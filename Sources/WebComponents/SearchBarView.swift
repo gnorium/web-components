@@ -239,9 +239,9 @@ public class SearchBarHydration: @unchecked Sendable {
 		guard input != nil else { return nil }
 
 		// Read configuration from data attributes
-		searchField = input?.dataset.get("searchField") ?? "q"
-		searchEndpoint = input?.dataset.get("searchEndpoint") ?? "/api/search"
-		resultUrlBase = input?.dataset.get("resultUrlBase") ?? "/results"
+		searchField = input?.dataset["searchField"] ?? "q"
+		searchEndpoint = input?.dataset["searchEndpoint"] ?? "/api/search"
+		resultUrlBase = input?.dataset["resultUrlBase"] ?? "/results"
 
 		button = container.querySelector("[data-search-button=\"true\"]")
 		guard button != nil else { return nil }

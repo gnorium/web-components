@@ -82,9 +82,6 @@ public struct SearchMenuView: HTML {
 					placeholder: placeholder,
 					class: "search-menu-typeahead"
 				)
-				.data("search-field", searchField)
-				.data("search-endpoint", searchEndpoint)
-				.data("result-url-base", resultUrlBase)
 
 				// Footer with keyboard hints
 				div {
@@ -136,6 +133,9 @@ public struct SearchMenuView: HTML {
 			}
 			.class("search-menu-container")
 			.data("search-menu-container", "true")
+			.data("search-field", searchField)
+			.data("search-endpoint", searchEndpoint)
+			.data("result-url-base", resultUrlBase)
 			.style {
 				searchMenuContainerCSS()
 			}
@@ -308,10 +308,13 @@ public class SearchMenuHydration: @unchecked Sendable {
 	}
 
 	private func hydrateTypeahead(_ typeahead: Element) {
-		// Read configuration from data attributes
-		searchField = typeahead.dataset.get("searchField") ?? "q"
-		searchEndpoint = typeahead.dataset.get("searchEndpoint") ?? "/api/search"
-		resultUrlBase = typeahead.dataset.get("resultUrlBase") ?? "/results"
+		// Read configuration from data attributes on the search menu container
+		guard let container = document.querySelector("[data-search-menu-container=\"true\"]") else {
+			return
+		}
+		searchField = container.dataset["searchField"] ?? "q"
+		searchEndpoint = container.dataset["searchEndpoint"] ?? "/api/search"
+		resultUrlBase = container.dataset["resultUrlBase"] ?? "/results"
 
 		// Ensure input exists but we don't need the reference
 		guard typeahead.querySelector("input") != nil else {

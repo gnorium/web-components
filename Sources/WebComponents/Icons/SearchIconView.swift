@@ -7,6 +7,8 @@ import DesignTokens
 import WebTypes
 
 public struct SearchIconView: HTML {
+	public init() {}
+
 	public func render(indent: Int = 0) -> String {
 		svg {
 			path()
