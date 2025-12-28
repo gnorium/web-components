@@ -64,7 +64,7 @@ public struct ToggleButtonGroupView: HTML {
 
 		// Collapse borders between buttons
 		selector(".toggle-button-view:not(:first-child)") {
-			marginLeft(calc("-\(borderWidthBase.value)")).important()
+			marginLeft(calc(-borderWidthBase)).important()
 		}
 
 		// Bring focused/hovered button to front

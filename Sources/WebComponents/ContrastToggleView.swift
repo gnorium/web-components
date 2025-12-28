@@ -22,8 +22,8 @@ public struct ContrastToggleView: HTML {
 			.class("contrast-toggle-icon-less")
 			.style {
 				display(.inlineBlock)
-				width(px(16))
-				height(px(16))
+				width(sizeIconMedium)
+				height(sizeIconMedium)
 				lineHeight(1)
 				transition(.opacity, s(0.2), .easeInOut)
 			}
@@ -33,8 +33,8 @@ public struct ContrastToggleView: HTML {
 			.class("contrast-toggle-icon-more")
 			.style {
 				display(.none)
-				width(px(16))
-				height(px(16))
+				width(sizeIconMedium)
+				height(sizeIconMedium)
 				lineHeight(1)
 				transition(.opacity, s(0.2), .easeInOut)
 			}

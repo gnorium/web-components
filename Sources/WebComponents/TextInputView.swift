@@ -100,11 +100,11 @@ public struct TextInputView: HTML {
 		boxSizing(.borderBox)
 
 		if hasStartIcon {
-			paddingLeft(calc("\(spacing12.value) + \(sizeIconMedium.value) + \(spacing8.value)")).important()
+			paddingLeft(calc(spacing12 + sizeIconMedium + spacing8)).important()
 		}
 
 		if hasEndIcon || clearable {
-			paddingRight(calc("\(spacing12.value) + \(sizeIconMedium.value) + \(spacing8.value)")).important()
+			paddingRight(calc(spacing12 + sizeIconMedium + spacing8)).important()
 		}
 
 		pseudoElement(.placeholder) {
