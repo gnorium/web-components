@@ -22,6 +22,7 @@ let package = Package(
                 .product(name: "WebAPIs", package: "web-apis"),
                 .product(name: "HTMLBuilder", package: "web-builders"),
                 .product(name: "CSSBuilder", package: "web-builders"),
+                .product(name: "SVGBuilder", package: "web-builders"),
                 .product(name: "WebTypes", package: "web-types")
             ]
         )

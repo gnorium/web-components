@@ -7,36 +7,39 @@ import WebTypes
 
 public struct ColorSchemeToggleView: HTML {
 	let `class`: String
-	
+	let size: Length
+
 	public init(
-		class: String = ""
+		class: String = "",
+		size: Length = sizeIconMedium
 	) {
 		self.class = `class`
+		self.size = size
 	}
 
 	public func render(indent: Int = 0) -> String {
 		button {
 			span {
-				LightModeIconView()
+				IconView(icon: { size in
+					LightModeIconView(width: size, height: size)
+				}, size: .medium)
 			}
 			.class("color-scheme-toggle-icon-light")
 			.style {
 				display(.inlineBlock)
-				width(sizeIconMedium)
-				height(sizeIconMedium)
 				lineHeight(1)
-				transition(.opacity, s(0.2), .easeInOut)
+				transition(transitionPropertyFade, transitionDurationMedium, transitionTimingFunctionUser)
 			}
 			span {
-				DarkModeIconView()
+				IconView(icon: { size in
+					DarkModeIconView(width: size, height: size)
+				}, size: .medium)
 			}
 			.class("color-scheme-toggle-icon-dark")
 			.style {
 				display(.none)
-				width(sizeIconMedium)
-				height(sizeIconMedium)
 				lineHeight(1)
-				transition(.opacity, s(0.2), .easeInOut)
+				transition(transitionPropertyFade, transitionDurationMedium, transitionTimingFunctionUser)
 			}
 		}
 		.class(`class`.isEmpty ? "color-scheme-toggle-view" : "color-scheme-toggle-view \(`class`)")
@@ -52,6 +55,12 @@ public struct ColorSchemeToggleView: HTML {
 			fontFamily(typographyFontSerif)
 			color(colorBase)
 			transition(.all, s(0.2), .easeInOut)
+			borderRadius(borderRadiusBase)
+
+			pseudoClass(.focus) {
+				outline(borderWidthBase, .solid, borderColorProgressiveFocus).important()
+				boxShadow(boxShadowOutsetSmall, boxShadowColorProgressiveFocus).important()
+			}
 		}
 		.render(indent: indent)
 	}

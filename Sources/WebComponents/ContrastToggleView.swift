@@ -7,36 +7,39 @@ import WebTypes
 
 public struct ContrastToggleView: HTML {
 	let `class`: String
+	let size: Length
 
 	public init(
-		class: String = ""
+		class: String = "",
+		size: Length = sizeIconMedium
 	) {
 		self.class = `class`
+		self.size = size
 	}
 
 	public func render(indent: Int = 0) -> String {
 		button {
 			span {
-				LessContrastIconView(color: SVGPaint(colorBase))
+				IconView(icon: { size in
+					LessContrastIconView(width: size, height: size)
+				}, size: .medium)
 			}
 			.class("contrast-toggle-icon-less")
 			.style {
 				display(.inlineBlock)
-				width(sizeIconMedium)
-				height(sizeIconMedium)
 				lineHeight(1)
-				transition(.opacity, s(0.2), .easeInOut)
+				transition(transitionPropertyFade, transitionDurationMedium, transitionTimingFunctionUser)
 			}
 			span {
-				MoreContrastIconView(color: SVGPaint(colorBase))
+				IconView(icon: { size in
+					MoreContrastIconView(width: size, height: size)
+				}, size: .medium)
 			}
 			.class("contrast-toggle-icon-more")
 			.style {
 				display(.none)
-				width(sizeIconMedium)
-				height(sizeIconMedium)
 				lineHeight(1)
-				transition(.opacity, s(0.2), .easeInOut)
+				transition(transitionPropertyFade, transitionDurationMedium, transitionTimingFunctionUser)
 			}
 		}
 		.class(`class`.isEmpty ? "contrast-toggle-view" : "contrast-toggle-view \(`class`)")
@@ -52,6 +55,12 @@ public struct ContrastToggleView: HTML {
 			fontFamily(typographyFontSerif)
 			color(colorBase)
 			transition(.all, s(0.2), .easeInOut)
+			borderRadius(borderRadiusBase)
+
+			pseudoClass(.focus) {
+				outline(borderWidthBase, .solid, borderColorProgressiveFocus).important()
+				boxShadow(boxShadowOutsetSmall, boxShadowColorProgressiveFocus).important()
+			}
 		}
 		.render(indent: indent)
 	}

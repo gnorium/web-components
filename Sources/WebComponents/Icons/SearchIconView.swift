@@ -7,7 +7,16 @@ import DesignTokens
 import WebTypes
 
 public struct SearchIconView: HTML {
-	public init() {}
+	let width: Length
+	let height: Length
+
+	public init(
+		width: Length = px(16),
+		height: Length = px(16)
+	) {
+		self.width = width
+		self.height = height
+	}
 
 	public func render(indent: Int = 0) -> String {
 		svg {
@@ -18,6 +27,8 @@ public struct SearchIconView: HTML {
 			.d(m(21, 21), l(-4.35, -4.35))
 		}
 		.class("search-bar-icon-view")
+		.width(width)
+		.height(height)
 		.xmlns("http://www.w3.org/2000/svg")
 		.viewBox(0, 0, 24, 24)
 		.fill(.none)

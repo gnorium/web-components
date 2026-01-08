@@ -6,7 +6,7 @@ import SVGBuilder
 import DesignTokens
 import WebTypes
 
-public struct GoogleLogoView: HTML {
+public struct GoogleIconView: HTML {
 	let `class`: String
 	let width: Length
 	let height: Length
@@ -36,7 +36,7 @@ public struct GoogleLogoView: HTML {
 				.d(M(12, 5.38), c(1.62, 0, 3.06, 0.56, 4.21, 1.64), l(3.15, -3.15), C(17.45, 2.09, 14.97, 1, 12, 1), C(7.7, 1, 3.99, 3.47, 2.18, 7.07), l(3.66, 2.84), c(0.87, -2.6, 3.3, -4.53, 6.16, -4.53), Z())
 				.fill(SVGPaint(hex(0xEA4335)))
 		}
-		.class(`class`.isEmpty ? "google-logo-view" : "google-logo-view \(`class`)")
+		.class(`class`.isEmpty ? "google-icon-view" : "google-icon-view \(`class`)")
 		.width(width)
 		.height(height)
 		.viewBox(0, 0, 24, 24)

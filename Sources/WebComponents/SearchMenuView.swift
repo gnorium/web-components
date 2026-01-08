@@ -71,65 +71,74 @@ public struct SearchMenuView: HTML {
 
 			// Search menu container - full screen
 			div {
-				// Search input at top
-				TypeaheadSearchView(
-					id: id,
-					formAction: resultUrlBase,
-					highlightQuery: true,
-					showThumbnail: false,
-					autoExpandWidth: false,
-					showEmptyQueryResults: true,
-					placeholder: placeholder,
-					class: "search-menu-typeahead"
-				)
-
-				// Footer with keyboard hints
-				div {
+				ContainerView(size: .xLarge) {
 					div {
-						// Navigation
-						div {
-							kbd { "↑" }
-								.class("keyboard-hint-key")
-								.style { keyboardHintKeyCSS() }
-							kbd { "↓" }
-								.class("keyboard-hint-key")
-								.style { keyboardHintKeyCSS() }
-							span { "to navigate" }
-								.class("keyboard-hint-label")
-								.style { keyboardHintLabelCSS() }
-						}
-						.class("keyboard-hint-group")
-						.style { keyboardHintGroupCSS() }
+						// Search input at top
+						TypeaheadSearchView(
+							id: id,
+							formAction: resultUrlBase,
+							highlightQuery: true,
+							showThumbnail: false,
+							autoExpandWidth: false,
+							showEmptyQueryResults: true,
+							placeholder: placeholder,
+							class: "search-menu-typeahead"
+						)
 
-						// Selection
+						// Footer with keyboard hints
 						div {
-							kbd { "↵" }
-								.class("keyboard-hint-key")
-								.style { keyboardHintKeyCSS() }
-							span { "to select" }
-								.class("keyboard-hint-label")
-								.style { keyboardHintLabelCSS() }
-						}
-						.class("keyboard-hint-group")
-						.style { keyboardHintGroupCSS() }
+							div {
+								// Navigation
+								div {
+									kbd { "↑" }
+										.class("keyboard-hint-key")
+										.style { keyboardHintKeyCSS() }
+									kbd { "↓" }
+										.class("keyboard-hint-key")
+										.style { keyboardHintKeyCSS() }
+									span { "to navigate" }
+										.class("keyboard-hint-label")
+										.style { keyboardHintLabelCSS() }
+								}
+								.class("keyboard-hint-group")
+								.style { keyboardHintGroupCSS() }
 
-						// Close
-						div {
-							kbd { "esc" }
-								.class("keyboard-hint-key")
-								.style { keyboardHintKeyCSS() }
-							span { "to close" }
-								.class("keyboard-hint-label")
-								.style { keyboardHintLabelCSS() }
+								// Selection
+								div {
+									kbd { "↵" }
+										.class("keyboard-hint-key")
+										.style { keyboardHintKeyCSS() }
+									span { "to select" }
+										.class("keyboard-hint-label")
+										.style { keyboardHintLabelCSS() }
+								}
+								.class("keyboard-hint-group")
+								.style { keyboardHintGroupCSS() }
+
+								// Close
+								div {
+									kbd { "esc" }
+										.class("keyboard-hint-key")
+										.style { keyboardHintKeyCSS() }
+									span { "to close" }
+										.class("keyboard-hint-label")
+										.style { keyboardHintLabelCSS() }
+								}
+								.class("keyboard-hint-group")
+								.style { keyboardHintGroupCSS() }
+							}
+							.class("keyboard-hint-container")
+							.style { keyboardHintContainerCSS() }
 						}
-						.class("keyboard-hint-group")
-						.style { keyboardHintGroupCSS() }
+						.class("search-menu-footer")
+						.style { searchMenuFooterCSS() }
 					}
-					.class("keyboard-hint-container")
-					.style { keyboardHintContainerCSS() }
+					.style {
+						display(.flex)
+						flexDirection(.column)
+						gap(spacing16)
+					}
 				}
-				.class("search-menu-footer")
-				.style { searchMenuFooterCSS() }
 			}
 			.class("search-menu-container")
 			.data("search-menu-container", "true")
@@ -180,7 +189,8 @@ public struct SearchMenuView: HTML {
 		position(.relative)
 		width(perc(100))
 		backgroundColor(backgroundColorBase)
-		padding(spacing16)
+		paddingTop(spacing16)
+		paddingBottom(spacing16)
 		borderBottom(borderWidthBase, .solid, borderColorBase)
 
 		// Start hidden - collapsed at navbar level with slide down animation
@@ -194,10 +204,8 @@ public struct SearchMenuView: HTML {
 		)
 		opacity(0)
 
-		// Desktop: more padding
+		// Desktop: more vertical padding
 		media(minWidth(px(768))) {
-			paddingLeft(spacing24)
-			paddingRight(spacing24)
 			paddingTop(spacing20)
 			paddingBottom(spacing20)
 		}
@@ -666,6 +674,9 @@ public class SearchMenuHydration: @unchecked Sendable {
     }
 
 	private func openMenu() {
+		// First scroll to top so navbar is fully visible
+		window.scrollTo(0, 0, behavior: .smooth)
+		
 		if let menu = document.querySelector("[data-search-menu=\"true\"]") {
 			// Show menu
 			menu.style.display(.block)

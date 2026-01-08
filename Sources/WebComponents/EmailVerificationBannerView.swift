@@ -25,7 +25,7 @@ public struct EmailVerificationBannerView: HTML {
 					marginRight(spacing8)
 				}
 
-				// Message
+				// Alert
 				span {
 					"Please verify your email address. We sent a verification email to "
 					strong { email }
@@ -175,12 +175,12 @@ public class EmailVerificationBannerHydration: @unchecked Sendable {
 			} ?? false
 
 			if isSuccess {
-				MessageAPI.showSuccess("Verification email sent! Please check your inbox.")
+				AlertAPI.showSuccess("Verification email sent! Please check your inbox.")
 				if let btn = self.resendButton {
 					btn.textContent = "Email Sent"
 				}
 			} else {
-				MessageAPI.showError("Failed to send verification email. Please try again.")
+				AlertAPI.showError("Failed to send verification email. Please try again.")
 				if let btn = self.resendButton {
 					btn.disabled = false
 					btn.textContent = "Resend Email"

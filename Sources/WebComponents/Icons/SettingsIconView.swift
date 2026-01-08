@@ -41,7 +41,7 @@ public struct SettingsIconView: HTML {
 					.transform("rotate(135)")
 			}
 			.xmlnsXlink("http://www.w3.org/1999/xlink")
-			.transform("translate(10 10)")
+			.transform(translate(10, 10))
 
 			path()
 				.d(M(10, 2.5), a(7.5, 7.5, 0, false, false, 0, 15), a(7.5, 7.5, 0, false, false, 0, -15), v(4), a(3.5, 3.5, 0, false, true, 0, 7), a(3.5, 3.5, 0, false, true, 0, -7))

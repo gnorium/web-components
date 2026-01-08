@@ -10,18 +10,15 @@ public struct LessContrastIconView: HTML {
 	let width: Length
 	let height: Length
 	let `class`: String
-	let color: String
 
 	public init(
 		width: Length = px(16),
 		height: Length = px(16),
-		class: String = "",
-		color: SVGPaint
+		class: String = ""
 	) {
 		self.width = width
 		self.height = height
 		self.class = `class`
-		self.color = color.value
 	}
 
 	public func render(indent: Int = 0) -> String {
@@ -32,14 +29,14 @@ public struct LessContrastIconView: HTML {
 				.cy(12)
 				.r(10)
 				.fill(.none)
-				.stroke(color)
+				.stroke(.currentColor)
 				.strokeWidth(2)
 
 			// Inner semicircle (not filled - less contrast)
 			path()
 				.d(M(12, 18), a(6, 6, 0, false, false, 0, -12), v(12), Z())
 				.fill(.none)
-				.stroke(color)
+				.stroke(.currentColor)
 				.strokeWidth(2)
 				.strokeLinecap(.round)
 				.strokeLinejoin(.round)

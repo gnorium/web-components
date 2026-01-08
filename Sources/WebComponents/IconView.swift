@@ -53,6 +53,34 @@ public struct IconView: HTML {
 		self.`class` = `class`
 	}
 
+	/// Convenience init for icon components with size parameter passed to icon builder
+	public init(
+		@HTMLBuilder icon: (_ size: Length) -> [HTML],
+		iconLabel: String? = nil,
+		size: IconSize = .medium,
+		iconColor: CSSColor? = nil,
+		class: String = ""
+	) {
+		let actualSize = Self.sizeToLength(size)
+		self.icon = icon(actualSize)
+		self.iconLabel = iconLabel
+		self.size = size
+		self.iconColor = iconColor
+		self.`class` = `class`
+	}
+
+	private static func sizeToLength(_ size: IconSize) -> Length {
+		// Return concrete pixel values for SVG attributes (SVG doesn't support CSS variables)
+		switch size {
+		case .medium:
+			return px(20)  // fontSizeMedium16 (16px) + 4px
+		case .small:
+			return px(16)  // fontSizeSmall14 (14px) + 2px
+		case .xSmall:
+			return px(12)
+		}
+	}
+
 	@CSSBuilder
 	private func iconViewCSS(_ size: IconSize, _ iconColor: CSSColor?) -> [CSS] {
 		display(.block)

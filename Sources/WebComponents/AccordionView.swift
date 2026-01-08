@@ -6,10 +6,6 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// Accordion component following Wikimedia Codex design system specification
-/// An expandable and collapsible section of content, often featured in a vertically stacked list.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/accordion.html
 public struct AccordionView: HTML {
 	let id: String
 	let open: Bool

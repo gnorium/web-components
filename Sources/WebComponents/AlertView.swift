@@ -6,12 +6,8 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// Message component following Wikimedia Codex design system specification
-/// A Message provides system feedback for users.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/message.html
-public struct MessageView: HTML {
-	let type: MessageType
+public struct AlertView: HTML {
+	let type: AlertType
 	let inline: Bool
 	let customIcon: String?
 	let fadeIn: Bool
@@ -21,7 +17,7 @@ public struct MessageView: HTML {
 	let content: [HTML]
 	let `class`: String
 
-	public enum MessageType: Sendable {
+	public enum AlertType: Sendable {
 		case notice
 		case warning
 		case error
@@ -29,10 +25,10 @@ public struct MessageView: HTML {
 
 		var value: String {
 			switch self {
-			case .notice: return "notice"
-			case .warning: return "warning"
-			case .error: return "error"
-			case .success: return "success"
+                case .notice: return "notice"
+                case .warning: return "warning"
+                case .error: return "error"
+                case .success: return "success"
 			}
 		}
 	}
@@ -44,7 +40,7 @@ public struct MessageView: HTML {
 	}
 
 	public init(
-		type: MessageType = .notice,
+		type: AlertType = .notice,
 		inline: Bool = false,
 		customIcon: String? = nil,
 		fadeIn: Bool = false,
@@ -66,7 +62,7 @@ public struct MessageView: HTML {
 	}
 
 	@CSSBuilder
-	private func messageViewCSS(_ type: MessageType, _ inline: Bool) -> [CSS] {
+	private func alertViewCSS(_ type: AlertType, _ inline: Bool) -> [CSS] {
 		display(.flex)
 		boxSizing(.borderBox)
 
@@ -97,7 +93,7 @@ public struct MessageView: HTML {
 	}
 
 	@CSSBuilder
-	private func messageIconCSS(_ type: MessageType) -> [CSS] {
+	private func alertIconCSS(_ type: AlertType) -> [CSS] {
 		display(.flex)
 		alignItems(.center)
 		minWidth(sizeIconMedium)
@@ -120,7 +116,7 @@ public struct MessageView: HTML {
 	}
 
 	@CSSBuilder
-	private func messageContentCSS() -> [CSS] {
+	private func alertContentCSS() -> [CSS] {
 		display(.flex)
 		flexDirection(.column)
 		flexGrow(1)
@@ -133,41 +129,8 @@ public struct MessageView: HTML {
 	}
 
 	@CSSBuilder
-	private func messageDismissCSS() -> [CSS] {
-		display(.flex)
-		alignItems(.flexStart)
-		minWidth(sizeIconMedium)
-		width(sizeIconMedium)
-		height(sizeIconMedium)
-		marginLeft(spacing8)
-		padding(0)
-		border(.none)
-		backgroundColor(.transparent)
-		color(colorSubtle)
-		fontSize(sizeIconMedium)
-		cursor(cursorBaseHover)
-		borderRadius(borderRadiusBase)
-		transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-		flexShrink(0)
-		justifyContent(.center)
-		
-		pseudoClass(.hover) {
-			backgroundColor(backgroundColorInteractiveSubtleHover).important()
-		}
-
-		pseudoClass(.active) {
-			backgroundColor(backgroundColorInteractiveSubtleActive).important()
-		}
-
-		pseudoClass(.focus) {
-			outline(borderWidthThick, .solid, borderColorProgressive).important()
-			outlineOffset(px(1)).important()
-		}
-	}
-
-	@CSSBuilder
-	private func messageFadeInCSS() -> [CSS] {
-		animation("message-fade-in", transitionDurationBase, transitionTimingFunctionSystem)
+	private func alertFadeInCSS() -> [CSS] {
+		animation("alert-fade-in", transitionDurationBase, transitionTimingFunctionSystem)
 	}
 
 	public func render(indent: Int = 0) -> String {
@@ -207,62 +170,54 @@ public struct MessageView: HTML {
 			}
 		}()
 
-		let messageClasses: String = {
-			let base = "message-view message-\(type.value)"
-			let inlinePart = inline ? " message-inline" : ""
-			let fadePart = fadeIn ? " message-fade-in" : ""
+		let alertClasses: String = {
+			let base = "alert-view alert-\(type.value)"
+			let inlinePart = inline ? " alert-inline" : ""
+			let fadePart = fadeIn ? " alert-fade-in" : ""
 			let classPart = `class`.isEmpty ? "" : " \(`class`)"
 			return "\(base)\(inlinePart)\(fadePart)\(classPart)"
 		}()
 
-		var message = div {
+		var alert = div {
 			if shouldShowIcon {
 				span {
 					displayIcon
 				}
-				.class("message-icon")
+				.class("alert-icon")
 				.ariaHidden(true)
 				.style {
-					messageIconCSS(type)
+					alertIconCSS(type)
 				}
 			}
 
 			div {
 				content
 			}
-			.class("message-content")
+			.class("alert-content")
 			.style {
-				messageContentCSS()
+				alertContentCSS()
 			}
 
 			if allowUserDismiss {
-				button {
-					CloseIconView(width: sizeIconMedium, height: sizeIconMedium)
-				}
-				.type(.button)
-				.class("message-dismiss")
-				.ariaLabel(dismissButtonLabel)
-				.style {
-					messageDismissCSS()
-				}
+				CloseButtonView(ariaLabel: dismissButtonLabel, class: "alert-dismiss")
 			}
 		}
-		.class(messageClasses)
+		.class(alertClasses)
 		.ariaLive(ariaLive)
 
 		if let role = role {
-			message = message.role(role)
+			alert = alert.role(role)
 		}
 
 		if let autoDismissValue = autoDismissValue {
-			message = message.data("auto-dismiss", "\(autoDismissValue)")
+			alert = alert.data("auto-dismiss", "\(autoDismissValue)")
 		}
 
-		return message
+		return alert
 			.style {
-				messageViewCSS(type, inline)
+				alertViewCSS(type, inline)
 				if fadeIn {
-					messageFadeInCSS()
+					alertFadeInCSS()
 				}
 			}
 			.render(indent: indent)
@@ -306,20 +261,20 @@ private func localParseInt(_ str: String) -> Int? {
 	return hasDigits ? (isNegative ? -result : result) : nil
 }
 
-/// Dynamic message creation functions
-public enum MessageAPI {
-	/// Message type for dynamic messages
-	public enum MessageType: Sendable {
+/// Dynamic alert creation functions
+public enum AlertAPI {
+	/// Alert type for dynamic alerts
+	public enum AlertType: Sendable {
 		case notice
 		case warning
 		case error
 		case success
 	}
 
-	/// Show a dynamic message without page reload
+	/// Show a dynamic alert without page reload
 	public static func show(
 		_ text: String,
-		type: MessageType = .notice,
+		type: AlertType = .notice,
 		inline: Bool = false,
 		customIcon: String? = nil,
 		allowUserDismiss: Bool = true,
@@ -329,17 +284,17 @@ public enum MessageAPI {
 		onDismiss: (@Sendable () -> Void)? = nil
 	) {
 
-		let messageContainer: Element
+		let alertContainer: Element
 
 		if let providedContainer = container {
-			messageContainer = providedContainer
-		} else if let pageMessages = document.querySelector(".page-messages") {
-			messageContainer = pageMessages
+			alertContainer = providedContainer
+		} else if let pageAlerts = document.querySelector(".page-alerts") {
+			alertContainer = pageAlerts
 		} else {
-			var existingContainer = document.querySelector(".message-container")
+			var existingContainer = document.querySelector(".alert-container")
 			if existingContainer == nil {
 				let newContainer = document.createElement(.div)
-				newContainer.className = "message-container"
+				newContainer.className = "alert-container"
 				newContainer.style.position(.fixed)
 				newContainer.style.top(px(80))
 				newContainer.style.left(perc(50))
@@ -355,7 +310,7 @@ public enum MessageAPI {
 				existingContainer = newContainer
 			}
 			guard let c = existingContainer else { return }
-			messageContainer = c
+			alertContainer = c
 		}
 
 		let (bgColor, borderColor, iconColor): (CSSColor, CSSColor, CSSColor) = {
@@ -400,47 +355,47 @@ public enum MessageAPI {
 				ariaLive = .polite
 		}
 
-		// Create message element
-		let messageEl = document.createElement(.div)
-		let messageClass: String
+		// Create alert element
+		let alertEl = document.createElement(.div)
+		let alertClass: String
 		switch type {
 			case .notice:
-				messageClass = "message-view message-notice message-fade-in"
+				alertClass = "alert-view alert-notice alert-fade-in"
 			case .warning:
-				messageClass = "message-view message-warning message-fade-in"
+				alertClass = "alert-view alert-warning alert-fade-in"
 			case .error:
-				messageClass = "message-view message-error message-fade-in"
+				alertClass = "alert-view alert-error alert-fade-in"
 			case .success:
-				messageClass = "message-view message-success message-fade-in"
+				alertClass = "alert-view alert-success alert-fade-in"
 		}
-		messageEl.className = messageClass
-		messageEl.setAttribute(.ariaLive, ariaLive)
+		alertEl.className = alertClass
+		alertEl.setAttribute(.ariaLive, ariaLive)
 		if type == .error {
-			messageEl.setAttribute(.role, .alert)
+			alertEl.setAttribute(.role, .alert)
 		}
 		
-		messageEl.style.display(.flex)
-		messageEl.style.boxSizing(.borderBox)
-		messageEl.style.pointerEvents(.auto)
-		messageEl.style.animation(("message-fade-in", s(0.3), .easeOut))
+		alertEl.style.display(.flex)
+		alertEl.style.boxSizing(.borderBox)
+		alertEl.style.pointerEvents(.auto)
+		alertEl.style.animation(("alert-fade-in", s(0.3), .easeOut))
 
 		if !inline {
-			messageEl.style.minHeight(px(64))
-			messageEl.style.padding(spacing12, spacing16)
-			messageEl.style.borderWidth(borderWidthBase)
-			messageEl.style.borderStyle(.solid)
-			messageEl.style.borderRadius(borderRadiusBase)
-			messageEl.style.backgroundColor(bgColor)
-			messageEl.style.borderColor(borderColor)
-			messageEl.style.boxShadow((0, px(2), px(8), rgba(0, 0, 0, 0.1)))
+			alertEl.style.minHeight(px(64))
+			alertEl.style.padding(spacing12, spacing16)
+			alertEl.style.borderWidth(borderWidthBase)
+			alertEl.style.borderStyle(.solid)
+			alertEl.style.borderRadius(borderRadiusBase)
+			alertEl.style.backgroundColor(bgColor)
+			alertEl.style.borderColor(borderColor)
+			alertEl.style.boxShadow((0, px(2), px(8), rgba(0, 0, 0, 0.1)))
 		} else {
-			messageEl.style.padding(px(0))
+			alertEl.style.padding(px(0))
 		}
 
 		// Icon
 		if shouldShowIcon {
 			let icon = document.createElement(.span)
-			icon.className = "message-icon"
+			icon.className = "alert-icon"
 			icon.innerHTML = displayIcon
 			icon.setAttribute(.ariaHidden, true)
 			icon.style.display(.flex)
@@ -452,12 +407,12 @@ public enum MessageAPI {
 			icon.style.flexShrink(0)
 			icon.style.fontSize(sizeIconMedium)
 			icon.style.color(iconColor)
-			messageEl.appendChild(icon)
+			alertEl.appendChild(icon)
 		}
 
 		// Content
 		let content = document.createElement(.div)
-		content.className = "message-content"
+		content.className = "alert-content"
 		content.innerHTML = text
 		content.style.display(.flex)
 		content.style.flexDirection(.column)
@@ -467,13 +422,13 @@ public enum MessageAPI {
 		content.style.fontWeight(fontWeightNormal)
 		content.style.lineHeight(lineHeightSmall22)
 		content.style.color(colorBase)
-		messageEl.appendChild(content)
+		alertEl.appendChild(content)
 
 		// Dismiss button
 		if allowUserDismiss {
             
 			let dismissBtn = document.createElement(.button)
-			dismissBtn.className = "message-dismiss"
+			dismissBtn.className = "alert-dismiss"
 			dismissBtn.innerHTML = "x"
 			dismissBtn.setAttribute(.type, .button)
 			dismissBtn.setAttribute(.ariaLabel, "Close")
@@ -496,25 +451,25 @@ public enum MessageAPI {
             dismissBtn.style.flexShrink(0)
             
 			_ = dismissBtn.on(.click) { _ in
-				dismissMessage(messageEl, onDismiss: onDismiss, userInitiated: true)
+				dismissAlert(alertEl, onDismiss: onDismiss, userInitiated: true)
 			}
 
-			messageEl.appendChild(dismissBtn)
+			alertEl.appendChild(dismissBtn)
             
 		}
 		// Add to container
-		messageContainer.appendChild(messageEl)
+		alertContainer.appendChild(alertEl)
 
 		// Auto-dismiss
 		if autoDismiss && type != .error {
 			_ = setTimeout(autoDismissTime) {
-				dismissMessage(messageEl, onDismiss: onDismiss, userInitiated: false)
+				dismissAlert(alertEl, onDismiss: onDismiss, userInitiated: false)
 			}
 		}
 	}
 
-	private static func dismissMessage(_ element: Element, onDismiss: (@Sendable () -> Void)?, userInitiated: Bool) {
-		element.style.animation(("message-fade-out", s(0.3), .easeOut))
+	private static func dismissAlert(_ element: Element, onDismiss: (@Sendable () -> Void)?, userInitiated: Bool) {
+		element.style.animation(("alert-fade-out", s(0.3), .easeOut))
 
 		_ = setTimeout(300) {
 			element.remove()
@@ -549,14 +504,14 @@ public enum MessageAPI {
 	}
 }
 
-private class MessageInstance: @unchecked Sendable {
-	private var messageElement: Element
+private class AlertInstance: @unchecked Sendable {
+	private var alertElement: Element
 	private var dismissButton: Element?
 	private var autoDismissTimer: Int32?
 
-	init(message: Element) {
-		self.messageElement = message
-		self.dismissButton = message.querySelector(".message-dismiss")
+	init(alert: Element) {
+		self.alertElement = alert
+		self.dismissButton = alert.querySelector(".alert-dismiss")
 
 		bindEvents()
 		setupAutoDismiss()
@@ -566,31 +521,31 @@ private class MessageInstance: @unchecked Sendable {
 		guard let button = dismissButton else { return }
 
 		_ = button.on(.click) { [self] _ in
-			self.dismissMessage(userInitiated: true)
+			self.dismissAlert(userInitiated: true)
 		}
 	}
 
 	private func setupAutoDismiss() {
-		guard let autoDismissAttr = messageElement.getAttribute(data("auto-dismiss")),
+		guard let autoDismissAttr = alertElement.getAttribute(data("auto-dismiss")),
 			let ms = localParseInt(autoDismissAttr) else {
 			return
 		}
 
 		autoDismissTimer = setTimeout(ms) { [self] in
-		self.dismissMessage(userInitiated: false)
+		self.dismissAlert(userInitiated: false)
 		}
 	}
 
-	private func dismissMessage(userInitiated: Bool) {
+	private func dismissAlert(userInitiated: Bool) {
 		if let timer = autoDismissTimer {
 			clearTimeout(timer)
 			autoDismissTimer = nil
 		}
 
-		messageElement.style.animation(("message-fade-out", s(0.3), .easeOut))
+		alertElement.style.animation(("alert-fade-out", s(0.3), .easeOut))
 
 		_ = setTimeout(300) { [self] in
-			self.messageElement.remove()
+			self.alertElement.remove()
 
 			let eventType: String
 			if userInitiated {
@@ -599,24 +554,24 @@ private class MessageInstance: @unchecked Sendable {
 				eventType = "auto_dismissed"
 			}
 			let event = CustomEvent(type: eventType, detail: "")
-			self.messageElement.dispatchEvent(event)
+			self.alertElement.dispatchEvent(event)
 		}
 	}
 }
 
-/// Hydration for server-rendered messages
-public class MessageHydration: @unchecked Sendable {
-	private var instances: [MessageInstance] = []
+/// Hydration for server-rendered alerts
+public class AlertHydration: @unchecked Sendable {
+	private var instances: [AlertInstance] = []
 
 	public init() {
-		hydrateAllMessages()
+		hydrateAllAlerts()
 	}
 
-	private func hydrateAllMessages() {
-		let allMessages = document.querySelectorAll(".message-view")
+	private func hydrateAllAlerts() {
+		let allAlerts = document.querySelectorAll(".alert-view")
 
-		for msg in allMessages {
-			let instance = MessageInstance(message: msg)
+		for alert in allAlerts {
+			let instance = AlertInstance(alert: alert)
 			instances.append(instance)
 		}
 	}

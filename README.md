@@ -11,7 +11,7 @@ WebComponents provides production-ready UI components that follow accessibility 
 - **Design System**: Components use design tokens from `design-tokens` package
 - **Server-Side Rendering**: Pure Swift, no JavaScript required
 - **Type Safety**: Compile-time guarantees for component props and styling
-- **Accessible**: Built following ARIA guidelines and Wikimedia Codex specs
+- **Accessible**: Built following ARIA guidelines
 - **Zero Dependencies on Client**: All components render to clean HTML/CSS
 
 ## Components
@@ -89,8 +89,9 @@ Contributions welcome! Please open an issue or submit a pull request.
 
 ## Related Packages
 
-- [design-tokens](https://github.com/gnorium/design-tokens) - Universal design tokens based on Apple HIG and Wikimedia Codex
+- [design-tokens](https://github.com/gnorium/design-tokens) - Universal design tokens based on Apple HIG
 - [embedded-swift-utilities](https://github.com/gnorium/embedded-swift-utilities) - Utilities for Embedded Swift
+- [web-administrator](https://github.com/gnorium/web-administrator) - Web administration panel for applications
 - [web-apis](https://github.com/gnorium/web-apis) - Web API implementations for Swift WebAssembly
 - [web-builders](https://github.com/gnorium/web-builders) - HTML, CSS, JS, and SVG DSL builders
 - [web-formats](https://github.com/gnorium/web-formats) - Structured data format builders
