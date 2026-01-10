@@ -120,7 +120,7 @@ public struct PopoverView: HTML {
 		height(px(12))
 		backgroundColor(backgroundColorBase)
 		border(borderWidthBase, .solid, borderColorSubtle)
-		transform("rotate(45deg)")
+		transform(rotate(deg(45)))
 
 		switch placement {
 			case .top, .topStart, .topEnd:

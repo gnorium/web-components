@@ -30,15 +30,15 @@ public struct SettingsIconView: HTML {
 
 				use()
 					.xlinkHref("#a")
-					.transform("rotate(45)")
+					.transform(rotate(45))
 
 				use()
 					.xlinkHref("#a")
-					.transform("rotate(90)")
+					.transform(rotate(90))
 
 				use()
 					.xlinkHref("#a")
-					.transform("rotate(135)")
+					.transform(rotate(135))
 			}
 			.xmlnsXlink("http://www.w3.org/1999/xlink")
 			.transform(translate(10, 10))
