@@ -83,7 +83,9 @@ public struct IconView: HTML {
 
 	@CSSBuilder
 	private func iconViewCSS(_ size: IconSize, _ iconColor: CSSColor?) -> [CSS] {
-		display(.block)
+		display(.flex)
+        alignItems(.center)
+        justifyContent(.center)
 		flexShrink(0)
 
 		switch size {
