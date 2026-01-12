@@ -63,7 +63,7 @@ public struct DropdownView: HTML {
                 .for(id)
                 .style {
                     display(.block)
-                    fontSize(px(14))
+                    fontSize(fontSizeMedium16)
                     fontWeight(600)
                     color(colorBase)
                     marginBottom(rem(0.5))
@@ -130,7 +130,7 @@ public struct DropdownView: HTML {
                     alignItems(.center)
                     justifyContent(.spaceBetween)
                     padding(spacing8, spacing12)
-                    fontSize(fontSizeSmall14)
+                    fontSize(fontSizeMedium16)
                     lineHeight(1.5)
                     color(colorBase)
                     backgroundColor(quiet ? backgroundColorTransparent : backgroundColorBase)
@@ -160,7 +160,7 @@ public struct DropdownView: HTML {
                             .style {
                                 width(perc(100))
                                 padding(spacing8, spacing12)
-                                fontSize(fontSizeSmall14)
+                                fontSize(fontSizeMedium16)
                                 lineHeight(1.5)
                                 color(colorBase)
                                 backgroundColor(backgroundColorBase)
@@ -190,7 +190,7 @@ public struct DropdownView: HTML {
                             .data("display", option.display)
                             .style {
                                 padding(spacing8, spacing12)
-                                fontSize(fontSizeSmall14)
+                                fontSize(fontSizeMedium16)
                                 color(colorBase)
                                 cursor(cursorBaseHover)
                                 transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
