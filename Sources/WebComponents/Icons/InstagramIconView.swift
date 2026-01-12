@@ -31,59 +31,55 @@ public struct InstagramIconView: HTML {
 			if !monochrome {
 				defs {
 				// Radial gradient f
-				radialGradient()
-				.id("ig-grad-f")
-				.cx(158.429)
-				.cy(578.088)
-				.r(52.3515)
-				.gradientUnits(.userSpaceOnUse)
-				.gradientTransform(matrix(0, -4.03418, 4.28018, 0, -2332.2273, 942.2356))
-				.content {
+				radialGradient {
 					stop().offset(0).stopColor(hex(0xFFCC00))
 					stop().offset(0.1242).stopColor(hex(0xFFCC00))
 					stop().offset(0.5672).stopColor(hex(0xFE4A05))
 					stop().offset(0.6942).stopColor(hex(0xFF0F3F))
 					stop().offset(1).stopColor(hex(0xFE0657)).stopOpacity(0)
 				}
+				.id("ig-grad-f")
+				.cx(158.429)
+				.cy(578.088)
+				.r(52.3515)
+				.gradientUnits(.userSpaceOnUse)
+				.gradientTransform(matrix(0, -4.03418, 4.28018, 0, -2332.2273, 942.2356))
 
 				// Radial gradient g
-				radialGradient()
+				radialGradient {
+					stop().offset(0).stopColor(hex(0xFFCC00))
+					stop().offset(1).stopColor(hex(0xFFCC00)).stopOpacity(0)
+				}
 				.id("ig-grad-g")
 				.cx(172.6149)
 				.cy(600.6924)
 				.r(65)
 				.gradientUnits(.userSpaceOnUse)
 				.gradientTransform(matrix(0.67441, -1.16203, 1.51283, 0.87801, -814.3657, -47.8354))
-				.content {
-					stop().offset(0).stopColor(hex(0xFFCC00))
-					stop().offset(1).stopColor(hex(0xFFCC00)).stopOpacity(0)
-				}
 
 				// Radial gradient h
-				radialGradient()
+				radialGradient {
+					stop().offset(0).stopColor(hex(0x780CFF))
+					stop().offset(1).stopColor(hex(0x820BFF)).stopOpacity(0)
+				}
 				.id("ig-grad-h")
 				.cx(144.012)
 				.cy(51.3367)
 				.r(67.081)
 				.gradientUnits(.userSpaceOnUse)
 				.gradientTransform(matrix(-2.3989, 0.67549, -0.23008, -0.81732, 464.9957, -26.4035))
-				.content {
-					stop().offset(0).stopColor(hex(0x780CFF))
-					stop().offset(1).stopColor(hex(0x820BFF)).stopOpacity(0)
-				}
 
 				// Radial gradient e
-				radialGradient()
+				radialGradient {
+					stop().offset(0).stopColor(hex(0xFF005F))
+					stop().offset(1).stopColor(hex(0xFC01D8))
+				}
 				.id("ig-grad-e")
 				.cx(199.7884)
 				.cy(628.4379)
 				.r(52.3515)
 				.gradientUnits(.userSpaceOnUse)
 				.gradientTransform(matrix(-3.10797, 0.87652, -0.6315, -2.23914, 1345.6503, 1374.1983))
-				.content {
-					stop().offset(0).stopColor(hex(0xFF005F))
-					stop().offset(1).stopColor(hex(0xFC01D8))
-				}
 			}
 
 				g {
