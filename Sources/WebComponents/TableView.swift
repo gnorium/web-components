@@ -30,6 +30,8 @@ public struct TableView: HTML {
 	let tfootContent: [HTML]
 	let footerContent: [HTML]
 	let emptyStateContent: [HTML]
+	let theadStyle: (@Sendable () -> [any CSS])?
+	let thStyle: (@Sendable (Column.Alignment) -> [any CSS])?
 	let `class`: String
 
 	public struct Column: Sendable {
@@ -130,6 +132,8 @@ public struct TableView: HTML {
 		paginate: Bool = false,
 		paginationPosition: PaginationPosition = .bottom,
 		paginationSizeDefault: Int = 10,
+		theadStyle: (@Sendable () -> [any CSS])? = nil,
+		thStyle: (@Sendable (Column.Alignment) -> [any CSS])? = nil,
 		class: String = "",
 		@HTMLBuilder header: () -> [HTML] = { [] },
 		@HTMLBuilder thead: () -> [HTML] = { [] },
@@ -151,6 +155,8 @@ public struct TableView: HTML {
 		self.paginate = paginate
 		self.paginationPosition = paginationPosition
 		self.paginationSizeDefault = paginationSizeDefault
+		self.theadStyle = theadStyle
+		self.thStyle = thStyle
 		self.`class` = `class`
 		self.headerContent = header()
 		self.theadContent = thead()
@@ -276,6 +282,7 @@ public struct TableView: HTML {
 		fontWeight(.inherit)
 		color(.inherit)
 		textAlign(.inherit)
+		textTransform(.inherit)
 		cursor(cursorBase)
 		transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
 
@@ -298,15 +305,15 @@ public struct TableView: HTML {
 
 	@CSSBuilder
 	private func tableTbodyCSS() -> [CSS] {
-		selector(" tr") {
+		selector("tr") {
 			borderBottom(borderWidthBase, .solid, borderColorSubtle)
 		}
 
-		selector(" tr:last-child") {
+		selector("tr:last-child") {
 			borderBottom(.none)
 		}
 
-		selector(" tr:hover") {
+		selector("tr:hover") {
 			backgroundColor(backgroundColorInteractiveSubtleHover).important()
 		}
 	}
@@ -478,7 +485,11 @@ public struct TableView: HTML {
 									}
 									.scope(.col)
 									.style {
-										tableThCSS(.start)
+										if let ts = thStyle {
+											ts(.start)
+										} else {
+											tableThCSS(.start)
+										}
 									}
 								}
 
@@ -515,14 +526,22 @@ public struct TableView: HTML {
 										if let colWidth = column.width {
 											width(colWidth)
 										}
-										tableThCSS(column.align)
+										if let ts = thStyle {
+											ts(column.align)
+										} else {
+											tableThCSS(column.align)
+										}
 									}
 								}
 							}
 						}
 						.class("table-thead")
 						.style {
-							tableTheadCSS()
+							if let ths = theadStyle {
+								ths()
+							} else {
+								tableTheadCSS()
+							}
 						}
 					}
 

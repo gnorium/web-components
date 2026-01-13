@@ -110,6 +110,7 @@ public struct ListView: HTML {
 				if let url = createUrl {
 					a { createLabel }
 						.href(url)
+						.class("list-create-button")
 						.style {
 							padding(spacing12, spacing24)
 							fontFamily(typographyFontSans)
@@ -181,6 +182,7 @@ public struct ListView: HTML {
 					if let url = createUrl {
 						a { emptyCreateLabel ?? "Create First Item" }
 							.href(url)
+							.class("list-empty-create-button")
 							.style {
 								padding(spacing12, spacing24)
 								fontFamily(typographyFontSans)
@@ -243,6 +245,7 @@ public struct ListView: HTML {
 									.style { tdStyle() }
 								}
 							}
+                            .class("table-row")
 							.style {
 								pseudoClass(.hover) {
 									backgroundColor(backgroundColorInteractiveSubtleHover)
@@ -280,17 +283,16 @@ public struct ListView: HTML {
 	
 	private func buildActionLink(action: RowAction, row: Row) -> HTML {
 		let href = resolveHref(action.hrefPattern, row: row)
+		let defaultClass = action.destructive ? "list-action-destructive" : "list-action"
 		var link = a { action.label }
 			.href(href)
+			.class(action.className ?? defaultClass)
 			.style {
 				actionLinkStyle(destructive: action.destructive)
 			}
 		
 		if action.openInNewTab {
 			link = link.target(.blank)
-		}
-		if let cls = action.className {
-			link = link.class(cls)
 		}
 		
 		return link
