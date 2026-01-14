@@ -38,7 +38,7 @@ Add WebComponents to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/gnorium/web-components", from: "1.0.0")
+    .package(url: "https://github.com/gnorium/web-components", branch: "main")
 ]
 ```
 
@@ -90,9 +90,11 @@ Contributions welcome! Please open an issue or submit a pull request.
 ## Related Packages
 
 - [design-tokens](https://github.com/gnorium/design-tokens) - Universal design tokens based on Apple HIG
-- [embedded-swift-utilities](https://github.com/gnorium/embedded-swift-utilities) - Utilities for Embedded Swift
+- [embedded-swift-utilities](https://github.com/gnorium/embedded-swift-utilities) - Utility functions for Embedded Swift environments
+- [markdown-utilities](https://github.com/gnorium/markdown-utilities) - Markdown rendering with media attribution support
 - [web-administrator](https://github.com/gnorium/web-administrator) - Web administration panel for applications
 - [web-apis](https://github.com/gnorium/web-apis) - Web API implementations for Swift WebAssembly
 - [web-builders](https://github.com/gnorium/web-builders) - HTML, CSS, JS, and SVG DSL builders
 - [web-formats](https://github.com/gnorium/web-formats) - Structured data format builders
-- [web-types](https://github.com/gnorium/web-types) - Web type definitions and design tokens
+- [web-security](https://github.com/gnorium/web-security) - Portable security utilities for web applications
+- [web-types](https://github.com/gnorium/web-types) - Shared web types and design tokens
