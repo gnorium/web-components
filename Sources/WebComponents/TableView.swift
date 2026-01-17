@@ -744,21 +744,21 @@ import EmbeddedSwiftUtilities
 		private func bindEvents() {
 			// Select all checkbox
 			if let selectAll = selectAllCheckbox {
-				_ = selectAll.on(.change) { [self] _ in
+				_ = selectAll.addEventListener(.change) { [self] _ in
 					self.toggleSelectAll()
 				}
 			}
 
 			// Row checkboxes
 			for checkbox in rowCheckboxes {
-				_ = checkbox.on(.change) { [self] _ in
+				_ = checkbox.addEventListener(.change) { [self] _ in
 					self.updateRowSelection()
 				}
 			}
 
 			// Sort buttons
 			for button in sortButtons {
-				_ = button.on(.click) { [self] _ in
+				_ = button.addEventListener(.click) { [self] _ in
 					guard let columnId = button.getAttribute("data-column-id") else { return }
 					self.toggleSort(columnId: columnId)
 				}
@@ -766,25 +766,25 @@ import EmbeddedSwiftUtilities
 
 			// Pagination buttons
 			if let firstBtn = paginationFirstBtn {
-				_ = firstBtn.on(.click) { [self] _ in
+				_ = firstBtn.addEventListener(.click) { [self] _ in
 					self.goToPage(1)
 				}
 			}
 
 			if let prevBtn = paginationPrevBtn {
-				_ = prevBtn.on(.click) { [self] _ in
+				_ = prevBtn.addEventListener(.click) { [self] _ in
 					self.goToPage(self.currentPage - 1)
 				}
 			}
 
 			if let nextBtn = paginationNextBtn {
-				_ = nextBtn.on(.click) { [self] _ in
+				_ = nextBtn.addEventListener(.click) { [self] _ in
 					self.goToPage(self.currentPage + 1)
 				}
 			}
 
 			if let lastBtn = paginationLastBtn {
-				_ = lastBtn.on(.click) { [self] _ in
+				_ = lastBtn.addEventListener(.click) { [self] _ in
 					self.goToPage(10)
 				}
 			}

@@ -212,12 +212,12 @@ private class ButtonGroupInstance: @unchecked Sendable {
 	private func bindEvents() {
 		for button in buttons {
 			// Click event
-			_ = button.on(.click) { [self] _ in
+			_ = button.addEventListener(.click) { [self] _ in
 				self.handleClick(button)
 			}
 
 			// Keyboard events
-			_ = button.on(.keydown) { [self] (event: CallbackString) in
+			_ = button.addEventListener(.keydown) { [self] (event: CallbackString) in
 				self.handleKeydown(button, event: event)
 			}
 		}

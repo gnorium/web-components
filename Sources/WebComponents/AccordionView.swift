@@ -376,7 +376,7 @@ private class AccordionInstance: @unchecked Sendable {
 		guard let details = details else { return }
 
 		// Handle toggle event
-		_ = details.on(.toggle) { [self] _ in
+		_ = details.addEventListener(.toggle) { [self] _ in
 			let isOpen = details.hasAttribute(.open)
 
 			// Rotate expand icon
@@ -414,7 +414,7 @@ private class AccordionInstance: @unchecked Sendable {
 
 		// Handle action button click
 		if let actionButton = actionButton {
-			_ = actionButton.on(.click) { [self] event in
+			_ = actionButton.addEventListener(.click) { [self] event in
 				event.stopPropagation()
 				let clickEvent = CustomEvent(type: "accordion-action-click", detail: "")
 				self.accordion.dispatchEvent(clickEvent)

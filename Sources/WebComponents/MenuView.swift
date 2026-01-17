@@ -385,7 +385,7 @@ private class MenuInstance: @unchecked Sendable {
 	private func bindEvents() {
 		// Listen for menu-item-change events from MenuItemView
 		for (index, item) in menuItems.enumerated() {
-			_ = item.on("menu-item-change") { [self] event in
+			_ = item.addEventListener("menu-item-change") { [self] event in
 				let value = event.detail
 
 				// Get current selection state
@@ -413,7 +413,7 @@ private class MenuInstance: @unchecked Sendable {
 			}
 
 			// Listen for highlight events
-			_ = item.on("menu-item-highlight") { [self] _ in
+			_ = item.addEventListener("menu-item-highlight") { [self] _ in
 				self.highlightedIndex = index
 				self.updateHighlight()
 			}
@@ -421,7 +421,7 @@ private class MenuInstance: @unchecked Sendable {
 
 		// Scroll event for load-more
 		if let list = menu.querySelector(".menu-list") {
-			_ = list.on(.scroll) { [self] _ in
+			_ = list.addEventListener(.scroll) { [self] _ in
 				let scrollTop = list.scrollTop
 				let scrollHeight = list.scrollHeight
 				let clientHeight = list.clientHeight

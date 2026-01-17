@@ -257,32 +257,32 @@ private class MenuButtonInstance: @unchecked Sendable {
 		guard let trigger else { return }
 
 		// Toggle button click
-		_ = trigger.on(.click) { [self] _ in
+		_ = trigger.addEventListener(.click) { [self] _ in
 			self.toggleMenu()
 		}
 
 		// Menu item clicks
 		for (index, item) in menuItems.enumerated() {
-			_ = item.on(.click) { [self] _ in
+			_ = item.addEventListener(.click) { [self] _ in
 				self.selectMenuItem(item)
 			}
 
-			_ = item.on(.keydown) { [self] (event: CallbackString) in
+			_ = item.addEventListener(.keydown) { [self] (event: CallbackString) in
 				self.handleMenuItemKeydown(event, index: index)
 			}
 
-			_ = item.on(.focus) { [self] _ in
+			_ = item.addEventListener(.focus) { [self] _ in
 				self.currentFocusIndex = index
 			}
 		}
 
 		// Click outside to close
-		_ = document.on(.click) { [self] (event: CallbackString) in
+		_ = document.addEventListener(.click) { [self] (event: CallbackString) in
 			self.handleClickOutside(event)
 		}
 
 		// Keyboard navigation on trigger
-		_ = trigger.on(.keydown) { [self] (event: CallbackString) in
+		_ = trigger.addEventListener(.keydown) { [self] (event: CallbackString) in
 			self.handleTriggerKeydown(event)
 		}
 	}

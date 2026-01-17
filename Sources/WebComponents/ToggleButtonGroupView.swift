@@ -126,7 +126,7 @@ public class ToggleButtonGroupHydration: @unchecked Sendable {
 			let buttons = group.querySelectorAll(".toggle-button")
 
 			for button in buttons {
-				_ = button.on(.click) { _ in
+				_ = button.addEventListener(.click) { _ in
 					guard let ariaPressed = button.getAttribute("aria-pressed"),
 						  !stringEquals(button.getAttribute("disabled") ?? "", "true") else { return }
 
@@ -161,7 +161,7 @@ public class ToggleButtonGroupHydration: @unchecked Sendable {
 				}
 
 				// Keyboard support
-				_ = button.on(.keydown) { event in
+				_ = button.addEventListener(.keydown) { event in
 					let key = event.key
 					if stringEquals(key, "Enter") || stringEquals(key, " ") {
 						event.preventDefault()

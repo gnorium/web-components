@@ -287,7 +287,7 @@ public class SearchMenuHydration: @unchecked Sendable {
 	public func hydrate() {
 		// Listen for navbar search icon click
 		if let searchTrigger = document.querySelector("[data-search-trigger=\"true\"]") {
-			_ = searchTrigger.on(.click) { [self] event in
+			_ = searchTrigger.addEventListener(.click) { [self] event in
 				event.preventDefault()
 				self.openMenu()
 			}
@@ -303,7 +303,7 @@ public class SearchMenuHydration: @unchecked Sendable {
 
 		// Close menu when clicking backdrop
 		if let backdrop = document.querySelector("[data-search-menu-backdrop=\"true\"]") {
-			_ = backdrop.on(.click) { [self] _ in
+			_ = backdrop.addEventListener(.click) { [self] _ in
 				self.closeMenu()
 			}
 		}
@@ -527,37 +527,37 @@ public class SearchMenuHydration: @unchecked Sendable {
             item.appendChild(textContent)
 
             // Add hover/active/focus event listeners for progressive styling
-            _ = item.on(.mouseenter) { _ in
+            _ = item.addEventListener(.mouseenter) { _ in
                 item.style.color(colorProgressive)
                 item.style.border(borderWidthBase, .solid, borderColorProgressive)
 				item.style.cursor(cursorBaseHover)
             }
 
-            _ = item.on(.mouseleave) { _ in
+            _ = item.addEventListener(.mouseleave) { _ in
                 item.style.color(colorSubtle)
                 item.style.border(borderWidthBase, .solid, borderColorSubtle)
 				item.style.cursor(cursorBase)
             }
 
-            _ = item.on(.mousedown) { _ in
+            _ = item.addEventListener(.mousedown) { _ in
                 item.style.color(colorProgressive)
                 item.style.border(borderWidthBase, .solid, borderColorProgressive)
 				item.style.cursor(cursorBaseHover)
             }
 
-            _ = item.on(.mouseup) { _ in
+            _ = item.addEventListener(.mouseup) { _ in
                 item.style.color(colorProgressive)
                 item.style.border(borderWidthBase, .solid, borderColorProgressive)
 				item.style.cursor(cursorBaseHover)
             }
 
-            _ = item.on(.focus) { _ in
+            _ = item.addEventListener(.focus) { _ in
                 item.style.color(colorProgressiveFocus)
                 item.style.outline(borderWidthBase, .solid, borderColorProgressiveFocus)
                 item.style.outlineOffset(px(-1))
             }
 
-            _ = item.on(.blur) { _ in
+            _ = item.addEventListener(.blur) { _ in
                 item.style.color(colorSubtle)
                 item.style.outline(.none)
             }

@@ -450,7 +450,7 @@ public enum AlertAPI {
 
             dismissBtn.style.flexShrink(0)
             
-			_ = dismissBtn.on(.click) { _ in
+			_ = dismissBtn.addEventListener(.click) { _ in
 				dismissAlert(alertEl, onDismiss: onDismiss, userInitiated: true)
 			}
 
@@ -520,7 +520,7 @@ private class AlertInstance: @unchecked Sendable {
 	private func bindEvents() {
 		guard let button = dismissButton else { return }
 
-		_ = button.on(.click) { [self] _ in
+		_ = button.addEventListener(.click) { [self] _ in
 			self.dismissAlert(userInitiated: true)
 		}
 	}

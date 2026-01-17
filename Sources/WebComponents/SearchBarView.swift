@@ -263,28 +263,28 @@ public class SearchBarHydration: @unchecked Sendable {
 
 		if isTrigger {
 			// openDialog mode: clicking opens the search dialog
-			_ = input.on(.click) { [self] _ in
+			_ = input.addEventListener(.click) { [self] _ in
 				self.openSearchDialog()
 			}
 
-			_ = button.on(.click) { [self] _ in
+			_ = button.addEventListener(.click) { [self] _ in
 				self.openSearchDialog()
 			}
 		} else {
 			// Inline search mode: normal search bar functionality
-			_ = input.on(.input) { [self] _ in
+			_ = input.addEventListener(.input) { [self] _ in
 				self.onInput()
 			}
 
-			_ = input.on(.focus) { [self] _ in
+			_ = input.addEventListener(.focus) { [self] _ in
 				self.onFocus()
 			}
 
-			_ = input.on(.keydown) { [self] key in
+			_ = input.addEventListener(.keydown) { [self] key in
 				self.onKeyDown(key: key)
 			}
 
-			_ = button.on(.click) { [self] _ in
+			_ = button.addEventListener(.click) { [self] _ in
 				self.onSearch()
 			}
 

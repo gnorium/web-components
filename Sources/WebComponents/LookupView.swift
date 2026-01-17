@@ -135,12 +135,12 @@ private class LookupInstance: @unchecked Sendable {
 		guard let input else { return }
 
 		// Input focus - open menu
-		_ = input.on(.focus) { [self] _ in
+		_ = input.addEventListener(.focus) { [self] _ in
 			self.openMenu()
 		}
 
 		// Input blur - close menu (delayed to allow item selection)
-		_ = input.on(.blur) { [self] _ in
+		_ = input.addEventListener(.blur) { [self] _ in
 			// Delay to allow click on menu item
 			_ = setTimeout(100) {
 				self.closeMenu()
@@ -148,7 +148,7 @@ private class LookupInstance: @unchecked Sendable {
 		}
 
 		// Input typing
-		_ = input.on(.input) { [self] _ in
+		_ = input.addEventListener(.input) { [self] _ in
 			self.openMenu()
 			// Dispatch input event for filtering
 			let event = CustomEvent(type: "lookup-input", detail: input.value)
@@ -156,21 +156,21 @@ private class LookupInstance: @unchecked Sendable {
 		}
 
 		// Keyboard navigation
-		_ = input.on(.keydown) { [self] (event: CallbackString) in
+		_ = input.addEventListener(.keydown) { [self] (event: CallbackString) in
 			self.handleInputKeydown(event)
 		}
 
 		// Menu item clicks
 		for (index, item) in menuItems.enumerated() {
-			_ = item.on(.click) { [self] _ in
+			_ = item.addEventListener(.click) { [self] _ in
 				self.selectMenuItem(item)
 			}
 
-			_ = item.on(.keydown) { [self] (event: CallbackString) in
+			_ = item.addEventListener(.keydown) { [self] (event: CallbackString) in
 				self.handleMenuItemKeydown(event, index: index)
 			}
 
-			_ = item.on(.focus) { [self] _ in
+			_ = item.addEventListener(.focus) { [self] _ in
 				self.currentFocusIndex = index
 			}
 		}

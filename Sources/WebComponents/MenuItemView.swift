@@ -545,7 +545,7 @@ private class MenuItemInstance: @unchecked Sendable {
 
 	private func bindEvents() {
 		// Click event
-		_ = menuItem.on(.click) { [self] event in
+		_ = menuItem.addEventListener(.click) { [self] event in
 			// Check if disabled
 			if let disabled = self.menuItem.getAttribute("aria-disabled"), stringEquals(disabled, "true") {
 				event.preventDefault()
@@ -561,7 +561,7 @@ private class MenuItemInstance: @unchecked Sendable {
 		}
 
 		// Mouse enter for highlighting
-		_ = menuItem.on(.mouseenter) { [self] _ in
+		_ = menuItem.addEventListener(.mouseenter) { [self] _ in
 			self.menuItem.dataset["highlighted"] = "true"
 
 			let event = CustomEvent(type: "menu-item-highlight", detail: "")
@@ -569,17 +569,17 @@ private class MenuItemInstance: @unchecked Sendable {
 		}
 
 		// Mouse leave
-		_ = menuItem.on(.mouseleave) { [self] _ in
+		_ = menuItem.addEventListener(.mouseleave) { [self] _ in
 			self.menuItem.dataset["highlighted"] = "false"
 		}
 
 		// Mouse down for active state
-		_ = menuItem.on(.mousedown) { [self] _ in
+		_ = menuItem.addEventListener(.mousedown) { [self] _ in
 			self.menuItem.dataset["active"] = "true"
 		}
 
 		// Mouse up
-		_ = menuItem.on(.mouseup) { [self] _ in
+		_ = menuItem.addEventListener(.mouseup) { [self] _ in
 			self.menuItem.dataset["active"] = "false"
 		}
 	}

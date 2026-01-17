@@ -213,31 +213,31 @@ private class TooltipInstance: @unchecked Sendable {
 		guard content != nil else { return }
 
 		// Hover for desktop
-		_ = trigger.on(.mouseenter) { [self] _ in
+		_ = trigger.addEventListener(.mouseenter) { [self] _ in
 			self.showTooltip()
 		}
 
-		_ = trigger.on(.mouseleave) { [self] _ in
+		_ = trigger.addEventListener(.mouseleave) { [self] _ in
 			self.hideTooltip()
 		}
 
 		// Focus for keyboard navigation
-		_ = trigger.on(.focus) { [self] _ in
+		_ = trigger.addEventListener(.focus) { [self] _ in
 			self.showTooltip()
 		}
 
-		_ = trigger.on(.blur) { [self] _ in
+		_ = trigger.addEventListener(.blur) { [self] _ in
 			self.hideTooltip()
 		}
 
 		// Long press for touch devices
-		_ = trigger.on(.touchstart) { [self] _ in
+		_ = trigger.addEventListener(.touchstart) { [self] _ in
 			self.touchTimer = setTimeout(500) {
 				self.showTooltip()
 			}
 		}
 
-		_ = trigger.on(.touchend) { [self] _ in
+		_ = trigger.addEventListener(.touchend) { [self] _ in
 			if let timer = self.touchTimer {
 				clearTimeout(timer)
 				self.touchTimer = nil
@@ -245,7 +245,7 @@ private class TooltipInstance: @unchecked Sendable {
 			self.hideTooltip()
 		}
 
-		_ = trigger.on(.touchmove) { [self] _ in
+		_ = trigger.addEventListener(.touchmove) { [self] _ in
 			if let timer = self.touchTimer {
 				clearTimeout(timer)
 				self.touchTimer = nil
@@ -253,7 +253,7 @@ private class TooltipInstance: @unchecked Sendable {
 		}
 
 		// Keyboard: Escape to dismiss
-		_ = document.on(.keydown) { [self] (event: CallbackString) in
+		_ = document.addEventListener(.keydown) { [self] (event: CallbackString) in
 			event.withCString { eventPtr in
 				let key = String(cString: eventPtr)
 				if stringEquals(key, "Escape") && self.isVisible {

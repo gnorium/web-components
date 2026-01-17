@@ -294,24 +294,24 @@ private class DropdownInstance: @unchecked Sendable {
 		guard let trigger, let searchInput else { return }
 
 		// Toggle dropdown on trigger click
-		_ = trigger.on(.click) { [self] _ in
+		_ = trigger.addEventListener(.click) { [self] _ in
 			self.toggleDropdown()
 		}
 
 		// Search functionality
-		_ = searchInput.on(.input) { [self] _ in
+		_ = searchInput.addEventListener(.input) { [self] _ in
 			self.filterOptions()
 		}
 
 		// Option click handlers
 		for option in allOptions {
-			_ = option.on(.click) { [self] _ in
+			_ = option.addEventListener(.click) { [self] _ in
 				self.selectOption(option)
 			}
 		}
 
 		// Click outside handler
-		_ = document.on(.click) { [self] event in
+		_ = document.addEventListener(.click) { [self] event in
 			guard self.isOpen,
 				  let target = event.target,
 				  let container = self.container else { return }

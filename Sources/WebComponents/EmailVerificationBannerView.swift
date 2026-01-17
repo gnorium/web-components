@@ -127,14 +127,14 @@ public class EmailVerificationBannerHydration: @unchecked Sendable {
 	nonisolated private func bindEvents() {
 		// Handle resend button
 		if let resend = resendButton {
-			_ = resend.on(.click) { [self] _ in
+			_ = resend.addEventListener(.click) { [self] _ in
 				self.handleResendEmail()
 			}
 		}
 
 		// Handle dismiss button
 		if let dismiss = dismissButton {
-			_ = dismiss.on(.click) { [self] _ in
+			_ = dismiss.addEventListener(.click) { [self] _ in
 				self.handleDismiss()
 			}
 		}

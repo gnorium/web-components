@@ -265,12 +265,12 @@ private class TabsInstance: @unchecked Sendable {
 
 	private func bindEvents() {
 		for button in tabButtons {
-			_ = button.on(.click) { [self] _ in
+			_ = button.addEventListener(.click) { [self] _ in
 				guard let tabName = button.getAttribute(data("tab-name")) else { return }
 				self.selectTab(tabName, setFocus: false)
 			}
 
-			_ = button.on(.keydown) { [self] (event: CallbackString) in
+			_ = button.addEventListener(.keydown) { [self] (event: CallbackString) in
 				event.withCString { eventPtr in
 					let key = String(cString: eventPtr)
 					self.handleKeydown(key: key, currentButton: button)
@@ -279,19 +279,19 @@ private class TabsInstance: @unchecked Sendable {
 		}
 
 		if let prevBtn = scrollPrevButton {
-			_ = prevBtn.on(.click) { [self] _ in
+			_ = prevBtn.addEventListener(.click) { [self] _ in
 				self.scrollTabs(direction: -1)
 			}
 		}
 
 		if let nextBtn = scrollNextButton {
-			_ = nextBtn.on(.click) { [self] _ in
+			_ = nextBtn.addEventListener(.click) { [self] _ in
 				self.scrollTabs(direction: 1)
 			}
 		}
 
 		if let list = tabsList {
-			_ = list.on(.scroll) { [self] _ in
+			_ = list.addEventListener(.scroll) { [self] _ in
 				self.updateScrollButtons()
 			}
 		}

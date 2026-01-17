@@ -171,19 +171,19 @@ private class MultiselectLookupInstance: @unchecked Sendable {
 		guard let input else { return }
 
 		// Input focus - open menu
-		_ = input.on(.focus) { [self] _ in
+		_ = input.addEventListener(.focus) { [self] _ in
 			self.openMenu()
 		}
 
 		// Input blur - close menu (delayed to allow item selection)
-		_ = input.on(.blur) { [self] _ in
+		_ = input.addEventListener(.blur) { [self] _ in
 			_ = setTimeout(100) {
 				self.closeMenu()
 			}
 		}
 
 		// Input typing
-		_ = input.on(.input) { [self] _ in
+		_ = input.addEventListener(.input) { [self] _ in
 			self.openMenu()
 			// Dispatch input event for filtering
 			let event = CustomEvent(type: "multiselect-lookup-input", detail: input.value)
@@ -191,13 +191,13 @@ private class MultiselectLookupInstance: @unchecked Sendable {
 		}
 
 		// Keyboard navigation on input
-		_ = input.on(.keydown) { [self] (event: CallbackString) in
+		_ = input.addEventListener(.keydown) { [self] (event: CallbackString) in
 			self.handleInputKeydown(event)
 		}
 
 		// Listen for menu-item-select events from MenuView
 		if let menu = menu {
-			_ = menu.on("menu-item-select") { [self] event in
+			_ = menu.addEventListener("menu-item-select") { [self] event in
 				let value = event.detail
 				self.toggleSelection(value)
 			}
@@ -206,7 +206,7 @@ private class MultiselectLookupInstance: @unchecked Sendable {
 		// Chip removal
 		for chip in chips {
 			if let removeButton = chip.querySelector(".chip-button") {
-				_ = removeButton.on(.click) { [self] _ in
+				_ = removeButton.addEventListener(.click) { [self] _ in
 					self.removeChip(chip)
 				}
 			}

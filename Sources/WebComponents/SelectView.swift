@@ -226,7 +226,7 @@ private class SelectInstance: @unchecked Sendable {
 		guard let handle else { return }
 
 		// Handle click - toggle menu
-		_ = handle.on(.click) { [self] _ in
+		_ = handle.addEventListener(.click) { [self] _ in
 			guard let ariaDisabled = handle.getAttribute(.ariaDisabled),
 				  !stringEquals(ariaDisabled, "true") else { return }
 
@@ -238,12 +238,12 @@ private class SelectInstance: @unchecked Sendable {
 		}
 
 		// Handle keyboard navigation
-		_ = handle.on(.keydown) { [self] (event: CallbackString) in
+		_ = handle.addEventListener(.keydown) { [self] (event: CallbackString) in
 			self.handleKeydown(event)
 		}
 
 		// Handle blur - close menu (delayed to allow item selection)
-		_ = handle.on(.blur) { [self] _ in
+		_ = handle.addEventListener(.blur) { [self] _ in
 			_ = setTimeout(100) {
 				self.closeMenu()
 			}
@@ -251,7 +251,7 @@ private class SelectInstance: @unchecked Sendable {
 
 		// Listen for menu-item-select events from MenuView
 		if let menu = menu {
-			_ = menu.on("menu-item-select") { [self] event in
+			_ = menu.addEventListener("menu-item-select") { [self] event in
 				let value = event.detail
 				self.selectValue(value)
 			}

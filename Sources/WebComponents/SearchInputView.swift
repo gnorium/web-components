@@ -363,24 +363,24 @@ private class SearchInputInstance: @unchecked Sendable {
 
 	private func bindEvents() {
 		if let input = inputElement {
-			_ = input.on(.input) { [self] _ in
+			_ = input.addEventListener(.input) { [self] _ in
 				self.handleInput()
 			}
 
-			_ = input.on(.keydown) { [self] event in
+			_ = input.addEventListener(.keydown) { [self] event in
 				let key = event.key
 				self.handleKeydown(key: key, event: event)
 			}
 		}
 
 		if let clear = clearButton {
-			_ = clear.on(.click) { [self] _ in
+			_ = clear.addEventListener(.click) { [self] _ in
 				self.clearInput()
 			}
 		}
 
 		if let submit = submitButton {
-			_ = submit.on(.click) { [self] _ in
+			_ = submit.addEventListener(.click) { [self] _ in
 				self.handleSubmit()
 			}
 		}

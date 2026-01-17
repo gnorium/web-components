@@ -257,12 +257,12 @@ private class ToggleButtonInstance: @unchecked Sendable {
 
 	private func bindEvents() {
 		// Click event
-		_ = button.on(.click) { [self] _ in
+		_ = button.addEventListener(.click) { [self] _ in
 			self.toggle()
 		}
 
 		// Keyboard events (Enter and Space)
-		_ = button.on(.keydown) { [self] (event: CallbackString) in
+		_ = button.addEventListener(.keydown) { [self] (event: CallbackString) in
 			event.withCString { eventPtr in
 				let key = String(cString: eventPtr)
 				if stringEquals(key, "Enter") || stringEquals(key, " ") {

@@ -404,14 +404,14 @@ private class PopoverInstance: @unchecked Sendable {
 	private func bindEvents() {
 		// Close button
 		if let closeBtn = closeButton {
-			_ = closeBtn.on(.click) { [self] _ in
+			_ = closeBtn.addEventListener(.click) { [self] _ in
 				self.closePopover()
 			}
 		}
 
 		// Primary action button
 		if let primBtn = primaryButton {
-			_ = primBtn.on(.click) { [self] _ in
+			_ = primBtn.addEventListener(.click) { [self] _ in
 				let event = CustomEvent(type: "popover-primary", detail: "")
 				self.popover.dispatchEvent(event)
 			}
@@ -419,19 +419,19 @@ private class PopoverInstance: @unchecked Sendable {
 
 		// Default action button
 		if let defBtn = defaultButton {
-			_ = defBtn.on(.click) { [self] _ in
+			_ = defBtn.addEventListener(.click) { [self] _ in
 				let event = CustomEvent(type: "popover-default", detail: "")
 				self.popover.dispatchEvent(event)
 			}
 		}
 
 		// Keyboard navigation
-		_ = popover.on(.keydown) { [self] (event: CallbackString) in
+		_ = popover.addEventListener(.keydown) { [self] (event: CallbackString) in
 			self.handleKeydown(event)
 		}
 
 		// Click outside to close
-		_ = document.on(.click) { [self] event in
+		_ = document.addEventListener(.click) { [self] event in
 			guard let target = event.target else { return }
 
 			// Check if click is outside popover
@@ -441,7 +441,7 @@ private class PopoverInstance: @unchecked Sendable {
 		}
 
 		// Focus trap - Tab key handling
-		_ = popover.on(.keydown) { [self] (event: CallbackString) in
+		_ = popover.addEventListener(.keydown) { [self] (event: CallbackString) in
 			event.withCString { eventPtr in
 				let key = String(cString: eventPtr)
 

@@ -264,12 +264,12 @@ private class TextAreaInstance: @unchecked Sendable {
 		guard let input else { return }
 
 		// Resize on input
-		_ = input.on(.input) { [self] _ in
+		_ = input.addEventListener(.input) { [self] _ in
 			self.resizeToFit()
 		}
 
 		// Resize on window resize (in case of layout changes)
-		window.on(.resize) { [self] _ in
+		window.addEventListener(.resize) { [self] _ in
 			self.resizeToFit()
 		}
 	}

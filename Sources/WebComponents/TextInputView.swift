@@ -303,12 +303,12 @@ private class TextInputInstance: @unchecked Sendable {
 		guard let input = input, let clearButton = clearButton else { return }
 
 		// Show/hide clear button based on input value
-		_ = input.on(.input) { [self] _ in
+		_ = input.addEventListener(.input) { [self] _ in
 			self.updateClearButtonVisibility()
 		}
 
 		// Clear input when clear button is clicked
-		_ = clearButton.on(.click) { [self] _ in
+		_ = clearButton.addEventListener(.click) { [self] _ in
 			guard let input = self.input else { return }
 			input.value = ""
 			self.updateClearButtonVisibility()
@@ -323,7 +323,7 @@ private class TextInputInstance: @unchecked Sendable {
 		}
 
 		// Prevent clear button from taking focus away from input
-		_ = clearButton.on(.mousedown) { event in
+		_ = clearButton.addEventListener(.mousedown) { event in
 			event.preventDefault()
 		}
 	}

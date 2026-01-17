@@ -229,7 +229,7 @@ private class ToggleSwitchInstance: @unchecked Sendable {
 		guard let input else { return }
 
 		// Dispatch custom change event when toggle state changes
-		_ = input.on(.change) { [self] _ in
+		_ = input.addEventListener(.change) { [self] _ in
 			let isChecked = input.hasAttribute("checked")
 			let event = CustomEvent(type: "toggle-switch-change", detail: isChecked ? "true" : "false")
 			self.toggleSwitch.dispatchEvent(event)

@@ -450,7 +450,7 @@ public class DialogHydration: @unchecked Sendable {
 		let triggers = document.querySelectorAll("[data-dialog-trigger]")
 
 		for trigger in triggers {
-			_ = trigger.on(.click) { event in
+			_ = trigger.addEventListener(.click) { event in
 				// Find the closest element with the data attribute (in case click target is a child span/icon)
 				guard let targetElement = event.target?.closest("[data-dialog-trigger]"),
 				      let dialogIdStr = targetElement.dataset["dialogTrigger"],
@@ -484,14 +484,14 @@ private class DialogInstance: @unchecked Sendable {
 	private func bindEvents() {
 		// Close button
 		if let closeButton = closeButton {
-			_ = closeButton.on(.click) { [self] event in
+			_ = closeButton.addEventListener(.click) { [self] event in
 				event.stopPropagation()
 				self.closeDialog()
 			}
 		}
 
 		// Backdrop click to close
-		_ = dialog.on(.click) { [self] event in
+		_ = dialog.addEventListener(.click) { [self] event in
 			// Only close if clicking directly on backdrop (not on dialog shell)
 			if let target = event.target, stringEquals(target.className, "dialog-view dialog-backdrop") || stringContains(target.className, "dialog-backdrop") {
 				self.closeDialog()
@@ -500,13 +500,13 @@ private class DialogInstance: @unchecked Sendable {
 
 		// Prevent clicks inside dialog shell from closing
 		if let shell = dialog.querySelector(".dialog-shell") {
-			_ = shell.on(.click) { event in
+			_ = shell.addEventListener(.click) { event in
 				event.stopPropagation()
 			}
 		}
 
 		// ESC key to close
-		_ = document.on(.keydown) { [self] event in
+		_ = document.addEventListener(.keydown) { [self] event in
 			let key = event.key
 			if stringEquals(key, "Escape") {
 				if let isOpen = self.dialog.dataset["open"], stringEquals(isOpen, "true") {
@@ -517,7 +517,7 @@ private class DialogInstance: @unchecked Sendable {
 
 		// Primary action button
 		if let primaryButton = primaryButton {
-			_ = primaryButton.on(.click) { [self] event in
+			_ = primaryButton.addEventListener(.click) { [self] event in
 				event.stopPropagation()
 				let customEvent = CustomEvent(type: "dialog-primary", detail: "")
 				self.dialog.dispatchEvent(customEvent)
@@ -526,7 +526,7 @@ private class DialogInstance: @unchecked Sendable {
 
 		// Default action button
 		if let defaultButton = defaultButton {
-			_ = defaultButton.on(.click) { [self] event in
+			_ = defaultButton.addEventListener(.click) { [self] event in
 				event.stopPropagation()
 				let customEvent = CustomEvent(type: "dialog-default", detail: "")
 				self.dialog.dispatchEvent(customEvent)

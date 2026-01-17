@@ -125,7 +125,7 @@ public class ContrastToggleHydration: @unchecked Sendable {
 		guard let btn = button else {
 			return
 		}
-		_ = btn.on(.click) { [self] _ in
+		_ = btn.addEventListener(.click) { [self] _ in
 			self.toggle()
 		}
 	}

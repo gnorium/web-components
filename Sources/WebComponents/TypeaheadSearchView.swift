@@ -234,49 +234,49 @@ private class TypeaheadSearchInstance: @unchecked Sendable {
 
 	private func bindEvents() {
 		if let input = inputElement {
-			_ = input.on(.input) { [self] _ in
+			_ = input.addEventListener(.input) { [self] _ in
 				self.handleInput()
 			}
 		}
 
 		if let view = inputViewElement {
             // Listen for submit-click from SearchInputInstance
-            _ = view.on("submit-click") { [self] _ in
+            _ = view.addEventListener("submit-click") { [self] _ in
                 self.handleSubmit()
             }
 
 			// Listen for arrow navigation from SearchInputInstance
-			_ = view.on("arrow-down") { [self] _ in
+			_ = view.addEventListener("arrow-down") { [self] _ in
 				console.log("TypeaheadSearchView: Received arrow-down event")
 				self.handleKeydown(key: "ArrowDown")
 			}
 
-			_ = view.on("arrow-up") { [self] _ in
+			_ = view.addEventListener("arrow-up") { [self] _ in
 				console.log("TypeaheadSearchView: Received arrow-up event")
 				self.handleKeydown(key: "ArrowUp")
 			}
 		}
 
 		for (index, item) in menuItems.enumerated() {
-			_ = item.on(.click) { [self] _ in
+			_ = item.addEventListener(.click) { [self] _ in
 				self.selectResult(index: index)
 			}
 
-			_ = item.on(.mouseenter) { [self] _ in
+			_ = item.addEventListener(.mouseenter) { [self] _ in
 				self.selectedIndex = index
 				self.updateMenuItemStates()
 			}
 		}
 
 		if let form = formElement {
-			_ = form.on(.submit) { [self] event in
+			_ = form.addEventListener(.submit) { [self] event in
 				event.preventDefault()
 				self.handleSubmit()
 			}
 		}
 
 		// Listen for menu updates from manual DOM manipulation (e.g. via SearchDialogView)
-		_ = typeaheadSearchElement.on("typeahead-menu-updated") { [self] _ in
+		_ = typeaheadSearchElement.addEventListener("typeahead-menu-updated") { [self] _ in
 			self.handleMenuUpdate()
 		}
 	}
@@ -287,11 +287,11 @@ private class TypeaheadSearchInstance: @unchecked Sendable {
 
 		// Re-bind events for new items
 		for (index, item) in menuItems.enumerated() {
-			_ = item.on(.click) { [self] _ in
+			_ = item.addEventListener(.click) { [self] _ in
 				self.selectResult(index: index)
 			}
 
-			_ = item.on(.mouseenter) { [self] _ in
+			_ = item.addEventListener(.mouseenter) { [self] _ in
 				self.selectedIndex = index
 				self.updateMenuItemStates()
 			}
