@@ -102,6 +102,7 @@ public struct CheckboxView: HTML {
 		height(minSizeInputBinary)
 		margin(0)
 		opacity(0)
+		zIndex(1)
 		if disabled {
 			cursor(cursorBaseDisabled)
 		} else {
@@ -161,6 +162,7 @@ public struct CheckboxView: HTML {
 	private func checkboxIconCSS(_ status: ValidationStatus, _ disabled: Bool, _ checked: Bool, _ indeterminate: Bool) -> [CSS] {
 		display(.inlineBlock)
 		position(.relative)
+		pointerEvents(.none)
 		width(minSizeInputBinary)
 		height(minSizeInputBinary)
 		if disabled {
@@ -175,7 +177,7 @@ public struct CheckboxView: HTML {
 		} else {
 			border(borderWidthBase, .solid, borderColorInputBinary)
 		}
-		borderRadius(borderRadiusBase)
+		borderRadius(borderRadiusMinimal)
 		transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
 		flexShrink(0)
 

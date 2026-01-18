@@ -21,6 +21,7 @@ public struct ButtonView: HTML {
 	let onClick: String?
 	let type: ButtonType
 	let fullWidth: Bool
+	let `class`: String
 
 	/// Button type attribute
 	public enum ButtonType: String, Sendable {
@@ -68,7 +69,7 @@ public struct ButtonView: HTML {
 	}
 
 	// MARK: - Initialization
-
+    
 	/// Create a standard button with text label
 	public init(
 		label: String,
@@ -79,7 +80,8 @@ public struct ButtonView: HTML {
 		type: ButtonType = .button,
 		ariaLabel: String? = nil,
 		onClick: String? = nil,
-		fullWidth: Bool = false
+		fullWidth: Bool = false,
+		class: String = ""
 	) {
 		self.label = label
 		self.action = action
@@ -92,6 +94,7 @@ public struct ButtonView: HTML {
 		self.ariaLabel = ariaLabel
 		self.onClick = onClick
 		self.fullWidth = fullWidth
+		self.`class` = `class`
 	}
 
 	/// Create a button with icon and text label
@@ -105,7 +108,8 @@ public struct ButtonView: HTML {
 		type: ButtonType = .button,
 		ariaLabel: String? = nil,
 		onClick: String? = nil,
-		fullWidth: Bool = false
+		fullWidth: Bool = false,
+		class: String = ""
 	) {
 		self.label = label
 		self.action = action
@@ -118,6 +122,7 @@ public struct ButtonView: HTML {
 		self.ariaLabel = ariaLabel
 		self.onClick = onClick
 		self.fullWidth = fullWidth
+		self.`class` = `class`
 	}
 
 	/// Create an icon-only button
@@ -131,7 +136,8 @@ public struct ButtonView: HTML {
 		type: ButtonType = .button,
 		ariaLabel: String,
 		onClick: String? = nil,
-		fullWidth: Bool = false
+		fullWidth: Bool = false,
+		class: String = ""
 	) {
 		self.label = ""
 		self.action = action
@@ -144,6 +150,7 @@ public struct ButtonView: HTML {
 		self.ariaLabel = ariaLabel
 		self.onClick = onClick
 		self.fullWidth = fullWidth
+		self.`class` = `class`
 	}
 
 	@CSSBuilder
@@ -279,7 +286,7 @@ public struct ButtonView: HTML {
 				span { label }
 			}
 		}
-		.class(classes.joined(separator: " "))
+		.class(`class`.isEmpty ? "button-view" : "button-view \(`class`)")
 		.type(type == .submit ? .submit : type == .reset ? .reset : .button)
 		.disabled(disabled)
 		.style {

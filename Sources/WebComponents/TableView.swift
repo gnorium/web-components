@@ -166,223 +166,6 @@ public struct TableView: HTML {
 		self.emptyStateContent = emptyState()
 	}
 
-	@CSSBuilder
-	private func tableViewCSS() -> [CSS] {
-		width(perc(100))
-	}
-
-	@CSSBuilder
-	private func tableHeaderCSS() -> [CSS] {
-		display(.flex)
-		alignItems(.center)
-		justifyContent(.spaceBetween)
-		gap(spacing12)
-		padding(spacing12)
-		marginBottom(spacing8)
-	}
-
-	@CSSBuilder
-	private func tableHeaderTitleCSS() -> [CSS] {
-		fontFamily(typographyFontSans)
-		fontSize(fontSizeLarge18)
-		fontWeight(fontWeightBold)
-		lineHeight(lineHeightMedium26)
-		color(colorBase)
-		margin(0)
-	}
-
-	@CSSBuilder
-	private func tableWrapperCSS() -> [CSS] {
-		overflowX(.auto)
-		border(borderWidthBase, .solid, borderColorSubtle)
-		borderRadius(borderRadiusBase)
-	}
-
-	@CSSBuilder
-	private func tableTableCSS(_ showVerticalBorders: Bool) -> [CSS] {
-		width(perc(100))
-		borderCollapse(.collapse)
-		fontFamily(typographyFontSans)
-		fontSize(fontSizeMedium16)
-		lineHeight(lineHeightMedium26)
-		color(colorBase)
-
-		if showVerticalBorders {
-			selector(" td, th") {
-				borderRight(borderWidthBase, .solid, borderColorSubtle)
-			}
-
-			selector(" td:last-child, th:last-child") {
-				borderRight(.none)
-			}
-		}
-	}
-
-	@CSSBuilder
-	private func tableCaptionCSS(_ hideCaption: Bool) -> [CSS] {
-		fontFamily(typographyFontSans)
-		fontSize(fontSizeMedium16)
-		fontWeight(fontWeightBold)
-		lineHeight(lineHeightMedium26)
-		color(colorBase)
-		textAlign(.start)
-		padding(spacing12)
-
-		if hideCaption {
-			position(.absolute)
-			width(px(1))
-			height(px(1))
-			margin(px(-1))
-			padding(0)
-			overflow(.hidden)
-			clip(rect(0, 0, 0, 0))
-			whiteSpace(.nowrap)
-			borderWidth(0)
-		}
-	}
-
-	@CSSBuilder
-	private func tableTheadCSS() -> [CSS] {
-		backgroundColor(backgroundColorNeutralSubtle)
-		borderBottom(borderWidthBase, .solid, borderColorSubtle)
-	}
-
-	@CSSBuilder
-	private func tableThCSS(_ align: Column.Alignment) -> [CSS] {
-		padding(spacing12)
-		fontFamily(typographyFontSans)
-		fontSize(fontSizeSmall14)
-		fontWeight(fontWeightBold)
-		lineHeight(lineHeightSmall22)
-		color(colorEmphasized)
-
-		switch align {
-		case .start:
-			textAlign(.start)
-		case .center:
-			textAlign(.center)
-		case .end:
-			textAlign(.end)
-		case .number:
-			textAlign(.right)
-		}
-	}
-
-	@CSSBuilder
-	private func tableSortButtonCSS() -> [CSS] {
-		display(.flex)
-		alignItems(.center)
-		gap(spacing4)
-		width(perc(100))
-		padding(0)
-		backgroundColor(backgroundColorTransparent)
-		border(.none)
-		fontFamily(.inherit)
-		fontSize(.inherit)
-		fontWeight(.inherit)
-		color(.inherit)
-		textAlign(.inherit)
-		textTransform(.inherit)
-		cursor(cursorBase)
-		transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-
-		pseudoClass(.hover) {
-			color(colorProgressive).important()
-		}
-
-		pseudoClass(.active) {
-			color(colorProgressiveActive).important()
-		}
-	}
-
-	@CSSBuilder
-	private func tableSortIconCSS() -> [CSS] {
-		display(.inlineFlex)
-		width(sizeIconSmall)
-		height(sizeIconSmall)
-		fontSize(fontSizeXSmall12)
-	}
-
-	@CSSBuilder
-	private func tableTbodyCSS() -> [CSS] {
-		selector("tr") {
-			borderBottom(borderWidthBase, .solid, borderColorSubtle)
-		}
-
-		selector("tr:last-child") {
-			borderBottom(.none)
-		}
-
-		selector("tr:hover") {
-			backgroundColor(backgroundColorInteractiveSubtleHover).important()
-		}
-	}
-
-	@CSSBuilder
-	private func tableTdCSS(_ align: Column.Alignment) -> [CSS] {
-		padding(spacing12)
-
-		switch align {
-		case .start:
-			textAlign(.start)
-		case .center:
-			textAlign(.center)
-		case .end:
-			textAlign(.end)
-		case .number:
-			textAlign(.right)
-		}
-	}
-
-	@CSSBuilder
-	private func tableTfootCSS() -> [CSS] {
-		backgroundColor(backgroundColorNeutralSubtle)
-		borderTop(borderWidthBase, .solid, borderColorSubtle)
-		fontWeight(fontWeightBold)
-	}
-
-	@CSSBuilder
-	private func tableEmptyStateCSS() -> [CSS] {
-		padding(spacing48)
-		textAlign(.center)
-		color(colorSubtle)
-		fontFamily(typographyFontSans)
-		fontSize(fontSizeMedium16)
-		lineHeight(lineHeightMedium26)
-	}
-
-	@CSSBuilder
-	private func tableFooterCSS() -> [CSS] {
-		padding(spacing12)
-		marginTop(spacing8)
-	}
-
-	@CSSBuilder
-	private func tablePaginationCSS() -> [CSS] {
-		display(.flex)
-		alignItems(.center)
-		justifyContent(.spaceBetween)
-		gap(spacing12)
-		padding(spacing12)
-		borderTop(borderWidthBase, .solid, borderColorSubtle)
-		flexWrap(.wrap)
-	}
-
-	@CSSBuilder
-	private func paginationInfoCSS() -> [CSS] {
-		fontFamily(typographyFontSans)
-		fontSize(fontSizeSmall14)
-		lineHeight(lineHeightSmall22)
-		color(colorSubtle)
-	}
-
-	@CSSBuilder
-	private func paginationControlsCSS() -> [CSS] {
-		display(.flex)
-		alignItems(.center)
-		gap(spacing8)
-	}
-
 	public func render(indent: Int = 0) -> String {
 		let hasCustomHeader = !headerContent.isEmpty
 		let hasCustomThead = !theadContent.isEmpty
@@ -702,6 +485,223 @@ public struct TableView: HTML {
 		}
 		.render(indent: indent)
 	}
+
+    @CSSBuilder
+	private func tableViewCSS() -> [CSS] {
+		width(perc(100))
+	}
+
+	@CSSBuilder
+	private func tableHeaderCSS() -> [CSS] {
+		display(.flex)
+		alignItems(.center)
+		justifyContent(.spaceBetween)
+		gap(spacing12)
+		padding(spacing12)
+		marginBottom(spacing8)
+	}
+
+	@CSSBuilder
+	private func tableHeaderTitleCSS() -> [CSS] {
+		fontFamily(typographyFontSans)
+		fontSize(fontSizeLarge18)
+		fontWeight(fontWeightBold)
+		lineHeight(lineHeightMedium26)
+		color(colorBase)
+		margin(0)
+	}
+
+	@CSSBuilder
+	private func tableWrapperCSS() -> [CSS] {
+		overflowX(.auto)
+		border(borderWidthBase, .solid, borderColorSubtle)
+		borderRadius(borderRadiusBase)
+	}
+
+	@CSSBuilder
+	private func tableTableCSS(_ showVerticalBorders: Bool) -> [CSS] {
+		width(perc(100))
+		borderCollapse(.collapse)
+		fontFamily(typographyFontSans)
+		fontSize(fontSizeMedium16)
+		lineHeight(lineHeightMedium26)
+		color(colorBase)
+
+		if showVerticalBorders {
+			selector(" td, th") {
+				borderRight(borderWidthBase, .solid, borderColorSubtle)
+			}
+
+			selector(" td:last-child, th:last-child") {
+				borderRight(.none)
+			}
+		}
+	}
+
+	@CSSBuilder
+	private func tableCaptionCSS(_ hideCaption: Bool) -> [CSS] {
+		fontFamily(typographyFontSans)
+		fontSize(fontSizeMedium16)
+		fontWeight(fontWeightBold)
+		lineHeight(lineHeightMedium26)
+		color(colorBase)
+		textAlign(.start)
+		padding(spacing12)
+
+		if hideCaption {
+			position(.absolute)
+			width(px(1))
+			height(px(1))
+			margin(px(-1))
+			padding(0)
+			overflow(.hidden)
+			clip(rect(0, 0, 0, 0))
+			whiteSpace(.nowrap)
+			borderWidth(0)
+		}
+	}
+
+	@CSSBuilder
+	private func tableTheadCSS() -> [CSS] {
+		backgroundColor(backgroundColorNeutralSubtle)
+		borderBottom(borderWidthBase, .solid, borderColorSubtle)
+	}
+
+	@CSSBuilder
+	private func tableThCSS(_ align: Column.Alignment) -> [CSS] {
+		padding(spacing12)
+		fontFamily(typographyFontSans)
+		fontSize(fontSizeSmall14)
+		fontWeight(fontWeightBold)
+		lineHeight(lineHeightSmall22)
+		color(colorEmphasized)
+
+		switch align {
+		case .start:
+			textAlign(.start)
+		case .center:
+			textAlign(.center)
+		case .end:
+			textAlign(.end)
+		case .number:
+			textAlign(.right)
+		}
+	}
+
+	@CSSBuilder
+	private func tableSortButtonCSS() -> [CSS] {
+		display(.flex)
+		alignItems(.center)
+		gap(spacing4)
+		width(perc(100))
+		padding(0)
+		backgroundColor(backgroundColorTransparent)
+		border(.none)
+		fontFamily(.inherit)
+		fontSize(.inherit)
+		fontWeight(.inherit)
+		color(.inherit)
+		textAlign(.inherit)
+		textTransform(.inherit)
+		cursor(cursorBase)
+		transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+
+		pseudoClass(.hover) {
+			color(colorProgressive).important()
+		}
+
+		pseudoClass(.active) {
+			color(colorProgressiveActive).important()
+		}
+	}
+
+	@CSSBuilder
+	private func tableSortIconCSS() -> [CSS] {
+		display(.inlineFlex)
+		width(sizeIconSmall)
+		height(sizeIconSmall)
+		fontSize(fontSizeXSmall12)
+	}
+
+	@CSSBuilder
+	private func tableTbodyCSS() -> [CSS] {
+		selector("tr") {
+			borderBottom(borderWidthBase, .solid, borderColorSubtle)
+		}
+
+		selector("tr:last-child") {
+			borderBottom(.none)
+		}
+
+		selector("tr:hover") {
+			backgroundColor(backgroundColorInteractiveSubtleHover).important()
+		}
+	}
+
+	@CSSBuilder
+	private func tableTdCSS(_ align: Column.Alignment) -> [CSS] {
+		padding(spacing12)
+
+		switch align {
+		case .start:
+			textAlign(.start)
+		case .center:
+			textAlign(.center)
+		case .end:
+			textAlign(.end)
+		case .number:
+			textAlign(.right)
+		}
+	}
+
+	@CSSBuilder
+	private func tableTfootCSS() -> [CSS] {
+		backgroundColor(backgroundColorNeutralSubtle)
+		borderTop(borderWidthBase, .solid, borderColorSubtle)
+		fontWeight(fontWeightBold)
+	}
+
+	@CSSBuilder
+	private func tableEmptyStateCSS() -> [CSS] {
+		padding(spacing48)
+		textAlign(.center)
+		color(colorSubtle)
+		fontFamily(typographyFontSans)
+		fontSize(fontSizeMedium16)
+		lineHeight(lineHeightMedium26)
+	}
+
+	@CSSBuilder
+	private func tableFooterCSS() -> [CSS] {
+		padding(spacing12)
+		marginTop(spacing8)
+	}
+
+	@CSSBuilder
+	private func tablePaginationCSS() -> [CSS] {
+		display(.flex)
+		alignItems(.center)
+		justifyContent(.spaceBetween)
+		gap(spacing12)
+		padding(spacing12)
+		borderTop(borderWidthBase, .solid, borderColorSubtle)
+		flexWrap(.wrap)
+	}
+
+	@CSSBuilder
+	private func paginationInfoCSS() -> [CSS] {
+		fontFamily(typographyFontSans)
+		fontSize(fontSizeSmall14)
+		lineHeight(lineHeightSmall22)
+		color(colorSubtle)
+	}
+
+	@CSSBuilder
+	private func paginationControlsCSS() -> [CSS] {
+		display(.flex)
+		alignItems(.center)
+		gap(spacing8)
+	}
 }
 
 #endif
@@ -713,169 +713,169 @@ import DesignTokens
 import WebTypes
 import EmbeddedSwiftUtilities
 
-	private class TableInstance: @unchecked Sendable {
-		private var table: Element
-		private var selectAllCheckbox: Element?
-		private var rowCheckboxes: [Element] = []
-		private var sortButtons: [Element] = []
-		private var paginationFirstBtn: Element?
-		private var paginationPrevBtn: Element?
-		private var paginationNextBtn: Element?
-		private var paginationLastBtn: Element?
-		private var selectedRows: [String] = []
-		private var currentSort: (columnId: String, direction: String)?
-		private var currentPage: Int = 1
+private class TableInstance: @unchecked Sendable {
+    private var table: Element
+    private var selectAllCheckbox: Element?
+    private var rowCheckboxes: [Element] = []
+    private var sortButtons: [Element] = []
+    private var paginationFirstBtn: Element?
+    private var paginationPrevBtn: Element?
+    private var paginationNextBtn: Element?
+    private var paginationLastBtn: Element?
+    private var selectedRows: [String] = []
+    private var currentSort: (columnId: String, direction: String)?
+    private var currentPage: Int = 1
 
-		init(table: Element) {
-			self.table = table
+    init(table: Element) {
+        self.table = table
 
-			selectAllCheckbox = table.querySelector("#select-all")
-			rowCheckboxes = Array(table.querySelectorAll("[id^='row-']"))
-			sortButtons = Array(table.querySelectorAll(".table-sort-button"))
+        selectAllCheckbox = table.querySelector("#select-all")
+        rowCheckboxes = Array(table.querySelectorAll("[id^='row-']"))
+        sortButtons = Array(table.querySelectorAll(".table-sort-button"))
 
-			paginationFirstBtn = table.querySelector(".pagination-first")
-			paginationPrevBtn = table.querySelector(".pagination-previous")
-			paginationNextBtn = table.querySelector(".pagination-next")
-			paginationLastBtn = table.querySelector(".pagination-last")
+        paginationFirstBtn = table.querySelector(".pagination-first")
+        paginationPrevBtn = table.querySelector(".pagination-previous")
+        paginationNextBtn = table.querySelector(".pagination-next")
+        paginationLastBtn = table.querySelector(".pagination-last")
 
-			bindEvents()
-		}
+        bindEvents()
+    }
 
-		private func bindEvents() {
-			// Select all checkbox
-			if let selectAll = selectAllCheckbox {
-				_ = selectAll.addEventListener(.change) { [self] _ in
-					self.toggleSelectAll()
-				}
-			}
+    private func bindEvents() {
+        // Select all checkbox
+        if let selectAll = selectAllCheckbox {
+            _ = selectAll.addEventListener(.change) { [self] _ in
+                self.toggleSelectAll()
+            }
+        }
 
-			// Row checkboxes
-			for checkbox in rowCheckboxes {
-				_ = checkbox.addEventListener(.change) { [self] _ in
-					self.updateRowSelection()
-				}
-			}
+        // Row checkboxes
+        for checkbox in rowCheckboxes {
+            _ = checkbox.addEventListener(.change) { [self] _ in
+                self.updateRowSelection()
+            }
+        }
 
-			// Sort buttons
-			for button in sortButtons {
-				_ = button.addEventListener(.click) { [self] _ in
-					guard let columnId = button.getAttribute("data-column-id") else { return }
-					self.toggleSort(columnId: columnId)
-				}
-			}
+        // Sort buttons
+        for button in sortButtons {
+            _ = button.addEventListener(.click) { [self] _ in
+                guard let columnId = button.getAttribute("data-column-id") else { return }
+                self.toggleSort(columnId: columnId)
+            }
+        }
 
-			// Pagination buttons
-			if let firstBtn = paginationFirstBtn {
-				_ = firstBtn.addEventListener(.click) { [self] _ in
-					self.goToPage(1)
-				}
-			}
+        // Pagination buttons
+        if let firstBtn = paginationFirstBtn {
+            _ = firstBtn.addEventListener(.click) { [self] _ in
+                self.goToPage(1)
+            }
+        }
 
-			if let prevBtn = paginationPrevBtn {
-				_ = prevBtn.addEventListener(.click) { [self] _ in
-					self.goToPage(self.currentPage - 1)
-				}
-			}
+        if let prevBtn = paginationPrevBtn {
+            _ = prevBtn.addEventListener(.click) { [self] _ in
+                self.goToPage(self.currentPage - 1)
+            }
+        }
 
-			if let nextBtn = paginationNextBtn {
-				_ = nextBtn.addEventListener(.click) { [self] _ in
-					self.goToPage(self.currentPage + 1)
-				}
-			}
+        if let nextBtn = paginationNextBtn {
+            _ = nextBtn.addEventListener(.click) { [self] _ in
+                self.goToPage(self.currentPage + 1)
+            }
+        }
 
-			if let lastBtn = paginationLastBtn {
-				_ = lastBtn.addEventListener(.click) { [self] _ in
-					self.goToPage(10)
-				}
-			}
-		}
+        if let lastBtn = paginationLastBtn {
+            _ = lastBtn.addEventListener(.click) { [self] _ in
+                self.goToPage(10)
+            }
+        }
+    }
 
-		private func toggleSelectAll() {
-			guard let selectAll = selectAllCheckbox else { return }
-			let isChecked = selectAll.checked
+    private func toggleSelectAll() {
+        guard let selectAll = selectAllCheckbox else { return }
+        let isChecked = selectAll.checked
 
-			for checkbox in rowCheckboxes {
-				checkbox.checked = isChecked
-			}
+        for checkbox in rowCheckboxes {
+            checkbox.checked = isChecked
+        }
 
-			updateRowSelection()
-		}
+        updateRowSelection()
+    }
 
-		private func updateRowSelection() {
-			selectedRows = []
+    private func updateRowSelection() {
+        selectedRows = []
 
-			for checkbox in rowCheckboxes {
-				if checkbox.checked {
-					if let idStr = checkbox.getAttribute(.id) {
-						if stringContains(idStr, "row-") {
-							// Manual substring to avoid String(decoding:) trigger via stringReplace, but use safe decoding
-							var rowIdBytes: [UInt8] = []
-							let bytes = Array(idStr.utf8)
-							// "row-" is 4 bytes
-							if bytes.count > 4 {
-								for i in 4..<bytes.count {
-									rowIdBytes.append(bytes[i])
-								}
-							}
-							let rowId = String(decoding: rowIdBytes, as: UTF8.self)
-							selectedRows.append(rowId)
-						}
-					}
-				}
-			}
+        for checkbox in rowCheckboxes {
+            if checkbox.checked {
+                if let idStr = checkbox.getAttribute(.id) {
+                    if stringContains(idStr, "row-") {
+                        // Manual substring to avoid String(decoding:) trigger via stringReplace, but use safe decoding
+                        var rowIdBytes: [UInt8] = []
+                        let bytes = Array(idStr.utf8)
+                        // "row-" is 4 bytes
+                        if bytes.count > 4 {
+                            for i in 4..<bytes.count {
+                                rowIdBytes.append(bytes[i])
+                            }
+                        }
+                        let rowId = String(decoding: rowIdBytes, as: UTF8.self)
+                        selectedRows.append(rowId)
+                    }
+                }
+            }
+        }
 
-			// Update select all checkbox state
-			if let selectAll = selectAllCheckbox {
-				if selectedRows.isEmpty {
-					selectAll.checked = false
-					selectAll.indeterminate = false
-				} else if selectedRows.count == rowCheckboxes.count {
-					selectAll.checked = true
-					selectAll.indeterminate = false
-				} else {
-					selectAll.checked = false
-					selectAll.indeterminate = true
-				}
-			}
+        // Update select all checkbox state
+        if let selectAll = selectAllCheckbox {
+            if selectedRows.isEmpty {
+                selectAll.checked = false
+                selectAll.indeterminate = false
+            } else if selectedRows.count == rowCheckboxes.count {
+                selectAll.checked = true
+                selectAll.indeterminate = false
+            } else {
+                selectAll.checked = false
+                selectAll.indeterminate = true
+            }
+        }
 
-			// Dispatch selection change event
-			var joinedBytes: [UInt8] = []
-			for (index, row) in selectedRows.enumerated() {
-				if index > 0 {
-					joinedBytes.append(44) // comma
-				}
-				joinedBytes.append(contentsOf: row.utf8)
-			}
-			let joinedRows = String(decoding: joinedBytes, as: UTF8.self)
-			let event = CustomEvent(type: "table-selection-change", detail: joinedRows)
-			table.dispatchEvent(event)
-		}
+        // Dispatch selection change event
+        var joinedBytes: [UInt8] = []
+        for (index, row) in selectedRows.enumerated() {
+            if index > 0 {
+                joinedBytes.append(44) // comma
+            }
+            joinedBytes.append(contentsOf: row.utf8)
+        }
+        let joinedRows = String(decoding: joinedBytes, as: UTF8.self)
+        let event = CustomEvent(type: "table-selection-change", detail: joinedRows)
+        table.dispatchEvent(event)
+    }
 
-		private func toggleSort(columnId: String) {
-			// Toggle sort direction
-			if let current = currentSort, stringEquals(current.columnId, columnId) {
-				let newDirection = stringEquals(current.direction, "asc") ? "desc" : "asc"
-				currentSort = (columnId, newDirection)
-			} else {
-				currentSort = (columnId, "asc")
-			}
+    private func toggleSort(columnId: String) {
+        // Toggle sort direction
+        if let current = currentSort, stringEquals(current.columnId, columnId) {
+            let newDirection = stringEquals(current.direction, "asc") ? "desc" : "asc"
+            currentSort = (columnId, newDirection)
+        } else {
+            currentSort = (columnId, "asc")
+        }
 
-			// Dispatch sort event
-			let sortData = "\(columnId):\(currentSort?.direction ?? "asc")"
-			let event = CustomEvent(type: "table-sort-change", detail: sortData)
-			table.dispatchEvent(event)
-		}
+        // Dispatch sort event
+        let sortData = "\(columnId):\(currentSort?.direction ?? "asc")"
+        let event = CustomEvent(type: "table-sort-change", detail: sortData)
+        table.dispatchEvent(event)
+    }
 
-		private func goToPage(_ page: Int) {
-			guard page > 0 else { return }
+    private func goToPage(_ page: Int) {
+        guard page > 0 else { return }
 
-			currentPage = page
+        currentPage = page
 
-			// Dispatch page change event
-			let event = CustomEvent(type: "table-page-change", detail: String(page))
-			table.dispatchEvent(event)
-		}
-	}
+        // Dispatch page change event
+        let event = CustomEvent(type: "table-page-change", detail: String(page))
+        table.dispatchEvent(event)
+    }
+}
 	
 public class TableHydration: @unchecked Sendable {
 	private var instances: [TableInstance] = []

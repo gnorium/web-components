@@ -255,7 +255,7 @@ public struct SearchMenuView: HTML {
 		color(colorBase)
 		backgroundColor(backgroundColorNeutralSubtle)
 		border(borderWidthBase, .solid, borderColorSubtle)
-		borderRadius(px(2))
+		borderRadius(borderRadiusMinimal)
 		boxShadow(px(0), px(1), px(1), px(0), rgba(0, 0, 0, 0.05))
 		lineHeight(1)
 	}
