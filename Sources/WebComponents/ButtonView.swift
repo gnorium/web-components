@@ -156,10 +156,15 @@ public struct ButtonView: HTML {
 	@CSSBuilder
 	private func buttonViewCSS() -> [CSS] {
 		// Base button styles
-		if fullWidth {
+		if iconOnly {
 			display(.flex)
+			justifyContent(.center)
 		} else {
-			display(.inlineFlex)
+			if fullWidth {
+				display(.flex)
+			} else {
+				display(.inlineFlex)
+			}
 		}
 		alignItems(.center)
 		justifyContent(.center)
@@ -219,8 +224,13 @@ public struct ButtonView: HTML {
 		// Disabled state
 		pseudoClass(.disabled) {
 			color(colorDisabled).important()
-			backgroundColor(backgroundColorDisabled).important()
-			borderColor(borderColorDisabled).important()
+			if weight == .quiet {
+				backgroundColor(.transparent).important()
+				borderColor(.transparent).important()
+			} else {
+				backgroundColor(backgroundColorDisabled).important()
+				borderColor(borderColorDisabled).important()
+			}
 			cursor(.default).important()
 			pointerEvents(.none).important()
 		}
@@ -347,11 +357,18 @@ public struct ButtonView: HTML {
 
 			pseudoClass(.hover, not(.disabled)) {
 				backgroundColor(backgroundColorInteractiveSubtle).important()
+				borderColor(.transparent).important()
 			}
 
 			pseudoClass(.active, not(.disabled)) {
 				backgroundColor(backgroundColorInteractiveSubtleActive).important()
 				color(colorEmphasized).important()
+				borderColor(.transparent).important()
+			}
+
+			pseudoClass(.focus) {
+				borderColor(.transparent).important()
+				boxShadow(.none).important()
 			}
 
 		// Progressive + Normal
@@ -405,11 +422,18 @@ public struct ButtonView: HTML {
 
 			pseudoClass(.hover, not(.disabled)) {
 				backgroundColor(backgroundColorProgressiveSubtle).important()
+				borderColor(.transparent).important()
 			}
 
 			pseudoClass(.active, not(.disabled)) {
 				backgroundColor(backgroundColorProgressiveSubtleHover).important()
 				color(colorProgressiveActive).important()
+				borderColor(.transparent).important()
+			}
+
+			pseudoClass(.focus) {
+				borderColor(.transparent).important()
+				boxShadow(.none).important()
 			}
 
 		// Destructive + Normal
@@ -463,11 +487,18 @@ public struct ButtonView: HTML {
 
 			pseudoClass(.hover, not(.disabled)) {
 				backgroundColor(backgroundColorDestructiveSubtle).important()
+				borderColor(.transparent).important()
 			}
 
 			pseudoClass(.active, not(.disabled)) {
 				backgroundColor(backgroundColorDestructiveSubtleHover).important()
 				color(colorDestructiveActive).important()
+				borderColor(.transparent).important()
+			}
+
+			pseudoClass(.focus) {
+				borderColor(.transparent).important()
+				boxShadow(.none).important()
 			}
 		}
 	}

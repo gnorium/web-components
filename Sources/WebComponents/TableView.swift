@@ -586,6 +586,7 @@ public struct TableView: HTML {
 		case .number:
 			textAlign(.right)
 		}
+		verticalAlign(.middle)
 	}
 
 	@CSSBuilder
@@ -652,6 +653,7 @@ public struct TableView: HTML {
 		case .number:
 			textAlign(.right)
 		}
+		verticalAlign(.middle)
 	}
 
 	@CSSBuilder

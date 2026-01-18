@@ -68,9 +68,9 @@ public struct CheckboxView: HTML {
 		} else {
 			display(.flex)
 		}
-		alignItems(.flexStart)
+		alignItems(.center)
 		position(.relative)
-		minHeight(minSizeInteractivePointer)
+		minHeight(minSizeInputBinary)
 		gap(spacing8)
 
 		if inline {
@@ -98,15 +98,28 @@ public struct CheckboxView: HTML {
 	@CSSBuilder
 	private func checkboxInputCSS(_ disabled: Bool) -> [CSS] {
 		position(.absolute)
-		width(minSizeInputBinary)
-		height(minSizeInputBinary)
+		width(perc(100))
+		height(perc(100))
 		margin(0)
 		opacity(0)
-		zIndex(1)
-		if disabled {
-			cursor(cursorBaseDisabled)
-		} else {
-			cursor(cursorBase)
+		zIndex(zIndexAboveContent)
+		cursor(disabled ? cursorBaseDisabled : .pointer)
+
+		// Checkmark visibility
+		pseudoClass(":checked") {
+			nextSibling(".checkbox-icon") {
+				pseudoElement(.before) {
+					opacity(1).important()
+				}
+			}
+		}
+
+		pseudoClass(.indeterminate) {
+			nextSibling(".checkbox-icon") {
+				pseudoElement(.before) {
+					opacity(1).important()
+				}
+			}
 		}
 
 		pseudoClass(.checked) {
@@ -166,7 +179,7 @@ public struct CheckboxView: HTML {
 		width(minSizeInputBinary)
 		height(minSizeInputBinary)
 		if disabled {
-			backgroundColor(backgroundColorDisabled)
+			backgroundColor(backgroundColorDisabledSubtle)
 		} else {
 			backgroundColor(backgroundColorBase)
 		}
@@ -186,24 +199,22 @@ public struct CheckboxView: HTML {
 			position(.absolute)
 			top(perc(50))
 			left(perc(50))
-			transform(translate(perc(-50), perc(-50)))
-			if checked || indeterminate {
-				opacity(1)
-			} else {
-				opacity(0)
-			}
+			pointerEvents(.none)
 			transition(transitionPropertyFade, transitionDurationBase)
+			opacity(0) // Shown when input is checked/indeterminate
 
 			if indeterminate {
 				width(px(10))
 				height(px(2))
 				backgroundColor(colorInvertedFixed)
+				transform(translate("-50%", "-50%"))
 			} else {
-				width(px(12))
-				height(px(6))
+				width(px(5))
+				height(px(9))
 				borderLeft(px(2), .solid, colorInvertedFixed)
 				borderBottom(px(2), .solid, colorInvertedFixed)
-				transform(translate(perc(-50), perc(-60)), rotate(deg(-45)))
+				// Fine-tuned visual centering for rotated L shape
+				transform(translate("-50%", "-55%"), rotate(deg(-45)))
 			}
 		}
 	}
