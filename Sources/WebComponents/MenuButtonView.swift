@@ -14,18 +14,21 @@ public struct MenuButtonView: HTML {
 		public let value: String
 		public let label: String
 		public let icon: (any HTML)?
+		public let url: String?
 		public let disabled: Bool
 		public let destructive: Bool
 
 		public init(
 			value: String,
 			label: String,
+			url: String? = nil,
 			icon: (any HTML)? = nil,
 			disabled: Bool = false,
 			destructive: Bool = false
 		) {
 			self.value = value
 			self.label = label
+			self.url = url
 			self.icon = icon
 			self.disabled = disabled
 			self.destructive = destructive
@@ -36,8 +39,10 @@ public struct MenuButtonView: HTML {
 	let buttonIcon: (any HTML)?
 	let iconOnly: Bool
 	let menuItems: [MenuItem]
+	let quiet: Bool
 	let disabled: Bool
 	let ariaLabel: String?
+	let size: ButtonView.ButtonSize
 	let `class`: String
 
 	public init(
@@ -45,16 +50,20 @@ public struct MenuButtonView: HTML {
 		buttonIcon: (any HTML)? = nil,
 		iconOnly: Bool = false,
 		menuItems: [MenuItem],
+		quiet: Bool = false,
 		disabled: Bool = false,
 		ariaLabel: String? = nil,
+		size: ButtonView.ButtonSize = .medium,
 		class: String = ""
 	) {
 		self.buttonLabel = buttonLabel
 		self.buttonIcon = buttonIcon
 		self.iconOnly = iconOnly
 		self.menuItems = menuItems
+		self.quiet = quiet
 		self.disabled = disabled
 		self.ariaLabel = ariaLabel
+		self.size = size
 		self.`class` = `class`
 	}
 
@@ -152,41 +161,51 @@ public struct MenuButtonView: HTML {
 				label: buttonLabel,
 				icon: buttonIcon,
 				modelValue: false,
-				quiet: false,
+				quiet: quiet,
 				disabled: disabled,
 				iconOnly: iconOnly,
 				ariaLabel: ariaLabel,
 				ariaExpanded: false,
+				size: size,
 				class: "menu-button-trigger"
 			)
 
 			// Menu
 			div {
 				menuItems.map { item in
-					div {
-						if let icon = item.icon {
-							span { icon }
-								.class("menu-item-icon")
-								.ariaHidden(true)
-								.style {
-									menuItemIconCSS()
-								}
-						}
+					let itemContent: [HTML] = [
+						item.icon.map { icon in span { icon }.class("menu-item-icon").ariaHidden(true).style { menuItemIconCSS() } },
+						span { item.label }.class("menu-item-text").style { menuItemTextCSS() }
+					].compactMap { $0 }
 
-						span { item.label }
-							.class("menu-item-text")
-							.style {
-								menuItemTextCSS()
-							}
-					}
-					.class(item.destructive ? "menu-item menu-item-destructive" : "menu-item")
-					.data("value", item.value)
-					.data("menu-item", true)
-					.role(.menuitem)
-					.tabindex(item.disabled ? -1 : 0)
-					.ariaDisabled(item.disabled)
-					.style {
-						menuItemCSS(item)
+					if let url = item.url {
+						return a {
+							itemContent
+						}
+						.href(url)
+						.class(item.destructive ? "menu-item menu-item-destructive" : "menu-item")
+						.data("value", item.value)
+						.data("menu-item", true)
+						.role(.menuitem)
+						.tabindex(item.disabled ? -1 : 0)
+						.ariaDisabled(item.disabled)
+						.style {
+							menuItemCSS(item)
+							textDecoration(.none)
+						}
+					} else {
+						return div {
+							itemContent
+						}
+						.class(item.destructive ? "menu-item menu-item-destructive" : "menu-item")
+						.data("value", item.value)
+						.data("menu-item", true)
+						.role(.menuitem)
+						.tabindex(item.disabled ? -1 : 0)
+						.ariaDisabled(item.disabled)
+						.style {
+							menuItemCSS(item)
+						}
 					}
 				}
 			}
@@ -398,11 +417,11 @@ private class MenuButtonInstance: @unchecked Sendable {
 	}
 
 	private func handleClickOutside(_ event: CallbackString) {
-		guard isOpen else { return }
+		guard isOpen, let target = event.target else { return }
 
-		// Check if click is outside menu button
-		// This is a simplified version - in real implementation would check event.target
-		// For now, we'll keep the menu open if clicked inside
+		if !menuButton.contains(target) {
+			closeMenu()
+		}
 	}
 }
 

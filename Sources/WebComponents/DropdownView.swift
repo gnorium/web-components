@@ -7,10 +7,22 @@ import DesignTokens
 import WebTypes
 
 public struct DropdownView: HTML {
+    public struct DropdownOption: Sendable {
+        public let value: String
+        public let display: String
+        public let altDisplay: String?
+
+        public init(value: String, display: String, altDisplay: String? = nil) {
+            self.value = value
+            self.display = display
+            self.altDisplay = altDisplay
+        }
+    }
+
     let id: String
     let name: String
     let labelText: String
-    let options: [(value: String, display: String)]
+    let options: [DropdownOption]
     let placeholder: String
     let required: Bool
     let tooltip: String?
@@ -23,7 +35,7 @@ public struct DropdownView: HTML {
         id: String,
         name: String,
         label: String,
-        options: [(value: String, display: String)],
+        options: [DropdownOption],
         placeholder: String = "Select an option",
         required: Bool = false,
         tooltip: String? = nil,
@@ -91,6 +103,7 @@ public struct DropdownView: HTML {
                             color(quiet ? colorBase : colorSubtle)
                             whiteSpace(.nowrap)
                         }
+                        .title(options.first { $0.display == placeholder }?.altDisplay ?? placeholder)
 
                     // Chevron icon
                     span {
@@ -182,21 +195,23 @@ public struct DropdownView: HTML {
                     div {
                         options.map { option in
                             div {
-                                option.display
+                                option.altDisplay ?? option.display
                             }
-                            .class("dropdown-option")
+                            .class(option.display == placeholder ? "dropdown-option is-selected" : "dropdown-option")
                             .data("dropdown-option", true)
                             .data("value", option.value)
                             .data("display", option.display)
+                            .data("alt-display", option.altDisplay ?? "")
                             .style {
                                 padding(spacing8, spacing12)
                                 fontSize(fontSizeMedium16)
-                                color(colorBase)
+                                color(option.display == placeholder ? colorInvertedFixed : colorBase)
+                                backgroundColor(option.display == placeholder ? backgroundColorProgressive : backgroundColorTransparent)
                                 cursor(cursorBaseHover)
                                 transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
                                 pseudoClass(.hover) {
-                                    backgroundColor(backgroundColorInteractiveSubtle)
-                                    color(colorProgressive)
+                                    backgroundColor(backgroundColorProgressive).important()
+                                    color(colorInvertedFixed).important()
                                 }
                             }
                         }
@@ -357,11 +372,12 @@ private class DropdownInstance: @unchecked Sendable {
 			}
 
 			// Use utility function for case-insensitive substring match
-			let matches = stringContainsCaseInsensitive(displayValue, searchValue)
+			let matches = stringContainsCaseInsensitive(displayValue, searchValue) || 
+                          stringContainsCaseInsensitive(option.getAttribute("data-alt-display") ?? "", searchValue)
 			option.style.display(matches ? .block : .none)
 		}
 	}
-
+    
 	private func selectOption(_ option: Element) {
 		guard let value = option.getAttribute("data-value"),
 			  let display = option.getAttribute("data-display") else { return }
@@ -369,11 +385,23 @@ private class DropdownInstance: @unchecked Sendable {
 		// Update hidden input
 		hiddenInput?.value = value
 
-		// Update selected text
-		selectedText?.innerHTML = display
-		selectedText?.style.color(.inherit)
+		// Get altDisplay for tooltip
+		let altDisplay = option.getAttribute("data-alt-display") ?? display
 
-		// Close dropdown
+		// Update selected text and title (tooltip)
+		selectedText?.innerHTML = display
+		selectedText?.setAttribute("title", altDisplay)
+
+		// Update selected state in menu
+		for opt in allOptions {
+			_ = opt.classList.remove("is-selected")
+			opt.style.backgroundColor(backgroundColorTransparent)
+			opt.style.color(colorBase)
+		}
+		_ = option.classList.add("is-selected")
+		option.style.backgroundColor(backgroundColorProgressive)
+		option.style.color(colorInvertedFixed)
+
 		closeDropdown()
 	}
 }

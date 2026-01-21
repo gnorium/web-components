@@ -18,7 +18,9 @@ public struct ToggleButtonView: HTML {
 	let iconOnly: Bool
 	let ariaLabel: String?
 	let ariaExpanded: Bool?
-	let `class`: String
+	let indicateSelection: Bool
+	let size: ButtonView.ButtonSize
+	var `class`: String
 	
 	public init(
 		label: String,
@@ -29,6 +31,8 @@ public struct ToggleButtonView: HTML {
 		iconOnly: Bool = false,
 		ariaLabel: String? = nil,
 		ariaExpanded: Bool? = nil,
+		indicateSelection: Bool = true,
+		size: ButtonView.ButtonSize = .medium,
 		class: String = ""
 	) {
 		self.label = label
@@ -39,195 +43,106 @@ public struct ToggleButtonView: HTML {
 		self.iconOnly = iconOnly
 		self.ariaLabel = ariaLabel
 		self.ariaExpanded = ariaExpanded
-		self.`class` = `class`
-	}
-
-	@CSSBuilder
-	private func toggleButtonViewCSS(_ isIconOnly: Bool) -> [CSS] {
-		display(.inlineFlex)
-		alignItems(.center)
-		justifyContent(.center)
-		gap(spacingHorizontalButton)
-		fontFamily(fontFamilyBase)
-		fontSize(fontSizeMedium16)
-		fontWeight(fontWeightBold)
-		lineHeight(1)
-		textDecoration(.none)
-		textAlign(.center)
-		verticalAlign(.middle)
-		whiteSpace(.nowrap)
-		userSelect(.none)
-		boxSizing(.borderBox)
-
-		// Size
-		minWidth(px(32))
-		minHeight(px(32))
-
-		// Border
-		borderWidth(borderWidthBase)
-		borderStyle(.solid)
-		borderRadius(borderRadiusBase)
-
-		// Interaction
-		cursor(.pointer)
-		transition(.all, s(0.1), .ease)
-
-		// Padding
-		if isIconOnly {
-			padding(0)
-			width(px(32))
-			height(px(32))
-		} else {
-			padding(0, spacingHorizontalButton)
-		}
-
-		// Normal style (default)
-		if !quiet {
-			backgroundColor(backgroundColorInteractive)
-			color(colorBase)
-			borderColor(borderColorBase)
-
-			pseudoClass(.hover, not(.disabled)) {
-				backgroundColor(backgroundColorInteractiveHover).important()
-			}
-
-			pseudoClass(.active, not(.disabled)) {
-				backgroundColor(backgroundColorInteractiveActive).important()
-				color(colorEmphasized).important()
-				borderColor(borderColorProgressive).important()
-			}
-
-			// Toggled ON state (aria-pressed="true")
-			attribute("[aria-pressed=\"true\"]") {
-				backgroundColor(backgroundColorProgressive).important()
-				color(colorInverted).important()
-				borderColor(borderColorProgressive).important()
-			}
-
-			attribute("[aria-pressed=\"true\"]:hover:not(:disabled)") {
-				backgroundColor(backgroundColorProgressiveHover).important()
-				borderColor(borderColorProgressiveHover).important()
-			}
-
-			attribute("[aria-pressed=\"true\"]:active:not(:disabled)") {
-				backgroundColor(backgroundColorProgressiveActive).important()
-				borderColor(borderColorProgressiveActive).important()
-			}
-		} else {
-			// Quiet style - more minimal
-			backgroundColor(.transparent)
-			color(colorBase)
-			borderColor(.transparent)
-
-			pseudoClass(.hover, not(.disabled)) {
-				backgroundColor(backgroundColorInteractiveSubtle).important()
-			}
-
-			pseudoClass(.active, not(.disabled)) {
-				backgroundColor(backgroundColorInteractiveSubtleActive).important()
-				color(colorEmphasized).important()
-			}
-
-			// Toggled ON state for quiet (aria-pressed="true")
-			attribute("[aria-pressed=\"true\"]") {
-				backgroundColor(backgroundColorProgressiveSubtle).important()
-				color(colorProgressive).important()
-				borderColor(.transparent).important()
-			}
-
-			attribute("[aria-pressed=\"true\"]:hover:not(:disabled)") {
-				backgroundColor(backgroundColorProgressiveSubtleHover).important()
-			}
-
-			attribute("[aria-pressed=\"true\"]:active:not(:disabled)") {
-				backgroundColor(backgroundColorProgressiveSubtleActive).important()
-				color(colorProgressiveActive).important()
-			}
-		}
-
-		// Focus state
-		pseudoClass(.focus) {
-			outline(borderWidthThick, .solid, colorProgressive).important()
-			borderColor(borderColorProgressive).important()
-		}
-
-		// Disabled state
-		pseudoClass(.disabled) {
-			color(colorDisabled).important()
-			backgroundColor(backgroundColorDisabled).important()
-			borderColor(borderColorDisabled).important()
-			cursor(.default).important()
-			pointerEvents(.none).important()
-		}
-	}
-
-	@CSSBuilder
-	private func toggleButtonIconCSS() -> [CSS] {
-		display(.flex)
-		alignItems(.center)
-		justifyContent(.center)
-		width(sizeIconSmall)
-		height(sizeIconSmall)
-	}
-
-	@CSSBuilder
-	private func toggleButtonLabelHiddenCSS() -> [CSS] {
-		position(.absolute)
-		width(px(1))
-		height(px(1))
-		padding(0)
-		margin(px(-1))
-		overflow(.hidden)
-		clip(rect(0, 0, 0, 0))
-		whiteSpace(.nowrap)
-		borderWidth(0)
+		self.indicateSelection = indicateSelection
+		self.size = size
+		self.class = `class`
 	}
 
 	public func render(indent: Int = 0) -> String {
 		let isIconOnly = iconOnly || (icon != nil && label.isEmpty)
+		let fullClass = `class`.isEmpty ? "toggle-button-view" : "toggle-button-view \(`class`)"
+		
+		return div {
+            ButtonView(
+                label: label,
+                weight: quiet ? .quiet : .normal,
+                size: size,
+                disabled: disabled,
+                ariaLabel: ariaLabel ?? label,
+                class: ""
+            ) {
+                if let icon = icon {
+                    span { icon }
+                        .class("button-icon")
+                        .ariaHidden(true)
+                        .style {
+                            display(.flex)
+                            alignItems(.center)
+                            justifyContent(.center)
+                            
+                            if size == .small {
+                                width(sizeIconXSmall)
+                                height(sizeIconXSmall)
+                            } else if size == .medium {
+                                width(sizeIconSmall)
+                                height(sizeIconSmall)
+                            } else if size == .large {
+                                width(sizeIconMedium)
+                                height(sizeIconMedium)
+                            }
+                        }
+                }
+                
+                if !label.isEmpty {
+                    span { label }
+                        .class(isIconOnly ? "toggle-button-label-hidden" : "toggle-button-label")
+                }
+            }
+        }
+        .class(fullClass)
+        .data("toggle-button", "true")
+        .ariaPressed(modelValue)
+        .ariaExpanded(ariaExpanded ?? false)
+        .style {
+            toggleStateCSS()
+        }
+        .render(indent: indent)
+    }
+	
+	@CSSBuilder
+	private func toggleStateCSS() -> [CSS] {
+		// Toggle-specific state styling
+		// Normal style (default) toggled state
+		if !quiet {
+            if indicateSelection {
+                attribute(ariaPressed(true)) {
+                    color(colorInverted).important()
+                    borderColor(borderColorProgressive).important()
+                }
+            }
+		} else {
+            if indicateSelection {
+                // Quiet style toggled state
+                attribute(ariaPressed(true)) {
+                    backgroundColor(backgroundColorProgressiveSubtle).important()
+                    color(colorProgressive).important()
+                    borderColor(.transparent).important()
+                }
 
-		var btn = button {
-			if let icon = icon {
-				span { icon }
-					.class("toggle-button-icon")
-					.ariaHidden(true)
-					.style {
-						toggleButtonIconCSS()
-					}
-			}
+                attribute(ariaPressed(true), .hover, not(.disabled)) {
+                    backgroundColor(backgroundColorProgressiveSubtleHover).important()
+                    color(colorProgressiveHover).important()
+                }
 
-			if !label.isEmpty {
-				span { label }
-					.class(isIconOnly ? "toggle-button-label-hidden" : "toggle-button-label")
-					.style {
-						if isIconOnly {
-							toggleButtonLabelHiddenCSS()
-						}
-					}
-			}
+                attribute(ariaPressed(true), .active, not(.disabled)) {
+                    backgroundColor(backgroundColorProgressiveSubtleActive).important()
+                    color(colorProgressiveActive).important()
+                }
+            }
 		}
-		.type(.button)
-		.class(`class`.isEmpty ? "toggle-button-view" : "toggle-button-view \(`class`)")
-		.data("toggle-button", true)
-		.ariaPressed(modelValue)
-		.disabled(disabled)
-		.style {
-			toggleButtonViewCSS(isIconOnly)
-		}
 
-		// Icon-only buttons require aria-label for accessibility
-		if isIconOnly {
-			btn = btn.ariaLabel(ariaLabel ?? label)
-		} else if let ariaLbl = ariaLabel {
-			btn = btn.ariaLabel(ariaLbl)
+		// Accessibility hidden label styling
+		descendant(".toggle-button-label-hidden") {
+			position(.absolute)
+			width(px(1))
+			height(px(1))
+			padding(0)
+			margin(px(-1))
+			overflow(.hidden)
+			clip(rect(0, 0, 0, 0))
+			whiteSpace(.nowrap)
+			borderWidth(0)
 		}
-
-		// Add aria-expanded if provided (for MenuButton integration)
-		if let expanded = ariaExpanded {
-			btn = btn.ariaExpanded(expanded)
-		}
-
-		return btn.render(indent: indent)
 	}
 }
 
@@ -273,6 +188,12 @@ private class ToggleButtonInstance: @unchecked Sendable {
 	}
 
 	private func toggle() {
+		// Re-read current state from DOM to stay in sync with other hydrators that might
+		// have changed the state during initialization or via system preference observers
+		if let ariaPressed = button.getAttribute("aria-pressed") {
+			modelValue = stringEquals(ariaPressed, "true")
+		}
+		
 		modelValue.toggle()
 		button.setAttribute("aria-pressed", modelValue ? "true" : "false")
 

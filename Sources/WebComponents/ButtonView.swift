@@ -18,10 +18,11 @@ public struct ButtonView: HTML {
 	let iconOnly: Bool
 	let disabled: Bool
 	let ariaLabel: String?
+	let url: String?
 	let onClick: String?
 	let type: ButtonType
 	let fullWidth: Bool
-	let `class`: String
+	var `class`: String
 
 	/// Button type attribute
 	public enum ButtonType: String, Sendable {
@@ -70,13 +71,13 @@ public struct ButtonView: HTML {
 
 	// MARK: - Initialization
     
-	/// Create a standard button with text label
 	public init(
 		label: String,
 		action: ButtonAction = .default,
 		weight: ButtonWeight = .normal,
 		size: ButtonSize = .medium,
 		disabled: Bool = false,
+		url: String? = nil,
 		type: ButtonType = .button,
 		ariaLabel: String? = nil,
 		onClick: String? = nil,
@@ -90,14 +91,14 @@ public struct ButtonView: HTML {
 		self.icon = nil
 		self.iconOnly = false
 		self.disabled = disabled
-		self.type = type
 		self.ariaLabel = ariaLabel
+		self.url = url
 		self.onClick = onClick
+		self.type = type
 		self.fullWidth = fullWidth
-		self.`class` = `class`
+		self.class = `class`
 	}
 
-	/// Create a button with icon and text label
 	public init(
 		label: String,
 		icon: any HTML,
@@ -105,6 +106,7 @@ public struct ButtonView: HTML {
 		weight: ButtonWeight = .normal,
 		size: ButtonSize = .medium,
 		disabled: Bool = false,
+		url: String? = nil,
 		type: ButtonType = .button,
 		ariaLabel: String? = nil,
 		onClick: String? = nil,
@@ -118,11 +120,12 @@ public struct ButtonView: HTML {
 		self.icon = icon
 		self.iconOnly = false
 		self.disabled = disabled
-		self.type = type
 		self.ariaLabel = ariaLabel
+		self.url = url
 		self.onClick = onClick
+		self.type = type
 		self.fullWidth = fullWidth
-		self.`class` = `class`
+		self.class = `class`
 	}
 
 	/// Create an icon-only button
@@ -133,6 +136,7 @@ public struct ButtonView: HTML {
 		weight: ButtonWeight = .normal,
 		size: ButtonSize = .medium,
 		disabled: Bool = false,
+		url: String? = nil,
 		type: ButtonType = .button,
 		ariaLabel: String,
 		onClick: String? = nil,
@@ -146,11 +150,42 @@ public struct ButtonView: HTML {
 		self.icon = icon
 		self.iconOnly = true
 		self.disabled = disabled
-		self.type = type
 		self.ariaLabel = ariaLabel
+		self.url = url
 		self.onClick = onClick
+		self.type = type
 		self.fullWidth = fullWidth
-		self.`class` = `class`
+		self.class = `class`
+	}
+
+	/// Create a button with custom content
+	public init(
+        label: String = "",
+		action: ButtonAction = .default,
+		weight: ButtonWeight = .normal,
+		size: ButtonSize = .medium,
+		disabled: Bool = false,
+		url: String? = nil,
+		type: ButtonType = .button,
+		ariaLabel: String? = nil,
+		onClick: String? = nil,
+		fullWidth: Bool = false,
+		class: String = "",
+		@HTMLBuilder content: () -> [any HTML]
+	) {
+		self.label = label
+		self.action = action
+		self.weight = weight
+		self.size = size
+		self.icon = content()
+		self.iconOnly = false // Custom content is treated as the full body
+		self.disabled = disabled
+		self.ariaLabel = ariaLabel
+		self.url = url
+		self.onClick = onClick
+		self.type = type
+		self.fullWidth = fullWidth
+		self.class = `class`
 	}
 
 	@CSSBuilder
@@ -254,64 +289,105 @@ public struct ButtonView: HTML {
 		if size == .small {
 			width(sizeIconXSmall)
 			height(sizeIconXSmall)
-		} else {
+		} else if size == .medium {
 			width(sizeIconSmall)
 			height(sizeIconSmall)
+		} else if size == .large {
+			width(sizeIconMedium)
+			height(sizeIconMedium)
 		}
 	}
 
-	public func render(indent: Int = 0) -> String {
-		var classes = [
-			"button-view",
-			"button-action-\(action.rawValue)",
-			"button-weight-\(weight.rawValue)",
-			"button-size-\(size.rawValue)"
-		]
-
-		if iconOnly {
-			classes.append("button-icon-only")
+	private var effectiveAriaLabel: String? {
+		if let ariaLabel = ariaLabel {
+			return ariaLabel
+		} else if !label.isEmpty {
+			return label
+		} else {
+			return nil
 		}
+	}
 
-		let effectiveAriaLabel: String? = {
-			if let ariaLabel = ariaLabel {
-				return ariaLabel
-			} else if !label.isEmpty {
-				return label
-			} else {
-				return nil
-			}
-		}()
+	// MARK: - Component Modifiers
 
-		var btn = button {
+	public func render(indent: Int = 0) -> String {
+		let baseClasses = "button-view button-action-\(action.rawValue) button-weight-\(weight.rawValue) button-size-\(size.rawValue)\(iconOnly ? " button-icon-only" : "")"
+		let fullClass = `class`.isEmpty ? baseClasses : "\(baseClasses) \(`class`)"
+
+		@HTMLBuilder
+		func renderContent() -> [any HTML] {
 			if let icon = icon {
-				span { icon }
-					.class("button-icon")
-					.ariaHidden(true)
-					.style {
-						buttonIconCSS()
-					}
+				if label.isEmpty && iconOnly {
+					span { icon }
+						.class("button-icon")
+						.ariaHidden(true)
+						.style {
+							buttonIconCSS()
+						}
+				} else {
+					// Either custom content or icon+label
+					icon
+				}
 			}
 
 			if !label.isEmpty {
 				span { label }
+					.class("button-label")
+					.style {
+						padding(0)
+						overflow(.hidden)
+						whiteSpace(.nowrap)
+						borderWidth(0)
+					}
 			}
 		}
-		.class(`class`.isEmpty ? "button-view" : "button-view \(`class`)")
-		.type(type == .submit ? .submit : type == .reset ? .reset : .button)
-		.disabled(disabled)
-		.style {
-			buttonViewCSS()
-		}
 
-		if let ariaLbl = effectiveAriaLabel {
-			btn = btn.ariaLabel(ariaLbl)
-		}
+		if let url = url {
+			var aBtn = a { renderContent() }
+				.href(url)
+				.class(fullClass)
+				.data("action", action.rawValue)
+				.data("weight", weight.rawValue)
+				.data("size", size.rawValue)
+				.style {
+					buttonViewCSS()
+				}
+			
+			if disabled {
+				aBtn = aBtn.ariaDisabled(true).class("disabled")
+			}
+            
+			if let ariaLbl = effectiveAriaLabel {
+				aBtn = aBtn.ariaLabel(ariaLbl)
+			}
+            
+			if let click = onClick {
+				aBtn = aBtn.onclick(click)
+			}
 
-		if let click = onClick {
-			btn = btn.onClick(click)
-		}
+			return aBtn.render(indent: indent)
+		} else {
+			var bBtn = button { renderContent() }
+				.type(type == .submit ? .submit : type == .reset ? .reset : .button)
+				.class(fullClass)
+				.data("action", action.rawValue)
+				.data("weight", weight.rawValue)
+				.data("size", size.rawValue)
+				.disabled(disabled)
+				.style {
+					buttonViewCSS()
+				}
 
-		return btn.render(indent: indent)
+			if let ariaLbl = effectiveAriaLabel {
+				bBtn = bBtn.ariaLabel(ariaLbl)
+			}
+
+			if let click = onClick {
+				bBtn = bBtn.onclick(click)
+			}
+
+			return bBtn.render(indent: indent)
+		}
 	}
 
 	@CSSBuilder
