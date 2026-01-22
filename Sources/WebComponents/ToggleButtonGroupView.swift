@@ -87,7 +87,7 @@ public struct ToggleButtonGroupView: HTML {
 					label: buttonItem.label,
 					icon: buttonItem.icon.map { iconStr in span { iconStr } },
 					modelValue: isSelected,
-					quiet: false,
+					weight: .normal,
 					disabled: isDisabled,
 					iconOnly: false,
 					class: "toggle-button-group-item"

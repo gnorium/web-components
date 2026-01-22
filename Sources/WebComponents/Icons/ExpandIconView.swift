@@ -24,7 +24,7 @@ public struct ExpandIconView: HTML {
 	public func render(indent: Int = 0) -> String {
 		svg {
 			path()
-				.d(m(17.5, 4.75), l(-7.5, 7.5), l(-7.5, -7.5), L(1, 6.25), l(9, 9), l(9, -9), Z())
+			.d(m(17.5, 4.75), l(-7.5, 7.5), l(-7.5, -7.5), L(1, 6.25), l(9, 9), l(9, -9), Z())
 		}
 		.class(`class`.isEmpty ? "expand-icon-view" : "expand-icon-view \(`class`)")
 		.width(width)

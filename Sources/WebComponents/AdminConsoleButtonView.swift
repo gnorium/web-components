@@ -16,29 +16,21 @@ public struct AdminConsoleButtonView: HTML {
     public func render(indent: Int = 0) -> String {
         div {
             ButtonView(
+                label: "",
+                icon: IconView(icon: { s in ConfigureIconView(width: s, height: s) }, size: .medium),
+                weight: .transparent,
+                size: .large,
                 url: url,
                 ariaLabel: "Admin Console",
                 class: "navbar-admin-console-btn"
-            ) {
-                IconView(icon: { s in ConfigureIconView(width: s, height: s) }, size: .medium)
-            }
+            )
         }
+        .class("admin-console-button-view")
         .title("Admin Console")
         .style {
             display(.flex)
             alignItems(.center)
             justifyContent(.center)
-            width(px(44))
-            height(px(44))
-            borderRadius(borderRadiusPill)
-            color(colorBase)
-            textDecoration(.none)
-            transition(.all, s(0.15), .ease)
-            
-            pseudoClass(.hover) {
-                backgroundColor(backgroundColorInteractiveSubtle)
-                color(colorProgressive).important()
-            }
         }
         .render(indent: indent)
     }

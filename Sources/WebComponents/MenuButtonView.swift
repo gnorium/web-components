@@ -39,35 +39,113 @@ public struct MenuButtonView: HTML {
 	let buttonIcon: (any HTML)?
 	let iconOnly: Bool
 	let menuItems: [MenuItem]
-	let quiet: Bool
+	let buttonWeight: ButtonView.ButtonWeight
 	let disabled: Bool
 	let ariaLabel: String?
 	let size: ButtonView.ButtonSize
 	let `class`: String
-
+	let buttonFontWeight: CSSFontWeight
+    let indicateSelection: Bool
+	
 	public init(
 		buttonLabel: String,
 		buttonIcon: (any HTML)? = nil,
 		iconOnly: Bool = false,
 		menuItems: [MenuItem],
-		quiet: Bool = false,
+		buttonWeight: ButtonView.ButtonWeight = .normal,
 		disabled: Bool = false,
 		ariaLabel: String? = nil,
 		size: ButtonView.ButtonSize = .medium,
-		class: String = ""
+		class: String = "",
+		buttonFontWeight: CSSFontWeight = fontWeightBold,
+		indicateSelection: Bool = false
 	) {
 		self.buttonLabel = buttonLabel
 		self.buttonIcon = buttonIcon
 		self.iconOnly = iconOnly
 		self.menuItems = menuItems
-		self.quiet = quiet
+		self.buttonWeight = buttonWeight
 		self.disabled = disabled
 		self.ariaLabel = ariaLabel
 		self.size = size
 		self.`class` = `class`
+		self.buttonFontWeight = buttonFontWeight
+		self.indicateSelection = indicateSelection
 	}
 
-	@CSSBuilder
+	public func render(indent: Int = 0) -> String {
+		div {
+			// Toggle Button
+			ToggleButtonView(
+				label: buttonLabel,
+				icon: buttonIcon,
+				modelValue: false,
+				weight: buttonWeight,
+				disabled: disabled,
+				iconOnly: iconOnly,
+				ariaLabel: ariaLabel,
+				ariaExpanded: false,
+				indicateSelection: indicateSelection,
+				size: size,
+				class: "menu-button-trigger",
+				buttonFontWeight: buttonFontWeight
+			)
+
+			// Menu
+			div {
+				menuItems.map { item in
+					let itemContent: [HTML] = [
+						item.icon.map { icon in span { icon }.class("menu-item-icon").ariaHidden(true).style { menuItemIconCSS() } },
+						span { item.label }.class("menu-item-text").style { menuItemTextCSS() }
+					].compactMap { $0 }
+
+					if let url = item.url {
+						return a {
+							itemContent
+						}
+						.href(url)
+						.class(item.destructive ? "menu-item menu-item-destructive" : "menu-item")
+						.data("value", item.value)
+						.data("menu-item", true)
+						.role(.menuitem)
+						.tabindex(item.disabled ? -1 : 0)
+						.ariaDisabled(item.disabled)
+						.style {
+							menuItemCSS(item)
+							textDecoration(.none)
+						}
+					} else {
+						return div {
+							itemContent
+						}
+						.class(item.destructive ? "menu-item menu-item-destructive" : "menu-item")
+						.data("value", item.value)
+						.data("menu-item", true)
+						.role(.menuitem)
+						.tabindex(item.disabled ? -1 : 0)
+						.ariaDisabled(item.disabled)
+						.style {
+							menuItemCSS(item)
+						}
+					}
+				}
+			}
+			.class("menu-button-menu")
+			.data("menu-button-menu", true)
+			.role(.menu)
+			.style {
+				menuButtonMenuCSS()
+			}
+		}
+		.class(`class`.isEmpty ? "menu-button-view" : "menu-button-view \(`class`)")
+		.data("menu-button", true)
+		.style {
+			menuButtonViewCSS()
+		}
+		.render(indent: indent)
+	}
+
+    @CSSBuilder
 	private func menuButtonViewCSS() -> [CSS] {
 		position(.relative)
 		display(.inlineBlock)
@@ -152,76 +230,6 @@ public struct MenuButtonView: HTML {
 	@CSSBuilder
 	private func menuItemTextCSS() -> [CSS] {
 		flex(1)
-	}
-
-	public func render(indent: Int = 0) -> String {
-		div {
-			// Toggle Button
-			ToggleButtonView(
-				label: buttonLabel,
-				icon: buttonIcon,
-				modelValue: false,
-				quiet: quiet,
-				disabled: disabled,
-				iconOnly: iconOnly,
-				ariaLabel: ariaLabel,
-				ariaExpanded: false,
-				size: size,
-				class: "menu-button-trigger"
-			)
-
-			// Menu
-			div {
-				menuItems.map { item in
-					let itemContent: [HTML] = [
-						item.icon.map { icon in span { icon }.class("menu-item-icon").ariaHidden(true).style { menuItemIconCSS() } },
-						span { item.label }.class("menu-item-text").style { menuItemTextCSS() }
-					].compactMap { $0 }
-
-					if let url = item.url {
-						return a {
-							itemContent
-						}
-						.href(url)
-						.class(item.destructive ? "menu-item menu-item-destructive" : "menu-item")
-						.data("value", item.value)
-						.data("menu-item", true)
-						.role(.menuitem)
-						.tabindex(item.disabled ? -1 : 0)
-						.ariaDisabled(item.disabled)
-						.style {
-							menuItemCSS(item)
-							textDecoration(.none)
-						}
-					} else {
-						return div {
-							itemContent
-						}
-						.class(item.destructive ? "menu-item menu-item-destructive" : "menu-item")
-						.data("value", item.value)
-						.data("menu-item", true)
-						.role(.menuitem)
-						.tabindex(item.disabled ? -1 : 0)
-						.ariaDisabled(item.disabled)
-						.style {
-							menuItemCSS(item)
-						}
-					}
-				}
-			}
-			.class("menu-button-menu")
-			.data("menu-button-menu", true)
-			.role(.menu)
-			.style {
-				menuButtonMenuCSS()
-			}
-		}
-		.class(`class`.isEmpty ? "menu-button-view" : "menu-button-view \(`class`)")
-		.data("menu-button", true)
-		.style {
-			menuButtonViewCSS()
-		}
-		.render(indent: indent)
 	}
 }
 
@@ -317,7 +325,6 @@ private class MenuButtonInstance: @unchecked Sendable {
 	private func openMenu() {
 		menu?.style.display(.block)
 		trigger?.setAttribute("aria-expanded", "true")
-		trigger?.setAttribute("aria-pressed", "true")
 		isOpen = true
 
 		// Focus first menu item
@@ -330,7 +337,6 @@ private class MenuButtonInstance: @unchecked Sendable {
 	private func closeMenu() {
 		menu?.style.display(.none)
 		trigger?.setAttribute("aria-expanded", "false")
-		trigger?.setAttribute("aria-pressed", "false")
 		isOpen = false
 		currentFocusIndex = -1
 		trigger?.focus()

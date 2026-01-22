@@ -45,7 +45,7 @@ public struct ContrastToggleButtonView: HTML {
 				}
 			},
 			modelValue: false,
-			quiet: true,
+			weight: .transparent,
 			iconOnly: true,
 			ariaLabel: "Toggle contrast",
 			indicateSelection: false,

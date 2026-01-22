@@ -13,7 +13,7 @@ public struct ToggleButtonView: HTML {
 	let label: String
 	let icon: (any HTML)?
 	let modelValue: Bool
-	let quiet: Bool
+	let weight: ButtonView.ButtonWeight
 	let disabled: Bool
 	let iconOnly: Bool
 	let ariaLabel: String?
@@ -21,24 +21,26 @@ public struct ToggleButtonView: HTML {
 	let indicateSelection: Bool
 	let size: ButtonView.ButtonSize
 	var `class`: String
+	let buttonFontWeight: CSSFontWeight
 	
 	public init(
 		label: String,
 		icon: (any HTML)? = nil,
 		modelValue: Bool = false,
-		quiet: Bool = false,
+		weight: ButtonView.ButtonWeight = .normal,
 		disabled: Bool = false,
 		iconOnly: Bool = false,
 		ariaLabel: String? = nil,
 		ariaExpanded: Bool? = nil,
 		indicateSelection: Bool = true,
 		size: ButtonView.ButtonSize = .medium,
-		class: String = ""
+		class: String = "",
+		buttonFontWeight: CSSFontWeight = fontWeightBold
 	) {
 		self.label = label
 		self.icon = icon
 		self.modelValue = modelValue
-		self.quiet = quiet
+		self.weight = weight
 		self.disabled = disabled
 		self.iconOnly = iconOnly
 		self.ariaLabel = ariaLabel
@@ -46,6 +48,7 @@ public struct ToggleButtonView: HTML {
 		self.indicateSelection = indicateSelection
 		self.size = size
 		self.class = `class`
+		self.buttonFontWeight = buttonFontWeight
 	}
 
 	public func render(indent: Int = 0) -> String {
@@ -54,12 +57,13 @@ public struct ToggleButtonView: HTML {
 		
 		return div {
             ButtonView(
-                label: label,
-                weight: quiet ? .quiet : .normal,
+                label: "",
+                weight: weight,
                 size: size,
                 disabled: disabled,
                 ariaLabel: ariaLabel ?? label,
-                class: ""
+                class: "",
+                buttonFontWeight: self.buttonFontWeight
             ) {
                 if let icon = icon {
                     span { icon }
@@ -103,14 +107,14 @@ public struct ToggleButtonView: HTML {
 	private func toggleStateCSS() -> [CSS] {
 		// Toggle-specific state styling
 		// Normal style (default) toggled state
-		if !quiet {
+		if weight == .normal || weight == .primary {
             if indicateSelection {
                 attribute(ariaPressed(true)) {
                     color(colorInverted).important()
                     borderColor(borderColorProgressive).important()
                 }
             }
-		} else {
+		} else { // quiet or transparent
             if indicateSelection {
                 // Quiet style toggled state
                 attribute(ariaPressed(true)) {

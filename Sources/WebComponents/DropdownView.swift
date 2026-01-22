@@ -27,7 +27,9 @@ public struct DropdownView: HTML {
     let required: Bool
     let tooltip: String?
     let `class`: String
-    let quiet: Bool
+    let buttonWeight: ButtonView.ButtonWeight
+    let buttonSize: ButtonView.ButtonSize
+    let fullWidth: Bool
     let dropdownWidth: Length?
     let menuWidth: Length?
 
@@ -40,7 +42,9 @@ public struct DropdownView: HTML {
         required: Bool = false,
         tooltip: String? = nil,
         class: String = "",
-        quiet: Bool = false,
+        buttonWeight: ButtonView.ButtonWeight = .normal,
+        buttonSize: ButtonView.ButtonSize = .medium,
+        fullWidth: Bool = true,
         width: Length? = nil,
         menuWidth: Length? = nil
     ) {
@@ -52,15 +56,17 @@ public struct DropdownView: HTML {
         self.required = required
         self.tooltip = tooltip
         self.`class` = `class`
-        self.quiet = quiet
+        self.buttonWeight = buttonWeight
+        self.buttonSize = buttonSize
+        self.fullWidth = fullWidth
         self.dropdownWidth = width
         self.menuWidth = menuWidth
     }
 
     public func render(indent: Int = 0) -> String {
         div {
-            // Label (hidden if quiet mode)
-            if !quiet {
+            // Label (hidden if quiet/transparent mode)
+            if buttonWeight == .normal || buttonWeight == .primary {
                 label {
                     labelText
 
@@ -85,79 +91,83 @@ public struct DropdownView: HTML {
 
             // Hidden input to store the selected value
             input()
-                .type(.hidden)
-                .id("\(id)-value")
-                .name(name)
-                .required(required)
+            .type(.hidden)
+            .id("\(id)-value")
+            .name(name)
+            .required(required)
 
             // Dropdown container
             div {
                 // Trigger button
-                button {
-                    span { placeholder }
+                div {
+                    ButtonView(
+                        label: "",
+                        weight: buttonWeight,
+                        size: buttonSize,
+                        fullWidth: fullWidth,
+                        class: "dropdown-trigger",
+                        buttonFontWeight: fontWeightNormal
+                    ) {
+                        span { placeholder }
                         .class("dropdown-selected-text")
                         .data("dropdown-selected-text", true)
                         .style {
                             flex(1)
                             textAlign(.left)
-                            color(quiet ? colorBase : colorSubtle)
+                            color(buttonWeight == .quiet || buttonWeight == .transparent ? colorBase : colorSubtle)
                             whiteSpace(.nowrap)
                         }
                         .title(options.first { $0.display == placeholder }?.altDisplay ?? placeholder)
 
-                    // Chevron icon
-                    span {
-                        svg {
-                            path()
-							.d(M(4, 6), l(6, 6), l(6, -6))
-							.fill(.none)
-							.stroke(.currentColor)
-							.strokeWidth(2)
-							.strokeLinecap(.round)
-							.strokeLinejoin(.round)
+                        // Icons
+                        span {
+                            IconView(
+                                icon: { s in
+                                    ExpandIconView(width: s, height: s)
+                                },
+                                size: buttonSize == .small ? .xSmall : buttonSize == .medium ? .small : .medium,
+                                class: "dropdown-expand-icon"
+                            )
                         }
-                        .width(px(16))
-                        .height(px(16))
-                        .viewBox(0, 0, 20, 20)
-                        .xmlns("http://www.w3.org/2000/svg")
-                    }
-                    .class("dropdown-chevron")
-                    .data("dropdown-chevron", true)
-                    .style {
-                        display(.flex)
-                        alignItems(.center)
-                        transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+                        .data("dropdown-expand-icon", true)
+                        .style {
+                            display(.flex)
+                            transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+                        }
+
+                        span {
+                            IconView(
+                                icon: { s in
+                                    CollapseIconView(width: s, height: s)
+                                },
+                                size: buttonSize == .small ? .xSmall : buttonSize == .medium ? .small : .medium,
+                                class: "dropdown-collapse-icon"
+                            )
+                        }
+                        .data("dropdown-collapse-icon", true)
+                        .style {
+                            display(.none)
+                            transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+                        }
                     }
                 }
-                .type(.button)
-                .class("dropdown-trigger")
                 .data("dropdown-trigger", true)
                 .data("dropdown-id", id)
                 .style {
                     if let w = dropdownWidth {
                         width(w)
-                    } else {
+                    } else if fullWidth {
                         width(perc(100))
+                    } else {
+                        width(.fitContent)
                     }
                     display(.flex)
-                    alignItems(.center)
+                    flex(1)
                     justifyContent(.spaceBetween)
-                    padding(spacing8, spacing12)
-                    fontSize(fontSizeMedium16)
-                    lineHeight(1.5)
-                    color(colorBase)
-                    backgroundColor(quiet ? backgroundColorTransparent : backgroundColorBase)
-                    border(borderWidthBase, .solid, quiet ? backgroundColorTransparent : borderColorBase)
-                    borderRadius(borderRadiusBase)
-                    cursor(cursorBaseHover)
-                    boxSizing(.borderBox)
-                    transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-                    pseudoClass(.hover) {
-                        borderColor(borderColorProgressive)
-                    }
-                    pseudoClass(.focus) {
-                        outline(borderWidthThick, .solid, colorProgressive).important()
-                        borderColor(borderColorProgressive).important()
+                    
+                    if buttonWeight == .normal || buttonWeight == .primary {
+                        backgroundColor(backgroundColorBase)
+                        border(borderWidthBase, .solid, borderColorBase)
                     }
                 }
 
@@ -273,7 +283,8 @@ private class DropdownInstance: @unchecked Sendable {
 	private var optionsList: Element?
 	private var selectedText: Element?
 	private var hiddenInput: Element?
-	private var chevron: Element?
+	private var expandIcon: Element?
+	private var collapseIcon: Element?
 	private var isOpen: Bool = false
 	private var allOptions: [Element] = []
 
@@ -284,7 +295,8 @@ private class DropdownInstance: @unchecked Sendable {
 		searchInput = container.querySelector("[data-dropdown-search=\"true\"]")
 		optionsList = container.querySelector("[data-dropdown-options-list=\"true\"]")
 		selectedText = container.querySelector("[data-dropdown-selected-text=\"true\"]")
-		chevron = container.querySelector("[data-dropdown-chevron=\"true\"]")
+		expandIcon = container.querySelector("[data-dropdown-expand-icon=\"true\"]")
+		collapseIcon = container.querySelector("[data-dropdown-collapse-icon=\"true\"]")
 
 		// Find hidden input by id
 		let expectedId = "\(dropdownId)-value"
@@ -348,13 +360,15 @@ private class DropdownInstance: @unchecked Sendable {
 
 	private func openDropdown() {
 		menu?.style.display(.block)
-		chevron?.style.transform(rotate(deg(180)))
+		expandIcon?.style.display(.none)
+		collapseIcon?.style.display(.flex)
 		isOpen = true
 	}
 
 	private func closeDropdown() {
 		menu?.style.display(.none)
-		chevron?.style.transform(rotate(deg(0)))
+		expandIcon?.style.display(.flex)
+		collapseIcon?.style.display(.none)
 		isOpen = false
 		searchInput?.value = ""
 		filterOptions() // Reset filter

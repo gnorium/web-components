@@ -23,6 +23,7 @@ public struct ButtonView: HTML {
 	let type: ButtonType
 	let fullWidth: Bool
 	var `class`: String
+	let buttonFontWeight: CSSFontWeight
 
 	/// Button type attribute
 	public enum ButtonType: String, Sendable {
@@ -49,6 +50,8 @@ public struct ButtonView: HTML {
 		case normal
 		/// Quiet buttons for easily recognizable actions that don't detract from content
 		case quiet
+        /// Transparent buttons that have no background on hover or active states
+        case transparent
 	}
 
 	/// Button sizes following Codex specification
@@ -82,7 +85,8 @@ public struct ButtonView: HTML {
 		ariaLabel: String? = nil,
 		onClick: String? = nil,
 		fullWidth: Bool = false,
-		class: String = ""
+		class: String = "",
+		buttonFontWeight: CSSFontWeight = fontWeightBold
 	) {
 		self.label = label
 		self.action = action
@@ -97,6 +101,7 @@ public struct ButtonView: HTML {
 		self.type = type
 		self.fullWidth = fullWidth
 		self.class = `class`
+		self.buttonFontWeight = buttonFontWeight
 	}
 
 	public init(
@@ -111,7 +116,8 @@ public struct ButtonView: HTML {
 		ariaLabel: String? = nil,
 		onClick: String? = nil,
 		fullWidth: Bool = false,
-		class: String = ""
+		class: String = "",
+		buttonFontWeight: CSSFontWeight = fontWeightBold
 	) {
 		self.label = label
 		self.action = action
@@ -126,6 +132,7 @@ public struct ButtonView: HTML {
 		self.type = type
 		self.fullWidth = fullWidth
 		self.class = `class`
+		self.buttonFontWeight = buttonFontWeight
 	}
 
 	/// Create an icon-only button
@@ -141,7 +148,8 @@ public struct ButtonView: HTML {
 		ariaLabel: String,
 		onClick: String? = nil,
 		fullWidth: Bool = false,
-		class: String = ""
+		class: String = "",
+		buttonFontWeight: CSSFontWeight = fontWeightBold
 	) {
 		self.label = ""
 		self.action = action
@@ -156,6 +164,7 @@ public struct ButtonView: HTML {
 		self.type = type
 		self.fullWidth = fullWidth
 		self.class = `class`
+		self.buttonFontWeight = buttonFontWeight
 	}
 
 	/// Create a button with custom content
@@ -171,6 +180,7 @@ public struct ButtonView: HTML {
 		onClick: String? = nil,
 		fullWidth: Bool = false,
 		class: String = "",
+		buttonFontWeight: CSSFontWeight = fontWeightBold,
 		@HTMLBuilder content: () -> [any HTML]
 	) {
 		self.label = label
@@ -186,129 +196,8 @@ public struct ButtonView: HTML {
 		self.type = type
 		self.fullWidth = fullWidth
 		self.class = `class`
+		self.buttonFontWeight = buttonFontWeight
 	}
-
-	@CSSBuilder
-	private func buttonViewCSS() -> [CSS] {
-		// Base button styles
-		if iconOnly {
-			display(.flex)
-			justifyContent(.center)
-		} else {
-			if fullWidth {
-				display(.flex)
-			} else {
-				display(.inlineFlex)
-			}
-		}
-		alignItems(.center)
-		justifyContent(.center)
-		gap(spacingHorizontalButton)
-		fontFamily(fontFamilyBase)
-		fontSize(fontSizeMedium16)
-		fontWeight(fontWeightBold)
-		lineHeight(1)
-		textDecoration(.none)
-		textAlign(.center)
-		verticalAlign(.middle)
-		whiteSpace(.nowrap)
-		userSelect(.none)
-		boxSizing(.borderBox)
-
-		// Size
-		if fullWidth {
-			width(perc(100))
-		} else {
-			minWidth(size.minSize)
-		}
-		minHeight(size.minSize)
-
-		// Border
-		borderWidth(borderWidthBase)
-		borderStyle(.solid)
-		borderRadius(borderRadiusPill)
-
-		// Interaction
-		cursor(.pointer)
-		transition(.all, s(0.1), .ease)
-
-		// Padding based on size and icon-only state
-		if iconOnly {
-			padding(0)
-			width(size.minSize)
-			height(size.minSize)
-		} else {
-			switch size {
-				case .small:
-					padding(0, spacingHorizontalButtonSmall)
-				case .medium:
-					padding(0, spacingHorizontalButton)
-				case .large:
-					padding(0, spacingHorizontalButtonLarge)
-			}
-		}
-
-		// Action + Weight combinations following Codex design tokens
-		applyActionWeightCSS()
-
-		// Focus state
-		pseudoClass(.focus) {
-			outline(borderWidthBase, .solid, borderColorTransparent).important()
-		}
-
-		// Disabled state
-		pseudoClass(.disabled) {
-			color(colorDisabled).important()
-			if weight == .quiet {
-				backgroundColor(.transparent).important()
-				borderColor(.transparent).important()
-			} else {
-				backgroundColor(backgroundColorDisabled).important()
-				borderColor(borderColorDisabled).important()
-			}
-			cursor(.default).important()
-			pointerEvents(.none).important()
-		}
-
-		// Icon hover color when button is disabled
-		pseudoClass(.disabled) {
-			descendant(".icon-view") {
-				pseudoClass(.hover) {
-					color(colorDisabled).important()
-				}
-			}
-		}
-	}
-
-	@CSSBuilder
-	private func buttonIconCSS() -> [CSS] {
-		display(.flex)
-		alignItems(.center)
-		justifyContent(.center)
-
-		if size == .small {
-			width(sizeIconXSmall)
-			height(sizeIconXSmall)
-		} else if size == .medium {
-			width(sizeIconSmall)
-			height(sizeIconSmall)
-		} else if size == .large {
-			width(sizeIconMedium)
-			height(sizeIconMedium)
-		}
-	}
-
-	private var effectiveAriaLabel: String? {
-		if let ariaLabel = ariaLabel {
-			return ariaLabel
-		} else if !label.isEmpty {
-			return label
-		} else {
-			return nil
-		}
-	}
-
-	// MARK: - Component Modifiers
 
 	public func render(indent: Int = 0) -> String {
 		let baseClasses = "button-view button-action-\(action.rawValue) button-weight-\(weight.rawValue) button-size-\(size.rawValue)\(iconOnly ? " button-icon-only" : "")"
@@ -391,6 +280,126 @@ public struct ButtonView: HTML {
 	}
 
 	@CSSBuilder
+	private func buttonViewCSS() -> [CSS] {
+		// Base button styles
+		if iconOnly {
+			display(.flex)
+			justifyContent(.center)
+		} else {
+			if fullWidth {
+				display(.flex)
+			} else {
+				display(.inlineFlex)
+			}
+		}
+		alignItems(.center)
+		justifyContent(.center)
+		gap(spacingHorizontalButton)
+		fontFamily(fontFamilyBase)
+		fontSize(fontSizeMedium16)
+		fontWeight(buttonFontWeight)
+		lineHeight(1)
+		textDecoration(.none)
+		textAlign(.center)
+		verticalAlign(.middle)
+		whiteSpace(.nowrap)
+		userSelect(.none)
+		boxSizing(.borderBox)
+
+		// Size
+		if fullWidth {
+			width(perc(100))
+		} else {
+			minWidth(size.minSize)
+		}
+		minHeight(size.minSize)
+
+		// Border
+		borderWidth(borderWidthBase)
+		borderStyle(.solid)
+		borderRadius(borderRadiusPill)
+
+		// Interaction
+		cursor(.pointer)
+		transition(.all, s(0.1), .ease)
+
+		// Padding based on size and icon-only state
+		if iconOnly {
+			padding(0)
+			width(size.minSize)
+			height(size.minSize)
+		} else {
+			switch size {
+				case .small:
+					padding(0, spacingHorizontalButtonSmall)
+				case .medium:
+					padding(0, spacingHorizontalButton)
+				case .large:
+					padding(0, spacingHorizontalButtonLarge)
+			}
+		}
+
+		// Action + Weight combinations following Codex design tokens
+		applyActionWeightCSS()
+
+		// Focus state
+		pseudoClass(.focus) {
+			outline(borderWidthBase, .solid, borderColorTransparent).important()
+		}
+
+		// Disabled state
+		pseudoClass(.disabled) {
+			color(colorInvertedFixed).important()
+			if weight == .quiet {
+				backgroundColor(.transparent).important()
+				borderColor(.transparent).important()
+			} else {
+				backgroundColor(backgroundColorDisabled).important()
+				borderColor(borderColorDisabled).important()
+			}
+			cursor(.default).important()
+			pointerEvents(.none).important()
+		}
+
+		// Icon hover color when button is disabled
+		pseudoClass(.disabled) {
+			descendant(".icon-view") {
+				pseudoClass(.hover) {
+					color(colorInvertedFixed).important()
+				}
+			}
+		}
+	}
+
+	@CSSBuilder
+	private func buttonIconCSS() -> [CSS] {
+		display(.flex)
+		alignItems(.center)
+		justifyContent(.center)
+
+		if size == .small {
+			width(sizeIconXSmall)
+			height(sizeIconXSmall)
+		} else if size == .medium {
+			width(sizeIconSmall)
+			height(sizeIconSmall)
+		} else if size == .large {
+			width(sizeIconMedium)
+			height(sizeIconMedium)
+		}
+	}
+
+	private var effectiveAriaLabel: String? {
+		if let ariaLabel = ariaLabel {
+			return ariaLabel
+		} else if !label.isEmpty {
+			return label
+		} else {
+			return nil
+		}
+	}
+    
+	@CSSBuilder
 	private func applyActionWeightCSS() -> [CSS] {
 		switch (action, weight) {
 		// Default + Normal (Neutral)
@@ -446,6 +455,29 @@ public struct ButtonView: HTML {
 				borderColor(.transparent).important()
 				boxShadow(.none).important()
 			}
+
+            // Default + Transparent
+        case (.default, .transparent):
+            backgroundColor(.transparent)
+            color(colorBase)
+            borderColor(.transparent)
+
+            pseudoClass(.hover, not(.disabled)) {
+                backgroundColor(.transparent).important()
+                color(colorBase).important()
+                borderColor(.transparent).important()
+            }
+
+            pseudoClass(.active, not(.disabled)) {
+                backgroundColor(.transparent).important()
+                color(colorEmphasized).important()
+                borderColor(.transparent).important()
+            }
+
+            pseudoClass(.focus) {
+                borderColor(.transparent).important()
+                boxShadow(.none).important()
+            }
 
 		// Progressive + Normal
 		case (.progressive, .normal):
@@ -512,6 +544,29 @@ public struct ButtonView: HTML {
 				boxShadow(.none).important()
 			}
 
+            // Progressive + Transparent
+        case (.progressive, .transparent):
+            backgroundColor(.transparent)
+            color(colorProgressive)
+            borderColor(.transparent)
+
+            pseudoClass(.hover, not(.disabled)) {
+                backgroundColor(.transparent).important()
+                color(colorProgressiveHover).important()
+                borderColor(.transparent).important()
+            }
+
+            pseudoClass(.active, not(.disabled)) {
+                backgroundColor(.transparent).important()
+                color(colorProgressiveActive).important()
+                borderColor(.transparent).important()
+            }
+
+            pseudoClass(.focus) {
+                borderColor(.transparent).important()
+                boxShadow(.none).important()
+            }
+
 		// Destructive + Normal
 		case (.destructive, .normal):
 			backgroundColor(backgroundColorDestructiveSubtle)
@@ -576,6 +631,29 @@ public struct ButtonView: HTML {
 				borderColor(.transparent).important()
 				boxShadow(.none).important()
 			}
+
+            // Destructive + Transparent
+        case (.destructive, .transparent):
+            backgroundColor(.transparent)
+            color(colorDestructive)
+            borderColor(.transparent)
+
+            pseudoClass(.hover, not(.disabled)) {
+                backgroundColor(.transparent).important()
+                color(colorDestructiveHover).important()
+                borderColor(.transparent).important()
+            }
+
+            pseudoClass(.active, not(.disabled)) {
+                backgroundColor(.transparent).important()
+                color(colorDestructiveActive).important()
+                borderColor(.transparent).important()
+            }
+
+            pseudoClass(.focus) {
+                borderColor(.transparent).important()
+                boxShadow(.none).important()
+            }
 		}
 	}
 }

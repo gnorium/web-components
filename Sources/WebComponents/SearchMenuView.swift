@@ -63,11 +63,11 @@ public struct SearchMenuView: HTML {
 		div {
 			// Backdrop with blur effect
 			div {}
-				.class("search-menu-backdrop")
-				.data("search-menu-backdrop", "true")
-				.style {
-					searchMenuBackdropCSS()
-				}
+            .class("search-menu-backdrop")
+            .data("search-menu-backdrop", "true")
+            .style {
+                searchMenuBackdropCSS()
+            }
 
 			// Search menu container - full screen
 			div {
@@ -91,14 +91,14 @@ public struct SearchMenuView: HTML {
 								// Navigation
 								div {
 									kbd { "↑" }
-										.class("keyboard-hint-key")
-										.style { keyboardHintKeyCSS() }
+                                    .class("keyboard-hint-key")
+                                    .style { keyboardHintKeyCSS() }
 									kbd { "↓" }
-										.class("keyboard-hint-key")
-										.style { keyboardHintKeyCSS() }
+                                    .class("keyboard-hint-key")
+                                    .style { keyboardHintKeyCSS() }
 									span { "to navigate" }
-										.class("keyboard-hint-label")
-										.style { keyboardHintLabelCSS() }
+                                    .class("keyboard-hint-label")
+                                    .style { keyboardHintLabelCSS() }
 								}
 								.class("keyboard-hint-group")
 								.style { keyboardHintGroupCSS() }
@@ -106,11 +106,11 @@ public struct SearchMenuView: HTML {
 								// Selection
 								div {
 									kbd { "↵" }
-										.class("keyboard-hint-key")
-										.style { keyboardHintKeyCSS() }
+                                    .class("keyboard-hint-key")
+                                    .style { keyboardHintKeyCSS() }
 									span { "to select" }
-										.class("keyboard-hint-label")
-										.style { keyboardHintLabelCSS() }
+                                    .class("keyboard-hint-label")
+                                    .style { keyboardHintLabelCSS() }
 								}
 								.class("keyboard-hint-group")
 								.style { keyboardHintGroupCSS() }
@@ -118,11 +118,11 @@ public struct SearchMenuView: HTML {
 								// Close
 								div {
 									kbd { "esc" }
-										.class("keyboard-hint-key")
-										.style { keyboardHintKeyCSS() }
+                                    .class("keyboard-hint-key")
+                                    .style { keyboardHintKeyCSS() }
 									span { "to close" }
-										.class("keyboard-hint-label")
-										.style { keyboardHintLabelCSS() }
+                                    .class("keyboard-hint-label")
+                                    .style { keyboardHintLabelCSS() }
 								}
 								.class("keyboard-hint-group")
 								.style { keyboardHintGroupCSS() }

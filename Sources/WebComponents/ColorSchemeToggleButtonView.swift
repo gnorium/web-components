@@ -45,7 +45,7 @@ public struct ColorSchemeToggleButtonView: HTML {
 				}
 			},
 			modelValue: false,
-			quiet: true,
+			weight: .transparent,
 			iconOnly: true,
 			ariaLabel: "Toggle color scheme",
 			indicateSelection: false,
