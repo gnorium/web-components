@@ -6,11 +6,8 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// ProgressBar component following Wikimedia Codex design system specification
 /// A visual element used to indicate the progress of an action or process.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/progress-bar.html
-public struct ProgressBarView: HTML {
+public struct ProgressBarView: HTMLProtocol {
 	let inline: Bool
 	let ariaLabel: String?
 	let ariaHidden: Bool
@@ -32,10 +29,10 @@ public struct ProgressBarView: HTML {
 	}
 
 	@CSSBuilder
-	private func progressBarViewCSS(_ inline: Bool, _ disabled: Bool) -> [CSS] {
+	private func progressBarViewCSS(_ inline: Bool, _ disabled: Bool) -> [CSSProtocol] {
 		display(.block)
 		position(.relative)
-		backgroundColor(backgroundColorProgressiveSubtle)
+		backgroundColor(backgroundColorBlueSubtle)
 		borderRadius(borderRadiusPill)
 		overflow(.hidden)
 
@@ -53,13 +50,13 @@ public struct ProgressBarView: HTML {
 	}
 
 	@CSSBuilder
-	private func progressBarBarCSS() -> [CSS] {
+	private func progressBarBarCSS() -> [CSSProtocol] {
 		position(.absolute)
 		top(0)
 		left(0)
 		width(perc(0))
 		height(perc(100))
-		backgroundColor(backgroundColorProgressive)
+		backgroundColor(backgroundColorBlue)
 		borderRadius(borderRadiusPill)
 		transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
 		animation("progress-bar-indeterminate", s(2), .linear, .infinite)

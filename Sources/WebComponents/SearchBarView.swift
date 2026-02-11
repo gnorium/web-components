@@ -6,11 +6,11 @@ import Foundation
 import DesignTokens
 import WebTypes
 
-public struct SearchBarView: HTML {
+public struct SearchBarView: HTMLProtocol {
 	let inSidebar: Bool
 	let openDialog: Bool
 	let `class`: String
-	let style: [CSS]
+	let style: [CSSProtocol]
 	let placeholder: String
 	let ariaLabel: String
 	let searchField: String
@@ -26,7 +26,7 @@ public struct SearchBarView: HTML {
 		searchField: String = "q",
 		searchEndpoint: String = "/api/search",
 		resultUrlBase: String = "/results",
-		@CSSBuilder style: () -> [CSS] = { [] }
+		@CSSBuilder style: () -> [CSSProtocol] = { [] }
 	) {
 		self.inSidebar = inSidebar
 		self.openDialog = openDialog
@@ -39,7 +39,7 @@ public struct SearchBarView: HTML {
 		self.style = style()
 	}
 	
-	public func style(@CSSBuilder _ content: () -> [CSS]) -> SearchBarView {
+	public func style(@CSSBuilder _ content: () -> [CSSProtocol]) -> SearchBarView {
 		return SearchBarView(
 			inSidebar: self.inSidebar,
 			openDialog: self.openDialog,
@@ -76,7 +76,7 @@ public struct SearchBarView: HTML {
 				borderRadius(borderRadiusBase)
 				padding(0, calc(rem(1) + px(32)), 0, rem(1)) // Corrected interpolation
 				width(perc(100))
-				maxWidth(px(512))
+				maxWidth(perc(100))
 				height(px(48))
 				fontWeight(fontWeightNormal)
 				transition(.all, s(0.2), .easeInOut)
@@ -103,7 +103,7 @@ public struct SearchBarView: HTML {
 					color(colorBase).important()
 				}
 
-				media(maxWidth(px(480))) {
+				media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
 					width(px(32))
 					padding(0)
 				}
@@ -119,14 +119,14 @@ public struct SearchBarView: HTML {
 			.data("search-button", true)
 			.style {
 				position(.absolute)
-				right(0)
+				insetInlineEnd(0)
 				top(perc(50))
 				transform(translateY("-\(perc(50))"))
 				background(.transparent)
 				border(.none)
 				color(colorBase)
-				marginRight(rem(1))
-				paddingLeft(0)
+				marginInlineEnd(rem(1))
+				paddingInlineStart(0)
 				display(.flex)
 				alignItems(.center)
 				justifyContent(.center)
@@ -149,8 +149,8 @@ public struct SearchBarView: HTML {
 					outline(.none)
 				}
 				
-				media(maxWidth(px(480))) {
-					paddingLeft(rem(0.5))
+				media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
+					paddingInlineStart(rem(0.5))
 				}
 			}
 			
@@ -259,7 +259,7 @@ public class SearchBarHydration: @unchecked Sendable {
 		guard let input, let button else { return }
 
 		// Check if this is a search trigger (opens dialog) or regular search bar (inline search)
-		let isTrigger = stringEquals(input.dataset.searchTrigger ?? "", "true")
+		let isTrigger = stringEquals(input.dataset.searchTrigger.value ?? "", "true")
 
 		if isTrigger {
 			// openDialog mode: clicking opens the search dialog
@@ -382,14 +382,14 @@ public class SearchBarHydration: @unchecked Sendable {
 				return
 			}
 
-			// Parse JSON response manually
+			// Parse JSONProtocol response manually
 			if let parsed = self.parseSearchResponse(json) {
 				self.results = parsed
 				self.isOpen = !parsed.isEmpty
 				self.activeIndex = -1
 				self.render()
 			} else {
-				console.error("SearchBar: Failed to parse JSON")
+				console.error("SearchBar: Failed to parse JSONProtocol")
 				self.results = []
 				self.isOpen = false
 				self.render()
@@ -401,7 +401,11 @@ public class SearchBarHydration: @unchecked Sendable {
 		guard let dropdown else { return }
 		guard let searchBarSuggestions = searchBarSuggestions else { return }
 
-		dropdown.style.display(isOpen ? .block : .none)
+		if isOpen {
+			dropdown.style.display(.block)
+		} else {
+			dropdown.style.display(.none)
+		}
 		searchBarSuggestions.innerHTML = ""
 
 		for (index, result) in results.enumerated() {
@@ -491,7 +495,7 @@ struct SearchBarSuggestedLemma {
 }
 
 extension SearchBarHydration {
-	// Simple JSON parser for search API response
+	// Simple JSONProtocol parser for search API response
 	// Expected format: {"exact": [...], "partial": [...]} 
 	private func parseSearchResponse(_ json: CallbackString) -> [SearchBarSuggestedLemma]? {
 		// Convert CallbackString to Swift String safely
@@ -541,16 +545,16 @@ extension SearchBarHydration {
 				}
 			} else {
 				// Number or boolean
-				var value = ""
+				var valueBytes: [UInt8] = []
 				trimmed.withCString { ptr in
 					let len = cStringLength(ptr)
 					for i in 0..<len {
 						let char = ptr[i]
 						if char == CChar(UInt8(ascii: ",")) || char == CChar(UInt8(ascii: "}")) || isWhitespace(char) { break }
-						value.append(Character(UnicodeScalar(UInt8(bitPattern: char))))
+						valueBytes.append(UInt8(bitPattern: char))
 					}
 				}
-				return value
+				return String(decoding: valueBytes, as: UTF8.self)
 			}
 			return ""
 		}
@@ -563,10 +567,10 @@ extension SearchBarHydration {
 			let language = extractValue(from: str, key: "language")
 			let languageCode = extractValue(from: str, key: "languageCode")
 			let homographStr = extractValue(from: str, key: "homograph")
-			let homograph = Int(homographStr) ?? 1
+			let homograph = safeParseInt(homographStr) ?? 1
 			let idStr = extractValue(from: str, key: "id")
 			// Handle string ID to Int conversion safely, or default to 0 if alphanumeric
-			let id = Int(idStr) ?? 0
+			let id = safeParseInt(idStr) ?? 0
 
 
 			if !text.isEmpty {

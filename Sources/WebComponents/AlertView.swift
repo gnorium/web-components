@@ -6,32 +6,33 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct AlertView: HTML {
-	let type: AlertType
+public struct AlertView: HTMLProtocol {
+	let alertColor: AlertColor
 	let inline: Bool
 	let customIcon: String?
 	let fadeIn: Bool
 	let allowUserDismiss: Bool
 	let dismissButtonLabel: String
 	let autoDismiss: AutoDismiss
-	let content: [HTML]
+	let content: [HTMLProtocol]
 	let `class`: String
 
-	public enum AlertType: Sendable {
-		case notice
-		case warning
-		case error
-		case success
+	/// Apple HIG color for the alert
+	public enum AlertColor: String, Sendable {
+		case gray
+		case orange
+		case red
+		case green
 
-		var value: String {
-			switch self {
-                case .notice: return "notice"
-                case .warning: return "warning"
-                case .error: return "error"
-                case .success: return "success"
-			}
-		}
+		// Legacy aliases
+		public static let notice = AlertColor.gray
+		public static let warning = AlertColor.orange
+		public static let error = AlertColor.red
+		public static let success = AlertColor.green
 	}
+
+	/// Legacy alias
+	public typealias AlertType = AlertColor
 
 	public enum AutoDismiss: Sendable {
 		case disabled
@@ -39,8 +40,9 @@ public struct AlertView: HTML {
 		case custom(Int) // milliseconds
 	}
 
+	/// Legacy init
 	public init(
-		type: AlertType = .notice,
+		type: AlertColor,
 		inline: Bool = false,
 		customIcon: String? = nil,
 		fadeIn: Bool = false,
@@ -48,9 +50,31 @@ public struct AlertView: HTML {
 		dismissButtonLabel: String = "Close",
 		autoDismiss: AutoDismiss = .disabled,
 		class: String = "",
-		@HTMLBuilder content: () -> [HTML]
+		@HTMLBuilder content: () -> [HTMLProtocol]
 	) {
-		self.type = type
+		self.alertColor = type
+		self.inline = inline
+		self.customIcon = customIcon
+		self.fadeIn = fadeIn
+		self.allowUserDismiss = allowUserDismiss
+		self.dismissButtonLabel = dismissButtonLabel
+		self.autoDismiss = autoDismiss
+		self.content = content()
+		self.`class` = `class`
+	}
+
+	public init(
+		color: AlertColor = .gray,
+		inline: Bool = false,
+		customIcon: String? = nil,
+		fadeIn: Bool = false,
+		allowUserDismiss: Bool = false,
+		dismissButtonLabel: String = "Close",
+		autoDismiss: AutoDismiss = .disabled,
+		class: String = "",
+		@HTMLBuilder content: () -> [HTMLProtocol]
+	) {
+		self.alertColor = color
 		self.inline = inline
 		self.customIcon = customIcon
 		self.fadeIn = fadeIn
@@ -62,8 +86,10 @@ public struct AlertView: HTML {
 	}
 
 	@CSSBuilder
-	private func alertViewCSS(_ type: AlertType, _ inline: Bool) -> [CSS] {
+	private func alertViewCSS(_ alertColor: AlertColor, _ inline: Bool) -> [CSSProtocol] {
 		display(.flex)
+		alignItems(.center)
+		gap(spacing8)
 		boxSizing(.borderBox)
 
 		if !inline {
@@ -73,19 +99,19 @@ public struct AlertView: HTML {
 			borderStyle(.solid)
 			borderRadius(borderRadiusBase)
 
-			switch type {
-			case .notice:
-				backgroundColor(backgroundColorNoticeSubtle)
-				borderColor(borderColorNotice)
-			case .warning:
-				backgroundColor(backgroundColorWarningSubtle)
-				borderColor(borderColorWarning)
-			case .error:
-				backgroundColor(backgroundColorErrorSubtle)
-				borderColor(borderColorError)
-			case .success:
-				backgroundColor(backgroundColorSuccessSubtle)
-				borderColor(borderColorSuccess)
+			switch alertColor {
+			case .gray:
+				backgroundColor(backgroundColorGraySubtle)
+				borderColor(borderColorGray)
+			case .orange:
+				backgroundColor(backgroundColorOrangeSubtle)
+				borderColor(borderColorOrange)
+			case .red:
+				backgroundColor(backgroundColorRedSubtle)
+				borderColor(borderColorRed)
+			case .green:
+				backgroundColor(backgroundColorGreenSubtle)
+				borderColor(borderColorGreen)
 			}
 		} else {
 			padding(0)
@@ -93,30 +119,29 @@ public struct AlertView: HTML {
 	}
 
 	@CSSBuilder
-	private func alertIconCSS(_ type: AlertType) -> [CSS] {
+	private func alertIconCSS(_ alertColor: AlertColor) -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		minWidth(sizeIconMedium)
 		width(sizeIconMedium)
 		height(sizeIconMedium)
-		marginRight(spacing8)
 		flexShrink(0)
 		fontSize(sizeIconMedium)
 
-		switch type {
-		case .notice:
-			color(colorNotice)
-		case .warning:
-			color(colorWarning)
-		case .error:
-			color(colorError)
-		case .success:
-			color(colorSuccess)
+		switch alertColor {
+		case .gray:
+			color(colorGray)
+		case .orange:
+			color(colorOrange)
+		case .red:
+			color(colorRed)
+		case .green:
+			color(colorGreen)
 		}
 	}
 
 	@CSSBuilder
-	private func alertContentCSS() -> [CSS] {
+	private func alertContentCSS() -> [CSSProtocol] {
 		display(.flex)
 		flexDirection(.column)
 		flexGrow(1)
@@ -129,35 +154,35 @@ public struct AlertView: HTML {
 	}
 
 	@CSSBuilder
-	private func alertFadeInCSS() -> [CSS] {
+	private func alertFadeInCSS() -> [CSSProtocol] {
 		animation("alert-fade-in", transitionDurationBase, transitionTimingFunctionSystem)
 	}
 
 	public func render(indent: Int = 0) -> String {
 		let defaultIcon: String = {
-			switch type {
-			case .notice:
-				return "i"
-			case .warning:
-				return "!"
-			case .error:
-				return "x"
-			case .success:
-				return "+"
+			switch alertColor {
+			case .gray:
+				return "ℹ"
+			case .orange:
+				return "⚠"
+			case .red:
+				return "✗"
+			case .green:
+				return "✓"
 			}
 		}()
 
 		let displayIcon = customIcon ?? defaultIcon
-		let shouldShowIcon = type != .notice || customIcon != nil
+		let shouldShowIcon = alertColor != .gray || customIcon != nil
 
 		let ariaLive: String = {
-			switch type {
-			case .error: return "assertive"
+			switch alertColor {
+			case .red: return "assertive"
 			default: return "polite"
 			}
 		}()
 
-		let role: String? = type == .error ? "alert" : nil
+		let role: String? = alertColor == .red ? "alert" : nil
 
 		let autoDismissValue: Int? = {
 			switch autoDismiss {
@@ -166,12 +191,12 @@ public struct AlertView: HTML {
 			case .default:
 				return 4000
 			case .custom(let ms):
-				return type == .error ? nil : ms
+				return alertColor == .red ? nil : ms
 			}
 		}()
 
 		let alertClasses: String = {
-			let base = "alert-view alert-\(type.value)"
+			let base = "alert-view alert-\(alertColor.rawValue)"
 			let inlinePart = inline ? " alert-inline" : ""
 			let fadePart = fadeIn ? " alert-fade-in" : ""
 			let classPart = `class`.isEmpty ? "" : " \(`class`)"
@@ -186,7 +211,7 @@ public struct AlertView: HTML {
 				.class("alert-icon")
 				.ariaHidden(true)
 				.style {
-					alertIconCSS(type)
+					alertIconCSS(alertColor)
 				}
 			}
 
@@ -215,7 +240,7 @@ public struct AlertView: HTML {
 
 		return alert
 			.style {
-				alertViewCSS(type, inline)
+				alertViewCSS(alertColor, inline)
 				if fadeIn {
 					alertFadeInCSS()
 				}
@@ -263,18 +288,27 @@ private func localParseInt(_ str: String) -> Int? {
 
 /// Dynamic alert creation functions
 public enum AlertAPI {
-	/// Alert type for dynamic alerts
-	public enum AlertType: Sendable {
-		case notice
-		case warning
-		case error
-		case success
+	/// Alert color for dynamic alerts
+	public enum AlertColor: Sendable {
+		case gray
+		case orange
+		case red
+		case green
+
+		// Legacy aliases
+		public static let notice = AlertColor.gray
+		public static let warning = AlertColor.orange
+		public static let error = AlertColor.red
+		public static let success = AlertColor.green
 	}
+
+	/// Legacy alias
+	public typealias AlertType = AlertColor
 
 	/// Show a dynamic alert without page reload
 	public static func show(
 		_ text: String,
-		type: AlertType = .notice,
+		type: AlertColor = .gray,
 		inline: Bool = false,
 		customIcon: String? = nil,
 		allowUserDismiss: Bool = true,
@@ -315,41 +349,41 @@ public enum AlertAPI {
 
 		let (bgColor, borderColor, iconColor): (CSSColor, CSSColor, CSSColor) = {
 			switch type {
-			case .notice:
-				return (backgroundColorNoticeSubtle, borderColorNotice, colorNotice)
-			case .warning:
-				return (backgroundColorWarningSubtle, borderColorWarning, colorWarning)
-			case .error:
-				return (backgroundColorErrorSubtle, borderColorError, colorError)
-			case .success:
-				return (backgroundColorSuccessSubtle, borderColorSuccess, colorSuccess)
+			case .gray:
+				return (backgroundColorGraySubtle, borderColorGray, colorGray)
+			case .orange:
+				return (backgroundColorOrangeSubtle, borderColorOrange, colorOrange)
+			case .red:
+				return (backgroundColorRedSubtle, borderColorRed, colorRed)
+			case .green:
+				return (backgroundColorGreenSubtle, borderColorGreen, colorGreen)
 			}
 		}()
 
 		let defaultIcon: String = {
 			switch type {
-			case .notice:
-				return "i"
-			case .warning:
-				return "!"
-			case .error:
-				return "x"
-			case .success:
-				return "+"
+			case .gray:
+				return "ℹ"
+			case .orange:
+				return "⚠"
+			case .red:
+				return "✗"
+			case .green:
+				return "✓"
 			}
 		}()
-		
+
 		let displayIcon: String
 		if let custom = customIcon {
 			displayIcon = custom
 		} else {
 			displayIcon = defaultIcon
 		}
-		let shouldShowIcon = type != .notice || customIcon != nil
-		
+		let shouldShowIcon = type != .gray || customIcon != nil
+
 		let ariaLive: ARIALive
 		switch type {
-			case .error:
+			case .red:
 				ariaLive = .assertive
 			default:
 				ariaLive = .polite
@@ -359,22 +393,23 @@ public enum AlertAPI {
 		let alertEl = document.createElement(.div)
 		let alertClass: String
 		switch type {
-			case .notice:
-				alertClass = "alert-view alert-notice alert-fade-in"
-			case .warning:
-				alertClass = "alert-view alert-warning alert-fade-in"
-			case .error:
-				alertClass = "alert-view alert-error alert-fade-in"
-			case .success:
-				alertClass = "alert-view alert-success alert-fade-in"
+			case .gray:
+				alertClass = "alert-view alert-gray alert-fade-in"
+			case .orange:
+				alertClass = "alert-view alert-orange alert-fade-in"
+			case .red:
+				alertClass = "alert-view alert-red alert-fade-in"
+			case .green:
+				alertClass = "alert-view alert-green alert-fade-in"
 		}
 		alertEl.className = alertClass
 		alertEl.setAttribute(.ariaLive, ariaLive)
-		if type == .error {
+		if type == .red {
 			alertEl.setAttribute(.role, .alert)
 		}
 		
 		alertEl.style.display(.flex)
+		alertEl.style.alignItems(.center)
 		alertEl.style.boxSizing(.borderBox)
 		alertEl.style.pointerEvents(.auto)
 		alertEl.style.animation(("alert-fade-in", s(0.3), .easeOut))
@@ -426,14 +461,16 @@ public enum AlertAPI {
 
 		// Dismiss button
 		if allowUserDismiss {
-            
 			let dismissBtn = document.createElement(.button)
 			dismissBtn.className = "alert-dismiss"
-			dismissBtn.innerHTML = "x"
-			dismissBtn.setAttribute(.type, .button)
+			// Use proper SVGProtocol close icon
+			dismissBtn.innerHTML = "<svg width=\"20\" height=\"20\" viewBox=\"0 0 20 20\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\"><path d=\"M4.34 2.93l12.73 12.73-1.41 1.41L2.93 4.35Z\"/><path d=\"M17.07 4.34L4.34 17.07l-1.41-1.41L15.66 2.93Z\"/></svg>"
+			let buttonType: HTMLButton.`Type` = .button
+			dismissBtn.setAttribute(.type, buttonType)
 			dismissBtn.setAttribute(.ariaLabel, "Close")
 			dismissBtn.style.display(.flex)
-			dismissBtn.style.alignItems(.flexStart)
+			dismissBtn.style.alignItems(.center)
+			dismissBtn.style.justifyContent(.center)
 			dismissBtn.style.minWidth(sizeIconMedium)
 			dismissBtn.style.width(sizeIconMedium)
 			dismissBtn.style.height(sizeIconMedium)
@@ -442,26 +479,22 @@ public enum AlertAPI {
 			dismissBtn.style.border(borderTransparent)
 			dismissBtn.style.backgroundColor(backgroundColorTransparent)
 			dismissBtn.style.color(colorSubtle)
-			dismissBtn.style.fontSize(sizeIconMedium)
 			dismissBtn.style.cursor(cursorBaseHover)
 			dismissBtn.style.borderRadius(borderRadiusBase)
-
 			dismissBtn.style.transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+			dismissBtn.style.flexShrink(0)
 
-            dismissBtn.style.flexShrink(0)
-            
 			_ = dismissBtn.addEventListener(.click) { _ in
 				dismissAlert(alertEl, onDismiss: onDismiss, userInitiated: true)
 			}
 
 			alertEl.appendChild(dismissBtn)
-            
 		}
 		// Add to container
 		alertContainer.appendChild(alertEl)
 
 		// Auto-dismiss
-		if autoDismiss && type != .error {
+		if autoDismiss && type != .red {
 			_ = setTimeout(autoDismissTime) {
 				dismissAlert(alertEl, onDismiss: onDismiss, userInitiated: false)
 			}
@@ -488,19 +521,19 @@ public enum AlertAPI {
 
 	/// Convenience methods
 	public static func showNotice(_ text: String, container: Element? = nil, onDismiss: (@Sendable () -> Void)? = nil) {
-		show(text, type: .notice, container: container, onDismiss: onDismiss)
+		show(text, type: .gray, container: container, onDismiss: onDismiss)
 	}
 
 	public static func showWarning(_ text: String, container: Element? = nil, onDismiss: (@Sendable () -> Void)? = nil) {
-		show(text, type: .warning, container: container, onDismiss: onDismiss)
+		show(text, type: .orange, container: container, onDismiss: onDismiss)
 	}
 
 	public static func showError(_ text: String, container: Element? = nil, onDismiss: (@Sendable () -> Void)? = nil) {
-		show(text, type: .error, container: container, onDismiss: onDismiss)
+		show(text, type: .red, container: container, onDismiss: onDismiss)
 	}
 
 	public static func showSuccess(_ text: String, container: Element? = nil, onDismiss: (@Sendable () -> Void)? = nil) {
-		show(text, type: .success, autoDismiss: true, container: container, onDismiss: onDismiss)
+		show(text, type: .green, autoDismiss: true, container: container, onDismiss: onDismiss)
 	}
 }
 

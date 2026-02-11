@@ -6,7 +6,7 @@ import SVGBuilder
 import DesignTokens
 import WebTypes
 
-public struct XIconView: HTML {
+public struct XIconView: HTMLProtocol {
 	let `class`: String
 	let width: Length
 	let height: Length

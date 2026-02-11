@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct CheckIconView: HTML {
+public struct CheckIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

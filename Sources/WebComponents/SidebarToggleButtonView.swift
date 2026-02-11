@@ -5,7 +5,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct SidebarToggleButtonView: HTML {
+public struct SidebarToggleButtonView: HTMLProtocol {
 	let `class`: String
 
 	public init(class: String = "") {
@@ -37,7 +37,7 @@ public struct SidebarToggleButtonView: HTML {
 				opacity(0.8)
 			}
 			
-			media(minWidth(px(769))) {
+			media(minWidth(minWidthBreakpointTablet)) {
 				display(.none).important()
 			}
 		}

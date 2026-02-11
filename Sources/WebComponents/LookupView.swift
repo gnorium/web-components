@@ -6,11 +6,8 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// Lookup component following Wikimedia Codex design system specification
 /// A predictive text input that presents a dropdown menu with suggestions based on the current input value.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/lookup.html
-public struct LookupView: HTML {
+public struct LookupView: HTMLProtocol {
 	let id: String
 	let name: String
 	let menuItems: [MenuItemView.MenuItemData]
@@ -61,7 +58,7 @@ public struct LookupView: HTML {
 	}
 
 	@CSSBuilder
-	private func lookupViewCSS() -> [CSS] {
+	private func lookupViewCSS() -> [CSSProtocol] {
 		position(.relative)
 		display(.inlineBlock)
 		minWidth(px(256))

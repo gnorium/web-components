@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct VolumeUpIconView: HTML {
+public struct VolumeUpIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

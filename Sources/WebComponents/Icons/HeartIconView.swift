@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct HeartIconView: HTML {
+public struct HeartIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

@@ -5,7 +5,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct CloseButtonView: HTML {
+public struct CloseButtonView: HTMLProtocol {
 	let ariaLabel: String
 	let `class`: String
 
@@ -20,7 +20,7 @@ public struct CloseButtonView: HTML {
 	public func render(indent: Int = 0) -> String {
 		ButtonView(
 			icon: IconView {
-				CloseIconView(width: sizeIconMedium, height: sizeIconMedium)
+				CloseIconView()
 			},
 			weight: .quiet,
     		size: .large,

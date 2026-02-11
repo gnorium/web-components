@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct HelpIconView: HTML {
+public struct HelpIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

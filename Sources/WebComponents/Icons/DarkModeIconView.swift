@@ -6,7 +6,7 @@ import SVGBuilder
 import DesignTokens
 import WebTypes
 
-public struct DarkModeIconView: HTML {
+public struct DarkModeIconView: HTMLProtocol {
 	let `class`: String
 	let width: Length
 	let height: Length

@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct BookIconView: HTML {
+public struct BookIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

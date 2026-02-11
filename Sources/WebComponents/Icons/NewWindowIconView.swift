@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct NewWindowIconView: HTML {
+public struct NewWindowIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct ClockIconView: HTML {
+public struct ClockIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

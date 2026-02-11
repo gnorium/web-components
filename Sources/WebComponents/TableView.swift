@@ -6,32 +6,29 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// Table component following Wikimedia Codex design system specification
 /// A structural component used to arrange data in rows and columns.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/table.html
-public struct TableView: HTML {
+public struct TableView: HTMLProtocol {
 	let captionContent: String
 	let hideCaption: Bool
 	let columns: [Column]
 	let data: [Row]
 	let useRowHeaders: Bool
 	let showVerticalBorders: Bool
-	let useRowSelection: Bool
+	let selectionMode: SelectionMode?
 	let selectedRows: [String]
 	let sort: Sort?
 	let pending: Bool
 	let paginate: Bool
 	let paginationPosition: PaginationPosition
 	let paginationSizeDefault: Int
-	let headerContent: [HTML]
-	let theadContent: [HTML]
-	let tbodyContent: [HTML]
-	let tfootContent: [HTML]
-	let footerContent: [HTML]
-	let emptyStateContent: [HTML]
-	let theadStyle: (@Sendable () -> [any CSS])?
-	let thStyle: (@Sendable (Column.Alignment) -> [any CSS])?
+	let headerContent: [HTMLProtocol]
+	let theadContent: [HTMLProtocol]
+	let tbodyContent: [HTMLProtocol]
+	let tfootContent: [HTMLProtocol]
+	let footerContent: [HTMLProtocol]
+	let emptyStateContent: [HTMLProtocol]
+	let theadStyle: (@Sendable () -> [any CSSProtocol])?
+	let thStyle: (@Sendable (Column.Alignment) -> [any CSSProtocol])?
 	let `class`: String
 
 	public struct Column: Sendable {
@@ -75,10 +72,19 @@ public struct TableView: HTML {
 	public struct Row: Sendable {
 		let id: String?
 		let cells: [String: String]
+		let groupId: String?  // Groups rows together - first row with groupId becomes collapsible header
+		let isGroupHeader: Bool  // True if this row is a group header (rendered with expand/collapse)
 
-		public init(id: String? = nil, cells: [String: String]) {
+		public init(
+			id: String? = nil,
+			cells: [String: String],
+			groupId: String? = nil,
+			isGroupHeader: Bool = false
+		) {
 			self.id = id
 			self.cells = cells
+			self.groupId = groupId
+			self.isGroupHeader = isGroupHeader
 		}
 	}
 
@@ -118,6 +124,21 @@ public struct TableView: HTML {
 		}
 	}
 
+	/// Selection mode for row selection
+	public enum SelectionMode: Sendable {
+		/// Multiple selection using checkboxes
+		case multiple
+		/// Single selection using radio buttons
+		case single
+
+		var value: String {
+			switch self {
+			case .multiple: return "multiple"
+			case .single: return "single"
+			}
+		}
+	}
+
 	public init(
 		captionContent: String,
 		hideCaption: Bool = false,
@@ -125,22 +146,22 @@ public struct TableView: HTML {
 		data: [Row] = [],
 		useRowHeaders: Bool = false,
 		showVerticalBorders: Bool = false,
-		useRowSelection: Bool = false,
+		selectionMode: SelectionMode? = nil,
 		selectedRows: [String] = [],
 		sort: Sort? = nil,
 		pending: Bool = false,
 		paginate: Bool = false,
 		paginationPosition: PaginationPosition = .bottom,
 		paginationSizeDefault: Int = 10,
-		theadStyle: (@Sendable () -> [any CSS])? = nil,
-		thStyle: (@Sendable (Column.Alignment) -> [any CSS])? = nil,
+		theadStyle: (@Sendable () -> [any CSSProtocol])? = nil,
+		thStyle: (@Sendable (Column.Alignment) -> [any CSSProtocol])? = nil,
 		class: String = "",
-		@HTMLBuilder header: () -> [HTML] = { [] },
-		@HTMLBuilder thead: () -> [HTML] = { [] },
-		@HTMLBuilder tbody: () -> [HTML] = { [] },
-		@HTMLBuilder tfoot: () -> [HTML] = { [] },
-		@HTMLBuilder footer: () -> [HTML] = { [] },
-		@HTMLBuilder emptyState: () -> [HTML] = { [] }
+		@HTMLBuilder header: () -> [HTMLProtocol] = { [] },
+		@HTMLBuilder thead: () -> [HTMLProtocol] = { [] },
+		@HTMLBuilder tbody: () -> [HTMLProtocol] = { [] },
+		@HTMLBuilder tfoot: () -> [HTMLProtocol] = { [] },
+		@HTMLBuilder footer: () -> [HTMLProtocol] = { [] },
+		@HTMLBuilder emptyState: () -> [HTMLProtocol] = { [] }
 	) {
 		self.captionContent = captionContent
 		self.hideCaption = hideCaption
@@ -148,7 +169,7 @@ public struct TableView: HTML {
 		self.data = data
 		self.useRowHeaders = useRowHeaders
 		self.showVerticalBorders = showVerticalBorders
-		self.useRowSelection = useRowSelection
+		self.selectionMode = selectionMode
 		self.selectedRows = selectedRows
 		self.sort = sort
 		self.pending = pending
@@ -208,22 +229,22 @@ public struct TableView: HTML {
 
 					div {
 						div {
-							ButtonView(label: "First", action: .default, weight: .quiet)
+							ButtonView(label: "First", buttonColor: .gray, weight: .quiet)
 						}
 						.class("pagination-first")
 
 						div {
-							ButtonView(label: "Previous", action: .default, weight: .quiet)
+							ButtonView(label: "Previous", buttonColor: .gray, weight: .quiet)
 						}
 						.class("pagination-previous")
 
 						div {
-							ButtonView(label: "Next", action: .default, weight: .quiet)
+							ButtonView(label: "Next", buttonColor: .gray, weight: .quiet)
 						}
 						.class("pagination-next")
 
 						div {
-							ButtonView(label: "Last", action: .default, weight: .quiet)
+							ButtonView(label: "Last", buttonColor: .gray, weight: .quiet)
 						}
 						.class("pagination-last")
 					}
@@ -253,18 +274,21 @@ public struct TableView: HTML {
 					} else {
 						thead {
 							tr {
-								// Select all checkbox
-								if useRowSelection {
+								// Select all checkbox (only for multiple selection mode)
+								if let mode = selectionMode {
 									th {
-										CheckboxView(
-											id: "select-all",
-											name: "select-all",
-											checked: !selectedRows.isEmpty && selectedRows.count == data.count,
-											indeterminate: !selectedRows.isEmpty && selectedRows.count < data.count,
-											hideLabel: true
-										) {
-											"Select all"
+										if mode == .multiple {
+											CheckboxView(
+												id: "select-all",
+												name: "select-all",
+												checked: !selectedRows.isEmpty && selectedRows.count == data.count,
+												indeterminate: !selectedRows.isEmpty && selectedRows.count < data.count,
+												hideLabel: true
+											) {
+												"Select all"
+											}
 										}
+										// For single selection mode, just an empty header cell
 									}
 									.scope(.col)
 									.style {
@@ -341,7 +365,7 @@ public struct TableView: HTML {
 										}
 										.class("table-empty-state-content")
 									}
-									.colspan(columns.count + (useRowSelection ? 1 : 0))
+									.colspan(columns.count + (selectionMode != nil ? 1 : 0))
 									.class("table-empty-state")
 									.style {
 										tableEmptyStateCSS()
@@ -349,18 +373,34 @@ public struct TableView: HTML {
 								}
 							} else {
 								for (rowIndex, row) in data.enumerated() {
+									let rowId = row.id ?? String(rowIndex)
+									let isSelected = selectedRows.contains(rowId)
+									let isGroupChild = row.groupId != nil && !row.isGroupHeader
+
 									tr {
-										// Row selection checkbox
-										if useRowSelection {
+										// Row selection (checkbox for multiple, radio for single)
+										if let mode = selectionMode {
 											td {
-												CheckboxView(
-													id: "row-\(row.id ?? String(rowIndex))",
-													name: "row-selection",
-													value: row.id ?? String(rowIndex),
-													checked: selectedRows.contains(row.id ?? String(rowIndex)),
-													hideLabel: true
-												) {
-													"Select row"
+												if mode == .multiple {
+													CheckboxView(
+														id: "row-\(rowId)",
+														name: "row-selection",
+														value: rowId,
+														checked: isSelected,
+														hideLabel: true
+													) {
+														"Select row"
+													}
+												} else {
+													RadioView(
+														id: "row-\(rowId)",
+														name: "row-selection",
+														value: rowId,
+														checked: isSelected,
+														hideLabel: true
+													) {
+														"Select row"
+													}
 												}
 											}
 											.style {
@@ -375,24 +415,96 @@ public struct TableView: HTML {
 
 											if useRowHeaders && isFirstCell {
 												th {
+													// Group header gets expand/collapse toggle
+													if row.isGroupHeader {
+														span {
+															CollapseIconView()
+														}
+														.class("group-toggle group-expanded")
+														.ariaHidden(true)
+														.style {
+																display(.inlineBlock)
+																marginInlineEnd(spacing8)
+																cursor(cursorBase)
+															}
+														span {
+															ExpandIconView()
+														}
+														.class("group-toggle group-collapsed")
+														.ariaHidden(true)
+														.style {
+															display(.none)
+															marginInlineEnd(spacing8)
+															cursor(cursorBase)
+														}
+													}
+													// Child rows get indentation
+													if isGroupChild {
+														span { "" }
+															.style {
+																display(.inlineBlock)
+																width(spacing24)
+															}
+													}
 													cellContent
 												}
 												.scope(.row)
 												.style {
 													tableThCSS(column.align)
+													if row.isGroupHeader {
+														fontWeight(fontWeightBold)
+														backgroundColor(backgroundColorNeutralSubtle)
+													}
 												}
 											} else {
 												td {
+													// Group header first cell gets expand/collapse toggle
+													if row.isGroupHeader && isFirstCell {
+														span {
+															CollapseIconView()
+														}
+														.class("group-toggle group-expanded")
+														.ariaHidden(true)
+														.style {
+															display(.inlineBlock)
+															marginInlineEnd(spacing8)
+															cursor(cursorBase)
+														}
+														span {
+															ExpandIconView()
+														}
+														.class("group-toggle group-collapsed")
+														.ariaHidden(true)
+														.style {
+															display(.none)
+															marginInlineEnd(spacing8)
+															cursor(cursorBase)
+														}
+													}
+													// Child rows get indentation on first cell
+													if isGroupChild && isFirstCell {
+														span { "" }
+															.style {
+																display(.inlineBlock)
+																width(spacing24)
+															}
+													}
 													cellContent
 												}
 												.style {
 													tableTdCSS(column.align)
+													if row.isGroupHeader {
+														fontWeight(fontWeightBold)
+														backgroundColor(backgroundColorNeutralSubtle)
+													}
 												}
 											}
 										}
 									}
-									.data("row-id", row.id ?? String(rowIndex))
-									.class(selectedRows.contains(row.id ?? String(rowIndex)) ? "table-row table-row-selected" : "table-row")
+									.data("row-id", rowId)
+									.data("group-id", row.groupId ?? "")
+									.data("is-group-header", row.isGroupHeader ? "true" : "")
+									.class(buildRowClass(isSelected: isSelected, isGroupHeader: row.isGroupHeader, isGroupChild: isGroupChild))
 								}
 							}
 						}
@@ -436,22 +548,22 @@ public struct TableView: HTML {
 
 					div {
 						div {
-							ButtonView(label: "First", action: .default, weight: .quiet)
+							ButtonView(label: "First", buttonColor: .gray, weight: .quiet)
 						}
 						.class("pagination-first")
 
 						div {
-							ButtonView(label: "Previous", action: .default, weight: .quiet)
+							ButtonView(label: "Previous", buttonColor: .gray, weight: .quiet)
 						}
 						.class("pagination-previous")
 
 						div {
-							ButtonView(label: "Next", action: .default, weight: .quiet)
+							ButtonView(label: "Next", buttonColor: .gray, weight: .quiet)
 						}
 						.class("pagination-next")
 
 						div {
-							ButtonView(label: "Last", action: .default, weight: .quiet)
+							ButtonView(label: "Last", buttonColor: .gray, weight: .quiet)
 						}
 						.class("pagination-last")
 					}
@@ -478,7 +590,7 @@ public struct TableView: HTML {
 			}
 		}
 		.class(`class`.isEmpty ? "table-view" : "table-view \(`class`)")
-		.data("use-row-selection", useRowSelection ? true : false)
+		.data("selection-mode", selectionMode?.value ?? "")
 		.data("paginate", paginate ? true : false)
 		.style {
 			tableViewCSS()
@@ -486,23 +598,31 @@ public struct TableView: HTML {
 		.render(indent: indent)
 	}
 
+	private func buildRowClass(isSelected: Bool, isGroupHeader: Bool, isGroupChild: Bool) -> String {
+		var classes = ["table-row"]
+		if isSelected { classes.append("table-row-selected") }
+		if isGroupHeader { classes.append("table-group-header") }
+		if isGroupChild { classes.append("table-group-child") }
+		return classes.joined(separator: " ")
+	}
+
     @CSSBuilder
-	private func tableViewCSS() -> [CSS] {
+	private func tableViewCSS() -> [CSSProtocol] {
 		width(perc(100))
 	}
 
 	@CSSBuilder
-	private func tableHeaderCSS() -> [CSS] {
+	private func tableHeaderCSS() -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.spaceBetween)
 		gap(spacing12)
 		padding(spacing12)
-		marginBottom(spacing8)
+		marginBlockEnd(spacing8)
 	}
 
 	@CSSBuilder
-	private func tableHeaderTitleCSS() -> [CSS] {
+	private func tableHeaderTitleCSS() -> [CSSProtocol] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeLarge18)
 		fontWeight(fontWeightBold)
@@ -512,14 +632,14 @@ public struct TableView: HTML {
 	}
 
 	@CSSBuilder
-	private func tableWrapperCSS() -> [CSS] {
+	private func tableWrapperCSS() -> [CSSProtocol] {
 		overflowX(.auto)
 		border(borderWidthBase, .solid, borderColorSubtle)
 		borderRadius(borderRadiusBase)
 	}
 
 	@CSSBuilder
-	private func tableTableCSS(_ showVerticalBorders: Bool) -> [CSS] {
+	private func tableTableCSS(_ showVerticalBorders: Bool) -> [CSSProtocol] {
 		width(perc(100))
 		borderCollapse(.collapse)
 		fontFamily(typographyFontSans)
@@ -529,17 +649,17 @@ public struct TableView: HTML {
 
 		if showVerticalBorders {
 			selector(" td, th") {
-				borderRight(borderWidthBase, .solid, borderColorSubtle)
+				borderInlineEnd(borderWidthBase, .solid, borderColorSubtle)
 			}
 
 			selector(" td:last-child, th:last-child") {
-				borderRight(.none)
+				borderInlineEnd(.none)
 			}
 		}
 	}
 
 	@CSSBuilder
-	private func tableCaptionCSS(_ hideCaption: Bool) -> [CSS] {
+	private func tableCaptionCSS(_ hideCaption: Bool) -> [CSSProtocol] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		fontWeight(fontWeightBold)
@@ -562,13 +682,13 @@ public struct TableView: HTML {
 	}
 
 	@CSSBuilder
-	private func tableTheadCSS() -> [CSS] {
+	private func tableTheadCSS() -> [CSSProtocol] {
 		backgroundColor(backgroundColorNeutralSubtle)
-		borderBottom(borderWidthBase, .solid, borderColorSubtle)
+		borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
 	}
 
 	@CSSBuilder
-	private func tableThCSS(_ align: Column.Alignment) -> [CSS] {
+	private func tableThCSS(_ align: Column.Alignment) -> [CSSProtocol] {
 		padding(spacing12)
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeSmall14)
@@ -584,13 +704,13 @@ public struct TableView: HTML {
 		case .end:
 			textAlign(.end)
 		case .number:
-			textAlign(.right)
+			textAlign(.end)
 		}
 		verticalAlign(.middle)
 	}
 
 	@CSSBuilder
-	private func tableSortButtonCSS() -> [CSS] {
+	private func tableSortButtonCSS() -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing4)
@@ -608,16 +728,16 @@ public struct TableView: HTML {
 		transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
 
 		pseudoClass(.hover) {
-			color(colorProgressive).important()
+			color(colorBlue).important()
 		}
 
 		pseudoClass(.active) {
-			color(colorProgressiveActive).important()
+			color(colorBlueActive).important()
 		}
 	}
 
 	@CSSBuilder
-	private func tableSortIconCSS() -> [CSS] {
+	private func tableSortIconCSS() -> [CSSProtocol] {
 		display(.inlineFlex)
 		width(sizeIconSmall)
 		height(sizeIconSmall)
@@ -625,13 +745,13 @@ public struct TableView: HTML {
 	}
 
 	@CSSBuilder
-	private func tableTbodyCSS() -> [CSS] {
+	private func tableTbodyCSS() -> [CSSProtocol] {
 		selector("tr") {
-			borderBottom(borderWidthBase, .solid, borderColorSubtle)
+			borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
 		}
 
 		selector("tr:last-child") {
-			borderBottom(.none)
+			borderBlockEnd(.none)
 		}
 
 		selector("tr:hover") {
@@ -640,7 +760,7 @@ public struct TableView: HTML {
 	}
 
 	@CSSBuilder
-	private func tableTdCSS(_ align: Column.Alignment) -> [CSS] {
+	private func tableTdCSS(_ align: Column.Alignment) -> [CSSProtocol] {
 		padding(spacing12)
 
 		switch align {
@@ -651,20 +771,20 @@ public struct TableView: HTML {
 		case .end:
 			textAlign(.end)
 		case .number:
-			textAlign(.right)
+			textAlign(.end)
 		}
 		verticalAlign(.middle)
 	}
 
 	@CSSBuilder
-	private func tableTfootCSS() -> [CSS] {
+	private func tableTfootCSS() -> [CSSProtocol] {
 		backgroundColor(backgroundColorNeutralSubtle)
-		borderTop(borderWidthBase, .solid, borderColorSubtle)
+		borderBlockStart(borderWidthBase, .solid, borderColorSubtle)
 		fontWeight(fontWeightBold)
 	}
 
 	@CSSBuilder
-	private func tableEmptyStateCSS() -> [CSS] {
+	private func tableEmptyStateCSS() -> [CSSProtocol] {
 		padding(spacing48)
 		textAlign(.center)
 		color(colorSubtle)
@@ -674,24 +794,24 @@ public struct TableView: HTML {
 	}
 
 	@CSSBuilder
-	private func tableFooterCSS() -> [CSS] {
+	private func tableFooterCSS() -> [CSSProtocol] {
 		padding(spacing12)
-		marginTop(spacing8)
+		marginBlockStart(spacing8)
 	}
 
 	@CSSBuilder
-	private func tablePaginationCSS() -> [CSS] {
+	private func tablePaginationCSS() -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.spaceBetween)
 		gap(spacing12)
 		padding(spacing12)
-		borderTop(borderWidthBase, .solid, borderColorSubtle)
+		borderBlockStart(borderWidthBase, .solid, borderColorSubtle)
 		flexWrap(.wrap)
 	}
 
 	@CSSBuilder
-	private func paginationInfoCSS() -> [CSS] {
+	private func paginationInfoCSS() -> [CSSProtocol] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeSmall14)
 		lineHeight(lineHeightSmall22)
@@ -699,7 +819,7 @@ public struct TableView: HTML {
 	}
 
 	@CSSBuilder
-	private func paginationControlsCSS() -> [CSS] {
+	private func paginationControlsCSS() -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing8)
@@ -718,22 +838,32 @@ import EmbeddedSwiftUtilities
 private class TableInstance: @unchecked Sendable {
     private var table: Element
     private var selectAllCheckbox: Element?
-    private var rowCheckboxes: [Element] = []
+    private var rowInputs: [Element] = []
     private var sortButtons: [Element] = []
+    private var groupHeaders: [Element] = []
     private var paginationFirstBtn: Element?
     private var paginationPrevBtn: Element?
     private var paginationNextBtn: Element?
     private var paginationLastBtn: Element?
     private var selectedRows: [String] = []
+    private var collapsedGroups: [String] = []
     private var currentSort: (columnId: String, direction: String)?
     private var currentPage: Int = 1
+    private var selectionMode: String = ""
 
     init(table: Element) {
         self.table = table
 
+        // Get selection mode from data attribute
+        if let mode = table.getAttribute("data-selection-mode") {
+            selectionMode = mode
+        }
+
         selectAllCheckbox = table.querySelector("#select-all")
-        rowCheckboxes = Array(table.querySelectorAll("[id^='row-']"))
+        // Query for both checkbox and radio inputs
+        rowInputs = Array(table.querySelectorAll("[id^='row-']"))
         sortButtons = Array(table.querySelectorAll(".table-sort-button"))
+        groupHeaders = Array(table.querySelectorAll(".table-group-header"))
 
         paginationFirstBtn = table.querySelector(".pagination-first")
         paginationPrevBtn = table.querySelector(".pagination-previous")
@@ -744,17 +874,32 @@ private class TableInstance: @unchecked Sendable {
     }
 
     private func bindEvents() {
-        // Select all checkbox
-        if let selectAll = selectAllCheckbox {
-            _ = selectAll.addEventListener(.change) { [self] _ in
-                self.toggleSelectAll()
+        // Select all checkbox (only for multiple selection mode)
+        if stringEquals(selectionMode, "multiple") {
+            if let selectAll = selectAllCheckbox {
+                _ = selectAll.addEventListener(.change) { [self] _ in
+                    self.toggleSelectAll()
+                }
             }
         }
 
-        // Row checkboxes
-        for checkbox in rowCheckboxes {
-            _ = checkbox.addEventListener(.change) { [self] _ in
+        // Row inputs (checkboxes or radios)
+        for input in rowInputs {
+            _ = input.addEventListener(.change) { [self] _ in
                 self.updateRowSelection()
+            }
+        }
+
+        // Group header expand/collapse
+        for header in groupHeaders {
+            _ = header.addEventListener(.click) { [self] event in
+                // Only toggle if clicking on the toggle icon area
+                if let target = event.target {
+                    let classList = target.className
+                    if stringContains(classList, "group-toggle") || stringContains(classList, "icon") {
+                        self.toggleGroup(header)
+                    }
+                }
             }
         }
 
@@ -792,12 +937,55 @@ private class TableInstance: @unchecked Sendable {
         }
     }
 
+    private func toggleGroup(_ header: Element) {
+        guard let groupId = header.getAttribute("data-group-id"), !groupId.isEmpty else { return }
+
+        // Check if currently collapsed
+        let isCollapsed = collapsedGroups.contains(where: { stringEquals($0, groupId) })
+
+        if isCollapsed {
+            // Expand: remove from collapsed list
+            collapsedGroups = collapsedGroups.filter { !stringEquals($0, groupId) }
+        } else {
+            // Collapse: add to collapsed list
+            collapsedGroups.append(groupId)
+        }
+
+        // Update visibility of child rows
+        let childRows = table.querySelectorAll(".table-group-child[data-group-id='\(groupId)']")
+        for child in childRows {
+            if isCollapsed {
+                child.style.display(.tableRow)
+            } else {
+                child.style.display(.none)
+            }
+        }
+
+        // Update toggle icon visibility
+        let expandedIcon = header.querySelector(".group-expanded")
+        let collapsedIcon = header.querySelector(".group-collapsed")
+
+        if isCollapsed {
+            // Now expanded
+            expandedIcon?.style.display(.inlineBlock)
+            collapsedIcon?.style.display(.none)
+        } else {
+            // Now collapsed
+            expandedIcon?.style.display(.none)
+            collapsedIcon?.style.display(.inlineBlock)
+        }
+
+        // Dispatch group toggle event
+        let event = CustomEvent(type: "table-group-toggle", detail: "\(groupId):\(isCollapsed ? "expanded" : "collapsed")")
+        table.dispatchEvent(event)
+    }
+
     private func toggleSelectAll() {
         guard let selectAll = selectAllCheckbox else { return }
         let isChecked = selectAll.checked
 
-        for checkbox in rowCheckboxes {
-            checkbox.checked = isChecked
+        for input in rowInputs {
+            input.checked = isChecked
         }
 
         updateRowSelection()
@@ -806,9 +994,9 @@ private class TableInstance: @unchecked Sendable {
     private func updateRowSelection() {
         selectedRows = []
 
-        for checkbox in rowCheckboxes {
-            if checkbox.checked {
-                if let idStr = checkbox.getAttribute(.id) {
+        for input in rowInputs {
+            if input.checked {
+                if let idStr = input.getAttribute(.id) {
                     if stringContains(idStr, "row-") {
                         // Manual substring to avoid String(decoding:) trigger via stringReplace, but use safe decoding
                         var rowIdBytes: [UInt8] = []
@@ -826,17 +1014,19 @@ private class TableInstance: @unchecked Sendable {
             }
         }
 
-        // Update select all checkbox state
-        if let selectAll = selectAllCheckbox {
-            if selectedRows.isEmpty {
-                selectAll.checked = false
-                selectAll.indeterminate = false
-            } else if selectedRows.count == rowCheckboxes.count {
-                selectAll.checked = true
-                selectAll.indeterminate = false
-            } else {
-                selectAll.checked = false
-                selectAll.indeterminate = true
+        // Update select all checkbox state (only for multiple selection mode)
+        if stringEquals(selectionMode, "multiple") {
+            if let selectAll = selectAllCheckbox {
+                if selectedRows.isEmpty {
+                    selectAll.checked = false
+                    selectAll.indeterminate = false
+                } else if selectedRows.count == rowInputs.count {
+                    selectAll.checked = true
+                    selectAll.indeterminate = false
+                } else {
+                    selectAll.checked = false
+                    selectAll.indeterminate = true
+                }
             }
         }
 
@@ -874,7 +1064,7 @@ private class TableInstance: @unchecked Sendable {
         currentPage = page
 
         // Dispatch page change event
-        let event = CustomEvent(type: "table-page-change", detail: String(page))
+        let event = CustomEvent(type: "table-page-change", detail: intToString(page))
         table.dispatchEvent(event)
     }
 }

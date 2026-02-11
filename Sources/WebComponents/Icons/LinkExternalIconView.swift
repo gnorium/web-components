@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct LinkExternalIconView: HTML {
+public struct LinkExternalIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

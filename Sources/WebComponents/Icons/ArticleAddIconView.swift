@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct ArticleAddIconView: HTML {
+public struct ArticleAddIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

@@ -6,15 +6,12 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// ProgressIndicator component following Wikimedia Codex design system specification
 /// A visual element used to indicate the ongoing, indefinite progress of an action or process.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/progress-indicator.html
-public struct ProgressIndicatorView: HTML {
+public struct ProgressIndicatorView: HTMLProtocol {
 	let showLabel: Bool
 	let ariaHidden: Bool
 	let ariaLabel: String?
-	let content: [HTML]
+	let content: [HTMLProtocol]
 	let `class`: String
 
 	public init(
@@ -22,7 +19,7 @@ public struct ProgressIndicatorView: HTML {
 		ariaHidden: Bool = false,
 		ariaLabel: String? = nil,
 		class: String = "",
-		@HTMLBuilder content: () -> [HTML] = { [] }
+		@HTMLBuilder content: () -> [HTMLProtocol] = { [] }
 	) {
 		self.showLabel = showLabel
 		self.ariaHidden = ariaHidden
@@ -32,7 +29,7 @@ public struct ProgressIndicatorView: HTML {
 	}
 
 	@CSSBuilder
-	private func progressIndicatorViewCSS() -> [CSS] {
+	private func progressIndicatorViewCSS() -> [CSSProtocol] {
 		display(.inlineFlex)
 		alignItems(.center)
 		gap(spacing8)
@@ -44,13 +41,13 @@ public struct ProgressIndicatorView: HTML {
 	}
 
 	@CSSBuilder
-	private func progressIndicatorSpinnerCSS() -> [CSS] {
+	private func progressIndicatorSpinnerCSS() -> [CSSProtocol] {
 		display(.inlineBlock)
 		width(sizeIconMedium)
 		height(sizeIconMedium)
 		borderWidth(borderWidthThick)
 		borderStyle(.solid)
-		borderColor(borderColorProgressive)
+		borderColor(borderColorBlue)
 		borderTopColor(borderColorTransparent)
 		borderRadius(borderRadiusCircle)
 		animation("progress-indicator-spin", s(1), .linear, .infinite)
@@ -58,7 +55,7 @@ public struct ProgressIndicatorView: HTML {
 	}
 
 	@CSSBuilder
-	private func progressIndicatorLabelCSS() -> [CSS] {
+	private func progressIndicatorLabelCSS() -> [CSSProtocol] {
 		display(.inline)
 	}
 

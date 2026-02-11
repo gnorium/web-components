@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct ExpandIconView: HTML {
+public struct ExpandIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

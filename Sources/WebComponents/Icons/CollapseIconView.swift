@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct CollapseIconView: HTML {
+public struct CollapseIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

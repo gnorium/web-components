@@ -7,7 +7,7 @@ import WebTypes
 
 /// Generic form view component for creating and editing records.
 /// Auto-generates form fields based on configuration.
-public struct FormView: HTML {
+public struct FormView: HTMLProtocol {
 	/// Form field configuration
 	public struct Field: Sendable {
 		public let name: String
@@ -93,7 +93,6 @@ public struct FormView: HTML {
 					fontWeight(.normal)
 					color(colorBase)
 					margin(0)
-					marginBottom(spacing32)
 				}
 			
 			// Form
@@ -112,14 +111,14 @@ public struct FormView: HTML {
 							fontSize(fontSizeMedium16)
 							fontWeight(500)
 							color(colorInverted)
-							backgroundColor(backgroundColorProgressive)
+							backgroundColor(backgroundColorBlue)
 							border(.none)
 							borderRadius(borderRadiusBase)
 							cursor(.pointer)
 							transition(.backgroundColor, transitionDurationBase, transitionTimingFunctionSystem)
 							
 							pseudoClass(.hover) {
-								backgroundColor(backgroundColorProgressiveHover)
+								backgroundColor(backgroundColorBlueHover)
 							}
 						}
 					
@@ -147,23 +146,30 @@ public struct FormView: HTML {
 				.style {
 					display(.flex)
 					gap(spacing16)
-					marginTop(spacing32)
 				}
 			}
 			.action(formAction)
 			.method(.post)
+			.style {
+				display(.flex)
+				flexDirection(.column)
+				gap(spacing24)
+			}
 		}
 		.class("form-view")
 		.style {
 			maxWidth(px(800))
 			margin(0, .auto)
 			padding(spacing48, spacing24)
+			display(.flex)
+			flexDirection(.column)
+			gap(spacing32)
 		}
 		.render(indent: indent)
 	}
 	
 	@HTMLBuilder
-	private func renderField(_ field: Field) -> HTML {
+	private func renderField(_ field: Field) -> HTMLProtocol {
 		if field.type == .hidden {
 			input()
 				.type(.hidden)
@@ -177,13 +183,13 @@ public struct FormView: HTML {
 						.name(field.name)
 						.value("true")
 						.checked(field.value == "true")
-						.style { marginRight(spacing8) }
 					
 					span { field.label }
 				}
 				.style {
 					display(.flex)
 					alignItems(.center)
+					gap(spacing8)
 					fontSize(fontSizeMedium16)
 					color(colorBase)
 					cursor(.pointer)
@@ -194,23 +200,23 @@ public struct FormView: HTML {
 						.style {
 							fontSize(fontSizeSmall14)
 							color(colorSubtle)
-							marginTop(spacing4)
-							marginBottom(0)
 						}
 				}
 			}
 			.class("form-field")
-			.style { marginBottom(spacing24) }
+			.style {
+				display(.flex)
+				flexDirection(.column)
+				gap(spacing8)
+			}
 		} else {
 			div {
 				label { field.label + (field.required ? "" : " (optional)") }
 					.for(field.name)
 					.style {
-						display(.block)
 						fontSize(fontSizeSmall14)
 						fontWeight(500)
 						color(colorBase)
-						marginBottom(spacing8)
 					}
 				
 				fieldInput(field)
@@ -220,18 +226,20 @@ public struct FormView: HTML {
 						.style {
 							fontSize(fontSizeSmall14)
 							color(colorSubtle)
-							marginTop(spacing8)
-							marginBottom(0)
 						}
 				}
 			}
 			.class("form-field")
-			.style { marginBottom(spacing24) }
+			.style {
+				display(.flex)
+				flexDirection(.column)
+				gap(spacing8)
+			}
 		}
 	}
 	
 	@HTMLBuilder
-	private func fieldInput(_ field: Field) -> HTML {
+	private func fieldInput(_ field: Field) -> HTMLProtocol {
 		switch field.type {
 		case .textarea:
 			textarea { field.value }
@@ -334,7 +342,7 @@ public struct FormView: HTML {
 	}
 	
 	@CSSBuilder
-	private func inputStyle() -> [CSS] {
+	private func inputStyle() -> [CSSProtocol] {
 		width(perc(100))
 		padding(spacing12, spacing16)
 		fontFamily(typographyFontSans)
@@ -345,9 +353,9 @@ public struct FormView: HTML {
 		borderRadius(borderRadiusBase)
 		
 		pseudoClass(.focus) {
-			borderColor(borderColorProgressiveFocus)
+			borderColor(borderColorBlueFocus)
 			outline(.none)
-			boxShadow(.inset, 0, 0, 0, px(1), borderColorProgressiveFocus)
+			boxShadow(.inset, 0, 0, 0, px(1), borderColorBlueFocus)
 		}
 		
 		pseudoClass(.disabled) {

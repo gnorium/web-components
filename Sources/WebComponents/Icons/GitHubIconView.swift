@@ -6,7 +6,7 @@ import SVGBuilder
 import DesignTokens
 import WebTypes
 
-public struct GitHubIconView: HTML {
+public struct GitHubIconView: HTMLProtocol {
 	let `class`: String
 	let width: Length
 	let height: Length

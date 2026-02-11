@@ -6,12 +6,9 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// ChipInput component following Wikimedia Codex design system specification
 /// A ChipInput allows users to create chips to filter content or make selections.
 /// Chips are editable and can be removed.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/chip-input.html
-public struct ChipInputView: HTML {
+public struct ChipInputView: HTMLProtocol {
 	public struct Chip : Sendable{
 		let id: String
 		let value: String
@@ -62,7 +59,7 @@ public struct ChipInputView: HTML {
 	}
 
 	@CSSBuilder
-	private func chipInputViewCSS(_ disabled: Bool) -> [CSS] {
+	private func chipInputViewCSS(_ disabled: Bool) -> [CSSProtocol] {
 		if disabled {
 			opacity(opacityMedium)
 			cursor(cursorBaseDisabled)
@@ -70,7 +67,7 @@ public struct ChipInputView: HTML {
 	}
 
 	@CSSBuilder
-	private func chipCSS() -> [CSS] {
+	private func chipCSS() -> [CSSProtocol] {
 		display(.inlineFlex)
 		alignItems(.center)
 		maxWidth(perc(100))
@@ -89,19 +86,19 @@ public struct ChipInputView: HTML {
 		}
 
 		pseudoClass(.focus) {
-			borderColor(borderColorProgressiveFocus).important()
-			boxShadow(px(0), px(0), px(0), px(1), boxShadowColorProgressiveFocus).important()
+			borderColor(borderColorBlueFocus).important()
+			boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
 			outline(px(1), .solid, .transparent).important()
 		}
 	}
 
 	@CSSBuilder
-	private func chipIconCSS() -> [CSS] {
+	private func chipIconCSS() -> [CSSProtocol] {
 		display(.inlineFlex)
 	}
 
 	@CSSBuilder
-	private func chipButtonCSS(_ disabled: Bool) -> [CSS] {
+	private func chipButtonCSS(_ disabled: Bool) -> [CSSProtocol] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -124,7 +121,7 @@ public struct ChipInputView: HTML {
 		}
 
 		pseudoClass(.focus) {
-			outline(px(2), .solid, borderColorProgressiveFocus).important()
+			outline(px(2), .solid, borderColorBlueFocus).important()
 			outlineOffset(px(-2)).important()
 		}
 
@@ -135,33 +132,33 @@ public struct ChipInputView: HTML {
 
 
 	@CSSBuilder
-	private func chipInputChipsCSS(_ status: ValidationStatus) -> [CSS] {
+	private func chipInputChipsCSS(_ status: ValidationStatus) -> [CSSProtocol] {
 		display(.flex)
 		flexWrap(.wrap)
 		gap(spacing8)
 		padding(spacing8)
 		backgroundColor(backgroundColorBase)
-		border(borderWidthBase, .solid, status == .error ? borderColorError : borderColorInputBinary)
+		border(borderWidthBase, .solid, status == .error ? borderColorRed : borderColorInputBinary)
 		borderRadius(borderRadiusBase)
 	}
 
 	@CSSBuilder
-	private func chipInputInputWrapperCSS(_ status: ValidationStatus) -> [CSS] {
+	private func chipInputInputWrapperCSS(_ status: ValidationStatus) -> [CSSProtocol] {
 		display(.flex)
 		padding(spacing8)
 		backgroundColor(backgroundColorBase)
-		border(borderWidthBase, .solid, status == .error ? borderColorError : borderColorInputBinary)
+		border(borderWidthBase, .solid, status == .error ? borderColorRed : borderColorInputBinary)
 		borderRadius(borderRadiusBase)
 		transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
 
 		pseudoClass(.focusWithin) {
-			borderColor(borderColorProgressiveFocus).important()
-			boxShadow(px(0), px(0), px(0), px(1), boxShadowColorProgressiveFocus).important()
+			borderColor(borderColorBlueFocus).important()
+			boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
 		}
 	}
 
 	@CSSBuilder
-	private func chipInputItemsCSS(_ status: ValidationStatus, _ disabled: Bool) -> [CSS] {
+	private func chipInputItemsCSS(_ status: ValidationStatus, _ disabled: Bool) -> [CSSProtocol] {
 		display(.flex)
 		flexWrap(.wrap)
 		alignItems(.center)
@@ -169,13 +166,13 @@ public struct ChipInputView: HTML {
 		padding(spacing8)
 		minHeight(minSizeInteractivePointer)
 		backgroundColor(disabled ? backgroundColorDisabled : backgroundColorBase)
-		border(borderWidthBase, .solid, disabled ? borderColorDisabled : (status == .error ? borderColorError : borderColorInputBinary))
+		border(borderWidthBase, .solid, disabled ? borderColorDisabled : (status == .error ? borderColorRed : borderColorInputBinary))
 		borderRadius(borderRadiusBase)
 		transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
 
 		pseudoClass(.focusWithin) {
-			borderColor(borderColorProgressiveFocus).important()
-			boxShadow(px(0), px(0), px(0), px(1), boxShadowColorProgressiveFocus).important()
+			borderColor(borderColorBlueFocus).important()
+			boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
 		}
 
 		if disabled {
@@ -184,7 +181,7 @@ public struct ChipInputView: HTML {
 	}
 
 	public func render(indent: Int = 0) -> String {
-		let chipElements: [HTML] = chips.map { chip in
+		let chipElements: [HTMLProtocol] = chips.map { chip in
 			div {
 				if let icon = chip.icon {
 					span { icon }

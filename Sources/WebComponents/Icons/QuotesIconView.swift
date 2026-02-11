@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct QuotesIconView: HTML {
+public struct QuotesIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

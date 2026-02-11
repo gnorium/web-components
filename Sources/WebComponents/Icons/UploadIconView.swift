@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct UploadIconView: HTML {
+public struct UploadIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

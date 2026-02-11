@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct CopyIconView: HTML {
+public struct CopyIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

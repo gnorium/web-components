@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct SidebarToggleIconView: HTML {
+public struct SidebarToggleIconView: HTMLProtocol {
 	let `class`: String
 
 	public init(class: String = "") {
@@ -47,7 +47,7 @@ public struct SidebarToggleIconView: HTML {
 	}
 	
 	@CSSBuilder
-	private func sidebarToggleIconLineCSS() -> [CSS] {
+	private func sidebarToggleIconLineCSS() -> [CSSProtocol] {
 		position(.absolute)
 		width(perc(100))
 		height(px(2))

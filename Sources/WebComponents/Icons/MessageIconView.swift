@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct MessageIconView: HTML {
+public struct MessageIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

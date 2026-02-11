@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct LanguageIconView: HTML {
+public struct LanguageIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

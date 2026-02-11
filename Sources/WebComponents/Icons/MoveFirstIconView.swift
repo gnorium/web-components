@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct MoveFirstIconView: HTML {
+public struct MoveFirstIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

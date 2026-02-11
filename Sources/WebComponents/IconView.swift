@@ -7,12 +7,9 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// Icon component following Wikimedia Codex design system specification
 /// A graphical representation of an idea. Can be used inside other components.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/icon.html
-public struct IconView: HTML {
-	let icon: [HTML]
+public struct IconView: HTMLProtocol {
+	let icon: [HTMLProtocol]
 	let iconLabel: String?
 	let size: IconSize
 	let iconColor: CSSColor?
@@ -25,7 +22,7 @@ public struct IconView: HTML {
 	}
 
 	public init(
-		icon: [HTML],
+		icon: [HTMLProtocol],
 		iconLabel: String? = nil,
 		size: IconSize = .medium,
 		iconColor: CSSColor? = nil,
@@ -40,7 +37,7 @@ public struct IconView: HTML {
 
 	/// Convenience init for icon components
 	public init(
-		@HTMLBuilder icon: () -> [HTML],
+		@HTMLBuilder icon: () -> [HTMLProtocol],
 		iconLabel: String? = nil,
 		size: IconSize = .medium,
 		iconColor: CSSColor? = nil,
@@ -55,7 +52,7 @@ public struct IconView: HTML {
 
 	/// Convenience init for icon components with size parameter passed to icon builder
 	public init(
-		@HTMLBuilder icon: (_ size: Length) -> [HTML],
+		@HTMLBuilder icon: (_ size: Length) -> [HTMLProtocol],
 		iconLabel: String? = nil,
 		size: IconSize = .medium,
 		iconColor: CSSColor? = nil,
@@ -70,7 +67,7 @@ public struct IconView: HTML {
 	}
 
 	private static func sizeToLength(_ size: IconSize) -> Length {
-		// Return concrete pixel values for SVG attributes (SVG doesn't support CSS variables)
+		// Return concrete pixel values for SVGProtocol attributes (SVGProtocol doesn't support CSSProtocol variables)
 		switch size {
 		case .medium:
 			return px(20)  // fontSizeMedium16 (16px) + 4px
@@ -82,7 +79,7 @@ public struct IconView: HTML {
 	}
 
 	@CSSBuilder
-	private func iconViewCSS(_ size: IconSize, _ iconColor: CSSColor?) -> [CSS] {
+	private func iconViewCSS(_ size: IconSize, _ iconColor: CSSColor?) -> [CSSProtocol] {
 		display(.flex)
         alignItems(.center)
         justifyContent(.center)

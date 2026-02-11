@@ -6,11 +6,8 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// Image component following Wikimedia Codex design system specification
 /// A visual element used to display content in various formats and states.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/image.html
-public struct ImageView: HTML {
+public struct ImageView: HTMLProtocol {
 	let src: String
 	let alt: String
 	let aspectRatio: AspectRatio?
@@ -70,7 +67,7 @@ public struct ImageView: HTML {
 	}
 
 	@CSSBuilder
-	private func imageViewCSS(_ imagePosition: Position?, _ aspectRatio: AspectRatio?) -> [CSS] {
+	private func imageViewCSS(_ imagePosition: Position?, _ aspectRatio: AspectRatio?) -> [CSSProtocol] {
 		display(.block)
 		position(.relative)
 		overflow(.hidden)
@@ -79,12 +76,11 @@ public struct ImageView: HTML {
 		if let imagePosition = imagePosition {
 			switch imagePosition {
 			case .left:
-				marginRight(.auto)
+				marginInlineEnd(.auto)
 			case .center:
-				marginLeft(.auto)
-				marginRight(.auto)
+				marginInline(.auto)
 			case .right:
-				marginLeft(.auto)
+				marginInlineStart(.auto)
 			}
 		}
 
@@ -104,15 +100,15 @@ public struct ImageView: HTML {
 	}
 
 	@CSSBuilder
-	private func imageImageCSS(_ objectFitVal: CSSObjectFit, _ objectPositionVal: CSSObjectPosition, _ hasAspectRatio: Bool) -> [CSS] {
+	private func imageImageCSS(_ objectFitVal: CSSObjectFit, _ objectPositionVal: CSSObjectPosition, _ hasAspectRatio: Bool) -> [CSSProtocol] {
 		display(.block)
 		width(perc(100))
 		height(perc(100))
 
 		if hasAspectRatio {
 			position(.absolute)
-			top(0)
-			left(0)
+			insetBlockStart(0)
+			insetInlineStart(0)
 		}
 
 		objectFit(objectFitVal)
@@ -120,10 +116,10 @@ public struct ImageView: HTML {
 	}
 
 	@CSSBuilder
-	private func imagePlaceholderCSS() -> [CSS] {
+	private func imagePlaceholderCSS() -> [CSSProtocol] {
 		position(.absolute)
-		top(0)
-		left(0)
+		insetBlockStart(0)
+		insetInlineStart(0)
 		width(perc(100))
 		height(perc(100))
 		display(.flex)

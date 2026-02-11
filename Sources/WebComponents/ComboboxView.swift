@@ -6,12 +6,9 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// Combobox component following Wikimedia Codex design system specification
 /// A Combobox is a text input with a dropdown menu of selectable options.
 /// Combines a menu of selectable items with a text box that can accept arbitrary input.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/combobox.html
-public struct ComboboxView: HTML {
+public struct ComboboxView: HTMLProtocol {
 	let id: String
 	let name: String
 	let menuItems: [MenuItemView.MenuItemData]
@@ -53,14 +50,14 @@ public struct ComboboxView: HTML {
 	}
 
 	@CSSBuilder
-	private func comboboxViewCSS() -> [CSS] {
+	private func comboboxViewCSS() -> [CSSProtocol] {
 		position(.relative)
 		display(.inlineBlock)
 		minWidth(px(256))
 	}
 
 	@CSSBuilder
-	private func comboboxIndicatorCSS() -> [CSS] {
+	private func comboboxIndicatorCSS() -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)

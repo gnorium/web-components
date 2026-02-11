@@ -6,12 +6,9 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// Field component following Wikimedia Codex design system specification
 /// A form field with a label, an input or control, and an optional validation message.
 /// Provides features for building accessible form fields to collect user input.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/field.html
-public struct FieldView: HTML {
+public struct FieldView: HTMLProtocol {
 	let id: String
 	let labelIcon: String?
 	let optional: Bool
@@ -20,12 +17,14 @@ public struct FieldView: HTML {
 	let isFieldset: Bool
 	let disabled: Bool
 	let status: ValidationStatus
-	let labelContent: [HTML]
-	let descriptionContent: [HTML]
-	let inputContent: [HTML]
-	let helpTextContent: [HTML]
+	let labelContent: [HTMLProtocol]
+	let descriptionContent: [HTMLProtocol]
+	let inputContent: [HTMLProtocol]
+	let helpTextContent: [HTMLProtocol]
 	let messages: ValidationMessages
 	let `class`: String
+	let labelFontWeight: CSSFontWeight
+	let labelFontSize: Length
 
 	public enum ValidationStatus: String, Sendable {
 		case `default`
@@ -56,11 +55,13 @@ public struct FieldView: HTML {
 		disabled: Bool = false,
 		status: ValidationStatus = .default,
 		messages: ValidationMessages = ValidationMessages(),
+		labelFontWeight: CSSFontWeight = fontWeightBold,
+		labelFontSize: Length = fontSizeMedium16,
 		class: String = "",
-		@HTMLBuilder label: () -> [HTML],
-		@HTMLBuilder description: () -> [HTML] = { [] },
-		@HTMLBuilder input: () -> [HTML],
-		@HTMLBuilder helpText: () -> [HTML] = { [] }
+		@HTMLBuilder label: () -> [HTMLProtocol],
+		@HTMLBuilder description: () -> [HTMLProtocol] = { [] },
+		@HTMLBuilder input: () -> [HTMLProtocol],
+		@HTMLBuilder helpText: () -> [HTMLProtocol] = { [] }
 	) {
 		self.id = id
 		self.labelIcon = labelIcon
@@ -71,6 +72,8 @@ public struct FieldView: HTML {
 		self.disabled = disabled
 		self.status = status
 		self.messages = messages
+		self.labelFontWeight = labelFontWeight
+		self.labelFontSize = labelFontSize
 		self.`class` = `class`
 		self.labelContent = label()
 		self.descriptionContent = description()
@@ -79,7 +82,7 @@ public struct FieldView: HTML {
 	}
 
 	@CSSBuilder
-	private func fieldViewCSS() -> [CSS] {
+	private func fieldViewCSS() -> [CSSProtocol] {
 		display(.flex)
 		flexDirection(.column)
 		gap(spacing8)
@@ -90,12 +93,12 @@ public struct FieldView: HTML {
 	}
 
 	@CSSBuilder
-	private func fieldInputWrapperCSS() -> [CSS] {
+	private func fieldInputWrapperCSS() -> [CSSProtocol] {
 		display(.block)
 	}
 
 	@CSSBuilder
-	private func fieldHelpTextCSS() -> [CSS] {
+	private func fieldHelpTextCSS() -> [CSSProtocol] {
 		display(.block)
 		fontSize(fontSizeSmall14)
 		lineHeight(lineHeightSmall22)
@@ -103,7 +106,7 @@ public struct FieldView: HTML {
 	}
 
 	@CSSBuilder
-	private func fieldValidationMessageCSS() -> [CSS] {
+	private func fieldValidationMessageCSS() -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.flexStart)
 		gap(spacing4)
@@ -112,7 +115,7 @@ public struct FieldView: HTML {
 	}
 
 	@CSSBuilder
-	private func fieldValidationIconCSS() -> [CSS] {
+	private func fieldValidationIconCSS() -> [CSSProtocol] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -121,7 +124,7 @@ public struct FieldView: HTML {
 	}
 
 	@CSSBuilder
-	private func fieldValidationTextCSS() -> [CSS] {
+	private func fieldValidationTextCSS() -> [CSSProtocol] {
 		flex(1)
 	}
 
@@ -140,7 +143,9 @@ public struct FieldView: HTML {
 					visuallyHidden: hideLabel,
 					isLegend: true,
 					descriptionId: descriptionId,
-					disabled: disabled
+					disabled: disabled,
+					labelFontWeight: labelFontWeight,
+					labelFontSize: labelFontSize
 				) {
 					labelContent
 				} description: {
@@ -184,7 +189,7 @@ public struct FieldView: HTML {
 					.class("field-validation-message")
 					.style {
 						fieldValidationMessageCSS()
-						color(colorError)
+						color(colorRed)
 					}
 				}
 
@@ -206,7 +211,7 @@ public struct FieldView: HTML {
 					.class("field-validation-message")
 					.style {
 						fieldValidationMessageCSS()
-						color(colorWarning)
+						color(colorOrange)
 					}
 				}
 
@@ -228,7 +233,7 @@ public struct FieldView: HTML {
 					.class("field-validation-message")
 					.style {
 						fieldValidationMessageCSS()
-						color(colorSuccess)
+						color(colorGreen)
 					}
 				}
 			}
@@ -252,7 +257,9 @@ public struct FieldView: HTML {
 					isLegend: false,
 					inputId: id,
 					descriptionId: descriptionId,
-					disabled: disabled
+					disabled: disabled,
+					labelFontWeight: labelFontWeight,
+					labelFontSize: labelFontSize
 				) {
 					labelContent
 				} description: {
@@ -296,7 +303,7 @@ public struct FieldView: HTML {
 					.class("field-validation-message")
 					.style {
 						fieldValidationMessageCSS()
-						color(colorError)
+						color(colorRed)
 					}
 				}
 
@@ -318,7 +325,7 @@ public struct FieldView: HTML {
 					.class("field-validation-message")
 					.style {
 						fieldValidationMessageCSS()
-						color(colorWarning)
+						color(colorOrange)
 					}
 				}
 
@@ -340,7 +347,7 @@ public struct FieldView: HTML {
 					.class("field-validation-message")
 					.style {
 						fieldValidationMessageCSS()
-						color(colorSuccess)
+						color(colorGreen)
 					}
 				}
 			}

@@ -6,7 +6,7 @@ import SVGBuilder
 import DesignTokens
 import WebTypes
 
-public struct DropdownView: HTML {
+public struct DropdownView: HTMLProtocol {
     public struct DropdownOption: Sendable {
         public let value: String
         public let display: String
@@ -24,7 +24,9 @@ public struct DropdownView: HTML {
     let labelText: String
     let options: [DropdownOption]
     let placeholder: String
+    let selectedValue: String?
     let required: Bool
+    let disabled: Bool
     let tooltip: String?
     let `class`: String
     let buttonWeight: ButtonView.ButtonWeight
@@ -32,6 +34,8 @@ public struct DropdownView: HTML {
     let fullWidth: Bool
     let dropdownWidth: Length?
     let menuWidth: Length?
+    let textFontSize: Length
+    let contentJustifyContent: CSSJustifyContent
 
     public init(
         id: String,
@@ -39,21 +43,27 @@ public struct DropdownView: HTML {
         label: String,
         options: [DropdownOption],
         placeholder: String = "Select an option",
+        selectedValue: String? = nil,
         required: Bool = false,
+        disabled: Bool = false,
         tooltip: String? = nil,
         class: String = "",
-        buttonWeight: ButtonView.ButtonWeight = .normal,
+        buttonWeight: ButtonView.ButtonWeight = .subtle,
         buttonSize: ButtonView.ButtonSize = .medium,
         fullWidth: Bool = true,
         width: Length? = nil,
-        menuWidth: Length? = nil
+        menuWidth: Length? = nil,
+        fontSize: Length = fontSizeSmall14,
+        contentJustifyContent: CSSJustifyContent = .center
     ) {
         self.id = id
         self.name = name
         self.labelText = label
         self.options = options
         self.placeholder = placeholder
+        self.selectedValue = selectedValue
         self.required = required
+        self.disabled = disabled
         self.tooltip = tooltip
         self.`class` = `class`
         self.buttonWeight = buttonWeight
@@ -61,12 +71,14 @@ public struct DropdownView: HTML {
         self.fullWidth = fullWidth
         self.dropdownWidth = width
         self.menuWidth = menuWidth
+        self.textFontSize = fontSize
+        self.contentJustifyContent = contentJustifyContent
     }
 
     public func render(indent: Int = 0) -> String {
         div {
-            // Label (hidden if quiet/transparent mode)
-            if buttonWeight == .normal || buttonWeight == .primary {
+            // Label
+            if !labelText.isEmpty {
                 label {
                     labelText
 
@@ -81,43 +93,53 @@ public struct DropdownView: HTML {
                 .for(id)
                 .style {
                     display(.block)
-                    fontSize(fontSizeMedium16)
+                    fontSize(textFontSize)
                     fontWeight(600)
                     color(colorBase)
-                    marginBottom(rem(0.5))
                     fontFamily(typographyFontSans)
                 }
             }
 
-            // Hidden input to store the selected value
-            input()
-            .type(.hidden)
-            .id("\(id)-value")
-            .name(name)
-            .required(required)
-
             // Dropdown container
             div {
+                // Hidden input to store the selected value
+                input()
+                .type(.hidden)
+                .id("\(id)-value")
+                .name(name)
+                .value(selectedValue ?? "")
+                .required(required)
+                .disabled(disabled)
+
+                // Determine display text - use selected option's display or placeholder
+                let displayText: String = {
+                    if let value = selectedValue,
+                       let option = options.first(where: { $0.value == value }) {
+                        return option.display
+                    }
+                    return placeholder
+                }()
                 // Trigger button
                 div {
                     ButtonView(
                         label: "",
                         weight: buttonWeight,
                         size: buttonSize,
+                        disabled: disabled,
                         fullWidth: fullWidth,
                         class: "dropdown-trigger",
-                        buttonFontWeight: fontWeightNormal
+                        labelFontWeight: fontWeightNormal,
+                        contentJustifyContent: contentJustifyContent
                     ) {
-                        span { placeholder }
+                        span { displayText }
                         .class("dropdown-selected-text")
                         .data("dropdown-selected-text", true)
                         .style {
-                            flex(1)
-                            textAlign(.left)
-                            color(buttonWeight == .quiet || buttonWeight == .transparent ? colorBase : colorSubtle)
+                            textAlign(.start)
+                            color(colorBase)
                             whiteSpace(.nowrap)
                         }
-                        .title(options.first { $0.display == placeholder }?.altDisplay ?? placeholder)
+                        .title(options.first { $0.value == selectedValue }?.altDisplay ?? displayText)
 
                         // Icons
                         span {
@@ -151,6 +173,7 @@ public struct DropdownView: HTML {
                         }
                     }
                 }
+				.class("dropdown-trigger-wrapper")
                 .data("dropdown-trigger", true)
                 .data("dropdown-id", id)
                 .style {
@@ -164,10 +187,8 @@ public struct DropdownView: HTML {
                     display(.flex)
                     flex(1)
                     justifyContent(.spaceBetween)
-                    
-                    if buttonWeight == .normal || buttonWeight == .primary {
-                        backgroundColor(backgroundColorBase)
-                        border(borderWidthBase, .solid, borderColorBase)
+                    media(maxWidth(maxWidthBreakpointMobile)) {
+                        width(perc(100)).important()
                     }
                 }
 
@@ -176,51 +197,62 @@ public struct DropdownView: HTML {
                     // Search input
                     div {
                         input()
-                            .type(.text)
-                            .placeholder("Search...")
-                            .class("dropdown-search-input")
-                            .data("dropdown-search", true)
-                            .style {
-                                width(perc(100))
-                                padding(spacing8, spacing12)
-                                fontSize(fontSizeMedium16)
-                                lineHeight(1.5)
-                                color(colorBase)
-                                backgroundColor(backgroundColorBase)
-                                border(borderWidthBase, .solid, borderColorBase)
-                                borderRadius(borderRadiusBase)
-                                boxSizing(.borderBox)
-                                pseudoClass(.focus) {
-                                    outline(borderWidthThick, .solid, colorProgressive).important()
-                                    borderColor(borderColorProgressive).important()
-                                }
-                            }
+						.type(.text)
+						.placeholder("Search...")
+						.class("dropdown-search-input")
+						.data("dropdown-search", true)
+						.style {
+							width(perc(100))
+							padding(spacing8, spacing12)
+							fontSize(textFontSize)
+							lineHeight(1.5)
+							color(colorBase)
+							backgroundColor(backgroundColorBase)
+							border(borderWidthBase, .solid, borderColorBase)
+							borderRadius(borderRadiusBase)
+							boxSizing(.borderBox)
+							pseudoClass(.focus) {
+								outline(borderWidthThick, .solid, colorBlue).important()
+								borderColor(borderColorBlue).important()
+							}
+						}
                     }
                     .style {
                         padding(spacing8)
-                        borderBottom(borderWidthBase, .solid, borderColorSubtle)
+                        borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
                     }
 
                     // Options list
                     div {
                         options.map { option in
-                            div {
-                                option.altDisplay ?? option.display
+                            let isSelected = option.value == selectedValue
+                            return div {
+                                span { option.display }
+                                if let alt = option.altDisplay, !alt.isEmpty {
+                                    span { alt }
+                                    .style {
+                                        marginInlineStart(.auto)
+                                        opacity(0.6)
+                                    }
+                                }
                             }
-                            .class(option.display == placeholder ? "dropdown-option is-selected" : "dropdown-option")
+                            .class(isSelected ? "dropdown-option is-selected" : "dropdown-option")
                             .data("dropdown-option", true)
                             .data("value", option.value)
                             .data("display", option.display)
                             .data("alt-display", option.altDisplay ?? "")
                             .style {
+                                display(.flex)
+                                alignItems(.center)
+                                gap(spacing8)
                                 padding(spacing8, spacing12)
-                                fontSize(fontSizeMedium16)
-                                color(option.display == placeholder ? colorInvertedFixed : colorBase)
-                                backgroundColor(option.display == placeholder ? backgroundColorProgressive : backgroundColorTransparent)
+                                fontSize(textFontSize)
+                                color(isSelected ? colorInvertedFixed : colorBase)
+                                backgroundColor(isSelected ? backgroundColorBlue : backgroundColorTransparent)
                                 cursor(cursorBaseHover)
                                 transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
                                 pseudoClass(.hover) {
-                                    backgroundColor(backgroundColorProgressive).important()
+                                    backgroundColor(backgroundColorBlue).important()
                                     color(colorInvertedFixed).important()
                                 }
                             }
@@ -238,30 +270,56 @@ public struct DropdownView: HTML {
                 .style {
                     position(.absolute)
                     top(perc(100))
-                    left(0)
+                    insetInlineStart(0)
                     if let mw = menuWidth {
                         width(mw)
                     } else if dropdownWidth != nil {
-                        minWidth(px(200))
+                        minWidth(px(250))
                     } else {
-                        right(0)
+                        insetInlineEnd(0)
                     }
-                    marginTop(spacing4)
+                    marginBlockStart(spacing4)
                     backgroundColor(backgroundColorBase)
                     border(borderWidthBase, .solid, borderColorBase)
                     borderRadius(borderRadiusBase)
                     boxShadow(boxShadowMedium)
                     zIndex(1000)
                     display(.none)
+                    overflow(.hidden)
+                    media(maxWidth(maxWidthBreakpointMobile)) {
+                        width(perc(100)).important()
+                        insetInlineStart(0).important()
+                        insetInlineEnd(0).important()
+                    }
                 }
             }
             .class("dropdown-container")
             .data("dropdown-container", true)
+            .data("dropdown-disabled", disabled)
             .style {
                 position(.relative)
+                if disabled {
+                    opacity(opacityDisabled)
+                    pointerEvents(.none)
+                }
+                media(maxWidth(maxWidthBreakpointMobile)) {
+                    width(perc(100)).important()
+                }
             }
         }
-        .class(`class`.isEmpty ? "dropdown-view form-group" : "dropdown-view form-group \(`class`)")
+        .class(`class`.isEmpty ? "dropdown-view" : "dropdown-view \(`class`)")
+		.style {
+			display(.flex)
+			flexDirection(.column)
+			gap(spacing8)
+			if fullWidth {
+				width(perc(100))
+			} else {
+				media(maxWidth(maxWidthBreakpointMobile)) {
+					width(perc(100)).important()
+				}
+			}
+		}
         .render(indent: indent)
     }
 }
@@ -298,15 +356,10 @@ private class DropdownInstance: @unchecked Sendable {
 		expandIcon = container.querySelector("[data-dropdown-expand-icon=\"true\"]")
 		collapseIcon = container.querySelector("[data-dropdown-collapse-icon=\"true\"]")
 
-		// Find hidden input by id
-		let expectedId = "\(dropdownId)-value"
-		let allInputs = document.querySelectorAll("input")
-		for input in allInputs {
-			if let inputId = input.getAttribute("id"),
-			   stringEquals(inputId, expectedId) {
-				hiddenInput = input
-				break
-			}
+		// Find hidden input relative to container
+		hiddenInput = container.querySelector("input[type=\"hidden\"]")
+		if hiddenInput == nil {
+			hiddenInput = container.parentElement?.querySelector("input[type=\"hidden\"]")
 		}
 
 		// Get all options
@@ -348,6 +401,32 @@ private class DropdownInstance: @unchecked Sendable {
 				self.closeDropdown()
 			}
 		}
+
+		// Keydown handler for auto-focusing search
+		_ = document.addEventListener(.keydown) { [self] event in
+			guard self.isOpen, let searchInput = self.searchInput else { return }
+            
+            // Get key from event
+            let key = event.key
+
+            // Check if it's a single printable character (and not a modifier combo if possible to check)
+            // Note: Simplistic check for length 1 and alphanumeric ranges could work
+            // Check if it's a single printable character (and not a modifier combo if possible to check)
+            // Note: Simplistic check for length 1 and alphanumeric ranges could work
+            if key.utf8.count == 1, let charByte = key.utf8.first {
+                // Check if it's a letter or number (ASCII only to avoid Unicode normalization code bloat)
+                // a-z: 97-122
+                // A-Z: 65-90
+                // 0-9: 48-57
+                let isLetterOrNumber = (charByte >= 97 && charByte <= 122) || 
+                                       (charByte >= 65 && charByte <= 90) || 
+                                       (charByte >= 48 && charByte <= 57)
+                
+                if isLetterOrNumber {
+                    searchInput.focus()
+                }
+            }
+		}
 	}
 
 	private func toggleDropdown() {
@@ -386,9 +465,13 @@ private class DropdownInstance: @unchecked Sendable {
 			}
 
 			// Use utility function for case-insensitive substring match
-			let matches = stringContainsCaseInsensitive(displayValue, searchValue) || 
+			let matches = stringContainsCaseInsensitive(displayValue, searchValue) ||
                           stringContainsCaseInsensitive(option.getAttribute("data-alt-display") ?? "", searchValue)
-			option.style.display(matches ? .block : .none)
+			if matches {
+				option.style.display(.flex)
+			} else {
+				option.style.display(.none)
+			}
 		}
 	}
     
@@ -413,8 +496,13 @@ private class DropdownInstance: @unchecked Sendable {
 			opt.style.color(colorBase)
 		}
 		_ = option.classList.add("is-selected")
-		option.style.backgroundColor(backgroundColorProgressive)
+		option.style.backgroundColor(backgroundColorBlue)
 		option.style.color(colorInvertedFixed)
+
+		// Dispatch change event on hidden input
+		if let hiddenInput {
+			hiddenInput.dispatchEvent(.change)
+		}
 
 		closeDropdown()
 	}
@@ -429,26 +517,42 @@ public class DropdownHydration: @unchecked Sendable {
 
     private func hydrateAllDropdowns() {
         let allContainers = document.querySelectorAll("[data-dropdown-container=\"true\"]")
-
         for container in allContainers {
+            if container.hasAttribute("data-dropdown-hydrated") { continue }
+
             guard let trigger = container.querySelector("[data-dropdown-trigger=\"true\"]"),
                   let dropdownId = trigger.getAttribute("data-dropdown-id") else { continue }
 
             let instance = DropdownInstance(container: container, dropdownId: dropdownId)
             instances.append(instance)
+            container.setAttribute("data-dropdown-hydrated", "true")
         }
+    }
+
+    public func hydrate(element: Element) {
+        if element.hasAttribute("data-dropdown-hydrated") { return }
+        
+        guard let trigger = element.querySelector("[data-dropdown-trigger=\"true\"]"),
+              let dropdownId = trigger.getAttribute("data-dropdown-id") else { return }
+
+        let instance = DropdownInstance(container: element, dropdownId: dropdownId)
+        instances.append(instance)
+        element.setAttribute("data-dropdown-hydrated", "true")
     }
 
     public func hydrateDropdown(dropdownId: String) {
         let allContainers = document.querySelectorAll("[data-dropdown-container=\"true\"]")
 
         for container in allContainers {
+            if container.hasAttribute("data-dropdown-hydrated") { continue }
+
             guard let trigger = container.querySelector("[data-dropdown-trigger=\"true\"]"),
                   let id = trigger.getAttribute("data-dropdown-id"),
                   stringEquals(id, dropdownId) else { continue }
 
             let instance = DropdownInstance(container: container, dropdownId: dropdownId)
             instances.append(instance)
+            container.setAttribute("data-dropdown-hydrated", "true")
             break
         }
     }

@@ -6,14 +6,11 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// ToggleSwitch component following Wikimedia Codex design system specification
 /// A ToggleSwitch enables the user to instantly toggle between on and off states.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/toggle-switch.html
 ///
 /// Component Integration:
 /// - Integrates LabelView for label and description rendering
-public struct ToggleSwitchView: HTML {
+public struct ToggleSwitchView: HTMLProtocol {
 	let id: String
 	let name: String
 	let inputValue: String
@@ -21,8 +18,8 @@ public struct ToggleSwitchView: HTML {
 	let alignSwitch: Bool
 	let hideLabel: Bool
 	let disabled: Bool
-	let labelContent: [HTML]
-	let descriptionContent: [HTML]
+	let labelContent: [HTMLProtocol]
+	let descriptionContent: [HTMLProtocol]
 	let `class`: String
 
 	public init(
@@ -34,8 +31,8 @@ public struct ToggleSwitchView: HTML {
 		hideLabel: Bool = false,
 		disabled: Bool = false,
 		class: String = "",
-		@HTMLBuilder label: () -> [HTML],
-		@HTMLBuilder description: () -> [HTML] = { [] }
+		@HTMLBuilder label: () -> [HTMLProtocol],
+		@HTMLBuilder description: () -> [HTMLProtocol] = { [] }
 	) {
 		self.id = id
 		self.name = name
@@ -50,7 +47,7 @@ public struct ToggleSwitchView: HTML {
 	}
 
 	@CSSBuilder
-	private func toggleSwitchViewCSS(_ alignSwitch: Bool) -> [CSS] {
+	private func toggleSwitchViewCSS(_ alignSwitch: Bool) -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		minHeight(minSizeInteractivePointer)
@@ -62,7 +59,7 @@ public struct ToggleSwitchView: HTML {
 	}
 
 	@CSSBuilder
-	private func toggleSwitchInputCSS(_ disabled: Bool) -> [CSS] {
+	private func toggleSwitchInputCSS(_ disabled: Bool) -> [CSSProtocol] {
 		position(.absolute)
 		width(px(1))
 		height(px(1))
@@ -86,7 +83,7 @@ public struct ToggleSwitchView: HTML {
 		pseudoClass(.focus) {
 			nextSibling(".toggle-switch-switch") {
 				borderColor(borderColorInputBinaryFocus).important()
-				boxShadow(px(0), px(0), px(0), px(1), boxShadowColorProgressiveFocus).important()
+				boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
 			}
 		}
 
@@ -98,7 +95,7 @@ public struct ToggleSwitchView: HTML {
 	}
 
 	@CSSBuilder
-	private func toggleSwitchSwitchCSS(_ disabled: Bool) -> [CSS] {
+	private func toggleSwitchSwitchCSS(_ disabled: Bool) -> [CSSProtocol] {
 		position(.relative)
 		display(.inlineBlock)
 		flexShrink(0)
@@ -118,7 +115,7 @@ public struct ToggleSwitchView: HTML {
 	}
 
 	@CSSBuilder
-	private func toggleSwitchGripCSS() -> [CSS] {
+	private func toggleSwitchGripCSS() -> [CSSProtocol] {
 		position(.absolute)
 		top(perc(50))
 		left(spacingToggleSwitchGripStart)
@@ -132,7 +129,7 @@ public struct ToggleSwitchView: HTML {
 	}
 
 	@CSSBuilder
-	private func toggleSwitchLabelWrapperCSS(_ alignSwitch: Bool) -> [CSS] {
+	private func toggleSwitchLabelWrapperCSS(_ alignSwitch: Bool) -> [CSSProtocol] {
 		if alignSwitch {
 			flex(1).important()
 		}

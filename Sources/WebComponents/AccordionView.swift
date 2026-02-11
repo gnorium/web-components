@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct AccordionView: HTML {
+public struct AccordionView: HTMLProtocol {
 	let id: String
 	let open: Bool
 	let actionIcon: String?
@@ -14,10 +14,16 @@ public struct AccordionView: HTML {
 	let actionButtonLabel: String
 	let separation: Separation
 	let headingLevel: HeadingLevel
-	let titleContent: [HTML]
-	let descriptionContent: [HTML]
-	let contentSlot: [HTML]
+	let headerDirection: HeaderDirection
+	let titleContent: [HTMLProtocol]
+	let descriptionContent: [HTMLProtocol]
+	let contentSlot: [HTMLProtocol]
 	let `class`: String
+
+	public enum HeaderDirection: Sendable {
+		case column
+		case row
+	}
 
 	public enum Separation: Sendable {
 		case none
@@ -63,10 +69,11 @@ public struct AccordionView: HTML {
 		actionButtonLabel: String = "",
 		separation: Separation = .divider,
 		headingLevel: HeadingLevel = .h3,
+		headerDirection: HeaderDirection = .column,
 		class: String = "",
-		@HTMLBuilder title: () -> [HTML],
-		@HTMLBuilder description: () -> [HTML] = { [] },
-		@HTMLBuilder content: () -> [HTML]
+		@HTMLBuilder title: () -> [HTMLProtocol],
+		@HTMLBuilder description: () -> [HTMLProtocol] = { [] },
+		@HTMLBuilder content: () -> [HTMLProtocol]
 	) {
 		self.id = id
 		self.open = open
@@ -75,6 +82,7 @@ public struct AccordionView: HTML {
 		self.actionButtonLabel = actionButtonLabel
 		self.separation = separation
 		self.headingLevel = headingLevel
+		self.headerDirection = headerDirection
 		self.`class` = `class`
 		self.titleContent = title()
 		self.descriptionContent = description()
@@ -82,7 +90,7 @@ public struct AccordionView: HTML {
 	}
 
 	@CSSBuilder
-	private func accordionViewCSS(_ separation: Separation) -> [CSS] {
+	private func accordionViewCSS(_ separation: Separation) -> [CSSProtocol] {
 		display(.block)
 
 		if separation == .outline {
@@ -93,11 +101,11 @@ public struct AccordionView: HTML {
 	}
 
 	@CSSBuilder
-	private func accordionSummaryCSS(_ separation: Separation, _ hasAction: Bool) -> [CSS] {
+	private func accordionSummaryCSS(_ separation: Separation, _ hasAction: Bool) -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing8)
-		cursor(cursorBase)
+		cursor(cursorBaseHover)
 		listStyle(.none)
 		userSelect(.none)
 
@@ -120,18 +128,18 @@ public struct AccordionView: HTML {
 			display(.none).important()
 		}
 
-		pseudoClass(.hover) {
-			backgroundColor(backgroundColorInteractiveSubtleHover).important()
+		pseudoClass(.focusVisible) {
+			outline(px(2), .solid, borderColorBlueFocus).important()
+			outlineOffset(px(1)).important()
 		}
 
 		pseudoClass(.focus) {
-			outline(px(2), .solid, borderColorProgressiveFocus).important()
-			outlineOffset(px(1)).important()
+			outline(.none).important()
 		}
 	}
 
 	@CSSBuilder
-	private func accordionExpandIconCSS() -> [CSS] {
+	private func accordionExpandIconCSS() -> [CSSProtocol] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -143,19 +151,25 @@ public struct AccordionView: HTML {
 	}
 
 	@CSSBuilder
-	private func accordionHeaderWrapperCSS() -> [CSS] {
+	private func accordionHeaderWrapperCSS() -> [CSSProtocol] {
 		display(.flex)
-		flexDirection(.column)
-		gap(spacing4)
+		if headerDirection == .row {
+			flexDirection(.row)
+			alignItems(.center)
+			gap(spacing8)
+		} else {
+			flexDirection(.column)
+			gap(spacing4)
+		}
 		flex(1)
 		minWidth(0)
 	}
 
 	@CSSBuilder
-	private func accordionTitleCSS() -> [CSS] {
+	private func accordionTitleCSS() -> [CSSProtocol] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
-		fontWeight(fontWeightBold)
+		fontWeight(fontWeightSemiBold)
 		lineHeight(lineHeightSmall22)
 		color(colorBase)
 		margin(0)
@@ -163,7 +177,7 @@ public struct AccordionView: HTML {
 	}
 
 	@CSSBuilder
-	private func accordionDescriptionCSS() -> [CSS] {
+	private func accordionDescriptionCSS() -> [CSSProtocol] {
 		fontSize(fontSizeSmall14)
 		lineHeight(lineHeightSmall22)
 		color(colorSubtle)
@@ -171,7 +185,7 @@ public struct AccordionView: HTML {
 	}
 
 	@CSSBuilder
-	private func accordionActionButtonCSS(_ actionAlwaysVisible: Bool) -> [CSS] {
+	private func accordionActionButtonCSS(_ actionAlwaysVisible: Bool) -> [CSSProtocol] {
 		if actionAlwaysVisible {
 			display(.inlineFlex)
 		} else {
@@ -201,13 +215,13 @@ public struct AccordionView: HTML {
 		}
 
 		pseudoClass(.focus) {
-			outline(px(2), .solid, borderColorProgressiveFocus).important()
+			outline(px(2), .solid, borderColorBlueFocus).important()
 			outlineOffset(px(-2)).important()
 		}
 	}
 
 	@CSSBuilder
-	private func accordionContentCSS(_ separation: Separation) -> [CSS] {
+	private func accordionContentCSS(_ separation: Separation) -> [CSSProtocol] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		lineHeight(lineHeightSmall22)
@@ -221,7 +235,7 @@ public struct AccordionView: HTML {
 	}
 
 	@CSSBuilder
-	private func accordionDividerCSS() -> [CSS] {
+	private func accordionDividerCSS() -> [CSSProtocol] {
 		height(borderWidthBase)
 		backgroundColor(borderColorSubtle)
 		margin(spacing0)
@@ -233,7 +247,7 @@ public struct AccordionView: HTML {
 		let hasAction = actionIcon != nil
 
 		// Render heading with appropriate level
-		let titleElement: HTML
+		let titleElement: HTMLProtocol
 		switch headingLevel {
 		case .h1:
 			titleElement = h1 { titleContent }
@@ -263,13 +277,6 @@ public struct AccordionView: HTML {
 
 		let detailsElement: HTMLDetailsElement = details {
 			summary {
-				span { "›" }
-					.class("accordion-expand-icon")
-					.ariaHidden(true)
-					.style {
-						accordionExpandIconCSS()
-					}
-
 				div {
 					titleElement
 
@@ -297,6 +304,22 @@ public struct AccordionView: HTML {
 					.style {
 						accordionActionButtonCSS(actionAlwaysVisible)
 					}
+				}
+
+				// Chevron icon at the end, rotates 180° when open
+				span {
+					IconView(
+						icon: { size in [ExpandIconView(width: size, height: size)] },
+						size: .medium
+					)
+				}
+				.class("accordion-expand-icon")
+				.style {
+					display(.inlineFlex)
+					alignItems(.center)
+					justifyContent(.center)
+					color(colorSubtle)
+					transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
 				}
 			}
 			.class("accordion-summary")
@@ -379,10 +402,10 @@ private class AccordionInstance: @unchecked Sendable {
 		_ = details.addEventListener(.toggle) { [self] _ in
 			let isOpen = details.hasAttribute(.open)
 
-			// Rotate expand icon
+			// Rotate expand icon 180° when open (chevron points up)
 			if let expandIcon = self.expandIcon {
 				if isOpen {
-					expandIcon.style.transform(rotate(deg(90)))
+					expandIcon.style.transform(rotate(deg(180)))
 				} else {
 					expandIcon.style.transform(rotate(deg(0)))
 				}

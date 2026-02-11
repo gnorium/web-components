@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct SearchIconView: HTML {
+public struct SearchIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 

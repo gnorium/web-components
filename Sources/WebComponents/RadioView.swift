@@ -6,21 +6,19 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// Radio component following Wikimedia Codex design system specification
 /// A radio input with label and optional description that supports single selection from a group.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/radio.html
-public struct RadioView: HTML {
+public struct RadioView: HTMLProtocol {
 	let id: String
 	let name: String
 	let value: String
 	let checked: Bool
 	let inline: Bool
 	let disabled: Bool
+	let hideLabel: Bool
 	let status: ValidationStatus
-	let labelContent: [HTML]
-	let descriptionContent: [HTML]
-	let customInputContent: [HTML]
+	let labelContent: [HTMLProtocol]
+	let descriptionContent: [HTMLProtocol]
+	let customInputContent: [HTMLProtocol]
 	let `class`: String
 
 	public enum ValidationStatus: String, Sendable {
@@ -35,15 +33,17 @@ public struct RadioView: HTML {
 		checked: Bool = false,
 		inline: Bool = false,
 		disabled: Bool = false,
+		hideLabel: Bool = false,
 		status: ValidationStatus = .default,
 		class: String = "",
-		@HTMLBuilder label: () -> [HTML],
-		@HTMLBuilder description: () -> [HTML] = { [] },
-		@HTMLBuilder customInput: () -> [HTML] = { [] }
+		@HTMLBuilder label: () -> [HTMLProtocol],
+		@HTMLBuilder description: () -> [HTMLProtocol] = { [] },
+		@HTMLBuilder customInput: () -> [HTMLProtocol] = { [] }
 	) {
 		self.id = id
 		self.name = name
 		self.value = value
+		self.hideLabel = hideLabel
 		self.checked = checked
 		self.inline = inline
 		self.disabled = disabled
@@ -55,7 +55,7 @@ public struct RadioView: HTML {
 	}
 
 	@CSSBuilder
-	private func radioViewCSS(_ inline: Bool) -> [CSS] {
+	private func radioViewCSS(_ inline: Bool) -> [CSSProtocol] {
 		if inline {
 			display(.inlineFlex)
 		} else {
@@ -68,7 +68,7 @@ public struct RadioView: HTML {
 	}
 
 	@CSSBuilder
-	private func radioInputCSS(_ disabled: Bool, _ status: ValidationStatus) -> [CSS] {
+	private func radioInputCSS(_ disabled: Bool, _ status: ValidationStatus) -> [CSSProtocol] {
 		position(.absolute)
 		width(minSizeInputBinary)
 		height(minSizeInputBinary)
@@ -87,7 +87,7 @@ public struct RadioView: HTML {
 		pseudoClass(.focus) {
 			nextSibling(".radio-icon") {
 				borderColor(borderColorInputBinaryFocus).important()
-				boxShadow(px(0), px(0), px(0), px(1), boxShadowColorProgressiveFocus).important()
+				boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
 			}
 		}
 
@@ -99,21 +99,21 @@ public struct RadioView: HTML {
 	}
 
 	@CSSBuilder
-	private func radioIconCSS(_ disabled: Bool, _ status: ValidationStatus) -> [CSS] {
+	private func radioIconCSS(_ disabled: Bool, _ status: ValidationStatus) -> [CSSProtocol] {
 		display(.inlineBlock)
 		position(.relative)
 		width(minSizeInputBinary)
 		height(minSizeInputBinary)
 		flexShrink(0)
 		backgroundColor(disabled ? backgroundColorDisabled : backgroundColorBase)
-		border(borderWidthBase, .solid, status == .error ? borderColorError : (disabled ? borderColorDisabled : borderColorInputBinary))
+		border(borderWidthBase, .solid, status == .error ? borderColorRed : (disabled ? borderColorDisabled : borderColorInputBinary))
 		borderRadius(borderRadiusCircle)
 		transition(.all, transitionDurationBase, transitionTimingFunctionSystem)
 		cursor(disabled ? cursorBaseDisabled : cursorBaseHover)
 	}
 
 	@CSSBuilder
-	private func radioLabelWrapperCSS(_ disabled: Bool) -> [CSS] {
+	private func radioLabelWrapperCSS(_ disabled: Bool) -> [CSSProtocol] {
 		display(.flex)
 		flexDirection(.column)
 		gap(spacing4)
@@ -122,7 +122,7 @@ public struct RadioView: HTML {
 	}
 
 	@CSSBuilder
-	private func radioLabelTextCSS(_ disabled: Bool) -> [CSS] {
+	private func radioLabelTextCSS(_ disabled: Bool) -> [CSSProtocol] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		lineHeight(lineHeightSmall22)
@@ -131,10 +131,23 @@ public struct RadioView: HTML {
 	}
 
 	@CSSBuilder
-	private func radioDescriptionCSS(_ disabled: Bool) -> [CSS] {
+	private func radioDescriptionCSS(_ disabled: Bool) -> [CSSProtocol] {
 		fontSize(fontSizeSmall14)
 		lineHeight(lineHeightSmall22)
 		color(disabled ? colorDisabled : colorSubtle)
+	}
+
+	@CSSBuilder
+	private func visuallyHiddenCSS() -> [CSSProtocol] {
+		position(.absolute)
+		width(px(1))
+		height(px(1))
+		margin(px(-1))
+		padding(0)
+		overflow(.hidden)
+		clip(rect(0, 0, 0, 0))
+		whiteSpace(.nowrap)
+		borderWidth(0)
 	}
 
 	public func render(indent: Int = 0) -> String {
@@ -173,12 +186,20 @@ public struct RadioView: HTML {
 						.class("radio-label-text")
 						.style {
 							radioLabelTextCSS(disabled)
+							if hideLabel {
+								visuallyHiddenCSS()
+							}
 						}
 				}
 				.for(id)
 				.class("radio-label")
+				.style {
+					if hideLabel {
+						visuallyHiddenCSS()
+					}
+				}
 
-				if hasDescription {
+				if hasDescription && !hideLabel {
 					div { descriptionContent }
 						.class("radio-description")
 						.id(descriptionId ?? "")
@@ -190,6 +211,9 @@ public struct RadioView: HTML {
 			.class("radio-label-wrapper")
 			.style {
 				radioLabelWrapperCSS(disabled)
+				if hideLabel {
+					visuallyHiddenCSS()
+				}
 			}
 		}
 		.class(`class`.isEmpty ? "radio-view" : "radio-view \(`class`)")

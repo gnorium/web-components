@@ -7,7 +7,7 @@ import SVGBuilder
 import DesignTokens
 import WebTypes
 
-public struct SearchMenuView: HTML {
+public struct SearchMenuView: HTMLProtocol {
 	let id: String
 	let placeholder: String
 	let results: [SearchResult]?
@@ -158,22 +158,22 @@ public struct SearchMenuView: HTML {
 	}
 
 	@CSSBuilder
-	private func searchMenuViewCSS() -> [CSS] {
+	private func searchMenuViewCSS() -> [CSSProtocol] {
 		// Hidden by default, positioned right below navbar
 		display(.none)
 		position(.fixed)
 		top(px(96))  // Right below navbar
-		left(0)
+		insetInlineStart(0)
 		width(perc(100))
 		zIndex(zIndexBase)
 		pointerEvents(.none)
 	}
 
 	@CSSBuilder
-	private func searchMenuBackdropCSS() -> [CSS] {
+	private func searchMenuBackdropCSS() -> [CSSProtocol] {
 		position(.fixed)
 		top(px(96))  // Start below navbar (navbar height is 96px)
-		left(0)
+		insetInlineStart(0)
 		width(perc(100))
 		height(calc(vh(100) - px(96)))  // Full height minus navbar
 		backgroundColor(rgba(0, 0, 0, 0.4))
@@ -185,13 +185,13 @@ public struct SearchMenuView: HTML {
 	}
 
 	@CSSBuilder
-	private func searchMenuContainerCSS() -> [CSS] {
+	private func searchMenuContainerCSS() -> [CSSProtocol] {
 		position(.relative)
 		width(perc(100))
 		backgroundColor(backgroundColorBase)
-		paddingTop(spacing16)
-		paddingBottom(spacing16)
-		borderBottom(borderWidthBase, .solid, borderColorBase)
+		paddingBlockStart(spacing16)
+		paddingBlockEnd(spacing16)
+		borderBlockEnd(borderWidthBase, .solid, borderColorBase)
 
 		// Start hidden - collapsed at navbar level with slide down animation
 		maxHeight(px(0))
@@ -205,29 +205,29 @@ public struct SearchMenuView: HTML {
 		opacity(0)
 
 		// Desktop: more vertical padding
-		media(minWidth(px(768))) {
-			paddingTop(spacing20)
-			paddingBottom(spacing20)
+		media(minWidth(minWidthBreakpointTablet)) {
+			paddingBlockStart(spacing20)
+			paddingBlockEnd(spacing20)
 		}
 	}
 
 	@CSSBuilder
-	private func searchMenuFooterCSS() -> [CSS] {
+	private func searchMenuFooterCSS() -> [CSSProtocol] {
 		// Hide keyboard hints on mobile
 		display(.none)
 		alignItems(.center)
 		justifyContent(.flexStart)
 		padding(0)
-		marginTop(spacing16)
+		marginBlockStart(spacing16)
 
 		// Show only on desktop
-		media(minWidth(px(768))) {
+		media(minWidth(minWidthBreakpointTablet)) {
 			display(.flex)
 		}
 	}
 
 	@CSSBuilder
-	private func keyboardHintContainerCSS() -> [CSS] {
+	private func keyboardHintContainerCSS() -> [CSSProtocol] {
 		display(.flex)
 		gap(spacing16)
 		alignItems(.center)
@@ -235,14 +235,14 @@ public struct SearchMenuView: HTML {
 	}
 
 	@CSSBuilder
-	private func keyboardHintGroupCSS() -> [CSS] {
+	private func keyboardHintGroupCSS() -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing6)
 	}
 
 	@CSSBuilder
-	private func keyboardHintKeyCSS() -> [CSS] {
+	private func keyboardHintKeyCSS() -> [CSSProtocol] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -261,7 +261,7 @@ public struct SearchMenuView: HTML {
 	}
 
 	@CSSBuilder
-	private func keyboardHintLabelCSS() -> [CSS] {
+	private func keyboardHintLabelCSS() -> [CSSProtocol] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeXSmall12)
 		color(colorSubtle)
@@ -281,15 +281,17 @@ public class SearchMenuHydration: @unchecked Sendable {
 	private var searchField: String = ""
 	private var searchEndpoint: String = ""
 	private var resultUrlBase: String = ""
+	private var isMenuOpen: Bool = false
 
 	public init() {}
 
 	public func hydrate() {
-		// Listen for navbar search icon click
-		if let searchTrigger = document.querySelector("[data-search-trigger=\"true\"]") {
+		// Listen for all search trigger clicks (desktop and mobile)
+		let searchTriggers = document.querySelectorAll("[data-search-trigger=\"true\"]")
+		for searchTrigger in searchTriggers {
 			_ = searchTrigger.addEventListener(.click) { [self] event in
 				event.preventDefault()
-				self.openMenu()
+				self.toggleMenu()
 			}
 		}
 
@@ -331,10 +333,10 @@ public class SearchMenuHydration: @unchecked Sendable {
 
 		// Listen for custom 'input' event from TypeaheadSearchInstance
 		typeahead.addEventListener("input") { [self] event in
-			// event.detail is JSON-stringified, so we need to parse it
+			// event.detail is JSONProtocol-stringified, so we need to parse it
 			var rawDetail = event.detail
 
-			// Strip quotes if JSON-stringified (e.g., "\"hello\"" -> "hello")
+			// Strip quotes if JSONProtocol-stringified (e.g., "\"hello\"" -> "hello")
 			let detailBytes = Array(rawDetail.utf8)
 			if detailBytes.count >= 2, detailBytes.first == 34, detailBytes.last == 34 {
 				let innerBytes = detailBytes[1..<detailBytes.count-1]
@@ -399,13 +401,13 @@ public class SearchMenuHydration: @unchecked Sendable {
         
         typeahead.fetch(url) { [self] jsonString in
             guard let json = jsonString else {
-                console.log("SearchDialogView: No JSON response received")
+                console.log("SearchDialogView: No JSONProtocol response received")
                 return
             }
 
-            console.log("SearchDialogView: Received JSON response")
+            console.log("SearchDialogView: Received JSONProtocol response")
 
-            // Parse JSON results
+            // Parse JSONProtocol results
             if let results = self.parseSearchResponse(json) {
                 console.log("SearchDialogView: Parsed \(results.count) results")
                 // Update Typeahead menu
@@ -528,8 +530,8 @@ public class SearchMenuHydration: @unchecked Sendable {
 
             // Add hover/active/focus event listeners for progressive styling
             _ = item.addEventListener(.mouseenter) { _ in
-                item.style.color(colorProgressive)
-                item.style.border(borderWidthBase, .solid, borderColorProgressive)
+                item.style.color(colorBlue)
+                item.style.border(borderWidthBase, .solid, borderColorBlue)
 				item.style.cursor(cursorBaseHover)
             }
 
@@ -540,20 +542,20 @@ public class SearchMenuHydration: @unchecked Sendable {
             }
 
             _ = item.addEventListener(.mousedown) { _ in
-                item.style.color(colorProgressive)
-                item.style.border(borderWidthBase, .solid, borderColorProgressive)
+                item.style.color(colorBlue)
+                item.style.border(borderWidthBase, .solid, borderColorBlue)
 				item.style.cursor(cursorBaseHover)
             }
 
             _ = item.addEventListener(.mouseup) { _ in
-                item.style.color(colorProgressive)
-                item.style.border(borderWidthBase, .solid, borderColorProgressive)
+                item.style.color(colorBlue)
+                item.style.border(borderWidthBase, .solid, borderColorBlue)
 				item.style.cursor(cursorBaseHover)
             }
 
             _ = item.addEventListener(.focus) { _ in
-                item.style.color(colorProgressiveFocus)
-                item.style.outline(borderWidthBase, .solid, borderColorProgressiveFocus)
+                item.style.color(colorBlueFocus)
+                item.style.outline(borderWidthBase, .solid, borderColorBlueFocus)
                 item.style.outlineOffset(px(-1))
             }
 
@@ -576,10 +578,10 @@ public class SearchMenuHydration: @unchecked Sendable {
     private func parseSearchResponse(_ json: CallbackString) -> [SuggestedLemma]? {
         let jsonString = json.toString()
         
-        // Manual JSON Parsing to avoid Foundation dependency in Wasm
+        // Manual JSONProtocol Parsing to avoid Foundation dependency in Wasm
         var results: [SuggestedLemma] = []
         
-        // Helper to extract JSON array
+        // Helper to extract JSONProtocol array
         func extractArray(from source: String, key: String) -> [String] {
             let searchKey = "\"\(key)\":"
             guard let keyOffset = stringIndexOf(source, searchKey) else { return [] }
@@ -673,10 +675,20 @@ public class SearchMenuHydration: @unchecked Sendable {
         return results
     }
 
+	private func toggleMenu() {
+		if isMenuOpen {
+			closeMenu()
+		} else {
+			openMenu()
+		}
+	}
+
 	private func openMenu() {
 		// First scroll to top so navbar is fully visible
 		window.scrollTo(0, 0, behavior: .smooth)
-		
+
+		isMenuOpen = true
+
 		if let menu = document.querySelector("[data-search-menu=\"true\"]") {
 			// Show menu
 			menu.style.display(.block)
@@ -718,6 +730,8 @@ public class SearchMenuHydration: @unchecked Sendable {
 	}
 
 	private func closeMenu() {
+		isMenuOpen = false
+
 		if let menu = document.querySelector("[data-search-menu=\"true\"]") {
 			// Animate out backdrop
 			if let backdrop = menu.querySelector("[data-search-menu-backdrop=\"true\"]") {
@@ -738,8 +752,8 @@ public class SearchMenuHydration: @unchecked Sendable {
 				container.style.transform(translateY(px(-125)))
 			}
 
-			// Hide menu after animation completes (400ms)
-			window.setTimeout(400) {
+			// Hide menu after animation completes (250ms)
+			window.setTimeout(250) {
 				menu.style.display(.none)
 				menu.style.pointerEvents(.none)
 			}

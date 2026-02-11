@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct EditIconView: HTML {
+public struct EditIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

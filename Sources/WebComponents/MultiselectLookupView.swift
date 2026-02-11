@@ -6,11 +6,8 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// MultiselectLookup component following Wikimedia Codex design system specification
 /// A predictive input that allows users to make multiple selections from a menu of options.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/multiselect-lookup.html
-public struct MultiselectLookupView: HTML {
+public struct MultiselectLookupView: HTMLProtocol {
 	public struct Chip: Sendable {
 		let id: String
 		let value: String
@@ -79,7 +76,7 @@ public struct MultiselectLookupView: HTML {
 	}
 
 	@CSSBuilder
-	private func multiselectLookupViewCSS() -> [CSS] {
+	private func multiselectLookupViewCSS() -> [CSSProtocol] {
 		position(.relative)
 		display(.inlineBlock)
 		minWidth(px(256))

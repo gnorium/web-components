@@ -6,11 +6,8 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// SearchInput component following Wikimedia Codex design system specification
 /// A SearchInput allows users to enter and submit a search query.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/search-input.html
-public struct SearchInputView: HTML {
+public struct SearchInputView: HTMLProtocol {
 	let modelValue: String
 	let useButton: Bool
 	let hideIcon: Bool
@@ -49,7 +46,7 @@ public struct SearchInputView: HTML {
 	}
 
 	@CSSBuilder
-	private func searchInputViewCSS(_ useButton: Bool) -> [CSS] {
+	private func searchInputViewCSS(_ useButton: Bool) -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		position(.relative)
@@ -61,7 +58,7 @@ public struct SearchInputView: HTML {
 	}
 
 	@CSSBuilder
-	private func searchInputWrapperCSS(_ useButton: Bool) -> [CSS] {
+	private func searchInputWrapperCSS(_ useButton: Bool) -> [CSSProtocol] {
 		position(.relative)
 		display(.flex)
 		alignItems(.center)
@@ -74,7 +71,7 @@ public struct SearchInputView: HTML {
 	}
 
 	@CSSBuilder
-	private func searchInputCSS(_ hasStartIcon: Bool, _ clearable: Bool, _ status: ValidationStatus) -> [CSS] {
+	private func searchInputCSS(_ hasStartIcon: Bool, _ clearable: Bool, _ status: ValidationStatus) -> [CSSProtocol] {
 		width(perc(100))
 		minHeight(minSizeInteractivePointer)
 		padding(spacing12, spacing16)
@@ -89,15 +86,15 @@ public struct SearchInputView: HTML {
 		boxSizing(.borderBox)
 
 		if hasStartIcon {
-			paddingLeft(px(36))
+			paddingInlineStart(px(36))
 		}
 
 		if clearable {
-			paddingRight(spacing64)  // Increased to accommodate both icons
+			paddingInlineEnd(spacing64)  // Increased to accommodate both icons
 		}
 
 		if status == .error {
-			borderColor(borderColorError)
+			borderColor(borderColorRed)
 		}
 
 		// Hide native WebKit search cancel button
@@ -115,9 +112,9 @@ public struct SearchInputView: HTML {
 		}
 
 		pseudoClass(.focus) {
-			outline(borderWidthBase, .solid, borderColorProgressive).important()
+			outline(borderWidthBase, .solid, borderColorBlue).important()
 			outlineOffset(px(-2)).important()
-			borderColor(borderColorProgressive).important()
+			borderColor(borderColorBlue).important()
 		}
 
 		pseudoClass(.disabled) {
@@ -129,10 +126,10 @@ public struct SearchInputView: HTML {
 	}
 
 	@CSSBuilder
-	private func searchInputStartIconCSS() -> [CSS] {
+	private func searchInputStartIconCSS() -> [CSSProtocol] {
 		position(.absolute)
-		left(spacing4)
-		marginLeft(spacing8)
+		insetInlineStart(spacing4)
+		marginInlineStart(spacing8)
 		top(perc(50))
 		transform("translateY(-50%)")
 		width(sizeIconMedium)
@@ -146,7 +143,7 @@ public struct SearchInputView: HTML {
 	}
 
 	@CSSBuilder
-	private func searchInputViewDetailsIconCSS() -> [CSS] {
+	private func searchInputViewDetailsIconCSS() -> [CSSProtocol] {
 		position(.absolute)
 		right(spacing40)  // Position to the left of clear button
 		top(perc(50))
@@ -162,10 +159,10 @@ public struct SearchInputView: HTML {
 	}
 
 	@CSSBuilder
-	private func searchInputClearButtonCSS() -> [CSS] {
+	private func searchInputClearButtonCSS() -> [CSSProtocol] {
 		position(.absolute)
-		right(spacing4)
-		marginRight(spacing8)
+		insetInlineEnd(spacing4)
+		marginInlineEnd(spacing8)
 		top(perc(50))
 		transform(translateY("-\(perc(50))"))
 		width(sizeIconMedium)
@@ -182,12 +179,12 @@ public struct SearchInputView: HTML {
 		transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
 
 		pseudoClass(.hover) {
-			color(colorProgressive).important()
+			color(colorBlue).important()
 			cursor(cursorBaseHover).important()
 
 			// Icon hover color when button is enabled
 			descendant(".icon-view") {
-				color(colorProgressive).important()
+				color(colorBlue).important()
 			}
 		}
 
@@ -196,7 +193,7 @@ public struct SearchInputView: HTML {
 		}
 
 		pseudoClass(.focus) {
-			outline(borderWidthBase, .solid, outlineColorProgressiveFocus).important()
+			outline(borderWidthBase, .solid, outlineColorBlueFocus).important()
 			outlineOffset(px(4)).important()
 		}
 
@@ -217,16 +214,16 @@ public struct SearchInputView: HTML {
 	}
 
 	@CSSBuilder
-	private func searchInputButtonCSS(_ disabled: Bool) -> [CSS] {
+	private func searchInputButtonCSS(_ disabled: Bool) -> [CSSProtocol] {
 		minHeight(minSizeInteractivePointer)
 		padding(spacing12, spacing16)
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		fontWeight(fontWeightBold)
 		lineHeight(lineHeightSmall22)
-		color(colorProgressive)
+		color(colorBlue)
 		backgroundColor(.transparent)
-		border(borderWidthBase, .solid, borderColorProgressive)
+		border(borderWidthBase, .solid, borderColorBlue)
 		borderRadius(borderRadiusBase)
 		cursor(disabled ? cursorBaseDisabled : cursorBaseHover)
 		transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
@@ -238,17 +235,17 @@ public struct SearchInputView: HTML {
 			cursor(cursorBaseDisabled)
 		} else {
 			pseudoClass(.hover) {
-				backgroundColor(backgroundColorProgressiveSubtle).important()
+				backgroundColor(backgroundColorBlueSubtle).important()
 			}
 
 			pseudoClass(.active) {
-				backgroundColor(backgroundColorProgressiveActive).important()
+				backgroundColor(backgroundColorBlueActive).important()
 				color(colorInverted).important()
-				borderColor(borderColorProgressiveActive).important()
+				borderColor(borderColorBlueActive).important()
 			}
 
 			pseudoClass(.focus) {
-				outline(borderWidthThick, .solid, borderColorProgressive).important()
+				outline(borderWidthThick, .solid, borderColorBlue).important()
 				outlineOffset(px(1)).important()
 			}
 		}

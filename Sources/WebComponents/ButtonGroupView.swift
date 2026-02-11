@@ -5,22 +5,19 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// ButtonGroup component following Wikimedia Codex design system specification
 /// A ButtonGroup consists of a set of two or more normal buttons.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/button-group.html
-public struct ButtonGroupView: HTML {
+public struct ButtonGroupView: HTMLProtocol {
 	public struct ButtonItem: Sendable {
 		public let value: String
 		public let label: String
-		public let icon: (any HTML)?
+		public let icon: (any HTMLProtocol)?
 		public let disabled: Bool
 		public let ariaLabel: String?
 
 		public init(
 			value: String,
 			label: String,
-			icon: (any HTML)? = nil,
+			icon: (any HTMLProtocol)? = nil,
 			disabled: Bool = false,
 			ariaLabel: String? = nil
 		) {
@@ -47,13 +44,13 @@ public struct ButtonGroupView: HTML {
 	}
 
 	@CSSBuilder
-	private func buttonGroupViewCSS() -> [CSS] {
+	private func buttonGroupViewCSS() -> [CSSProtocol] {
 		display(.inlineFlex)
 		flexWrap(.wrap)
 	}
 
 	@CSSBuilder
-	private func buttonGroupButtonCSS(_ isDisabled: Bool) -> [CSS] {
+	private func buttonGroupButtonCSS(_ isDisabled: Bool) -> [CSSProtocol] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -75,7 +72,7 @@ public struct ButtonGroupView: HTML {
 		padding(0, spacingHorizontalButton)
 
 		// Colors - Neutral normal button style
-		backgroundColor(backgroundColorInteractive)
+		backgroundColor(backgroundColorBase)
 		color(colorBase)
 		borderWidth(borderWidthBase)
 		borderStyle(.solid)
@@ -87,20 +84,20 @@ public struct ButtonGroupView: HTML {
 
 		// Hover state
 		pseudoClass(.hover, not(.disabled)) {
-			backgroundColor(backgroundColorInteractiveHover).important()
+			backgroundColor(backgroundColorInteractive).important()
 		}
 
 		// Active state
 		pseudoClass(.active, not(.disabled)) {
 			backgroundColor(backgroundColorInteractiveActive).important()
 			color(colorEmphasized).important()
-			borderColor(borderColorProgressive).important()
+			borderColor(borderColorBlue).important()
 		}
 
 		// Focus state
 		pseudoClass(.focus) {
-			outline(borderWidthThick, .solid, colorProgressive).important()
-			borderColor(borderColorProgressive).important()
+			outline(borderWidthThick, .solid, colorBlue).important()
+			borderColor(borderColorBlue).important()
 		}
 
 		// Disabled state
@@ -114,7 +111,7 @@ public struct ButtonGroupView: HTML {
 	}
 
 	@CSSBuilder
-	private func buttonIconCSS() -> [CSS] {
+	private func buttonIconCSS() -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -124,7 +121,7 @@ public struct ButtonGroupView: HTML {
 
 	public func render(indent: Int = 0) -> String {
 		div {
-			buttons.map { button -> any HTML in
+			buttons.map { button -> any HTMLProtocol in
 				let isDisabled = disabled || button.disabled
 
 				return div {
@@ -149,6 +146,15 @@ public struct ButtonGroupView: HTML {
 				.ariaLabel(button.ariaLabel ?? button.label)
 				.style {
 					buttonGroupButtonCSS(isDisabled)
+					borderRadius(borderRadiusPill)
+					
+					pseudoClass(.hover) {
+						zIndex(1).important()
+					}
+					
+					pseudoClass(.focus) {
+						zIndex(2).important()
+					}
 				}
 			}
 		}
@@ -156,37 +162,6 @@ public struct ButtonGroupView: HTML {
 		.role(.group)
 		.style {
 			buttonGroupViewCSS()
-
-			// First button - rounded left corners
-			selector(".button-group-button:first-child") {
-				borderTopLeftRadius(borderRadiusPill).important()
-				borderBottomLeftRadius(borderRadiusPill).important()
-			}
-
-			// Last button - rounded right corners
-			selector(".button-group-button:last-child") {
-				borderTopRightRadius(borderRadiusPill).important()
-				borderBottomRightRadius(borderRadiusPill).important()
-			}
-
-			// Middle buttons - no border radius
-			selector(".button-group-button:not(:first-child):not(:last-child)") {
-				borderRadius(0).important()
-			}
-
-			// Collapse borders between buttons
-			selector(".button-group-button:not(:last-child)") {
-				marginRight(px(-1)).important()
-			}
-
-			// Bring focused/hovered button to front
-			selector(".button-group-button:hover") {
-				zIndex(1).important()
-			}
-
-			selector(".button-group-button:focus") {
-				zIndex(2).important()
-			}
 		}
 		.render(indent: indent)
 	}

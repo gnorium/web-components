@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct LogOutIconView: HTML {
+public struct LogOutIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

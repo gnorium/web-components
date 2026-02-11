@@ -5,13 +5,10 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// ToggleButton component following Wikimedia Codex design system specification
 /// A button that can be toggled on and off with state persistence.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/toggle-button.html
-public struct ToggleButtonView: HTML {
+public struct ToggleButtonView: HTMLProtocol {
 	let label: String
-	let icon: (any HTML)?
+	let icon: (any HTMLProtocol)?
 	let modelValue: Bool
 	let weight: ButtonView.ButtonWeight
 	let disabled: Bool
@@ -21,13 +18,13 @@ public struct ToggleButtonView: HTML {
 	let indicateSelection: Bool
 	let size: ButtonView.ButtonSize
 	var `class`: String
-	let buttonFontWeight: CSSFontWeight
+	let labelFontWeight: CSSFontWeight
 	
 	public init(
 		label: String,
-		icon: (any HTML)? = nil,
+		icon: (any HTMLProtocol)? = nil,
 		modelValue: Bool = false,
-		weight: ButtonView.ButtonWeight = .normal,
+		weight: ButtonView.ButtonWeight = .subtle,
 		disabled: Bool = false,
 		iconOnly: Bool = false,
 		ariaLabel: String? = nil,
@@ -35,7 +32,7 @@ public struct ToggleButtonView: HTML {
 		indicateSelection: Bool = true,
 		size: ButtonView.ButtonSize = .medium,
 		class: String = "",
-		buttonFontWeight: CSSFontWeight = fontWeightBold
+		labelFontWeight: CSSFontWeight = fontWeightBold
 	) {
 		self.label = label
 		self.icon = icon
@@ -48,7 +45,7 @@ public struct ToggleButtonView: HTML {
 		self.indicateSelection = indicateSelection
 		self.size = size
 		self.class = `class`
-		self.buttonFontWeight = buttonFontWeight
+		self.labelFontWeight = labelFontWeight
 	}
 
 	public func render(indent: Int = 0) -> String {
@@ -63,7 +60,7 @@ public struct ToggleButtonView: HTML {
                 disabled: disabled,
                 ariaLabel: ariaLabel ?? label,
                 class: "",
-                buttonFontWeight: self.buttonFontWeight
+                labelFontWeight: self.labelFontWeight
             ) {
                 if let icon = icon {
                     span { icon }
@@ -104,33 +101,33 @@ public struct ToggleButtonView: HTML {
     }
 	
 	@CSSBuilder
-	private func toggleStateCSS() -> [CSS] {
+	private func toggleStateCSS() -> [CSSProtocol] {
 		// Toggle-specific state styling
-		// Normal style (default) toggled state
-		if weight == .normal || weight == .primary {
+		// Subtle/solid toggled state
+		if weight == .subtle || weight == .solid {
             if indicateSelection {
                 attribute(ariaPressed(true)) {
                     color(colorInverted).important()
-                    borderColor(borderColorProgressive).important()
+                    borderColor(borderColorBlue).important()
                 }
             }
-		} else { // quiet or transparent
+		} else { // quiet or plain
             if indicateSelection {
                 // Quiet style toggled state
                 attribute(ariaPressed(true)) {
-                    backgroundColor(backgroundColorProgressiveSubtle).important()
-                    color(colorProgressive).important()
+                    backgroundColor(backgroundColorBlueSubtle).important()
+                    color(colorBlue).important()
                     borderColor(.transparent).important()
                 }
 
                 attribute(ariaPressed(true), .hover, not(.disabled)) {
-                    backgroundColor(backgroundColorProgressiveSubtleHover).important()
-                    color(colorProgressiveHover).important()
+                    backgroundColor(backgroundColorBlueSubtleHover).important()
+                    color(colorBlueHover).important()
                 }
 
                 attribute(ariaPressed(true), .active, not(.disabled)) {
-                    backgroundColor(backgroundColorProgressiveSubtleActive).important()
-                    color(colorProgressiveActive).important()
+                    backgroundColor(backgroundColorBlueSubtleActive).important()
+                    color(colorBlueActive).important()
                 }
             }
 		}

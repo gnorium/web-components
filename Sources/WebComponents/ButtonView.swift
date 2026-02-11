@@ -5,16 +5,13 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// Button component following Wikimedia Codex design system specification
-/// A Button triggers an action when the user clicks or taps on it.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/latest/components/demos/button.html
-public struct ButtonView: HTML {
+/// Button — triggers an action when the user clicks or taps on it.
+public struct ButtonView: HTMLProtocol {
 	let label: String
-	let action: ButtonAction
+	let buttonColor: ButtonColor
 	let weight: ButtonWeight
 	let size: ButtonSize
-	let icon: (any HTML)?
+	let icon: (any HTMLProtocol)?
 	let iconOnly: Bool
 	let disabled: Bool
 	let ariaLabel: String?
@@ -23,7 +20,8 @@ public struct ButtonView: HTML {
 	let type: ButtonType
 	let fullWidth: Bool
 	var `class`: String
-	let buttonFontWeight: CSSFontWeight
+	let labelFontWeight: CSSFontWeight
+	let contentJustifyContent: CSSJustifyContent
 
 	/// Button type attribute
 	public enum ButtonType: String, Sendable {
@@ -32,29 +30,29 @@ public struct ButtonView: HTML {
 		case reset
 	}
 
-	/// Button action types following Codex specification
-	public enum ButtonAction: String, Sendable {
+	/// Button color — Apple HIG color for the button's action identity
+	public enum ButtonColor: String, Sendable {
 		/// Neutral buttons for actions that are neutral or secondary in importance
-		case `default`
-		/// Progressive buttons for actions that lead to the next step in the process
-		case progressive
-		/// Destructive buttons for actions involving removal or limitation (deleting, blocking)
-		case destructive
+		case gray
+		/// Blue buttons for primary/progressive actions
+		case blue
+		/// Red buttons for destructive/removal actions
+		case red
 	}
 
-	/// Button weight (visual prominence) following Codex specification
+	/// Button weight (visual prominence)
 	public enum ButtonWeight: String, Sendable {
-		/// Primary buttons signal the main action - only one per view
-		case primary
-		/// Normal buttons are the default choice (uses subtle background in Codex)
-		case normal
-		/// Quiet buttons for easily recognizable actions that don't detract from content
+		/// Solid buttons signal the main action — filled background, inverted text
+		case solid
+		/// Subtle buttons are the default — light background, colored text, border
+		case subtle
+		/// Quiet buttons — transparent, no border, hover shows subtle background
 		case quiet
-        /// Transparent buttons that have no background on hover or active states
-        case transparent
+		/// Plain buttons — transparent, no background change on hover
+		case plain
 	}
 
-	/// Button sizes following Codex specification
+	/// Button sizes
 	public enum ButtonSize: String, Sendable {
 		/// Small: Use only when space is tight (inline with text, compact layouts). Avoid on touchscreens.
 		case small
@@ -76,8 +74,8 @@ public struct ButtonView: HTML {
     
 	public init(
 		label: String,
-		action: ButtonAction = .default,
-		weight: ButtonWeight = .normal,
+		buttonColor: ButtonColor = .gray,
+		weight: ButtonWeight = .subtle,
 		size: ButtonSize = .medium,
 		disabled: Bool = false,
 		url: String? = nil,
@@ -86,10 +84,11 @@ public struct ButtonView: HTML {
 		onClick: String? = nil,
 		fullWidth: Bool = false,
 		class: String = "",
-		buttonFontWeight: CSSFontWeight = fontWeightBold
+		labelFontWeight: CSSFontWeight = fontWeightBold,
+		contentJustifyContent: CSSJustifyContent = .center
 	) {
 		self.label = label
-		self.action = action
+		self.buttonColor = buttonColor
 		self.weight = weight
 		self.size = size
 		self.icon = nil
@@ -101,14 +100,15 @@ public struct ButtonView: HTML {
 		self.type = type
 		self.fullWidth = fullWidth
 		self.class = `class`
-		self.buttonFontWeight = buttonFontWeight
+		self.labelFontWeight = labelFontWeight
+		self.contentJustifyContent = contentJustifyContent
 	}
 
 	public init(
 		label: String,
-		icon: any HTML,
-		action: ButtonAction = .default,
-		weight: ButtonWeight = .normal,
+		icon: any HTMLProtocol,
+		buttonColor: ButtonColor = .gray,
+		weight: ButtonWeight = .subtle,
 		size: ButtonSize = .medium,
 		disabled: Bool = false,
 		url: String? = nil,
@@ -117,10 +117,11 @@ public struct ButtonView: HTML {
 		onClick: String? = nil,
 		fullWidth: Bool = false,
 		class: String = "",
-		buttonFontWeight: CSSFontWeight = fontWeightBold
+		labelFontWeight: CSSFontWeight = fontWeightBold,
+		contentJustifyContent: CSSJustifyContent = .center
 	) {
 		self.label = label
-		self.action = action
+		self.buttonColor = buttonColor
 		self.weight = weight
 		self.size = size
 		self.icon = icon
@@ -132,15 +133,16 @@ public struct ButtonView: HTML {
 		self.type = type
 		self.fullWidth = fullWidth
 		self.class = `class`
-		self.buttonFontWeight = buttonFontWeight
+		self.labelFontWeight = labelFontWeight
+		self.contentJustifyContent = contentJustifyContent
 	}
 
 	/// Create an icon-only button
 	/// WARNING: Icon-only buttons require aria-label for accessibility
 	public init(
-		icon: any HTML,
-		action: ButtonAction = .default,
-		weight: ButtonWeight = .normal,
+		icon: any HTMLProtocol,
+		buttonColor: ButtonColor = .gray,
+		weight: ButtonWeight = .subtle,
 		size: ButtonSize = .medium,
 		disabled: Bool = false,
 		url: String? = nil,
@@ -149,10 +151,11 @@ public struct ButtonView: HTML {
 		onClick: String? = nil,
 		fullWidth: Bool = false,
 		class: String = "",
-		buttonFontWeight: CSSFontWeight = fontWeightBold
+		labelFontWeight: CSSFontWeight = fontWeightBold,
+		contentJustifyContent: CSSJustifyContent = .center
 	) {
 		self.label = ""
-		self.action = action
+		self.buttonColor = buttonColor
 		self.weight = weight
 		self.size = size
 		self.icon = icon
@@ -164,14 +167,15 @@ public struct ButtonView: HTML {
 		self.type = type
 		self.fullWidth = fullWidth
 		self.class = `class`
-		self.buttonFontWeight = buttonFontWeight
+		self.labelFontWeight = labelFontWeight
+		self.contentJustifyContent = contentJustifyContent
 	}
 
 	/// Create a button with custom content
 	public init(
         label: String = "",
-		action: ButtonAction = .default,
-		weight: ButtonWeight = .normal,
+		buttonColor: ButtonColor = .gray,
+		weight: ButtonWeight = .subtle,
 		size: ButtonSize = .medium,
 		disabled: Bool = false,
 		url: String? = nil,
@@ -180,11 +184,12 @@ public struct ButtonView: HTML {
 		onClick: String? = nil,
 		fullWidth: Bool = false,
 		class: String = "",
-		buttonFontWeight: CSSFontWeight = fontWeightBold,
-		@HTMLBuilder content: () -> [any HTML]
+		labelFontWeight: CSSFontWeight = fontWeightBold,
+		contentJustifyContent: CSSJustifyContent = .center,
+		@HTMLBuilder content: () -> [any HTMLProtocol]
 	) {
 		self.label = label
-		self.action = action
+		self.buttonColor = buttonColor
 		self.weight = weight
 		self.size = size
 		self.icon = content()
@@ -196,15 +201,16 @@ public struct ButtonView: HTML {
 		self.type = type
 		self.fullWidth = fullWidth
 		self.class = `class`
-		self.buttonFontWeight = buttonFontWeight
+		self.labelFontWeight = labelFontWeight
+		self.contentJustifyContent = contentJustifyContent
 	}
 
 	public func render(indent: Int = 0) -> String {
-		let baseClasses = "button-view button-action-\(action.rawValue) button-weight-\(weight.rawValue) button-size-\(size.rawValue)\(iconOnly ? " button-icon-only" : "")"
+		let baseClasses = "button-view button-color-\(buttonColor.rawValue) button-weight-\(weight.rawValue) button-size-\(size.rawValue)\(iconOnly ? " button-icon-only" : "")"
 		let fullClass = `class`.isEmpty ? baseClasses : "\(baseClasses) \(`class`)"
 
 		@HTMLBuilder
-		func renderContent() -> [any HTML] {
+		func renderContent() -> [any HTMLProtocol] {
 			if let icon = icon {
 				if label.isEmpty && iconOnly {
 					span { icon }
@@ -235,21 +241,21 @@ public struct ButtonView: HTML {
 			var aBtn = a { renderContent() }
 				.href(url)
 				.class(fullClass)
-				.data("action", action.rawValue)
+				.data("color", buttonColor.rawValue)
 				.data("weight", weight.rawValue)
 				.data("size", size.rawValue)
 				.style {
 					buttonViewCSS()
 				}
-			
+
 			if disabled {
 				aBtn = aBtn.ariaDisabled(true).class("disabled")
 			}
-            
+
 			if let ariaLbl = effectiveAriaLabel {
 				aBtn = aBtn.ariaLabel(ariaLbl)
 			}
-            
+
 			if let click = onClick {
 				aBtn = aBtn.onclick(click)
 			}
@@ -259,7 +265,7 @@ public struct ButtonView: HTML {
 			var bBtn = button { renderContent() }
 				.type(type == .submit ? .submit : type == .reset ? .reset : .button)
 				.class(fullClass)
-				.data("action", action.rawValue)
+				.data("color", buttonColor.rawValue)
 				.data("weight", weight.rawValue)
 				.data("size", size.rawValue)
 				.disabled(disabled)
@@ -280,7 +286,7 @@ public struct ButtonView: HTML {
 	}
 
 	@CSSBuilder
-	private func buttonViewCSS() -> [CSS] {
+	private func buttonViewCSS() -> [CSSProtocol] {
 		// Base button styles
 		if iconOnly {
 			display(.flex)
@@ -293,11 +299,11 @@ public struct ButtonView: HTML {
 			}
 		}
 		alignItems(.center)
-		justifyContent(.center)
+		justifyContent(contentJustifyContent)
 		gap(spacingHorizontalButton)
 		fontFamily(fontFamilyBase)
 		fontSize(fontSizeMedium16)
-		fontWeight(buttonFontWeight)
+		fontWeight(labelFontWeight)
 		lineHeight(1)
 		textDecoration(.none)
 		textAlign(.center)
@@ -311,6 +317,10 @@ public struct ButtonView: HTML {
 			width(perc(100))
 		} else {
 			minWidth(size.minSize)
+			media(maxWidth(maxWidthBreakpointMobile)) {
+				width(perc(100)).important()
+				display(.flex).important()
+			}
 		}
 		minHeight(size.minSize)
 
@@ -339,8 +349,8 @@ public struct ButtonView: HTML {
 			}
 		}
 
-		// Action + Weight combinations following Codex design tokens
-		applyActionWeightCSS()
+		// Color + Weight combinations
+		applyColorWeightCSS()
 
 		// Focus state
 		pseudoClass(.focus) {
@@ -372,7 +382,7 @@ public struct ButtonView: HTML {
 	}
 
 	@CSSBuilder
-	private func buttonIconCSS() -> [CSS] {
+	private func buttonIconCSS() -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -400,10 +410,26 @@ public struct ButtonView: HTML {
 	}
     
 	@CSSBuilder
-	private func applyActionWeightCSS() -> [CSS] {
-		switch (action, weight) {
-		// Default + Normal (Neutral)
-		case (.default, .normal):
+	private func applyColorWeightCSS() -> [CSSProtocol] {
+		switch (buttonColor, weight) {
+		// Gray + Subtle
+		case (.gray, .subtle):
+			backgroundColor(backgroundColorBase)
+			color(colorBase)
+			borderColor(borderColorBase)
+
+			pseudoClass(.hover, not(.disabled)) {
+				backgroundColor(backgroundColorInteractive).important()
+			}
+
+			pseudoClass(.active, not(.disabled)) {
+				backgroundColor(backgroundColorInteractiveActive).important()
+				color(colorEmphasized).important()
+				borderColor(borderColorBase).important()
+			}
+
+		// Gray + Solid
+		case (.gray, .solid):
 			backgroundColor(backgroundColorInteractive)
 			color(colorBase)
 			borderColor(borderColorBase)
@@ -415,27 +441,11 @@ public struct ButtonView: HTML {
 			pseudoClass(.active, not(.disabled)) {
 				backgroundColor(backgroundColorInteractiveActive).important()
 				color(colorEmphasized).important()
-				borderColor(borderColorProgressive).important()
+				borderColor(borderColorBase).important()
 			}
 
-		// Default + Primary
-		case (.default, .primary):
-			backgroundColor(backgroundColorBase)
-			color(colorBase)
-			borderColor(borderColorBase)
-
-			pseudoClass(.hover, not(.disabled)) {
-				backgroundColor(backgroundColorNeutralSubtle).important()
-			}
-
-			pseudoClass(.active, not(.disabled)) {
-				backgroundColor(backgroundColorNeutral).important()
-				color(colorEmphasized).important()
-				borderColor(borderColorProgressive).important()
-			}
-
-		// Default + Quiet
-		case (.default, .quiet):
+		// Gray + Quiet
+		case (.gray, .quiet):
 			backgroundColor(.transparent)
 			color(colorBase)
 			borderColor(.transparent)
@@ -456,8 +466,8 @@ public struct ButtonView: HTML {
 				boxShadow(.none).important()
 			}
 
-            // Default + Transparent
-        case (.default, .transparent):
+		// Gray + Plain
+        case (.gray, .plain):
             backgroundColor(.transparent)
             color(colorBase)
             borderColor(.transparent)
@@ -479,63 +489,63 @@ public struct ButtonView: HTML {
                 boxShadow(.none).important()
             }
 
-		// Progressive + Normal
-		case (.progressive, .normal):
-			backgroundColor(backgroundColorProgressiveSubtle)
-			color(colorProgressive)
-			borderColor(borderColorProgressive)
+		// Blue + Subtle
+		case (.blue, .subtle):
+			backgroundColor(backgroundColorBlueSubtle)
+			color(colorBlue)
+			borderColor(borderColorBlue)
 
 			pseudoClass(.hover, not(.disabled)) {
-				backgroundColor(backgroundColorProgressiveSubtleHover).important()
-				borderColor(borderColorProgressiveHover).important()
+				backgroundColor(backgroundColorBlueSubtleHover).important()
+				borderColor(borderColorBlueHover).important()
 			}
 
 			pseudoClass(.active, not(.disabled)) {
-				backgroundColor(backgroundColorProgressiveSubtleActive).important()
-				borderColor(borderColorProgressiveActive).important()
-				color(colorProgressiveActive).important()
+				backgroundColor(backgroundColorBlueSubtleActive).important()
+				borderColor(borderColorBlueActive).important()
+				color(colorBlueActive).important()
 			}
 
 			pseudoClass(.focus) {
-				borderColor(borderColorProgressiveFocus).important()
-				boxShadow(boxShadowOutsetSmall, boxShadowColorProgressiveFocus).important()
+				borderColor(borderColorBlueFocus).important()
+				boxShadow(boxShadowOutsetSmall, boxShadowColorBlueFocus).important()
 			}
 
-		// Progressive + Primary
-		case (.progressive, .primary):
-			backgroundColor(backgroundColorProgressive)
+		// Blue + Solid
+		case (.blue, .solid):
+			backgroundColor(backgroundColorBlue)
 			color(colorInvertedFixed)
-			borderColor(borderColorProgressive)
+			borderColor(borderColorBlue)
 
 			pseudoClass(.hover, not(.disabled)) {
-				backgroundColor(backgroundColorProgressiveHover).important()
-				borderColor(borderColorProgressiveHover).important()
+				backgroundColor(backgroundColorBlueHover).important()
+				borderColor(borderColorBlueHover).important()
 			}
 
 			pseudoClass(.active, not(.disabled)) {
-				backgroundColor(backgroundColorProgressiveActive).important()
-				borderColor(borderColorProgressiveActive).important()
+				backgroundColor(backgroundColorBlueActive).important()
+				borderColor(borderColorBlueActive).important()
 			}
 
 			pseudoClass(.focus) {
-				borderColor(borderColorProgressiveFocus).important()
-				boxShadow(boxShadowOutsetSmall, boxShadowColorProgressiveFocus).important()
+				borderColor(borderColorBlueFocus).important()
+				boxShadow(boxShadowOutsetSmall, boxShadowColorBlueFocus).important()
 			}
 
-		// Progressive + Quiet
-		case (.progressive, .quiet):
+		// Blue + Quiet
+		case (.blue, .quiet):
 			backgroundColor(.transparent)
-			color(colorProgressive)
+			color(colorBlue)
 			borderColor(.transparent)
 
 			pseudoClass(.hover, not(.disabled)) {
-				backgroundColor(backgroundColorProgressiveSubtle).important()
+				backgroundColor(backgroundColorBlueSubtle).important()
 				borderColor(.transparent).important()
 			}
 
 			pseudoClass(.active, not(.disabled)) {
-				backgroundColor(backgroundColorProgressiveSubtleHover).important()
-				color(colorProgressiveActive).important()
+				backgroundColor(backgroundColorBlueSubtleHover).important()
+				color(colorBlueActive).important()
 				borderColor(.transparent).important()
 			}
 
@@ -544,21 +554,21 @@ public struct ButtonView: HTML {
 				boxShadow(.none).important()
 			}
 
-            // Progressive + Transparent
-        case (.progressive, .transparent):
+		// Blue + Plain
+        case (.blue, .plain):
             backgroundColor(.transparent)
-            color(colorProgressive)
+            color(colorBlue)
             borderColor(.transparent)
 
             pseudoClass(.hover, not(.disabled)) {
                 backgroundColor(.transparent).important()
-                color(colorProgressiveHover).important()
+                color(colorBlueHover).important()
                 borderColor(.transparent).important()
             }
 
             pseudoClass(.active, not(.disabled)) {
                 backgroundColor(.transparent).important()
-                color(colorProgressiveActive).important()
+                color(colorBlueActive).important()
                 borderColor(.transparent).important()
             }
 
@@ -567,63 +577,63 @@ public struct ButtonView: HTML {
                 boxShadow(.none).important()
             }
 
-		// Destructive + Normal
-		case (.destructive, .normal):
-			backgroundColor(backgroundColorDestructiveSubtle)
-			color(colorDestructive)
-			borderColor(borderColorDestructive)
+		// Red + Subtle
+		case (.red, .subtle):
+			backgroundColor(backgroundColorRedSubtle)
+			color(colorRed)
+			borderColor(borderColorRed)
 
 			pseudoClass(.hover, not(.disabled)) {
-				backgroundColor(backgroundColorDestructiveSubtleHover).important()
-				borderColor(borderColorDestructiveHover).important()
+				backgroundColor(backgroundColorRedSubtleHover).important()
+				borderColor(borderColorRedHover).important()
 			}
 
 			pseudoClass(.active, not(.disabled)) {
-				backgroundColor(backgroundColorDestructiveSubtleActive).important()
-				borderColor(borderColorDestructiveActive).important()
-				color(colorDestructiveActive).important()
+				backgroundColor(backgroundColorRedSubtleActive).important()
+				borderColor(borderColorRedActive).important()
+				color(colorRedActive).important()
 			}
 
 			pseudoClass(.focus) {
-				borderColor(borderColorDestructiveFocus).important()
-				boxShadow(boxShadowOutsetSmall, boxShadowColorDestructiveFocus).important()
+				borderColor(borderColorRedFocus).important()
+				boxShadow(boxShadowOutsetSmall, boxShadowColorRedFocus).important()
 			}
 
-		// Destructive + Primary
-		case (.destructive, .primary):
-			backgroundColor(backgroundColorDestructive)
+		// Red + Solid
+		case (.red, .solid):
+			backgroundColor(backgroundColorRed)
 			color(colorInvertedFixed)
-			borderColor(borderColorDestructive)
+			borderColor(borderColorRed)
 
 			pseudoClass(.hover, not(.disabled)) {
-				backgroundColor(backgroundColorDestructiveHover).important()
-				borderColor(borderColorDestructiveHover).important()
+				backgroundColor(backgroundColorRedHover).important()
+				borderColor(borderColorRedHover).important()
 			}
 
 			pseudoClass(.active, not(.disabled)) {
-				backgroundColor(backgroundColorDestructiveActive).important()
-				borderColor(borderColorDestructiveActive).important()
+				backgroundColor(backgroundColorRedActive).important()
+				borderColor(borderColorRedActive).important()
 			}
 
 			pseudoClass(.focus) {
-				borderColor(borderColorDestructiveFocus).important()
-				boxShadow(boxShadowOutsetSmall, boxShadowColorDestructiveFocus).important()
+				borderColor(borderColorRedFocus).important()
+				boxShadow(boxShadowOutsetSmall, boxShadowColorRedFocus).important()
 			}
 
-		// Destructive + Quiet
-		case (.destructive, .quiet):
+		// Red + Quiet
+		case (.red, .quiet):
 			backgroundColor(.transparent)
-			color(colorDestructive)
+			color(colorRed)
 			borderColor(.transparent)
 
 			pseudoClass(.hover, not(.disabled)) {
-				backgroundColor(backgroundColorDestructiveSubtle).important()
+				backgroundColor(backgroundColorRedSubtle).important()
 				borderColor(.transparent).important()
 			}
 
 			pseudoClass(.active, not(.disabled)) {
-				backgroundColor(backgroundColorDestructiveSubtleHover).important()
-				color(colorDestructiveActive).important()
+				backgroundColor(backgroundColorRedSubtleHover).important()
+				color(colorRedActive).important()
 				borderColor(.transparent).important()
 			}
 
@@ -632,21 +642,21 @@ public struct ButtonView: HTML {
 				boxShadow(.none).important()
 			}
 
-            // Destructive + Transparent
-        case (.destructive, .transparent):
+		// Red + Plain
+        case (.red, .plain):
             backgroundColor(.transparent)
-            color(colorDestructive)
+            color(colorRed)
             borderColor(.transparent)
 
             pseudoClass(.hover, not(.disabled)) {
                 backgroundColor(.transparent).important()
-                color(colorDestructiveHover).important()
+                color(colorRedHover).important()
                 borderColor(.transparent).important()
             }
 
             pseudoClass(.active, not(.disabled)) {
                 backgroundColor(.transparent).important()
-                color(colorDestructiveActive).important()
+                color(colorRedActive).important()
                 borderColor(.transparent).important()
             }
 

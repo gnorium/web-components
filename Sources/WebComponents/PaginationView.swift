@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct PaginationView: HTML {
+public struct PaginationView: HTMLProtocol {
     public let previousLabel: String?
     public let previousHref: String?
     public let nextLabel: String?
@@ -53,19 +53,11 @@ public struct PaginationView: HTML {
                     .style {
                         fontFamily(typographyFontSans)
                         fontSize(fontSizeMedium16)
-                        color(colorProgressive)
+                        color(colorBase)
                         textDecoration(.none)
-                        fontWeight(fontWeightSemiBold)
-                        pseudoClass(.hover) {
-                            color(colorProgressiveHover).important()
-                            textDecoration(.underline).important()
-                        }
-                        pseudoClass(.active) {
-                            color(colorProgressiveActive).important()
-                        }
+                        fontWeight(fontWeightNormal)
                         pseudoClass(.focus) {
-                            color(colorProgressiveFocus).important()
-                            outline(borderWidthBase, .solid, colorProgressiveFocus).important()
+                            outline(borderWidthBase, .solid, colorBlueFocus).important()
                             outlineOffset(px(2)).important()
                         }
                     }
@@ -84,12 +76,23 @@ public struct PaginationView: HTML {
                             .style {
                                 fontFamily(typographyFontSans)
                                 fontSize(fontSizeMedium16)
-                                color(colorInvertedFixed)
-                                fontWeight(fontWeightBold)
+                                color(colorBlue)
+                                fontWeight(fontWeightNormal)
                                 padding(spacing8, spacing12)
-                                backgroundColor(backgroundColorProgressive)
-                                borderRadius(borderRadiusBase)
+                                borderRadius(borderRadiusPill)
                                 display(.inlineBlock)
+
+                                pseudoClass(.hover) {
+                                    color(colorBlueHover).important()
+                                }
+                                pseudoClass(.active) {
+                                    color(colorBlueActive).important()
+                                }
+                                pseudoClass(.focus) {
+                                    color(colorBlueFocus).important()
+                                    outline(borderWidthBase, .solid, colorBlueFocus).important()
+                                    outlineOffset(px(2)).important()
+                                }
                             }
                         } else {
                             a { page.label }
@@ -98,24 +101,16 @@ public struct PaginationView: HTML {
                             .style {
                                 fontFamily(typographyFontSans)
                                 fontSize(fontSizeMedium16)
-                                color(colorProgressive)
+                                color(colorBase)
                                 textDecoration(.none)
-                                fontWeight(fontWeightSemiBold)
+                                fontWeight(fontWeightNormal)
                                 padding(spacing8, spacing12)
                                 display(.inlineBlock)
-                                pseudoClass(.hover) {
-                                    color(colorProgressiveHover).important()
-                                    backgroundColor(backgroundColorInteractive).important()
-                                    borderRadius(borderRadiusBase).important()
-                                }
-                                pseudoClass(.active) {
-                                    color(colorProgressiveActive).important()
-                                }
                                 pseudoClass(.focus) {
-                                    color(colorProgressiveFocus).important()
-                                    outline(borderWidthBase, .solid, colorProgressiveFocus).important()
+                                    color(colorBlueFocus).important()
+                                    outline(borderWidthBase, .solid, colorBlueFocus).important()
                                     outlineOffset(px(2)).important()
-                                    borderRadius(borderRadiusBase).important()
+                                    borderRadius(borderRadiusPill).important()
                                 }
                             }
                         }
@@ -139,25 +134,17 @@ public struct PaginationView: HTML {
                     .style {
                         fontFamily(typographyFontSans)
                         fontSize(fontSizeMedium16)
-                        color(colorProgressive)
+                        color(colorBase)
                         textDecoration(.none)
-                        fontWeight(fontWeightSemiBold)
-                        pseudoClass(.hover) {
-                            color(colorProgressiveHover).important()
-                            textDecoration(.underline).important()
-                        }
-                        pseudoClass(.active) {
-                            color(colorProgressiveActive).important()
-                        }
+                        fontWeight(fontWeightNormal)
                         pseudoClass(.focus) {
-							color(colorProgressiveFocus).important()
-                            outline(borderWidthBase, .solid, colorProgressiveFocus).important()
+                            outline(borderWidthBase, .solid, colorBlueFocus).important()
                             outlineOffset(px(2)).important()
                         }
                     }
                 }
                 .style {
-                    textAlign(.right)
+                    textAlign(.end)
                 }
             } else {
                 div {}.style { flex(1) }
@@ -170,9 +157,9 @@ public struct PaginationView: HTML {
             justifyContent(.spaceBetween)
             alignItems(.center)
             maxWidth(px(800))
-            margin(spacing48, .auto, 0, .auto)
+            marginInline(.auto)
             padding(spacing32)
-            borderTop(borderWidthBase, .solid, borderColorBase)
+            borderBlockStart(borderWidthBase, .solid, borderColorBase)
             gap(spacing32)
         }
         .render(indent: indent)

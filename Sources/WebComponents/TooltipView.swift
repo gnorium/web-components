@@ -5,14 +5,11 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// Tooltip component following Wikimedia Codex design system specification
 /// A brief message that shows up when a user hovers over a specific part of the UI.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/directives/tooltip.html
-public struct TooltipView: HTML {
+public struct TooltipView: HTMLProtocol {
 	let tooltipText: String
 	let placement: Placement
-	let children: [HTML]
+	let children: [HTMLProtocol]
 	let `class`: String
 
 	public enum Placement: String, Sendable {
@@ -34,7 +31,7 @@ public struct TooltipView: HTML {
 		tooltip: String,
 		placement: Placement = .bottom,
 		class: String = "",
-		@HTMLBuilder content: () -> [HTML]
+		@HTMLBuilder content: () -> [HTMLProtocol]
 	) {
 		self.tooltipText = tooltip
 		self.placement = placement
@@ -43,7 +40,7 @@ public struct TooltipView: HTML {
 	}
 
 	@CSSBuilder
-	private func tooltipTriggerCSS() -> [CSS] {
+	private func tooltipTriggerCSS() -> [CSSProtocol] {
 		position(.relative)
 		display(.inlineFlex)
 		alignItems(.center)
@@ -51,13 +48,13 @@ public struct TooltipView: HTML {
 	}
 
 	@CSSBuilder
-	private func tooltipContentCSS(_ placement: Placement) -> [CSS] {
+	private func tooltipContentCSS(_ placement: Placement) -> [CSSProtocol] {
 		position(.absolute)
 		padding(spacing8, spacing12)
-		minWidth(px(120))
+		minWidth(px(160))
 		maxWidth(px(320))
 		backgroundColor(backgroundColorInverted)
-		color(colorInvertedFixed)
+		color(colorInverted)
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeSmall14)
 		fontWeight(fontWeightNormal)
@@ -108,7 +105,7 @@ public struct TooltipView: HTML {
 	}
 
 	@CSSBuilder
-	private func tooltipArrowCSS(_ placement: Placement) -> [CSS] {
+	private func tooltipArrowCSS(_ placement: Placement) -> [CSSProtocol] {
 		content("\"\"")
 		position(.absolute)
 		width(0)

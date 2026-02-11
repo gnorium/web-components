@@ -6,19 +6,16 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// Card component following Wikimedia Codex design system specification
 /// A Card groups information related to a single topic.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/card.html
-public struct CardView: HTML {
+public struct CardView: HTMLProtocol {
 	let url: String
 	let icon: String?
 	let thumbnail: Thumbnail?
 	let forceThumbnail: Bool
 	let customPlaceholderIcon: String?
-	let titleContent: [HTML]
-	let descriptionContent: [HTML]
-	let supportingTextContent: [HTML]
+	let titleContent: [HTMLProtocol]
+	let descriptionContent: [HTMLProtocol]
+	let supportingTextContent: [HTMLProtocol]
 	let `class`: String
 
 	public struct Thumbnail: Sendable {
@@ -38,9 +35,9 @@ public struct CardView: HTML {
 		forceThumbnail: Bool = false,
 		customPlaceholderIcon: String? = nil,
 		class: String = "",
-		@HTMLBuilder title: () -> [HTML],
-		@HTMLBuilder description: () -> [HTML] = { [] },
-		@HTMLBuilder supportingText: () -> [HTML] = { [] }
+		@HTMLBuilder title: () -> [HTMLProtocol],
+		@HTMLBuilder description: () -> [HTMLProtocol] = { [] },
+		@HTMLBuilder supportingText: () -> [HTMLProtocol] = { [] }
 	) {
 		self.url = url
 		self.icon = icon
@@ -54,7 +51,7 @@ public struct CardView: HTML {
 	}
 
 	@CSSBuilder
-	private func cardViewCSS(_ isLink: Bool) -> [CSS] {
+	private func cardViewCSS(_ isLink: Bool) -> [CSSProtocol] {
 		display(.block)
 		backgroundColor(backgroundColorBase)
 		border(borderWidthBase, .solid, borderColorSubtle)
@@ -68,24 +65,24 @@ public struct CardView: HTML {
 			cursor(cursorBase)
 
 			pseudoClass(.hover) {
-				borderColor(borderColorProgressiveHover).important()
+				borderColor(borderColorBlueHover).important()
 				boxShadow(boxShadowMedium).important()
 			}
 
 			pseudoClass(.focus) {
-				borderColor(borderColorProgressiveFocus).important()
-				boxShadow(px(0), px(0), px(0), px(1), boxShadowColorProgressiveFocus).important()
+				borderColor(borderColorBlueFocus).important()
+				boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
 				outline(px(1), .solid, .transparent).important()
 			}
 
 			pseudoClass(.active) {
-				borderColor(borderColorProgressiveActive).important()
+				borderColor(borderColorBlueActive).important()
 			}
 		}
 	}
 
 	@CSSBuilder
-	private func cardMediaCSS() -> [CSS] {
+	private func cardMediaCSS() -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -94,7 +91,7 @@ public struct CardView: HTML {
 	}
 
 	@CSSBuilder
-	private func cardThumbnailCSS() -> [CSS] {
+	private func cardThumbnailCSS() -> [CSSProtocol] {
 		width(px(80))
 		height(px(80))
 		overflow(.hidden)
@@ -103,7 +100,7 @@ public struct CardView: HTML {
 	}
 
 	@CSSBuilder
-	private func cardThumbnailImageCSS() -> [CSS] {
+	private func cardThumbnailImageCSS() -> [CSSProtocol] {
 		width(perc(100))
 		height(perc(100))
 		objectFit(.cover)
@@ -111,7 +108,7 @@ public struct CardView: HTML {
 	}
 
 	@CSSBuilder
-	private func cardThumbnailPlaceholderCSS() -> [CSS] {
+	private func cardThumbnailPlaceholderCSS() -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -123,7 +120,7 @@ public struct CardView: HTML {
 	}
 
 	@CSSBuilder
-	private func cardIconCSS() -> [CSS] {
+	private func cardIconCSS() -> [CSSProtocol] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -134,10 +131,10 @@ public struct CardView: HTML {
 	}
 
 	@CSSBuilder
-	private func cardTextCSS(_ hasMedia: Bool) -> [CSS] {
+	private func cardTextCSS(_ hasMedia: Bool) -> [CSSProtocol] {
 		display(.flex)
 		flexDirection(.column)
-		gap(spacing8)
+		gap(spacing16)
 		padding(spacing12)
 		flex(1)
 		minWidth(0)
@@ -148,12 +145,12 @@ public struct CardView: HTML {
 	}
 
 	@CSSBuilder
-	private func cardTitleCSS(_ isLink: Bool) -> [CSS] {
+	private func cardTitleCSS(_ isLink: Bool) -> [CSSProtocol] {
 		fontFamily(typographyFontSans)
-		fontSize(fontSizeMedium16)
-		fontWeight(fontWeightBold)
+		fontSize(fontSizeXXLarge24)
+		fontWeight(fontWeightNormal)
 		lineHeight(lineHeightSmall22)
-		color(isLink ? colorProgressive : colorBase)
+		color(isLink ? colorBlue : colorBase)
 		margin(0)
 		wordWrap(.breakWord)
 
@@ -163,7 +160,7 @@ public struct CardView: HTML {
 	}
 
 	@CSSBuilder
-	private func cardDescriptionCSS() -> [CSS] {
+	private func cardDescriptionCSS() -> [CSSProtocol] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeSmall14)
 		lineHeight(lineHeightSmall22)
@@ -172,7 +169,7 @@ public struct CardView: HTML {
 	}
 
 	@CSSBuilder
-	private func cardSupportingTextCSS() -> [CSS] {
+	private func cardSupportingTextCSS() -> [CSSProtocol] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeXSmall12)
 		lineHeight(lineHeightSmall22)
@@ -181,10 +178,10 @@ public struct CardView: HTML {
 	}
 
 	@CSSBuilder
-	private func cardContentWrapperCSS(_ hasMedia: Bool) -> [CSS] {
+	private func cardContentWrapperCSS(_ hasMedia: Bool) -> [CSSProtocol] {
 		display(.flex)
 		alignItems(hasMedia ? .flexStart : .center)
-		gap(spacing12)
+		gap(spacing16)
 		width(perc(100))
 	}
 
@@ -197,7 +194,7 @@ public struct CardView: HTML {
 		let hasMedia = hasThumbnail || hasIcon
 		let hasTitleOnly = !hasDescription && !hasSupportingText
 
-		let cardContentElement: HTML = div {
+		let cardContentElement: HTMLProtocol = div {
 			if hasThumbnail {
 				div {
 					if let thumb = thumbnail {
@@ -266,19 +263,19 @@ public struct CardView: HTML {
 
 		if isLink {
 			return a { cardContentElement }
-				.href(url)
-				.class(`class`.isEmpty ? "card-view card-is-link" : "card-view card-is-link \(`class`)")
-				.style {
-					cardViewCSS(true)
-				}
-				.render(indent: indent)
+			.href(url)
+			.class(`class`.isEmpty ? "card-view card-is-link" : "card-view card-is-link \(`class`)")
+			.style {
+				cardViewCSS(true)
+			}
+			.render(indent: indent)
 		} else {
 			return div { cardContentElement }
-				.class(`class`.isEmpty ? "card-view" : "card-view \(`class`)")
-				.style {
-					cardViewCSS(false)
-				}
-				.render(indent: indent)
+			.class(`class`.isEmpty ? "card-view" : "card-view \(`class`)")
+			.style {
+				cardViewCSS(false)
+			}
+			.render(indent: indent)
 		}
 	}
 }

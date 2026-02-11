@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct FlagIconView: HTML {
+public struct FlagIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

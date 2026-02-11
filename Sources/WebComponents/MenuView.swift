@@ -6,11 +6,8 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// Menu component following Wikimedia Codex design system specification
 /// A Menu displays a list of available options, suggestions, or actions.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/menu.html
-public struct MenuView: HTML {
+public struct MenuView: HTMLProtocol {
 	let menuItems: [MenuItemView.MenuItemData]
 	let menuGroups: [MenuGroupData]
 	let footer: MenuItemView.MenuItemData?
@@ -23,8 +20,8 @@ public struct MenuView: HTML {
 	let hideDescriptionOverflow: Bool
 	let searchQuery: String
 	let multiselect: Bool
-	let pendingContent: [HTML]
-	let noResultsContent: [HTML]
+	let pendingContent: [HTMLProtocol]
+	let noResultsContent: [HTMLProtocol]
 	let showNoResultsSlot: Bool?
 	let `class`: String
 
@@ -66,8 +63,8 @@ public struct MenuView: HTML {
 		multiselect: Bool = false,
 		showNoResultsSlot: Bool? = nil,
 		class: String = "",
-		@HTMLBuilder pending: () -> [HTML] = { [] },
-		@HTMLBuilder noResults: () -> [HTML] = { [] }
+		@HTMLBuilder pending: () -> [HTMLProtocol] = { [] },
+		@HTMLBuilder noResults: () -> [HTMLProtocol] = { [] }
 	) {
 		self.menuItems = menuItems
 		self.menuGroups = menuGroups
@@ -88,12 +85,12 @@ public struct MenuView: HTML {
 	}
 
 	@CSSBuilder
-	private func menuViewCSS(_ expanded: Bool, _ hasVisibleLimit: Bool) -> [CSS] {
+	private func menuViewCSS(_ expanded: Bool, _ hasVisibleLimit: Bool) -> [CSSProtocol] {
 		position(.absolute)
 		top(perc(100))
-		left(0)
-		right(0)
-		marginTop(spacing4)
+		insetInlineStart(0)
+		insetInlineEnd(0)
+		marginBlockStart(spacing4)
 		backgroundColor(backgroundColorBase)
 		border(borderWidthBase, .solid, borderColorSubtle)
 		borderRadius(borderRadiusBase)
@@ -113,7 +110,7 @@ public struct MenuView: HTML {
 	}
 
 	@CSSBuilder
-	private func menuListCSS(_ hasVisibleLimit: Bool, _ visibleItemLimit: Int?) -> [CSS] {
+	private func menuListCSS(_ hasVisibleLimit: Bool, _ visibleItemLimit: Int?) -> [CSSProtocol] {
 		listStyle(.none)
 		margin(0)
 		padding(0)
@@ -125,14 +122,14 @@ public struct MenuView: HTML {
 	}
 
 	@CSSBuilder
-	private func menuGroupCSS() -> [CSS] {
+	private func menuGroupCSS() -> [CSSProtocol] {
 		listStyle(.none)
 		margin(0)
 		padding(0)
 	}
 
 	@CSSBuilder
-	private func menuGroupHeaderCSS(_ hideTitle: Bool) -> [CSS] {
+	private func menuGroupHeaderCSS(_ hideTitle: Bool) -> [CSSProtocol] {
 		if !hideTitle {
 			display(.flex)
 			alignItems(.center)
@@ -142,7 +139,7 @@ public struct MenuView: HTML {
 	}
 
 	@CSSBuilder
-	private func menuGroupTitleCSS(_ hideTitle: Bool) -> [CSS] {
+	private func menuGroupTitleCSS(_ hideTitle: Bool) -> [CSSProtocol] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeSmall14)
 		fontWeight(fontWeightBold)
@@ -164,7 +161,7 @@ public struct MenuView: HTML {
 	}
 
 	@CSSBuilder
-	private func menuGroupDescriptionCSS() -> [CSS] {
+	private func menuGroupDescriptionCSS() -> [CSSProtocol] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeXSmall12)
 		lineHeight(lineHeightSmall22)
@@ -173,7 +170,7 @@ public struct MenuView: HTML {
 	}
 
 	@CSSBuilder
-	private func menuGroupDividerCSS() -> [CSS] {
+	private func menuGroupDividerCSS() -> [CSSProtocol] {
 		height(borderWidthBase)
 		backgroundColor(borderColorSubtle)
 		margin(spacing8, spacing0)
@@ -181,12 +178,12 @@ public struct MenuView: HTML {
 	}
 
 	@CSSBuilder
-	private func menuPendingCSS() -> [CSS] {
+	private func menuPendingCSS() -> [CSSProtocol] {
 		padding(spacing12)
 	}
 
 	@CSSBuilder
-	private func menuNoResultsCSS() -> [CSS] {
+	private func menuNoResultsCSS() -> [CSSProtocol] {
 		padding(spacing12)
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
@@ -204,7 +201,7 @@ public struct MenuView: HTML {
 		let hasPendingContent = !pendingContent.isEmpty
 
 		// Render individual menu item using MenuItemView
-		func renderMenuItem(_ item: MenuItemView.MenuItemData, itemIndex: Int, isFooter: Bool = false) -> HTML {
+		func renderMenuItem(_ item: MenuItemView.MenuItemData, itemIndex: Int, isFooter: Bool = false) -> HTMLProtocol {
 			let isSelected = selected.contains(item.value)
 			let thumbnail = item.thumbnail != nil ? MenuItemView.Thumbnail(url: item.thumbnail!, alt: "") : nil
 
@@ -239,7 +236,7 @@ public struct MenuView: HTML {
 							div { pendingContent }
 								.class("menu-pending-content")
 								.style {
-									marginTop(spacing8)
+									marginBlockStart(spacing8)
 									fontFamily(typographyFontSans)
 									fontSize(fontSizeMedium16)
 									lineHeight(lineHeightSmall22)

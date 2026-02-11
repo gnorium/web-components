@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct ErrorIconView: HTML {
+public struct ErrorIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

@@ -6,11 +6,8 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// ToggleButtonGroup component following Wikimedia Codex design system specification
 /// A ToggleButtonGroup is a group of ToggleButtons that allows single or multi-select.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/toggle-button-group.html
-public struct ToggleButtonGroupView: HTML {
+public struct ToggleButtonGroupView: HTMLProtocol {
 	let buttons: [ButtonItem]
 	let selectedValues: [String]
 	let isMultiSelect: Bool
@@ -46,25 +43,25 @@ public struct ToggleButtonGroupView: HTML {
 	}
 
 	@CSSBuilder
-	private func toggleButtonGroupViewCSS() -> [CSS] {
+	private func toggleButtonGroupViewCSS() -> [CSSProtocol] {
 		display(.inlineFlex)
 		flexWrap(.wrap)
 		gap(0)
 
 		// Rounded corners for first/last buttons
 		selector(".toggle-button-view:first-child") {
-			borderTopLeftRadius(borderRadiusBase).important()
-			borderBottomLeftRadius(borderRadiusBase).important()
+			borderStartStartRadius(borderRadiusBase).important()
+			borderEndStartRadius(borderRadiusBase).important()
 		}
 
 		selector(".toggle-button-view:last-child") {
-			borderTopRightRadius(borderRadiusBase).important()
-			borderBottomRightRadius(borderRadiusBase).important()
+			borderStartEndRadius(borderRadiusBase).important()
+			borderEndEndRadius(borderRadiusBase).important()
 		}
 
 		// Collapse borders between buttons
 		selector(".toggle-button-view:not(:first-child)") {
-			marginLeft(calc(-borderWidthBase)).important()
+			marginInlineStart(calc(-borderWidthBase)).important()
 		}
 
 		// Bring focused/hovered button to front
@@ -87,7 +84,7 @@ public struct ToggleButtonGroupView: HTML {
 					label: buttonItem.label,
 					icon: buttonItem.icon.map { iconStr in span { iconStr } },
 					modelValue: isSelected,
-					weight: .normal,
+					weight: .subtle,
 					disabled: isDisabled,
 					iconOnly: false,
 					class: "toggle-button-group-item"

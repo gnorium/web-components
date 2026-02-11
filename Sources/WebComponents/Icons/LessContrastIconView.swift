@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct LessContrastIconView: HTML {
+public struct LessContrastIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

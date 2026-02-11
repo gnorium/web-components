@@ -6,7 +6,7 @@ import SVGBuilder
 import DesignTokens
 import WebTypes
 
-public struct FacebookIconView: HTML {
+public struct FacebookIconView: HTMLProtocol {
 	let `class`: String
 	let width: Length
 	let height: Length

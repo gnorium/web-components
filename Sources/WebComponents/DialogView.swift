@@ -6,11 +6,8 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// Dialog component following Wikimedia Codex design system specification
 /// A Dialog is a container that is overlaid on a web page or app in order to present necessary information and tasks.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/dialog.html
-public struct DialogView: HTML {
+public struct DialogView: HTMLProtocol {
 	let open: Bool
 	let title: String
 	let subtitle: String?
@@ -21,25 +18,40 @@ public struct DialogView: HTML {
 	let primaryAction: PrimaryAction?
 	let defaultAction: DefaultAction?
 	let stackedActions: Bool
-	let headerContent: [HTML]
-	let bodyContent: [HTML]
-	let footerContent: [HTML]
-	let footerTextContent: [HTML]
+	let headerContent: [HTMLProtocol]
+	let bodyContent: [HTMLProtocol]
+	let footerContent: [HTMLProtocol]
+	let footerTextContent: [HTMLProtocol]
 	let `class`: String
 
 	public struct PrimaryAction: Sendable {
 		let label: String
-		let type: ActionType
+		let color: ActionColor
 		let disabled: Bool
 
-		public enum ActionType: String, Sendable {
-			case progressive
-			case destructive
+		/// Apple HIG color for the dialog action
+		public enum ActionColor: String, Sendable {
+			case blue
+			case red
+
+			// Legacy aliases
+			public static let progressive = ActionColor.blue
+			public static let destructive = ActionColor.red
 		}
 
-		public init(label: String, type: ActionType = .progressive, disabled: Bool = false) {
+		/// Legacy alias
+		public typealias ActionType = ActionColor
+
+		public init(label: String, color: ActionColor = .blue, disabled: Bool = false) {
 			self.label = label
-			self.type = type
+			self.color = color
+			self.disabled = disabled
+		}
+
+		/// Legacy init
+		public init(label: String, type: ActionColor, disabled: Bool = false) {
+			self.label = label
+			self.color = type
 			self.disabled = disabled
 		}
 	}
@@ -66,10 +78,10 @@ public struct DialogView: HTML {
 		defaultAction: DefaultAction? = nil,
 		stackedActions: Bool = false,
 		class: String = "",
-		@HTMLBuilder header: () -> [HTML] = { [] },
-		@HTMLBuilder body: () -> [HTML],
-		@HTMLBuilder footer: () -> [HTML] = { [] },
-		@HTMLBuilder footerText: () -> [HTML] = { [] }
+		@HTMLBuilder header: () -> [HTMLProtocol] = { [] },
+		@HTMLBuilder body: () -> [HTMLProtocol],
+		@HTMLBuilder footer: () -> [HTMLProtocol] = { [] },
+		@HTMLBuilder footerText: () -> [HTMLProtocol] = { [] }
 	) {
 		self.open = open
 		self.title = title
@@ -89,12 +101,12 @@ public struct DialogView: HTML {
 	}
 
 	@CSSBuilder
-	private func dialogBackdropCSS() -> [CSS] {
+	private func dialogBackdropCSS() -> [CSSProtocol] {
 		position(.fixed)
-		top(0)
-		left(0)
-		right(0)
-		bottom(0)
+		insetBlockStart(0)
+		insetInlineStart(0)
+		insetInlineEnd(0)
+		insetBlockEnd(0)
 		width(perc(100))
 		height(perc(100))
 		backgroundColor(backgroundColorBackdropDark)
@@ -106,7 +118,7 @@ public struct DialogView: HTML {
 	}
 
 	@CSSBuilder
-	private func dialogShellCSS() -> [CSS] {
+	private func dialogShellCSS() -> [CSSProtocol] {
 		position(.relative)
 		display(.flex)
 		flexDirection(.column)
@@ -118,18 +130,18 @@ public struct DialogView: HTML {
 	}
 
 	@CSSBuilder
-	private func dialogHeaderCSS(_ hasCustomHeader: Bool) -> [CSS] {
+	private func dialogHeaderCSS(_ hasCustomHeader: Bool) -> [CSSProtocol] {
 		if !hasCustomHeader {
 			display(.flex)
 			flexDirection(.column)
 			gap(spacing4)
 			padding(spacing20, spacing24)
-			borderBottom(borderWidthBase, .solid, borderColorSubtle)
+			borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
 		}
 	}
 
 	@CSSBuilder
-	private func dialogHeaderTitleGroupCSS() -> [CSS] {
+	private func dialogHeaderTitleGroupCSS() -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.flexStart)
 		gap(spacing16)
@@ -137,7 +149,7 @@ public struct DialogView: HTML {
 	}
 
 	@CSSBuilder
-	private func dialogHeaderTextCSS() -> [CSS] {
+	private func dialogHeaderTextCSS() -> [CSSProtocol] {
 		display(.flex)
 		flexDirection(.column)
 		gap(spacing4)
@@ -146,7 +158,7 @@ public struct DialogView: HTML {
 	}
 
 	@CSSBuilder
-	private func dialogHeaderTitleCSS(_ hideTitle: Bool) -> [CSS] {
+	private func dialogHeaderTitleCSS(_ hideTitle: Bool) -> [CSSProtocol] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeLarge18)
 		fontWeight(fontWeightBold)
@@ -169,7 +181,7 @@ public struct DialogView: HTML {
 	}
 
 	@CSSBuilder
-	private func dialogHeaderSubtitleCSS() -> [CSS] {
+	private func dialogHeaderSubtitleCSS() -> [CSSProtocol] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeSmall14)
 		fontWeight(fontWeightNormal)
@@ -180,7 +192,7 @@ public struct DialogView: HTML {
 	}
 
 	@CSSBuilder
-	private func dialogCloseButtonCSS() -> [CSS] {
+	private func dialogCloseButtonCSS() -> [CSSProtocol] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -208,13 +220,13 @@ public struct DialogView: HTML {
 		pseudoClass(.focus) {
 			backgroundColor(backgroundColorInteractiveSubtleHover).important()
 			color(colorBase).important()
-			outline(px(2), .solid, borderColorProgressiveFocus).important()
+			outline(px(2), .solid, borderColorBlueFocus).important()
 			outlineOffset(px(-2)).important()
 		}
 	}
 
 	@CSSBuilder
-	private func dialogBodyCSS() -> [CSS] {
+	private func dialogBodyCSS() -> [CSSProtocol] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		lineHeight(lineHeightMedium26)
@@ -225,13 +237,13 @@ public struct DialogView: HTML {
 	}
 
 	@CSSBuilder
-	private func dialogFooterCSS(_ hasCustomFooter: Bool, _ hasFooterText: Bool) -> [CSS] {
+	private func dialogFooterCSS(_ hasCustomFooter: Bool, _ hasFooterText: Bool) -> [CSSProtocol] {
 		if !hasCustomFooter {
 			display(.flex)
 			flexDirection(.column)
 			gap(spacing12)
 			padding(spacing20, spacing24)
-			borderTop(borderWidthBase, .solid, borderColorSubtle)
+			borderBlockStart(borderWidthBase, .solid, borderColorSubtle)
 
 			if !hasFooterText {
 				flexDirection(.row)
@@ -242,7 +254,7 @@ public struct DialogView: HTML {
 	}
 
 	@CSSBuilder
-	private func dialogFooterTextCSS() -> [CSS] {
+	private func dialogFooterTextCSS() -> [CSSProtocol] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeSmall14)
 		lineHeight(lineHeightSmall22)
@@ -251,7 +263,7 @@ public struct DialogView: HTML {
 	}
 
 	@CSSBuilder
-	private func dialogFooterActionsCSS(_ stackedActions: Bool) -> [CSS] {
+	private func dialogFooterActionsCSS(_ stackedActions: Bool) -> [CSSProtocol] {
 		display(.flex)
 		gap(spacing12)
 
@@ -272,7 +284,7 @@ public struct DialogView: HTML {
 		let hasActions = primaryAction != nil || defaultAction != nil
 
 		// Default header (when no custom header provided)
-		let defaultHeader: HTML = div {
+		let defaultHeader: HTMLProtocol = div {
 			div {
 				div {
 					h2 { title }
@@ -323,7 +335,7 @@ public struct DialogView: HTML {
 		}
 
 		// Default footer (when no custom footer provided)
-		let defaultFooter: HTML = div {
+		let defaultFooter: HTMLProtocol = div {
 			if hasFooterText {
 				div { footerTextContent }
 					.class("dialog-footer-text")
@@ -339,8 +351,8 @@ public struct DialogView: HTML {
 						div {
 							ButtonView(
 								label: defAction.label,
-								action: .default,
-								weight: .normal,
+								buttonColor: .gray,
+								weight: .subtle,
 								disabled: defAction.disabled
 							)
 						}
@@ -352,8 +364,8 @@ public struct DialogView: HTML {
 						div {
 							ButtonView(
 								label: primAction.label,
-								action: primAction.type == .progressive ? .progressive : .destructive,
-								weight: .primary,
+								buttonColor: primAction.color == .blue ? .blue : .red,
+								weight: .solid,
 								disabled: primAction.disabled
 							)
 						}

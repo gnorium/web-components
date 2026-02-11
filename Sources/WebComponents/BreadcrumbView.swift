@@ -6,11 +6,8 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// Breadcrumb component following Wikimedia Codex design system specification
 /// A list of links to the parent pages of the current page in hierarchical order.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/breadcrumb.html
-public struct BreadcrumbView: HTML {
+public struct BreadcrumbView: HTMLProtocol {
 	let items: [BreadcrumbItem]
 	let truncateLength: Int
 	let maxVisible: Int
@@ -28,7 +25,7 @@ public struct BreadcrumbView: HTML {
 
 	public init(
 		items: [BreadcrumbItem],
-		truncateLength: Int = 25,
+		truncateLength: Int = 40,
 		maxVisible: Int = 6,
 		class: String = ""
 	) {
@@ -39,7 +36,7 @@ public struct BreadcrumbView: HTML {
 	}
 
 	@CSSBuilder
-	private func breadcrumbViewCSS() -> [CSS] {
+	private func breadcrumbViewCSS() -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		flexWrap(.wrap)
@@ -51,17 +48,17 @@ public struct BreadcrumbView: HTML {
 	}
 
 	@CSSBuilder
-	private func breadcrumbItemCSS() -> [CSS] {
+	private func breadcrumbItemCSS() -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing4)
 	}
 
 	@CSSBuilder
-	private func breadcrumbLinkCSS() -> [CSS] {
-		color(colorProgressive)
+	private func breadcrumbLinkCSS() -> [CSSProtocol] {
+		color(colorBlue)
 		textDecoration(.none)
-		maxWidth(px(150))
+		maxWidth(px(350))
 		overflow(.hidden)
 		textOverflow(.ellipsis)
 		whiteSpace(.nowrap)
@@ -71,30 +68,30 @@ public struct BreadcrumbView: HTML {
 		}
 
 		pseudoClass(.focus) {
-			outline(borderWidthThick, .solid, borderColorProgressive).important()
+			outline(borderWidthThick, .solid, borderColorBlue).important()
 			outlineOffset(px(1)).important()
 			borderRadius(borderRadiusBase).important()
 		}
 	}
 
 	@CSSBuilder
-	private func breadcrumbCurrentCSS() -> [CSS] {
+	private func breadcrumbCurrentCSS() -> [CSSProtocol] {
 		color(colorBase)
 		fontWeight(fontWeightNormal)
-		maxWidth(px(150))
+		maxWidth(px(350))
 		overflow(.hidden)
 		textOverflow(.ellipsis)
 		whiteSpace(.nowrap)
 	}
 
 	@CSSBuilder
-	private func breadcrumbSeparatorCSS() -> [CSS] {
+	private func breadcrumbSeparatorCSS() -> [CSSProtocol] {
 		color(colorSubtle)
 		userSelect(.none)
 	}
 
 	@CSSBuilder
-	private func breadcrumbOverflowCSS() -> [CSS] {
+	private func breadcrumbOverflowCSS() -> [CSSProtocol] {
 		display(.inlineFlex)
 		alignItems(.center)
 		gap(spacing4)
@@ -140,7 +137,7 @@ public struct BreadcrumbView: HTML {
 									}
 							}
 
-							span { "/" }
+							span { "›" }
 								.class("breadcrumb-separator")
 								.ariaHidden(true)
 								.style {
@@ -192,7 +189,7 @@ public struct BreadcrumbView: HTML {
 							}
 
 							if !isLast {
-								span { ">" }
+								span { "›" }
 									.class("breadcrumb-separator")
 									.ariaHidden(true)
 									.style {

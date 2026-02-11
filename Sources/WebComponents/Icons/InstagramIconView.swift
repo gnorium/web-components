@@ -5,7 +5,7 @@ import SVGBuilder
 import DesignTokens
 import WebTypes
 
-public struct InstagramIconView: HTML {
+public struct InstagramIconView: HTMLProtocol {
 	let `class`: String
 	let width: Length
 	let height: Length

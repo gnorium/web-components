@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct ClearIconView: HTML {
+public struct ClearIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

@@ -6,11 +6,8 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// TextInput component following Wikimedia Codex design system specification
 /// A form element that lets users input and edit a single-line text value.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/text-input.html
-public struct TextInputView: HTML {
+public struct TextInputView: HTMLProtocol {
 	let id: String
 	let name: String
 	let placeholder: String
@@ -23,7 +20,10 @@ public struct TextInputView: HTML {
 	let clearable: Bool
 	let startIcon: String?
 	let endIcon: String?
+	let inputFontSize: Length
 	let `class`: String
+	let min: Int?
+	let max: Int?
 
 	public enum InputType: String, Sendable {
 		case text
@@ -58,7 +58,10 @@ public struct TextInputView: HTML {
 		clearable: Bool = false,
 		startIcon: String? = nil,
 		endIcon: String? = nil,
-		class: String = ""
+		inputFontSize: Length = fontSizeSmall14,
+		class: String = "",
+		min: Int? = nil,
+		max: Int? = nil
 	) {
 		self.id = id
 		self.name = name
@@ -72,27 +75,30 @@ public struct TextInputView: HTML {
 		self.clearable = clearable
 		self.startIcon = startIcon
 		self.endIcon = endIcon
+		self.inputFontSize = inputFontSize
 		self.`class` = `class`
+		self.min = min
+		self.max = max
 	}
 
 	@CSSBuilder
-	private func textInputViewCSS() -> [CSS] {
+	private func textInputViewCSS() -> [CSSProtocol] {
 		position(.relative)
 		display(.inlineBlock)
 		width(perc(100))
 	}
 
 	@CSSBuilder
-	private func textInputInputCSS(_ disabled: Bool, _ readonly: Bool, _ status: ValidationStatus, _ hasStartIcon: Bool, _ hasEndIcon: Bool, _ clearable: Bool) -> [CSS] {
+	private func textInputInputCSS(_ disabled: Bool, _ readonly: Bool, _ status: ValidationStatus, _ hasStartIcon: Bool, _ hasEndIcon: Bool, _ clearable: Bool) -> [CSSProtocol] {
 		width(perc(100))
 		minHeight(minSizeInteractivePointer)
 		padding(spacing8, spacing12)
 		fontFamily(typographyFontSans)
-		fontSize(fontSizeMedium16)
+		fontSize(inputFontSize)
 		lineHeight(lineHeightSmall22)
 		color(disabled ? colorDisabled : colorBase)
 		backgroundColor(disabled ? backgroundColorDisabled : (readonly ? backgroundColorNeutralSubtle : backgroundColorBase))
-		border(borderWidthBase, .solid, status == .error ? borderColorError : (disabled ? borderColorDisabled : borderColorInputBinary))
+		border(borderWidthBase, .solid, status == .error ? borderColorRed : (disabled ? borderColorDisabled : borderColorBase))
 		borderRadius(borderRadiusBase)
 		transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
 		outline(.none)
@@ -100,30 +106,29 @@ public struct TextInputView: HTML {
 		boxSizing(.borderBox)
 
 		if hasStartIcon {
-			paddingLeft(calc(spacing12 + sizeIconMedium + spacing8)).important()
+			paddingInlineStart(calc(spacing12 + sizeIconMedium + spacing8)).important()
 		}
 
 		if hasEndIcon || clearable {
-			paddingRight(calc(spacing12 + sizeIconMedium + spacing8)).important()
+			paddingInlineEnd(calc(spacing12 + sizeIconMedium + spacing8)).important()
 		}
 
 		pseudoElement(.placeholder) {
 			color(colorPlaceholder).important()
-			opacity(opacityIconPlaceholder).important()
 		}
 
 		pseudoClass(.focus, not(.disabled), not(.readOnly)) {
-			borderColor(borderColorProgressiveFocus).important()
-			boxShadow(px(0), px(0), px(0), px(1), boxShadowColorProgressiveFocus).important()
+			borderColor(borderColorBlueFocus).important()
+			boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
 		}
 
 		pseudoClass(.hover, not(.disabled), not(.readOnly)) {
-			borderColor(borderColorInputBinaryHover).important()
+			borderColor(borderColorInputHover).important()
 		}
 	}
 
 	@CSSBuilder
-	private func textInputIconCSS(_ isStartIcon: Bool) -> [CSS] {
+	private func textInputIconCSS(_ isStartIcon: Bool) -> [CSSProtocol] {
 		position(.absolute)
 		top(perc(50))
 		transform(translateY(perc(-50)))
@@ -143,7 +148,7 @@ public struct TextInputView: HTML {
 	}
 
 	@CSSBuilder
-	private func textInputClearButtonCSS(_ disabled: Bool) -> [CSS] {
+	private func textInputClearButtonCSS(_ disabled: Bool) -> [CSSProtocol] {
 		position(.absolute)
 		top(perc(50))
 		right(spacing12)
@@ -171,7 +176,7 @@ public struct TextInputView: HTML {
 		}
 
 		pseudoClass(.focus) {
-			outline(px(2), .solid, borderColorProgressiveFocus).important()
+			outline(px(2), .solid, borderColorBlueFocus).important()
 			outlineOffset(px(-2)).important()
 		}
 
@@ -185,6 +190,29 @@ public struct TextInputView: HTML {
 		let hasEndIcon = endIcon != nil
 		let htmlInputType = getHTMLInputType(type)
 
+		// Build input element before the div block
+		var inputEl = input()
+			.type(htmlInputType)
+			.id(id)
+			.name(name)
+			.placeholder(placeholder)
+			.value(value)
+			.disabled(disabled)
+			.readonly(readonly)
+			.required(required)
+			.class("text-input-input")
+
+		if let minValue = min {
+			inputEl = inputEl.min(minValue)
+		}
+		if let maxValue = max {
+			inputEl = inputEl.max(maxValue)
+		}
+
+		let styledInput = inputEl.style {
+			textInputInputCSS(disabled, readonly, status, hasStartIcon, hasEndIcon, clearable)
+		}
+
 		var container = div {
 			if let icon = startIcon {
 				span { icon }
@@ -195,19 +223,7 @@ public struct TextInputView: HTML {
 					}
 			}
 
-			input()
-				.type(htmlInputType)
-				.id(id)
-				.name(name)
-				.placeholder(placeholder)
-				.value(value)
-				.disabled(disabled)
-				.readonly(readonly)
-				.required(required)
-				.class("text-input-input")
-				.style {
-					textInputInputCSS(disabled, readonly, status, hasStartIcon, hasEndIcon, clearable)
-				}
+			styledInput
 
 			if clearable {
 				button {

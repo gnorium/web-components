@@ -6,16 +6,19 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// Link component following Wikimedia Codex design system specification
 /// Navigates the user to another page, view or section.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/mixins/link.html
-public struct LinkView: HTML {
+public struct LinkView: HTMLProtocol {
+	public enum LinkWeight: String, Sendable {
+		case `default`
+		case plain
+	}
+
 	let url: String
 	let underlined: Bool
 	let redLink: Bool
 	let external: Bool
-	let content: [HTML]
+	let weight: LinkWeight
+	let content: [HTMLProtocol]
 	let `class`: String
 
 	public init(
@@ -23,23 +26,25 @@ public struct LinkView: HTML {
 		underlined: Bool = false,
 		redLink: Bool = false,
 		external: Bool = false,
+		weight: LinkWeight = .default,
 		class: String = "",
-		@HTMLBuilder content: () -> [HTML]
+		@HTMLBuilder content: () -> [HTMLProtocol]
 	) {
 		self.url = url
 		self.underlined = underlined
 		self.redLink = redLink
 		self.external = external
+		self.weight = weight
 		self.content = content()
 		self.`class` = `class`
 	}
 
 	@CSSBuilder
-	private func linkViewCSS(_ underlined: Bool, _ redLink: Bool) -> [CSS] {
+	private func linkViewCSS(_ underlined: Bool, _ redLink: Bool) -> [CSSProtocol] {
 		if redLink {
-			color(colorDestructive)
+			color(colorRed)
 		} else {
-			color(colorProgressive)
+			color(colorBlue)
 		}
 
 		if underlined {
@@ -52,40 +57,62 @@ public struct LinkView: HTML {
 
 		pseudoClass(.hover) {
 			if redLink {
-				color(colorDestructiveHover).important()
+				color(colorRedHover).important()
 			} else {
-				color(colorProgressiveHover).important()
+				color(colorBlueHover).important()
 			}
 			textDecoration(.underline).important()
 		}
 
 		pseudoClass(.active) {
 			if redLink {
-				color(colorDestructiveActive).important()
+				color(colorRedActive).important()
 			} else {
-				color(colorProgressiveActive).important()
+				color(colorBlueActive).important()
 			}
 		}
 
 		pseudoClass(.focus) {
-			outline(borderWidthThick, .solid, borderColorProgressive).important()
+			outline(borderWidthThick, .solid, borderColorBlue).important()
 			outlineOffset(px(1)).important()
 			borderRadius(borderRadiusBase).important()
 		}
 
-		if !redLink {
+		if redLink {
 			pseudoClass(.visited) {
-				color(colorVisited).important()
+				color(colorRed).important()
 			}
 		}
 	}
 
 	@CSSBuilder
-	private func linkExternalIconCSS() -> [CSS] {
+	private func linkViewPlainCSS() -> [CSSProtocol] {
+		display(.flex)
+		alignItems(.center)
+		gap(spacing8)
+		height(px(44))
+		paddingInline(spacing16)
+		fontFamily(typographyFontSans)
+		fontSize(fontSizeMedium16)
+		fontWeight(fontWeightNormal)
+		color(colorBase)
+		textDecoration(.none)
+		borderRadius(borderRadiusBase)
+		cursor(cursorBaseHover)
+
+		pseudoClass(.focus) {
+			outline(borderWidthThick, .solid, borderColorBlue).important()
+			outlineOffset(px(1)).important()
+			borderRadius(borderRadiusBase).important()
+		}
+	}
+
+	@CSSBuilder
+	private func linkExternalIconCSS() -> [CSSProtocol] {
 		display(.inlineBlock)
 		width(sizeIconXSmall)
 		height(sizeIconXSmall)
-		marginLeft(spacing4)
+		marginInlineStart(spacing4)
 		verticalAlign(.middle)
 		fontSize(sizeIconXSmall)
 	}
@@ -93,6 +120,9 @@ public struct LinkView: HTML {
 	public func render(indent: Int = 0) -> String {
 		let linkClasses = {
 			var classes = "link-view"
+			if weight == .plain {
+				classes += " link-plain"
+			}
 			if underlined {
 				classes += " link-underlined"
 			}
@@ -131,7 +161,11 @@ public struct LinkView: HTML {
 
 		return link
 			.style {
-				linkViewCSS(underlined, redLink)
+				if weight == .plain {
+					linkViewPlainCSS()
+				} else {
+					linkViewCSS(underlined, redLink)
+				}
 			}
 			.render(indent: indent)
 	}

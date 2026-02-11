@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct InfoFilledIconView: HTML {
+public struct InfoFilledIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

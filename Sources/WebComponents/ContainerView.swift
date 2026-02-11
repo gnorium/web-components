@@ -6,13 +6,10 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// Container component following Wikimedia Codex design system specification
 /// A flexible layout wrapper that adapts across different breakpoints and screen sizes.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/container.html
-public struct ContainerView: HTML {
+public struct ContainerView: HTMLProtocol {
 	let size: Size
-	let content: [HTML]
+	let content: [HTMLProtocol]
 	let `class`: String
 
 	public enum Size: String, Sendable {
@@ -25,7 +22,7 @@ public struct ContainerView: HTML {
 	public init(
 		size: Size = .full,
 		class: String = "",
-		@HTMLBuilder content: () -> [HTML]
+		@HTMLBuilder content: () -> [HTMLProtocol]
 	) {
 		self.size = size
 		self.`class` = `class`
@@ -33,10 +30,9 @@ public struct ContainerView: HTML {
 	}
 
 	@CSSBuilder
-	private func containerViewCSS(_ size: Size) -> [CSS] {
+	private func containerViewCSS(_ size: Size) -> [CSSProtocol] {
 		width(perc(100))
-		marginLeft(.auto)
-		marginRight(.auto)
+		marginInline(.auto)
 		boxSizing(.borderBox)
 
 		// Fluid padding that scales smoothly with viewport width
@@ -45,8 +41,8 @@ public struct ContainerView: HTML {
 		// - Preferred: 5vw (5% of viewport width - scales naturally)
 		// - Max: 64px (prevents excessive padding on ultra-wide displays)
 		// This ensures padding always feels proportional to screen size
-		paddingLeft(clamp(spacing16, vw(5), spacing64))
-		paddingRight(clamp(spacing16, vw(5), spacing64))
+		paddingInlineStart(clamp(spacing16, vw(5), spacing64))
+		paddingInlineEnd(clamp(spacing16, vw(5), spacing64))
 
 		switch size {
 			case .medium:

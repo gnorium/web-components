@@ -6,30 +6,38 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// Tabs component following Wikimedia Codex design system specification
 /// Tabs consist of two or more tab items for navigating between different sections of content.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/tabs.html
-public struct TabsView: HTML {
+public struct TabsView: HTMLProtocol {
 	let tabs: [TabView]
 	let activeTab: String?
 	let framed: Bool
+	let variant: Variant
 	let `class`: String
+
+	/// Visual style variant for tab buttons
+	public enum Variant: String, Sendable {
+		/// Underline active tab, transparent background
+		case quiet
+		/// Pill-shaped tabs, filled background on active tab
+		case solid
+	}
 
 	public init(
 		tabs: [TabView],
 		activeTab: String? = nil,
 		framed: Bool = false,
+		variant: Variant = .quiet,
 		class: String = ""
 	) {
 		self.tabs = tabs
 		self.activeTab = activeTab ?? tabs.first?.name
 		self.framed = framed
+		self.variant = variant
 		self.`class` = `class`
 	}
 
 	@CSSBuilder
-	private func tabsViewCSS(_ framed: Bool) -> [CSS] {
+	private func tabsViewCSS(_ framed: Bool) -> [CSSProtocol] {
 		display(.block)
 		fontFamily(typographyFontSans)
 
@@ -40,60 +48,88 @@ public struct TabsView: HTML {
 	}
 
 	@CSSBuilder
-	private func tabsHeaderCSS() -> [CSS] {
+	private func tabsHeaderCSS(_ variant: Variant) -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		position(.relative)
 		overflow(.hidden)
-		borderBottom(borderWidthBase, .solid, borderColorSubtle)
-	}
 
-	@CSSBuilder
-	private func tabsListCSS() -> [CSS] {
-		display(.flex)
-		gap(0)
-		margin(0)
-		padding(0)
-		listStyle(.none)
-		overflow(.auto)
-		scrollbarWidth(.none)
-		flexGrow(1)
-
-		pseudoElement(.webkitScrollbar) {
-			display(.none).important()
+		switch variant {
+		case .quiet:
+			gap(0)
+		case .solid:
+			gap(spacing4)
 		}
 	}
 
 	@CSSBuilder
-	private func tabButtonCSS(_ isActive: Bool, _ disabled: Bool, _ framed: Bool) -> [CSS] {
+	private func tabsListCSS(_ variant: Variant) -> [CSSProtocol] {
+		display(.flex)
+		margin(0)
+		padding(0)
+		listStyle(.none)
+		flexGrow(1)
+
+		switch variant {
+		case .quiet:
+			gap(spacing4)
+			overflow(.auto)
+			scrollbarWidth(.none)
+
+			pseudoElement(.webkitScrollbar) {
+				display(.none).important()
+			}
+		case .solid:
+			gap(spacing8)
+			flexWrap(.wrap)
+		}
+	}
+
+	@CSSBuilder
+	private func tabButtonCSS(_ isActive: Bool, _ disabled: Bool, _ framed: Bool, _ variant: Variant) -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)
-		minWidth(px(64))
-		padding(spacing12, spacing16)
-		fontSize(fontSizeMedium16)
-		fontWeight(fontWeightNormal)
-		lineHeight(lineHeightSmall22)
 		whiteSpace(.nowrap)
 		textAlign(.center)
-		backgroundColor(.transparent)
 		border(.none)
-		cursor(disabled ? cursorBaseDisabled : cursorBaseHover)
+		cursor(disabled ? cursorBaseDisabled : (isActive ? .default : cursorBaseHover))
 		transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
 		position(.relative)
+		fontFamily(typographyFontSans)
 
-		if isActive {
-			color(colorProgressive)
-			fontWeight(fontWeightBold)
+		switch variant {
+		case .quiet:
+			height(px(44))
+			padding(0, spacing12)
+			fontSize(fontSizeSmall14)
+			fontWeight(fontWeightNormal)
+			lineHeight(lineHeightSmall22)
+			backgroundColor(.transparent)
+			borderRadius(borderRadiusPill)
 
-			if !framed {
-				borderBottom(borderWidthThick, .solid, borderColorProgressive)
+			if isActive {
+				color(colorBase)
+				fontWeight(fontWeightSemiBold)
 			} else {
-				backgroundColor(backgroundColorBase)
+				color(colorSubtle)
 			}
-		} else {
-			color(colorBase)
-			borderBottom(borderWidthThick, .solid, .transparent)
+
+		case .solid:
+			padding(spacing8, spacing16)
+			fontSize(fontSizeSmall14)
+			lineHeight(lineHeightXSmall20)
+			borderRadius(borderRadiusPill)
+
+			if isActive {
+				color(colorInvertedFixed)
+				backgroundColor(colorBlue)
+				fontWeight(fontWeightBold)
+			} else {
+				color(colorBlue)
+				backgroundColor(.transparent)
+				fontWeight(fontWeightNormal)
+			}
 		}
 
 		if disabled {
@@ -101,35 +137,34 @@ public struct TabsView: HTML {
 			cursor(cursorBaseDisabled)
 		}
 
-		if !disabled && !isActive {
-			pseudoClass(.hover) {
-				color(colorProgressive).important()
-				backgroundColor(backgroundColorProgressiveSubtle).important()
-			}
+		pseudoClass(.hover, not(.disabled), not(attribute(.ariaSelected, true))) {
+			color(colorBase).important()
 
-			pseudoClass(.active) {
-				backgroundColor(backgroundColorProgressiveSubtle).important()
+			if variant == .solid {
+				backgroundColor(backgroundColorInteractiveSubtleHover).important()
 			}
+		}
+
+		pseudoClass(.focusVisible) {
+			outline(borderWidthThick, .solid, borderColorBlue).important()
+			outlineOffset(px(-2)).important()
 		}
 
 		pseudoClass(.focus) {
-			outline(borderWidthThick, .solid, borderColorProgressive).important()
-			outlineOffset(px(-2)).important()
+			outline(.none)
 		}
 	}
 
 	@CSSBuilder
-	private func tabPanelCSS(_ framed: Bool) -> [CSS] {
+	private func tabPanelCSS(_ framed: Bool) -> [CSSProtocol] {
 		if framed {
 			padding(spacing16)
-		} else {
-			padding(spacing16, 0)
 		}
 	}
 
 	@CSSBuilder
-	private func tabsScrollButtonCSS() -> [CSS] {
-		display(.flex)
+	private func tabsScrollButtonCSS() -> [CSSProtocol] {
+		display(.none)
 		alignItems(.center)
 		justifyContent(.center)
 		width(sizeIconMedium)
@@ -160,51 +195,74 @@ public struct TabsView: HTML {
 
 		return div {
 			div {
-				button { "◀" }
-					.type(.button)
-					.class("tabs-scroll-button tabs-scroll-prev")
-					.ariaLabel("Scroll to previous tabs")
-					.data("scroll", "prev")
-					.style {
-						tabsScrollButtonCSS()
-					}
+				// Scroll buttons only for quiet variant (solid wraps instead)
+				if variant == .quiet {
+					button { PreviousIconView() }
+						.type(.button)
+						.class("tabs-scroll-button tabs-scroll-prev")
+						.ariaLabel("Scroll to previous tabs")
+						.data("scroll", "prev")
+						.style {
+							tabsScrollButtonCSS()
+						}
+				}
 
 				div {
 					for tab in tabs {
 						let isActive = tab.name == active
-						button { tab.label.isEmpty ? tab.name : tab.label }
-							.type(.button)
-							.class(tab.`class`.isEmpty ? "tab-view" : "tab-view \(tab.`class`)")
-							.role("tab")
-							.ariaSelected(isActive)
-							.ariaControls("panel-\(tab.name)")
-							.id("tab-\(tab.name)")
-							.data("tab-name", tab.name)
-							.disabled(tab.disabled)
-							.tabindex(isActive ? 0 : -1)
-							.style {
-								tabButtonCSS(isActive, tab.disabled, framed)
-							}
+						let tabClass = tab.`class`.isEmpty ? "tab-view" : "tab-view \(tab.`class`)"
+
+						if let url = tab.url {
+							// URL tabs render as anchor links (navigation)
+							a { tab.label.isEmpty ? tab.name : tab.label }
+								.href(url)
+								.class(tabClass)
+								.role("tab")
+								.ariaSelected(isActive)
+								.id("tab-\(tab.name)")
+								.data("tab-name", tab.name)
+								.style {
+									tabButtonCSS(isActive, tab.disabled, framed, variant)
+									textDecoration(.none)
+								}
+						} else {
+							// Panel-switching tabs render as buttons
+							button { tab.label.isEmpty ? tab.name : tab.label }
+								.type(.button)
+								.class(tabClass)
+								.role("tab")
+								.ariaSelected(isActive)
+								.ariaControls("panel-\(tab.name)")
+								.id("tab-\(tab.name)")
+								.data("tab-name", tab.name)
+								.disabled(tab.disabled)
+								.tabindex(isActive ? 0 : -1)
+								.style {
+									tabButtonCSS(isActive, tab.disabled, framed, variant)
+								}
+						}
 					}
 				}
 				.class("tabs-list")
 				.role("tablist")
 				.style {
-					tabsListCSS()
+					tabsListCSS(variant)
 				}
 
-				button { "▶" }
-					.type(.button)
-					.class("tabs-scroll-button tabs-scroll-next")
-					.ariaLabel("Scroll to next tabs")
-					.data("scroll", "next")
-					.style {
-						tabsScrollButtonCSS()
-					}
+				if variant == .quiet {
+					button { NextIconView() }
+						.type(.button)
+						.class("tabs-scroll-button tabs-scroll-next")
+						.ariaLabel("Scroll to next tabs")
+						.data("scroll", "next")
+						.style {
+							tabsScrollButtonCSS()
+						}
+				}
 			}
 			.class("tabs-header")
 			.style {
-				tabsHeaderCSS()
+				tabsHeaderCSS(variant)
 			}
 
 			for tab in tabs {
@@ -223,7 +281,12 @@ public struct TabsView: HTML {
 				}
 			}
 		}
-		.class(`class`.isEmpty ? (framed ? "tabs-view tabs-framed" : "tabs-view") : (framed ? "tabs-view tabs-framed \(`class`)" : "tabs-view \(`class`)"))
+		.class([
+			"tabs-view",
+			framed ? "tabs-framed" : nil,
+			variant == .solid ? "tabs-solid" : nil,
+			`class`.isEmpty ? nil : `class`
+		].compactMap { $0 }.joined(separator: " "))
 		.data("active-tab", active)
 		.style {
 			tabsViewCSS(framed)
@@ -253,7 +316,7 @@ private class TabsInstance: @unchecked Sendable {
 	init(tabs: Element) {
 		self.tabsElement = tabs
 		self.tabButtons = Array(tabs.querySelectorAll(".tabs-list [role='tab']"))
-		self.tabPanels = Array(tabs.querySelectorAll(".tabs-panel"))
+		self.tabPanels = Array(tabs.querySelectorAll(".tab-panel"))
 		self.scrollPrevButton = tabs.querySelector("[\(data("scroll"))='prev']")
 		self.scrollNextButton = tabs.querySelector("[\(data("scroll"))='next']")
 		self.tabsList = tabs.querySelector(".tabs-list")
@@ -265,12 +328,12 @@ private class TabsInstance: @unchecked Sendable {
 
 	private func bindEvents() {
 		for button in tabButtons {
-			_ = button.addEventListener(.click) { [self] _ in
+			_ = button.addEventListener(.click) { [self, button] _ in
 				guard let tabName = button.getAttribute(data("tab-name")) else { return }
 				self.selectTab(tabName, setFocus: false)
 			}
 
-			_ = button.addEventListener(.keydown) { [self] (event: CallbackString) in
+			_ = button.addEventListener(.keydown) { [self, button] (event: CallbackString) in
 				event.withCString { eventPtr in
 					let key = String(cString: eventPtr)
 					self.handleKeydown(key: key, currentButton: button)
@@ -365,19 +428,28 @@ private class TabsInstance: @unchecked Sendable {
 		      let prev = scrollPrevButton,
 		      let next = scrollNextButton else { return }
 
+		let hasOverflow = list.scrollWidth > list.clientWidth
 		let canScrollLeft = list.scrollLeft > 0
 		let canScrollRight = list.scrollLeft < (list.scrollWidth - list.clientWidth - 1)
 
-		if canScrollLeft {
-			prev.removeAttribute("disabled")
-		} else {
-			prev.setAttribute("disabled", "")
-		}
+		if hasOverflow {
+			prev.style.setProperty("display", "flex")
+			next.style.setProperty("display", "flex")
 
-		if canScrollRight {
-			next.removeAttribute("disabled")
+			if canScrollLeft {
+				prev.removeAttribute("disabled")
+			} else {
+				prev.setAttribute("disabled", "")
+			}
+
+			if canScrollRight {
+				next.removeAttribute("disabled")
+			} else {
+				next.setAttribute("disabled", "")
+			}
 		} else {
-			next.setAttribute("disabled", "")
+			prev.style.setProperty("display", "none")
+			next.style.setProperty("display", "none")
 		}
 	}
 }

@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct CancelIconView: HTML {
+public struct CancelIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

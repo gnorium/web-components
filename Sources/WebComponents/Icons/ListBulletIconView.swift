@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct ListBulletIconView: HTML {
+public struct ListBulletIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

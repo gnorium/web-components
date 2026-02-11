@@ -5,15 +5,12 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// MenuButton component following Wikimedia Codex design system specification
 /// A ToggleButton that displays a Menu with actions when toggled on.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/menu-button.html
-public struct MenuButtonView: HTML {
+public struct MenuButtonView: HTMLProtocol {
 	public struct MenuItem: Sendable {
 		public let value: String
 		public let label: String
-		public let icon: (any HTML)?
+		public let icon: (any HTMLProtocol)?
 		public let url: String?
 		public let disabled: Bool
 		public let destructive: Bool
@@ -22,7 +19,7 @@ public struct MenuButtonView: HTML {
 			value: String,
 			label: String,
 			url: String? = nil,
-			icon: (any HTML)? = nil,
+			icon: (any HTMLProtocol)? = nil,
 			disabled: Bool = false,
 			destructive: Bool = false
 		) {
@@ -36,7 +33,7 @@ public struct MenuButtonView: HTML {
 	}
 
 	let buttonLabel: String
-	let buttonIcon: (any HTML)?
+	let buttonIcon: (any HTMLProtocol)?
 	let iconOnly: Bool
 	let menuItems: [MenuItem]
 	let buttonWeight: ButtonView.ButtonWeight
@@ -44,20 +41,20 @@ public struct MenuButtonView: HTML {
 	let ariaLabel: String?
 	let size: ButtonView.ButtonSize
 	let `class`: String
-	let buttonFontWeight: CSSFontWeight
+	let labelFontWeight: CSSFontWeight
     let indicateSelection: Bool
 	
 	public init(
 		buttonLabel: String,
-		buttonIcon: (any HTML)? = nil,
+		buttonIcon: (any HTMLProtocol)? = nil,
 		iconOnly: Bool = false,
 		menuItems: [MenuItem],
-		buttonWeight: ButtonView.ButtonWeight = .normal,
+		buttonWeight: ButtonView.ButtonWeight = .subtle,
 		disabled: Bool = false,
 		ariaLabel: String? = nil,
 		size: ButtonView.ButtonSize = .medium,
 		class: String = "",
-		buttonFontWeight: CSSFontWeight = fontWeightBold,
+		labelFontWeight: CSSFontWeight = fontWeightBold,
 		indicateSelection: Bool = false
 	) {
 		self.buttonLabel = buttonLabel
@@ -69,7 +66,7 @@ public struct MenuButtonView: HTML {
 		self.ariaLabel = ariaLabel
 		self.size = size
 		self.`class` = `class`
-		self.buttonFontWeight = buttonFontWeight
+		self.labelFontWeight = labelFontWeight
 		self.indicateSelection = indicateSelection
 	}
 
@@ -88,13 +85,13 @@ public struct MenuButtonView: HTML {
 				indicateSelection: indicateSelection,
 				size: size,
 				class: "menu-button-trigger",
-				buttonFontWeight: buttonFontWeight
+				labelFontWeight: labelFontWeight
 			)
 
 			// Menu
 			div {
 				menuItems.map { item in
-					let itemContent: [HTML] = [
+					let itemContent: [HTMLProtocol] = [
 						item.icon.map { icon in span { icon }.class("menu-item-icon").ariaHidden(true).style { menuItemIconCSS() } },
 						span { item.label }.class("menu-item-text").style { menuItemTextCSS() }
 					].compactMap { $0 }
@@ -146,17 +143,17 @@ public struct MenuButtonView: HTML {
 	}
 
     @CSSBuilder
-	private func menuButtonViewCSS() -> [CSS] {
+	private func menuButtonViewCSS() -> [CSSProtocol] {
 		position(.relative)
 		display(.inlineBlock)
 	}
 
 	@CSSBuilder
-	private func menuButtonMenuCSS() -> [CSS] {
+	private func menuButtonMenuCSS() -> [CSSProtocol] {
 		position(.absolute)
 		top(perc(100))
-		left(0)
-		marginTop(spacing4)
+		insetInlineStart(0)
+		marginBlockStart(spacing4)
 		minWidth(px(160))
 		maxWidth(px(320))
 		backgroundColor(backgroundColorBase)
@@ -171,7 +168,7 @@ public struct MenuButtonView: HTML {
 	}
 
 	@CSSBuilder
-	private func menuItemCSS(_ item: MenuItem) -> [CSS] {
+	private func menuItemCSS(_ item: MenuItem) -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing12)
@@ -183,7 +180,7 @@ public struct MenuButtonView: HTML {
 		boxSizing(.borderBox)
 
 		if item.destructive {
-			color(colorDestructive)
+			color(colorRed)
 		} else {
 			color(colorBase)
 		}
@@ -192,21 +189,21 @@ public struct MenuButtonView: HTML {
 
 		pseudoClass(.hover, not(.disabled)) {
 			if item.destructive {
-				backgroundColor(backgroundColorDestructiveSubtle).important()
-				color(colorDestructive).important()
+				backgroundColor(backgroundColorRedSubtle).important()
+				color(colorRed).important()
 			} else {
 				backgroundColor(backgroundColorInteractiveSubtle).important()
-				color(colorProgressive).important()
+				color(colorBlue).important()
 			}
 		}
 
 		pseudoClass(.focus) {
 			if item.destructive {
-				backgroundColor(backgroundColorDestructiveSubtle).important()
-				outline(borderWidthThick, .solid, colorDestructive).important()
+				backgroundColor(backgroundColorRedSubtle).important()
+				outline(borderWidthThick, .solid, colorRed).important()
 			} else {
 				backgroundColor(backgroundColorInteractiveSubtle).important()
-				outline(borderWidthThick, .solid, colorProgressive).important()
+				outline(borderWidthThick, .solid, colorBlue).important()
 			}
 		}
 
@@ -218,7 +215,7 @@ public struct MenuButtonView: HTML {
 	}
 
 	@CSSBuilder
-	private func menuItemIconCSS() -> [CSS] {
+	private func menuItemIconCSS() -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -228,7 +225,7 @@ public struct MenuButtonView: HTML {
 	}
 
 	@CSSBuilder
-	private func menuItemTextCSS() -> [CSS] {
+	private func menuItemTextCSS() -> [CSSProtocol] {
 		flex(1)
 	}
 }

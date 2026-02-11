@@ -5,7 +5,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct ColorSchemeToggleButtonView: HTML {
+public struct ColorSchemeToggleButtonView: HTMLProtocol {
 	let `class`: String
 	let size: ButtonView.ButtonSize
 
@@ -45,7 +45,7 @@ public struct ColorSchemeToggleButtonView: HTML {
 				}
 			},
 			modelValue: false,
-			weight: .transparent,
+			weight: .plain,
 			iconOnly: true,
 			ariaLabel: "Toggle color scheme",
 			indicateSelection: false,
@@ -66,13 +66,16 @@ import WebTypes
 import EmbeddedSwiftUtilities
 
 public class ColorSchemeToggleButtonHydration: @unchecked Sendable {
-	nonisolated(unsafe) private var button: Element?
+	nonisolated(unsafe) private var buttons: [Element] = []
 	nonisolated(unsafe) private var currentScheme: CSSPrefersColorScheme = .light
 
 	public init?() {
-		button = document.querySelector(".color-scheme-toggle-button-view")
+		let allButtons = document.querySelectorAll(".color-scheme-toggle-button-view")
+		for button in allButtons {
+			buttons.append(button)
+		}
 
-		guard button != nil else {
+		guard !buttons.isEmpty else {
 			return nil
 		}
 
@@ -107,38 +110,45 @@ public class ColorSchemeToggleButtonHydration: @unchecked Sendable {
 	}
 
 	nonisolated private func bindEvents() {
-		guard let btn = button else {
-			return
-		}
-		
-		// Listen for toggle-button-update from ToggleButtonInstance
-		_ = btn.addEventListener("toggle-button-update") { [self] (event: CallbackString) in
-			let isDark = event.detail.withCString { ptr in
-				ptr[0] == 116 && ptr[1] == 114 && ptr[2] == 117 && ptr[3] == 101 && ptr[4] == 0 // "true"
+		// Listen for toggle-button-update from all buttons
+		for button in buttons {
+			_ = button.addEventListener("toggle-button-update") { [self] (event: CallbackString) in
+				let isDark = event.detail.withCString { ptr in
+					ptr[0] == 116 && ptr[1] == 114 && ptr[2] == 117 && ptr[3] == 101 && ptr[4] == 0 // "true"
+				}
+				self.currentScheme = isDark ? .dark : .light
+				self.applyColorScheme()
 			}
-			self.currentScheme = isDark ? .dark : .light
-			self.applyColorScheme()
 		}
 	}
 
 	nonisolated private func applyColorScheme() {
 		let htmlElement = document.querySelector("html")
-		let lightIcon = button?.querySelector(".color-scheme-toggle-button-icon-light")
-		let darkIcon = button?.querySelector(".color-scheme-toggle-button-icon-dark")
 
 		switch currentScheme {
 			case .dark:
-				htmlElement?.dataset.colorScheme = "dark"
-				button?.setAttribute("aria-pressed", "true")
+				htmlElement?.dataset.colorScheme("dark")
 				localStorage.setItem("color-scheme", "dark")
-				lightIcon?.style.display(.none)
-				darkIcon?.style.display(.flex)
 			case .light:
-				htmlElement?.dataset.colorScheme = "light"
-				button?.setAttribute("aria-pressed", "false")
+				htmlElement?.dataset.colorScheme("light")
 				localStorage.setItem("color-scheme", "light")
-				lightIcon?.style.display(.flex)
-				darkIcon?.style.display(.none)
+		}
+
+		// Update all buttons
+		for button in buttons {
+			let lightIcon = button.querySelector(".color-scheme-toggle-button-icon-light")
+			let darkIcon = button.querySelector(".color-scheme-toggle-button-icon-dark")
+
+			switch currentScheme {
+				case .dark:
+					button.setAttribute("aria-pressed", "true")
+					lightIcon?.style.display(.none)
+					darkIcon?.style.display(.flex)
+				case .light:
+					button.setAttribute("aria-pressed", "false")
+					lightIcon?.style.display(.flex)
+					darkIcon?.style.display(.none)
+			}
 		}
 	}
 }

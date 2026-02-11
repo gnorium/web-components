@@ -6,12 +6,9 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// Label component following Wikimedia Codex design system specification
 /// A Label provides a descriptive title for an input or form field.
 /// Every input or form field must have an associated label for accessibility.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/label.html
-public struct LabelView: HTML {
+public struct LabelView: HTMLProtocol {
 	let icon: String?
 	let optional: Bool
 	let optionalFlag: String
@@ -20,9 +17,11 @@ public struct LabelView: HTML {
 	let inputId: String?
 	let descriptionId: String?
 	let disabled: Bool
-	let labelContent: [HTML]
-	let descriptionContent: [HTML]
+	let labelContent: [HTMLProtocol]
+	let descriptionContent: [HTMLProtocol]
 	let `class`: String
+	let labelFontWeight: CSSFontWeight
+	let labelFontSize: Length
 
 	public init(
 		icon: String? = nil,
@@ -33,9 +32,11 @@ public struct LabelView: HTML {
 		inputId: String? = nil,
 		descriptionId: String? = nil,
 		disabled: Bool = false,
+		labelFontWeight: CSSFontWeight = fontWeightBold,
+		labelFontSize: Length = fontSizeMedium16,
 		class: String = "",
-		@HTMLBuilder label: () -> [HTML],
-		@HTMLBuilder description: () -> [HTML] = { [] }
+		@HTMLBuilder label: () -> [HTMLProtocol],
+		@HTMLBuilder description: () -> [HTMLProtocol] = { [] }
 	) {
 		self.icon = icon
 		self.optional = optional
@@ -45,20 +46,26 @@ public struct LabelView: HTML {
 		self.inputId = inputId
 		self.descriptionId = descriptionId
 		self.disabled = disabled
+		self.labelFontWeight = labelFontWeight
+		self.labelFontSize = labelFontSize
 		self.`class` = `class`
 		self.labelContent = label()
 		self.descriptionContent = description()
 	}
 
 	@CSSBuilder
-	private func labelViewCSS() -> [CSS] {
+	private func labelViewCSS() -> [CSSProtocol] {
+		display(.flex)
+		flexDirection(.column)
+		gap(spacing4)
+
 		if disabled {
 			opacity(opacityMedium)
 		}
 	}
 
 	@CSSBuilder
-	private func visuallyHiddenCSS() -> [CSS] {
+	private func visuallyHiddenCSS() -> [CSSProtocol] {
 		position(.absolute)
 		width(px(1))
 		height(px(1))
@@ -71,19 +78,19 @@ public struct LabelView: HTML {
 	}
 
 	@CSSBuilder
-	private func labelTextCSS() -> [CSS] {
+	private func labelTextCSS() -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing4)
 		fontFamily(typographyFontSans)
-		fontSize(fontSizeMedium16)
-		fontWeight(fontWeightBold)
+		fontSize(labelFontSize)
+		fontWeight(labelFontWeight)
 		lineHeight(lineHeightMedium26)
 		color(disabled ? colorDisabled : colorBase)
 	}
 
 	@CSSBuilder
-	private func labelIconCSS() -> [CSS] {
+	private func labelIconCSS() -> [CSSProtocol] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -94,15 +101,14 @@ public struct LabelView: HTML {
 	}
 
 	@CSSBuilder
-	private func labelOptionalFlagCSS() -> [CSS] {
+	private func labelOptionalFlagCSS() -> [CSSProtocol] {
 		color(disabled ? colorDisabled : colorSubtle)
 		fontWeight(fontWeightNormal)
 	}
 
 	@CSSBuilder
-	private func labelDescriptionCSS() -> [CSS] {
+	private func labelDescriptionCSS() -> [CSSProtocol] {
 		display(.block)
-		marginTop(spacing4)
 		fontSize(fontSizeSmall14)
 		lineHeight(lineHeightSmall22)
 		color(disabled ? colorDisabled : colorSubtle)
@@ -183,7 +189,6 @@ public struct LabelView: HTML {
 					.for(forId)
 					.class("label-text")
 					.style {
-						marginBottom(hasDescription ? spacing4 : spacing0)
 						labelTextCSS()
 					}
 				} else {
@@ -209,7 +214,6 @@ public struct LabelView: HTML {
 					}
 					.class("label-text")
 					.style {
-						marginBottom(hasDescription ? spacing4 : spacing0)
 						labelTextCSS()
 					}
 				}

@@ -6,11 +6,8 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// Select component following Wikimedia Codex design system specification
 /// A select input with a dropdown menu of predefined, selectable options.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/select.html
-public struct SelectView: HTML {
+public struct SelectView: HTMLProtocol {
 	let id: String
 	let name: String
 	let menuItems: [MenuItemView.MenuItemData]
@@ -55,14 +52,14 @@ public struct SelectView: HTML {
 	}
 
 	@CSSBuilder
-	private func selectViewCSS() -> [CSS] {
+	private func selectViewCSS() -> [CSSProtocol] {
 		position(.relative)
 		display(.inlineBlock)
 		minWidth(px(256))
 	}
 
 	@CSSBuilder
-	private func selectHandleCSS(_ disabled: Bool, _ status: ValidationStatus) -> [CSS] {
+	private func selectHandleCSS(_ disabled: Bool, _ status: ValidationStatus) -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.spaceBetween)
@@ -70,7 +67,7 @@ public struct SelectView: HTML {
 		minHeight(minSizeInteractivePointer)
 		padding(spacing8, spacing12)
 		backgroundColor(disabled ? backgroundColorDisabled : backgroundColorBase)
-		border(borderWidthBase, .solid, status == .error ? borderColorError : (disabled ? borderColorDisabled : borderColorInputBinary))
+		border(borderWidthBase, .solid, status == .error ? borderColorRed : (disabled ? borderColorDisabled : borderColorInputBinary))
 		borderRadius(borderRadiusBase)
 		color(disabled ? colorDisabled : colorBase)
 		fontFamily(typographyFontSans)
@@ -85,14 +82,14 @@ public struct SelectView: HTML {
 		}
 
 		pseudoClass(.focus) {
-			borderColor(borderColorProgressiveFocus).important()
-			boxShadow(px(0), px(0), px(0), px(1), boxShadowColorProgressiveFocus).important()
+			borderColor(borderColorBlueFocus).important()
+			boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
 			outline(px(1), .solid, .transparent).important()
 		}
 	}
 
 	@CSSBuilder
-	private func selectLabelCSS(_ hasSelection: Bool) -> [CSS] {
+	private func selectLabelCSS(_ hasSelection: Bool) -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing8)
@@ -107,7 +104,7 @@ public struct SelectView: HTML {
 	}
 
 	@CSSBuilder
-	private func selectIconCSS() -> [CSS] {
+	private func selectIconCSS() -> [CSSProtocol] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -117,7 +114,7 @@ public struct SelectView: HTML {
 	}
 
 	@CSSBuilder
-	private func selectIndicatorCSS(_ disabled: Bool) -> [CSS] {
+	private func selectIndicatorCSS(_ disabled: Bool) -> [CSSProtocol] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)

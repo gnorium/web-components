@@ -6,34 +6,34 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// Tab component following Wikimedia Codex design system specification
 /// A Tab is one of the selectable items included within Tabs.
 /// Must be used with Tabs component - this component is only meant to be used inside TabsView.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/tab.html
-public struct TabView: HTML, Sendable {
+public struct TabView: HTMLProtocol, Sendable {
 	public let name: String
 	public let label: String
 	public let disabled: Bool
-	public let content: [HTML]
+	public let url: String?
+	public let content: [HTMLProtocol]
 	let `class`: String
 
 	public init(
 		name: String,
 		label: String = "",
 		disabled: Bool = false,
+		url: String? = nil,
 		class: String = "",
-		@HTMLBuilder content: () -> [HTML]
+		@HTMLBuilder content: () -> [HTMLProtocol]
 	) {
 		self.name = name
 		self.label = label.isEmpty ? name : label
 		self.disabled = disabled
+		self.url = url
 		self.content = content()
 		self.`class` = `class`
 	}
 
 	@CSSBuilder
-	private func tabButtonCSS(_ isActive: Bool, _ disabled: Bool, _ framed: Bool) -> [CSS] {
+	private func tabButtonCSS(_ isActive: Bool, _ disabled: Bool, _ framed: Bool) -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -51,17 +51,17 @@ public struct TabView: HTML, Sendable {
 		position(.relative)
 
 		if isActive {
-			color(colorProgressive)
+			color(colorBlue)
 			fontWeight(fontWeightBold)
 
 			if !framed {
-				borderBottom(borderWidthThick, .solid, borderColorProgressive)
+				borderBlockEnd(borderWidthThick, .solid, borderColorBlue)
 			} else {
 				backgroundColor(backgroundColorBase)
 			}
 		} else {
 			color(colorBase)
-			borderBottom(borderWidthThick, .solid, .transparent)
+			borderBlockEnd(borderWidthThick, .solid, borderColorTransparent)
 		}
 
 		if disabled {
@@ -71,23 +71,23 @@ public struct TabView: HTML, Sendable {
 
 		if !disabled && !isActive {
 			pseudoClass(.hover) {
-				color(colorProgressive).important()
-				backgroundColor(backgroundColorProgressiveSubtle).important()
+				color(colorBlue).important()
+				backgroundColor(backgroundColorBlueSubtle).important()
 			}
 
 			pseudoClass(.active) {
-				backgroundColor(backgroundColorProgressiveSubtle).important()
+				backgroundColor(backgroundColorBlueSubtle).important()
 			}
 		}
 
 		pseudoClass(.focus) {
-			outline(borderWidthThick, .solid, borderColorProgressive).important()
+			outline(borderWidthThick, .solid, borderColorBlue).important()
 			outlineOffset(px(-2)).important()
 		}
 	}
 
 	@CSSBuilder
-	private func tabPanelCSS(_ framed: Bool) -> [CSS] {
+	private func tabPanelCSS(_ framed: Bool) -> [CSSProtocol] {
 		if framed {
 			padding(spacing16)
 		} else {

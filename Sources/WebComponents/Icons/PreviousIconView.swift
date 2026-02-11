@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct PreviousIconView: HTML {
+public struct PreviousIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

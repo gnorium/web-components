@@ -6,7 +6,7 @@ import SVGBuilder
 import DesignTokens
 import WebTypes
 
-public struct LinkedInIconView: HTML {
+public struct LinkedInIconView: HTMLProtocol {
 	let `class`: String
 	let width: Length
 	let height: Length

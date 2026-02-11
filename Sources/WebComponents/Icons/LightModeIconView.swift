@@ -6,7 +6,7 @@ import SVGBuilder
 import DesignTokens
 import WebTypes
 
-public struct LightModeIconView: HTML {
+public struct LightModeIconView: HTMLProtocol {
 	let `class`: String
     let width: Length
     let height: Length

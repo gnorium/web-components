@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct MergeIconView: HTML {
+public struct MergeIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

@@ -6,7 +6,7 @@ import SVGBuilder
 import DesignTokens
 import WebTypes
 
-public struct GoogleIconView: HTML {
+public struct GoogleIconView: HTMLProtocol {
 	let `class`: String
 	let width: Length
 	let height: Length

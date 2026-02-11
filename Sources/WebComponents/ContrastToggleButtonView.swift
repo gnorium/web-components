@@ -5,7 +5,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct ContrastToggleButtonView: HTML {
+public struct ContrastToggleButtonView: HTMLProtocol {
 	let `class`: String
 	let size: ButtonView.ButtonSize
 
@@ -45,7 +45,7 @@ public struct ContrastToggleButtonView: HTML {
 				}
 			},
 			modelValue: false,
-			weight: .transparent,
+			weight: .plain,
 			iconOnly: true,
 			ariaLabel: "Toggle contrast",
 			indicateSelection: false,
@@ -66,13 +66,16 @@ import WebTypes
 import EmbeddedSwiftUtilities
 
 public class ContrastToggleButtonHydration: @unchecked Sendable {
-	nonisolated(unsafe) private var button: Element?
+	nonisolated(unsafe) private var buttons: [Element] = []
 	nonisolated(unsafe) private var currentContrast: CSSPrefersContrast = .less
 
 	public init?() {
-		button = document.querySelector(".contrast-toggle-button-view")
+		let allButtons = document.querySelectorAll(".contrast-toggle-button-view")
+		for button in allButtons {
+			buttons.append(button)
+		}
 
-		guard button != nil else {
+		guard !buttons.isEmpty else {
 			return nil
 		}
 
@@ -107,40 +110,49 @@ public class ContrastToggleButtonHydration: @unchecked Sendable {
 	}
 
 	nonisolated private func bindEvents() {
-		guard let btn = button else {
-			return
-		}
-		
-		// Listen for toggle-button-update from ToggleButtonInstance
-		_ = btn.addEventListener("toggle-button-update") { [self] (event: CallbackString) in
-			let isMore = event.detail.withCString { ptr in
-				ptr[0] == 116 && ptr[1] == 114 && ptr[2] == 117 && ptr[3] == 101 && ptr[4] == 0 // "true"
+		// Listen for toggle-button-update from all buttons
+		for button in buttons {
+			_ = button.addEventListener("toggle-button-update") { [self] (event: CallbackString) in
+				let isMore = event.detail.withCString { ptr in
+					ptr[0] == 116 && ptr[1] == 114 && ptr[2] == 117 && ptr[3] == 101 && ptr[4] == 0 // "true"
+				}
+				self.currentContrast = isMore ? .more : .less
+				self.applyContrast()
 			}
-			self.currentContrast = isMore ? .more : .less
-			self.applyContrast()
 		}
 	}
 
 	nonisolated private func applyContrast() {
 		let htmlElement = document.querySelector("html")
-		let lessIcon = button?.querySelector(".contrast-toggle-button-icon-less")
-		let moreIcon = button?.querySelector(".contrast-toggle-button-icon-more")
 
 		switch currentContrast {
 		case .more:
-			htmlElement?.dataset.contrast = "more"
-			button?.setAttribute("aria-pressed", "true")
+			htmlElement?.dataset.contrast("more")
 			localStorage.setItem("contrast", "more")
-			lessIcon?.style.display(.none)
-			moreIcon?.style.display(.flex)
 		case .less:
-			htmlElement?.dataset.contrast = "less"
-			button?.setAttribute("aria-pressed", "false")
+			htmlElement?.dataset.contrast("less")
 			localStorage.setItem("contrast", "less")
-			lessIcon?.style.display(.flex)
-			moreIcon?.style.display(.none)
 		default:
 			break
+		}
+
+		// Update all buttons
+		for button in buttons {
+			let lessIcon = button.querySelector(".contrast-toggle-button-icon-less")
+			let moreIcon = button.querySelector(".contrast-toggle-button-icon-more")
+
+			switch currentContrast {
+			case .more:
+				button.setAttribute("aria-pressed", "true")
+				lessIcon?.style.display(.none)
+				moreIcon?.style.display(.flex)
+			case .less:
+				button.setAttribute("aria-pressed", "false")
+				lessIcon?.style.display(.flex)
+				moreIcon?.style.display(.none)
+			default:
+				break
+			}
 		}
 	}
 }

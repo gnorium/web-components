@@ -6,7 +6,7 @@ import SVGBuilder
 import DesignTokens
 import WebTypes
 
-public struct DeleteIconView: HTML {
+public struct DeleteIconView: HTMLProtocol {
 	let `class`: String
 	let width: Length
 	let height: Length

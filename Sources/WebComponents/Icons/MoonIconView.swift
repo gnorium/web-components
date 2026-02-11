@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct MoonIconView: HTML {
+public struct MoonIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

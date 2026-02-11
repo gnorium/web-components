@@ -6,11 +6,8 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// TextArea component following Wikimedia Codex design system specification
 /// A multi-line text input that allows manual resizing if needed.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/text-area.html
-public struct TextAreaView: HTML {
+public struct TextAreaView: HTMLProtocol {
 	let id: String
 	let name: String
 	let placeholder: String
@@ -61,7 +58,7 @@ public struct TextAreaView: HTML {
 	}
 
 	@CSSBuilder
-	private func textAreaViewCSS(_ hasStartIcon: Bool, _ hasEndIcon: Bool) -> [CSS] {
+	private func textAreaViewCSS(_ hasStartIcon: Bool, _ hasEndIcon: Bool) -> [CSSProtocol] {
 		position(.relative)
 		display(.inlineBlock)
 		width(perc(100))
@@ -74,7 +71,7 @@ public struct TextAreaView: HTML {
 	}
 
 	@CSSBuilder
-	private func textAreaInputCSS(_ disabled: Bool, _ readonly: Bool, _ status: ValidationStatus, _ autosize: Bool, _ hasStartIcon: Bool, _ hasEndIcon: Bool) -> [CSS] {
+	private func textAreaInputCSS(_ disabled: Bool, _ readonly: Bool, _ status: ValidationStatus, _ autosize: Bool, _ hasStartIcon: Bool, _ hasEndIcon: Bool) -> [CSSProtocol] {
 		width(perc(100))
 		minHeight(px(rows * 24))
 		padding(spacing12)
@@ -83,7 +80,7 @@ public struct TextAreaView: HTML {
 		lineHeight(lineHeightSmall22)
 		color(disabled ? colorDisabled : colorBase)
 		backgroundColor(disabled ? backgroundColorDisabled : (readonly ? backgroundColorNeutralSubtle : backgroundColorBase))
-		border(borderWidthBase, .solid, status == .error ? borderColorError : (disabled ? borderColorDisabled : borderColorInputBinary))
+		border(borderWidthBase, .solid, status == .error ? borderColorRed : (disabled ? borderColorDisabled : borderColorSubtle))
 		borderRadius(borderRadiusBase)
 		transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
 		outline(.none)
@@ -98,11 +95,11 @@ public struct TextAreaView: HTML {
 		}
 
 		if hasStartIcon {
-			paddingLeft(calc(spacing12 + sizeIconMedium + spacing8)).important()
+			paddingInlineStart(calc(spacing12 + sizeIconMedium + spacing8)).important()
 		}
 
 		if hasEndIcon {
-			paddingRight(calc(spacing12 + sizeIconMedium + spacing8)).important()
+			paddingInlineEnd(calc(spacing12 + sizeIconMedium + spacing8)).important()
 		}
 
 		pseudoElement(.placeholder) {
@@ -111,17 +108,17 @@ public struct TextAreaView: HTML {
 		}
 
 		pseudoClass(.focus, not(.disabled), not(.readOnly)) {
-			borderColor(borderColorProgressiveFocus).important()
-			boxShadow(px(0), px(0), px(0), px(1), boxShadowColorProgressiveFocus).important()
+			borderColor(borderColorBlueFocus).important()
+			boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
 		}
 
 		pseudoClass(.hover, not(.disabled), not(.readOnly)) {
-			borderColor(borderColorInputBinaryHover).important()
+			borderColor(borderColorBase).important()
 		}
 	}
 
 	@CSSBuilder
-	private func textAreaIconCSS(_ isStartIcon: Bool) -> [CSS] {
+	private func textAreaIconCSS(_ isStartIcon: Bool) -> [CSSProtocol] {
 		position(.absolute)
 		top(spacing12)
 		display(.inlineFlex)

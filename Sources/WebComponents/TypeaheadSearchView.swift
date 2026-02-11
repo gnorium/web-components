@@ -6,11 +6,8 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// TypeaheadSearch component following Wikimedia Codex design system specification
 /// TypeaheadSearch is a search input that provides a menu of options based on the current search query.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/typeahead-search.html
-public struct TypeaheadSearchView: HTML {
+public struct TypeaheadSearchView: HTMLProtocol {
 	public struct SearchResult: Sendable {
 		public let value: String
 		public let label: String
@@ -81,20 +78,20 @@ public struct TypeaheadSearchView: HTML {
 	}
 
 	@CSSBuilder
-	private func typeaheadSearchViewCSS() -> [CSS] {
+	private func typeaheadSearchViewCSS() -> [CSSProtocol] {
 		position(.relative)
 		width(perc(100))
 		fontFamily(typographyFontSans)
 	}
 
 	@CSSBuilder
-	private func typeaheadSearchFormCSS() -> [CSS] {
+	private func typeaheadSearchFormCSS() -> [CSSProtocol] {
 		position(.relative)
 		width(perc(100))
 	}
 
 	@CSSBuilder
-	private func typeaheadSearchInputWrapperCSS(_ autoExpandWidth: Bool, _ showThumbnail: Bool) -> [CSS] {
+	private func typeaheadSearchInputWrapperCSS(_ autoExpandWidth: Bool, _ showThumbnail: Bool) -> [CSSProtocol] {
 		position(.relative)
 		width(perc(100))
 
@@ -104,24 +101,24 @@ public struct TypeaheadSearchView: HTML {
 	}
 
 	@CSSBuilder
-	private func typeaheadSearchMenuCSS() -> [CSS] {
+	private func typeaheadSearchMenuCSS() -> [CSSProtocol] {
 		display(.flex)
 		flexDirection(.column)
 		gap(spacing8)
-		marginTop(spacing8)
+		marginBlockStart(spacing8)
 		maxHeight(min(calc(vh(100) - px(128)), px(900)))
 		overflowY(.auto)
 	}
 
 	@CSSBuilder
-	private func typeaheadSearchPendingCSS() -> [CSS] {
+	private func typeaheadSearchPendingCSS() -> [CSSProtocol] {
 		padding(spacing12, spacing16)
 		color(colorSubtle)
 		fontSize(fontSizeSmall14)
 	}
 
 	@CSSBuilder
-	private func typeaheadSearchNoResultsCSS() -> [CSS] {
+	private func typeaheadSearchNoResultsCSS() -> [CSSProtocol] {
 		padding(spacing12, spacing16)
 		color(colorSubtle)
 		fontSize(fontSizeSmall14)
@@ -400,8 +397,8 @@ private class TypeaheadSearchInstance: @unchecked Sendable {
 				_ = item.classList.add("menu-item-selected")
 				item.setAttribute("aria-selected", "true")
 				// Apply highlighted styles
-				item.style.color(colorProgressive)
-				item.style.border(borderWidthBase, .solid, borderColorProgressive)
+				item.style.color(colorBlue)
+				item.style.border(borderWidthBase, .solid, borderColorBlue)
 			} else {
 				_ = item.classList.remove("menu-item-selected")
 				item.setAttribute("aria-selected", "false")

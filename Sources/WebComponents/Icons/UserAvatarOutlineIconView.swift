@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct UserAvatarOutlineIconView: HTML {
+public struct UserAvatarOutlineIconView: HTMLProtocol {
 	let width: Length
 	let height: Length
 	let `class`: String

@@ -6,7 +6,7 @@ import SVGBuilder
 import DesignTokens
 import WebTypes
 
-public struct ViewDetailsIconView: HTML {
+public struct ViewDetailsIconView: HTMLProtocol {
 	let `class`: String
 	let width: Length
 	let height: Length

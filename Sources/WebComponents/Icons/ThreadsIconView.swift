@@ -6,7 +6,7 @@ import SVGBuilder
 import DesignTokens
 import WebTypes
 
-public struct ThreadsIconView: HTML {
+public struct ThreadsIconView: HTMLProtocol {
 	let `class`: String
 	let width: Length
 	let height: Length

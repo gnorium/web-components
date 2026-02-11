@@ -6,7 +6,7 @@ import DesignTokens
 import WebTypes
 
 /// Banner component to remind users to verify their email
-public struct EmailVerificationBannerView: HTML {
+public struct EmailVerificationBannerView: HTMLProtocol {
 	let email: String
 	let `class`: String
 
@@ -22,7 +22,6 @@ public struct EmailVerificationBannerView: HTML {
 				span { "⚠️" }
 				.style {
 					fontSize(fontSizeMedium16)
-					marginRight(spacing8)
 				}
 
 				// Alert
@@ -43,11 +42,10 @@ public struct EmailVerificationBannerView: HTML {
 				.class("resend-verification-email")
 				.data("email", email)
 				.style {
-					marginLeft(spacing12)
 					padding(spacing8, spacing12)
 					backgroundColor(backgroundColorBase)
-					color(colorProgressive)
-					border(borderWidthBase, .solid, borderColorProgressive)
+					color(colorBlue)
+					border(borderWidthBase, .solid, borderColorBlue)
 					borderRadius(borderRadiusBase)
 					fontSize(fontSizeSmall14)
 					fontWeight(fontWeightBold)
@@ -55,10 +53,10 @@ public struct EmailVerificationBannerView: HTML {
 					cursor(cursorBaseHover)
 					transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
 					pseudoClass(.hover) {
-						backgroundColor(backgroundColorProgressiveSubtle)
+						backgroundColor(backgroundColorBlueSubtle)
 					}
 					pseudoClass(.active) {
-						backgroundColor(backgroundColorProgressiveSubtleActive)
+						backgroundColor(backgroundColorBlueSubtleActive)
 					}
 				}
 
@@ -68,7 +66,6 @@ public struct EmailVerificationBannerView: HTML {
 				.class("dismiss-verification-banner")
 				.ariaLabel("Dismiss")
 				.style {
-					marginLeft(spacing12)
 					padding(spacing8, spacing12)
 					backgroundColor(.transparent)
 					color(colorSubtle)
@@ -92,8 +89,8 @@ public struct EmailVerificationBannerView: HTML {
 		.class(`class`.isEmpty ? "email-verification-banner" : "email-verification-banner \(`class`)")
 		.data("hydrate", "email-verification-banner")
 		.style {
-			backgroundColor(backgroundColorWarningSubtle)
-			borderBottom(borderWidthBase, .solid, borderColorWarning)
+			backgroundColor(backgroundColorOrangeSubtle)
+			borderBlockEnd(borderWidthBase, .solid, borderColorOrange)
 			padding(spacing12, spacing16)
 		}
 		.render(indent: indent)

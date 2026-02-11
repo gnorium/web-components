@@ -10,6 +10,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/gnorium/design-tokens", branch: "main"),
+        .package(url: "https://github.com/gnorium/diff-engine", branch: "main"),
         .package(url: "https://github.com/gnorium/web-apis", branch: "main"),
         .package(url: "https://github.com/gnorium/web-builders", branch: "main"),
         .package(url: "https://github.com/gnorium/web-types", branch: "main")
@@ -19,6 +20,7 @@ let package = Package(
             name: "WebComponents",
             dependencies: [
                 .product(name: "DesignTokens", package: "design-tokens"),
+                .product(name: "DiffEngine", package: "diff-engine"),
                 .product(name: "WebAPIs", package: "web-apis"),
                 .product(name: "HTMLBuilder", package: "web-builders"),
                 .product(name: "CSSBuilder", package: "web-builders"),

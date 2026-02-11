@@ -6,11 +6,8 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// Popover component following Wikimedia Codex design system specification
 /// A non-disruptive container that is overlaid on a web page or app, positioned near its trigger.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/popover.html
-public struct PopoverView: HTML {
+public struct PopoverView: HTMLProtocol {
 	let open: Bool
 	let title: String
 	let icon: String?
@@ -21,9 +18,9 @@ public struct PopoverView: HTML {
 	let stackedActions: Bool
 	let renderInPlace: Bool
 	let placement: Placement
-	let headerContent: [HTML]
-	let bodyContent: [HTML]
-	let footerContent: [HTML]
+	let headerContent: [HTMLProtocol]
+	let bodyContent: [HTMLProtocol]
+	let footerContent: [HTMLProtocol]
 	let `class`: String
 	
 	public enum Placement: String, Sendable {
@@ -43,16 +40,30 @@ public struct PopoverView: HTML {
 
 	public struct PrimaryAction: Sendable {
 		let label: String
-		let type: ActionType
+		let actionColor: ActionColor
 
-		public enum ActionType: String, Sendable {
-			case progressive
-			case destructive
+		/// Apple HIG color for the popover action
+		public enum ActionColor: String, Sendable {
+			case blue
+			case red
+
+			// Legacy aliases
+			public static let progressive = ActionColor.blue
+			public static let destructive = ActionColor.red
 		}
 
-		public init(label: String, type: ActionType = .progressive) {
+		/// Legacy alias
+		public typealias ActionType = ActionColor
+
+		public init(label: String, actionColor: ActionColor = .blue) {
 			self.label = label
-			self.type = type
+			self.actionColor = actionColor
+		}
+
+		/// Legacy init
+		public init(label: String, type: ActionColor) {
+			self.label = label
+			self.actionColor = type
 		}
 	}
 
@@ -76,9 +87,9 @@ public struct PopoverView: HTML {
 		renderInPlace: Bool = false,
 		placement: Placement = .bottom,
 		class: String = "",
-		@HTMLBuilder header: () -> [HTML] = { [] },
-		@HTMLBuilder body: () -> [HTML] = { [] },
-		@HTMLBuilder footer: () -> [HTML] = { [] }
+		@HTMLBuilder header: () -> [HTMLProtocol] = { [] },
+		@HTMLBuilder body: () -> [HTMLProtocol] = { [] },
+		@HTMLBuilder footer: () -> [HTMLProtocol] = { [] }
 	) {
 		self.open = open
 		self.title = title
@@ -97,7 +108,7 @@ public struct PopoverView: HTML {
 	}
 
 	@CSSBuilder
-	private func popoverViewCSS(_ open: Bool) -> [CSS] {
+	private func popoverViewCSS(_ open: Bool) -> [CSSProtocol] {
 		position(.absolute)
 		backgroundColor(backgroundColorBase)
 		border(borderWidthBase, .solid, borderColorSubtle)
@@ -114,7 +125,7 @@ public struct PopoverView: HTML {
 	}
 
 	@CSSBuilder
-	private func popoverArrowCSS(_ placement: Placement) -> [CSS] {
+	private func popoverArrowCSS(_ placement: Placement) -> [CSSProtocol] {
 		position(.absolute)
 		width(px(12))
 		height(px(12))
@@ -161,7 +172,7 @@ public struct PopoverView: HTML {
 	}
 
 	@CSSBuilder
-	private func popoverHeaderCSS(_ hasCustomHeader: Bool) -> [CSS] {
+	private func popoverHeaderCSS(_ hasCustomHeader: Bool) -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing8)
@@ -174,7 +185,7 @@ public struct PopoverView: HTML {
 	}
 
 	@CSSBuilder
-	private func popoverHeaderContentCSS() -> [CSS] {
+	private func popoverHeaderContentCSS() -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing8)
@@ -183,7 +194,7 @@ public struct PopoverView: HTML {
 	}
 
 	@CSSBuilder
-	private func popoverIconCSS() -> [CSS] {
+	private func popoverIconCSS() -> [CSSProtocol] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -195,7 +206,7 @@ public struct PopoverView: HTML {
 	}
 
 	@CSSBuilder
-	private func popoverTitleCSS() -> [CSS] {
+	private func popoverTitleCSS() -> [CSSProtocol] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		fontWeight(fontWeightBold)
@@ -207,7 +218,7 @@ public struct PopoverView: HTML {
 	}
 
 	@CSSBuilder
-	private func popoverBodyCSS() -> [CSS] {
+	private func popoverBodyCSS() -> [CSSProtocol] {
 		padding(spacing12)
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
@@ -216,7 +227,7 @@ public struct PopoverView: HTML {
 	}
 
 	@CSSBuilder
-	private func popoverFooterCSS(_ hasActions: Bool, _ stackedActions: Bool) -> [CSS] {
+	private func popoverFooterCSS(_ hasActions: Bool, _ stackedActions: Bool) -> [CSSProtocol] {
 		if hasActions {
 			display(.flex)
 			gap(spacing8)
@@ -236,7 +247,7 @@ public struct PopoverView: HTML {
 	}
 
 	@CSSBuilder
-	private func popoverPrimaryButtonCSS(_ stackedActions: Bool) -> [CSS] {
+	private func popoverPrimaryButtonCSS(_ stackedActions: Bool) -> [CSSProtocol] {
 		if stackedActions {
 			// Primary button on top in stacked layout
 			order(-1)
@@ -323,8 +334,8 @@ public struct PopoverView: HTML {
 							div {
 								ButtonView(
 									label: defAction.label,
-									action: .default,
-									weight: .normal
+									buttonColor: .gray,
+									weight: .subtle
 								)
 							}
 							.class("popover-default-button")
@@ -334,8 +345,8 @@ public struct PopoverView: HTML {
 							div {
 								ButtonView(
 									label: primAction.label,
-									action: primAction.type == .progressive ? .progressive : .destructive,
-									weight: .primary
+									buttonColor: primAction.actionColor == .blue ? .blue : .red,
+									weight: .solid
 								)
 							}
 							.class("popover-primary-button")
@@ -455,7 +466,7 @@ private class PopoverInstance: @unchecked Sendable {
 	private func positionPopover() {
 		// Position popover relative to anchor
 		// This would typically use a positioning library or custom logic
-		// For now, CSS handles basic positioning
+		// For now, CSSProtocol handles basic positioning
 	}
 
 	private func closePopover() {

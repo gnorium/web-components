@@ -6,11 +6,8 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// MenuItem component following Wikimedia Codex design system specification
 /// A MenuItem is a selectable option within a Menu.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/menu-item.html
-public struct MenuItemView: HTML {
+public struct MenuItemView: HTMLProtocol {
 	let id: String
 	let value: String
 	let disabled: Bool
@@ -29,9 +26,9 @@ public struct MenuItemView: HTML {
 	let searchQuery: String
 	let boldLabel: Bool
 	let hideDescriptionOverflow: Bool
-	let action: MenuItemAction
+	let itemColor: MenuItemColor
 	let multiselect: Bool
-	let content: [HTML]
+	let content: [HTMLProtocol]
 	let `class`: String
 
 	public struct Thumbnail: Sendable {
@@ -44,10 +41,17 @@ public struct MenuItemView: HTML {
 		}
 	}
 
-	public enum MenuItemAction: String, Sendable {
+	/// Apple HIG color for the menu item
+	public enum MenuItemColor: String, Sendable {
 		case `default`
-		case destructive
+		case red
+
+		// Legacy alias
+		public static let destructive = MenuItemColor.red
 	}
+
+	/// Legacy alias
+	public typealias MenuItemAction = MenuItemColor
 
 	/// Data structure for menu items
 	public struct MenuItemData: Sendable {
@@ -94,10 +98,10 @@ public struct MenuItemView: HTML {
 		searchQuery: String = "",
 		boldLabel: Bool = false,
 		hideDescriptionOverflow: Bool = false,
-		action: MenuItemAction = .default,
+		action: MenuItemColor = .default,
 		multiselect: Bool = false,
 		class: String = "",
-		@HTMLBuilder content: () -> [HTML] = { [] }
+		@HTMLBuilder content: () -> [HTMLProtocol] = { [] }
 	) {
 		self.id = id
 		self.value = value
@@ -117,14 +121,14 @@ public struct MenuItemView: HTML {
 		self.searchQuery = searchQuery
 		self.boldLabel = boldLabel
 		self.hideDescriptionOverflow = hideDescriptionOverflow
-		self.action = action
+		self.itemColor = action
 		self.multiselect = multiselect
 		self.`class` = `class`
 		self.content = content()
 	}
 
 	@CSSBuilder
-	private func menuItemViewCSS(_ disabled: Bool, _ selected: Bool, _ active: Bool, _ highlighted: Bool, _ action: MenuItemAction) -> [CSS] {
+	private func menuItemViewCSS(_ disabled: Bool, _ selected: Bool, _ active: Bool, _ highlighted: Bool, _ itemColor: MenuItemColor) -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing12)
@@ -133,7 +137,7 @@ public struct MenuItemView: HTML {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		lineHeight(lineHeightSmall22)
-		color(disabled ? colorDisabled : (action == .destructive ? colorDestructive : colorSubtle))
+		color(disabled ? colorDisabled : (itemColor == .red ? colorRed : colorSubtle))
 		backgroundColor(backgroundColorTransparent)
 		border(borderWidthBase, .solid, disabled ? borderColorDisabled : borderColorSubtle)
 		borderRadius(borderRadiusBase)
@@ -144,38 +148,38 @@ public struct MenuItemView: HTML {
 		transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
 
 		if highlighted && !disabled {
-			color(colorProgressive)
-			border(borderWidthBase, .solid, borderColorProgressive)
+			color(colorBlue)
+			border(borderWidthBase, .solid, borderColorBlue)
 		}
 
 		if active && !disabled {
-			color(colorProgressive)
-			border(borderWidthBase, .solid, borderColorProgressive)
+			color(colorBlue)
+			border(borderWidthBase, .solid, borderColorBlue)
 		}
 
 		if !disabled {
 			pseudoClass(.hover) {
-				color(colorProgressive).important()
-				border(borderWidthBase, .solid, borderColorProgressive).important()
+				color(colorBlue).important()
+				border(borderWidthBase, .solid, borderColorBlue).important()
 				cursor(cursorBaseHover).important()
 			}
 
 			pseudoClass(.active) {
-				color(colorProgressive).important()
-				border(borderWidthBase, .solid, borderColorProgressive).important()
+				color(colorBlue).important()
+				border(borderWidthBase, .solid, borderColorBlue).important()
 				cursor(cursorBaseHover).important()
 			}
 
 			pseudoClass(.focus) {
-				color(colorProgressiveFocus).important()
-				outline(borderWidthBase, .solid, borderColorProgressiveFocus).important()
+				color(colorBlueFocus).important()
+				outline(borderWidthBase, .solid, borderColorBlueFocus).important()
 				outlineOffset(px(-1)).important()
 			}
 		}
 	}
 
 	@CSSBuilder
-	private func menuItemCheckboxCSS(_ selected: Bool) -> [CSS] {
+	private func menuItemCheckboxCSS(_ selected: Bool) -> [CSSProtocol] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -189,14 +193,14 @@ public struct MenuItemView: HTML {
 	}
 
 	@CSSBuilder
-	private func menuItemCheckmarkCSS() -> [CSS] {
+	private func menuItemCheckmarkCSS() -> [CSSProtocol] {
 		fontSize(fontSizeSmall14)
 		color(colorInvertedFixed)
 		lineHeight(1)
 	}
 
 	@CSSBuilder
-	private func menuItemThumbnailCSS() -> [CSS] {
+	private func menuItemThumbnailCSS() -> [CSSProtocol] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -209,20 +213,20 @@ public struct MenuItemView: HTML {
 	}
 
 	@CSSBuilder
-	private func menuItemThumbnailImageCSS() -> [CSS] {
+	private func menuItemThumbnailImageCSS() -> [CSSProtocol] {
 		width(perc(100))
 		height(perc(100))
 		objectFit(.cover)
 	}
 
 	@CSSBuilder
-	private func menuItemThumbnailPlaceholderCSS() -> [CSS] {
+	private func menuItemThumbnailPlaceholderCSS() -> [CSSProtocol] {
 		fontSize(fontSizeLarge18)
 		color(colorPlaceholder)
 	}
 
 	@CSSBuilder
-	private func menuItemIconCSS() -> [CSS] {
+	private func menuItemIconCSS() -> [CSSProtocol] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -234,7 +238,7 @@ public struct MenuItemView: HTML {
 	}
 
 	@CSSBuilder
-	private func menuItemTextCSS() -> [CSS] {
+	private func menuItemTextCSS() -> [CSSProtocol] {
 		display(.flex)
 		flexDirection(.column)
 		gap(spacing4)
@@ -243,7 +247,7 @@ public struct MenuItemView: HTML {
 	}
 
 	@CSSBuilder
-	private func menuItemTitleCSS() -> [CSS] {
+	private func menuItemTitleCSS() -> [CSSProtocol] {
 		display(.flex)
 		alignItems(.baseline)
 		gap(spacing4)
@@ -251,7 +255,7 @@ public struct MenuItemView: HTML {
 	}
 
 	@CSSBuilder
-	private func menuItemLabelCSS(_ boldLabel: Bool, _ hasSearchQuery: Bool) -> [CSS] {
+	private func menuItemLabelCSS(_ boldLabel: Bool, _ hasSearchQuery: Bool) -> [CSSProtocol] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		fontWeight(boldLabel || hasSearchQuery ? fontWeightBold : fontWeightNormal)
@@ -261,7 +265,7 @@ public struct MenuItemView: HTML {
 	}
 
 	@CSSBuilder
-	private func menuItemSearchQueryCSS() -> [CSS] {
+	private func menuItemSearchQueryCSS() -> [CSSProtocol] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		fontWeight(fontWeightNormal)
@@ -270,7 +274,7 @@ public struct MenuItemView: HTML {
 	}
 
 	@CSSBuilder
-	private func menuItemMatchCSS() -> [CSS] {
+	private func menuItemMatchCSS() -> [CSSProtocol] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		fontWeight(fontWeightNormal)
@@ -279,7 +283,7 @@ public struct MenuItemView: HTML {
 	}
 
 	@CSSBuilder
-	private func menuItemSupportingTextCSS() -> [CSS] {
+	private func menuItemSupportingTextCSS() -> [CSSProtocol] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		fontWeight(fontWeightNormal)
@@ -288,7 +292,7 @@ public struct MenuItemView: HTML {
 	}
 
 	@CSSBuilder
-	private func menuItemDescriptionCSS(_ hideOverflow: Bool) -> [CSS] {
+	private func menuItemDescriptionCSS(_ hideOverflow: Bool) -> [CSSProtocol] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeSmall14)
 		lineHeight(lineHeightSmall22)
@@ -315,7 +319,7 @@ public struct MenuItemView: HTML {
 		let hasUrl = !url.isEmpty
 
 		// Highlight search query in label
-		func renderLabelWithHighlight() -> [HTML] {
+		func renderLabelWithHighlight() -> [HTMLProtocol] {
 			if hasSearchQuery && displayLabel.lowercased().contains(searchQuery.lowercased()) {
 				let lowerLabel = displayLabel.lowercased()
 				let lowerQuery = searchQuery.lowercased()
@@ -356,12 +360,12 @@ public struct MenuItemView: HTML {
 		}
 
 		// Main content
-		let itemContent: [HTML] = {
+		let itemContent: [HTMLProtocol] = {
 			if hasCustomContent {
 				return content
 			}
 
-			var items: [HTML] = []
+			var items: [HTMLProtocol] = []
 
 			// Multiselect checkbox
 			if multiselect {
@@ -494,7 +498,7 @@ public struct MenuItemView: HTML {
 
 			return link
 				.style {
-					menuItemViewCSS(disabled, selected, active, highlighted, action)
+					menuItemViewCSS(disabled, selected, active, highlighted, itemColor)
 				}
 				.render(indent: indent)
 		} else {
@@ -518,7 +522,7 @@ public struct MenuItemView: HTML {
 
 			return listItem
 				.style {
-					menuItemViewCSS(disabled, selected, active, highlighted, action)
+					menuItemViewCSS(disabled, selected, active, highlighted, itemColor)
 				}
 				.render(indent: indent)
 		}

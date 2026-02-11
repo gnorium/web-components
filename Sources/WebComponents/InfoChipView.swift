@@ -6,37 +6,82 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-/// InfoChip component following Wikimedia Codex design system specification
-/// A non-interactive indicator that provides information and/or conveys a status.
-///
-/// Codex Reference: https://doc.wikimedia.org/codex/main/components/demos/info-chip.html
-public struct InfoChipView: HTML {
-	let status: Status
+/// InfoChip — a non-interactive indicator that provides information and/or conveys a status.
+public struct InfoChipView: HTMLProtocol {
+	let chipColor: InfoChipColor
+	let weight: Weight
 	let icon: String?
-	let content: [HTML]
+	let content: [HTMLProtocol]
 	let `class`: String
 
-	public enum Status: String, Sendable {
-		case notice
-		case warning
-		case error
-		case success
+	/// Apple HIG color for the chip
+	public enum InfoChipColor: String, Sendable {
+		case gray, orange, red, green, teal, blue, purple, pink, yellow
+
+		// Legacy aliases
+		public static let notice = InfoChipColor.gray
+		public static let warning = InfoChipColor.orange
+		public static let error = InfoChipColor.red
+		public static let success = InfoChipColor.green
+	}
+
+	/// Legacy alias
+	public typealias Status = InfoChipColor
+
+	/// Visual weight of the chip
+	public enum Weight: String, Sendable {
+		/// Light background, colored text, border (default)
+		case subtle
+		/// Filled background, inverted text, no border
+		case solid
 	}
 
 	public init(
-		status: Status = .notice,
+		chipColor: InfoChipColor = .gray,
+		weight: Weight = .subtle,
 		icon: String? = nil,
 		class: String = "",
-		@HTMLBuilder content: () -> [HTML]
+		@HTMLBuilder content: () -> [HTMLProtocol]
 	) {
-		self.status = status
+		self.chipColor = chipColor
+		self.weight = weight
+		self.icon = icon
+		self.content = content()
+		self.`class` = `class`
+	}
+
+	/// Legacy init
+	public init(
+		color: InfoChipColor,
+		weight: Weight = .subtle,
+		icon: String? = nil,
+		class: String = "",
+		@HTMLBuilder content: () -> [HTMLProtocol]
+	) {
+		self.chipColor = color
+		self.weight = weight
+		self.icon = icon
+		self.content = content()
+		self.`class` = `class`
+	}
+
+	/// Legacy init
+	public init(
+		status: InfoChipColor,
+		weight: Weight = .subtle,
+		icon: String? = nil,
+		class: String = "",
+		@HTMLBuilder content: () -> [HTMLProtocol]
+	) {
+		self.chipColor = status
+		self.weight = weight
 		self.icon = icon
 		self.content = content()
 		self.`class` = `class`
 	}
 
 	@CSSBuilder
-	private func infoChipViewCSS(_ status: Status) -> [CSS] {
+	private func infoChipViewCSS(_ chipColor: InfoChipColor, _ weight: Weight) -> [CSSProtocol] {
 		display(.inlineFlex)
 		alignItems(.center)
 		gap(spacing4)
@@ -51,28 +96,75 @@ public struct InfoChipView: HTML {
 		textOverflow(.ellipsis)
 		overflow(.hidden)
 
-		switch status {
-		case .notice:
-			color(colorNotice)
-			backgroundColor(backgroundColorNoticeSubtle)
-			border(borderWidthBase, .solid, borderColorNotice)
-		case .warning:
-			color(colorWarning)
-			backgroundColor(backgroundColorWarningSubtle)
-			border(borderWidthBase, .solid, borderColorWarning)
-		case .error:
-			color(colorError)
-			backgroundColor(backgroundColorErrorSubtle)
-			border(borderWidthBase, .solid, borderColorError)
-		case .success:
-			color(colorSuccess)
-			backgroundColor(backgroundColorSuccessSubtle)
-			border(borderWidthBase, .solid, borderColorSuccess)
+		switch (chipColor, weight) {
+		case (.gray, .subtle):
+			color(colorGray)
+			backgroundColor(backgroundColorGraySubtle)
+			border(borderWidthBase, .solid, borderColorGray)
+		case (.gray, .solid):
+			color(colorInvertedFixed)
+			backgroundColor(colorGray)
+		case (.orange, .subtle):
+			color(colorOrange)
+			backgroundColor(backgroundColorOrangeSubtle)
+			border(borderWidthBase, .solid, borderColorOrange)
+		case (.orange, .solid):
+			color(colorInvertedFixed)
+			backgroundColor(colorOrange)
+		case (.red, .subtle):
+			color(colorRed)
+			backgroundColor(backgroundColorRedSubtle)
+			border(borderWidthBase, .solid, borderColorRed)
+		case (.red, .solid):
+			color(colorInvertedFixed)
+			backgroundColor(colorRed)
+		case (.green, .subtle):
+			color(colorGreen)
+			backgroundColor(backgroundColorGreenSubtle)
+			border(borderWidthBase, .solid, borderColorGreen)
+		case (.green, .solid):
+			color(colorInvertedFixed)
+			backgroundColor(colorGreen)
+		case (.teal, .subtle):
+			color(colorTeal)
+			backgroundColor(backgroundColorTealSubtle)
+			border(borderWidthBase, .solid, borderColorTeal)
+		case (.teal, .solid):
+			color(colorInvertedFixed)
+			backgroundColor(colorTeal)
+		case (.blue, .subtle):
+			color(colorBlue)
+			backgroundColor(backgroundColorBlueSubtle)
+			border(borderWidthBase, .solid, borderColorBlue)
+		case (.blue, .solid):
+			color(colorInvertedFixed)
+			backgroundColor(colorBlue)
+		case (.purple, .subtle):
+			color(colorPurple)
+			backgroundColor(backgroundColorPurpleSubtle)
+			border(borderWidthBase, .solid, borderColorPurple)
+		case (.purple, .solid):
+			color(colorInvertedFixed)
+			backgroundColor(colorPurple)
+		case (.pink, .subtle):
+			color(colorPink)
+			backgroundColor(backgroundColorPinkSubtle)
+			border(borderWidthBase, .solid, borderColorPink)
+		case (.pink, .solid):
+			color(colorInvertedFixed)
+			backgroundColor(colorPink)
+		case (.yellow, .subtle):
+			color(colorYellow)
+			backgroundColor(backgroundColorYellowSubtle)
+			border(borderWidthBase, .solid, borderColorYellow)
+		case (.yellow, .solid):
+			color(colorInvertedFixed)
+			backgroundColor(colorYellow)
 		}
 	}
 
 	@CSSBuilder
-	private func infoChipIconCSS() -> [CSS] {
+	private func infoChipIconCSS() -> [CSSProtocol] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -83,7 +175,7 @@ public struct InfoChipView: HTML {
 	}
 
 	@CSSBuilder
-	private func infoChipTextCSS() -> [CSS] {
+	private func infoChipTextCSS() -> [CSSProtocol] {
 		flex(1)
 		minWidth(0)
 		textOverflow(.ellipsis)
@@ -93,15 +185,16 @@ public struct InfoChipView: HTML {
 
 	public func render(indent: Int = 0) -> String {
 		let defaultIcon: String = {
-			switch status {
-			case .notice: return "ℹ"
-			case .warning: return "⚠"
-			case .error: return "✖"
-			case .success: return "✓"
+			switch chipColor {
+			case .gray: return "ℹ"
+			case .orange: return "⚠"
+			case .red: return "✗"
+			case .green: return "✓"
+			case .teal, .blue, .purple, .pink, .yellow: return "●"
 			}
 		}()
 
-		let shouldShowIcon = icon != nil || status != .notice
+		let shouldShowIcon = icon != nil || chipColor != .gray
 
 		return span {
 			if shouldShowIcon {
@@ -123,9 +216,9 @@ public struct InfoChipView: HTML {
 				infoChipTextCSS()
 			}
 		}
-		.class(`class`.isEmpty ? "info-chip-view info-chip-\(status.rawValue)" : "info-chip-view info-chip-\(status.rawValue) \(`class`)")
+		.class(`class`.isEmpty ? "info-chip-view info-chip-\(chipColor.rawValue) info-chip-\(weight.rawValue)" : "info-chip-view info-chip-\(chipColor.rawValue) info-chip-\(weight.rawValue) \(`class`)")
 		.style {
-			infoChipViewCSS(status)
+			infoChipViewCSS(chipColor, weight)
 		}
 		.render(indent: indent)
 	}
