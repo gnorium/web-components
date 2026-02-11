@@ -19,7 +19,7 @@ public struct SidebarMenuButtonView: HTMLProtocol {
 				icon: IconView(icon: { size in
 					MenuIconView(width: size, height: size)
 				}, size: .medium),
-				weight: .plain,
+				weight: .quiet,
 				size: .large,
 				ariaLabel: "Open menu",
 				class: "sidebar-menu-btn"
@@ -29,6 +29,15 @@ public struct SidebarMenuButtonView: HTMLProtocol {
 		.data("sidebar-menu", true)
 		.ariaExpanded(false)
 		.ariaControls("navbar-slide-menu")
+		.style {
+			// Hidden by default — WASI shows via inline display:flex when sidebar exists
+			display(.none)
+
+			// On desktop the sidebar column is visible, so never show hamburger
+			media(minWidth(minWidthBreakpointTablet)) {
+				display(.none).important()
+			}
+		}
 		.render(indent: indent)
 	}
 }
