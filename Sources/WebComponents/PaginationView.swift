@@ -63,7 +63,7 @@ public struct PaginationView: HTMLProtocol {
                     }
                 }
             } else {
-                div {}.style { flex(1) }
+                div {}
             }
 
             // Page numbers (center)
@@ -147,7 +147,7 @@ public struct PaginationView: HTMLProtocol {
                     textAlign(.end)
                 }
             } else {
-                div {}.style { flex(1) }
+                div {}
             }
         }
         .class(`class`.isEmpty ? "pagination-view" : "pagination-view \(`class`)")
@@ -156,10 +156,6 @@ public struct PaginationView: HTMLProtocol {
             flexDirection(.row)
             justifyContent(.spaceBetween)
             alignItems(.center)
-            maxWidth(px(800))
-            marginInline(.auto)
-            padding(spacing32)
-            borderBlockStart(borderWidthBase, .solid, borderColorBase)
             gap(spacing32)
         }
         .render(indent: indent)

@@ -136,7 +136,7 @@ public struct SearchMenuView: HTMLProtocol {
 					.style {
 						display(.flex)
 						flexDirection(.column)
-						gap(spacing16)
+						gap(spacing8)
 					}
 				}
 			}
@@ -165,7 +165,7 @@ public struct SearchMenuView: HTMLProtocol {
 		top(px(96))  // Right below navbar
 		insetInlineStart(0)
 		width(perc(100))
-		zIndex(zIndexBase)
+		zIndex(zIndexOverlay)
 		pointerEvents(.none)
 	}
 
@@ -177,8 +177,8 @@ public struct SearchMenuView: HTMLProtocol {
 		width(perc(100))
 		height(calc(vh(100) - px(96)))  // Full height minus navbar
 		backgroundColor(rgba(0, 0, 0, 0.4))
-		backdropFilter("blur(20px)")
-		customProperty("-webkit-backdrop-filter", "blur(20px)")
+		backdropFilter(blur(rem(1)))
+		webkitBackdropFilter(blur(rem(1)))
 		opacity(0)
 		transition(.opacity, transitionDurationMedium, transitionTimingFunctionSystem)
 		zIndex(-1)
@@ -218,7 +218,6 @@ public struct SearchMenuView: HTMLProtocol {
 		alignItems(.center)
 		justifyContent(.flexStart)
 		padding(0)
-		marginBlockStart(spacing16)
 
 		// Show only on desktop
 		media(minWidth(minWidthBreakpointTablet)) {
@@ -308,6 +307,11 @@ public class SearchMenuHydration: @unchecked Sendable {
 			_ = backdrop.addEventListener(.click) { [self] _ in
 				self.closeMenu()
 			}
+		}
+
+		// Close search when ellipsis menu opens (event from NavbarHydration)
+		_ = document.addEventListener("ellipsis-menu-opened") { [self] _ in
+			if self.isMenuOpen { self.closeMenu() }
 		}
 
 		// Hydrate search functionality
@@ -684,6 +688,9 @@ public class SearchMenuHydration: @unchecked Sendable {
 	}
 
 	private func openMenu() {
+		// Signal ellipsis menu to close (NavbarHydration listens)
+		document.dispatchEvent(CustomEvent(type: "search-menu-opened", detail: "{}"))
+
 		// First scroll to top so navbar is fully visible
 		window.scrollTo(0, 0, behavior: .smooth)
 

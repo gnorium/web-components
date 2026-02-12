@@ -105,7 +105,6 @@ public struct TypeaheadSearchView: HTMLProtocol {
 		display(.flex)
 		flexDirection(.column)
 		gap(spacing8)
-		marginBlockStart(spacing8)
 		maxHeight(min(calc(vh(100) - px(128)), px(900)))
 		overflowY(.auto)
 	}
