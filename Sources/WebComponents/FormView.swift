@@ -88,7 +88,7 @@ public struct FormView: HTMLProtocol {
 			// Header
 			h1 { title }
 				.style {
-					fontFamily(typographyFontSerif)
+					fontFamily(typographyFontSans)
 					fontSize(px(32))
 					fontWeight(.normal)
 					color(colorBase)
