@@ -45,6 +45,25 @@ public struct TooltipView: HTMLProtocol {
 		display(.inlineFlex)
 		alignItems(.center)
 		verticalAlign(.middle)
+		cursor(.help)
+
+		// CSS hover fallback — works without WASI hydration
+		pseudoClass(.hover) {
+			child(".tooltip-content") {
+				opacity(1)
+				visibility(.visible)
+				pointerEvents(.auto)
+			}
+		}
+
+		// Focus fallback for keyboard navigation
+		pseudoClass(.focusWithin) {
+			child(".tooltip-content") {
+				opacity(1)
+				visibility(.visible)
+				pointerEvents(.auto)
+			}
+		}
 	}
 
 	@CSSBuilder

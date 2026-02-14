@@ -16,7 +16,7 @@ public struct InfoChipView: HTMLProtocol {
 
 	/// Apple HIG color for the chip
 	public enum InfoChipColor: String, Sendable {
-		case gray, orange, red, green, teal, blue, purple, pink, yellow
+		case red, orange, yellow, green, mint, teal, cyan, blue, indigo, purple, pink, brown, gray
 
 		// Legacy aliases
 		public static let notice = InfoChipColor.gray
@@ -97,20 +97,6 @@ public struct InfoChipView: HTMLProtocol {
 		overflow(.hidden)
 
 		switch (chipColor, weight) {
-		case (.gray, .subtle):
-			color(colorGray)
-			backgroundColor(backgroundColorGraySubtle)
-			border(borderWidthBase, .solid, borderColorGray)
-		case (.gray, .solid):
-			color(colorInvertedFixed)
-			backgroundColor(colorGray)
-		case (.orange, .subtle):
-			color(colorOrange)
-			backgroundColor(backgroundColorOrangeSubtle)
-			border(borderWidthBase, .solid, borderColorOrange)
-		case (.orange, .solid):
-			color(colorInvertedFixed)
-			backgroundColor(colorOrange)
 		case (.red, .subtle):
 			color(colorRed)
 			backgroundColor(backgroundColorRedSubtle)
@@ -118,6 +104,20 @@ public struct InfoChipView: HTMLProtocol {
 		case (.red, .solid):
 			color(colorInvertedFixed)
 			backgroundColor(colorRed)
+		case (.orange, .subtle):
+			color(colorOrange)
+			backgroundColor(backgroundColorOrangeSubtle)
+			border(borderWidthBase, .solid, borderColorOrange)
+		case (.orange, .solid):
+			color(colorInvertedFixed)
+			backgroundColor(colorOrange)
+		case (.yellow, .subtle):
+			color(colorYellow)
+			backgroundColor(backgroundColorYellowSubtle)
+			border(borderWidthBase, .solid, borderColorYellow)
+		case (.yellow, .solid):
+			color(colorInvertedFixed)
+			backgroundColor(colorYellow)
 		case (.green, .subtle):
 			color(colorGreen)
 			backgroundColor(backgroundColorGreenSubtle)
@@ -125,6 +125,13 @@ public struct InfoChipView: HTMLProtocol {
 		case (.green, .solid):
 			color(colorInvertedFixed)
 			backgroundColor(colorGreen)
+		case (.mint, .subtle):
+			color(colorMint)
+			backgroundColor(backgroundColorMintSubtle)
+			border(borderWidthBase, .solid, borderColorMint)
+		case (.mint, .solid):
+			color(colorInvertedFixed)
+			backgroundColor(colorMint)
 		case (.teal, .subtle):
 			color(colorTeal)
 			backgroundColor(backgroundColorTealSubtle)
@@ -132,6 +139,13 @@ public struct InfoChipView: HTMLProtocol {
 		case (.teal, .solid):
 			color(colorInvertedFixed)
 			backgroundColor(colorTeal)
+		case (.cyan, .subtle):
+			color(colorCyan)
+			backgroundColor(backgroundColorCyanSubtle)
+			border(borderWidthBase, .solid, borderColorCyan)
+		case (.cyan, .solid):
+			color(colorInvertedFixed)
+			backgroundColor(colorCyan)
 		case (.blue, .subtle):
 			color(colorBlue)
 			backgroundColor(backgroundColorBlueSubtle)
@@ -139,6 +153,13 @@ public struct InfoChipView: HTMLProtocol {
 		case (.blue, .solid):
 			color(colorInvertedFixed)
 			backgroundColor(colorBlue)
+		case (.indigo, .subtle):
+			color(colorIndigo)
+			backgroundColor(backgroundColorIndigoSubtle)
+			border(borderWidthBase, .solid, borderColorIndigo)
+		case (.indigo, .solid):
+			color(colorInvertedFixed)
+			backgroundColor(colorIndigo)
 		case (.purple, .subtle):
 			color(colorPurple)
 			backgroundColor(backgroundColorPurpleSubtle)
@@ -153,13 +174,20 @@ public struct InfoChipView: HTMLProtocol {
 		case (.pink, .solid):
 			color(colorInvertedFixed)
 			backgroundColor(colorPink)
-		case (.yellow, .subtle):
-			color(colorYellow)
-			backgroundColor(backgroundColorYellowSubtle)
-			border(borderWidthBase, .solid, borderColorYellow)
-		case (.yellow, .solid):
+		case (.brown, .subtle):
+			color(colorBrown)
+			backgroundColor(backgroundColorBrownSubtle)
+			border(borderWidthBase, .solid, borderColorBrown)
+		case (.brown, .solid):
 			color(colorInvertedFixed)
-			backgroundColor(colorYellow)
+			backgroundColor(colorBrown)
+		case (.gray, .subtle):
+			color(colorGray)
+			backgroundColor(backgroundColorGraySubtle)
+			border(borderWidthBase, .solid, borderColorGray)
+		case (.gray, .solid):
+			color(colorInvertedFixed)
+			backgroundColor(colorGray)
 		}
 	}
 
@@ -189,8 +217,8 @@ public struct InfoChipView: HTMLProtocol {
 			case .gray: return "ℹ"
 			case .orange: return "⚠"
 			case .red: return "✗"
-			case .green: return "✓"
-			case .teal, .blue, .purple, .pink, .yellow: return "●"
+			case .mint: return "✓"
+			case .yellow, .green, .teal, .cyan, .blue, .indigo, .purple, .pink, .brown: return "●"
 			}
 		}()
 

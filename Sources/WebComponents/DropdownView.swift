@@ -54,7 +54,7 @@ public struct DropdownView: HTMLProtocol {
         width: Length? = nil,
         menuWidth: Length? = nil,
         fontSize: Length = fontSizeSmall14,
-        contentJustifyContent: CSSJustifyContent = .center
+        contentJustifyContent: CSSJustifyContent = .spaceBetween
     ) {
         self.id = id
         self.name = name
@@ -80,7 +80,8 @@ public struct DropdownView: HTMLProtocol {
             // Label
             if !labelText.isEmpty {
                 label {
-                    labelText
+                    span { labelText }
+                    .class("dropdown-label-text")
 
                     if let tooltipText = tooltip {
 						TooltipView(tooltip: tooltipText, placement: .bottom) {
@@ -92,7 +93,9 @@ public struct DropdownView: HTMLProtocol {
                 }
                 .for(id)
                 .style {
-                    display(.block)
+                    display(.flex)
+                    alignItems(.center)
+                    gap(spacing4)
                     fontSize(textFontSize)
                     fontWeight(600)
                     color(colorBase)
@@ -232,7 +235,6 @@ public struct DropdownView: HTMLProtocol {
                                     span { alt }
                                     .style {
                                         marginInlineStart(.auto)
-                                        opacity(0.6)
                                     }
                                 }
                             }
@@ -283,7 +285,7 @@ public struct DropdownView: HTMLProtocol {
                     border(borderWidthBase, .solid, borderColorBase)
                     borderRadius(borderRadiusBase)
                     boxShadow(boxShadowMedium)
-                    zIndex(1000)
+                    zIndex(zIndexDropdown)
                     display(.none)
                     overflow(.hidden)
                     media(maxWidth(maxWidthBreakpointMobile)) {
@@ -299,7 +301,6 @@ public struct DropdownView: HTMLProtocol {
             .style {
                 position(.relative)
                 if disabled {
-                    opacity(opacityDisabled)
                     pointerEvents(.none)
                 }
                 media(maxWidth(maxWidthBreakpointMobile)) {
