@@ -200,6 +200,7 @@ public struct InfoChipView: HTMLProtocol {
 		height(sizeIconSmall)
 		flexShrink(0)
 		fontSize(fontSizeSmall14)
+		lineHeight(1)
 	}
 
 	@CSSBuilder
@@ -217,12 +218,13 @@ public struct InfoChipView: HTMLProtocol {
 			case .gray: return "ℹ"
 			case .orange: return "⚠"
 			case .red: return "✗"
-			case .mint: return "✓"
-			case .yellow, .green, .teal, .cyan, .blue, .indigo, .purple, .pink, .brown: return "●"
+			case .mint: return "●"
+			case .green: return "✓"
+		case .yellow, .teal, .cyan, .blue, .indigo, .purple, .pink, .brown: return "●"
 			}
 		}()
 
-		let shouldShowIcon = icon != nil || chipColor != .gray
+		let shouldShowIcon = icon == nil ? chipColor != .gray : !icon!.isEmpty
 
 		return span {
 			if shouldShowIcon {
