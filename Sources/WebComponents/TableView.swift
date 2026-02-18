@@ -57,7 +57,7 @@ public struct TableView: HTMLProtocol {
 		public init(
 			id: String,
 			label: String,
-			sortable: Bool = false,
+			sortable: Bool = true,
 			align: Alignment = .start,
 			width: String? = nil
 		) {
@@ -74,17 +74,20 @@ public struct TableView: HTMLProtocol {
 		let cells: [String: String]
 		let groupId: String?  // Groups rows together - first row with groupId becomes collapsible header
 		let isGroupHeader: Bool  // True if this row is a group header (rendered with expand/collapse)
+		let url: String?  // When set, row becomes a navigable link
 
 		public init(
 			id: String? = nil,
 			cells: [String: String],
 			groupId: String? = nil,
-			isGroupHeader: Bool = false
+			isGroupHeader: Bool = false,
+			url: String? = nil
 		) {
 			self.id = id
 			self.cells = cells
 			self.groupId = groupId
 			self.isGroupHeader = isGroupHeader
+			self.url = url
 		}
 	}
 
@@ -307,15 +310,22 @@ public struct TableView: HTMLProtocol {
 											button {
 												span { column.label }
 
-												if let currentSort = sort, currentSort.columnId == column.id {
-													span {
-														currentSort.direction == .ascending ? "▲" : "▼"
+												span {
+													if let currentSort = sort, currentSort.columnId == column.id {
+														if currentSort.direction == .ascending {
+															UpTriangleIconView(width: px(12), height: px(12))
+														} else {
+															DownTriangleIconView(width: px(12), height: px(12))
+														}
+													} else {
+														DownTriangleIconView(width: px(12), height: px(12))
 													}
-													.class("table-sort-icon")
-													.ariaHidden(true)
-													.style {
-														tableSortIconCSS()
-													}
+												}
+												.class("table-sort-icon")
+												.ariaHidden(true)
+												.style {
+													tableSortIconCSS()
+													color(sort?.columnId == column.id ? .currentColor : colorSubtle)
 												}
 											}
 											.class("table-sort-button")
@@ -489,7 +499,13 @@ public struct TableView: HTMLProtocol {
 																width(spacing24)
 															}
 													}
-													cellContent
+													if isFirstCell, let url = row.url {
+														a { cellContent }
+														.href(url)
+														.class("table-row-link-anchor")
+													} else {
+														cellContent
+													}
 												}
 												.style {
 													tableTdCSS(column.align)
@@ -504,14 +520,12 @@ public struct TableView: HTMLProtocol {
 									.data("row-id", rowId)
 									.data("group-id", row.groupId ?? "")
 									.data("is-group-header", row.isGroupHeader ? "true" : "")
-									.class(buildRowClass(isSelected: isSelected, isGroupHeader: row.isGroupHeader, isGroupChild: isGroupChild))
+									.data("url", row.url ?? "")
+									.class(buildRowClass(isSelected: isSelected, isGroupHeader: row.isGroupHeader, isGroupChild: isGroupChild, hasUrl: row.url != nil))
 								}
 							}
 						}
 						.class("table-tbody")
-						.style {
-							tableTbodyCSS()
-						}
 					}
 
 					// tfoot
@@ -598,17 +612,50 @@ public struct TableView: HTMLProtocol {
 		.render(indent: indent)
 	}
 
-	private func buildRowClass(isSelected: Bool, isGroupHeader: Bool, isGroupChild: Bool) -> String {
+	private func buildRowClass(isSelected: Bool, isGroupHeader: Bool, isGroupChild: Bool, hasUrl: Bool = false) -> String {
 		var classes = ["table-row"]
 		if isSelected { classes.append("table-row-selected") }
 		if isGroupHeader { classes.append("table-group-header") }
 		if isGroupChild { classes.append("table-group-child") }
+		if hasUrl { classes.append("table-row-link") }
 		return classes.joined(separator: " ")
 	}
 
     @CSSBuilder
 	private func tableViewCSS() -> [CSSProtocol] {
 		width(perc(100))
+
+		// Row styles — applied universally (both auto-generated and custom tbody)
+		selector(" tbody tr") {
+			borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
+		}
+
+		selector(" tbody tr:last-child") {
+			borderBlockEnd(.none)
+		}
+
+		selector(" tbody tr:hover") {
+			backgroundColor(backgroundColorInteractiveSubtleHover).important()
+		}
+
+		selector(" tbody tr:active") {
+			backgroundColor(backgroundColorInteractiveSubtleActive).important()
+		}
+
+		selector(" tbody tr[data-url]:not([data-url=''])") {
+			cursor(cursorBaseHover)
+			transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionUser)
+		}
+
+		selector(" .table-row-link-anchor") {
+			textDecoration(.none)
+			color(.inherit)
+		}
+
+		// Fixed row height — prevent wrapping, let columns expand and table scroll horizontally
+		selector(" td, th") {
+			whiteSpace(.nowrap)
+		}
 	}
 
 	@CSSBuilder
@@ -724,14 +771,22 @@ public struct TableView: HTMLProtocol {
 		color(.inherit)
 		textAlign(.inherit)
 		textTransform(.inherit)
-		cursor(cursorBase)
+		cursor(cursorBaseHover)
 		transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
 
 		pseudoClass(.hover) {
 			color(colorBlue).important()
 		}
 
+		selector(":hover .table-sort-icon") {
+			color(colorBlue).important()
+		}
+
 		pseudoClass(.active) {
+			color(colorBlueActive).important()
+		}
+
+		selector(":active .table-sort-icon") {
 			color(colorBlueActive).important()
 		}
 	}
@@ -739,24 +794,11 @@ public struct TableView: HTMLProtocol {
 	@CSSBuilder
 	private func tableSortIconCSS() -> [CSSProtocol] {
 		display(.inlineFlex)
+		alignItems(.center)
+		justifyContent(.center)
 		width(sizeIconSmall)
 		height(sizeIconSmall)
 		fontSize(fontSizeXSmall12)
-	}
-
-	@CSSBuilder
-	private func tableTbodyCSS() -> [CSSProtocol] {
-		selector("tr") {
-			borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
-		}
-
-		selector("tr:last-child") {
-			borderBlockEnd(.none)
-		}
-
-		selector("tr:hover") {
-			backgroundColor(backgroundColorInteractiveSubtleHover).important()
-		}
 	}
 
 	@CSSBuilder
@@ -935,6 +977,22 @@ private class TableInstance: @unchecked Sendable {
                 self.goToPage(10)
             }
         }
+
+        // Row link navigation — click anywhere on row to navigate
+        let linkRows = table.querySelectorAll("tr[data-url]:not([data-url=''])")
+        for row in linkRows {
+            _ = row.addEventListener(.click) { event in
+                // Skip if click originated on interactive elements
+                if let target = event.target {
+                    let tag = target.tagName
+                    if stringEquals(tag, "INPUT") || stringEquals(tag, "LABEL") || stringEquals(tag, "BUTTON") || stringEquals(tag, "A") {
+                        return
+                    }
+                }
+                guard let url = row.getAttribute("data-url") else { return }
+                location.href = url
+            }
+        }
     }
 
     private func toggleGroup(_ header: Element) {
@@ -1052,8 +1110,78 @@ private class TableInstance: @unchecked Sendable {
             currentSort = (columnId, "asc")
         }
 
+        let isAscending = stringEquals(currentSort?.direction ?? "asc", "asc")
+
+        // Find column index by locating the th with the matching sort button
+        let headerCells = Array(table.querySelectorAll("thead th"))
+        var columnIndex = -1
+        for i in 0..<headerCells.count {
+            if let _ = headerCells[i].querySelector("[data-column-id='\(columnId)']") {
+                columnIndex = i
+                break
+            }
+        }
+        guard columnIndex >= 0 else { return }
+
+        // Get tbody and its rows
+        guard let tbodyEl = table.querySelector("tbody") else { return }
+        var rows = Array(tbodyEl.querySelectorAll("tr"))
+        guard rows.count > 1 else { return }
+
+        // Sort rows — numeric when both values parse as numbers, string otherwise
+        rows.sort { a, b in
+            let cellsA = Array(a.querySelectorAll("td, th"))
+            let cellsB = Array(b.querySelectorAll("td, th"))
+            let textA = columnIndex < cellsA.count ? (cellsA[columnIndex].textContent ?? "") : ""
+            let textB = columnIndex < cellsB.count ? (cellsB[columnIndex].textContent ?? "") : ""
+
+            let cmp: Int
+            if let numA = safeParseInt(textA), let numB = safeParseInt(textB) {
+                cmp = numA < numB ? -1 : (numA > numB ? 1 : 0)
+            } else {
+                cmp = stringCompare(textA, textB)
+            }
+            return isAscending ? cmp < 0 : cmp > 0
+        }
+
+        // Reorder DOM nodes (appendChild moves existing nodes)
+        for row in rows {
+            tbodyEl.appendChild(row)
+        }
+
+        // Update sort indicators on all sort buttons
+        let downSvg = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"12\" height=\"12\" viewBox=\"0 0 20 20\" fill=\"currentColor\"><path d=\"M10 15 2 5h16z\"/></svg>"
+        for btn in sortButtons {
+            guard let btnColumnId = btn.getAttribute("data-column-id") else { continue }
+            let isActive = stringEquals(btnColumnId, columnId)
+
+            // Get or create the sort icon span
+            let icon: Element
+            if let existing = btn.querySelector(".table-sort-icon") {
+                icon = existing
+            } else {
+                icon = document.createElement("span")
+                icon.className = "table-sort-icon"
+                icon.setAttribute("aria-hidden", "true")
+                btn.appendChild(icon)
+            }
+
+            if isActive {
+                let svgPath = isAscending ? "m10 5 8 10H2z" : "M10 15 2 5h16z"
+                icon.innerHTML = stringConcat(
+                    "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"12\" height=\"12\" viewBox=\"0 0 20 20\" fill=\"currentColor\"><path d=\"",
+                    svgPath,
+                    "\"/></svg>"
+                )
+                icon.style.setProperty("color", "currentColor")
+            } else {
+                icon.innerHTML = downSvg
+                icon.style.setProperty("color", "var(--color-subtle)")
+            }
+        }
+
         // Dispatch sort event
-        let sortData = "\(columnId):\(currentSort?.direction ?? "asc")"
+        let sortData = stringConcat(columnId, ":", currentSort?.direction ?? "asc")
         let event = CustomEvent(type: "table-sort-change", detail: sortData)
         table.dispatchEvent(event)
     }

@@ -419,11 +419,11 @@ public struct ButtonView: HTMLProtocol {
 			borderColor(borderColorBase)
 
 			pseudoClass(.hover, not(.disabled)) {
-				backgroundColor(backgroundColorInteractive).important()
+				backgroundColor(backgroundColorInteractiveSubtleHover).important()
 			}
 
 			pseudoClass(.active, not(.disabled)) {
-				backgroundColor(backgroundColorInteractiveActive).important()
+				backgroundColor(backgroundColorInteractiveSubtleActive).important()
 				color(colorEmphasized).important()
 				borderColor(borderColorBase).important()
 			}

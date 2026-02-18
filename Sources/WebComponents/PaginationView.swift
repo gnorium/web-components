@@ -8,36 +8,36 @@ import WebTypes
 
 public struct PaginationView: HTMLProtocol {
     public let previousLabel: String?
-    public let previousHref: String?
+    public let previousUrl: String?
     public let nextLabel: String?
-    public let nextHref: String?
+    public let nextUrl: String?
     public let pageNumbers: [PageNumber]?
     let `class`: String
 
 	public struct PageNumber: Sendable {
         public let label: String
-        public let href: String
+        public let url: String
         public let isActive: Bool
 
-        public init(label: String, href: String, isActive: Bool = false) {
+        public init(label: String, url: String, isActive: Bool = false) {
             self.label = label
-            self.href = href
+            self.url = url
             self.isActive = isActive
         }
     }
 
     public init(
         previousLabel: String? = nil,
-        previousHref: String? = nil,
+        previousUrl: String? = nil,
         nextLabel: String? = nil,
-        nextHref: String? = nil,
+        nextUrl: String? = nil,
         pageNumbers: [PageNumber]? = nil,
         class: String = ""
     ) {
         self.previousLabel = previousLabel
-        self.previousHref = previousHref
+        self.previousUrl = previousUrl
         self.nextLabel = nextLabel
-        self.nextHref = nextHref
+        self.nextUrl = nextUrl
         self.pageNumbers = pageNumbers
         self.`class` = `class`
     }
@@ -45,7 +45,7 @@ public struct PaginationView: HTMLProtocol {
     public func render(indent: Int = 0) -> String {
         section {
             // Previous link
-            if let prevLabel = previousLabel, let prevHref = previousHref {
+            if let prevLabel = previousLabel, let prevHref = previousUrl {
                 div {
                     a { prevLabel }
                     .class("pagination-prev")
@@ -97,7 +97,7 @@ public struct PaginationView: HTMLProtocol {
                         } else {
                             a { page.label }
 							.class("page-label")
-                            .href(page.href)
+                            .href(page.url)
                             .style {
                                 fontFamily(typographyFontSans)
                                 fontSize(fontSizeMedium16)
@@ -126,11 +126,11 @@ public struct PaginationView: HTMLProtocol {
             }
 
             // Next link
-            if let nextLabel = nextLabel, let nextHref = nextHref {
+            if let nextLabel = nextLabel, let nextUrl = nextUrl {
                 div {
                     a { nextLabel }
                     .class("pagination-next")
-                    .href(nextHref)
+                    .href(nextUrl)
                     .style {
                         fontFamily(typographyFontSans)
                         fontSize(fontSizeMedium16)
