@@ -14,6 +14,7 @@ public struct AlertView: HTMLProtocol {
 	let allowUserDismiss: Bool
 	let dismissButtonLabel: String
 	let autoDismiss: AutoDismiss
+	let clearQueryParam: String?
 	let content: [HTMLProtocol]
 	let `class`: String
 
@@ -49,6 +50,7 @@ public struct AlertView: HTMLProtocol {
 		allowUserDismiss: Bool = false,
 		dismissButtonLabel: String = "Close",
 		autoDismiss: AutoDismiss = .disabled,
+		clearQueryParam: String? = nil,
 		class: String = "",
 		@HTMLBuilder content: () -> [HTMLProtocol]
 	) {
@@ -59,6 +61,7 @@ public struct AlertView: HTMLProtocol {
 		self.allowUserDismiss = allowUserDismiss
 		self.dismissButtonLabel = dismissButtonLabel
 		self.autoDismiss = autoDismiss
+		self.clearQueryParam = clearQueryParam
 		self.content = content()
 		self.`class` = `class`
 	}
@@ -71,6 +74,7 @@ public struct AlertView: HTMLProtocol {
 		allowUserDismiss: Bool = false,
 		dismissButtonLabel: String = "Close",
 		autoDismiss: AutoDismiss = .disabled,
+		clearQueryParam: String? = nil,
 		class: String = "",
 		@HTMLBuilder content: () -> [HTMLProtocol]
 	) {
@@ -81,6 +85,7 @@ public struct AlertView: HTMLProtocol {
 		self.allowUserDismiss = allowUserDismiss
 		self.dismissButtonLabel = dismissButtonLabel
 		self.autoDismiss = autoDismiss
+		self.clearQueryParam = clearQueryParam
 		self.content = content()
 		self.`class` = `class`
 	}
@@ -238,6 +243,10 @@ public struct AlertView: HTMLProtocol {
 			alert = alert.data("auto-dismiss", "\(autoDismissValue)")
 		}
 
+		if let param = clearQueryParam {
+			alert = alert.data("clear-param", param)
+		}
+
 		return alert
 			.style {
 				alertViewCSS(alertColor, inline)
@@ -257,6 +266,52 @@ import WebAPIs
 import DesignTokens
 import WebTypes
 import EmbeddedSwiftUtilities
+
+// Remove a single query parameter from a URL search string (e.g. "?error=foo&x=1" → "?x=1")
+private func removeQueryParam(_ search: String, _ param: String) -> String {
+	let searchBytes = Array(search.utf8)
+	let paramBytes = Array(param.utf8)
+	guard !searchBytes.isEmpty, searchBytes[0] == 0x3F else { return search } // must start with '?'
+
+	// Parse params from after the '?'
+	var kept: [[UInt8]] = []
+	var i = 1 // skip '?'
+	while i < searchBytes.count {
+		var j = i
+		while j < searchBytes.count && searchBytes[j] != 0x26 { j += 1 } // find '&'
+		// param segment is searchBytes[i..<j]
+		// Check if it starts with param=
+		let segLen = j - i
+		if segLen > paramBytes.count && searchBytes[i + paramBytes.count] == 0x3D { // '='
+			var matches = true
+			for k in 0..<paramBytes.count {
+				if searchBytes[i + k] != paramBytes[k] { matches = false; break }
+			}
+			if !matches {
+				kept.append(Array(searchBytes[i..<j]))
+			}
+		} else if segLen == paramBytes.count {
+			// param with no value (just "error" with no =)
+			var matches = true
+			for k in 0..<paramBytes.count {
+				if searchBytes[i + k] != paramBytes[k] { matches = false; break }
+			}
+			if !matches {
+				kept.append(Array(searchBytes[i..<j]))
+			}
+		} else {
+			kept.append(Array(searchBytes[i..<j]))
+		}
+		i = j + 1 // skip '&'
+	}
+	if kept.isEmpty { return "" }
+	var result: [UInt8] = [0x3F] // '?'
+	for (idx, seg) in kept.enumerated() {
+		if idx > 0 { result.append(0x26) } // '&'
+		result.append(contentsOf: seg)
+	}
+	return String(decoding: result, as: UTF8.self)
+}
 
 // Helper for safe string concatenation
 private func concat(_ parts: String...) -> String {
@@ -573,6 +628,14 @@ private class AlertInstance: @unchecked Sendable {
 		if let timer = autoDismissTimer {
 			clearTimeout(timer)
 			autoDismissTimer = nil
+		}
+
+		// Clear query param from URL if specified (prevents alert returning on refresh)
+		if let paramName = alertElement.getAttribute(data("clear-param")) {
+			let pathname = window.location.pathname
+			let search = window.location.search
+			let cleaned = removeQueryParam(search, paramName)
+			window.replaceURL(stringConcat(pathname, cleaned))
 		}
 
 		alertElement.style.animation(("alert-fade-out", s(0.3), .easeOut))

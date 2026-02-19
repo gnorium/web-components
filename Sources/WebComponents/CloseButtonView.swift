@@ -22,7 +22,7 @@ public struct CloseButtonView: HTMLProtocol {
 			icon: IconView {
 				CloseIconView()
 			},
-			weight: .quiet,
+			weight: .plain,
     		size: .large,
 			ariaLabel: ariaLabel,
 			class: "close-button-view \(`class`)"

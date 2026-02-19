@@ -108,6 +108,9 @@ public struct AccordionView: HTMLProtocol {
 		cursor(cursorBaseHover)
 		listStyle(.none)
 		userSelect(.none)
+		position(.relative)
+		zIndex(1)
+		backgroundColor(backgroundColorNeutral)
 
 		if separation == .minimal {
 			minHeight(minSizeInteractivePointer)
@@ -226,6 +229,7 @@ public struct AccordionView: HTMLProtocol {
 		fontSize(fontSizeMedium16)
 		lineHeight(lineHeightSmall22)
 		color(colorBase)
+		transition(transitionPropertyBase, transitionDurationMedium, transitionTimingFunctionSystem)
 
 		if separation == .minimal {
 			padding(spacing12, spacing0)
@@ -306,11 +310,11 @@ public struct AccordionView: HTMLProtocol {
 					}
 				}
 
-				// Chevron icon at the end, rotates 180° when open
+				// Animated chevron that morphs between v (closed) and ^ (open)
 				span {
-					IconView(
-						icon: { size in [ExpandIconView(width: size, height: size)] },
-						size: .medium
+					AnimatedRightDownChevronView(
+						id: "accordion-\(id)",
+						expanded: open
 					)
 				}
 				.class("accordion-expand-icon")
@@ -319,7 +323,6 @@ public struct AccordionView: HTMLProtocol {
 					alignItems(.center)
 					justifyContent(.center)
 					color(colorSubtle)
-					transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
 				}
 			}
 			.class("accordion-summary")
@@ -336,6 +339,7 @@ public struct AccordionView: HTMLProtocol {
 		.open(open)
 		.class("accordion-details")
 		.id(id)
+		.style { overflow(.hidden) }
 
 		if separation == .divider {
 			return div {
@@ -382,7 +386,8 @@ private class AccordionInstance: @unchecked Sendable {
 	private var details: Element?
 	private var summary: Element?
 	private var actionButton: Element?
-	private var expandIcon: Element?
+	private var chevronSvg: Element?
+	private var isOpen: Bool
 
 	init(accordion: Element) {
 		self.accordion = accordion
@@ -390,49 +395,88 @@ private class AccordionInstance: @unchecked Sendable {
 		details = accordion.querySelector(".accordion-details")
 		summary = accordion.querySelector(".accordion-summary")
 		actionButton = accordion.querySelector(".accordion-action-button")
-		expandIcon = accordion.querySelector(".accordion-expand-icon")
+		chevronSvg = accordion.querySelector(".animated-chevron")
+		isOpen = details?.hasAttribute(.open) ?? false
 
 		bindEvents()
 	}
 
 	private func bindEvents() {
-		guard let details = details else { return }
+		guard let summary = summary, details != nil else { return }
 
-		// Handle toggle event
-		_ = details.addEventListener(.toggle) { [self] _ in
-			let isOpen = details.hasAttribute(.open)
+		// Handle click on summary — we track state ourselves
+		_ = summary.addEventListener(.click) { [self] event in
+			guard let details = self.details else { return }
 
-			// Rotate expand icon 180° when open (chevron points up)
-			if let expandIcon = self.expandIcon {
-				if isOpen {
-					expandIcon.style.transform(rotate(deg(180)))
-				} else {
-					expandIcon.style.transform(rotate(deg(0)))
+			if self.isOpen {
+				// --- CLOSING ---
+				// Prevent native close so we can animate first
+				event.preventDefault()
+				self.isOpen = false
+
+				// Rotate chevron back to right
+				if let svg = self.chevronSvg {
+					svg.style.setProperty("transform", "rotate(-90deg)")
+					svg.setAttribute("data-expanded", "false")
 				}
-			}
 
-			// Show/hide action button if not always visible
-			if let actionButton = self.actionButton {
-				let displayValue = actionButton.getAttribute(.style) ?? ""
-				let alwaysVisible = !stringContains(displayValue, "display: none")
-				if !alwaysVisible {
-					if isOpen {
-						actionButton.style.display(.inlineFlex)
-					} else {
+				// Animate content sliding up, then manually close
+				if let content = details.querySelector(".accordion-content") {
+					content.style.setProperty("transition", "transform 0.25s ease")
+					content.style.setProperty("transform", "translateY(-100%)")
+				}
+				window.setTimeout(250) {
+					details.removeAttribute("open")
+				}
+
+				// Hide action button
+				if let actionButton = self.actionButton {
+					let displayValue = actionButton.getAttribute(.style) ?? ""
+					let alwaysVisible = !stringContains(displayValue, "display: none")
+					if !alwaysVisible {
 						actionButton.style.display(.none)
 					}
 				}
-			}
 
-			// Dispatch custom toggle event
-			let detailValue: String
-			if isOpen {
-				detailValue = "true"
+				// Dispatch custom event
+				let closeEvent = CustomEvent(type: "accordion-toggle", detail: "false")
+				self.accordion.dispatchEvent(closeEvent)
 			} else {
-				detailValue = "false"
+				// --- OPENING ---
+				// Let browser add [open] natively, then animate content in
+				self.isOpen = true
+
+				// Rotate chevron to down
+				if let svg = self.chevronSvg {
+					svg.style.setProperty("transform", "rotate(0deg)")
+					svg.setAttribute("data-expanded", "true")
+				}
+
+				// Wait for browser to add [open], then animate content slide-in
+				window.requestAnimationFrame {
+					if let content = details.querySelector(".accordion-content") {
+						content.style.setProperty("transition", "none")
+						content.style.setProperty("transform", "translateY(-100%)")
+						window.requestAnimationFrame {
+							content.style.setProperty("transition", "transform 0.25s ease")
+							content.style.setProperty("transform", "translateY(0)")
+						}
+					}
+				}
+
+				// Show action button
+				if let actionButton = self.actionButton {
+					let displayValue = actionButton.getAttribute(.style) ?? ""
+					let alwaysVisible = !stringContains(displayValue, "display: none")
+					if !alwaysVisible {
+						actionButton.style.display(.inlineFlex)
+					}
+				}
+
+				// Dispatch custom event
+				let openEvent = CustomEvent(type: "accordion-toggle", detail: "true")
+				self.accordion.dispatchEvent(openEvent)
 			}
-			let event = CustomEvent(type: "accordion-toggle", detail: detailValue)
-			self.accordion.dispatchEvent(event)
 		}
 
 		// Handle action button click

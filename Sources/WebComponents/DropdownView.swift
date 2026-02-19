@@ -144,36 +144,14 @@ public struct DropdownView: HTMLProtocol {
                         }
                         .title(options.first { $0.value == selectedValue }?.altDisplay ?? displayText)
 
-                        // Icons
-                        span {
-                            IconView(
-                                icon: { s in
-                                    ExpandIconView(width: s, height: s)
-                                },
-                                size: buttonSize == .small ? .xSmall : buttonSize == .medium ? .small : .medium,
-                                class: "dropdown-expand-icon"
-                            )
-                        }
-                        .data("dropdown-expand-icon", true)
-                        .style {
-                            display(.flex)
-                            transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-                        }
-
-                        span {
-                            IconView(
-                                icon: { s in
-                                    CollapseIconView(width: s, height: s)
-                                },
-                                size: buttonSize == .small ? .xSmall : buttonSize == .medium ? .small : .medium,
-                                class: "dropdown-collapse-icon"
-                            )
-                        }
-                        .data("dropdown-collapse-icon", true)
-                        .style {
-                            display(.none)
-                            transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-                        }
+                        // Animated chevron icon
+                        AnimatedRightDownChevronView(
+                            id: "dropdown-\(id)",
+                            expanded: false,
+                            width: buttonSize == .small ? px(12) : buttonSize == .medium ? px(16) : px(20),
+                            height: buttonSize == .small ? px(12) : buttonSize == .medium ? px(16) : px(20),
+                            class: "dropdown-chevron"
+                        )
                     }
                 }
 				.class("dropdown-trigger-wrapper")
@@ -342,8 +320,7 @@ private class DropdownInstance: @unchecked Sendable {
 	private var optionsList: Element?
 	private var selectedText: Element?
 	private var hiddenInput: Element?
-	private var expandIcon: Element?
-	private var collapseIcon: Element?
+	private var chevronSvg: Element?
 	private var isOpen: Bool = false
 	private var allOptions: [Element] = []
 
@@ -354,8 +331,7 @@ private class DropdownInstance: @unchecked Sendable {
 		searchInput = container.querySelector("[data-dropdown-search=\"true\"]")
 		optionsList = container.querySelector("[data-dropdown-options-list=\"true\"]")
 		selectedText = container.querySelector("[data-dropdown-selected-text=\"true\"]")
-		expandIcon = container.querySelector("[data-dropdown-expand-icon=\"true\"]")
-		collapseIcon = container.querySelector("[data-dropdown-collapse-icon=\"true\"]")
+		chevronSvg = container.querySelector(".animated-chevron")
 
 		// Find hidden input relative to container
 		hiddenInput = container.querySelector("input[type=\"hidden\"]")
@@ -440,18 +416,27 @@ private class DropdownInstance: @unchecked Sendable {
 
 	private func openDropdown() {
 		menu?.style.display(.block)
-		expandIcon?.style.display(.none)
-		collapseIcon?.style.display(.flex)
+		morphChevron()
 		isOpen = true
 	}
 
 	private func closeDropdown() {
 		menu?.style.display(.none)
-		expandIcon?.style.display(.flex)
-		collapseIcon?.style.display(.none)
+		morphChevron()
 		isOpen = false
 		searchInput?.value = ""
 		filterOptions() // Reset filter
+	}
+
+	private func morphChevron() {
+		guard let svg = chevronSvg else { return }
+		if isOpen {
+			svg.style.setProperty("transform", "rotate(0deg)")
+			svg.setAttribute("data-expanded", "true")
+		} else {
+			svg.style.setProperty("transform", "rotate(-90deg)")
+			svg.setAttribute("data-expanded", "false")
+		}
 	}
 
 	private func filterOptions() {

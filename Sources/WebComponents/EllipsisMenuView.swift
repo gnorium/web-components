@@ -99,15 +99,12 @@ public struct EllipsisMenuView: HTMLProtocol {
 		paddingBlockEnd(spacing16)
 		borderBlockEnd(borderWidthBase, .solid, borderColorBase)
 
-		maxHeight(px(0))
-		overflow(.hidden)
-		transform(translateY(px(-125)))
+		opacity(0)
+		transform(translateY(perc(-100)))
 		transition(
-			(.maxHeight, transitionDurationMedium, transitionTimingFunctionSystem),
 			(.opacity, transitionDurationMedium, transitionTimingFunctionSystem),
 			(.transform, transitionDurationMedium, transitionTimingFunctionSystem)
 		)
-		opacity(0)
 
 		media(minWidth(minWidthBreakpointTablet)) {
 			paddingBlockStart(spacing20)

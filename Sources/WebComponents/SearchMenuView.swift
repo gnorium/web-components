@@ -162,7 +162,7 @@ public struct SearchMenuView: HTMLProtocol {
 		// Hidden by default, positioned right below navbar
 		display(.none)
 		position(.fixed)
-		top(px(96))  // Right below navbar
+		top(px(96))
 		insetInlineStart(0)
 		width(perc(100))
 		zIndex(zIndexOverlay)
@@ -193,16 +193,13 @@ public struct SearchMenuView: HTMLProtocol {
 		paddingBlockEnd(spacing16)
 		borderBlockEnd(borderWidthBase, .solid, borderColorBase)
 
-		// Start hidden - collapsed at navbar level with slide down animation
-		maxHeight(px(0))
-		overflow(.hidden)
-		transform(translateY(px(-125)))
+		// Start hidden — translated fully above; slides down from beneath navbar
+		opacity(0)
+		transform(translateY(perc(-100)))
 		transition(
-			(.maxHeight, transitionDurationMedium, transitionTimingFunctionSystem),
 			(.opacity, transitionDurationMedium, transitionTimingFunctionSystem),
 			(.transform, transitionDurationMedium, transitionTimingFunctionSystem)
 		)
-		opacity(0)
 
 		// Desktop: more vertical padding
 		media(minWidth(minWidthBreakpointTablet)) {
@@ -484,7 +481,7 @@ public class SearchMenuHydration: @unchecked Sendable {
             item.style.userSelect(.none)
             item.style.textDecoration(textDecorationNone)
             item.style.boxSizing(.borderBox)
-            item.style.transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+            item.style.transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionUser)
 			 
             // Construct URL for navigation
             let href = "\(resultUrlBase)/\(result.languageCode)/\(result.lemma)/\(result.homograph)"
@@ -709,11 +706,8 @@ public class SearchMenuHydration: @unchecked Sendable {
 					backdrop.style.pointerEvents(.auto)
 				}
 
-				// Animate container (expand height, fade in, and slide down)
+				// Animate container (slide down from beneath navbar)
 				if let container = menu.querySelector("[data-search-menu-container=\"true\"]") {
-					// Set max-height to viewport height minus navbar to show full content
-					container.style.maxHeight(calc(vh(100) - px(96)))
-					container.style.overflow(.visible)
 					container.style.opacity(1)
 					container.style.transform(translateY(px(0)))
 				}
@@ -751,15 +745,13 @@ public class SearchMenuHydration: @unchecked Sendable {
 				footer.style.display(.none)
 			}
 
-			// Animate out container (collapse height, fade out, and slide up)
+			// Animate out container (slide back up beneath navbar)
 			if let container = menu.querySelector("[data-search-menu-container=\"true\"]") {
-				container.style.maxHeight(px(0))
-				container.style.overflow(.hidden)
 				container.style.opacity(0)
-				container.style.transform(translateY(px(-125)))
+				container.style.transform(translateY(perc(-100)))
 			}
 
-			// Hide menu after animation completes (250ms)
+			// Hide menu after animation
 			window.setTimeout(250) {
 				menu.style.display(.none)
 				menu.style.pointerEvents(.none)

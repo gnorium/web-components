@@ -311,21 +311,27 @@ public struct TableView: HTMLProtocol {
 												span { column.label }
 
 												span {
-													if let currentSort = sort, currentSort.columnId == column.id {
-														if currentSort.direction == .ascending {
-															UpTriangleIconView(width: px(12), height: px(12))
-														} else {
-															DownTriangleIconView(width: px(12), height: px(12))
-														}
-													} else {
-														DownTriangleIconView(width: px(12), height: px(12))
-													}
+													AnimatedUpDownChevronView(
+														id: "table-sort-\(column.id)",
+														expanded: {
+															if let currentSort = sort, currentSort.columnId == column.id {
+																return currentSort.direction == .ascending
+															}
+															return false
+														}(),
+														width: px(12),
+														height: px(12)
+													)
 												}
 												.class("table-sort-icon")
 												.ariaHidden(true)
 												.style {
 													tableSortIconCSS()
-													color(sort?.columnId == column.id ? .currentColor : colorSubtle)
+													if sort?.columnId == column.id {
+														color(.currentColor)
+													} else {
+														display(.none)
+													}
 												}
 											}
 											.class("table-sort-button")
@@ -425,28 +431,12 @@ public struct TableView: HTMLProtocol {
 
 											if useRowHeaders && isFirstCell {
 												th {
-													// Group header gets expand/collapse toggle
-													if row.isGroupHeader {
-														span {
-															CollapseIconView()
-														}
-														.class("group-toggle group-expanded")
-														.ariaHidden(true)
-														.style {
-																display(.inlineBlock)
-																marginInlineEnd(spacing8)
-																cursor(cursorBase)
-															}
-														span {
-															ExpandIconView()
-														}
-														.class("group-toggle group-collapsed")
-														.ariaHidden(true)
-														.style {
-															display(.none)
-															marginInlineEnd(spacing8)
-															cursor(cursorBase)
-														}
+													// Group header gets animated triangle toggle
+													if row.isGroupHeader, let gid = row.groupId {
+														AnimatedUpDownChevronView(
+															id: "table-group-\(gid)",
+															expanded: false
+														)
 													}
 													// Child rows get indentation
 													if isGroupChild {
@@ -468,28 +458,12 @@ public struct TableView: HTMLProtocol {
 												}
 											} else {
 												td {
-													// Group header first cell gets expand/collapse toggle
-													if row.isGroupHeader && isFirstCell {
-														span {
-															CollapseIconView()
-														}
-														.class("group-toggle group-expanded")
-														.ariaHidden(true)
-														.style {
-															display(.inlineBlock)
-															marginInlineEnd(spacing8)
-															cursor(cursorBase)
-														}
-														span {
-															ExpandIconView()
-														}
-														.class("group-toggle group-collapsed")
-														.ariaHidden(true)
-														.style {
-															display(.none)
-															marginInlineEnd(spacing8)
-															cursor(cursorBase)
-														}
+													// Group header first cell gets animated triangle toggle
+													if row.isGroupHeader && isFirstCell, let gid = row.groupId {
+														AnimatedUpDownChevronView(
+															id: "table-group-\(gid)",
+															expanded: false
+														)
 													}
 													// Child rows get indentation on first cell
 													if isGroupChild && isFirstCell {
@@ -616,7 +590,7 @@ public struct TableView: HTMLProtocol {
 		var classes = ["table-row"]
 		if isSelected { classes.append("table-row-selected") }
 		if isGroupHeader { classes.append("table-group-header") }
-		if isGroupChild { classes.append("table-group-child") }
+		if isGroupChild { classes.append("table-group-child table-row-animatable") }
 		if hasUrl { classes.append("table-row-link") }
 		return classes.joined(separator: " ")
 	}
@@ -656,6 +630,16 @@ public struct TableView: HTMLProtocol {
 		selector(" td, th") {
 			whiteSpace(.nowrap)
 		}
+
+		// Animated expand/collapse for group child rows — translate underneath
+		selector(" .table-row-animatable") {
+			transition(.transform, transitionDurationMedium, transitionTimingFunctionSystem)
+		}
+
+		selector(" .table-row-animatable.table-row-collapsed") {
+			transform(translateY(perc(-100)))
+		}
+
 	}
 
 	@CSSBuilder
@@ -907,6 +891,20 @@ private class TableInstance: @unchecked Sendable {
         sortButtons = Array(table.querySelectorAll(".table-sort-button"))
         groupHeaders = Array(table.querySelectorAll(".table-group-header"))
 
+        // Re-create server-rendered <animate> elements so beginElement() works reliably
+        let chevronPolygons = table.querySelectorAll(".animated-up-down-chevron polygon")
+        for polygon in chevronPolygons {
+            if let animateEl = polygon.querySelector("animate") {
+                let from = animateEl.getAttribute("from") ?? ""
+                let to = animateEl.getAttribute("to") ?? ""
+                polygon.innerHTML = stringConcat(
+                    "<animate attributeName=\"points\" from=\"", from,
+                    "\" to=\"", to,
+                    "\" dur=\"200ms\" fill=\"freeze\" begin=\"indefinite\"></animate>"
+                )
+            }
+        }
+
         paginationFirstBtn = table.querySelector(".pagination-first")
         paginationPrevBtn = table.querySelector(".pagination-previous")
         paginationNextBtn = table.querySelector(".pagination-next")
@@ -932,16 +930,18 @@ private class TableInstance: @unchecked Sendable {
             }
         }
 
-        // Group header expand/collapse
+        // Group header expand/collapse — entire row is clickable
         for header in groupHeaders {
+            header.style.cursor(.pointer)
             _ = header.addEventListener(.click) { [self] event in
-                // Only toggle if clicking on the toggle icon area
+                // Skip if click originated on interactive elements
                 if let target = event.target {
-                    let classList = target.className
-                    if stringContains(classList, "group-toggle") || stringContains(classList, "icon") {
-                        self.toggleGroup(header)
+                    let tag = target.tagName
+                    if stringEquals(tag, "INPUT") || stringEquals(tag, "LABEL") || stringEquals(tag, "A") {
+                        return
                     }
                 }
+                self.toggleGroup(header)
             }
         }
 
@@ -1009,32 +1009,43 @@ private class TableInstance: @unchecked Sendable {
             collapsedGroups.append(groupId)
         }
 
-        // Update visibility of child rows
+        // Animate child rows
         let childRows = table.querySelectorAll(".table-group-child[data-group-id='\(groupId)']")
         for child in childRows {
             if isCollapsed {
+                // Expand: show row first, then animate in via rAF
                 child.style.display(.tableRow)
+                window.requestAnimationFrame {
+                    child.classList.remove("table-row-collapsed")
+                }
             } else {
-                child.style.display(.none)
+                // Collapse: add collapsed class, then hide after animation
+                child.classList.add("table-row-collapsed")
+                window.setTimeout(250) {
+                    child.style.display(.none)
+                }
             }
         }
 
-        // Update toggle icon visibility
-        let expandedIcon = header.querySelector(".group-expanded")
-        let collapsedIcon = header.querySelector(".group-collapsed")
-
-        if isCollapsed {
-            // Now expanded
-            expandedIcon?.style.display(.inlineBlock)
-            collapsedIcon?.style.display(.none)
-        } else {
-            // Now collapsed
-            expandedIcon?.style.display(.none)
-            collapsedIcon?.style.display(.inlineBlock)
+        // Animate chevron morph
+        if let animateEl = header.querySelector(".animated-up-down-chevron animate") {
+            let from = animateEl.getAttribute("from") ?? ""
+            let to = animateEl.getAttribute("to") ?? ""
+            animateEl.beginElement()
+            window.setTimeout(210) {
+                if let polygon = animateEl.parentElement {
+                    polygon.setAttribute("points", to)
+                    polygon.innerHTML = stringConcat(
+                        "<animate attributeName=\"points\" from=\"", to,
+                        "\" to=\"", from,
+                        "\" dur=\"200ms\" fill=\"freeze\" begin=\"indefinite\"></animate>"
+                    )
+                }
+            }
         }
 
         // Dispatch group toggle event
-        let event = CustomEvent(type: "table-group-toggle", detail: "\(groupId):\(isCollapsed ? "expanded" : "collapsed")")
+        let event = CustomEvent(type: "table-group-toggle", detail: stringConcat(groupId, ":", isCollapsed ? "expanded" : "collapsed"))
         table.dispatchEvent(event)
     }
 
@@ -1125,13 +1136,33 @@ private class TableInstance: @unchecked Sendable {
 
         // Get tbody and its rows
         guard let tbodyEl = table.querySelector("tbody") else { return }
-        var rows = Array(tbodyEl.querySelectorAll("tr"))
-        guard rows.count > 1 else { return }
+        let allRows = Array(tbodyEl.querySelectorAll("tr"))
+        guard allRows.count > 1 else { return }
 
-        // Sort rows — numeric when both values parse as numbers, string otherwise
-        rows.sort { a, b in
-            let cellsA = Array(a.querySelectorAll("td, th"))
-            let cellsB = Array(b.querySelectorAll("td, th"))
+        // Build row groups: each group is a top-level row followed by its children.
+        // A row is a "child" if it has a group-child class (table-group-child,
+        // batch-group-child, or lemma-history-sub-row). Top-level rows are everything else.
+        var groups: [(header: Element, children: [Element])] = []
+        for row in allRows {
+            let classList = row.getAttribute("class") ?? ""
+            let isChild = stringContains(classList, "group-child")
+                || stringContains(classList, "sub-row")
+            if isChild {
+                // Attach to the last group
+                if !groups.isEmpty {
+                    groups[groups.count - 1].children.append(row)
+                }
+            } else {
+                groups.append((header: row, children: []))
+            }
+        }
+
+        guard groups.count > 1 else { return }
+
+        // Sort groups by the header row's cell value
+        groups.sort { a, b in
+            let cellsA = Array(a.header.querySelectorAll("td, th"))
+            let cellsB = Array(b.header.querySelectorAll("td, th"))
             let textA = columnIndex < cellsA.count ? (cellsA[columnIndex].textContent ?? "") : ""
             let textB = columnIndex < cellsB.count ? (cellsB[columnIndex].textContent ?? "") : ""
 
@@ -1144,39 +1175,54 @@ private class TableInstance: @unchecked Sendable {
             return isAscending ? cmp < 0 : cmp > 0
         }
 
-        // Reorder DOM nodes (appendChild moves existing nodes)
-        for row in rows {
-            tbodyEl.appendChild(row)
+        // Reorder DOM: header then its children, per group
+        for group in groups {
+            tbodyEl.appendChild(group.header)
+            for child in group.children {
+                tbodyEl.appendChild(child)
+            }
         }
 
-        // Update sort indicators on all sort buttons
-        let downSvg = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"12\" height=\"12\" viewBox=\"0 0 20 20\" fill=\"currentColor\"><path d=\"M10 15 2 5h16z\"/></svg>"
+        // Animate sort indicator chevrons — show only on active column
+        let chevronCollapsed = "2.5,4.75 10,12.25 17.5,4.75 19,6.25 10,15.25 1,6.25"
+        let chevronExpanded = "2.5,15.25 10,7.75 17.5,15.25 19,13.75 10,4.75 1,13.75"
         for btn in sortButtons {
             guard let btnColumnId = btn.getAttribute("data-column-id") else { continue }
             let isActive = stringEquals(btnColumnId, columnId)
 
-            // Get or create the sort icon span
-            let icon: Element
-            if let existing = btn.querySelector(".table-sort-icon") {
-                icon = existing
-            } else {
-                icon = document.createElement("span")
-                icon.className = "table-sort-icon"
-                icon.setAttribute("aria-hidden", "true")
-                btn.appendChild(icon)
-            }
+            let icon = btn.querySelector(".table-sort-icon")
+            guard let icon = icon else { continue }
 
             if isActive {
-                let svgPath = isAscending ? "m10 5 8 10H2z" : "M10 15 2 5h16z"
-                icon.innerHTML = stringConcat(
-                    "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"12\" height=\"12\" viewBox=\"0 0 20 20\" fill=\"currentColor\"><path d=\"",
-                    svgPath,
-                    "\"/></svg>"
-                )
+                // Show and animate the chevron morph for the active sort column
+                icon.style.display(.inlineFlex)
                 icon.style.setProperty("color", "currentColor")
+                if let animateEl = icon.querySelector(".animated-up-down-chevron animate") {
+                    let from = animateEl.getAttribute("from") ?? ""
+                    let to = animateEl.getAttribute("to") ?? ""
+                    animateEl.beginElement()
+                    window.setTimeout(210) {
+                        if let polygon = animateEl.parentElement {
+                            polygon.setAttribute("points", to)
+                            polygon.innerHTML = stringConcat(
+                                "<animate attributeName=\"points\" from=\"", to,
+                                "\" to=\"", from,
+                                "\" dur=\"200ms\" fill=\"freeze\" begin=\"indefinite\"></animate>"
+                            )
+                        }
+                    }
+                }
             } else {
-                icon.innerHTML = downSvg
-                icon.style.setProperty("color", "var(--color-subtle)")
+                // Hide inactive columns and reset to collapsed (down-pointing)
+                icon.style.display(.none)
+                if let polygon = icon.querySelector(".animated-up-down-chevron polygon") {
+                    polygon.setAttribute("points", chevronCollapsed)
+                    polygon.innerHTML = stringConcat(
+                        "<animate attributeName=\"points\" from=\"", chevronCollapsed,
+                        "\" to=\"", chevronExpanded,
+                        "\" dur=\"200ms\" fill=\"freeze\" begin=\"indefinite\"></animate>"
+                    )
+                }
             }
         }
 
