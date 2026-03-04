@@ -110,7 +110,6 @@ public struct AccordionView: HTMLProtocol {
 		userSelect(.none)
 		position(.relative)
 		zIndex(1)
-		backgroundColor(backgroundColorNeutral)
 
 		if separation == .minimal {
 			minHeight(minSizeInteractivePointer)
@@ -491,10 +490,14 @@ private class AccordionInstance: @unchecked Sendable {
 }
 
 public class AccordionHydration: @unchecked Sendable {
+	/// The active instance, set automatically on init. Accessible from any module that imports WebComponents.
+	public static nonisolated(unsafe) var current: AccordionHydration?
+
 	private var instances: [AccordionInstance] = []
 
 	public init() {
 		hydrateAllAccordions()
+		AccordionHydration.current = self
 	}
 
 	private func hydrateAllAccordions() {
@@ -504,6 +507,130 @@ public class AccordionHydration: @unchecked Sendable {
 			let instance = AccordionInstance(accordion: accordion)
 			instances.append(instance)
 		}
+	}
+
+	/// Hydrates a dynamically created accordion element (e.g. from AccordionFactory).
+	public func hydrate(_ element: Element) {
+		let instance = AccordionInstance(accordion: element)
+		instances.append(instance)
+	}
+}
+
+/// WASI factory for creating AccordionView DOM elements dynamically.
+/// Produces the same structure as the server-rendered AccordionView.
+public enum AccordionFactory {
+	/// Creates an AccordionView DOM element matching the server-rendered structure.
+	///
+	/// - Parameters:
+	///   - id: Unique ID for the accordion (used on the `<details>` element)
+	///   - open: Whether the accordion starts expanded
+	///   - separation: Visual separation style ("none", "minimal", "divider", "outline")
+	///   - title: Text content for the accordion title
+	///   - headingTag: HTML tag for the heading (e.g. "h3", "h5"). Default "h3"
+	///   - content: Closure that returns the content element to place inside `.accordion-content`
+	/// - Returns: The root `.accordion-view` div element (call AccordionHydration.hydrate to bind animations)
+	public static func createElement(
+		id: String,
+		open: Bool = false,
+		separation: String = "outline",
+		title: String,
+		headingTag: String = "h3",
+		content: () -> Element
+	) -> Element {
+		let isOutline = stringEquals(separation, "outline")
+		let isMinimal = stringEquals(separation, "minimal")
+		let isDivider = stringEquals(separation, "divider")
+
+		// Root: .accordion-view wrapper
+		let root = document.createElement("div")
+		root.setAttribute("class", "accordion-view")
+		root.setAttribute(data("separation"), separation)
+		var rootStyle = "display:block"
+		if isOutline {
+			rootStyle = stringConcat(rootStyle, ";border:1px solid var(--border-color-subtle);border-radius:var(--border-radius-base);padding:4px")
+		}
+		root.setAttribute(.style, rootStyle)
+
+		// Details element
+		let details = document.createElement("details")
+		details.setAttribute("class", "accordion-details")
+		details.setAttribute("id", id)
+		details.setAttribute(.style, "overflow:hidden")
+		if open {
+			details.setAttribute("open", "")
+		}
+
+		// Summary
+		let summary = document.createElement("summary")
+		summary.setAttribute("class", "accordion-summary")
+		var summaryStyle = "display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;user-select:none;position:relative;z-index:1"
+		if isMinimal {
+			summaryStyle = stringConcat(summaryStyle, ";min-height:var(--min-size-interactive-pointer);padding:4px 0")
+		} else {
+			summaryStyle = stringConcat(summaryStyle, ";padding:12px 16px")
+		}
+		if isOutline {
+			summaryStyle = stringConcat(summaryStyle, ";border-radius:var(--border-radius-base)")
+		}
+		summary.setAttribute(.style, summaryStyle)
+
+		// Header wrapper
+		let headerWrapper = document.createElement("div")
+		headerWrapper.setAttribute("class", "accordion-header-wrapper")
+		headerWrapper.setAttribute(.style, "display:flex;flex-direction:row;align-items:center;gap:8px;flex:1;min-width:0")
+
+		// Title heading
+		let heading = document.createElement(headingTag)
+		heading.setAttribute("class", "accordion-title")
+		heading.setAttribute(.style, "font-family:var(--typography-font-sans);font-size:16px;font-weight:600;line-height:22px;color:var(--color-base);margin:0;word-wrap:break-word")
+		heading.textContent = title
+		headerWrapper.appendChild(heading)
+		summary.appendChild(headerWrapper)
+
+		// Expand icon span + animated chevron
+		let expandIconSpan = document.createElement("span")
+		expandIconSpan.setAttribute("class", "accordion-expand-icon")
+		expandIconSpan.setAttribute(.style, "display:inline-flex;align-items:center;justify-content:center;color:var(--color-subtle)")
+		let chevron = AnimatedRightDownChevronFactory.createElement(id: stringConcat("accordion-", id), expanded: open)
+		expandIconSpan.appendChild(chevron)
+		summary.appendChild(expandIconSpan)
+
+		details.appendChild(summary)
+
+		// Content wrapper
+		let contentDiv = document.createElement("div")
+		contentDiv.setAttribute("class", "accordion-content")
+		var contentStyle = "font-family:var(--typography-font-sans);font-size:16px;line-height:22px;color:var(--color-base)"
+		if isMinimal {
+			contentStyle = stringConcat(contentStyle, ";padding:12px 0")
+		} else {
+			contentStyle = stringConcat(contentStyle, ";padding:16px")
+		}
+		contentDiv.setAttribute(.style, contentStyle)
+		contentDiv.appendChild(content())
+		details.appendChild(contentDiv)
+
+		root.appendChild(details)
+
+		// Divider HR if needed
+		if isDivider {
+			let hr = document.createElement("hr")
+			hr.setAttribute("class", "accordion-divider")
+			hr.setAttribute("aria-hidden", "true")
+			hr.setAttribute(.style, "height:1px;background:var(--border-color-subtle);margin:0;border:none")
+			root.appendChild(hr)
+		}
+
+		// Scoped style for marker suppression and focus states
+		let style = document.createElement("style")
+		style.textContent = stringConcat(
+			"#", id, " summary::marker,#", id, " summary::-webkit-details-marker{display:none!important}",
+			"#", id, " summary:focus{outline:none!important}",
+			"#", id, " summary:focus-visible{outline:2px solid var(--border-color-blue-focus)!important;outline-offset:1px!important}"
+		)
+		root.appendChild(style)
+
+		return root
 	}
 }
 

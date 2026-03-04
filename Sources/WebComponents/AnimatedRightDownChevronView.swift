@@ -79,3 +79,43 @@ public struct AnimatedRightDownChevronView: HTMLProtocol {
 }
 
 #endif
+
+#if os(WASI)
+
+import WebAPIs
+import EmbeddedSwiftUtilities
+
+/// WASI factory for creating AnimatedRightDownChevronView DOM elements dynamically.
+public enum AnimatedRightDownChevronFactory {
+	/// The SVG innerHTML for the down-pointing chevron polygon (20×20 viewBox).
+	/// CSS-rotated -90deg for collapsed (right-pointing), 0deg for expanded (down-pointing).
+	private static let chevronSVGContent = "<polygon points=\"2.5,4.75 10,12.25 17.5,4.75 19,6.25 10,15.25 1,6.25\" fill=\"currentColor\"/>"
+
+	/// Creates an animated chevron SVG element matching the server-rendered AnimatedRightDownChevronView.
+	/// - Parameters:
+	///   - id: Base ID (element gets id="\(id)-chevron")
+	///   - expanded: Initial state (false = right-pointing >, true = down-pointing v)
+	/// - Returns: A wrapper element containing the SVG (use innerHTML injection since createElementNS is complex in WASI)
+	public static func createElement(id: String, expanded: Bool = false) -> Element {
+		let wrapper = document.createElement("span")
+		let rotation = expanded ? "rotate(0deg)" : "rotate(-90deg)"
+		let expandedStr = expanded ? "true" : "false"
+		wrapper.innerHTML = stringConcat(
+			"<svg class=\"animated-chevron\" id=\"", id, "-chevron\"",
+			" width=\"20\" height=\"20\" viewBox=\"0 0 20 20\"",
+			" xmlns=\"http://www.w3.org/2000/svg\"",
+			" data-expanded=\"", expandedStr, "\"",
+			" fill=\"currentColor\"",
+			" style=\"transition:transform 200ms ease;transform:", rotation, ";transform-origin:50% 50%\">",
+			chevronSVGContent,
+			"</svg>"
+		)
+		// Return the SVG element itself (unwrap from span)
+		if let svg = wrapper.firstElementChild {
+			return svg
+		}
+		return wrapper
+	}
+}
+
+#endif
