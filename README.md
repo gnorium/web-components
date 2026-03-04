@@ -1,6 +1,6 @@
 # WebComponents, as used in [gnorium.com](https://gnorium.com)
 
-Reusable UI components following [Wikimedia Codex](https://doc.wikimedia.org/codex/) design system specification, built with Swift for server-side rendering.
+Reusable UI components following design system specification, built with Swift for server-side rendering.
 
 ## Overview
 
