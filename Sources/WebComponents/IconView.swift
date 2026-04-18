@@ -8,8 +8,8 @@ import DesignTokens
 import WebTypes
 
 /// A graphical representation of an idea. Can be used inside other components.
-public struct IconView: HTMLProtocol {
-	let icon: [HTMLProtocol]
+public struct IconView: HTMLContent {
+	let icon: [AnyHTMLContent]
 	let iconLabel: String?
 	let size: IconSize
 	let iconColor: CSSColor?
@@ -21,14 +21,14 @@ public struct IconView: HTMLProtocol {
 		case xSmall = "x-small"
 	}
 
-	public init(
-		icon: [HTMLProtocol],
+	public init<T: HTMLContent>(
+		icon: [T],
 		iconLabel: String? = nil,
 		size: IconSize = .medium,
 		iconColor: CSSColor? = nil,
 		class: String = ""
 	) {
-		self.icon = icon
+		self.icon = icon.map { AnyHTMLContent($0) }
 		self.iconLabel = iconLabel
 		self.size = size
 		self.iconColor = iconColor
@@ -36,14 +36,14 @@ public struct IconView: HTMLProtocol {
 	}
 
 	/// Convenience init for icon components
-	public init(
-		@HTMLBuilder icon: () -> [HTMLProtocol],
+	public init<T: HTMLContent>(
+		@HTMLBuilder icon: () -> [T],
 		iconLabel: String? = nil,
 		size: IconSize = .medium,
 		iconColor: CSSColor? = nil,
 		class: String = ""
 	) {
-		self.icon = icon()
+		self.icon = icon().map { AnyHTMLContent($0) }
 		self.iconLabel = iconLabel
 		self.size = size
 		self.iconColor = iconColor
@@ -51,15 +51,15 @@ public struct IconView: HTMLProtocol {
 	}
 
 	/// Convenience init for icon components with size parameter passed to icon builder
-	public init(
-		@HTMLBuilder icon: (_ size: Length) -> [HTMLProtocol],
+	public init<T: HTMLContent>(
+		@HTMLBuilder icon: (_ size: Length) -> [T],
 		iconLabel: String? = nil,
 		size: IconSize = .medium,
 		iconColor: CSSColor? = nil,
 		class: String = ""
 	) {
 		let actualSize = Self.sizeToLength(size)
-		self.icon = icon(actualSize)
+		self.icon = icon(actualSize).map { AnyHTMLContent($0) }
 		self.iconLabel = iconLabel
 		self.size = size
 		self.iconColor = iconColor
@@ -67,7 +67,7 @@ public struct IconView: HTMLProtocol {
 	}
 
 	private static func sizeToLength(_ size: IconSize) -> Length {
-		// Return concrete pixel values for SVGProtocol attributes (SVGProtocol doesn't support CSSProtocol variables)
+		// Return concrete pixel values for SVGContent attributes (SVGContent doesn't support CSSContent variables)
 		switch size {
 		case .medium:
 			return px(20)  // fontSizeMedium16 (16px) + 4px
@@ -79,7 +79,7 @@ public struct IconView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func iconViewCSS(_ size: IconSize, _ iconColor: CSSColor?) -> [CSSProtocol] {
+	private func iconViewCSS(_ size: IconSize, _ iconColor: CSSColor?) -> [AnyCSSContent] {
 		display(.flex)
         alignItems(.center)
         justifyContent(.center)

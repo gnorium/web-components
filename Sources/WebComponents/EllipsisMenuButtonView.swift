@@ -6,7 +6,7 @@ import HTMLBuilder
 import WebTypes
 
 /// A button that toggles an ellipsis popover menu.
-public struct EllipsisMenuButtonView: HTMLProtocol {
+public struct EllipsisMenuButtonView: HTMLContent {
 	let `class`: String
 
 	public init(class: String = "") {

@@ -6,11 +6,11 @@ import Foundation
 import DesignTokens
 import WebTypes
 
-public struct SearchBarView: HTMLProtocol {
+public struct SearchBarView: HTMLContent {
 	let inSidebar: Bool
 	let openDialog: Bool
 	let `class`: String
-	let style: [CSSProtocol]
+	let style: [AnyCSSContent]
 	let placeholder: String
 	let ariaLabel: String
 	let searchField: String
@@ -26,7 +26,7 @@ public struct SearchBarView: HTMLProtocol {
 		searchField: String = "q",
 		searchEndpoint: String = "/api/search",
 		resultUrlBase: String = "/results",
-		@CSSBuilder style: () -> [CSSProtocol] = { [] }
+		@CSSBuilder style: () -> [AnyCSSContent] = { [] }
 	) {
 		self.inSidebar = inSidebar
 		self.openDialog = openDialog
@@ -39,7 +39,7 @@ public struct SearchBarView: HTMLProtocol {
 		self.style = style()
 	}
 	
-	public func style(@CSSBuilder _ content: () -> [CSSProtocol]) -> SearchBarView {
+	public func style(@CSSBuilder _ content: () -> [AnyCSSContent]) -> SearchBarView {
 		return SearchBarView(
 			inSidebar: self.inSidebar,
 			openDialog: self.openDialog,
@@ -74,7 +74,7 @@ public struct SearchBarView: HTMLProtocol {
 				color(colorBase)
 				fontFamily(typographyFontSans)
 				borderRadius(borderRadiusBase)
-				padding(0, calc(rem(1) + px(32)), 0, rem(1)) // Corrected interpolation
+				padding(px(0), calc(rem(1) + px(32)), px(0), rem(1))
 				width(perc(100))
 				maxWidth(perc(100))
 				height(px(48))
@@ -121,7 +121,7 @@ public struct SearchBarView: HTMLProtocol {
 				position(.absolute)
 				insetInlineEnd(0)
 				top(perc(50))
-				transform(translateY("-\(perc(50))"))
+				transform(translateY(perc(-50)))
 				background(.transparent)
 				border(.none)
 				color(colorBase)
@@ -136,12 +136,12 @@ public struct SearchBarView: HTMLProtocol {
 				transition(.all, s(0.2), .easeInOut)
 				
 				pseudoClass(.hover) {
-					transform(translateY("-\(perc(50))"), scale(1.02))
+					transform(translateY(perc(-50)), scale(1.02))
 					backgroundColor(.transparent).important()
 				}
 				
 				pseudoClass(.active) {
-					transform(translateY("-\(perc(50))"), scale(0.95))
+					transform(translateY(perc(-50)), scale(0.95))
 					outline(.none)
 				}
 				
@@ -302,8 +302,8 @@ public class SearchBarHydration: @unchecked Sendable {
 	}
 
 	private func onInput() {
-		if let timerId = debounceTimer {
-			window.clearTimeout(timerId)
+		if let timerID = debounceTimer {
+			window.clearTimeout(timerID)
 		}
 		debounceTimer = window.setTimeout(Constants.debounceMs) { [self] in
 			self.fetchResults()
@@ -362,7 +362,7 @@ public class SearchBarHydration: @unchecked Sendable {
 
 	private func fetchResults() {
 		guard let input else { return }
-		let query = input.value
+		let query = (input as? HTMLInputElement)?.value ?? ""
 		guard !query.isEmpty else {
 			results = []
 			isOpen = false
@@ -382,14 +382,14 @@ public class SearchBarHydration: @unchecked Sendable {
 				return
 			}
 
-			// Parse JSONProtocol response manually
+			// Parse JSONRepresentable response manually
 			if let parsed = self.parseSearchResponse(json) {
 				self.results = parsed
 				self.isOpen = !parsed.isEmpty
 				self.activeIndex = -1
 				self.render()
 			} else {
-				console.error("SearchBar: Failed to parse JSONProtocol")
+				console.error("SearchBar: Failed to parse JSONRepresentable")
 				self.results = []
 				self.isOpen = false
 				self.render()
@@ -495,7 +495,7 @@ struct SearchBarSuggestedLemma {
 }
 
 extension SearchBarHydration {
-	// Simple JSONProtocol parser for search API response
+	// Simple JSONRepresentable parser for search API response
 	// Expected format: {"exact": [...], "partial": [...]} 
 	private func parseSearchResponse(_ json: CallbackString) -> [SearchBarSuggestedLemma]? {
 		// Convert CallbackString to Swift String safely

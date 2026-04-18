@@ -1,17 +1,20 @@
 #if !os(WASI)
 
+#if !os(WASI)
 import Foundation
+
+#endif
 import HTMLBuilder
 import CSSBuilder
 import DesignTokens
 import WebTypes
 
 /// InfoChip — a non-interactive indicator that provides information and/or conveys a status.
-public struct InfoChipView: HTMLProtocol {
+public struct InfoChipView: HTMLContent {
 	let chipColor: InfoChipColor
 	let weight: Weight
 	let icon: String?
-	let content: [HTMLProtocol]
+	let content: [AnyHTMLContent]
 	let `class`: String
 
 	/// Apple HIG color for the chip
@@ -41,7 +44,7 @@ public struct InfoChipView: HTMLProtocol {
 		weight: Weight = .subtle,
 		icon: String? = nil,
 		class: String = "",
-		@HTMLBuilder content: () -> [HTMLProtocol]
+		@HTMLBuilder content: () -> [AnyHTMLContent]
 	) {
 		self.chipColor = chipColor
 		self.weight = weight
@@ -56,7 +59,7 @@ public struct InfoChipView: HTMLProtocol {
 		weight: Weight = .subtle,
 		icon: String? = nil,
 		class: String = "",
-		@HTMLBuilder content: () -> [HTMLProtocol]
+		@HTMLBuilder content: () -> [AnyHTMLContent]
 	) {
 		self.chipColor = color
 		self.weight = weight
@@ -71,7 +74,7 @@ public struct InfoChipView: HTMLProtocol {
 		weight: Weight = .subtle,
 		icon: String? = nil,
 		class: String = "",
-		@HTMLBuilder content: () -> [HTMLProtocol]
+		@HTMLBuilder content: () -> [AnyHTMLContent]
 	) {
 		self.chipColor = status
 		self.weight = weight
@@ -81,7 +84,7 @@ public struct InfoChipView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func infoChipViewCSS(_ chipColor: InfoChipColor, _ weight: Weight) -> [CSSProtocol] {
+	private func infoChipViewCSS(_ chipColor: InfoChipColor, _ weight: Weight) -> [AnyCSSContent] {
 		display(.inlineFlex)
 		alignItems(.center)
 		gap(spacing4)
@@ -192,7 +195,7 @@ public struct InfoChipView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func infoChipIconCSS() -> [CSSProtocol] {
+	private func infoChipIconCSS() -> [AnyCSSContent] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -204,7 +207,7 @@ public struct InfoChipView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func infoChipTextCSS() -> [CSSProtocol] {
+	private func infoChipTextCSS() -> [AnyCSSContent] {
 		flex(1)
 		minWidth(0)
 		textOverflow(.ellipsis)

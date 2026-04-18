@@ -1,13 +1,14 @@
 #if !os(WASI)
 
-import CSSBuilder
-import DesignTokens
+import Foundation
 import HTMLBuilder
 import WebTypes
+import CSSBuilder
+import DesignTokens
 
 /// Generic form view component for creating and editing records.
 /// Auto-generates form fields based on configuration.
-public struct FormView: HTMLProtocol {
+public struct FormView: HTMLContent {
 	/// Form field configuration
 	public struct Field: Sendable {
 		public let name: String
@@ -169,7 +170,7 @@ public struct FormView: HTMLProtocol {
 	}
 	
 	@HTMLBuilder
-	private func renderField(_ field: Field) -> HTMLProtocol {
+	private func renderField(_ field: Field) -> [AnyHTMLContent] {
 		if field.type == .hidden {
 			input()
 				.type(.hidden)
@@ -239,10 +240,10 @@ public struct FormView: HTMLProtocol {
 	}
 	
 	@HTMLBuilder
-	private func fieldInput(_ field: Field) -> HTMLProtocol {
+	private func fieldInput(_ field: Field) -> [AnyHTMLContent] {
 		switch field.type {
 		case .textarea:
-			textarea { field.value }
+			textarea(field.value)
 				.name(field.name)
 				.id(field.name)
 				.required(field.required)
@@ -342,7 +343,7 @@ public struct FormView: HTMLProtocol {
 	}
 	
 	@CSSBuilder
-	private func inputStyle() -> [CSSProtocol] {
+	private func inputStyle() -> [AnyCSSContent] {
 		width(perc(100))
 		padding(spacing12, spacing16)
 		fontFamily(typographyFontSans)

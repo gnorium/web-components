@@ -1,12 +1,13 @@
 #if !os(WASI)
 
-import HTMLBuilder
-import SVGBuilder
 import CSSBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
+import SVGBuilder
 import WebTypes
 
-public struct MoreContrastIconView: HTMLProtocol {
+public struct MoreContrastIconView: HTMLContent {
 	let width: Length
 	let height: Length
 	let `class`: String
@@ -21,7 +22,7 @@ public struct MoreContrastIconView: HTMLProtocol {
 		self.class = `class`
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func toNode() -> DOMNode {
 		svg {
 			// Outer circle
 			circle()
@@ -47,7 +48,6 @@ public struct MoreContrastIconView: HTMLProtocol {
 		.viewBox(0, 0, 24, 24)
 		.xmlns("http://www.w3.org/2000/svg")
 		.ariaHidden(true)
-		.render(indent: indent)
 	}
 }
 

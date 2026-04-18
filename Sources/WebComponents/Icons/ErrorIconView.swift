@@ -1,12 +1,13 @@
 #if !os(WASI)
 
-import HTMLBuilder
-import SVGBuilder
 import CSSBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
+import SVGBuilder
 import WebTypes
 
-public struct ErrorIconView: HTMLProtocol {
+public struct ErrorIconView: HTMLContent {
 	let width: Length
 	let height: Length
 	let `class`: String
@@ -21,7 +22,7 @@ public struct ErrorIconView: HTMLProtocol {
 		self.class = `class`
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func toNode() -> DOMNode {
 		svg {
 			path()
 			.d(M(13.728, 1), H(6.272), L(1, 6.272), v(7.456), L(6.272, 19), h(7.456), L(19, 13.728), V(6.272), Z(), M(11, 15), H(9), v(-2), h(2), Z(), m(0, -4), H(9), V(5), h(2), Z())
@@ -32,7 +33,6 @@ public struct ErrorIconView: HTMLProtocol {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
-		.render(indent: indent)
 	}
 }
 

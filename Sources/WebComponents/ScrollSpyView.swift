@@ -34,8 +34,8 @@ public class ScrollSpyHydration: @unchecked Sendable {
 
 		for link in links {
 			let href = link.getAttribute(.href) ?? ""
-			let sectionId = stringReplace(href, "#", "")
-			guard let section = document.getElementById(sectionId),
+			let sectionID = stringReplace(href, "#", "")
+			guard let section = document.getElementById(sectionID),
 			      let rect = section.getBoundingClientRect() else { continue }
 			if rect.top <= 0 {
 				activeHref = href

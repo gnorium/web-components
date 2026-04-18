@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct AlertView: HTMLProtocol {
+public struct AlertView: HTMLContent {
 	let alertColor: AlertColor
 	let inline: Bool
 	let customIcon: String?
@@ -15,7 +15,7 @@ public struct AlertView: HTMLProtocol {
 	let dismissButtonLabel: String
 	let autoDismiss: AutoDismiss
 	let clearQueryParam: String?
-	let content: [HTMLProtocol]
+	let content: [AnyHTMLContent]
 	let `class`: String
 
 	/// Apple HIG color for the alert
@@ -52,7 +52,7 @@ public struct AlertView: HTMLProtocol {
 		autoDismiss: AutoDismiss = .disabled,
 		clearQueryParam: String? = nil,
 		class: String = "",
-		@HTMLBuilder content: () -> [HTMLProtocol]
+		@HTMLBuilder content: () -> [AnyHTMLContent]
 	) {
 		self.alertColor = type
 		self.inline = inline
@@ -76,7 +76,7 @@ public struct AlertView: HTMLProtocol {
 		autoDismiss: AutoDismiss = .disabled,
 		clearQueryParam: String? = nil,
 		class: String = "",
-		@HTMLBuilder content: () -> [HTMLProtocol]
+		@HTMLBuilder content: () -> [AnyHTMLContent]
 	) {
 		self.alertColor = color
 		self.inline = inline
@@ -91,7 +91,7 @@ public struct AlertView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func alertViewCSS(_ alertColor: AlertColor, _ inline: Bool) -> [CSSProtocol] {
+	private func alertViewCSS(_ alertColor: AlertColor, _ inline: Bool) -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing8)
@@ -124,7 +124,7 @@ public struct AlertView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func alertIconCSS(_ alertColor: AlertColor) -> [CSSProtocol] {
+	private func alertIconCSS(_ alertColor: AlertColor) -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		minWidth(sizeIconMedium)
@@ -146,7 +146,7 @@ public struct AlertView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func alertContentCSS() -> [CSSProtocol] {
+	private func alertContentCSS() -> [AnyCSSContent] {
 		display(.flex)
 		flexDirection(.column)
 		flexGrow(1)
@@ -159,7 +159,7 @@ public struct AlertView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func alertFadeInCSS() -> [CSSProtocol] {
+	private func alertFadeInCSS() -> [AnyCSSContent] {
 		animation("alert-fade-in", transitionDurationBase, transitionTimingFunctionSystem)
 	}
 
@@ -518,7 +518,7 @@ public enum AlertAPI {
 		if allowUserDismiss {
 			let dismissBtn = document.createElement(.button)
 			dismissBtn.className = "alert-dismiss"
-			// Use proper SVGProtocol close icon
+			// Use proper SVGContent close icon
 			dismissBtn.innerHTML = "<svg width=\"20\" height=\"20\" viewBox=\"0 0 20 20\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\"><path d=\"M4.34 2.93l12.73 12.73-1.41 1.41L2.93 4.35Z\"/><path d=\"M17.07 4.34L4.34 17.07l-1.41-1.41L15.66 2.93Z\"/></svg>"
 			let buttonType: HTMLButton.`Type` = .button
 			dismissBtn.setAttribute(.type, buttonType)

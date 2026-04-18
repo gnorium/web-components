@@ -1,12 +1,13 @@
 #if !os(WASI)
 
-import HTMLBuilder
-import SVGBuilder
 import CSSBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
+import SVGBuilder
 import WebTypes
 
-public struct DownloadIconView: HTMLProtocol {
+public struct DownloadIconView: HTMLContent {
 	let width: Length
 	let height: Length
 	let `class`: String
@@ -21,7 +22,7 @@ public struct DownloadIconView: HTMLProtocol {
 		self.class = `class`
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func toNode() -> DOMNode {
 		svg {
 			path()
 				.d(M(17, 12), v(5), H(3), v(-5), H(1), v(5), a(2, 2, 0, false, false, 2, 2), h(14), a(2, 2, 0, false, false, 2, -2), v(-5), Z())
@@ -35,7 +36,6 @@ public struct DownloadIconView: HTMLProtocol {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
-		.render(indent: indent)
 	}
 }
 

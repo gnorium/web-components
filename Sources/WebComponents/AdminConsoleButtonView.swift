@@ -6,7 +6,7 @@ import DesignTokens
 import WebTypes
 
 /// Specialized button for the Admin Console link
-public struct AdminConsoleButtonView: HTMLProtocol {
+public struct AdminConsoleButtonView: HTMLContent {
     let url: String
     let size: ButtonView.ButtonSize
 

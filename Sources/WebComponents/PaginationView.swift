@@ -1,15 +1,16 @@
 #if !os(WASI)
 
+#if !os(WASI)
 import Foundation
+
+#endif
 import HTMLBuilder
 import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct PaginationView: HTMLProtocol {
-    public let previousLabel: String?
+public struct PaginationView: HTMLContent {
     public let previousUrl: String?
-    public let nextLabel: String?
     public let nextUrl: String?
     public let pageNumbers: [PageNumber]?
     let `class`: String
@@ -27,127 +28,167 @@ public struct PaginationView: HTMLProtocol {
     }
 
     public init(
-        previousLabel: String? = nil,
         previousUrl: String? = nil,
-        nextLabel: String? = nil,
         nextUrl: String? = nil,
         pageNumbers: [PageNumber]? = nil,
         class: String = ""
     ) {
-        self.previousLabel = previousLabel
         self.previousUrl = previousUrl
-        self.nextLabel = nextLabel
         self.nextUrl = nextUrl
         self.pageNumbers = pageNumbers
         self.`class` = `class`
     }
 
     public func render(indent: Int = 0) -> String {
-        section {
+        let currentPageIndex = pageNumbers?.firstIndex(where: { $0.isActive }) ?? 0
+        let currentPage = currentPageIndex + 1
+        let totalPages = pageNumbers?.count ?? 0
+        
+        // Calculate dynamic width based on total pages digit count
+        let totalPagesStr = "\(totalPages)"
+        let digitCount = totalPagesStr.utf8.count
+        let inputWidth = calc(ch(digitCount) + px(20)) // Buffer for padding and numeric controls
+
+        return section {
             // Previous link
-            if let prevLabel = previousLabel, let prevHref = previousUrl {
-                div {
-                    a { prevLabel }
+            div {
+                if let prevHref = previousUrl {
+                    a {
+                        PreviousIconView(width: px(16), height: px(16))
+                    }
                     .class("pagination-prev")
                     .href(prevHref)
+                    .ariaLabel("Previous page")
                     .style {
-                        fontFamily(typographyFontSans)
-                        fontSize(fontSizeMedium16)
+                        display(.flex)
+                        alignItems(.center)
+                        justifyContent(.center)
+                        width(px(44))
+                        height(px(44))
                         color(colorBase)
                         textDecoration(.none)
-                        fontWeight(fontWeightNormal)
+                        borderRadius(borderRadiusBase)
                         pseudoClass(.focus) {
                             outline(borderWidthBase, .solid, colorBlueFocus).important()
                             outlineOffset(px(2)).important()
                         }
                     }
                 }
-            } else {
-                div {}
+            }
+            .style {
+                flex(1)
+                display(.flex)
+                justifyContent(.flexStart)
             }
 
-            // Page numbers (center)
-            if let pages = pageNumbers, !pages.isEmpty {
-                div {
-                    for page in pages {
-                        if page.isActive {
-                            span { page.label }
-							.class("page-label-active")
-                            .style {
-                                fontFamily(typographyFontSans)
-                                fontSize(fontSizeMedium16)
-                                color(colorBlue)
-                                fontWeight(fontWeightNormal)
-                                padding(spacing8, spacing12)
-                                borderRadius(borderRadiusPill)
-                                display(.inlineBlock)
+            // Page Indicator (center)
+            div {
+                // Current Page Input (Editable)
+                input()
+                .type(.number)
+                .value("\(currentPage)")
+                .class("page-box")
+                .min(1)
+                .max(totalPages)
+                .style {
+                    fontFamily(typographyFontSans)
+                    fontSize(fontSizeMedium16)
+                    color(colorBase)
+                    fontWeight(fontWeightNormal)
+                    padding(spacing0, spacing8)
+                    border(borderWidthBase, .solid, borderColorSubtle)
+                    borderRadius(borderRadiusBase)
+                    backgroundColor(backgroundColorBase)
+                    width(inputWidth)
+                    height(px(44))
+                    textAlign(.center)
+                    display(.inlineBlock)
+                    transition(.borderColor, s(0.2), .ease)
+                    outline(.none)
+                    boxSizing(.borderBox)
 
-                                pseudoClass(.hover) {
-                                    color(colorBlueHover).important()
-                                }
-                                pseudoClass(.active) {
-                                    color(colorBlueActive).important()
-                                }
-                                pseudoClass(.focus) {
-                                    color(colorBlueFocus).important()
-                                    outline(borderWidthBase, .solid, colorBlueFocus).important()
-                                    outlineOffset(px(2)).important()
-                                }
-                            }
-                        } else {
-                            a { page.label }
-							.class("page-label")
-                            .href(page.url)
-                            .style {
-                                fontFamily(typographyFontSans)
-                                fontSize(fontSizeMedium16)
-                                color(colorBase)
-                                textDecoration(.none)
-                                fontWeight(fontWeightNormal)
-                                padding(spacing8, spacing12)
-                                display(.inlineBlock)
-                                pseudoClass(.focus) {
-                                    color(colorBlueFocus).important()
-                                    outline(borderWidthBase, .solid, colorBlueFocus).important()
-                                    outlineOffset(px(2)).important()
-                                    borderRadius(borderRadiusPill).important()
-                                }
-                            }
-                        }
+                    // Hide arrows/spinners across all browsers
+                    webkitAppearance(.none)
+                    mozAppearance(.textfield)
+                    margin(0)
+                    
+                    // Handle webkit spinners
+                    pseudoElement(.webkitOuterSpinButton) {
+                        webkitAppearance(.none)
+                        margin(0)
+                    }
+                    pseudoElement(.webkitInnerSpinButton) {
+                        webkitAppearance(.none)
+                        margin(0)
+                    }
+                    
+                    pseudoClass(.focus) {
+                        borderColor(colorBlue).important()
+                        boxShadow(0, 0, 0, px(2), colorBlueFocus)
+                    }
+                    
+                    pseudoClass(.hover) {
+                        borderColor(borderColorBase)
                     }
                 }
+
+                // "of [Total]"
+                span { "of \(totalPages)" }
                 .style {
-                    display(.flex)
-                    flexDirection(.row)
-                    gap(spacing4)
-                    alignItems(.center)
-                    justifyContent(.center)
+                    fontFamily(typographyFontSans)
+                    fontSize(fontSizeMedium16)
+                    color(colorSubtle)
+                    fontWeight(fontWeightNormal)
+                    whiteSpace(.nowrap)
                 }
+
+                // Hidden links for hydration mapping (crucial for non-standard paths)
+                div {
+                    for pageNumber in pageNumbers ?? [] {
+                        a { pageNumber.label }
+                        .href(pageNumber.url)
+                        .data("page", pageNumber.label)
+                    }
+                }
+                .style { display(.none) }
+            }
+            .style {
+                display(.flex)
+                flexDirection(.row)
+                alignItems(.center)
+                justifyContent(.center)
+                gap(spacing12)
             }
 
             // Next link
-            if let nextLabel = nextLabel, let nextUrl = nextUrl {
-                div {
-                    a { nextLabel }
+            div {
+                if let nextHref = nextUrl {
+                    a {
+                        NextIconView(width: px(16), height: px(16))
+                    }
                     .class("pagination-next")
-                    .href(nextUrl)
+                    .href(nextHref)
+                    .ariaLabel("Next page")
                     .style {
-                        fontFamily(typographyFontSans)
-                        fontSize(fontSizeMedium16)
+                        display(.flex)
+                        alignItems(.center)
+                        justifyContent(.center)
+                        width(px(44))
+                        height(px(44))
                         color(colorBase)
                         textDecoration(.none)
-                        fontWeight(fontWeightNormal)
+                        borderRadius(borderRadiusBase)
                         pseudoClass(.focus) {
                             outline(borderWidthBase, .solid, colorBlueFocus).important()
                             outlineOffset(px(2)).important()
                         }
                     }
                 }
-                .style {
-                    textAlign(.end)
-                }
-            } else {
-                div {}
+            }
+            .style {
+                flex(1)
+                display(.flex)
+                justifyContent(.flexEnd)
             }
         }
         .class(`class`.isEmpty ? "pagination-view" : "pagination-view \(`class`)")
@@ -156,10 +197,106 @@ public struct PaginationView: HTMLProtocol {
             flexDirection(.row)
             justifyContent(.spaceBetween)
             alignItems(.center)
-            gap(spacing32)
+            paddingBlock(spacing24)
+            maxWidth(px(600))
+            margin(0, .auto)
+            gap(spacing16)
         }
         .render(indent: indent)
     }
+}
+
+#endif
+
+#if os(WASI)
+
+import WebAPIs
+import EmbeddedSwiftUtilities
+
+public class PaginationHydration: @unchecked Sendable {
+	public init() {
+		hydrate()
+	}
+
+	private func hydrate() {
+		let paginationViews = document.querySelectorAll(".pagination-view")
+		for view in paginationViews {
+			let inputEl = view.querySelector(".page-box")
+			// Change on Enter key
+			_ = inputEl?.addEventListener(.keydown) { [self] event in
+				if stringEquals(event.key, "Enter") {
+					event.preventDefault()
+					guard let input = (inputEl as? HTMLInputElement) else { return }
+					self.navigateToPage(input.value, in: view)
+				}
+			}
+
+			// Also handle 'change' event for broader compatibility
+			_ = inputEl?.addEventListener(.change) { [self] _ in
+				guard let input = (inputEl as? HTMLInputElement) else { return }
+				self.navigateToPage(input.value, in: view)
+			}
+		}
+	}
+
+	private func navigateToPage(_ page: String, in view: Element) {
+		guard !stringIsEmpty(page) else { return }
+		
+		// 1. Try to find a link with matching data-page (robust path-independent matching)
+		let allLinks = view.querySelectorAll("a[data-page]")
+		for link in allLinks {
+			if let dataPage = link.getAttribute("data-page") {
+				if stringEquals(dataPage, page) {
+					if let href = link.getAttribute("href") {
+						window.location.href = href
+						return
+					}
+				}
+			}
+		}
+		
+		let currentUrl = window.location.href
+		
+		// 2. If current URL already has page=, just replace it
+		if stringContains(currentUrl, "page=") {
+			window.location.href = self.replacePageNumber(in: currentUrl, with: page)
+			return
+		}
+		
+		// 3. Try to find any other page link to copy the URL pattern (for tables)
+		let patternLink = view.querySelector("a[href*='page=']")
+		if let firstLink = patternLink {
+			let pattern = firstLink.getAttribute("href") ?? ""
+			if stringContains(pattern, "page=") {
+				window.location.href = self.replacePageNumber(in: pattern, with: page)
+				return
+			}
+		}
+		
+		// 4. Final Fallback: Append page= to current URL
+		if stringContains(currentUrl, "?") {
+			window.location.href = stringConcat(currentUrl, "&page=", page)
+		} else {
+			window.location.href = stringConcat(currentUrl, "?page=", page)
+		}
+	}
+
+	private func replacePageNumber(in url: String, with newPage: String) -> String {
+		let key = "page="
+		guard let idx = stringIndexOf(url, key) else { return url }
+		
+		let prefix = stringSubstring(url, from: 0, to: idx + 5)
+		let suffix = stringSubstring(url, from: idx + 5)
+		
+		let bytes = Array(suffix.utf8)
+		var i = 0
+		while i < bytes.count && bytes[i] >= 48 && bytes[i] <= 57 { // ASCII '0'-'9'
+			i += 1
+		}
+		let remaining = stringSubstring(suffix, from: i)
+		
+		return stringConcat(prefix, newPage, remaining)
+	}
 }
 
 #endif

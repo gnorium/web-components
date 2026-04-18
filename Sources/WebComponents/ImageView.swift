@@ -7,7 +7,7 @@ import DesignTokens
 import WebTypes
 
 /// A visual element used to display content in various formats and states.
-public struct ImageView: HTMLProtocol {
+public struct ImageView: HTMLContent {
 	let src: String
 	let alt: String
 	let aspectRatio: AspectRatio?
@@ -67,7 +67,7 @@ public struct ImageView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func imageViewCSS(_ imagePosition: Position?, _ aspectRatio: AspectRatio?) -> [CSSProtocol] {
+	private func imageViewCSS(_ imagePosition: Position?, _ aspectRatio: AspectRatio?) -> [AnyCSSContent] {
 		display(.block)
 		position(.relative)
 		overflow(.hidden)
@@ -100,7 +100,7 @@ public struct ImageView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func imageImageCSS(_ objectFitVal: CSSObjectFit, _ objectPositionVal: CSSObjectPosition, _ hasAspectRatio: Bool) -> [CSSProtocol] {
+	private func imageImageCSS(_ objectFitVal: CSSObjectFit, _ objectPositionVal: CSSObjectPosition, _ hasAspectRatio: Bool) -> [AnyCSSContent] {
 		display(.block)
 		width(perc(100))
 		height(perc(100))
@@ -116,7 +116,7 @@ public struct ImageView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func imagePlaceholderCSS() -> [CSSProtocol] {
+	private func imagePlaceholderCSS() -> [AnyCSSContent] {
 		position(.absolute)
 		insetBlockStart(0)
 		insetInlineStart(0)

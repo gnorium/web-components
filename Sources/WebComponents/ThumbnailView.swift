@@ -1,13 +1,16 @@
 #if !os(WASI)
 
+#if !os(WASI)
 import Foundation
+
+#endif
 import HTMLBuilder
 import CSSBuilder
 import DesignTokens
 import WebTypes
 
 /// A visual element used to display a small preview of an image.
-public struct ThumbnailView: HTMLProtocol {
+public struct ThumbnailView: HTMLContent {
 	let src: String?
 	let alt: String
 	let placeholderIcon: String?
@@ -26,7 +29,7 @@ public struct ThumbnailView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func thumbnailViewCSS() -> [CSSProtocol] {
+	private func thumbnailViewCSS() -> [AnyCSSContent] {
 		display(.block)
 		position(.relative)
 		minWidth(size256)
@@ -40,7 +43,7 @@ public struct ThumbnailView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func thumbnailImageCSS() -> [CSSProtocol] {
+	private func thumbnailImageCSS() -> [AnyCSSContent] {
 		display(.block)
 		width(perc(100))
 		height(perc(100))
@@ -49,7 +52,7 @@ public struct ThumbnailView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func thumbnailPlaceholderCSS() -> [CSSProtocol] {
+	private func thumbnailPlaceholderCSS() -> [AnyCSSContent] {
 		position(.absolute)
 		insetBlockStart(0)
 		insetInlineStart(0)
@@ -62,7 +65,7 @@ public struct ThumbnailView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func thumbnailPlaceholderIconCSS() -> [CSSProtocol] {
+	private func thumbnailPlaceholderIconCSS() -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)

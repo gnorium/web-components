@@ -1,12 +1,13 @@
 #if !os(WASI)
 
-import HTMLBuilder
-import SVGBuilder
 import CSSBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
+import SVGBuilder
 import WebTypes
 
-public struct ClearIconView: HTMLProtocol {
+public struct ClearIconView: HTMLContent {
 	let width: Length
 	let height: Length
 	let `class`: String
@@ -21,7 +22,7 @@ public struct ClearIconView: HTMLProtocol {
 		self.class = `class`
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func toNode() -> DOMNode {
 		svg {
 			path()
 				.d(M(10, 0), a(10, 10, 0, true, false, 10, 10), A(10, 10, 0, false, false, 10, 0), m(5.66, 14.24), l(-1.41, 1.41), L(10, 11.41), l(-4.24, 4.25), l(-1.42, -1.42), L(8.59, 10), L(4.34, 5.76), l(1.42, -1.42), L(10, 8.59), l(4.24, -4.24), l(1.41, 1.41), L(11.41, 10), Z())
@@ -32,7 +33,6 @@ public struct ClearIconView: HTMLProtocol {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
-		.render(indent: indent)
 	}
 }
 

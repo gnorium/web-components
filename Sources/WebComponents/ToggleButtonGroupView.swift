@@ -1,13 +1,16 @@
 #if !os(WASI)
 
+#if !os(WASI)
 import Foundation
+
+#endif
 import HTMLBuilder
 import CSSBuilder
 import DesignTokens
 import WebTypes
 
 /// A ToggleButtonGroup is a group of ToggleButtons that allows single or multi-select.
-public struct ToggleButtonGroupView: HTMLProtocol {
+public struct ToggleButtonGroupView: HTMLContent {
 	let buttons: [ButtonItem]
 	let selectedValues: [String]
 	let isMultiSelect: Bool
@@ -43,7 +46,7 @@ public struct ToggleButtonGroupView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func toggleButtonGroupViewCSS() -> [CSSProtocol] {
+	private func toggleButtonGroupViewCSS() -> [AnyCSSContent] {
 		display(.inlineFlex)
 		flexWrap(.wrap)
 		gap(0)
@@ -137,14 +140,14 @@ public class ToggleButtonGroupHydration: @unchecked Sendable {
 						// Single select - deselect all other buttons first
 						for otherButton in buttons {
 							if otherButton.id != button.id {
-								otherButton.setAttribute("aria-pressed", "false")
+								otherButton.setAttribute(.ariaPressed, false)
 								_ = otherButton.classList.remove("toggle-button-selected")
 							}
 						}
 					}
 
 					// Toggle this button
-					button.setAttribute("aria-pressed", newPressed ? "true" : "false")
+					button.setAttribute(.ariaPressed, newPressed ? true : false)
 					if newPressed {
 						_ = button.classList.add("toggle-button-selected")
 					} else {

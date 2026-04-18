@@ -1,12 +1,13 @@
 #if !os(WASI)
 
-import HTMLBuilder
-import SVGBuilder
 import CSSBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
+import SVGBuilder
 import WebTypes
 
-public struct DownTriangleIconView: HTMLProtocol {
+public struct DownTriangleIconView: HTMLContent {
 	let width: Length
 	let height: Length
 	let `class`: String
@@ -21,7 +22,7 @@ public struct DownTriangleIconView: HTMLProtocol {
 		self.class = `class`
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func toNode() -> DOMNode {
 		svg {
 			path()
 			.d(M(10, 15), L(2, 5), h(16), Z())
@@ -32,7 +33,6 @@ public struct DownTriangleIconView: HTMLProtocol {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
-		.render(indent: indent)
 	}
 }
 

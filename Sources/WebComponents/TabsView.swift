@@ -1,13 +1,16 @@
 #if !os(WASI)
 
+#if !os(WASI)
 import Foundation
+
+#endif
 import HTMLBuilder
 import CSSBuilder
 import DesignTokens
 import WebTypes
 
 /// Tabs consist of two or more tab items for navigating between different sections of content.
-public struct TabsView: HTMLProtocol {
+public struct TabsView: HTMLContent {
 	let tabs: [TabView]
 	let activeTab: String?
 	let framed: Bool
@@ -37,7 +40,7 @@ public struct TabsView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func tabsViewCSS(_ framed: Bool) -> [CSSProtocol] {
+	private func tabsViewCSS(_ framed: Bool) -> [AnyCSSContent] {
 		display(.block)
 		fontFamily(typographyFontSans)
 
@@ -48,7 +51,7 @@ public struct TabsView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func tabsHeaderCSS(_ variant: Variant) -> [CSSProtocol] {
+	private func tabsHeaderCSS(_ variant: Variant) -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		position(.relative)
@@ -63,7 +66,7 @@ public struct TabsView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func tabsListCSS(_ variant: Variant) -> [CSSProtocol] {
+	private func tabsListCSS(_ variant: Variant) -> [AnyCSSContent] {
 		display(.flex)
 		margin(0)
 		padding(0)
@@ -86,7 +89,7 @@ public struct TabsView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func tabButtonCSS(_ isActive: Bool, _ disabled: Bool, _ framed: Bool, _ variant: Variant) -> [CSSProtocol] {
+	private func tabButtonCSS(_ isActive: Bool, _ disabled: Bool, _ framed: Bool, _ variant: Variant) -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -156,14 +159,14 @@ public struct TabsView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func tabPanelCSS(_ framed: Bool) -> [CSSProtocol] {
+	private func tabPanelCSS(_ framed: Bool) -> [AnyCSSContent] {
 		if framed {
 			padding(spacing16)
 		}
 	}
 
 	@CSSBuilder
-	private func tabsScrollButtonCSS() -> [CSSProtocol] {
+	private func tabsScrollButtonCSS() -> [AnyCSSContent] {
 		display(.none)
 		alignItems(.center)
 		justifyContent(.center)
@@ -379,17 +382,17 @@ private class TabsInstance: @unchecked Sendable {
 		}
 
 		for panel in tabPanels {
-			if let panelId = panel.getAttribute(.id) {
-				let shouldShow = stringEquals(panelId, "panel-\(tabName)")
+			if let panelID = panel.getAttribute(.id) {
+				let shouldShow = stringEquals(panelID, "panel-\(tabName)")
 				if shouldShow {
-					panel.removeAttribute("hidden")
+					panel.removeAttribute(.hidden)
 				} else {
-					panel.setAttribute("hidden", "")
+					panel.setAttribute(.hidden, "")
 				}
 			}
 		}
 
-		tabsElement.setAttribute("data-active-tab", tabName)
+		tabsElement.setAttribute(data("active-tab"), tabName)
 
 		let event = CustomEvent(type: "update:active", detail: tabName)
 		tabsElement.dispatchEvent(event)
@@ -437,19 +440,19 @@ private class TabsInstance: @unchecked Sendable {
 			next.style.setProperty("display", "flex")
 
 			if canScrollLeft {
-				prev.removeAttribute("disabled")
+				prev.removeAttribute(.disabled)
 			} else {
-				prev.setAttribute("disabled", "")
+				prev.setAttribute(.disabled, "")
 			}
 
 			if canScrollRight {
-				next.removeAttribute("disabled")
+				next.removeAttribute(.disabled)
 			} else {
-				next.setAttribute("disabled", "")
+				next.setAttribute(.disabled, "")
 			}
 		} else {
-			prev.style.setProperty("display", "none")
-			next.style.setProperty("display", "none")
+			prev.style.display(.none)
+			next.style.display(.none)
 		}
 	}
 }

@@ -1,12 +1,13 @@
 #if !os(WASI)
 
-import HTMLBuilder
-import SVGBuilder
 import CSSBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
+import SVGBuilder
 import WebTypes
 
-public struct EditIconView: HTMLProtocol {
+public struct EditIconView: HTMLContent {
 	let width: Length
 	let height: Length
 	let `class`: String
@@ -21,7 +22,7 @@ public struct EditIconView: HTMLProtocol {
 		self.class = `class`
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func toNode() -> DOMNode {
 		svg {
 			path()
 				.d(m(16.77, 8), l(1.94, -2), a(1, 1, 0, false, false, 0, -1.41), l(-3.34, -3.3), a(1, 1, 0, false, false, -1.41, 0), L(12, 3.23), Z(), M(1, 14.25), V(19), h(4.75), l(9.96, -9.96), l(-4.75, -4.75), Z())
@@ -32,7 +33,6 @@ public struct EditIconView: HTMLProtocol {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
-		.render(indent: indent)
 	}
 }
 

@@ -1,26 +1,27 @@
 #if !os(WASI)
 
-import HTMLBuilder
-import SVGBuilder
 import CSSBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
+import SVGBuilder
 import WebTypes
 
-public struct SidebarToggleIconView: HTMLProtocol {
+public struct SidebarToggleIconView: HTMLContent {
 	let `class`: String
 
 	public init(class: String = "") {
 		self.class = `class`
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func toNode() -> DOMNode {
 		span {
 			span {}
 			.class("sidebar-toggle-icon-line sidebar-toggle-icon-line-middle")
 			.style {
 				sidebarToggleIconLineCSS()
 				top(perc(50))
-				transform(translateY("-\(perc(50))"))
+				transform(translateY(perc(-50)))
 			}
 		}
 		.class(`class`.isEmpty ? "sidebar-toggle-icon-view" : "sidebar-toggle-icon-view \(`class`)")
@@ -43,11 +44,10 @@ public struct SidebarToggleIconView: HTMLProtocol {
 				bottom(0)
 			}
 		}
-		.render(indent: indent)
 	}
 	
 	@CSSBuilder
-	private func sidebarToggleIconLineCSS() -> [CSSProtocol] {
+	private func sidebarToggleIconLineCSS() -> [AnyCSSContent] {
 		position(.absolute)
 		width(perc(100))
 		height(px(2))

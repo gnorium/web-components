@@ -5,7 +5,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct CloseButtonView: HTMLProtocol {
+public struct CloseButtonView: HTMLContent {
 	let ariaLabel: String
 	let `class`: String
 

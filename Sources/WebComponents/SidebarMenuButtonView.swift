@@ -6,7 +6,7 @@ import HTMLBuilder
 import WebTypes
 
 /// A sidebar menu button that toggles the slide-from-left sidebar panel.
-public struct SidebarMenuButtonView: HTMLProtocol {
+public struct SidebarMenuButtonView: HTMLContent {
 	let `class`: String
 
 	public init(class: String = "") {

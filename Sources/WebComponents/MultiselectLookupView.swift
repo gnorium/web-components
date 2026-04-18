@@ -1,13 +1,16 @@
 #if !os(WASI)
 
+#if !os(WASI)
 import Foundation
+
+#endif
 import HTMLBuilder
 import CSSBuilder
 import DesignTokens
 import WebTypes
 
 /// A predictive input that allows users to make multiple selections from a menu of options.
-public struct MultiselectLookupView: HTMLProtocol {
+public struct MultiselectLookupView: HTMLContent {
 	public struct Chip: Sendable {
 		let id: String
 		let value: String
@@ -76,7 +79,7 @@ public struct MultiselectLookupView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func multiselectLookupViewCSS() -> [CSSProtocol] {
+	private func multiselectLookupViewCSS() -> [AnyCSSContent] {
 		position(.relative)
 		display(.inlineBlock)
 		minWidth(px(256))
@@ -183,7 +186,7 @@ private class MultiselectLookupInstance: @unchecked Sendable {
 		_ = input.addEventListener(.input) { [self] _ in
 			self.openMenu()
 			// Dispatch input event for filtering
-			let event = CustomEvent(type: "multiselect-lookup-input", detail: input.value)
+			let event = CustomEvent(type: "multiselect-lookup-input", detail: (input as? HTMLInputElement)?.value ?? "")
 			self.lookup.dispatchEvent(event)
 		}
 
@@ -228,17 +231,17 @@ private class MultiselectLookupInstance: @unchecked Sendable {
 		// Clear input unless keepInputOnSelection is true
 		if !keepInputOnSelection {
 			if let input = input {
-				input.value = ""
+				(input as? HTMLInputElement)?.value = ""
 			}
 			closeMenu()
 		}
 	}
 
 	private func removeChip(_ chip: Element) {
-		guard let chipId = chip.getAttribute("data-chip-id") else { return }
+		guard let chipID = chip.getAttribute("data-chip-id") else { return }
 
 		// Emit chip remove event
-		let event = CustomEvent(type: "multiselect-lookup-chip-remove", detail: chipId)
+		let event = CustomEvent(type: "multiselect-lookup-chip-remove", detail: chipID)
 		lookup.dispatchEvent(event)
 	}
 
@@ -256,7 +259,7 @@ private class MultiselectLookupInstance: @unchecked Sendable {
 				}
 			} else if stringEquals(key, "Backspace") {
 				// If input is empty, focus last chip
-				if let input = input, stringEquals(input.value, "") {
+				if let input = input, stringEquals((input as? HTMLInputElement)?.value ?? "", "") {
 					if !chips.isEmpty {
 						chips[chips.count - 1].focus()
 					}

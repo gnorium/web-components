@@ -7,7 +7,7 @@ import DesignTokens
 import WebTypes
 
 /// A SearchInput allows users to enter and submit a search query.
-public struct SearchInputView: HTMLProtocol {
+public struct SearchInputView: HTMLContent {
 	let modelValue: String
 	let useButton: Bool
 	let hideIcon: Bool
@@ -46,7 +46,7 @@ public struct SearchInputView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func searchInputViewCSS(_ useButton: Bool) -> [CSSProtocol] {
+	private func searchInputViewCSS(_ useButton: Bool) -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		position(.relative)
@@ -58,7 +58,7 @@ public struct SearchInputView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func searchInputWrapperCSS(_ useButton: Bool) -> [CSSProtocol] {
+	private func searchInputWrapperCSS(_ useButton: Bool) -> [AnyCSSContent] {
 		position(.relative)
 		display(.flex)
 		alignItems(.center)
@@ -71,7 +71,7 @@ public struct SearchInputView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func searchInputCSS(_ hasStartIcon: Bool, _ clearable: Bool, _ status: ValidationStatus) -> [CSSProtocol] {
+	private func searchInputCSS(_ hasStartIcon: Bool, _ clearable: Bool, _ status: ValidationStatus) -> [AnyCSSContent] {
 		width(perc(100))
 		minHeight(minSizeInteractivePointer)
 		padding(spacing12, spacing16)
@@ -126,12 +126,12 @@ public struct SearchInputView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func searchInputStartIconCSS() -> [CSSProtocol] {
+	private func searchInputStartIconCSS() -> [AnyCSSContent] {
 		position(.absolute)
 		insetInlineStart(spacing4)
 		marginInlineStart(spacing8)
 		top(perc(50))
-		transform("translateY(-50%)")
+		transform(translateY(perc(-50)))
 		width(sizeIconMedium)
 		height(sizeIconMedium)
 		padding(spacing8)
@@ -143,11 +143,11 @@ public struct SearchInputView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func searchInputViewDetailsIconCSS() -> [CSSProtocol] {
+	private func searchInputViewDetailsIconCSS() -> [AnyCSSContent] {
 		position(.absolute)
 		right(spacing40)  // Position to the left of clear button
 		top(perc(50))
-		transform(translateY("-\(perc(50))"))
+		transform(translateY(perc(-50)))
 		width(sizeIconMedium)
 		height(sizeIconMedium)
 		padding(spacing8)
@@ -159,12 +159,12 @@ public struct SearchInputView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func searchInputClearButtonCSS() -> [CSSProtocol] {
+	private func searchInputClearButtonCSS() -> [AnyCSSContent] {
 		position(.absolute)
 		insetInlineEnd(spacing4)
 		marginInlineEnd(spacing8)
 		top(perc(50))
-		transform(translateY("-\(perc(50))"))
+		transform(translateY(perc(-50)))
 		width(sizeIconMedium)
 		height(sizeIconMedium)
 		padding(spacing8)
@@ -214,7 +214,7 @@ public struct SearchInputView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func searchInputButtonCSS(_ disabled: Bool) -> [CSSProtocol] {
+	private func searchInputButtonCSS(_ disabled: Bool) -> [AnyCSSContent] {
 		minHeight(minSizeInteractivePointer)
 		padding(spacing12, spacing16)
 		fontFamily(typographyFontSans)
@@ -385,16 +385,16 @@ private class SearchInputInstance: @unchecked Sendable {
 
 	private func handleInput() {
 		guard let input = inputElement else { return }
-		let value = input.value
+		let value = (input as? HTMLInputElement)?.value ?? ""
 
 		// Update clear button disabled state and styling
 		if let clear = clearButton {
 			if value.isEmpty {
-				clear.disabled = true
+				(clear as? HTMLButtonElement)?.disabled = true
 				clear.style.opacity(opacityIconBaseDisabled)
 				clear.style.cursor(.notAllowed)
 			} else {
-				clear.disabled = false
+				(clear as? HTMLButtonElement)?.disabled = false
 				clear.style.opacity(opacityIconBaseSelected)
 				clear.style.cursor(cursorBaseHover)
 			}
@@ -431,14 +431,14 @@ private class SearchInputInstance: @unchecked Sendable {
 
 	private func clearInput() {
 		guard let input = inputElement else { return }
-		input.value = ""
+		(input as? HTMLInputElement)?.value = ""
 		input.focus()
 		handleInput()
 	}
 
 	private func handleSubmit() {
 		guard let input = inputElement else { return }
-		let value = input.value
+		let value = (input as? HTMLInputElement)?.value ?? ""
 
 		let event = CustomEvent(type: "submit-click", detail: value)
 		searchInputElement.dispatchEvent(event)

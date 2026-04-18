@@ -6,11 +6,11 @@ import DesignTokens
 import WebTypes
 
 /// A ToggleButton that displays a Menu with actions when toggled on.
-public struct MenuButtonView: HTMLProtocol {
+public struct MenuButtonView: HTMLContent {
 	public struct MenuItem: Sendable {
 		public let value: String
 		public let label: String
-		public let icon: (any HTMLProtocol)?
+		public let icon: AnyHTMLContent?
 		public let url: String?
 		public let disabled: Bool
 		public let destructive: Bool
@@ -19,7 +19,7 @@ public struct MenuButtonView: HTMLProtocol {
 			value: String,
 			label: String,
 			url: String? = nil,
-			icon: (any HTMLProtocol)? = nil,
+			icon: AnyHTMLContent? = nil,
 			disabled: Bool = false,
 			destructive: Bool = false
 		) {
@@ -33,7 +33,7 @@ public struct MenuButtonView: HTMLProtocol {
 	}
 
 	let buttonLabel: String
-	let buttonIcon: (any HTMLProtocol)?
+	let buttonIcon: AnyHTMLContent?
 	let iconOnly: Bool
 	let menuItems: [MenuItem]
 	let buttonWeight: ButtonView.ButtonWeight
@@ -46,7 +46,7 @@ public struct MenuButtonView: HTMLProtocol {
 	
 	public init(
 		buttonLabel: String,
-		buttonIcon: (any HTMLProtocol)? = nil,
+		buttonIcon: AnyHTMLContent? = nil,
 		iconOnly: Bool = false,
 		menuItems: [MenuItem],
 		buttonWeight: ButtonView.ButtonWeight = .subtle,
@@ -71,7 +71,7 @@ public struct MenuButtonView: HTMLProtocol {
 	}
 
 	public func render(indent: Int = 0) -> String {
-		div {
+		return div {
 			// Toggle Button
 			ToggleButtonView(
 				label: buttonLabel,
@@ -90,15 +90,10 @@ public struct MenuButtonView: HTMLProtocol {
 
 			// Menu
 			div {
-				menuItems.map { item in
-					let itemContent: [HTMLProtocol] = [
-						item.icon.map { icon in span { icon }.class("menu-item-icon").ariaHidden(true).style { menuItemIconCSS() } },
-						span { item.label }.class("menu-item-text").style { menuItemTextCSS() }
-					].compactMap { $0 }
-
+				for item in menuItems {
 					if let url = item.url {
-						return a {
-							itemContent
+						a {
+							renderItemContent(item)
 						}
 						.href(url)
 						.class(item.destructive ? "menu-item menu-item-destructive" : "menu-item")
@@ -112,8 +107,8 @@ public struct MenuButtonView: HTMLProtocol {
 							textDecoration(.none)
 						}
 					} else {
-						return div {
-							itemContent
+						div {
+							renderItemContent(item)
 						}
 						.class(item.destructive ? "menu-item menu-item-destructive" : "menu-item")
 						.data("value", item.value)
@@ -143,13 +138,13 @@ public struct MenuButtonView: HTMLProtocol {
 	}
 
     @CSSBuilder
-	private func menuButtonViewCSS() -> [CSSProtocol] {
+	private func menuButtonViewCSS() -> [AnyCSSContent] {
 		position(.relative)
 		display(.inlineBlock)
 	}
 
 	@CSSBuilder
-	private func menuButtonMenuCSS() -> [CSSProtocol] {
+	private func menuButtonMenuCSS() -> [AnyCSSContent] {
 		position(.absolute)
 		top(perc(100))
 		insetInlineStart(0)
@@ -168,7 +163,7 @@ public struct MenuButtonView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func menuItemCSS(_ item: MenuItem) -> [CSSProtocol] {
+	private func menuItemCSS(_ item: MenuItem) -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing12)
@@ -215,7 +210,7 @@ public struct MenuButtonView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func menuItemIconCSS() -> [CSSProtocol] {
+	private func menuItemIconCSS() -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -225,9 +220,22 @@ public struct MenuButtonView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func menuItemTextCSS() -> [CSSProtocol] {
+	private func menuItemTextCSS() -> [AnyCSSContent] {
 		flex(1)
 	}
+
+    @HTMLBuilder
+		func renderItemContent(_ item: MenuItem) -> [AnyHTMLContent] {
+			if let icon = item.icon {
+				span { icon }
+                .class("menu-item-icon")
+                .ariaHidden(true)
+                .style { menuItemIconCSS() }
+			}
+			span { item.label }
+            .class("menu-item-text")
+            .style { menuItemTextCSS() }
+		}
 }
 
 #endif
@@ -321,7 +329,7 @@ private class MenuButtonInstance: @unchecked Sendable {
 
 	private func openMenu() {
 		menu?.style.display(.block)
-		trigger?.setAttribute("aria-expanded", "true")
+		trigger?.setAttribute(.ariaExpanded, "true")
 		isOpen = true
 
 		// Focus first menu item
@@ -333,7 +341,7 @@ private class MenuButtonInstance: @unchecked Sendable {
 
 	private func closeMenu() {
 		menu?.style.display(.none)
-		trigger?.setAttribute("aria-expanded", "false")
+		trigger?.setAttribute(.ariaExpanded, "false")
 		isOpen = false
 		currentFocusIndex = -1
 		trigger?.focus()

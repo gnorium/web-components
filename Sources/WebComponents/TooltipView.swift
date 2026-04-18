@@ -6,10 +6,10 @@ import DesignTokens
 import WebTypes
 
 /// A brief message that shows up when a user hovers over a specific part of the UI.
-public struct TooltipView: HTMLProtocol {
+public struct TooltipView: HTMLContent {
 	let tooltipText: String
 	let placement: Placement
-	let children: [HTMLProtocol]
+	let children: [AnyHTMLContent]
 	let `class`: String
 
 	public enum Placement: String, Sendable {
@@ -31,7 +31,7 @@ public struct TooltipView: HTMLProtocol {
 		tooltip: String,
 		placement: Placement = .bottom,
 		class: String = "",
-		@HTMLBuilder content: () -> [HTMLProtocol]
+		@HTMLBuilder content: () -> [AnyHTMLContent]
 	) {
 		self.tooltipText = tooltip
 		self.placement = placement
@@ -40,7 +40,7 @@ public struct TooltipView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func tooltipTriggerCSS() -> [CSSProtocol] {
+	private func tooltipTriggerCSS() -> [AnyCSSContent] {
 		position(.relative)
 		display(.inlineFlex)
 		alignItems(.center)
@@ -67,7 +67,7 @@ public struct TooltipView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func tooltipContentCSS(_ placement: Placement) -> [CSSProtocol] {
+	private func tooltipContentCSS(_ placement: Placement) -> [AnyCSSContent] {
 		position(.absolute)
 		padding(spacing8, spacing12)
 		minWidth(px(160))
@@ -124,7 +124,7 @@ public struct TooltipView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func tooltipArrowCSS(_ placement: Placement) -> [CSSProtocol] {
+	private func tooltipArrowCSS(_ placement: Placement) -> [AnyCSSContent] {
 		content("\"\"")
 		position(.absolute)
 		width(0)

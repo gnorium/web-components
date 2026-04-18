@@ -1,12 +1,13 @@
 #if !os(WASI)
 
-import HTMLBuilder
-import SVGBuilder
 import CSSBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
+import SVGBuilder
 import WebTypes
 
-public struct SearchIconView: HTMLProtocol {
+public struct SearchIconView: HTMLContent {
 	let width: Length
 	let height: Length
 
@@ -18,7 +19,7 @@ public struct SearchIconView: HTMLProtocol {
 		self.height = height
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func toNode() -> DOMNode {
 		svg {
 			path()
 			.d(M(11, 3), a(8, 8, 0, true, false, 0, 16), a(8, 8, 0, false, false, 0, -16), Z())
@@ -36,7 +37,6 @@ public struct SearchIconView: HTMLProtocol {
 		.strokeWidth(2)
 		.strokeLinecap(.round)
 		.strokeLinejoin(.round)
-		.render(indent: indent)
 	}
 }
 

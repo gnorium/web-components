@@ -1,6 +1,9 @@
 #if !os(WASI)
 
+#if !os(WASI)
 import Foundation
+
+#endif
 import HTMLBuilder
 import CSSBuilder
 import DesignTokens
@@ -10,7 +13,7 @@ import WebTypes
 ///
 /// Component Integration:
 /// - Integrates LabelView for label and description rendering
-public struct ToggleSwitchView: HTMLProtocol {
+public struct ToggleSwitchView: HTMLContent {
 	let id: String
 	let name: String
 	let inputValue: String
@@ -18,8 +21,8 @@ public struct ToggleSwitchView: HTMLProtocol {
 	let alignSwitch: Bool
 	let hideLabel: Bool
 	let disabled: Bool
-	let labelContent: [HTMLProtocol]
-	let descriptionContent: [HTMLProtocol]
+	let labelContent: [AnyHTMLContent]
+	let descriptionContent: [AnyHTMLContent]
 	let `class`: String
 
 	public init(
@@ -31,8 +34,8 @@ public struct ToggleSwitchView: HTMLProtocol {
 		hideLabel: Bool = false,
 		disabled: Bool = false,
 		class: String = "",
-		@HTMLBuilder label: () -> [HTMLProtocol],
-		@HTMLBuilder description: () -> [HTMLProtocol] = { [] }
+		@HTMLBuilder label: () -> [AnyHTMLContent],
+		@HTMLBuilder description: () -> [AnyHTMLContent] = { [] }
 	) {
 		self.id = id
 		self.name = name
@@ -47,7 +50,7 @@ public struct ToggleSwitchView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func toggleSwitchViewCSS(_ alignSwitch: Bool) -> [CSSProtocol] {
+	private func toggleSwitchViewCSS(_ alignSwitch: Bool) -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		minHeight(minSizeInteractivePointer)
@@ -59,7 +62,7 @@ public struct ToggleSwitchView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func toggleSwitchInputCSS(_ disabled: Bool) -> [CSSProtocol] {
+	private func toggleSwitchInputCSS(_ disabled: Bool) -> [AnyCSSContent] {
 		position(.absolute)
 		width(px(1))
 		height(px(1))
@@ -95,7 +98,7 @@ public struct ToggleSwitchView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func toggleSwitchSwitchCSS(_ disabled: Bool) -> [CSSProtocol] {
+	private func toggleSwitchSwitchCSS(_ disabled: Bool) -> [AnyCSSContent] {
 		position(.relative)
 		display(.inlineBlock)
 		flexShrink(0)
@@ -115,7 +118,7 @@ public struct ToggleSwitchView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func toggleSwitchGripCSS() -> [CSSProtocol] {
+	private func toggleSwitchGripCSS() -> [AnyCSSContent] {
 		position(.absolute)
 		top(perc(50))
 		left(spacingToggleSwitchGripStart)
@@ -129,7 +132,7 @@ public struct ToggleSwitchView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func toggleSwitchLabelWrapperCSS(_ alignSwitch: Bool) -> [CSSProtocol] {
+	private func toggleSwitchLabelWrapperCSS(_ alignSwitch: Bool) -> [AnyCSSContent] {
 		if alignSwitch {
 			flex(1).important()
 		}
@@ -137,14 +140,14 @@ public struct ToggleSwitchView: HTMLProtocol {
 
 	public func render(indent: Int = 0) -> String {
 		let hasDescription = !descriptionContent.isEmpty
-		let descriptionId = hasDescription ? "\(id)-description" : nil
+		let descriptionID = hasDescription ? "\(id)-description" : nil
 
 		// Create a wrapper div to hold LabelView and apply toggle-specific styles
 		let labelWrapper: HTMLDivElement = div {
 			LabelView(
 				visuallyHidden: hideLabel,
-				inputId: id,
-				descriptionId: descriptionId,
+				inputID: id,
+				descriptionID: descriptionID,
 				disabled: disabled
 			) {
 				labelContent
@@ -172,7 +175,7 @@ public struct ToggleSwitchView: HTMLProtocol {
 				.value(inputValue)
 				.checked(checked)
 				.disabled(disabled)
-				.ariaDescribedby(descriptionId)
+				.ariaDescribedby(descriptionID ?? "")
 				.class("toggle-switch-input")
 				.style {
 					toggleSwitchInputCSS(disabled)

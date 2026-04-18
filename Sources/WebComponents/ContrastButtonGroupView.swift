@@ -7,7 +7,7 @@ import WebTypes
 
 /// A button group for selecting contrast level (Standard / Increased).
 /// Renders two option buttons with icons. Hydrated by ContrastButtonGroupHydration.
-public struct ContrastButtonGroupView: HTMLProtocol {
+public struct ContrastButtonGroupView: HTMLContent {
 	let `class`: String
 
 	public init(class: String = "") {
@@ -34,7 +34,7 @@ public struct ContrastButtonGroupView: HTMLProtocol {
 		.render(indent: indent)
 	}
 
-	private func optionButton(value: String, label: String, @HTMLBuilder icon: () -> HTMLProtocol) -> HTMLProtocol {
+	private func optionButton(value: String, label: String, @HTMLBuilder icon: () -> [AnyHTMLContent]) -> HTMLContent {
 		div {
 			span { icon() }
 			.class("option-icon")

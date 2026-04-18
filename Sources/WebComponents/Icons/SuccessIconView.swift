@@ -1,12 +1,13 @@
 #if !os(WASI)
 
-import HTMLBuilder
-import SVGBuilder
 import CSSBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
+import SVGBuilder
 import WebTypes
 
-public struct SuccessIconView: HTMLProtocol {
+public struct SuccessIconView: HTMLContent {
 	let width: Length
 	let height: Length
 	let `class`: String
@@ -21,7 +22,7 @@ public struct SuccessIconView: HTMLProtocol {
 		self.class = `class`
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func toNode() -> DOMNode {
 		svg {
 			path()
 			.d(M(10, 20), a(10, 10, 0, false, true, 0, -20), a(10, 10, 0, true, true, 0, 20), m(-2, -5), l(9, -8.5), L(15.5, 5), L(8, 12), L(4.5, 8.5), L(3, 10), Z())
@@ -32,7 +33,6 @@ public struct SuccessIconView: HTMLProtocol {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
-		.render(indent: indent)
 	}
 }
 

@@ -7,7 +7,7 @@ import DesignTokens
 import WebTypes
 
 /// A structural component used to arrange data in rows and columns.
-public struct TableView: HTMLProtocol {
+public struct TableView: HTMLContent {
 	let captionContent: String
 	let hideCaption: Bool
 	let columns: [Column]
@@ -21,14 +21,14 @@ public struct TableView: HTMLProtocol {
 	let paginate: Bool
 	let paginationPosition: PaginationPosition
 	let paginationSizeDefault: Int
-	let headerContent: [HTMLProtocol]
-	let theadContent: [HTMLProtocol]
-	let tbodyContent: [HTMLProtocol]
-	let tfootContent: [HTMLProtocol]
-	let footerContent: [HTMLProtocol]
-	let emptyStateContent: [HTMLProtocol]
-	let theadStyle: (@Sendable () -> [any CSSProtocol])?
-	let thStyle: (@Sendable (Column.Alignment) -> [any CSSProtocol])?
+	let headerContent: [AnyHTMLContent]
+	let theadContent: [AnyHTMLContent]
+	let tbodyContent: [AnyHTMLContent]
+	let tfootContent: [AnyHTMLContent]
+	let footerContent: [AnyHTMLContent]
+	let emptyStateContent: [AnyHTMLContent]
+	let theadStyle: (@Sendable () -> [AnyCSSContent])?
+	let thStyle: (@Sendable (Column.Alignment) -> [AnyCSSContent])?
 	let `class`: String
 
 	public struct Column: Sendable {
@@ -36,7 +36,7 @@ public struct TableView: HTMLProtocol {
 		let label: String
 		let sortable: Bool
 		let align: Alignment
-		let width: String?
+		let width: LengthPercentage?
 
 		public enum Alignment: Sendable {
 			case start
@@ -59,7 +59,7 @@ public struct TableView: HTMLProtocol {
 			label: String,
 			sortable: Bool = true,
 			align: Alignment = .start,
-			width: String? = nil
+			width: LengthPercentage? = nil
 		) {
 			self.id = id
 			self.label = label
@@ -67,32 +67,42 @@ public struct TableView: HTMLProtocol {
 			self.align = align
 			self.width = width
 		}
+
+		public init(
+			id: String,
+			label: String,
+			sortable: Bool = true,
+			align: Alignment = .start,
+			width: Length
+		) {
+			self.init(id: id, label: label, sortable: sortable, align: align, width: LengthPercentage(width))
+		}
 	}
 
 	public struct Row: Sendable {
 		let id: String?
 		let cells: [String: String]
-		let groupId: String?  // Groups rows together - first row with groupId becomes collapsible header
+		let groupID: String?  // Groups rows together - first row with groupID becomes collapsible header
 		let isGroupHeader: Bool  // True if this row is a group header (rendered with expand/collapse)
 		let url: String?  // When set, row becomes a navigable link
 
 		public init(
 			id: String? = nil,
 			cells: [String: String],
-			groupId: String? = nil,
+			groupID: String? = nil,
 			isGroupHeader: Bool = false,
 			url: String? = nil
 		) {
 			self.id = id
 			self.cells = cells
-			self.groupId = groupId
+			self.groupID = groupID
 			self.isGroupHeader = isGroupHeader
 			self.url = url
 		}
 	}
 
 	public struct Sort: Sendable {
-		let columnId: String
+		let columnID: String
 		let direction: Direction
 
 		public enum Direction: Sendable {
@@ -107,8 +117,8 @@ public struct TableView: HTMLProtocol {
 			}
 		}
 
-		public init(columnId: String, direction: Direction) {
-			self.columnId = columnId
+		public init(columnID: String, direction: Direction) {
+			self.columnID = columnID
 			self.direction = direction
 		}
 	}
@@ -156,15 +166,15 @@ public struct TableView: HTMLProtocol {
 		paginate: Bool = false,
 		paginationPosition: PaginationPosition = .bottom,
 		paginationSizeDefault: Int = 10,
-		theadStyle: (@Sendable () -> [any CSSProtocol])? = nil,
-		thStyle: (@Sendable (Column.Alignment) -> [any CSSProtocol])? = nil,
+		theadStyle: (@Sendable () -> [AnyCSSContent])? = nil,
+		thStyle: (@Sendable (Column.Alignment) -> [AnyCSSContent])? = nil,
 		class: String = "",
-		@HTMLBuilder header: () -> [HTMLProtocol] = { [] },
-		@HTMLBuilder thead: () -> [HTMLProtocol] = { [] },
-		@HTMLBuilder tbody: () -> [HTMLProtocol] = { [] },
-		@HTMLBuilder tfoot: () -> [HTMLProtocol] = { [] },
-		@HTMLBuilder footer: () -> [HTMLProtocol] = { [] },
-		@HTMLBuilder emptyState: () -> [HTMLProtocol] = { [] }
+		@HTMLBuilder header: () -> [AnyHTMLContent] = { [] },
+		@HTMLBuilder thead: () -> [AnyHTMLContent] = { [] },
+		@HTMLBuilder tbody: () -> [AnyHTMLContent] = { [] },
+		@HTMLBuilder tfoot: () -> [AnyHTMLContent] = { [] },
+		@HTMLBuilder footer: () -> [AnyHTMLContent] = { [] },
+		@HTMLBuilder emptyState: () -> [AnyHTMLContent] = { [] }
 	) {
 		self.captionContent = captionContent
 		self.hideCaption = hideCaption
@@ -182,12 +192,12 @@ public struct TableView: HTMLProtocol {
 		self.theadStyle = theadStyle
 		self.thStyle = thStyle
 		self.`class` = `class`
-		self.headerContent = header()
-		self.theadContent = thead()
-		self.tbodyContent = tbody()
-		self.tfootContent = tfoot()
-		self.footerContent = footer()
-		self.emptyStateContent = emptyState()
+		self.headerContent = header().map { AnyHTMLContent($0) }
+		self.theadContent = thead().map { AnyHTMLContent($0) }
+		self.tbodyContent = tbody().map { AnyHTMLContent($0) }
+		self.tfootContent = tfoot().map { AnyHTMLContent($0) }
+		self.footerContent = footer().map { AnyHTMLContent($0) }
+		self.emptyStateContent = emptyState().map { AnyHTMLContent($0) }
 	}
 
 	public func render(indent: Int = 0) -> String {
@@ -314,7 +324,7 @@ public struct TableView: HTMLProtocol {
 													AnimatedUpDownChevronView(
 														id: "table-sort-\(column.id)",
 														expanded: {
-															if let currentSort = sort, currentSort.columnId == column.id {
+															if let currentSort = sort, currentSort.columnID == column.id {
 																return currentSort.direction == .ascending
 															}
 															return false
@@ -327,7 +337,7 @@ public struct TableView: HTMLProtocol {
 												.ariaHidden(true)
 												.style {
 													tableSortIconCSS()
-													if sort?.columnId == column.id {
+													if sort?.columnID == column.id {
 														color(.currentColor)
 													} else {
 														display(.none)
@@ -387,11 +397,12 @@ public struct TableView: HTMLProtocol {
 										tableEmptyStateCSS()
 									}
 								}
+								.class("table-empty-row")
 							} else {
 								for (rowIndex, row) in data.enumerated() {
-									let rowId = row.id ?? String(rowIndex)
-									let isSelected = selectedRows.contains(rowId)
-									let isGroupChild = row.groupId != nil && !row.isGroupHeader
+									let rowID = row.id ?? String(rowIndex)
+									let isSelected = selectedRows.contains(rowID)
+									let isGroupChild = row.groupID != nil && !row.isGroupHeader
 
 									tr {
 										// Row selection (checkbox for multiple, radio for single)
@@ -399,9 +410,9 @@ public struct TableView: HTMLProtocol {
 											td {
 												if mode == .multiple {
 													CheckboxView(
-														id: "row-\(rowId)",
+														id: "row-\(rowID)",
 														name: "row-selection",
-														value: rowId,
+														value: rowID,
 														checked: isSelected,
 														hideLabel: true
 													) {
@@ -409,9 +420,9 @@ public struct TableView: HTMLProtocol {
 													}
 												} else {
 													RadioView(
-														id: "row-\(rowId)",
+														id: "row-\(rowID)",
 														name: "row-selection",
-														value: rowId,
+														value: rowID,
 														checked: isSelected,
 														hideLabel: true
 													) {
@@ -432,7 +443,7 @@ public struct TableView: HTMLProtocol {
 											if useRowHeaders && isFirstCell {
 												th {
 													// Group header gets animated triangle toggle
-													if row.isGroupHeader, let gid = row.groupId {
+													if row.isGroupHeader, let gid = row.groupID {
 														AnimatedUpDownChevronView(
 															id: "table-group-\(gid)",
 															expanded: false
@@ -459,7 +470,7 @@ public struct TableView: HTMLProtocol {
 											} else {
 												td {
 													// Group header first cell gets animated triangle toggle
-													if row.isGroupHeader && isFirstCell, let gid = row.groupId {
+													if row.isGroupHeader && isFirstCell, let gid = row.groupID {
 														AnimatedUpDownChevronView(
 															id: "table-group-\(gid)",
 															expanded: false
@@ -491,8 +502,8 @@ public struct TableView: HTMLProtocol {
 											}
 										}
 									}
-									.data("row-id", rowId)
-									.data("group-id", row.groupId ?? "")
+									.data("row-id", rowID)
+									.data("group-id", row.groupID ?? "")
 									.data("is-group-header", row.isGroupHeader ? "true" : "")
 									.data("url", row.url ?? "")
 									.class(buildRowClass(isSelected: isSelected, isGroupHeader: row.isGroupHeader, isGroupChild: isGroupChild, hasUrl: row.url != nil))
@@ -577,13 +588,20 @@ public struct TableView: HTMLProtocol {
 				}
 			}
 		}
-		.class(`class`.isEmpty ? "table-view" : "table-view \(`class`)")
+		.class(buildTableViewClass(isEmpty: isEmpty))
 		.data("selection-mode", selectionMode?.value ?? "")
 		.data("paginate", paginate ? true : false)
 		.style {
 			tableViewCSS()
 		}
 		.render(indent: indent)
+	}
+
+	private func buildTableViewClass(isEmpty: Bool) -> String {
+		var classes = ["table-view"]
+		if !`class`.isEmpty { classes.append(`class`) }
+		if isEmpty { classes.append("table-view-empty") }
+		return classes.joined(separator: " ")
 	}
 
 	private func buildRowClass(isSelected: Bool, isGroupHeader: Bool, isGroupChild: Bool, hasUrl: Bool = false) -> String {
@@ -596,54 +614,67 @@ public struct TableView: HTMLProtocol {
 	}
 
     @CSSBuilder
-	private func tableViewCSS() -> [CSSProtocol] {
+	private func tableViewCSS() -> [AnyCSSContent] {
 		width(perc(100))
 
 		// Row styles — applied universally (both auto-generated and custom tbody)
-		selector(" tbody tr") {
+		selector("tbody tr") {
 			borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
 		}
 
-		selector(" tbody tr:last-child") {
+		selector("tbody tr:last-child") {
 			borderBlockEnd(.none)
 		}
 
-		selector(" tbody tr:hover") {
+		selector("tbody tr:not(.table-empty-row):hover") {
 			backgroundColor(backgroundColorInteractiveSubtleHover).important()
 		}
 
-		selector(" tbody tr:active") {
+		selector("tbody tr:not(.table-empty-row):active") {
 			backgroundColor(backgroundColorInteractiveSubtleActive).important()
 		}
 
-		selector(" tbody tr[data-url]:not([data-url=''])") {
+		selector("tbody tr[data-url]:not([data-url=''])") {
 			cursor(cursorBaseHover)
 			transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionUser)
 		}
 
-		selector(" .table-row-link-anchor") {
+		// Disable sort button interaction when table is empty
+		selector(".table-view-empty .table-sort-button") {
+			cursor(.default).important()
+		}
+
+		selector(".table-view-empty .table-sort-button:hover") {
+			color(.inherit).important()
+		}
+
+		selector(".table-view-empty .table-sort-button:active") {
+			color(.inherit).important()
+		}
+
+		selector(".table-row-link-anchor") {
 			textDecoration(.none)
 			color(.inherit)
 		}
 
 		// Fixed row height — prevent wrapping, let columns expand and table scroll horizontally
-		selector(" td, th") {
+		selector("td, th") {
 			whiteSpace(.nowrap)
 		}
 
 		// Animated expand/collapse for group child rows — translate underneath
-		selector(" .table-row-animatable") {
+		selector(".table-row-animatable") {
 			transition(.transform, transitionDurationMedium, transitionTimingFunctionSystem)
 		}
 
-		selector(" .table-row-animatable.table-row-collapsed") {
+		selector(".table-row-animatable.table-row-collapsed") {
 			transform(translateY(perc(-100)))
 		}
 
 	}
 
 	@CSSBuilder
-	private func tableHeaderCSS() -> [CSSProtocol] {
+	private func tableHeaderCSS() -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.spaceBetween)
@@ -653,7 +684,7 @@ public struct TableView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func tableHeaderTitleCSS() -> [CSSProtocol] {
+	private func tableHeaderTitleCSS() -> [AnyCSSContent] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeLarge18)
 		fontWeight(fontWeightBold)
@@ -663,14 +694,14 @@ public struct TableView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func tableWrapperCSS() -> [CSSProtocol] {
+	private func tableWrapperCSS() -> [AnyCSSContent] {
 		overflowX(.auto)
 		border(borderWidthBase, .solid, borderColorSubtle)
 		borderRadius(borderRadiusBase)
 	}
 
 	@CSSBuilder
-	private func tableTableCSS(_ showVerticalBorders: Bool) -> [CSSProtocol] {
+	private func tableTableCSS(_ showVerticalBorders: Bool) -> [AnyCSSContent] {
 		width(perc(100))
 		borderCollapse(.collapse)
 		fontFamily(typographyFontSans)
@@ -679,18 +710,18 @@ public struct TableView: HTMLProtocol {
 		color(colorBase)
 
 		if showVerticalBorders {
-			selector(" td, th") {
+			selector("td, th") {
 				borderInlineEnd(borderWidthBase, .solid, borderColorSubtle)
 			}
 
-			selector(" td:last-child, th:last-child") {
+			selector("td:last-child, th:last-child") {
 				borderInlineEnd(.none)
 			}
 		}
 	}
 
 	@CSSBuilder
-	private func tableCaptionCSS(_ hideCaption: Bool) -> [CSSProtocol] {
+	private func tableCaptionCSS(_ hideCaption: Bool) -> [AnyCSSContent] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		fontWeight(fontWeightBold)
@@ -713,13 +744,13 @@ public struct TableView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func tableTheadCSS() -> [CSSProtocol] {
+	private func tableTheadCSS() -> [AnyCSSContent] {
 		backgroundColor(backgroundColorNeutralSubtle)
 		borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
 	}
 
 	@CSSBuilder
-	private func tableThCSS(_ align: Column.Alignment) -> [CSSProtocol] {
+	private func tableThCSS(_ align: Column.Alignment) -> [AnyCSSContent] {
 		padding(spacing12)
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeSmall14)
@@ -741,7 +772,7 @@ public struct TableView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func tableSortButtonCSS() -> [CSSProtocol] {
+	private func tableSortButtonCSS() -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing4)
@@ -776,7 +807,7 @@ public struct TableView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func tableSortIconCSS() -> [CSSProtocol] {
+	private func tableSortIconCSS() -> [AnyCSSContent] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -786,7 +817,7 @@ public struct TableView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func tableTdCSS(_ align: Column.Alignment) -> [CSSProtocol] {
+	private func tableTdCSS(_ align: Column.Alignment) -> [AnyCSSContent] {
 		padding(spacing12)
 
 		switch align {
@@ -803,14 +834,14 @@ public struct TableView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func tableTfootCSS() -> [CSSProtocol] {
+	private func tableTfootCSS() -> [AnyCSSContent] {
 		backgroundColor(backgroundColorNeutralSubtle)
 		borderBlockStart(borderWidthBase, .solid, borderColorSubtle)
 		fontWeight(fontWeightBold)
 	}
 
 	@CSSBuilder
-	private func tableEmptyStateCSS() -> [CSSProtocol] {
+	private func tableEmptyStateCSS() -> [AnyCSSContent] {
 		padding(spacing48)
 		textAlign(.center)
 		color(colorSubtle)
@@ -820,13 +851,13 @@ public struct TableView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func tableFooterCSS() -> [CSSProtocol] {
+	private func tableFooterCSS() -> [AnyCSSContent] {
 		padding(spacing12)
 		marginBlockStart(spacing8)
 	}
 
 	@CSSBuilder
-	private func tablePaginationCSS() -> [CSSProtocol] {
+	private func tablePaginationCSS() -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.spaceBetween)
@@ -837,7 +868,7 @@ public struct TableView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func paginationInfoCSS() -> [CSSProtocol] {
+	private func paginationInfoCSS() -> [AnyCSSContent] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeSmall14)
 		lineHeight(lineHeightSmall22)
@@ -845,7 +876,7 @@ public struct TableView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func paginationControlsCSS() -> [CSSProtocol] {
+	private func paginationControlsCSS() -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing8)
@@ -873,7 +904,7 @@ private class TableInstance: @unchecked Sendable {
     private var paginationLastBtn: Element?
     private var selectedRows: [String] = []
     private var collapsedGroups: [String] = []
-    private var currentSort: (columnId: String, direction: String)?
+    private var currentSort: (columnID: String, direction: String)?
     private var currentPage: Int = 1
     private var selectionMode: String = ""
 
@@ -948,8 +979,8 @@ private class TableInstance: @unchecked Sendable {
         // Sort buttons
         for button in sortButtons {
             _ = button.addEventListener(.click) { [self] _ in
-                guard let columnId = button.getAttribute("data-column-id") else { return }
-                self.toggleSort(columnId: columnId)
+                guard let columnID = button.getAttribute("data-column-id") else { return }
+                self.toggleSort(columnID: columnID)
             }
         }
 
@@ -996,21 +1027,21 @@ private class TableInstance: @unchecked Sendable {
     }
 
     private func toggleGroup(_ header: Element) {
-        guard let groupId = header.getAttribute("data-group-id"), !groupId.isEmpty else { return }
+        guard let groupID = header.getAttribute("data-group-id"), !groupID.isEmpty else { return }
 
         // Check if currently collapsed
-        let isCollapsed = collapsedGroups.contains(where: { stringEquals($0, groupId) })
+        let isCollapsed = collapsedGroups.contains(where: { stringEquals($0, groupID) })
 
         if isCollapsed {
             // Expand: remove from collapsed list
-            collapsedGroups = collapsedGroups.filter { !stringEquals($0, groupId) }
+            collapsedGroups = collapsedGroups.filter { !stringEquals($0, groupID) }
         } else {
             // Collapse: add to collapsed list
-            collapsedGroups.append(groupId)
+            collapsedGroups.append(groupID)
         }
 
         // Animate child rows
-        let childRows = table.querySelectorAll(".table-group-child[data-group-id='\(groupId)']")
+        let childRows = table.querySelectorAll(".table-group-child[data-group-id='\(groupID)']")
         for child in childRows {
             if isCollapsed {
                 // Expand: show row first, then animate in via rAF
@@ -1034,7 +1065,7 @@ private class TableInstance: @unchecked Sendable {
             animateEl.beginElement()
             window.setTimeout(210) {
                 if let polygon = animateEl.parentElement {
-                    polygon.setAttribute("points", to)
+                    polygon.setAttribute(.points, to)
                     polygon.innerHTML = stringConcat(
                         "<animate attributeName=\"points\" from=\"", to,
                         "\" to=\"", from,
@@ -1045,16 +1076,16 @@ private class TableInstance: @unchecked Sendable {
         }
 
         // Dispatch group toggle event
-        let event = CustomEvent(type: "table-group-toggle", detail: stringConcat(groupId, ":", isCollapsed ? "expanded" : "collapsed"))
+        let event = CustomEvent(type: "table-group-toggle", detail: stringConcat(groupID, ":", isCollapsed ? "expanded" : "collapsed"))
         table.dispatchEvent(event)
     }
 
     private func toggleSelectAll() {
         guard let selectAll = selectAllCheckbox else { return }
-        let isChecked = selectAll.checked
+        let isChecked = (selectAll as? HTMLInputElement)?.checked ?? false
 
         for input in rowInputs {
-            input.checked = isChecked
+            (input as? HTMLInputElement)?.checked = isChecked
         }
 
         updateRowSelection()
@@ -1064,20 +1095,20 @@ private class TableInstance: @unchecked Sendable {
         selectedRows = []
 
         for input in rowInputs {
-            if input.checked {
+            if (input as? HTMLInputElement)?.checked == true {
                 if let idStr = input.getAttribute(.id) {
                     if stringContains(idStr, "row-") {
                         // Manual substring to avoid String(decoding:) trigger via stringReplace, but use safe decoding
-                        var rowIdBytes: [UInt8] = []
+                        var rowIDBytes: [UInt8] = []
                         let bytes = Array(idStr.utf8)
                         // "row-" is 4 bytes
                         if bytes.count > 4 {
                             for i in 4..<bytes.count {
-                                rowIdBytes.append(bytes[i])
+                                rowIDBytes.append(bytes[i])
                             }
                         }
-                        let rowId = String(decoding: rowIdBytes, as: UTF8.self)
-                        selectedRows.append(rowId)
+                        let rowID = String(decoding: rowIDBytes, as: UTF8.self)
+                        selectedRows.append(rowID)
                     }
                 }
             }
@@ -1087,13 +1118,13 @@ private class TableInstance: @unchecked Sendable {
         if stringEquals(selectionMode, "multiple") {
             if let selectAll = selectAllCheckbox {
                 if selectedRows.isEmpty {
-                    selectAll.checked = false
+                    (selectAll as? HTMLInputElement)?.checked = false
                     selectAll.indeterminate = false
                 } else if selectedRows.count == rowInputs.count {
-                    selectAll.checked = true
+                    (selectAll as? HTMLInputElement)?.checked = true
                     selectAll.indeterminate = false
                 } else {
-                    selectAll.checked = false
+                    (selectAll as? HTMLInputElement)?.checked = false
                     selectAll.indeterminate = true
                 }
             }
@@ -1112,13 +1143,13 @@ private class TableInstance: @unchecked Sendable {
         table.dispatchEvent(event)
     }
 
-    private func toggleSort(columnId: String) {
+    private func toggleSort(columnID: String) {
         // Toggle sort direction
-        if let current = currentSort, stringEquals(current.columnId, columnId) {
+        if let current = currentSort, stringEquals(current.columnID, columnID) {
             let newDirection = stringEquals(current.direction, "asc") ? "desc" : "asc"
-            currentSort = (columnId, newDirection)
+            currentSort = (columnID, newDirection)
         } else {
-            currentSort = (columnId, "asc")
+            currentSort = (columnID, "asc")
         }
 
         let isAscending = stringEquals(currentSort?.direction ?? "asc", "asc")
@@ -1127,7 +1158,7 @@ private class TableInstance: @unchecked Sendable {
         let headerCells = Array(table.querySelectorAll("thead th"))
         var columnIndex = -1
         for i in 0..<headerCells.count {
-            if let _ = headerCells[i].querySelector("[data-column-id='\(columnId)']") {
+            if let _ = headerCells[i].querySelector("[data-column-id='\(columnID)']") {
                 columnIndex = i
                 break
             }
@@ -1187,8 +1218,8 @@ private class TableInstance: @unchecked Sendable {
         let chevronCollapsed = "2.5,4.75 10,12.25 17.5,4.75 19,6.25 10,15.25 1,6.25"
         let chevronExpanded = "2.5,15.25 10,7.75 17.5,15.25 19,13.75 10,4.75 1,13.75"
         for btn in sortButtons {
-            guard let btnColumnId = btn.getAttribute("data-column-id") else { continue }
-            let isActive = stringEquals(btnColumnId, columnId)
+            guard let btnColumnID = btn.getAttribute("data-column-id") else { continue }
+            let isActive = stringEquals(btnColumnID, columnID)
 
             let icon = btn.querySelector(".table-sort-icon")
             guard let icon = icon else { continue }
@@ -1203,7 +1234,7 @@ private class TableInstance: @unchecked Sendable {
                     animateEl.beginElement()
                     window.setTimeout(210) {
                         if let polygon = animateEl.parentElement {
-                            polygon.setAttribute("points", to)
+                            polygon.setAttribute(.points, to)
                             polygon.innerHTML = stringConcat(
                                 "<animate attributeName=\"points\" from=\"", to,
                                 "\" to=\"", from,
@@ -1216,7 +1247,7 @@ private class TableInstance: @unchecked Sendable {
                 // Hide inactive columns and reset to collapsed (down-pointing)
                 icon.style.display(.none)
                 if let polygon = icon.querySelector(".animated-up-down-chevron polygon") {
-                    polygon.setAttribute("points", chevronCollapsed)
+                    polygon.setAttribute(.points, chevronCollapsed)
                     polygon.innerHTML = stringConcat(
                         "<animate attributeName=\"points\" from=\"", chevronCollapsed,
                         "\" to=\"", chevronExpanded,
@@ -1227,7 +1258,7 @@ private class TableInstance: @unchecked Sendable {
         }
 
         // Dispatch sort event
-        let sortData = stringConcat(columnId, ":", currentSort?.direction ?? "asc")
+        let sortData = stringConcat(columnID, ":", currentSort?.direction ?? "asc")
         let event = CustomEvent(type: "table-sort-change", detail: sortData)
         table.dispatchEvent(event)
     }

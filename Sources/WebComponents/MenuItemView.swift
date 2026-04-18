@@ -1,13 +1,16 @@
 #if !os(WASI)
 
+#if !os(WASI)
 import Foundation
+
+#endif
 import HTMLBuilder
 import CSSBuilder
 import DesignTokens
 import WebTypes
 
 /// A MenuItem is a selectable option within a Menu.
-public struct MenuItemView: HTMLProtocol {
+public struct MenuItemView: HTMLContent {
 	let id: String
 	let value: String
 	let disabled: Bool
@@ -28,7 +31,7 @@ public struct MenuItemView: HTMLProtocol {
 	let hideDescriptionOverflow: Bool
 	let itemColor: MenuItemColor
 	let multiselect: Bool
-	let content: [HTMLProtocol]
+	let content: [AnyHTMLContent]
 	let `class`: String
 
 	public struct Thumbnail: Sendable {
@@ -101,7 +104,7 @@ public struct MenuItemView: HTMLProtocol {
 		action: MenuItemColor = .default,
 		multiselect: Bool = false,
 		class: String = "",
-		@HTMLBuilder content: () -> [HTMLProtocol] = { [] }
+		@HTMLBuilder content: () -> [AnyHTMLContent] = { [] }
 	) {
 		self.id = id
 		self.value = value
@@ -128,7 +131,7 @@ public struct MenuItemView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func menuItemViewCSS(_ disabled: Bool, _ selected: Bool, _ active: Bool, _ highlighted: Bool, _ itemColor: MenuItemColor) -> [CSSProtocol] {
+	private func menuItemViewCSS(_ disabled: Bool, _ selected: Bool, _ active: Bool, _ highlighted: Bool, _ itemColor: MenuItemColor) -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing12)
@@ -179,7 +182,7 @@ public struct MenuItemView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func menuItemCheckboxCSS(_ selected: Bool) -> [CSSProtocol] {
+	private func menuItemCheckboxCSS(_ selected: Bool) -> [AnyCSSContent] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -193,14 +196,14 @@ public struct MenuItemView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func menuItemCheckmarkCSS() -> [CSSProtocol] {
+	private func menuItemCheckmarkCSS() -> [AnyCSSContent] {
 		fontSize(fontSizeSmall14)
 		color(colorInvertedFixed)
 		lineHeight(1)
 	}
 
 	@CSSBuilder
-	private func menuItemThumbnailCSS() -> [CSSProtocol] {
+	private func menuItemThumbnailCSS() -> [AnyCSSContent] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -213,20 +216,20 @@ public struct MenuItemView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func menuItemThumbnailImageCSS() -> [CSSProtocol] {
+	private func menuItemThumbnailImageCSS() -> [AnyCSSContent] {
 		width(perc(100))
 		height(perc(100))
 		objectFit(.cover)
 	}
 
 	@CSSBuilder
-	private func menuItemThumbnailPlaceholderCSS() -> [CSSProtocol] {
+	private func menuItemThumbnailPlaceholderCSS() -> [AnyCSSContent] {
 		fontSize(fontSizeLarge18)
 		color(colorPlaceholder)
 	}
 
 	@CSSBuilder
-	private func menuItemIconCSS() -> [CSSProtocol] {
+	private func menuItemIconCSS() -> [AnyCSSContent] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -238,7 +241,7 @@ public struct MenuItemView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func menuItemTextCSS() -> [CSSProtocol] {
+	private func menuItemTextCSS() -> [AnyCSSContent] {
 		display(.flex)
 		flexDirection(.column)
 		gap(spacing4)
@@ -247,7 +250,7 @@ public struct MenuItemView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func menuItemTitleCSS() -> [CSSProtocol] {
+	private func menuItemTitleCSS() -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.baseline)
 		gap(spacing4)
@@ -255,7 +258,7 @@ public struct MenuItemView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func menuItemLabelCSS(_ boldLabel: Bool, _ hasSearchQuery: Bool) -> [CSSProtocol] {
+	private func menuItemLabelCSS(_ boldLabel: Bool, _ hasSearchQuery: Bool) -> [AnyCSSContent] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		fontWeight(boldLabel || hasSearchQuery ? fontWeightBold : fontWeightNormal)
@@ -265,7 +268,7 @@ public struct MenuItemView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func menuItemSearchQueryCSS() -> [CSSProtocol] {
+	private func menuItemSearchQueryCSS() -> [AnyCSSContent] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		fontWeight(fontWeightNormal)
@@ -274,7 +277,7 @@ public struct MenuItemView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func menuItemMatchCSS() -> [CSSProtocol] {
+	private func menuItemMatchCSS() -> [AnyCSSContent] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		fontWeight(fontWeightNormal)
@@ -283,7 +286,7 @@ public struct MenuItemView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func menuItemSupportingTextCSS() -> [CSSProtocol] {
+	private func menuItemSupportingTextCSS() -> [AnyCSSContent] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		fontWeight(fontWeightNormal)
@@ -292,7 +295,7 @@ public struct MenuItemView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func menuItemDescriptionCSS(_ hideOverflow: Bool) -> [CSSProtocol] {
+	private func menuItemDescriptionCSS(_ hideOverflow: Bool) -> [AnyCSSContent] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeSmall14)
 		lineHeight(lineHeightSmall22)
@@ -319,7 +322,8 @@ public struct MenuItemView: HTMLProtocol {
 		let hasUrl = !url.isEmpty
 
 		// Highlight search query in label
-		func renderLabelWithHighlight() -> [HTMLProtocol] {
+		@HTMLBuilder
+		func renderLabelWithHighlight() -> [AnyHTMLContent] {
 			if hasSearchQuery && displayLabel.lowercased().contains(searchQuery.lowercased()) {
 				let lowerLabel = displayLabel.lowercased()
 				let lowerQuery = searchQuery.lowercased()
@@ -332,40 +336,36 @@ public struct MenuItemView: HTMLProtocol {
 					let queryText = String(displayLabel[displayLabel.index(displayLabel.startIndex, offsetBy: startIndex)..<displayLabel.index(displayLabel.startIndex, offsetBy: endIndex)])
 					let afterQuery = String(displayLabel.suffix(displayLabel.count - endIndex))
 
-					return [
-						span { beforeQuery }
-							.style {
-								menuItemLabelCSS(boldLabel, hasSearchQuery)
-							},
-						span { queryText }
-							.class("menu-item-search-query")
-							.style {
-								menuItemSearchQueryCSS()
-							},
-						span { afterQuery }
-							.style {
-								menuItemLabelCSS(boldLabel, hasSearchQuery)
-							}
-					]
+					span { beforeQuery }
+						.style {
+							menuItemLabelCSS(boldLabel, hasSearchQuery)
+						}
+					span { queryText }
+						.class("menu-item-search-query")
+						.style {
+							menuItemSearchQueryCSS()
+						}
+					span { afterQuery }
+						.style {
+							menuItemLabelCSS(boldLabel, hasSearchQuery)
+						}
 				}
-			}
-
-			return [
+			} else {
 				span { displayLabel }
 					.class("menu-item-label")
 					.style {
 						menuItemLabelCSS(boldLabel, hasSearchQuery)
 					}
-			]
+			}
 		}
 
 		// Main content
-		let itemContent: [HTMLProtocol] = {
+		let itemContent: [AnyHTMLContent] = {
 			if hasCustomContent {
 				return content
 			}
 
-			var items: [HTMLProtocol] = []
+			var items: [AnyHTMLContent] = []
 
 			// Multiselect checkbox
 			if multiselect {

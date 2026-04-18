@@ -1,15 +1,18 @@
 #if !os(WASI)
 
+#if !os(WASI)
 import Foundation
+
+#endif
 import HTMLBuilder
 import CSSBuilder
 import DesignTokens
 import WebTypes
 
 /// A flexible layout wrapper that adapts across different breakpoints and screen sizes.
-public struct ContainerView: HTMLProtocol {
+public struct ContainerView: HTMLContent {
 	let size: Size
-	let content: [HTMLProtocol]
+	let content: [AnyHTMLContent]
 	let `class`: String
 
 	public enum Size: String, Sendable {
@@ -22,7 +25,7 @@ public struct ContainerView: HTMLProtocol {
 	public init(
 		size: Size = .full,
 		class: String = "",
-		@HTMLBuilder content: () -> [HTMLProtocol]
+		@HTMLBuilder content: () -> [AnyHTMLContent]
 	) {
 		self.size = size
 		self.`class` = `class`
@@ -30,7 +33,7 @@ public struct ContainerView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func containerViewCSS(_ size: Size) -> [CSSProtocol] {
+	private func containerViewCSS(_ size: Size) -> [AnyCSSContent] {
 		width(perc(100))
 		marginInline(.auto)
 		boxSizing(.borderBox)

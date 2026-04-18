@@ -1,6 +1,9 @@
 #if !os(WASI)
 
+#if !os(WASI)
 import Foundation
+
+#endif
 import HTMLBuilder
 import CSSBuilder
 import DesignTokens
@@ -8,7 +11,7 @@ import WebTypes
 
 /// A Combobox is a text input with a dropdown menu of selectable options.
 /// Combines a menu of selectable items with a text box that can accept arbitrary input.
-public struct ComboboxView: HTMLProtocol {
+public struct ComboboxView: HTMLContent {
 	let id: String
 	let name: String
 	let menuItems: [MenuItemView.MenuItemData]
@@ -50,14 +53,14 @@ public struct ComboboxView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func comboboxViewCSS() -> [CSSProtocol] {
+	private func comboboxViewCSS() -> [AnyCSSContent] {
 		position(.relative)
 		display(.inlineBlock)
 		minWidth(px(256))
 	}
 
 	@CSSBuilder
-	private func comboboxIndicatorCSS() -> [CSSProtocol] {
+	private func comboboxIndicatorCSS() -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)

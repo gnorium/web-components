@@ -1,12 +1,13 @@
 #if !os(WASI)
 
-import HTMLBuilder
-import SVGBuilder
 import CSSBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
+import SVGBuilder
 import WebTypes
 
-public struct SettingsIconView: HTMLProtocol {
+public struct SettingsIconView: HTMLContent {
 	let width: Length
 	let height: Length
 	let `class`: String
@@ -21,7 +22,7 @@ public struct SettingsIconView: HTMLProtocol {
 		self.class = `class`
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func toNode() -> DOMNode {
 		svg {
 			g {
 				path()
@@ -29,15 +30,15 @@ public struct SettingsIconView: HTMLProtocol {
 					.d(M(1.5, -10), h(-3), l(-1, 6.5), h(5), m(0, 7), h(-5), l(1, 6.5), h(3))
 
 				use()
-					.xlinkHref("#a")
+					.href("#a")
 					.transform(rotate(45))
 
 				use()
-					.xlinkHref("#a")
+					.href("#a")
 					.transform(rotate(90))
 
 				use()
-					.xlinkHref("#a")
+					.href("#a")
 					.transform(rotate(135))
 			}
 			.xmlnsXlink("http://www.w3.org/1999/xlink")
@@ -52,7 +53,6 @@ public struct SettingsIconView: HTMLProtocol {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
-		.render(indent: indent)
 	}
 }
 

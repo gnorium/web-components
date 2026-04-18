@@ -7,7 +7,7 @@ import WebTypes
 
 /// A button group for selecting color scheme (Light / Dark).
 /// Renders two option buttons with icons. Hydrated by ColorSchemeButtonGroupHydration.
-public struct ColorSchemeButtonGroupView: HTMLProtocol {
+public struct ColorSchemeButtonGroupView: HTMLContent {
 	let `class`: String
 
 	public init(class: String = "") {
@@ -34,7 +34,7 @@ public struct ColorSchemeButtonGroupView: HTMLProtocol {
 		.render(indent: indent)
 	}
 
-	private func optionButton(value: String, label: String, @HTMLBuilder icon: () -> HTMLProtocol) -> HTMLProtocol {
+	private func optionButton(value: String, label: String, @HTMLBuilder icon: () -> [AnyHTMLContent]) -> HTMLContent {
 		div {
 			span { icon() }
 			.class("option-icon")

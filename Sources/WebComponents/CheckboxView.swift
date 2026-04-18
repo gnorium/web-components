@@ -1,3 +1,10 @@
+#if os(WASI)
+
+import WebAPIs
+import EmbeddedSwiftUtilities
+
+#endif
+
 #if !os(WASI)
 
 import Foundation
@@ -8,7 +15,7 @@ import WebTypes
 
 /// A Checkbox is a binary input that can appear by itself or in a multiselect group.
 /// Checkboxes can be selected, unselected or in an indeterminate state.
-public struct CheckboxView: HTMLProtocol {
+public struct CheckboxView: HTMLContent {
 	let id: String
 	let name: String
 	let value: String
@@ -18,9 +25,9 @@ public struct CheckboxView: HTMLProtocol {
 	let inline: Bool
 	let hideLabel: Bool
 	let status: ValidationStatus
-	let labelContent: [HTMLProtocol]
-	let descriptionContent: [HTMLProtocol]
-	let customInputContent: [HTMLProtocol]
+	let labelContent: [AnyHTMLContent]
+	let descriptionContent: [AnyHTMLContent]
+	let customInputContent: [AnyHTMLContent]
 	let `class`: String
 	let labelFontWeight: CSSFontWeight
 	let labelFontSize: Length
@@ -43,9 +50,9 @@ public struct CheckboxView: HTMLProtocol {
 		class: String = "",
 		labelFontWeight: CSSFontWeight = fontWeightNormal,
 		labelFontSize: Length = fontSizeSmall14,
-		@HTMLBuilder label: () -> [HTMLProtocol],
-		@HTMLBuilder description: () -> [HTMLProtocol] = { [] },
-		@HTMLBuilder customInput: () -> [HTMLProtocol] = { [] }
+		@HTMLBuilder label: () -> [AnyHTMLContent],
+		@HTMLBuilder description: () -> [AnyHTMLContent] = { [] },
+		@HTMLBuilder customInput: () -> [AnyHTMLContent] = { [] }
 	) {
 		self.id = id
 		self.name = name
@@ -64,8 +71,44 @@ public struct CheckboxView: HTMLProtocol {
 		self.customInputContent = customInput()
 	}
 
+	public init(
+		id: String,
+		name: String,
+		value: Bool,
+		checked: Bool = false,
+		disabled: Bool = false,
+		indeterminate: Bool = false,
+		inline: Bool = false,
+		hideLabel: Bool = false,
+		status: ValidationStatus = .default,
+		class: String = "",
+		labelFontWeight: CSSFontWeight = fontWeightNormal,
+		labelFontSize: Length = fontSizeSmall14,
+		@HTMLBuilder label: () -> [AnyHTMLContent],
+		@HTMLBuilder description: () -> [AnyHTMLContent] = { [] },
+		@HTMLBuilder customInput: () -> [AnyHTMLContent] = { [] }
+	) {
+		self.init(
+			id: id,
+			name: name,
+			value: value ? "true" : "false",
+			checked: checked,
+			disabled: disabled,
+			indeterminate: indeterminate,
+			inline: inline,
+			hideLabel: hideLabel,
+			status: status,
+			class: `class`,
+			labelFontWeight: labelFontWeight,
+			labelFontSize: labelFontSize,
+			label: label,
+			description: description,
+			customInput: customInput
+		)
+	}
+
 	@CSSBuilder
-	private func checkboxViewCSS(_ inline: Bool) -> [CSSProtocol] {
+	private func checkboxViewCSS(_ inline: Bool) -> [AnyCSSContent] {
 		if inline {
 			display(.inlineFlex)
 		} else {
@@ -92,14 +135,14 @@ public struct CheckboxView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func checkboxIconWrapperCSS() -> [CSSProtocol] {
+	private func checkboxIconWrapperCSS() -> [AnyCSSContent] {
 		display(.inlineFlex)
 		position(.relative)
 		verticalAlign(.middle)
 	}
 
 	@CSSBuilder
-	private func checkboxInputCSS(_ disabled: Bool) -> [CSSProtocol] {
+	private func checkboxInputCSS(_ disabled: Bool) -> [AnyCSSContent] {
 		position(.absolute)
 		width(perc(100))
 		height(perc(100))
@@ -141,8 +184,8 @@ public struct CheckboxView: HTMLProtocol {
 
 		pseudoClass(.focus) {
 			nextSibling(".checkbox-icon") {
-				borderColor(borderColorInputBinaryFocus).important()
-				boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
+				borderColor(borderColorBlueFocus).important()
+				boxShadow(px(0), px(0), px(8), boxShadowColorBlueFocus).important()
 			}
 		}
 
@@ -175,7 +218,7 @@ public struct CheckboxView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func checkboxIconCSS(_ status: ValidationStatus, _ disabled: Bool, _ checked: Bool, _ indeterminate: Bool) -> [CSSProtocol] {
+	private func checkboxIconCSS(_ status: ValidationStatus, _ disabled: Bool, _ checked: Bool, _ indeterminate: Bool) -> [AnyCSSContent] {
 		display(.inlineBlock)
 		position(.relative)
 		pointerEvents(.none)
@@ -203,39 +246,51 @@ public struct CheckboxView: HTMLProtocol {
 			top(perc(50))
 			left(perc(50))
 			pointerEvents(.none)
-			transition(transitionPropertyFade, transitionDurationBase)
+			transition(.all, s(0.2), .easeInOut)
 			opacity(disabled && checked ? 1 : 0) // Shown when input is checked/indeterminate
+			transform(translate(perc(-50), (indeterminate ? perc(-50) : perc(-60))), scale(0.5))
 
 			if indeterminate {
 				width(px(10))
 				height(px(2))
 				backgroundColor(disabled ? colorSubtle : colorInvertedFixed)
-				transform(translate("-50%", "-50%"))
 			} else {
 				width(px(5))
 				height(px(10))
 				borderRight(px(2), .solid, disabled ? colorSubtle : colorInvertedFixed)
 				borderBottom(px(2), .solid, disabled ? colorSubtle : colorInvertedFixed)
 				// Standard checkmark: rotate L-shape 45 degrees clockwise
-				transform(translate("-50%", "-60%"), rotate(deg(45)))
+				transform(translate(perc(-50), perc(-60)), rotate(deg(45)), scale(0.5))
+			}
+		}
+
+		// Animation on check
+		pseudoClass(.checked) {
+			pseudoElement(.before) {
+				opacity(1).important()
+				if indeterminate {
+					transform(translate(perc(-50), perc(-50)), scale(1)).important()
+				} else {
+					transform(translate(perc(-50), perc(-60)), rotate(deg(45)), scale(1)).important()
+				}
 			}
 		}
 	}
 
 	@CSSBuilder
-	private func checkboxLabelWrapperCSS() -> [CSSProtocol] {
+	private func checkboxLabelWrapperCSS() -> [AnyCSSContent] {
 		flex(1)
 	}
 
 	@CSSBuilder
-	private func checkboxCustomInputCSS() -> [CSSProtocol] {
+	private func checkboxCustomInputCSS() -> [AnyCSSContent] {
 		display(.block)
 	}
 
 	public func render(indent: Int = 0) -> String {
 		let hasDescription = !descriptionContent.isEmpty
 		let hasCustomInput = !customInputContent.isEmpty
-		let descriptionId = hasDescription ? "\(id)-description" : nil
+		let descriptionID = hasDescription ? "\(id)-description" : nil
 
 		return div {
 			span {
@@ -246,7 +301,7 @@ public struct CheckboxView: HTMLProtocol {
 				.value(value)
 				.checked(checked)
 				.disabled(disabled)
-				.ariaDescribedby(descriptionId)
+				.ariaDescribedby(descriptionID)
 				.class("checkbox-input")
 				.style {
 					checkboxInputCSS(disabled)
@@ -266,8 +321,8 @@ public struct CheckboxView: HTMLProtocol {
 			div {
 				LabelView(
 					visuallyHidden: hideLabel,
-					inputId: id,
-					descriptionId: hasDescription ? descriptionId : nil,
+					inputID: id,
+					descriptionID: hasDescription ? descriptionID : nil,
 					disabled: disabled,
 					labelFontWeight: labelFontWeight,
 					labelFontSize: labelFontSize

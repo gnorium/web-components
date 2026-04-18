@@ -6,12 +6,12 @@ import DesignTokens
 import WebTypes
 
 /// Button — triggers an action when the user clicks or taps on it.
-public struct ButtonView: HTMLProtocol {
+public struct ButtonView: HTMLContent {
 	let label: String
 	let buttonColor: ButtonColor
 	let weight: ButtonWeight
 	let size: ButtonSize
-	let icon: (any HTMLProtocol)?
+	let icon: AnyHTMLContent?
 	let iconOnly: Bool
 	let disabled: Bool
 	let ariaLabel: String?
@@ -104,9 +104,9 @@ public struct ButtonView: HTMLProtocol {
 		self.contentJustifyContent = contentJustifyContent
 	}
 
-	public init(
+	public init<T: HTMLContent>(
 		label: String,
-		icon: any HTMLProtocol,
+		icon: T,
 		buttonColor: ButtonColor = .gray,
 		weight: ButtonWeight = .subtle,
 		size: ButtonSize = .medium,
@@ -124,7 +124,7 @@ public struct ButtonView: HTMLProtocol {
 		self.buttonColor = buttonColor
 		self.weight = weight
 		self.size = size
-		self.icon = icon
+		self.icon = AnyHTMLContent(icon)
 		self.iconOnly = false
 		self.disabled = disabled
 		self.ariaLabel = ariaLabel
@@ -139,8 +139,8 @@ public struct ButtonView: HTMLProtocol {
 
 	/// Create an icon-only button
 	/// WARNING: Icon-only buttons require aria-label for accessibility
-	public init(
-		icon: any HTMLProtocol,
+	public init<T: HTMLContent>(
+		icon: T,
 		buttonColor: ButtonColor = .gray,
 		weight: ButtonWeight = .subtle,
 		size: ButtonSize = .medium,
@@ -158,7 +158,7 @@ public struct ButtonView: HTMLProtocol {
 		self.buttonColor = buttonColor
 		self.weight = weight
 		self.size = size
-		self.icon = icon
+		self.icon = AnyHTMLContent(icon)
 		self.iconOnly = true
 		self.disabled = disabled
 		self.ariaLabel = ariaLabel
@@ -186,13 +186,13 @@ public struct ButtonView: HTMLProtocol {
 		class: String = "",
 		labelFontWeight: CSSFontWeight = fontWeightBold,
 		contentJustifyContent: CSSJustifyContent = .center,
-		@HTMLBuilder content: () -> [any HTMLProtocol]
+		@HTMLBuilder content: () -> [AnyHTMLContent]
 	) {
 		self.label = label
 		self.buttonColor = buttonColor
 		self.weight = weight
 		self.size = size
-		self.icon = content()
+		self.icon = AnyHTMLContent(content())
 		self.iconOnly = false // Custom content is treated as the full body
 		self.disabled = disabled
 		self.ariaLabel = ariaLabel
@@ -210,7 +210,7 @@ public struct ButtonView: HTMLProtocol {
 		let fullClass = `class`.isEmpty ? baseClasses : "\(baseClasses) \(`class`)"
 
 		@HTMLBuilder
-		func renderContent() -> [any HTMLProtocol] {
+		func renderContent() -> [AnyHTMLContent] {
 			if let icon = icon {
 				if label.isEmpty && iconOnly {
 					span { icon }
@@ -286,7 +286,7 @@ public struct ButtonView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func buttonViewCSS() -> [CSSProtocol] {
+	private func buttonViewCSS() -> [AnyCSSContent] {
 		// Base button styles
 		if iconOnly {
 			display(.flex)
@@ -382,7 +382,7 @@ public struct ButtonView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func buttonIconCSS() -> [CSSProtocol] {
+	private func buttonIconCSS() -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -410,7 +410,7 @@ public struct ButtonView: HTMLProtocol {
 	}
     
 	@CSSBuilder
-	private func applyColorWeightCSS() -> [CSSProtocol] {
+	private func applyColorWeightCSS() -> [AnyCSSContent] {
 		switch (buttonColor, weight) {
 		// Gray + Subtle
 		case (.gray, .subtle):

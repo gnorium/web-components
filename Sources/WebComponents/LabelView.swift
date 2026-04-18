@@ -1,6 +1,5 @@
 #if !os(WASI)
 
-import Foundation
 import HTMLBuilder
 import CSSBuilder
 import DesignTokens
@@ -8,17 +7,17 @@ import WebTypes
 
 /// A Label provides a descriptive title for an input or form field.
 /// Every input or form field must have an associated label for accessibility.
-public struct LabelView: HTMLProtocol {
+public struct LabelView: HTMLContent {
 	let icon: String?
 	let optional: Bool
 	let optionalFlag: String
 	let visuallyHidden: Bool
 	let isLegend: Bool
-	let inputId: String?
-	let descriptionId: String?
+	let inputID: String?
+	let descriptionID: String?
 	let disabled: Bool
-	let labelContent: [HTMLProtocol]
-	let descriptionContent: [HTMLProtocol]
+	let labelContent: [AnyHTMLContent]
+	let descriptionContent: [AnyHTMLContent]
 	let `class`: String
 	let labelFontWeight: CSSFontWeight
 	let labelFontSize: Length
@@ -29,22 +28,22 @@ public struct LabelView: HTMLProtocol {
 		optionalFlag: String = "(optional)",
 		visuallyHidden: Bool = false,
 		isLegend: Bool = false,
-		inputId: String? = nil,
-		descriptionId: String? = nil,
+		inputID: String? = nil,
+		descriptionID: String? = nil,
 		disabled: Bool = false,
 		labelFontWeight: CSSFontWeight = fontWeightBold,
 		labelFontSize: Length = fontSizeMedium16,
 		class: String = "",
-		@HTMLBuilder label: () -> [HTMLProtocol],
-		@HTMLBuilder description: () -> [HTMLProtocol] = { [] }
+		@HTMLBuilder label: () -> [AnyHTMLContent],
+		@HTMLBuilder description: () -> [AnyHTMLContent] = { [] }
 	) {
 		self.icon = icon
 		self.optional = optional
 		self.optionalFlag = optionalFlag
 		self.visuallyHidden = visuallyHidden
 		self.isLegend = isLegend
-		self.inputId = inputId
-		self.descriptionId = descriptionId
+		self.inputID = inputID
+		self.descriptionID = descriptionID
 		self.disabled = disabled
 		self.labelFontWeight = labelFontWeight
 		self.labelFontSize = labelFontSize
@@ -54,7 +53,7 @@ public struct LabelView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func labelViewCSS() -> [CSSProtocol] {
+	private func labelViewCSS() -> [AnyCSSContent] {
 		display(.flex)
 		flexDirection(.column)
 		gap(spacing4)
@@ -65,7 +64,7 @@ public struct LabelView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func visuallyHiddenCSS() -> [CSSProtocol] {
+	private func visuallyHiddenCSS() -> [AnyCSSContent] {
 		position(.absolute)
 		width(px(1))
 		height(px(1))
@@ -78,7 +77,7 @@ public struct LabelView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func labelTextCSS() -> [CSSProtocol] {
+	private func labelTextCSS() -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing4)
@@ -90,7 +89,7 @@ public struct LabelView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func labelIconCSS() -> [CSSProtocol] {
+	private func labelIconCSS() -> [AnyCSSContent] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -101,13 +100,13 @@ public struct LabelView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func labelOptionalFlagCSS() -> [CSSProtocol] {
+	private func labelOptionalFlagCSS() -> [AnyCSSContent] {
 		color(disabled ? colorDisabled : colorSubtle)
 		fontWeight(fontWeightNormal)
 	}
 
 	@CSSBuilder
-	private func labelDescriptionCSS() -> [CSSProtocol] {
+	private func labelDescriptionCSS() -> [AnyCSSContent] {
 		display(.block)
 		fontSize(fontSizeSmall14)
 		lineHeight(lineHeightSmall22)
@@ -148,7 +147,7 @@ public struct LabelView: HTMLProtocol {
 				if hasDescription {
 					span { descriptionContent }
 						.class("label-description")
-						.id(descriptionId ?? "")
+						.id(descriptionID ?? "")
 						.style {
 							labelDescriptionCSS()
 						}
@@ -165,7 +164,7 @@ public struct LabelView: HTMLProtocol {
 			.render(indent: indent)
 		} else {
 			return div {
-				if let forId = inputId {
+				if let forID = inputID {
 					label {
 						if let iconValue = icon {
 							span { iconValue }
@@ -186,7 +185,7 @@ public struct LabelView: HTMLProtocol {
 								}
 						}
 					}
-					.for(forId)
+					.for(forID)
 					.class("label-text")
 					.style {
 						labelTextCSS()
@@ -221,7 +220,7 @@ public struct LabelView: HTMLProtocol {
 				if hasDescription {
 					span { descriptionContent }
 						.class("label-description")
-						.id(descriptionId ?? "")
+						.id(descriptionID ?? "")
 						.style {
 							labelDescriptionCSS()
 						}

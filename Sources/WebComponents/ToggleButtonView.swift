@@ -6,9 +6,9 @@ import DesignTokens
 import WebTypes
 
 /// A button that can be toggled on and off with state persistence.
-public struct ToggleButtonView: HTMLProtocol {
+public struct ToggleButtonView: HTMLContent {
 	let label: String
-	let icon: (any HTMLProtocol)?
+	let icon: AnyHTMLContent?
 	let modelValue: Bool
 	let weight: ButtonView.ButtonWeight
 	let disabled: Bool
@@ -20,9 +20,9 @@ public struct ToggleButtonView: HTMLProtocol {
 	var `class`: String
 	let labelFontWeight: CSSFontWeight
 	
-	public init(
+	public init<T: HTMLContent>(
 		label: String,
-		icon: (any HTMLProtocol)? = nil,
+		icon: T? = nil,
 		modelValue: Bool = false,
 		weight: ButtonView.ButtonWeight = .subtle,
 		disabled: Bool = false,
@@ -35,7 +35,7 @@ public struct ToggleButtonView: HTMLProtocol {
 		labelFontWeight: CSSFontWeight = fontWeightBold
 	) {
 		self.label = label
-		self.icon = icon
+		self.icon = icon.map { AnyHTMLContent($0) }
 		self.modelValue = modelValue
 		self.weight = weight
 		self.disabled = disabled
@@ -101,7 +101,7 @@ public struct ToggleButtonView: HTMLProtocol {
     }
 	
 	@CSSBuilder
-	private func toggleStateCSS() -> [CSSProtocol] {
+	private func toggleStateCSS() -> [AnyCSSContent] {
 		// Toggle-specific state styling
 		// Subtle/solid toggled state
 		if weight == .subtle || weight == .solid {
@@ -196,7 +196,7 @@ private class ToggleButtonInstance: @unchecked Sendable {
 		}
 		
 		modelValue.toggle()
-		button.setAttribute("aria-pressed", modelValue ? "true" : "false")
+		button.setAttribute(.ariaPressed, modelValue ? true : false)
 
 		// Emit custom event for update:modelValue
 		let event = CustomEvent(type: "toggle-button-update", detail: modelValue ? "true" : "false")

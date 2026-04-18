@@ -1,12 +1,13 @@
 #if !os(WASI)
 
-import HTMLBuilder
 import CSSBuilder
-import SVGBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
+import SVGBuilder
 import WebTypes
 
-public struct ViewDetailsIconView: HTMLProtocol {
+public struct ViewDetailsIconView: HTMLContent {
 	let `class`: String
 	let width: Length
 	let height: Length
@@ -21,7 +22,7 @@ public struct ViewDetailsIconView: HTMLProtocol {
 		self.height = height
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func toNode() -> DOMNode {
 		svg {
 			rect()
 				.width(px(7))
@@ -50,7 +51,6 @@ public struct ViewDetailsIconView: HTMLProtocol {
 		.strokeLinecap(.round)
 		.strokeLinejoin(.round)
 		.strokeWidth(px(2))
-		.render(indent: indent)
 	}
 }
 

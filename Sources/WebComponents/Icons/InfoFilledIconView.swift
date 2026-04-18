@@ -1,12 +1,13 @@
 #if !os(WASI)
 
-import HTMLBuilder
-import SVGBuilder
 import CSSBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
+import SVGBuilder
 import WebTypes
 
-public struct InfoFilledIconView: HTMLProtocol {
+public struct InfoFilledIconView: HTMLContent {
 	let width: Length
 	let height: Length
 	let `class`: String
@@ -21,7 +22,7 @@ public struct InfoFilledIconView: HTMLProtocol {
 		self.class = `class`
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func toNode() -> DOMNode {
 		svg {
 			path()
 			.d(M(10, 0), C(4.477, 0, 0, 4.477, 0, 10), s(4.477, 10, 10, 10), s(10, -4.477, 10, -10), S(15.523, 0, 10, 0), M(9, 5), h(2), v(2), H(9), Z(), m(0, 4), h(2), v(6), H(9), Z())
@@ -32,7 +33,6 @@ public struct InfoFilledIconView: HTMLProtocol {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
-		.render(indent: indent)
 	}
 }
 

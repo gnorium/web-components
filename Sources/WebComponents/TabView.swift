@@ -1,6 +1,9 @@
 #if !os(WASI)
 
+#if !os(WASI)
 import Foundation
+
+#endif
 import HTMLBuilder
 import CSSBuilder
 import DesignTokens
@@ -8,12 +11,12 @@ import WebTypes
 
 /// A Tab is one of the selectable items included within Tabs.
 /// Must be used with Tabs component - this component is only meant to be used inside TabsView.
-public struct TabView: HTMLProtocol, Sendable {
+public struct TabView: HTMLContent, Sendable {
 	public let name: String
 	public let label: String
 	public let disabled: Bool
 	public let url: String?
-	public let content: [HTMLProtocol]
+	public let content: [AnyHTMLContent]
 	let `class`: String
 
 	public init(
@@ -22,18 +25,18 @@ public struct TabView: HTMLProtocol, Sendable {
 		disabled: Bool = false,
 		url: String? = nil,
 		class: String = "",
-		@HTMLBuilder content: () -> [HTMLProtocol]
+		@HTMLBuilder content: () -> [AnyHTMLContent]
 	) {
 		self.name = name
 		self.label = label.isEmpty ? name : label
 		self.disabled = disabled
 		self.url = url
-		self.content = content()
+		self.content = content().map { AnyHTMLContent($0) }
 		self.`class` = `class`
 	}
 
 	@CSSBuilder
-	private func tabButtonCSS(_ isActive: Bool, _ disabled: Bool, _ framed: Bool) -> [CSSProtocol] {
+	private func tabButtonCSS(_ isActive: Bool, _ disabled: Bool, _ framed: Bool) -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -87,7 +90,7 @@ public struct TabView: HTMLProtocol, Sendable {
 	}
 
 	@CSSBuilder
-	private func tabPanelCSS(_ framed: Bool) -> [CSSProtocol] {
+	private func tabPanelCSS(_ framed: Bool) -> [AnyCSSContent] {
 		if framed {
 			padding(spacing16)
 		} else {

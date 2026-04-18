@@ -1,13 +1,16 @@
 #if !os(WASI)
 
+#if !os(WASI)
 import Foundation
+
+#endif
 import HTMLBuilder
 import CSSBuilder
 import DesignTokens
 import WebTypes
 
 /// A visual element used to indicate the progress of an action or process.
-public struct ProgressBarView: HTMLProtocol {
+public struct ProgressBarView: HTMLContent {
 	let inline: Bool
 	let ariaLabel: String?
 	let ariaHidden: Bool
@@ -29,7 +32,7 @@ public struct ProgressBarView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func progressBarViewCSS(_ inline: Bool, _ disabled: Bool) -> [CSSProtocol] {
+	private func progressBarViewCSS(_ inline: Bool, _ disabled: Bool) -> [AnyCSSContent] {
 		display(.block)
 		position(.relative)
 		backgroundColor(backgroundColorBlueSubtle)
@@ -50,7 +53,7 @@ public struct ProgressBarView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func progressBarBarCSS() -> [CSSProtocol] {
+	private func progressBarBarCSS() -> [AnyCSSContent] {
 		position(.absolute)
 		top(0)
 		left(0)

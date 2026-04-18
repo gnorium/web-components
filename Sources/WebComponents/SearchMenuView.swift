@@ -7,7 +7,7 @@ import SVGBuilder
 import DesignTokens
 import WebTypes
 
-public struct SearchMenuView: HTMLProtocol {
+public struct SearchMenuView: HTMLContent {
 	let id: String
 	let placeholder: String
 	let results: [SearchResult]?
@@ -158,7 +158,7 @@ public struct SearchMenuView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func searchMenuViewCSS() -> [CSSProtocol] {
+	private func searchMenuViewCSS() -> [AnyCSSContent] {
 		// Hidden by default, positioned right below navbar
 		display(.none)
 		position(.fixed)
@@ -170,7 +170,7 @@ public struct SearchMenuView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func searchMenuBackdropCSS() -> [CSSProtocol] {
+	private func searchMenuBackdropCSS() -> [AnyCSSContent] {
 		position(.fixed)
 		top(px(96))  // Start below navbar (navbar height is 96px)
 		insetInlineStart(0)
@@ -185,7 +185,7 @@ public struct SearchMenuView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func searchMenuContainerCSS() -> [CSSProtocol] {
+	private func searchMenuContainerCSS() -> [AnyCSSContent] {
 		position(.relative)
 		width(perc(100))
 		backgroundColor(backgroundColorBase)
@@ -209,7 +209,7 @@ public struct SearchMenuView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func searchMenuFooterCSS() -> [CSSProtocol] {
+	private func searchMenuFooterCSS() -> [AnyCSSContent] {
 		// Hide keyboard hints on mobile
 		display(.none)
 		alignItems(.center)
@@ -223,7 +223,7 @@ public struct SearchMenuView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func keyboardHintContainerCSS() -> [CSSProtocol] {
+	private func keyboardHintContainerCSS() -> [AnyCSSContent] {
 		display(.flex)
 		gap(spacing16)
 		alignItems(.center)
@@ -231,14 +231,14 @@ public struct SearchMenuView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func keyboardHintGroupCSS() -> [CSSProtocol] {
+	private func keyboardHintGroupCSS() -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing6)
 	}
 
 	@CSSBuilder
-	private func keyboardHintKeyCSS() -> [CSSProtocol] {
+	private func keyboardHintKeyCSS() -> [AnyCSSContent] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -257,7 +257,7 @@ public struct SearchMenuView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func keyboardHintLabelCSS() -> [CSSProtocol] {
+	private func keyboardHintLabelCSS() -> [AnyCSSContent] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeXSmall12)
 		color(colorSubtle)
@@ -334,10 +334,10 @@ public class SearchMenuHydration: @unchecked Sendable {
 
 		// Listen for custom 'input' event from TypeaheadSearchInstance
 		typeahead.addEventListener("input") { [self] event in
-			// event.detail is JSONProtocol-stringified, so we need to parse it
+			// event.detail is JSONRepresentable-stringified, so we need to parse it
 			var rawDetail = event.detail
 
-			// Strip quotes if JSONProtocol-stringified (e.g., "\"hello\"" -> "hello")
+			// Strip quotes if JSONRepresentable-stringified (e.g., "\"hello\"" -> "hello")
 			let detailBytes = Array(rawDetail.utf8)
 			if detailBytes.count >= 2, detailBytes.first == 34, detailBytes.last == 34 {
 				let innerBytes = detailBytes[1..<detailBytes.count-1]
@@ -402,13 +402,13 @@ public class SearchMenuHydration: @unchecked Sendable {
         
         typeahead.fetch(url) { [self] jsonString in
             guard let json = jsonString else {
-                console.log("SearchDialogView: No JSONProtocol response received")
+                console.log("SearchDialogView: No JSONRepresentable response received")
                 return
             }
 
-            console.log("SearchDialogView: Received JSONProtocol response")
+            console.log("SearchDialogView: Received JSONRepresentable response")
 
-            // Parse JSONProtocol results
+            // Parse JSONRepresentable results
             if let results = self.parseSearchResponse(json) {
                 console.log("SearchDialogView: Parsed \(results.count) results")
                 // Update Typeahead menu
@@ -579,10 +579,10 @@ public class SearchMenuHydration: @unchecked Sendable {
     private func parseSearchResponse(_ json: CallbackString) -> [SuggestedLemma]? {
         let jsonString = json.toString()
         
-        // Manual JSONProtocol Parsing to avoid Foundation dependency in Wasm
+        // Manual JSONRepresentable Parsing to avoid Foundation dependency in Wasm
         var results: [SuggestedLemma] = []
         
-        // Helper to extract JSONProtocol array
+        // Helper to extract JSONRepresentable array
         func extractArray(from source: String, key: String) -> [String] {
             let searchKey = "\"\(key)\":"
             guard let keyOffset = stringIndexOf(source, searchKey) else { return [] }
@@ -762,7 +762,7 @@ public class SearchMenuHydration: @unchecked Sendable {
 
 			// Clear search input
 			if let input = menu.querySelector("input") {
-				input.value = ""
+				(input as? HTMLInputElement)?.value = ""
 				input.blur()
 			}
 

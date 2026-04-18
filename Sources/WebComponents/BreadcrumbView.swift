@@ -7,7 +7,7 @@ import DesignTokens
 import WebTypes
 
 /// A list of links to the parent pages of the current page in hierarchical order.
-public struct BreadcrumbView: HTMLProtocol {
+public struct BreadcrumbView: HTMLContent {
 	let items: [BreadcrumbItem]
 	let truncateLength: Int
 	let maxVisible: Int
@@ -36,7 +36,7 @@ public struct BreadcrumbView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func breadcrumbViewCSS() -> [CSSProtocol] {
+	private func breadcrumbViewCSS() -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		flexWrap(.wrap)
@@ -48,14 +48,14 @@ public struct BreadcrumbView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func breadcrumbItemCSS() -> [CSSProtocol] {
+	private func breadcrumbItemCSS() -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing4)
 	}
 
 	@CSSBuilder
-	private func breadcrumbLinkCSS() -> [CSSProtocol] {
+	private func breadcrumbLinkCSS() -> [AnyCSSContent] {
 		color(colorBlue)
 		textDecoration(.none)
 		maxWidth(px(350))
@@ -75,7 +75,7 @@ public struct BreadcrumbView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func breadcrumbCurrentCSS() -> [CSSProtocol] {
+	private func breadcrumbCurrentCSS() -> [AnyCSSContent] {
 		color(colorBase)
 		fontWeight(fontWeightNormal)
 		maxWidth(px(350))
@@ -85,13 +85,13 @@ public struct BreadcrumbView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func breadcrumbSeparatorCSS() -> [CSSProtocol] {
+	private func breadcrumbSeparatorCSS() -> [AnyCSSContent] {
 		color(colorSubtle)
 		userSelect(.none)
 	}
 
 	@CSSBuilder
-	private func breadcrumbOverflowCSS() -> [CSSProtocol] {
+	private func breadcrumbOverflowCSS() -> [AnyCSSContent] {
 		display(.inlineFlex)
 		alignItems(.center)
 		gap(spacing4)

@@ -1,12 +1,13 @@
 #if !os(WASI)
 
-import HTMLBuilder
-import SVGBuilder
 import CSSBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
+import SVGBuilder
 import WebTypes
 
-public struct CheckAllIconView: HTMLProtocol {
+public struct CheckAllIconView: HTMLContent {
 	let width: Length
 	let height: Length
 	let `class`: String
@@ -21,7 +22,7 @@ public struct CheckAllIconView: HTMLProtocol {
 		self.class = `class`
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func toNode() -> DOMNode {
 		svg {
 			path()
 				.d(m(0.29, 12.71), l(1.42, -1.42), l(2.22, 2.22), l(8.3, -10.14), l(1.54, 1.26), l(-9.7, 11.86), Z(), M(12, 10), h(5), v(2), h(-5), Z(), m(-3, 4), h(5), v(2), H(9), Z(), m(6, -8), h(5), v(2), h(-5), Z())
@@ -32,7 +33,6 @@ public struct CheckAllIconView: HTMLProtocol {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
-		.render(indent: indent)
 	}
 }
 

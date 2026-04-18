@@ -7,7 +7,7 @@ import DesignTokens
 import WebTypes
 
 /// Navigates the user to another page, view or section.
-public struct LinkView: HTMLProtocol {
+public struct LinkView: HTMLContent {
 	public enum LinkWeight: String, Sendable {
 		case `default`
 		case plain
@@ -18,7 +18,7 @@ public struct LinkView: HTMLProtocol {
 	let redLink: Bool
 	let external: Bool
 	let weight: LinkWeight
-	let content: [HTMLProtocol]
+	let content: [AnyHTMLContent]
 	let `class`: String
 
 	public init(
@@ -28,7 +28,7 @@ public struct LinkView: HTMLProtocol {
 		external: Bool = false,
 		weight: LinkWeight = .default,
 		class: String = "",
-		@HTMLBuilder content: () -> [HTMLProtocol]
+		@HTMLBuilder content: () -> [AnyHTMLContent]
 	) {
 		self.url = url
 		self.underlined = underlined
@@ -40,7 +40,7 @@ public struct LinkView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func linkViewCSS(_ underlined: Bool, _ redLink: Bool) -> [CSSProtocol] {
+	private func linkViewCSS(_ underlined: Bool, _ redLink: Bool) -> [AnyCSSContent] {
 		if redLink {
 			color(colorRed)
 		} else {
@@ -86,7 +86,7 @@ public struct LinkView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func linkViewPlainCSS() -> [CSSProtocol] {
+	private func linkViewPlainCSS() -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing8)
@@ -108,7 +108,7 @@ public struct LinkView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func linkExternalIconCSS() -> [CSSProtocol] {
+	private func linkExternalIconCSS() -> [AnyCSSContent] {
 		display(.inlineBlock)
 		width(sizeIconXSmall)
 		height(sizeIconXSmall)
@@ -156,7 +156,7 @@ public struct LinkView: HTMLProtocol {
 		if external {
 			link = link
 				.target(.blank)
-				.rel((.noopener, .noreferrer))
+				.rel(.noopener, .noreferrer)
 		}
 
 		return link

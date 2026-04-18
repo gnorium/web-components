@@ -8,7 +8,7 @@ import WebTypes
 
 /// A form field with a label, an input or control, and an optional validation message.
 /// Provides features for building accessible form fields to collect user input.
-public struct FieldView: HTMLProtocol {
+public struct FieldView: HTMLContent {
 	let id: String
 	let labelIcon: String?
 	let optional: Bool
@@ -17,10 +17,10 @@ public struct FieldView: HTMLProtocol {
 	let isFieldset: Bool
 	let disabled: Bool
 	let status: ValidationStatus
-	let labelContent: [HTMLProtocol]
-	let descriptionContent: [HTMLProtocol]
-	let inputContent: [HTMLProtocol]
-	let helpTextContent: [HTMLProtocol]
+	let labelContent: [AnyHTMLContent]
+	let descriptionContent: [AnyHTMLContent]
+	let inputContent: [AnyHTMLContent]
+	let helpTextContent: [AnyHTMLContent]
 	let messages: ValidationMessages
 	let `class`: String
 	let labelFontWeight: CSSFontWeight
@@ -58,10 +58,10 @@ public struct FieldView: HTMLProtocol {
 		labelFontWeight: CSSFontWeight = fontWeightBold,
 		labelFontSize: Length = fontSizeMedium16,
 		class: String = "",
-		@HTMLBuilder label: () -> [HTMLProtocol],
-		@HTMLBuilder description: () -> [HTMLProtocol] = { [] },
-		@HTMLBuilder input: () -> [HTMLProtocol],
-		@HTMLBuilder helpText: () -> [HTMLProtocol] = { [] }
+		@HTMLBuilder label: () -> [AnyHTMLContent],
+		@HTMLBuilder description: () -> [AnyHTMLContent] = { [] },
+		@HTMLBuilder input: () -> [AnyHTMLContent],
+		@HTMLBuilder helpText: () -> [AnyHTMLContent] = { [] }
 	) {
 		self.id = id
 		self.labelIcon = labelIcon
@@ -82,7 +82,7 @@ public struct FieldView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func fieldViewCSS() -> [CSSProtocol] {
+	private func fieldViewCSS() -> [AnyCSSContent] {
 		display(.flex)
 		flexDirection(.column)
 		gap(spacing8)
@@ -93,12 +93,12 @@ public struct FieldView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func fieldInputWrapperCSS() -> [CSSProtocol] {
+	private func fieldInputWrapperCSS() -> [AnyCSSContent] {
 		display(.block)
 	}
 
 	@CSSBuilder
-	private func fieldHelpTextCSS() -> [CSSProtocol] {
+	private func fieldHelpTextCSS() -> [AnyCSSContent] {
 		display(.block)
 		fontSize(fontSizeSmall14)
 		lineHeight(lineHeightSmall22)
@@ -106,7 +106,7 @@ public struct FieldView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func fieldValidationMessageCSS() -> [CSSProtocol] {
+	private func fieldValidationMessageCSS() -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.flexStart)
 		gap(spacing4)
@@ -115,7 +115,7 @@ public struct FieldView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func fieldValidationIconCSS() -> [CSSProtocol] {
+	private func fieldValidationIconCSS() -> [AnyCSSContent] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -124,15 +124,15 @@ public struct FieldView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func fieldValidationTextCSS() -> [CSSProtocol] {
+	private func fieldValidationTextCSS() -> [AnyCSSContent] {
 		flex(1)
 	}
 
 	public func render(indent: Int = 0) -> String {
 		let hasDescription = !descriptionContent.isEmpty
 		let hasHelpText = !helpTextContent.isEmpty
-		let descriptionId = hasDescription ? "\(id)-description" : nil
-		let helpTextId = hasHelpText ? "\(id)-help-text" : nil
+		let descriptionID = hasDescription ? "\(id)-description" : nil
+		let helpTextID = hasHelpText ? "\(id)-help-text" : nil
 
 		if isFieldset {
 			return fieldset {
@@ -142,7 +142,7 @@ public struct FieldView: HTMLProtocol {
 					optionalFlag: optionalFlag,
 					visuallyHidden: hideLabel,
 					isLegend: true,
-					descriptionId: descriptionId,
+					descriptionID: descriptionID,
 					disabled: disabled,
 					labelFontWeight: labelFontWeight,
 					labelFontSize: labelFontSize
@@ -165,7 +165,7 @@ public struct FieldView: HTMLProtocol {
 				if hasHelpText {
 					div { helpTextContent }
 						.class("field-help-text")
-						.id(helpTextId ?? "")
+						.id(helpTextID ?? "")
 						.style {
 							fieldHelpTextCSS()
 						}
@@ -255,8 +255,8 @@ public struct FieldView: HTMLProtocol {
 					optionalFlag: optionalFlag,
 					visuallyHidden: hideLabel,
 					isLegend: false,
-					inputId: id,
-					descriptionId: descriptionId,
+					inputID: id,
+					descriptionID: descriptionID,
 					disabled: disabled,
 					labelFontWeight: labelFontWeight,
 					labelFontSize: labelFontSize
@@ -279,7 +279,7 @@ public struct FieldView: HTMLProtocol {
 				if hasHelpText {
 					div { helpTextContent }
 						.class("field-help-text")
-						.id(helpTextId ?? "")
+						.id(helpTextID ?? "")
 						.style {
 							fieldHelpTextCSS()
 						}

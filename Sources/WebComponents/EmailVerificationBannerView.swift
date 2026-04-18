@@ -6,7 +6,7 @@ import DesignTokens
 import WebTypes
 
 /// Banner component to remind users to verify their email
-public struct EmailVerificationBannerView: HTMLProtocol {
+public struct EmailVerificationBannerView: HTMLContent {
 	let email: String
 	let `class`: String
 
@@ -142,7 +142,7 @@ public class EmailVerificationBannerHydration: @unchecked Sendable {
 		guard let email = button.getAttribute("data-email") else { return }
 
 		// Disable button
-		button.disabled = true
+		(button as? HTMLButtonElement)?.disabled = true
 		button.textContent = "Sending..."
 
 		// Send request to resend verification email
@@ -179,7 +179,7 @@ public class EmailVerificationBannerHydration: @unchecked Sendable {
 			} else {
 				AlertAPI.showError("Failed to send verification email. Please try again.")
 				if let btn = self.resendButton {
-					btn.disabled = false
+					(btn as? HTMLButtonElement)?.disabled = false
 					btn.textContent = "Resend Email"
 				}
 			}

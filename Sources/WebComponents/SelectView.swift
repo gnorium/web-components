@@ -7,7 +7,7 @@ import DesignTokens
 import WebTypes
 
 /// A select input with a dropdown menu of predefined, selectable options.
-public struct SelectView: HTMLProtocol {
+public struct SelectView: HTMLContent {
 	let id: String
 	let name: String
 	let menuItems: [MenuItemView.MenuItemData]
@@ -52,14 +52,14 @@ public struct SelectView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func selectViewCSS() -> [CSSProtocol] {
+	private func selectViewCSS() -> [AnyCSSContent] {
 		position(.relative)
 		display(.inlineBlock)
 		minWidth(px(256))
 	}
 
 	@CSSBuilder
-	private func selectHandleCSS(_ disabled: Bool, _ status: ValidationStatus) -> [CSSProtocol] {
+	private func selectHandleCSS(_ disabled: Bool, _ status: ValidationStatus) -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.spaceBetween)
@@ -89,7 +89,7 @@ public struct SelectView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func selectLabelCSS(_ hasSelection: Bool) -> [CSSProtocol] {
+	private func selectLabelCSS(_ hasSelection: Bool) -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing8)
@@ -104,7 +104,7 @@ public struct SelectView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func selectIconCSS() -> [CSSProtocol] {
+	private func selectIconCSS() -> [AnyCSSContent] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -114,7 +114,7 @@ public struct SelectView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func selectIndicatorCSS(_ disabled: Bool) -> [CSSProtocol] {
+	private func selectIndicatorCSS(_ disabled: Bool) -> [AnyCSSContent] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -258,14 +258,14 @@ private class SelectInstance: @unchecked Sendable {
 	private func openMenu() {
 		menu?.dataset["expanded"] = "true"
 		menu?.style.display(.flex)
-		handle?.setAttribute("aria-expanded", "true")
+		handle?.setAttribute(.ariaExpanded, "true")
 		isOpen = true
 	}
 
 	private func closeMenu() {
 		menu?.dataset["expanded"] = "false"
 		menu?.style.display(.none)
-		handle?.setAttribute("aria-expanded", "false")
+		handle?.setAttribute(.ariaExpanded, "false")
 		isOpen = false
 	}
 

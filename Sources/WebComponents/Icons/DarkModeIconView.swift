@@ -1,12 +1,13 @@
 #if !os(WASI)
 
-import HTMLBuilder
 import CSSBuilder
-import SVGBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
+import SVGBuilder
 import WebTypes
 
-public struct DarkModeIconView: HTMLProtocol {
+public struct DarkModeIconView: HTMLContent {
 	let `class`: String
 	let width: Length
 	let height: Length
@@ -21,7 +22,7 @@ public struct DarkModeIconView: HTMLProtocol {
 		self.height = height
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func toNode() -> DOMNode {
 		svg {
 			path()
 				.d(M(8, 2), a(4, 4, 0, false, false, 6, 6), a(6, 6, 0, true, true, -6, -6), Z())
@@ -36,7 +37,6 @@ public struct DarkModeIconView: HTMLProtocol {
 		.viewBox(0, 0, 16, 16)
 		.fill(.none)
 		.stroke(.currentColor)
-		.render(indent: indent)
 	}
 }
 

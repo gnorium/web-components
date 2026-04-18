@@ -1,23 +1,24 @@
 #if !os(WASI)
 
+import Foundation
 import HTMLBuilder
 import CSSBuilder
 import DesignTokens
 import WebTypes
 
 /// A ButtonGroup consists of a set of two or more normal buttons.
-public struct ButtonGroupView: HTMLProtocol {
+public struct ButtonGroupView: HTMLContent {
 	public struct ButtonItem: Sendable {
 		public let value: String
 		public let label: String
-		public let icon: (any HTMLProtocol)?
+		public let icon: AnyHTMLContent?
 		public let disabled: Bool
 		public let ariaLabel: String?
 
 		public init(
 			value: String,
 			label: String,
-			icon: (any HTMLProtocol)? = nil,
+			icon: AnyHTMLContent? = nil,
 			disabled: Bool = false,
 			ariaLabel: String? = nil
 		) {
@@ -44,13 +45,13 @@ public struct ButtonGroupView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func buttonGroupViewCSS() -> [CSSProtocol] {
+	private func buttonGroupViewCSS() -> [AnyCSSContent] {
 		display(.inlineFlex)
 		flexWrap(.wrap)
 	}
 
 	@CSSBuilder
-	private func buttonGroupButtonCSS(_ isDisabled: Bool) -> [CSSProtocol] {
+	private func buttonGroupButtonCSS(_ isDisabled: Bool) -> [AnyCSSContent] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -80,24 +81,44 @@ public struct ButtonGroupView: HTMLProtocol {
 
 		// Interaction
 		cursor(.pointer)
-		transition(.all, s(0.1), .ease)
+		transition(.all, s(0.2), .easeInOut)
+
+		// Shared border logic
+		pseudoClass(not(.lastChild)) {
+			borderInlineEndWidth(0)
+		}
+
+		// First button
+		pseudoClass(.firstChild) {
+			borderTopLeftRadius(borderRadiusBase)
+			borderBottomLeftRadius(borderRadiusBase)
+		}
+
+		// Last button
+		pseudoClass(.lastChild) {
+			borderTopRightRadius(borderRadiusBase)
+			borderBottomRightRadius(borderRadiusBase)
+		}
 
 		// Hover state
 		pseudoClass(.hover, not(.disabled)) {
-			backgroundColor(backgroundColorInteractive).important()
+			backgroundColor(backgroundColorInteractiveSubtleHover).important()
+			zIndex(1).important()
 		}
 
 		// Active state
 		pseudoClass(.active, not(.disabled)) {
-			backgroundColor(backgroundColorInteractiveActive).important()
+			backgroundColor(backgroundColorInteractiveSubtleActive).important()
 			color(colorEmphasized).important()
-			borderColor(borderColorBlue).important()
+			borderColor(borderColorBase).important()
+			zIndex(1).important()
 		}
 
 		// Focus state
 		pseudoClass(.focus) {
 			outline(borderWidthThick, .solid, colorBlue).important()
 			borderColor(borderColorBlue).important()
+			zIndex(2).important()
 		}
 
 		// Disabled state
@@ -111,7 +132,7 @@ public struct ButtonGroupView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func buttonIconCSS() -> [CSSProtocol] {
+	private func buttonIconCSS() -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -121,10 +142,10 @@ public struct ButtonGroupView: HTMLProtocol {
 
 	public func render(indent: Int = 0) -> String {
 		div {
-			buttons.map { button -> any HTMLProtocol in
+			for button in buttons {
 				let isDisabled = disabled || button.disabled
 
-				return div {
+				div {
 					if let icon = button.icon {
 						span { icon }
 							.class("button-icon")
@@ -146,15 +167,6 @@ public struct ButtonGroupView: HTMLProtocol {
 				.ariaLabel(button.ariaLabel ?? button.label)
 				.style {
 					buttonGroupButtonCSS(isDisabled)
-					borderRadius(borderRadiusPill)
-					
-					pseudoClass(.hover) {
-						zIndex(1).important()
-					}
-					
-					pseudoClass(.focus) {
-						zIndex(2).important()
-					}
 				}
 			}
 		}

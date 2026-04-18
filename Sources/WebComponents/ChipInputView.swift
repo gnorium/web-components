@@ -8,7 +8,7 @@ import WebTypes
 
 /// A ChipInput allows users to create chips to filter content or make selections.
 /// Chips are editable and can be removed.
-public struct ChipInputView: HTMLProtocol {
+public struct ChipInputView: HTMLContent {
 	public struct Chip : Sendable{
 		let id: String
 		let value: String
@@ -59,7 +59,7 @@ public struct ChipInputView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func chipInputViewCSS(_ disabled: Bool) -> [CSSProtocol] {
+	private func chipInputViewCSS(_ disabled: Bool) -> [AnyCSSContent] {
 		if disabled {
 			opacity(opacityMedium)
 			cursor(cursorBaseDisabled)
@@ -67,7 +67,7 @@ public struct ChipInputView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func chipCSS() -> [CSSProtocol] {
+	private func chipCSS() -> [AnyCSSContent] {
 		display(.inlineFlex)
 		alignItems(.center)
 		maxWidth(perc(100))
@@ -80,25 +80,30 @@ public struct ChipInputView: HTMLProtocol {
 		color(colorBase)
 		cursor(cursorBase)
 
+		transition(.all, s(0.2), .easeInOut)
+		userSelect(.none)
+
 		pseudoClass(.hover) {
 			backgroundColor(backgroundColorInteractiveSubtleHover).important()
 			borderColor(borderColorSubtle).important()
+			transform(translateY(px(-1)))
+			boxShadow(px(0), px(2), px(4), boxShadowColorBase).important()
 		}
 
 		pseudoClass(.focus) {
 			borderColor(borderColorBlueFocus).important()
-			boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
+			boxShadow(px(0), px(0), px(0), px(2), boxShadowColorBlueFocus).important()
 			outline(px(1), .solid, .transparent).important()
 		}
 	}
 
 	@CSSBuilder
-	private func chipIconCSS() -> [CSSProtocol] {
+	private func chipIconCSS() -> [AnyCSSContent] {
 		display(.inlineFlex)
 	}
 
 	@CSSBuilder
-	private func chipButtonCSS(_ disabled: Bool) -> [CSSProtocol] {
+	private func chipButtonCSS(_ disabled: Bool) -> [AnyCSSContent] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -132,7 +137,7 @@ public struct ChipInputView: HTMLProtocol {
 
 
 	@CSSBuilder
-	private func chipInputChipsCSS(_ status: ValidationStatus) -> [CSSProtocol] {
+	private func chipInputChipsCSS(_ status: ValidationStatus) -> [AnyCSSContent] {
 		display(.flex)
 		flexWrap(.wrap)
 		gap(spacing8)
@@ -143,7 +148,7 @@ public struct ChipInputView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func chipInputInputWrapperCSS(_ status: ValidationStatus) -> [CSSProtocol] {
+	private func chipInputInputWrapperCSS(_ status: ValidationStatus) -> [AnyCSSContent] {
 		display(.flex)
 		padding(spacing8)
 		backgroundColor(backgroundColorBase)
@@ -153,12 +158,12 @@ public struct ChipInputView: HTMLProtocol {
 
 		pseudoClass(.focusWithin) {
 			borderColor(borderColorBlueFocus).important()
-			boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
+			boxShadow(px(0), px(0), px(8), boxShadowColorBlueFocus).important()
 		}
 	}
 
 	@CSSBuilder
-	private func chipInputItemsCSS(_ status: ValidationStatus, _ disabled: Bool) -> [CSSProtocol] {
+	private func chipInputItemsCSS(_ status: ValidationStatus, _ disabled: Bool) -> [AnyCSSContent] {
 		display(.flex)
 		flexWrap(.wrap)
 		alignItems(.center)
@@ -172,7 +177,7 @@ public struct ChipInputView: HTMLProtocol {
 
 		pseudoClass(.focusWithin) {
 			borderColor(borderColorBlueFocus).important()
-			boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
+			boxShadow(px(0), px(0), px(8), boxShadowColorBlueFocus).important()
 		}
 
 		if disabled {
@@ -181,7 +186,7 @@ public struct ChipInputView: HTMLProtocol {
 	}
 
 	public func render(indent: Int = 0) -> String {
-		let chipElements: [HTMLProtocol] = chips.map { chip in
+		let chipElements = chips.map { chip in
 			div {
 				if let icon = chip.icon {
 					span { icon }

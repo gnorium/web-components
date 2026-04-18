@@ -1,12 +1,13 @@
 #if !os(WASI)
 
-import HTMLBuilder
 import CSSBuilder
-import SVGBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
+import SVGBuilder
 import WebTypes
 
-public struct XIconView: HTMLProtocol {
+public struct XIconView: HTMLContent {
 	let `class`: String
 	let width: Length
 	let height: Length
@@ -27,7 +28,7 @@ public struct XIconView: HTMLProtocol {
 		self.monochrome = monochrome
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func toNode() -> DOMNode {
 		svg {
 			path()
 				.d(M(236, 0), h(46), l(-101, 115), l(118, 156), h(-92.6), l(-72.5, -94.8), l(-83, 94.8), h(-46), l(107, -123), l(-113, -148), h(94.9), l(65.5, 86.6), z(), m(-16.1, 244), h(25.5), l(-165, -218), h(-27.4), z())
@@ -39,7 +40,6 @@ public struct XIconView: HTMLProtocol {
 		.viewBox(0, 0, 300, 271)
 		.xmlns("http://www.w3.org/2000/svg")
 		.xmlnsXlink("http://www.w3.org/1999/xlink")
-		.render(indent: indent)
 	}
 }
 

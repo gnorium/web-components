@@ -1,12 +1,13 @@
 #if !os(WASI)
 
-import HTMLBuilder
 import CSSBuilder
-import SVGBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
+import SVGBuilder
 import WebTypes
 
-public struct YouTubeIconView: HTMLProtocol {
+public struct YouTubeIconView: HTMLContent {
 	let `class`: String
 	let width: Length
 	let height: Length
@@ -27,7 +28,7 @@ public struct YouTubeIconView: HTMLProtocol {
 		self.monochrome = monochrome
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func toNode() -> DOMNode {
 		svg {
 			// YouTube rounded rectangle background
 			path()
@@ -44,7 +45,6 @@ public struct YouTubeIconView: HTMLProtocol {
 		.height(height)
 		.viewBox(0, 0, 28.57, 20)
 		.xmlns("http://www.w3.org/2000/svg")
-		.render(indent: indent)
 	}
 }
 

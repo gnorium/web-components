@@ -7,7 +7,7 @@ import DesignTokens
 import WebTypes
 
 /// A multi-line text input that allows manual resizing if needed.
-public struct TextAreaView: HTMLProtocol {
+public struct TextAreaView: HTMLContent {
 	let id: String
 	let name: String
 	let placeholder: String
@@ -58,7 +58,7 @@ public struct TextAreaView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func textAreaViewCSS(_ hasStartIcon: Bool, _ hasEndIcon: Bool) -> [CSSProtocol] {
+	private func textAreaViewCSS(_ hasStartIcon: Bool, _ hasEndIcon: Bool) -> [AnyCSSContent] {
 		position(.relative)
 		display(.inlineBlock)
 		width(perc(100))
@@ -71,7 +71,7 @@ public struct TextAreaView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func textAreaInputCSS(_ disabled: Bool, _ readonly: Bool, _ status: ValidationStatus, _ autosize: Bool, _ hasStartIcon: Bool, _ hasEndIcon: Bool) -> [CSSProtocol] {
+	private func textAreaInputCSS(_ disabled: Bool, _ readonly: Bool, _ status: ValidationStatus, _ autosize: Bool, _ hasStartIcon: Bool, _ hasEndIcon: Bool) -> [AnyCSSContent] {
 		width(perc(100))
 		minHeight(px(rows * 24))
 		padding(spacing12)
@@ -89,6 +89,9 @@ public struct TextAreaView: HTMLProtocol {
 		if autosize {
 			resize(.none)
 			overflow(.hidden)
+			fieldSizing(.content)
+			minHeight(em(2.5))
+			maxHeight(rem(18))
 		} else {
 			resize(.vertical)
 			overflowY(.auto)
@@ -118,7 +121,7 @@ public struct TextAreaView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func textAreaIconCSS(_ isStartIcon: Bool) -> [CSSProtocol] {
+	private func textAreaIconCSS(_ isStartIcon: Bool) -> [AnyCSSContent] {
 		position(.absolute)
 		top(spacing12)
 		display(.inlineFlex)
@@ -141,7 +144,7 @@ public struct TextAreaView: HTMLProtocol {
 		let hasEndIcon = endIcon != nil
 
 		if hasStartIcon || hasEndIcon {
-			var textAreaInput = textarea { value }
+			var textAreaInput = textarea(value)
 				.id(id)
 				.name(name)
 				.placeholder(placeholder)
@@ -191,15 +194,15 @@ public struct TextAreaView: HTMLProtocol {
 			}
 			.render(indent: indent)
 		} else {
-			var textAreaInput = textarea { value }
-				.id(id)
-				.name(name)
-				.placeholder(placeholder)
-				.disabled(disabled)
-				.readonly(readonly)
-				.required(required)
-				.rows(rows)
-				.class("text-area-input")
+			var textAreaInput = textarea(value)
+            .id(id)
+            .name(name)
+            .placeholder(placeholder)
+            .disabled(disabled)
+            .readonly(readonly)
+            .required(required)
+            .rows(rows)
+            .class("text-area-input")
 
 			if autosize {
 				textAreaInput = textAreaInput.data("autosize", "true")

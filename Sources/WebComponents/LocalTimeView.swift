@@ -1,6 +1,9 @@
 #if !os(WASI)
 
+#if !os(WASI)
 import Foundation
+
+#endif
 import HTMLBuilder
 import CSSBuilder
 import DesignTokens
@@ -8,7 +11,7 @@ import WebTypes
 
 /// Renders a `<time>` element with an ISO 8601 `datetime` attribute and a UTC fallback display.
 /// WASM hydration converts the display to the user's local timezone.
-public struct LocalTimeView: HTMLProtocol {
+public struct LocalTimeView: HTMLContent {
 	let date: Date
 	let size: Length
 	let textColor: CSSColor

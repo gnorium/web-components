@@ -1,12 +1,13 @@
 #if !os(WASI)
 
-import HTMLBuilder
-import SVGBuilder
 import CSSBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
+import SVGBuilder
 import WebTypes
 
-public struct BookIconView: HTMLProtocol {
+public struct BookIconView: HTMLContent {
 	let width: Length
 	let height: Length
 	let `class`: String
@@ -21,7 +22,7 @@ public struct BookIconView: HTMLProtocol {
 		self.class = `class`
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func toNode() -> DOMNode {
 		svg {
 			path()
 			.d(M(15, 2), a(7.65, 7.65, 0, false, false, -5, 2), a(7.65, 7.65, 0, false, false, -5, -2), H(1), v(15), h(4), a(7.65, 7.65, 0, false, true, 5, 2), a(7.65, 7.65, 0, false, true, 5, -2), h(4), V(2), Z(), m(2.5, 13.5), H(14), a(4.38, 4.38, 0, false, false, -3, 1), V(5), s(1, -1.5, 4, -1.5), h(2.5), Z())
@@ -35,7 +36,6 @@ public struct BookIconView: HTMLProtocol {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
-		.render(indent: indent)
 	}
 }
 

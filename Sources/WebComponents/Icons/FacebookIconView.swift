@@ -1,12 +1,13 @@
 #if !os(WASI)
 
-import HTMLBuilder
 import CSSBuilder
-import SVGBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
+import SVGBuilder
 import WebTypes
 
-public struct FacebookIconView: HTMLProtocol {
+public struct FacebookIconView: HTMLContent {
 	let `class`: String
 	let width: Length
 	let height: Length
@@ -27,7 +28,7 @@ public struct FacebookIconView: HTMLProtocol {
 		self.monochrome = monochrome
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func toNode() -> DOMNode {
 		svg {
 			defs {
 				clipPath {
@@ -63,7 +64,6 @@ public struct FacebookIconView: HTMLProtocol {
 		.viewBox(0, 0, 666.66668, 666.66717)
 		.xmlns("http://www.w3.org/2000/svg")
 		.xmlnsXlink("http://www.w3.org/1999/xlink")
-		.render(indent: indent)
 	}
 }
 

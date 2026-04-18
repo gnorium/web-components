@@ -1,13 +1,16 @@
 #if !os(WASI)
 
+#if !os(WASI)
 import Foundation
+
+#endif
 import HTMLBuilder
 import CSSBuilder
 import DesignTokens
 import WebTypes
 
 /// TypeaheadSearch is a search input that provides a menu of options based on the current search query.
-public struct TypeaheadSearchView: HTMLProtocol {
+public struct TypeaheadSearchView: HTMLContent {
 	public struct SearchResult: Sendable {
 		public let value: String
 		public let label: String
@@ -78,20 +81,20 @@ public struct TypeaheadSearchView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func typeaheadSearchViewCSS() -> [CSSProtocol] {
+	private func typeaheadSearchViewCSS() -> [AnyCSSContent] {
 		position(.relative)
 		width(perc(100))
 		fontFamily(typographyFontSans)
 	}
 
 	@CSSBuilder
-	private func typeaheadSearchFormCSS() -> [CSSProtocol] {
+	private func typeaheadSearchFormCSS() -> [AnyCSSContent] {
 		position(.relative)
 		width(perc(100))
 	}
 
 	@CSSBuilder
-	private func typeaheadSearchInputWrapperCSS(_ autoExpandWidth: Bool, _ showThumbnail: Bool) -> [CSSProtocol] {
+	private func typeaheadSearchInputWrapperCSS(_ autoExpandWidth: Bool, _ showThumbnail: Bool) -> [AnyCSSContent] {
 		position(.relative)
 		width(perc(100))
 
@@ -101,7 +104,7 @@ public struct TypeaheadSearchView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func typeaheadSearchMenuCSS() -> [CSSProtocol] {
+	private func typeaheadSearchMenuCSS() -> [AnyCSSContent] {
 		display(.flex)
 		flexDirection(.column)
 		gap(spacing8)
@@ -110,14 +113,14 @@ public struct TypeaheadSearchView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func typeaheadSearchPendingCSS() -> [CSSProtocol] {
+	private func typeaheadSearchPendingCSS() -> [AnyCSSContent] {
 		padding(spacing12, spacing16)
 		color(colorSubtle)
 		fontSize(fontSizeSmall14)
 	}
 
 	@CSSBuilder
-	private func typeaheadSearchNoResultsCSS() -> [CSSProtocol] {
+	private func typeaheadSearchNoResultsCSS() -> [AnyCSSContent] {
 		padding(spacing12, spacing16)
 		color(colorSubtle)
 		fontSize(fontSizeSmall14)
@@ -183,8 +186,8 @@ public struct TypeaheadSearchView: HTMLProtocol {
 			}
 		}
 		.class(`class`.isEmpty ? (showThumbnail ? (autoExpandWidth ? "typeahead-search-view typeahead-search-show-thumbnail typeahead-search-auto-expand-width" : "typeahead-search-view typeahead-search-show-thumbnail") : "typeahead-search-view") : (showThumbnail ? (autoExpandWidth ? "typeahead-search-view typeahead-search-show-thumbnail typeahead-search-auto-expand-width \(`class`)" : "typeahead-search-view typeahead-search-show-thumbnail \(`class`)") : "typeahead-search-view \(`class`)"))
-		.data("show-empty-query", showEmptyQueryResults ? "true" : "false")
-		.data("highlight-query", highlightQuery ? "true" : "false")
+		.setAttribute(data("show-empty-query"), showEmptyQueryResults)
+		.setAttribute(data("highlight-query"), highlightQuery)
 		.style {
 			typeaheadSearchViewCSS()
 		}
@@ -219,7 +222,9 @@ private class TypeaheadSearchInstance: @unchecked Sendable {
 		self.inputElement = typeaheadSearch.querySelector(".search-input")
 		self.inputViewElement = typeaheadSearch.querySelector(".search-input-view")
 		self.menuElement = typeaheadSearch.querySelector(".typeahead-search-menu")
-		self.highlightQuery = stringEquals(typeaheadSearch.getAttribute("data-highlight-query") ?? "", "true")
+		if let attr = typeaheadSearch.getAttribute(data("highlight-query")) {
+			self.highlightQuery = stringEquals(attr, "true")
+		}
 
 		if let menu = menuElement {
 			self.menuItems = Array(menu.querySelectorAll(".menu-item-view"))
@@ -303,7 +308,7 @@ private class TypeaheadSearchInstance: @unchecked Sendable {
 
 	private func handleInput() {
 		guard let input = inputElement else { return }
-		currentQuery = input.value
+		currentQuery = (input as? HTMLInputElement)?.value ?? ""
 
 		// Debounce input
 		if let timer = debounceTimer {
@@ -321,7 +326,8 @@ private class TypeaheadSearchInstance: @unchecked Sendable {
 
 		// Show/hide menu based on query
 		if currentQuery.isEmpty {
-			let showEmptyQuery = stringEquals(typeaheadSearchElement.getAttribute("data-show-empty-query") ?? "", "true")
+			let showEmptyAttr = typeaheadSearchElement.getAttribute(data("show-empty-query")) ?? "false"
+			let showEmptyQuery = stringEquals(showEmptyAttr, "true")
 			if showEmptyQuery {
 				showMenu()
 			} else {
@@ -364,11 +370,11 @@ private class TypeaheadSearchInstance: @unchecked Sendable {
 		guard index >= 0 && index < menuItems.count else { return }
 		let item = menuItems[index]
 
-		if let url = item.getAttribute("data-url"), !url.isEmpty {
+		if let url = item.getAttribute(data("url")), !url.isEmpty {
 			window.location.href = url
 		}
 
-		let value = item.getAttribute("data-value") ?? ""
+		let value = item.getAttribute(data("value")) ?? ""
 		let event = CustomEvent(type: "search-result-click", detail: value)
 		typeaheadSearchElement.dispatchEvent(event)
 	}
@@ -386,7 +392,7 @@ private class TypeaheadSearchInstance: @unchecked Sendable {
 
 	private func hideMenu() {
 		guard let menu = menuElement else { return }
-		menu.setAttribute("hidden", "")
+		menu.setAttribute(.hidden, "")
 		menu.style.display(.none)
 	}
 
@@ -394,13 +400,13 @@ private class TypeaheadSearchInstance: @unchecked Sendable {
 		for (index, item) in menuItems.enumerated() {
 			if index == selectedIndex {
 				_ = item.classList.add("menu-item-selected")
-				item.setAttribute("aria-selected", "true")
+				item.setAttribute(.ariaSelected, true)
 				// Apply highlighted styles
 				item.style.color(colorBlue)
 				item.style.border(borderWidthBase, .solid, borderColorBlue)
 			} else {
 				_ = item.classList.remove("menu-item-selected")
-				item.setAttribute("aria-selected", "false")
+				item.setAttribute(.ariaSelected, false)
 				// Apply default styles
 				item.style.color(colorSubtle)
 				item.style.border(borderWidthBase, .solid, borderColorSubtle)

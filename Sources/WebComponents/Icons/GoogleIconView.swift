@@ -1,12 +1,13 @@
 #if !os(WASI)
 
-import HTMLBuilder
 import CSSBuilder
-import SVGBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
+import SVGBuilder
 import WebTypes
 
-public struct GoogleIconView: HTMLProtocol {
+public struct GoogleIconView: HTMLContent {
 	let `class`: String
 	let width: Length
 	let height: Length
@@ -21,7 +22,7 @@ public struct GoogleIconView: HTMLProtocol {
 		self.height = height
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func toNode() -> DOMNode {
 		svg {
 			path()
 				.d(M(22.56, 12.25), c(0, -0.78, -0.07, -1.53, -0.2, -2.25), H(12), v(4.26), h(5.92), c(-0.26, 1.37, -1.04, 2.53, -2.21, 3.31), v(2.77), h(3.57), c(2.08, -1.92, 3.28, -4.74, 3.28, -8.09), Z())
@@ -42,7 +43,6 @@ public struct GoogleIconView: HTMLProtocol {
 		.viewBox(0, 0, 24, 24)
 		.xmlns("http://www.w3.org/2000/svg")
 		.xmlnsXlink("http://www.w3.org/1999/xlink")
-		.render(indent: indent)
 	}
 }
 

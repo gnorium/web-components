@@ -21,7 +21,7 @@ import WebTypes
 ///   el.setAttribute('to', from);
 /// }, 210);
 /// ```
-public struct AnimatedUpDownChevronView: HTMLProtocol {
+public struct AnimatedUpDownChevronView: HTMLContent {
 	let id: String
 	let expanded: Bool
 	let width: Length

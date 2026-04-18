@@ -6,7 +6,7 @@ import SVGBuilder
 import DesignTokens
 import WebTypes
 
-public struct DropdownView: HTMLProtocol {
+public struct DropdownView: HTMLContent {
     public struct DropdownOption: Sendable {
         public let value: String
         public let display: String
@@ -324,7 +324,7 @@ private class DropdownInstance: @unchecked Sendable {
 	private var isOpen: Bool = false
 	private var allOptions: [Element] = []
 
-	init(container: Element, dropdownId: String) {
+	init(container: Element, dropdownID: String) {
 		self.container = container
 		trigger = container.querySelector("[data-dropdown-trigger=\"true\"]")
 		menu = container.querySelector("[data-dropdown-menu=\"true\"]")
@@ -424,35 +424,35 @@ private class DropdownInstance: @unchecked Sendable {
 		menu?.style.display(.none)
 		morphChevron()
 		isOpen = false
-		searchInput?.value = ""
+		(searchInput as? HTMLInputElement)?.value = ""
 		filterOptions() // Reset filter
 	}
 
 	private func morphChevron() {
 		guard let svg = chevronSvg else { return }
 		if isOpen {
-			svg.style.setProperty("transform", "rotate(0deg)")
-			svg.setAttribute("data-expanded", "true")
+			svg.style.transform(rotate(deg(0)))
+			svg.setAttribute(data("expanded"), true)
 		} else {
-			svg.style.setProperty("transform", "rotate(-90deg)")
-			svg.setAttribute("data-expanded", "false")
+			svg.style.transform(rotate(deg(-90)))
+			svg.setAttribute(data("expanded"), false)
 		}
 	}
 
 	private func filterOptions() {
 		guard let searchInput else { return }
 
-		let searchValue = searchInput.value
+		let searchValue = (searchInput as? HTMLInputElement)?.value ?? ""
 
 		for option in allOptions {
-			guard let displayValue = option.getAttribute("data-display") else {
+			guard let displayValue = option.getAttribute(data("display")) else {
 				option.style.display(.none)
 				continue
 			}
 
 			// Use utility function for case-insensitive substring match
 			let matches = stringContainsCaseInsensitive(displayValue, searchValue) ||
-                          stringContainsCaseInsensitive(option.getAttribute("data-alt-display") ?? "", searchValue)
+                          stringContainsCaseInsensitive(option.getAttribute(data("alt-display")) ?? "", searchValue)
 			if matches {
 				option.style.display(.flex)
 			} else {
@@ -462,18 +462,18 @@ private class DropdownInstance: @unchecked Sendable {
 	}
     
 	private func selectOption(_ option: Element) {
-		guard let value = option.getAttribute("data-value"),
-			  let display = option.getAttribute("data-display") else { return }
+		guard let value = option.getAttribute(data("value")),
+			  let display = option.getAttribute(data("display")) else { return }
 
 		// Update hidden input
-		hiddenInput?.value = value
+		(hiddenInput as? HTMLInputElement)?.value = value
 
 		// Get altDisplay for tooltip
-		let altDisplay = option.getAttribute("data-alt-display") ?? display
+		let altDisplay = option.getAttribute(data("alt-display")) ?? display
 
 		// Update selected text and title (tooltip)
 		selectedText?.innerHTML = display
-		selectedText?.setAttribute("title", altDisplay)
+		selectedText?.setAttribute(.title, altDisplay)
 
 		// Update selected state in menu
 		for opt in allOptions {
@@ -507,11 +507,11 @@ public class DropdownHydration: @unchecked Sendable {
             if container.hasAttribute("data-dropdown-hydrated") { continue }
 
             guard let trigger = container.querySelector("[data-dropdown-trigger=\"true\"]"),
-                  let dropdownId = trigger.getAttribute("data-dropdown-id") else { continue }
+                  let dropdownID = trigger.getAttribute("data-dropdown-id") else { continue }
 
-            let instance = DropdownInstance(container: container, dropdownId: dropdownId)
+            let instance = DropdownInstance(container: container, dropdownID: dropdownID)
             instances.append(instance)
-            container.setAttribute("data-dropdown-hydrated", "true")
+            container.setAttribute(data("dropdown-hydrated"), true)
         }
     }
 
@@ -519,14 +519,14 @@ public class DropdownHydration: @unchecked Sendable {
         if element.hasAttribute("data-dropdown-hydrated") { return }
         
         guard let trigger = element.querySelector("[data-dropdown-trigger=\"true\"]"),
-              let dropdownId = trigger.getAttribute("data-dropdown-id") else { return }
+              let dropdownID = trigger.getAttribute("data-dropdown-id") else { return }
 
-        let instance = DropdownInstance(container: element, dropdownId: dropdownId)
+        let instance = DropdownInstance(container: element, dropdownID: dropdownID)
         instances.append(instance)
-        element.setAttribute("data-dropdown-hydrated", "true")
+        element.setAttribute(data("dropdown-hydrated"), true)
     }
 
-    public func hydrateDropdown(dropdownId: String) {
+    public func hydrateDropdown(dropdownID: String) {
         let allContainers = document.querySelectorAll("[data-dropdown-container=\"true\"]")
 
         for container in allContainers {
@@ -534,11 +534,11 @@ public class DropdownHydration: @unchecked Sendable {
 
             guard let trigger = container.querySelector("[data-dropdown-trigger=\"true\"]"),
                   let id = trigger.getAttribute("data-dropdown-id"),
-                  stringEquals(id, dropdownId) else { continue }
+                  stringEquals(id, dropdownID) else { continue }
 
-            let instance = DropdownInstance(container: container, dropdownId: dropdownId)
+            let instance = DropdownInstance(container: container, dropdownID: dropdownID)
             instances.append(instance)
-            container.setAttribute("data-dropdown-hydrated", "true")
+            container.setAttribute(data("dropdown-hydrated"), true)
             break
         }
     }

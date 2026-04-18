@@ -7,7 +7,7 @@ import DesignTokens
 import WebTypes
 
 /// A Menu displays a list of available options, suggestions, or actions.
-public struct MenuView: HTMLProtocol {
+public struct MenuView: HTMLContent {
 	let menuItems: [MenuItemView.MenuItemData]
 	let menuGroups: [MenuGroupData]
 	let footer: MenuItemView.MenuItemData?
@@ -20,8 +20,8 @@ public struct MenuView: HTMLProtocol {
 	let hideDescriptionOverflow: Bool
 	let searchQuery: String
 	let multiselect: Bool
-	let pendingContent: [HTMLProtocol]
-	let noResultsContent: [HTMLProtocol]
+	let pendingContent: [AnyHTMLContent]
+	let noResultsContent: [AnyHTMLContent]
 	let showNoResultsSlot: Bool?
 	let `class`: String
 
@@ -63,8 +63,8 @@ public struct MenuView: HTMLProtocol {
 		multiselect: Bool = false,
 		showNoResultsSlot: Bool? = nil,
 		class: String = "",
-		@HTMLBuilder pending: () -> [HTMLProtocol] = { [] },
-		@HTMLBuilder noResults: () -> [HTMLProtocol] = { [] }
+		@HTMLBuilder pending: () -> [AnyHTMLContent] = { [] },
+		@HTMLBuilder noResults: () -> [AnyHTMLContent] = { [] }
 	) {
 		self.menuItems = menuItems
 		self.menuGroups = menuGroups
@@ -85,7 +85,7 @@ public struct MenuView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func menuViewCSS(_ expanded: Bool, _ hasVisibleLimit: Bool) -> [CSSProtocol] {
+	private func menuViewCSS(_ expanded: Bool, _ hasVisibleLimit: Bool) -> [AnyCSSContent] {
 		position(.absolute)
 		top(perc(100))
 		insetInlineStart(0)
@@ -110,7 +110,7 @@ public struct MenuView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func menuListCSS(_ hasVisibleLimit: Bool, _ visibleItemLimit: Int?) -> [CSSProtocol] {
+	private func menuListCSS(_ hasVisibleLimit: Bool, _ visibleItemLimit: Int?) -> [AnyCSSContent] {
 		listStyle(.none)
 		margin(0)
 		padding(0)
@@ -122,14 +122,14 @@ public struct MenuView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func menuGroupCSS() -> [CSSProtocol] {
+	private func menuGroupCSS() -> [AnyCSSContent] {
 		listStyle(.none)
 		margin(0)
 		padding(0)
 	}
 
 	@CSSBuilder
-	private func menuGroupHeaderCSS(_ hideTitle: Bool) -> [CSSProtocol] {
+	private func menuGroupHeaderCSS(_ hideTitle: Bool) -> [AnyCSSContent] {
 		if !hideTitle {
 			display(.flex)
 			alignItems(.center)
@@ -139,7 +139,7 @@ public struct MenuView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func menuGroupTitleCSS(_ hideTitle: Bool) -> [CSSProtocol] {
+	private func menuGroupTitleCSS(_ hideTitle: Bool) -> [AnyCSSContent] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeSmall14)
 		fontWeight(fontWeightBold)
@@ -161,7 +161,7 @@ public struct MenuView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func menuGroupDescriptionCSS() -> [CSSProtocol] {
+	private func menuGroupDescriptionCSS() -> [AnyCSSContent] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeXSmall12)
 		lineHeight(lineHeightSmall22)
@@ -170,7 +170,7 @@ public struct MenuView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func menuGroupDividerCSS() -> [CSSProtocol] {
+	private func menuGroupDividerCSS() -> [AnyCSSContent] {
 		height(borderWidthBase)
 		backgroundColor(borderColorSubtle)
 		margin(spacing8, spacing0)
@@ -178,12 +178,12 @@ public struct MenuView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func menuPendingCSS() -> [CSSProtocol] {
+	private func menuPendingCSS() -> [AnyCSSContent] {
 		padding(spacing12)
 	}
 
 	@CSSBuilder
-	private func menuNoResultsCSS() -> [CSSProtocol] {
+	private func menuNoResultsCSS() -> [AnyCSSContent] {
 		padding(spacing12)
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
@@ -201,7 +201,7 @@ public struct MenuView: HTMLProtocol {
 		let hasPendingContent = !pendingContent.isEmpty
 
 		// Render individual menu item using MenuItemView
-		func renderMenuItem(_ item: MenuItemView.MenuItemData, itemIndex: Int, isFooter: Bool = false) -> HTMLProtocol {
+		func renderMenuItem(_ item: MenuItemView.MenuItemData, itemIndex: Int, isFooter: Bool = false) -> MenuItemView {
 			let isSelected = selected.contains(item.value)
 			let thumbnail = item.thumbnail != nil ? MenuItemView.Thumbnail(url: item.thumbnail!, alt: "") : nil
 
@@ -298,9 +298,9 @@ public struct MenuView: HTMLProtocol {
 
 							// Group items
 							ul {
-								group.items.enumerated().map { (offset, item) in
+								for (offset, item) in group.items.enumerated() {
 									let currentIndex = itemIndex + offset
-									return renderMenuItem(item, itemIndex: currentIndex)
+									renderMenuItem(item, itemIndex: currentIndex)
 								}
 							}
 							.class("menu-group-list")
@@ -319,7 +319,7 @@ public struct MenuView: HTMLProtocol {
 
 				// Individual menu items (not in groups)
 				if !menuItems.isEmpty {
-					menuItems.enumerated().map { (offset, item) in
+					for (offset, item) in menuItems.enumerated() {
 						renderMenuItem(item, itemIndex: itemIndex + offset)
 					}
 				}
@@ -337,7 +337,7 @@ public struct MenuView: HTMLProtocol {
 			}
 		}
 		.class(`class`.isEmpty ? "menu-view" : "menu-view \(`class`)")
-		.data("expanded", expanded ? "true" : "false")
+		.setAttribute(data("expanded"), expanded)
 		.style {
 			menuViewCSS(expanded, hasVisibleLimit)
 		}
@@ -386,21 +386,21 @@ private class MenuInstance: @unchecked Sendable {
 				let value = event.detail
 
 				// Get current selection state
-				let isSelected = item.getAttribute("aria-selected") ?? "false"
+				let isSelected = item.getAttribute(.ariaSelected) ?? "false"
 				let newSelected = !stringEquals(isSelected, "true")
 
 				if self.multiselect {
 					// Multiselect: toggle this item
-					item.setAttribute("aria-selected", newSelected ? "true" : "false")
+					item.setAttribute(.ariaSelected, newSelected)
 				} else {
 					// Single select: deselect all, select this one
 					for otherItem in self.menuItems {
-						otherItem.setAttribute("aria-selected", "false")
+						otherItem.setAttribute(.ariaSelected, false)
 					}
-					item.setAttribute("aria-selected", "true")
+					item.setAttribute(.ariaSelected, true)
 
 					// Close menu
-					self.menu.dataset["expanded"] = "false"
+					self.menu.setAttribute(data("expanded"), false)
 					self.menu.style.display(.none)
 				}
 
@@ -469,7 +469,7 @@ private class MenuInstance: @unchecked Sendable {
 			return true
 
 		case "Escape":
-			menu.dataset["expanded"] = "false"
+			menu.setAttribute(data("expanded"), false)
 			menu.style.display(.none)
 			return true
 
@@ -481,7 +481,7 @@ private class MenuInstance: @unchecked Sendable {
 	private func updateHighlight() {
 		for (index, item) in menuItems.enumerated() {
 			if index == highlightedIndex {
-				item.dataset["highlighted"] = "true"
+				item.setAttribute(data("highlighted"), true)
 
 				// Dispatch keyboard navigation event
 				let event = CustomEvent(type: "menu-item-keyboard-nav", detail: "")

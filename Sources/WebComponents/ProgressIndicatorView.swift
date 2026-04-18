@@ -1,17 +1,20 @@
 #if !os(WASI)
 
+#if !os(WASI)
 import Foundation
+
+#endif
 import HTMLBuilder
 import CSSBuilder
 import DesignTokens
 import WebTypes
 
 /// A visual element used to indicate the ongoing, indefinite progress of an action or process.
-public struct ProgressIndicatorView: HTMLProtocol {
+public struct ProgressIndicatorView: HTMLContent {
 	let showLabel: Bool
 	let ariaHidden: Bool
 	let ariaLabel: String?
-	let content: [HTMLProtocol]
+	let content: [AnyHTMLContent]
 	let `class`: String
 
 	public init(
@@ -19,7 +22,7 @@ public struct ProgressIndicatorView: HTMLProtocol {
 		ariaHidden: Bool = false,
 		ariaLabel: String? = nil,
 		class: String = "",
-		@HTMLBuilder content: () -> [HTMLProtocol] = { [] }
+		@HTMLBuilder content: () -> [AnyHTMLContent] = { [] }
 	) {
 		self.showLabel = showLabel
 		self.ariaHidden = ariaHidden
@@ -29,7 +32,7 @@ public struct ProgressIndicatorView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func progressIndicatorViewCSS() -> [CSSProtocol] {
+	private func progressIndicatorViewCSS() -> [AnyCSSContent] {
 		display(.inlineFlex)
 		alignItems(.center)
 		gap(spacing8)
@@ -41,7 +44,7 @@ public struct ProgressIndicatorView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func progressIndicatorSpinnerCSS() -> [CSSProtocol] {
+	private func progressIndicatorSpinnerCSS() -> [AnyCSSContent] {
 		display(.inlineBlock)
 		width(sizeIconMedium)
 		height(sizeIconMedium)
@@ -55,7 +58,7 @@ public struct ProgressIndicatorView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func progressIndicatorLabelCSS() -> [CSSProtocol] {
+	private func progressIndicatorLabelCSS() -> [AnyCSSContent] {
 		display(.inline)
 	}
 

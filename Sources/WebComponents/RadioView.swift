@@ -7,7 +7,7 @@ import DesignTokens
 import WebTypes
 
 /// A radio input with label and optional description that supports single selection from a group.
-public struct RadioView: HTMLProtocol {
+public struct RadioView: HTMLContent {
 	let id: String
 	let name: String
 	let value: String
@@ -16,9 +16,9 @@ public struct RadioView: HTMLProtocol {
 	let disabled: Bool
 	let hideLabel: Bool
 	let status: ValidationStatus
-	let labelContent: [HTMLProtocol]
-	let descriptionContent: [HTMLProtocol]
-	let customInputContent: [HTMLProtocol]
+	let labelContent: [AnyHTMLContent]
+	let descriptionContent: [AnyHTMLContent]
+	let customInputContent: [AnyHTMLContent]
 	let `class`: String
 
 	public enum ValidationStatus: String, Sendable {
@@ -36,9 +36,9 @@ public struct RadioView: HTMLProtocol {
 		hideLabel: Bool = false,
 		status: ValidationStatus = .default,
 		class: String = "",
-		@HTMLBuilder label: () -> [HTMLProtocol],
-		@HTMLBuilder description: () -> [HTMLProtocol] = { [] },
-		@HTMLBuilder customInput: () -> [HTMLProtocol] = { [] }
+		@HTMLBuilder label: () -> [AnyHTMLContent],
+		@HTMLBuilder description: () -> [AnyHTMLContent] = { [] },
+		@HTMLBuilder customInput: () -> [AnyHTMLContent] = { [] }
 	) {
 		self.id = id
 		self.name = name
@@ -55,7 +55,7 @@ public struct RadioView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func radioViewCSS(_ inline: Bool) -> [CSSProtocol] {
+	private func radioViewCSS(_ inline: Bool) -> [AnyCSSContent] {
 		if inline {
 			display(.inlineFlex)
 		} else {
@@ -68,7 +68,7 @@ public struct RadioView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func radioInputCSS(_ disabled: Bool, _ status: ValidationStatus) -> [CSSProtocol] {
+	private func radioInputCSS(_ disabled: Bool, _ status: ValidationStatus) -> [AnyCSSContent] {
 		position(.absolute)
 		width(minSizeInputBinary)
 		height(minSizeInputBinary)
@@ -99,7 +99,7 @@ public struct RadioView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func radioIconCSS(_ disabled: Bool, _ status: ValidationStatus) -> [CSSProtocol] {
+	private func radioIconCSS(_ disabled: Bool, _ status: ValidationStatus) -> [AnyCSSContent] {
 		display(.inlineBlock)
 		position(.relative)
 		width(minSizeInputBinary)
@@ -113,7 +113,7 @@ public struct RadioView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func radioLabelWrapperCSS(_ disabled: Bool) -> [CSSProtocol] {
+	private func radioLabelWrapperCSS(_ disabled: Bool) -> [AnyCSSContent] {
 		display(.flex)
 		flexDirection(.column)
 		gap(spacing4)
@@ -122,7 +122,7 @@ public struct RadioView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func radioLabelTextCSS(_ disabled: Bool) -> [CSSProtocol] {
+	private func radioLabelTextCSS(_ disabled: Bool) -> [AnyCSSContent] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		lineHeight(lineHeightSmall22)
@@ -131,14 +131,14 @@ public struct RadioView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func radioDescriptionCSS(_ disabled: Bool) -> [CSSProtocol] {
+	private func radioDescriptionCSS(_ disabled: Bool) -> [AnyCSSContent] {
 		fontSize(fontSizeSmall14)
 		lineHeight(lineHeightSmall22)
 		color(disabled ? colorDisabled : colorSubtle)
 	}
 
 	@CSSBuilder
-	private func visuallyHiddenCSS() -> [CSSProtocol] {
+	private func visuallyHiddenCSS() -> [AnyCSSContent] {
 		position(.absolute)
 		width(px(1))
 		height(px(1))
@@ -153,7 +153,7 @@ public struct RadioView: HTMLProtocol {
 	public func render(indent: Int = 0) -> String {
 		let hasDescription = !descriptionContent.isEmpty
 		let hasCustomInput = !customInputContent.isEmpty
-		let descriptionId = hasDescription ? "\(id)-description" : nil
+		let descriptionID = hasDescription ? "\(id)-description" : nil
 
 		var radioView = div {
 			if hasCustomInput {
@@ -166,7 +166,7 @@ public struct RadioView: HTMLProtocol {
 					.value(value)
 					.checked(checked)
 					.disabled(disabled)
-					.ariaDescribedby(descriptionId)
+					.ariaDescribedby(descriptionID ?? "")
 					.class("radio-input")
 					.style {
 						radioInputCSS(disabled, status)
@@ -182,7 +182,9 @@ public struct RadioView: HTMLProtocol {
 
 			div {
 				label {
-					span { labelContent }
+					span { 
+						for item in labelContent { item }
+					}
 						.class("radio-label-text")
 						.style {
 							radioLabelTextCSS(disabled)
@@ -200,9 +202,11 @@ public struct RadioView: HTMLProtocol {
 				}
 
 				if hasDescription && !hideLabel {
-					div { descriptionContent }
+					div { 
+						for item in descriptionContent { item }
+					}
 						.class("radio-description")
-						.id(descriptionId ?? "")
+						.id(descriptionID ?? "")
 						.style {
 							radioDescriptionCSS(disabled)
 						}

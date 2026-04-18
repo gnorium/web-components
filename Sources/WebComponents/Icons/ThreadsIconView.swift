@@ -1,12 +1,13 @@
 #if !os(WASI)
 
-import HTMLBuilder
 import CSSBuilder
-import SVGBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
+import SVGBuilder
 import WebTypes
 
-public struct ThreadsIconView: HTMLProtocol {
+public struct ThreadsIconView: HTMLContent {
 	let `class`: String
 	let width: Length
 	let height: Length
@@ -27,7 +28,7 @@ public struct ThreadsIconView: HTMLProtocol {
 		self.monochrome = monochrome
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func toNode() -> DOMNode {
 		svg {
 			// Background rounded square
 			path()
@@ -45,7 +46,6 @@ public struct ThreadsIconView: HTMLProtocol {
 		.viewBox(0, 0, 960, 960)
 		.xmlns("http://www.w3.org/2000/svg")
 		.xmlnsXlink("http://www.w3.org/1999/xlink")
-		.render(indent: indent)
 	}
 }
 

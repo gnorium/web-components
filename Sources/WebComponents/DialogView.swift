@@ -7,7 +7,7 @@ import DesignTokens
 import WebTypes
 
 /// A Dialog is a container that is overlaid on a web page or app in order to present necessary information and tasks.
-public struct DialogView: HTMLProtocol {
+public struct DialogView: HTMLContent {
 	let open: Bool
 	let title: String
 	let subtitle: String?
@@ -18,10 +18,10 @@ public struct DialogView: HTMLProtocol {
 	let primaryAction: PrimaryAction?
 	let defaultAction: DefaultAction?
 	let stackedActions: Bool
-	let headerContent: [HTMLProtocol]
-	let bodyContent: [HTMLProtocol]
-	let footerContent: [HTMLProtocol]
-	let footerTextContent: [HTMLProtocol]
+	let headerContent: [AnyHTMLContent]
+	let bodyContent: [AnyHTMLContent]
+	let footerContent: [AnyHTMLContent]
+	let footerTextContent: [AnyHTMLContent]
 	let `class`: String
 
 	public struct PrimaryAction: Sendable {
@@ -78,10 +78,10 @@ public struct DialogView: HTMLProtocol {
 		defaultAction: DefaultAction? = nil,
 		stackedActions: Bool = false,
 		class: String = "",
-		@HTMLBuilder header: () -> [HTMLProtocol] = { [] },
-		@HTMLBuilder body: () -> [HTMLProtocol],
-		@HTMLBuilder footer: () -> [HTMLProtocol] = { [] },
-		@HTMLBuilder footerText: () -> [HTMLProtocol] = { [] }
+		@HTMLBuilder header: () -> [AnyHTMLContent] = { [] },
+		@HTMLBuilder body: () -> [AnyHTMLContent],
+		@HTMLBuilder footer: () -> [AnyHTMLContent] = { [] },
+		@HTMLBuilder footerText: () -> [AnyHTMLContent] = { [] }
 	) {
 		self.open = open
 		self.title = title
@@ -101,7 +101,7 @@ public struct DialogView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func dialogBackdropCSS() -> [CSSProtocol] {
+	private func dialogBackdropCSS() -> [AnyCSSContent] {
 		position(.fixed)
 		insetBlockStart(0)
 		insetInlineStart(0)
@@ -118,7 +118,7 @@ public struct DialogView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func dialogShellCSS() -> [CSSProtocol] {
+	private func dialogShellCSS() -> [AnyCSSContent] {
 		position(.relative)
 		display(.flex)
 		flexDirection(.column)
@@ -130,7 +130,7 @@ public struct DialogView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func dialogHeaderCSS(_ hasCustomHeader: Bool) -> [CSSProtocol] {
+	private func dialogHeaderCSS(_ hasCustomHeader: Bool) -> [AnyCSSContent] {
 		if !hasCustomHeader {
 			display(.flex)
 			flexDirection(.column)
@@ -141,7 +141,7 @@ public struct DialogView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func dialogHeaderTitleGroupCSS() -> [CSSProtocol] {
+	private func dialogHeaderTitleGroupCSS() -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.flexStart)
 		gap(spacing16)
@@ -149,7 +149,7 @@ public struct DialogView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func dialogHeaderTextCSS() -> [CSSProtocol] {
+	private func dialogHeaderTextCSS() -> [AnyCSSContent] {
 		display(.flex)
 		flexDirection(.column)
 		gap(spacing4)
@@ -158,7 +158,7 @@ public struct DialogView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func dialogHeaderTitleCSS(_ hideTitle: Bool) -> [CSSProtocol] {
+	private func dialogHeaderTitleCSS(_ hideTitle: Bool) -> [AnyCSSContent] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeLarge18)
 		fontWeight(fontWeightBold)
@@ -181,7 +181,7 @@ public struct DialogView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func dialogHeaderSubtitleCSS() -> [CSSProtocol] {
+	private func dialogHeaderSubtitleCSS() -> [AnyCSSContent] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeSmall14)
 		fontWeight(fontWeightNormal)
@@ -192,7 +192,7 @@ public struct DialogView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func dialogCloseButtonCSS() -> [CSSProtocol] {
+	private func dialogCloseButtonCSS() -> [AnyCSSContent] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -226,7 +226,7 @@ public struct DialogView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func dialogBodyCSS() -> [CSSProtocol] {
+	private func dialogBodyCSS() -> [AnyCSSContent] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		lineHeight(lineHeightMedium26)
@@ -237,7 +237,7 @@ public struct DialogView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func dialogFooterCSS(_ hasCustomFooter: Bool, _ hasFooterText: Bool) -> [CSSProtocol] {
+	private func dialogFooterCSS(_ hasCustomFooter: Bool, _ hasFooterText: Bool) -> [AnyCSSContent] {
 		if !hasCustomFooter {
 			display(.flex)
 			flexDirection(.column)
@@ -254,7 +254,7 @@ public struct DialogView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func dialogFooterTextCSS() -> [CSSProtocol] {
+	private func dialogFooterTextCSS() -> [AnyCSSContent] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeSmall14)
 		lineHeight(lineHeightSmall22)
@@ -263,7 +263,7 @@ public struct DialogView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func dialogFooterActionsCSS(_ stackedActions: Bool) -> [CSSProtocol] {
+	private func dialogFooterActionsCSS(_ stackedActions: Bool) -> [AnyCSSContent] {
 		display(.flex)
 		gap(spacing12)
 
@@ -284,7 +284,7 @@ public struct DialogView: HTMLProtocol {
 		let hasActions = primaryAction != nil || defaultAction != nil
 
 		// Default header (when no custom header provided)
-		let defaultHeader: HTMLProtocol = div {
+		let defaultHeader: HTMLContent = div {
 			div {
 				div {
 					h2 { title }
@@ -335,7 +335,7 @@ public struct DialogView: HTMLProtocol {
 		}
 
 		// Default footer (when no custom footer provided)
-		let defaultFooter: HTMLProtocol = div {
+		let defaultFooter: HTMLContent = div {
 			if hasFooterText {
 				div { footerTextContent }
 					.class("dialog-footer-text")
@@ -465,9 +465,9 @@ public class DialogHydration: @unchecked Sendable {
 			_ = trigger.addEventListener(.click) { event in
 				// Find the closest element with the data attribute (in case click target is a child span/icon)
 				guard let targetElement = event.target?.closest("[data-dialog-trigger]"),
-				      let dialogIdStr = targetElement.dataset["dialogTrigger"],
-				      let dialogId = safeParseInt(dialogIdStr),
-				      let instance = self.instances[Int32(dialogId)] else {
+				      let dialogIDStr = targetElement.dataset["dialogTrigger"],
+				      let dialogID = safeParseInt(dialogIDStr),
+				      let instance = self.instances[Int32(dialogID)] else {
 					return
 				}
 

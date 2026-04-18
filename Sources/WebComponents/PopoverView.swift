@@ -7,7 +7,7 @@ import DesignTokens
 import WebTypes
 
 /// A non-disruptive container that is overlaid on a web page or app, positioned near its trigger.
-public struct PopoverView: HTMLProtocol {
+public struct PopoverView: HTMLContent {
 	let open: Bool
 	let title: String
 	let icon: String?
@@ -18,9 +18,9 @@ public struct PopoverView: HTMLProtocol {
 	let stackedActions: Bool
 	let renderInPlace: Bool
 	let placement: Placement
-	let headerContent: [HTMLProtocol]
-	let bodyContent: [HTMLProtocol]
-	let footerContent: [HTMLProtocol]
+	let headerContent: [AnyHTMLContent]
+	let bodyContent: [AnyHTMLContent]
+	let footerContent: [AnyHTMLContent]
 	let `class`: String
 	
 	public enum Placement: String, Sendable {
@@ -87,9 +87,9 @@ public struct PopoverView: HTMLProtocol {
 		renderInPlace: Bool = false,
 		placement: Placement = .bottom,
 		class: String = "",
-		@HTMLBuilder header: () -> [HTMLProtocol] = { [] },
-		@HTMLBuilder body: () -> [HTMLProtocol] = { [] },
-		@HTMLBuilder footer: () -> [HTMLProtocol] = { [] }
+		@HTMLBuilder header: () -> [AnyHTMLContent] = { [] },
+		@HTMLBuilder body: () -> [AnyHTMLContent] = { [] },
+		@HTMLBuilder footer: () -> [AnyHTMLContent] = { [] }
 	) {
 		self.open = open
 		self.title = title
@@ -108,7 +108,7 @@ public struct PopoverView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func popoverViewCSS(_ open: Bool) -> [CSSProtocol] {
+	private func popoverViewCSS(_ open: Bool) -> [AnyCSSContent] {
 		position(.absolute)
 		backgroundColor(backgroundColorBase)
 		border(borderWidthBase, .solid, borderColorSubtle)
@@ -125,7 +125,7 @@ public struct PopoverView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func popoverArrowCSS(_ placement: Placement) -> [CSSProtocol] {
+	private func popoverArrowCSS(_ placement: Placement) -> [AnyCSSContent] {
 		position(.absolute)
 		width(px(12))
 		height(px(12))
@@ -172,7 +172,7 @@ public struct PopoverView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func popoverHeaderCSS(_ hasCustomHeader: Bool) -> [CSSProtocol] {
+	private func popoverHeaderCSS(_ hasCustomHeader: Bool) -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing8)
@@ -185,7 +185,7 @@ public struct PopoverView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func popoverHeaderContentCSS() -> [CSSProtocol] {
+	private func popoverHeaderContentCSS() -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing8)
@@ -194,7 +194,7 @@ public struct PopoverView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func popoverIconCSS() -> [CSSProtocol] {
+	private func popoverIconCSS() -> [AnyCSSContent] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -206,7 +206,7 @@ public struct PopoverView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func popoverTitleCSS() -> [CSSProtocol] {
+	private func popoverTitleCSS() -> [AnyCSSContent] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		fontWeight(fontWeightBold)
@@ -218,7 +218,7 @@ public struct PopoverView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func popoverBodyCSS() -> [CSSProtocol] {
+	private func popoverBodyCSS() -> [AnyCSSContent] {
 		padding(spacing12)
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
@@ -227,7 +227,7 @@ public struct PopoverView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func popoverFooterCSS(_ hasActions: Bool, _ stackedActions: Bool) -> [CSSProtocol] {
+	private func popoverFooterCSS(_ hasActions: Bool, _ stackedActions: Bool) -> [AnyCSSContent] {
 		if hasActions {
 			display(.flex)
 			gap(spacing8)
@@ -247,7 +247,7 @@ public struct PopoverView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func popoverPrimaryButtonCSS(_ stackedActions: Bool) -> [CSSProtocol] {
+	private func popoverPrimaryButtonCSS(_ stackedActions: Bool) -> [AnyCSSContent] {
 		if stackedActions {
 			// Primary button on top in stacked layout
 			order(-1)
@@ -466,7 +466,7 @@ private class PopoverInstance: @unchecked Sendable {
 	private func positionPopover() {
 		// Position popover relative to anchor
 		// This would typically use a positioning library or custom logic
-		// For now, CSSProtocol handles basic positioning
+		// For now, CSSContent handles basic positioning
 	}
 
 	private func closePopover() {

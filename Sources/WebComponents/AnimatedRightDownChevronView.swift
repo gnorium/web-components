@@ -20,7 +20,7 @@ import WebTypes
 ///     ? 'rotate(-90deg)' : 'rotate(0deg)';
 /// svg.dataset.expanded = svg.dataset.expanded === 'true' ? 'false' : 'true';
 /// ```
-public struct AnimatedRightDownChevronView: HTMLProtocol {
+public struct AnimatedRightDownChevronView: HTMLContent {
 	let id: String
 	let expanded: Bool
 	let width: Length

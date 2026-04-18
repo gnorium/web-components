@@ -7,7 +7,7 @@ import DesignTokens
 import WebTypes
 
 /// A form element that lets users input and edit a single-line text value.
-public struct TextInputView: HTMLProtocol {
+public struct TextInputView: HTMLContent {
 	let id: String
 	let name: String
 	let placeholder: String
@@ -82,14 +82,14 @@ public struct TextInputView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func textInputViewCSS() -> [CSSProtocol] {
+	private func textInputViewCSS() -> [AnyCSSContent] {
 		position(.relative)
 		display(.inlineBlock)
 		width(perc(100))
 	}
 
 	@CSSBuilder
-	private func textInputInputCSS(_ disabled: Bool, _ readonly: Bool, _ status: ValidationStatus, _ hasStartIcon: Bool, _ hasEndIcon: Bool, _ clearable: Bool) -> [CSSProtocol] {
+	private func textInputInputCSS(_ disabled: Bool, _ readonly: Bool, _ status: ValidationStatus, _ hasStartIcon: Bool, _ hasEndIcon: Bool, _ clearable: Bool) -> [AnyCSSContent] {
 		width(perc(100))
 		minHeight(minSizeInteractivePointer)
 		padding(spacing8, spacing12)
@@ -128,7 +128,7 @@ public struct TextInputView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func textInputIconCSS(_ isStartIcon: Bool) -> [CSSProtocol] {
+	private func textInputIconCSS(_ isStartIcon: Bool) -> [AnyCSSContent] {
 		position(.absolute)
 		top(perc(50))
 		transform(translateY(perc(-50)))
@@ -148,7 +148,7 @@ public struct TextInputView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func textInputClearButtonCSS(_ disabled: Bool) -> [CSSProtocol] {
+	private func textInputClearButtonCSS(_ disabled: Bool) -> [AnyCSSContent] {
 		position(.absolute)
 		top(perc(50))
 		right(spacing12)
@@ -326,7 +326,7 @@ private class TextInputInstance: @unchecked Sendable {
 		// Clear input when clear button is clicked
 		_ = clearButton.addEventListener(.click) { [self] _ in
 			guard let input = self.input else { return }
-			input.value = ""
+			(input as? WebAPIs.HTMLInputElement)?.value = ""
 			self.updateClearButtonVisibility()
 			input.focus()
 
@@ -347,7 +347,7 @@ private class TextInputInstance: @unchecked Sendable {
 	private func updateClearButtonVisibility() {
 		guard let input = input, let clearButton = clearButton else { return }
 
-		if !stringEquals(input.value, "") {
+		if !stringEquals((input as? WebAPIs.HTMLInputElement)?.value ?? "", "") {
 			clearButton.style.display(.flex)
 		} else {
 			clearButton.style.display(.none)

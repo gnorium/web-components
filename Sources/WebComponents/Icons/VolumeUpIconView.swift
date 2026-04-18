@@ -1,12 +1,13 @@
 #if !os(WASI)
 
-import HTMLBuilder
-import SVGBuilder
 import CSSBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
+import SVGBuilder
 import WebTypes
 
-public struct VolumeUpIconView: HTMLProtocol {
+public struct VolumeUpIconView: HTMLContent {
 	let width: Length
 	let height: Length
 	let `class`: String
@@ -21,7 +22,7 @@ public struct VolumeUpIconView: HTMLProtocol {
 		self.class = `class`
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func toNode() -> DOMNode {
 		svg {
 			path()
 				.d(M(4, 6), v(8), l(5.2, 3.9), c(0.3, 0.3, 0.8, 0, 0.8, -0.5), V(2.6), c(0, -0.5, -0.5, -0.8, -0.8, -0.5), Z(), m(0, 8), H(1), a(1, 1, 0, false, true, -1, -1), V(7), a(1, 1, 0, false, true, 1, -1), h(3), m(12.4, 11.4), a(1, 1, 0, false, true, -0.7, -1.7), a(8, 8, 0, false, false, 0, -11.4), A(1, 1, 0, false, true, 17, 3), a(10, 10, 0, false, true, 0, 14.2), a(1, 1, 0, false, true, -0.7, 0.3), Z())
@@ -35,7 +36,6 @@ public struct VolumeUpIconView: HTMLProtocol {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
-		.render(indent: indent)
 	}
 }
 

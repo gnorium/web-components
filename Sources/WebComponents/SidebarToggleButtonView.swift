@@ -5,7 +5,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct SidebarToggleButtonView: HTMLProtocol {
+public struct SidebarToggleButtonView: HTMLContent {
 	let `class`: String
 
 	public init(class: String = "") {

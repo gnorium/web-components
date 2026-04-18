@@ -7,15 +7,15 @@ import DesignTokens
 import WebTypes
 
 /// A Card groups information related to a single topic.
-public struct CardView: HTMLProtocol {
+public struct CardView: HTMLContent {
 	let url: String
 	let icon: String?
 	let thumbnail: Thumbnail?
 	let forceThumbnail: Bool
 	let customPlaceholderIcon: String?
-	let titleContent: [HTMLProtocol]
-	let descriptionContent: [HTMLProtocol]
-	let supportingTextContent: [HTMLProtocol]
+	let titleContent: [AnyHTMLContent]
+	let descriptionContent: [AnyHTMLContent]
+	let supportingTextContent: [AnyHTMLContent]
 	let `class`: String
 
 	public struct Thumbnail: Sendable {
@@ -35,9 +35,9 @@ public struct CardView: HTMLProtocol {
 		forceThumbnail: Bool = false,
 		customPlaceholderIcon: String? = nil,
 		class: String = "",
-		@HTMLBuilder title: () -> [HTMLProtocol],
-		@HTMLBuilder description: () -> [HTMLProtocol] = { [] },
-		@HTMLBuilder supportingText: () -> [HTMLProtocol] = { [] }
+		@HTMLBuilder title: () -> [AnyHTMLContent],
+		@HTMLBuilder description: () -> [AnyHTMLContent] = { [] },
+		@HTMLBuilder supportingText: () -> [AnyHTMLContent] = { [] }
 	) {
 		self.url = url
 		self.icon = icon
@@ -51,7 +51,7 @@ public struct CardView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func cardViewCSS(_ isLink: Bool) -> [CSSProtocol] {
+	private func cardViewCSS(_ isLink: Bool) -> [AnyCSSContent] {
 		display(.block)
 		backgroundColor(backgroundColorBase)
 		border(borderWidthBase, .solid, borderColorSubtle)
@@ -82,7 +82,7 @@ public struct CardView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func cardMediaCSS() -> [CSSProtocol] {
+	private func cardMediaCSS() -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -91,7 +91,7 @@ public struct CardView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func cardThumbnailCSS() -> [CSSProtocol] {
+	private func cardThumbnailCSS() -> [AnyCSSContent] {
 		width(px(80))
 		height(px(80))
 		overflow(.hidden)
@@ -100,7 +100,7 @@ public struct CardView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func cardThumbnailImageCSS() -> [CSSProtocol] {
+	private func cardThumbnailImageCSS() -> [AnyCSSContent] {
 		width(perc(100))
 		height(perc(100))
 		objectFit(.cover)
@@ -108,7 +108,7 @@ public struct CardView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func cardThumbnailPlaceholderCSS() -> [CSSProtocol] {
+	private func cardThumbnailPlaceholderCSS() -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -120,7 +120,7 @@ public struct CardView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func cardIconCSS() -> [CSSProtocol] {
+	private func cardIconCSS() -> [AnyCSSContent] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -131,7 +131,7 @@ public struct CardView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func cardTextCSS(_ hasMedia: Bool) -> [CSSProtocol] {
+	private func cardTextCSS(_ hasMedia: Bool) -> [AnyCSSContent] {
 		display(.flex)
 		flexDirection(.column)
 		gap(spacing16)
@@ -145,7 +145,7 @@ public struct CardView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func cardTitleCSS(_ isLink: Bool) -> [CSSProtocol] {
+	private func cardTitleCSS(_ isLink: Bool) -> [AnyCSSContent] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeXXLarge24)
 		fontWeight(fontWeightNormal)
@@ -160,7 +160,7 @@ public struct CardView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func cardDescriptionCSS() -> [CSSProtocol] {
+	private func cardDescriptionCSS() -> [AnyCSSContent] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeSmall14)
 		lineHeight(lineHeightSmall22)
@@ -169,7 +169,7 @@ public struct CardView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func cardSupportingTextCSS() -> [CSSProtocol] {
+	private func cardSupportingTextCSS() -> [AnyCSSContent] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeXSmall12)
 		lineHeight(lineHeightSmall22)
@@ -178,7 +178,7 @@ public struct CardView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func cardContentWrapperCSS(_ hasMedia: Bool) -> [CSSProtocol] {
+	private func cardContentWrapperCSS(_ hasMedia: Bool) -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(hasMedia ? .flexStart : .center)
 		gap(spacing16)
@@ -194,7 +194,7 @@ public struct CardView: HTMLProtocol {
 		let hasMedia = hasThumbnail || hasIcon
 		let hasTitleOnly = !hasDescription && !hasSupportingText
 
-		let cardContentElement: HTMLProtocol = div {
+		let cardContentElement: HTMLContent = div {
 			if hasThumbnail {
 				div {
 					if let thumb = thumbnail {

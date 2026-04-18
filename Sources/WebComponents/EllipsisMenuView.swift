@@ -8,15 +8,15 @@ import WebTypes
 /// Full-screen overlay menu triggered by EllipsisMenuButtonView.
 /// Renders a blurred backdrop + slide-down container below the navbar.
 /// Pass app-specific content (sections, toggles, links) via the content closure.
-public struct EllipsisMenuView: HTMLProtocol {
+public struct EllipsisMenuView: HTMLContent {
 	let `class`: String
 	let navbarHeight: Int
-	let content: [HTMLProtocol]
+	let content: [AnyHTMLContent]
 
 	public init(
 		class: String = "",
 		navbarHeight: Int = 96,
-		@HTMLBuilder content: () -> [HTMLProtocol]
+		@HTMLBuilder content: () -> [AnyHTMLContent]
 	) {
 		self.class = `class`
 		self.navbarHeight = navbarHeight
@@ -65,7 +65,7 @@ public struct EllipsisMenuView: HTMLProtocol {
 	// MARK: - CSS
 
 	@CSSBuilder
-	private func ellipsisMenuViewCSS() -> [CSSProtocol] {
+	private func ellipsisMenuViewCSS() -> [AnyCSSContent] {
 		display(.none)
 		position(.fixed)
 		top(px(navbarHeight))
@@ -76,7 +76,7 @@ public struct EllipsisMenuView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func ellipsisMenuBackdropCSS() -> [CSSProtocol] {
+	private func ellipsisMenuBackdropCSS() -> [AnyCSSContent] {
 		position(.fixed)
 		top(px(navbarHeight))
 		insetInlineStart(0)
@@ -91,7 +91,7 @@ public struct EllipsisMenuView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func ellipsisMenuContainerCSS() -> [CSSProtocol] {
+	private func ellipsisMenuContainerCSS() -> [AnyCSSContent] {
 		position(.relative)
 		width(perc(100))
 		backgroundColor(backgroundColorBase)
@@ -115,14 +115,14 @@ public struct EllipsisMenuView: HTMLProtocol {
 	// MARK: - Public Section Helpers
 
 	@CSSBuilder
-	public static func sectionCSS() -> [CSSProtocol] {
+	public static func sectionCSS() -> [AnyCSSContent] {
 		display(.flex)
 		flexDirection(.column)
 		gap(spacing8)
 	}
 
 	@CSSBuilder
-	public static func sectionHeaderCSS() -> [CSSProtocol] {
+	public static func sectionHeaderCSS() -> [AnyCSSContent] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeXSmall12)
 		fontWeight(fontWeightSemiBold)
@@ -131,7 +131,7 @@ public struct EllipsisMenuView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	public static func dividerCSS() -> [CSSProtocol] {
+	public static func dividerCSS() -> [AnyCSSContent] {
 		height(px(1))
 		backgroundColor(borderColorSubtle)
 	}

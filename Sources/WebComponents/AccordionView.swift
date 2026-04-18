@@ -6,7 +6,7 @@ import CSSBuilder
 import DesignTokens
 import WebTypes
 
-public struct AccordionView: HTMLProtocol {
+public struct AccordionView: HTMLContent {
 	let id: String
 	let open: Bool
 	let actionIcon: String?
@@ -15,9 +15,9 @@ public struct AccordionView: HTMLProtocol {
 	let separation: Separation
 	let headingLevel: HeadingLevel
 	let headerDirection: HeaderDirection
-	let titleContent: [HTMLProtocol]
-	let descriptionContent: [HTMLProtocol]
-	let contentSlot: [HTMLProtocol]
+	let titleContent: [AnyHTMLContent]
+	let descriptionContent: [AnyHTMLContent]
+	let contentSlot: [AnyHTMLContent]
 	let `class`: String
 
 	public enum HeaderDirection: Sendable {
@@ -71,9 +71,9 @@ public struct AccordionView: HTMLProtocol {
 		headingLevel: HeadingLevel = .h3,
 		headerDirection: HeaderDirection = .column,
 		class: String = "",
-		@HTMLBuilder title: () -> [HTMLProtocol],
-		@HTMLBuilder description: () -> [HTMLProtocol] = { [] },
-		@HTMLBuilder content: () -> [HTMLProtocol]
+		@HTMLBuilder title: () -> [AnyHTMLContent],
+		@HTMLBuilder description: () -> [AnyHTMLContent] = { [] },
+		@HTMLBuilder content: () -> [AnyHTMLContent]
 	) {
 		self.id = id
 		self.open = open
@@ -90,7 +90,7 @@ public struct AccordionView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func accordionViewCSS(_ separation: Separation) -> [CSSProtocol] {
+	private func accordionViewCSS(_ separation: Separation) -> [AnyCSSContent] {
 		display(.block)
 
 		if separation == .outline {
@@ -101,7 +101,7 @@ public struct AccordionView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func accordionSummaryCSS(_ separation: Separation, _ hasAction: Bool) -> [CSSProtocol] {
+	private func accordionSummaryCSS(_ separation: Separation, _ hasAction: Bool) -> [AnyCSSContent] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing8)
@@ -141,7 +141,7 @@ public struct AccordionView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func accordionExpandIconCSS() -> [CSSProtocol] {
+	private func accordionExpandIconCSS() -> [AnyCSSContent] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -153,7 +153,7 @@ public struct AccordionView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func accordionHeaderWrapperCSS() -> [CSSProtocol] {
+	private func accordionHeaderWrapperCSS() -> [AnyCSSContent] {
 		display(.flex)
 		if headerDirection == .row {
 			flexDirection(.row)
@@ -168,7 +168,7 @@ public struct AccordionView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func accordionTitleCSS() -> [CSSProtocol] {
+	private func accordionTitleCSS() -> [AnyCSSContent] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		fontWeight(fontWeightSemiBold)
@@ -179,7 +179,7 @@ public struct AccordionView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func accordionDescriptionCSS() -> [CSSProtocol] {
+	private func accordionDescriptionCSS() -> [AnyCSSContent] {
 		fontSize(fontSizeSmall14)
 		lineHeight(lineHeightSmall22)
 		color(colorSubtle)
@@ -187,7 +187,7 @@ public struct AccordionView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func accordionActionButtonCSS(_ actionAlwaysVisible: Bool) -> [CSSProtocol] {
+	private func accordionActionButtonCSS(_ actionAlwaysVisible: Bool) -> [AnyCSSContent] {
 		if actionAlwaysVisible {
 			display(.inlineFlex)
 		} else {
@@ -223,7 +223,7 @@ public struct AccordionView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func accordionContentCSS(_ separation: Separation) -> [CSSProtocol] {
+	private func accordionContentCSS(_ separation: Separation) -> [AnyCSSContent] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		lineHeight(lineHeightSmall22)
@@ -238,7 +238,7 @@ public struct AccordionView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func accordionDividerCSS() -> [CSSProtocol] {
+	private func accordionDividerCSS() -> [AnyCSSContent] {
 		height(borderWidthBase)
 		backgroundColor(borderColorSubtle)
 		margin(spacing0)
@@ -250,7 +250,7 @@ public struct AccordionView: HTMLProtocol {
 		let hasAction = actionIcon != nil
 
 		// Render heading with appropriate level
-		let titleElement: HTMLProtocol
+		let titleElement: HTMLContent
 		switch headingLevel {
 		case .h1:
 			titleElement = h1 { titleContent }
@@ -379,6 +379,8 @@ import WebAPIs
 import DesignTokens
 import WebTypes
 import EmbeddedSwiftUtilities
+import CSSBuilder
+import HTMLBuilder
 
 private class AccordionInstance: @unchecked Sendable {
 	private var accordion: Element
@@ -416,7 +418,7 @@ private class AccordionInstance: @unchecked Sendable {
 				// Rotate chevron back to right
 				if let svg = self.chevronSvg {
 					svg.style.setProperty("transform", "rotate(-90deg)")
-					svg.setAttribute("data-expanded", "false")
+					svg.setAttribute(data("expanded"), "false")
 				}
 
 				// Animate content sliding up, then manually close
@@ -448,7 +450,7 @@ private class AccordionInstance: @unchecked Sendable {
 				// Rotate chevron to down
 				if let svg = self.chevronSvg {
 					svg.style.setProperty("transform", "rotate(0deg)")
-					svg.setAttribute("data-expanded", "true")
+					svg.setAttribute(data("expanded"), "true")
 				}
 
 				// Wait for browser to add [open], then animate content slide-in
@@ -542,55 +544,79 @@ public enum AccordionFactory {
 		let isDivider = stringEquals(separation, "divider")
 
 		// Root: .accordion-view wrapper
-		let root = document.createElement("div")
-		root.setAttribute("class", "accordion-view")
+		let root = document.createElement(.div)
+		root.setAttribute(.class, "accordion-view")
 		root.setAttribute(data("separation"), separation)
-		var rootStyle = "display:block"
+		
+		root.style.display(.block)
 		if isOutline {
-			rootStyle = stringConcat(rootStyle, ";border:1px solid var(--border-color-subtle);border-radius:var(--border-radius-base);padding:4px")
+			root.style.border(px(1), .solid, borderColorSubtle)
+			root.style.borderRadius(borderRadiusBase)
+			root.style.padding(px(4))
 		}
-		root.setAttribute(.style, rootStyle)
 
 		// Details element
-		let details = document.createElement("details")
-		details.setAttribute("class", "accordion-details")
-		details.setAttribute("id", id)
-		details.setAttribute(.style, "overflow:hidden")
+		let details = document.createElement(.details)
+		details.setAttribute(.class, "accordion-details")
+		details.setAttribute(.id, id)
+		details.style.overflow(.hidden)
 		if open {
-			details.setAttribute("open", "")
+			details.setAttribute(.open, "")
 		}
 
 		// Summary
-		let summary = document.createElement("summary")
-		summary.setAttribute("class", "accordion-summary")
-		var summaryStyle = "display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;user-select:none;position:relative;z-index:1"
+		let summary = document.createElement(.summary)
+		summary.setAttribute(.class, "accordion-summary")
+		summary.style.display(.flex)
+		summary.style.alignItems(.center)
+		summary.style.gap(px(8))
+		summary.style.cursor(.pointer)
+		summary.style.listStyle(.none)
+		summary.style.userSelect(.none)
+		summary.style.position(.relative)
+		summary.style.zIndex(1)
+
 		if isMinimal {
-			summaryStyle = stringConcat(summaryStyle, ";min-height:var(--min-size-interactive-pointer);padding:4px 0")
+			summary.style.minHeight(minSizeInteractivePointer)
+			summary.style.padding(px(4), px(0))
 		} else {
-			summaryStyle = stringConcat(summaryStyle, ";padding:12px 16px")
+			summary.style.padding(px(12), px(16))
 		}
 		if isOutline {
-			summaryStyle = stringConcat(summaryStyle, ";border-radius:var(--border-radius-base)")
+			summary.style.borderRadius(borderRadiusBase)
 		}
-		summary.setAttribute(.style, summaryStyle)
 
 		// Header wrapper
-		let headerWrapper = document.createElement("div")
-		headerWrapper.setAttribute("class", "accordion-header-wrapper")
-		headerWrapper.setAttribute(.style, "display:flex;flex-direction:row;align-items:center;gap:8px;flex:1;min-width:0")
+		let headerWrapper = document.createElement(.div)
+		headerWrapper.setAttribute(.class, "accordion-header-wrapper")
+		headerWrapper.style.display(.flex)
+		headerWrapper.style.flexDirection(.row)
+		headerWrapper.style.alignItems(.center)
+		headerWrapper.style.gap(px(8))
+		headerWrapper.style.flex(Int32(1))
+		headerWrapper.style.minWidth(px(0))
 
 		// Title heading
 		let heading = document.createElement(headingTag)
-		heading.setAttribute("class", "accordion-title")
-		heading.setAttribute(.style, "font-family:var(--typography-font-sans);font-size:16px;font-weight:600;line-height:22px;color:var(--color-base);margin:0;word-wrap:break-word")
+		heading.setAttribute(.class, "accordion-title")
+		heading.style.fontFamily(typographyFontSans)
+		heading.style.fontSize(px(16))
+		heading.style.fontWeight(.bold)
+		heading.style.lineHeight(1.618)
+		heading.style.color(colorBase)
+		heading.style.margin(px(0))
+		heading.style.overflowWrap("break-word")
 		heading.textContent = title
 		headerWrapper.appendChild(heading)
 		summary.appendChild(headerWrapper)
 
 		// Expand icon span + animated chevron
-		let expandIconSpan = document.createElement("span")
-		expandIconSpan.setAttribute("class", "accordion-expand-icon")
-		expandIconSpan.setAttribute(.style, "display:inline-flex;align-items:center;justify-content:center;color:var(--color-subtle)")
+		let expandIconSpan = document.createElement(.span)
+		expandIconSpan.setAttribute(.class, "accordion-expand-icon")
+		expandIconSpan.style.display(.inlineFlex)
+		expandIconSpan.style.alignItems(.center)
+		expandIconSpan.style.justifyContent(.center)
+		expandIconSpan.style.color(colorSubtle)
 		let chevron = AnimatedRightDownChevronFactory.createElement(id: stringConcat("accordion-", id), expanded: open)
 		expandIconSpan.appendChild(chevron)
 		summary.appendChild(expandIconSpan)
@@ -598,15 +624,17 @@ public enum AccordionFactory {
 		details.appendChild(summary)
 
 		// Content wrapper
-		let contentDiv = document.createElement("div")
-		contentDiv.setAttribute("class", "accordion-content")
-		var contentStyle = "font-family:var(--typography-font-sans);font-size:16px;line-height:22px;color:var(--color-base)"
+		let contentDiv = document.createElement(.div)
+		contentDiv.setAttribute(.class, "accordion-content")
+		contentDiv.style.fontFamily(typographyFontSans)
+		contentDiv.style.fontSize(px(16))
+		contentDiv.style.lineHeight(1.618)
+		contentDiv.style.color(colorBase)
 		if isMinimal {
-			contentStyle = stringConcat(contentStyle, ";padding:12px 0")
+			contentDiv.style.padding(px(12), px(0))
 		} else {
-			contentStyle = stringConcat(contentStyle, ";padding:16px")
+			contentDiv.style.padding(px(16))
 		}
-		contentDiv.setAttribute(.style, contentStyle)
 		contentDiv.appendChild(content())
 		details.appendChild(contentDiv)
 
@@ -614,20 +642,32 @@ public enum AccordionFactory {
 
 		// Divider HR if needed
 		if isDivider {
-			let hr = document.createElement("hr")
-			hr.setAttribute("class", "accordion-divider")
-			hr.setAttribute("aria-hidden", "true")
-			hr.setAttribute(.style, "height:1px;background:var(--border-color-subtle);margin:0;border:none")
+			let hr = document.createElement(.hr)
+			hr.setAttribute(.class, "accordion-divider")
+			hr.setAttribute(.ariaHidden, "true")
+			hr.style.height(px(1))
+			hr.style.backgroundColor(borderColorSubtle)
+			hr.style.margin(px(0))
+			hr.style.border(.none)
 			root.appendChild(hr)
 		}
 
 		// Scoped style for marker suppression and focus states
-		let style = document.createElement("style")
-		style.textContent = stringConcat(
-			"#", id, " summary::marker,#", id, " summary::-webkit-details-marker{display:none!important}",
-			"#", id, " summary:focus{outline:none!important}",
-			"#", id, " summary:focus-visible{outline:2px solid var(--border-color-blue-focus)!important;outline-offset:1px!important}"
-		)
+		let style = document.createElement(.style)
+		style.textContent = renderCSS {
+			selector("#\(id)") {
+				selector("summary::marker", "summary::-webkit-details-marker") {
+					display(.none).important()
+				}
+				selector("summary:focus") {
+					outline(.none).important()
+				}
+				selector("summary:focus-visible") {
+					outline(px(2), .solid, borderColorBlueFocus).important()
+					outlineOffset(px(1)).important()
+				}
+			}
+		}
 		root.appendChild(style)
 
 		return root

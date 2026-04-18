@@ -1,13 +1,16 @@
 #if !os(WASI)
 
+#if !os(WASI)
 import Foundation
+
+#endif
 import HTMLBuilder
 import CSSBuilder
 import DesignTokens
 import WebTypes
 
 /// A predictive text input that presents a dropdown menu with suggestions based on the current input value.
-public struct LookupView: HTMLProtocol {
+public struct LookupView: HTMLContent {
 	let id: String
 	let name: String
 	let menuItems: [MenuItemView.MenuItemData]
@@ -58,7 +61,7 @@ public struct LookupView: HTMLProtocol {
 	}
 
 	@CSSBuilder
-	private func lookupViewCSS() -> [CSSProtocol] {
+	private func lookupViewCSS() -> [AnyCSSContent] {
 		position(.relative)
 		display(.inlineBlock)
 		minWidth(px(256))
@@ -148,7 +151,7 @@ private class LookupInstance: @unchecked Sendable {
 		_ = input.addEventListener(.input) { [self] _ in
 			self.openMenu()
 			// Dispatch input event for filtering
-			let event = CustomEvent(type: "lookup-input", detail: input.value)
+			let event = CustomEvent(type: "lookup-input", detail: (input as? HTMLInputElement)?.value ?? "")
 			self.lookup.dispatchEvent(event)
 		}
 
@@ -192,7 +195,7 @@ private class LookupInstance: @unchecked Sendable {
 
 		// Update input value
 		if let input = input {
-			input.value = value
+			(input as? HTMLInputElement)?.value = value
 		}
 
 		// Emit selection event
