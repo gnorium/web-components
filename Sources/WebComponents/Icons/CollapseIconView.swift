@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,10 +22,10 @@ public struct CollapseIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
-				.d(m(2.5, 15.25), l(7.5, -7.5), l(7.5, 7.5), l(1.5, -1.5), l(-9, -9), l(-9, 9), Z())
+				.d(m(2.5, 15.25), l(7.5, -7.5), l(7.5, 7.5), l(1.5, -1.5), l(-9, -9), l(-9, 9), Z()).render()
 		}
 		.class(`class`.isEmpty ? "collapse-icon-view" : "collapse-icon-view \(`class`)")
 		.width(width)
@@ -33,6 +33,7 @@ public struct CollapseIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

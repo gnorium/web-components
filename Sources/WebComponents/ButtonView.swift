@@ -1,8 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
-import HTMLBuilder
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
+import DOMBuilder
+import Foundation
+import HTMLBuilder
 import WebTypes
 
 /// Button — triggers an action when the user clicks or taps on it.
@@ -11,7 +14,7 @@ public struct ButtonView: HTMLContent {
 	let buttonColor: ButtonColor
 	let weight: ButtonWeight
 	let size: ButtonSize
-	let icon: AnyHTMLContent?
+	let icon: DOMNode?
 	let iconOnly: Bool
 	let disabled: Bool
 	let ariaLabel: String?
@@ -124,7 +127,7 @@ public struct ButtonView: HTMLContent {
 		self.buttonColor = buttonColor
 		self.weight = weight
 		self.size = size
-		self.icon = AnyHTMLContent(icon)
+		self.icon = icon.render()
 		self.iconOnly = false
 		self.disabled = disabled
 		self.ariaLabel = ariaLabel
@@ -158,7 +161,7 @@ public struct ButtonView: HTMLContent {
 		self.buttonColor = buttonColor
 		self.weight = weight
 		self.size = size
-		self.icon = AnyHTMLContent(icon)
+		self.icon = icon.render()
 		self.iconOnly = true
 		self.disabled = disabled
 		self.ariaLabel = ariaLabel
@@ -186,13 +189,13 @@ public struct ButtonView: HTMLContent {
 		class: String = "",
 		labelFontWeight: CSSFontWeight = fontWeightBold,
 		contentJustifyContent: CSSJustifyContent = .center,
-		@HTMLBuilder content: () -> [AnyHTMLContent]
+		@HTMLBuilder content: () -> [DOMNode]
 	) {
 		self.label = label
 		self.buttonColor = buttonColor
 		self.weight = weight
 		self.size = size
-		self.icon = AnyHTMLContent(content())
+		self.icon = .fragment(content())
 		self.iconOnly = false // Custom content is treated as the full body
 		self.disabled = disabled
 		self.ariaLabel = ariaLabel
@@ -205,12 +208,12 @@ public struct ButtonView: HTMLContent {
 		self.contentJustifyContent = contentJustifyContent
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let baseClasses = "button-view button-color-\(buttonColor.rawValue) button-weight-\(weight.rawValue) button-size-\(size.rawValue)\(iconOnly ? " button-icon-only" : "")"
 		let fullClass = `class`.isEmpty ? baseClasses : "\(baseClasses) \(`class`)"
 
 		@HTMLBuilder
-		func renderContent() -> [AnyHTMLContent] {
+		func renderContent() -> [DOMNode] {
 			if let icon = icon {
 				if label.isEmpty && iconOnly {
 					span { icon }
@@ -260,7 +263,7 @@ public struct ButtonView: HTMLContent {
 				aBtn = aBtn.onclick(click)
 			}
 
-			return aBtn.render(indent: indent)
+			return aBtn.render()
 		} else {
 			var bBtn = button { renderContent() }
 				.type(type == .submit ? .submit : type == .reset ? .reset : .button)
@@ -281,12 +284,12 @@ public struct ButtonView: HTMLContent {
 				bBtn = bBtn.onclick(click)
 			}
 
-			return bBtn.render(indent: indent)
+			return bBtn.render()
 		}
 	}
 
 	@CSSBuilder
-	private func buttonViewCSS() -> [AnyCSSContent] {
+	private func buttonViewCSS() -> [CSSRule] {
 		// Base button styles
 		if iconOnly {
 			display(.flex)
@@ -382,7 +385,7 @@ public struct ButtonView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func buttonIconCSS() -> [AnyCSSContent] {
+	private func buttonIconCSS() -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -410,7 +413,7 @@ public struct ButtonView: HTMLContent {
 	}
     
 	@CSSBuilder
-	private func applyColorWeightCSS() -> [AnyCSSContent] {
+	private func applyColorWeightCSS() -> [CSSRule] {
 		switch (buttonColor, weight) {
 		// Gray + Subtle
 		case (.gray, .subtle):

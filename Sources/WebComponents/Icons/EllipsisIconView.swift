@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,7 +22,7 @@ public struct EllipsisIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			circle()
 				.cx(3)
@@ -37,7 +37,7 @@ public struct EllipsisIconView: HTMLContent {
 			circle()
 				.cx(17)
 				.cy(10)
-				.r(2)
+				.r(2).render()
 		}
 		.class(`class`.isEmpty ? "ellipsis-icon-view" : "ellipsis-icon-view \(`class`)")
 		.width(width)
@@ -45,6 +45,7 @@ public struct EllipsisIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,10 +22,10 @@ public struct DownTriangleIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
-			.d(M(10, 15), L(2, 5), h(16), Z())
+			.d(M(10, 15), L(2, 5), h(16), Z()).render()
 		}
 		.class(`class`.isEmpty ? "down-triangle-icon-view" : "down-triangle-icon-view \(`class`)")
 		.width(width)
@@ -33,6 +33,7 @@ public struct DownTriangleIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

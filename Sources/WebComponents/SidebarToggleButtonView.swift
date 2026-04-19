@@ -1,8 +1,10 @@
-#if !os(WASI)
+#if SERVER
 
-import HTMLBuilder
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
 import WebTypes
 
 public struct SidebarToggleButtonView: HTMLContent {
@@ -12,7 +14,7 @@ public struct SidebarToggleButtonView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		button {
 			SidebarToggleIconView()
 		}
@@ -41,7 +43,7 @@ public struct SidebarToggleButtonView: HTMLContent {
 				display(.none).important()
 			}
 		}
-		.render(indent: indent)
+		.render()
 	}
 }
 

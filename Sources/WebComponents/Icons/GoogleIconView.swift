@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,7 +22,7 @@ public struct GoogleIconView: HTMLContent {
 		self.height = height
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
 				.d(M(22.56, 12.25), c(0, -0.78, -0.07, -1.53, -0.2, -2.25), H(12), v(4.26), h(5.92), c(-0.26, 1.37, -1.04, 2.53, -2.21, 3.31), v(2.77), h(3.57), c(2.08, -1.92, 3.28, -4.74, 3.28, -8.09), Z())
@@ -35,7 +35,7 @@ public struct GoogleIconView: HTMLContent {
 				.fill(SVGPaint(hex(0xFBBC05)))
 			path()
 				.d(M(12, 5.38), c(1.62, 0, 3.06, 0.56, 4.21, 1.64), l(3.15, -3.15), C(17.45, 2.09, 14.97, 1, 12, 1), C(7.7, 1, 3.99, 3.47, 2.18, 7.07), l(3.66, 2.84), c(0.87, -2.6, 3.3, -4.53, 6.16, -4.53), Z())
-				.fill(SVGPaint(hex(0xEA4335)))
+				.fill(SVGPaint(hex(0xEA4335))).render()
 		}
 		.class(`class`.isEmpty ? "google-icon-view" : "google-icon-view \(`class`)")
 		.width(width)
@@ -43,6 +43,7 @@ public struct GoogleIconView: HTMLContent {
 		.viewBox(0, 0, 24, 24)
 		.xmlns("http://www.w3.org/2000/svg")
 		.xmlnsXlink("http://www.w3.org/1999/xlink")
+        .render()
 	}
 }
 

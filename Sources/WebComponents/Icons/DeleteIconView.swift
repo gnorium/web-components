@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,10 +22,10 @@ public struct DeleteIconView: HTMLContent {
 		self.height = height
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
-				.d(M(20, 5), H(9), l(-7, 7), l(7, 7), h(11), a(2, 2, 0, false, false, 2, -2), V(7), a(2, 2, 0, false, false, -2, -2), Z(), M(18, 9), l(-6, 6), M(12, 9), l(6, 6))
+				.d(M(20, 5), H(9), l(-7, 7), l(7, 7), h(11), a(2, 2, 0, false, false, 2, -2), V(7), a(2, 2, 0, false, false, -2, -2), Z(), M(18, 9), l(-6, 6), M(12, 9), l(6, 6)).render()
 		}
 		.class(`class`.isEmpty ? "delete-icon-view" : "delete-icon-view \(`class`)")
 		.width(width)
@@ -37,6 +37,7 @@ public struct DeleteIconView: HTMLContent {
 		.strokeLinecap(.round)
 		.strokeLinejoin(.round)
 		.strokeWidth(px(2))
+        .render()
 	}
 }
 

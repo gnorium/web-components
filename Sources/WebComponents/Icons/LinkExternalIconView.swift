@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,10 +22,10 @@ public struct LinkExternalIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
-				.d(M(19, 1), h(-8), l(3.286, 3.286), L(6, 12), l(1.371, 1.472), l(8.332, -7.77), l(0.007, 0.008), L(19, 9), Z(), M(2, 5), h(4), v(2), H(3), v(10), h(10), v(-4.004), h(2), V(18), a(1, 1, 0, false, true, -1, 1), H(2), a(1, 1, 0, false, true, -1, -1), V(6), a(1, 1, 0, false, true, 1, -1))
+				.d(M(19, 1), h(-8), l(3.286, 3.286), L(6, 12), l(1.371, 1.472), l(8.332, -7.77), l(0.007, 0.008), L(19, 9), Z(), M(2, 5), h(4), v(2), H(3), v(10), h(10), v(-4.004), h(2), V(18), a(1, 1, 0, false, true, -1, 1), H(2), a(1, 1, 0, false, true, -1, -1), V(6), a(1, 1, 0, false, true, 1, -1)).render()
 		}
 		.class(`class`.isEmpty ? "link-external-icon-view" : "link-external-icon-view \(`class`)")
 		.width(width)
@@ -33,6 +33,7 @@ public struct LinkExternalIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

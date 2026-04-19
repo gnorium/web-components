@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -28,11 +28,11 @@ public struct XIconView: HTMLContent {
 		self.monochrome = monochrome
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
 				.d(M(236, 0), h(46), l(-101, 115), l(118, 156), h(-92.6), l(-72.5, -94.8), l(-83, 94.8), h(-46), l(107, -123), l(-113, -148), h(94.9), l(65.5, 86.6), z(), m(-16.1, 244), h(25.5), l(-165, -218), h(-27.4), z())
-				.fill(fill)
+				.fill(fill).render()
 		}
 		.class(`class`.isEmpty ? "x-icon-view" : "x-icon-view \(`class`)")
 		.width(width)
@@ -40,6 +40,7 @@ public struct XIconView: HTMLContent {
 		.viewBox(0, 0, 300, 271)
 		.xmlns("http://www.w3.org/2000/svg")
 		.xmlnsXlink("http://www.w3.org/1999/xlink")
+        .render()
 	}
 }
 

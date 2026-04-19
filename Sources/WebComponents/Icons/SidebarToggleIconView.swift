@@ -1,6 +1,7 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
 import DOMBuilder
 import HTMLBuilder
@@ -14,7 +15,7 @@ public struct SidebarToggleIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		span {
 			span {}
 			.class("sidebar-toggle-icon-line sidebar-toggle-icon-line-middle")
@@ -44,10 +45,11 @@ public struct SidebarToggleIconView: HTMLContent {
 				bottom(0)
 			}
 		}
+		.render()
 	}
 	
 	@CSSBuilder
-	private func sidebarToggleIconLineCSS() -> [AnyCSSContent] {
+	private func sidebarToggleIconLineCSS() -> [CSSRule] {
 		position(.absolute)
 		width(perc(100))
 		height(px(2))

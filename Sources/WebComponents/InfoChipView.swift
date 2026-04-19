@@ -1,12 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
-#if !os(WASI)
-import Foundation
-
-#endif
-import HTMLBuilder
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
+import DOMBuilder
+import Foundation
+import HTMLBuilder
 import WebTypes
 
 /// InfoChip — a non-interactive indicator that provides information and/or conveys a status.
@@ -14,7 +13,7 @@ public struct InfoChipView: HTMLContent {
 	let chipColor: InfoChipColor
 	let weight: Weight
 	let icon: String?
-	let content: [AnyHTMLContent]
+	let content: [DOMNode]
 	let `class`: String
 
 	/// Apple HIG color for the chip
@@ -44,7 +43,7 @@ public struct InfoChipView: HTMLContent {
 		weight: Weight = .subtle,
 		icon: String? = nil,
 		class: String = "",
-		@HTMLBuilder content: () -> [AnyHTMLContent]
+		@HTMLBuilder content: () -> [DOMNode]
 	) {
 		self.chipColor = chipColor
 		self.weight = weight
@@ -59,7 +58,7 @@ public struct InfoChipView: HTMLContent {
 		weight: Weight = .subtle,
 		icon: String? = nil,
 		class: String = "",
-		@HTMLBuilder content: () -> [AnyHTMLContent]
+		@HTMLBuilder content: () -> [DOMNode]
 	) {
 		self.chipColor = color
 		self.weight = weight
@@ -74,7 +73,7 @@ public struct InfoChipView: HTMLContent {
 		weight: Weight = .subtle,
 		icon: String? = nil,
 		class: String = "",
-		@HTMLBuilder content: () -> [AnyHTMLContent]
+		@HTMLBuilder content: () -> [DOMNode]
 	) {
 		self.chipColor = status
 		self.weight = weight
@@ -84,7 +83,7 @@ public struct InfoChipView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func infoChipViewCSS(_ chipColor: InfoChipColor, _ weight: Weight) -> [AnyCSSContent] {
+	private func infoChipViewCSS(_ chipColor: InfoChipColor, _ weight: Weight) -> [CSSRule] {
 		display(.inlineFlex)
 		alignItems(.center)
 		gap(spacing4)
@@ -195,7 +194,7 @@ public struct InfoChipView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func infoChipIconCSS() -> [AnyCSSContent] {
+	private func infoChipIconCSS() -> [CSSRule] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -207,7 +206,7 @@ public struct InfoChipView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func infoChipTextCSS() -> [AnyCSSContent] {
+	private func infoChipTextCSS() -> [CSSRule] {
 		flex(1)
 		minWidth(0)
 		textOverflow(.ellipsis)
@@ -215,7 +214,7 @@ public struct InfoChipView: HTMLContent {
 		whiteSpace(.nowrap)
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let defaultIcon: String = {
 			switch chipColor {
 			case .gray: return "ℹ"
@@ -253,7 +252,7 @@ public struct InfoChipView: HTMLContent {
 		.style {
 			infoChipViewCSS(chipColor, weight)
 		}
-		.render(indent: indent)
+		.render()
 	}
 }
 

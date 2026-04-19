@@ -1,15 +1,18 @@
-#if !os(WASI)
+#if SERVER
 
-import HTMLBuilder
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
+import DOMBuilder
+import Foundation
+import HTMLBuilder
 import WebTypes
 
 /// A brief message that shows up when a user hovers over a specific part of the UI.
 public struct TooltipView: HTMLContent {
 	let tooltipText: String
 	let placement: Placement
-	let children: [AnyHTMLContent]
+	let children: [DOMNode]
 	let `class`: String
 
 	public enum Placement: String, Sendable {
@@ -31,7 +34,7 @@ public struct TooltipView: HTMLContent {
 		tooltip: String,
 		placement: Placement = .bottom,
 		class: String = "",
-		@HTMLBuilder content: () -> [AnyHTMLContent]
+		@HTMLBuilder content: () -> [DOMNode]
 	) {
 		self.tooltipText = tooltip
 		self.placement = placement
@@ -40,14 +43,14 @@ public struct TooltipView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func tooltipTriggerCSS() -> [AnyCSSContent] {
+	private func tooltipTriggerCSS() -> [CSSRule] {
 		position(.relative)
 		display(.inlineFlex)
 		alignItems(.center)
 		verticalAlign(.middle)
 		cursor(.help)
 
-		// CSS hover fallback — works without WASI hydration
+		// CSS hover fallback — works without CLIENT hydration
 		pseudoClass(.hover) {
 			child(".tooltip-content") {
 				opacity(1)
@@ -67,7 +70,7 @@ public struct TooltipView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func tooltipContentCSS(_ placement: Placement) -> [AnyCSSContent] {
+	private func tooltipContentCSS(_ placement: Placement) -> [CSSRule] {
 		position(.absolute)
 		padding(spacing8, spacing12)
 		minWidth(px(160))
@@ -124,7 +127,7 @@ public struct TooltipView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func tooltipArrowCSS(_ placement: Placement) -> [AnyCSSContent] {
+	private func tooltipArrowCSS(_ placement: Placement) -> [CSSRule] {
 		content("\"\"")
 		position(.absolute)
 		width(0)
@@ -173,7 +176,7 @@ public struct TooltipView: HTMLContent {
 		}
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		return span {
 			span {
 				children
@@ -198,18 +201,18 @@ public struct TooltipView: HTMLContent {
 		.style {
 			tooltipTriggerCSS()
 		}
-		.render(indent: indent)
+		.render()
 	}
 }
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import DesignTokens
-import WebTypes
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 private class TooltipInstance: @unchecked Sendable {
 	private var trigger: Element

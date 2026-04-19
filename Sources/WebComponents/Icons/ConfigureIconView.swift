@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,7 +22,7 @@ public struct ConfigureIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
 				.fillRule(.evenodd)
@@ -30,7 +30,7 @@ public struct ConfigureIconView: HTMLContent {
 
 			path()
 				.fillRule(.evenodd)
-				.d(M(11, 11.17), a(3.001, 3.001, 0, false, true, 0, 5.66), V(18), H(9), v(-1.17), a(3.001, 3.001, 0, false, true, 0, -5.66), V(2), h(2), Z(), M(10, 13), a(1, 1, 0, true, true, 0, 2), a(1, 1, 0, false, true, 0, -2))
+				.d(M(11, 11.17), a(3.001, 3.001, 0, false, true, 0, 5.66), V(18), H(9), v(-1.17), a(3.001, 3.001, 0, false, true, 0, -5.66), V(2), h(2), Z(), M(10, 13), a(1, 1, 0, true, true, 0, 2), a(1, 1, 0, false, true, 0, -2)).render()
 		}
 		.class(`class`.isEmpty ? "configure-icon-view" : "configure-icon-view \(`class`)")
 		.width(width)
@@ -38,6 +38,7 @@ public struct ConfigureIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

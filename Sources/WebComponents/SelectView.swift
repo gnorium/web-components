@@ -1,9 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
-import Foundation
-import HTMLBuilder
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
+import Foundation
+import DOMBuilder
+import HTMLBuilder
 import WebTypes
 
 /// A select input with a dropdown menu of predefined, selectable options.
@@ -52,14 +54,14 @@ public struct SelectView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func selectViewCSS() -> [AnyCSSContent] {
+	private func selectViewCSS() -> [CSSRule] {
 		position(.relative)
 		display(.inlineBlock)
 		minWidth(px(256))
 	}
 
 	@CSSBuilder
-	private func selectHandleCSS(_ disabled: Bool, _ status: ValidationStatus) -> [AnyCSSContent] {
+	private func selectHandleCSS(_ disabled: Bool, _ status: ValidationStatus) -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.spaceBetween)
@@ -89,7 +91,7 @@ public struct SelectView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func selectLabelCSS(_ hasSelection: Bool) -> [AnyCSSContent] {
+	private func selectLabelCSS(_ hasSelection: Bool) -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing8)
@@ -104,7 +106,7 @@ public struct SelectView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func selectIconCSS() -> [AnyCSSContent] {
+	private func selectIconCSS() -> [CSSRule] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -114,7 +116,7 @@ public struct SelectView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func selectIndicatorCSS(_ disabled: Bool) -> [AnyCSSContent] {
+	private func selectIndicatorCSS(_ disabled: Bool) -> [CSSRule] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -124,7 +126,7 @@ public struct SelectView: HTMLContent {
 		color(disabled ? colorDisabled : colorSubtle)
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let selectedItem = menuItems.first(where: { $0.value == selectedValue }) ??
 			menuGroups.flatMap(\.items).first(where: { $0.value == selectedValue })
 
@@ -191,18 +193,18 @@ public struct SelectView: HTMLContent {
 		.style {
 			selectViewCSS()
 		}
-		.render(indent: indent)
+		.render()
 	}
 }
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import DesignTokens
-import WebTypes
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 private class SelectInstance: @unchecked Sendable {
 	private var select: Element

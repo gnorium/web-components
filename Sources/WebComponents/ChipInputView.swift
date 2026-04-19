@@ -1,9 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
+import CSSBuilder
+import CSSOMBuilder
+import DesignTokens
+import DOMBuilder
 import Foundation
 import HTMLBuilder
-import CSSBuilder
-import DesignTokens
 import WebTypes
 
 /// A ChipInput allows users to create chips to filter content or make selections.
@@ -59,7 +61,7 @@ public struct ChipInputView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func chipInputViewCSS(_ disabled: Bool) -> [AnyCSSContent] {
+	private func chipInputViewCSS(_ disabled: Bool) -> [CSSRule] {
 		if disabled {
 			opacity(opacityMedium)
 			cursor(cursorBaseDisabled)
@@ -67,7 +69,7 @@ public struct ChipInputView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func chipCSS() -> [AnyCSSContent] {
+	private func chipCSS() -> [CSSRule] {
 		display(.inlineFlex)
 		alignItems(.center)
 		maxWidth(perc(100))
@@ -98,12 +100,12 @@ public struct ChipInputView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func chipIconCSS() -> [AnyCSSContent] {
+	private func chipIconCSS() -> [CSSRule] {
 		display(.inlineFlex)
 	}
 
 	@CSSBuilder
-	private func chipButtonCSS(_ disabled: Bool) -> [AnyCSSContent] {
+	private func chipButtonCSS(_ disabled: Bool) -> [CSSRule] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -137,7 +139,7 @@ public struct ChipInputView: HTMLContent {
 
 
 	@CSSBuilder
-	private func chipInputChipsCSS(_ status: ValidationStatus) -> [AnyCSSContent] {
+	private func chipInputChipsCSS(_ status: ValidationStatus) -> [CSSRule] {
 		display(.flex)
 		flexWrap(.wrap)
 		gap(spacing8)
@@ -148,7 +150,7 @@ public struct ChipInputView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func chipInputInputWrapperCSS(_ status: ValidationStatus) -> [AnyCSSContent] {
+	private func chipInputInputWrapperCSS(_ status: ValidationStatus) -> [CSSRule] {
 		display(.flex)
 		padding(spacing8)
 		backgroundColor(backgroundColorBase)
@@ -163,7 +165,7 @@ public struct ChipInputView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func chipInputItemsCSS(_ status: ValidationStatus, _ disabled: Bool) -> [AnyCSSContent] {
+	private func chipInputItemsCSS(_ status: ValidationStatus, _ disabled: Bool) -> [CSSRule] {
 		display(.flex)
 		flexWrap(.wrap)
 		alignItems(.center)
@@ -185,7 +187,7 @@ public struct ChipInputView: HTMLContent {
 		}
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let chipElements = chips.map { chip in
 			div {
 				if let icon = chip.icon {
@@ -218,6 +220,7 @@ public struct ChipInputView: HTMLContent {
 			.style {
 				chipCSS()
 			}
+			.render()
 		}
 
 		let containerElement: HTMLDivElement
@@ -275,7 +278,7 @@ public struct ChipInputView: HTMLContent {
 		.style {
 			chipInputViewCSS(disabled)
 		}
-		.render(indent: indent)
+		.render()
 	}
 }
 

@@ -1,9 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
-import Foundation
-import HTMLBuilder
 import CSSBuilder
 import DesignTokens
+import CSSOMBuilder
+import DOMBuilder
+import Foundation
+import HTMLBuilder
 import WebTypes
 
 /// A Card groups information related to a single topic.
@@ -13,9 +15,9 @@ public struct CardView: HTMLContent {
 	let thumbnail: Thumbnail?
 	let forceThumbnail: Bool
 	let customPlaceholderIcon: String?
-	let titleContent: [AnyHTMLContent]
-	let descriptionContent: [AnyHTMLContent]
-	let supportingTextContent: [AnyHTMLContent]
+	let titleContent: [DOMNode]
+	let descriptionContent: [DOMNode]
+	let supportingTextContent: [DOMNode]
 	let `class`: String
 
 	public struct Thumbnail: Sendable {
@@ -35,9 +37,9 @@ public struct CardView: HTMLContent {
 		forceThumbnail: Bool = false,
 		customPlaceholderIcon: String? = nil,
 		class: String = "",
-		@HTMLBuilder title: () -> [AnyHTMLContent],
-		@HTMLBuilder description: () -> [AnyHTMLContent] = { [] },
-		@HTMLBuilder supportingText: () -> [AnyHTMLContent] = { [] }
+		@HTMLBuilder title: () -> [DOMNode],
+		@HTMLBuilder description: () -> [DOMNode] = { [] },
+		@HTMLBuilder supportingText: () -> [DOMNode] = { [] }
 	) {
 		self.url = url
 		self.icon = icon
@@ -51,7 +53,7 @@ public struct CardView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func cardViewCSS(_ isLink: Bool) -> [AnyCSSContent] {
+	private func cardViewCSS(_ isLink: Bool) -> [CSSRule] {
 		display(.block)
 		backgroundColor(backgroundColorBase)
 		border(borderWidthBase, .solid, borderColorSubtle)
@@ -82,7 +84,7 @@ public struct CardView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func cardMediaCSS() -> [AnyCSSContent] {
+	private func cardMediaCSS() -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -91,7 +93,7 @@ public struct CardView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func cardThumbnailCSS() -> [AnyCSSContent] {
+	private func cardThumbnailCSS() -> [CSSRule] {
 		width(px(80))
 		height(px(80))
 		overflow(.hidden)
@@ -100,7 +102,7 @@ public struct CardView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func cardThumbnailImageCSS() -> [AnyCSSContent] {
+	private func cardThumbnailImageCSS() -> [CSSRule] {
 		width(perc(100))
 		height(perc(100))
 		objectFit(.cover)
@@ -108,7 +110,7 @@ public struct CardView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func cardThumbnailPlaceholderCSS() -> [AnyCSSContent] {
+	private func cardThumbnailPlaceholderCSS() -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -120,7 +122,7 @@ public struct CardView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func cardIconCSS() -> [AnyCSSContent] {
+	private func cardIconCSS() -> [CSSRule] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -131,7 +133,7 @@ public struct CardView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func cardTextCSS(_ hasMedia: Bool) -> [AnyCSSContent] {
+	private func cardTextCSS(_ hasMedia: Bool) -> [CSSRule] {
 		display(.flex)
 		flexDirection(.column)
 		gap(spacing16)
@@ -145,7 +147,7 @@ public struct CardView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func cardTitleCSS(_ isLink: Bool) -> [AnyCSSContent] {
+	private func cardTitleCSS(_ isLink: Bool) -> [CSSRule] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeXXLarge24)
 		fontWeight(fontWeightNormal)
@@ -160,7 +162,7 @@ public struct CardView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func cardDescriptionCSS() -> [AnyCSSContent] {
+	private func cardDescriptionCSS() -> [CSSRule] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeSmall14)
 		lineHeight(lineHeightSmall22)
@@ -169,7 +171,7 @@ public struct CardView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func cardSupportingTextCSS() -> [AnyCSSContent] {
+	private func cardSupportingTextCSS() -> [CSSRule] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeXSmall12)
 		lineHeight(lineHeightSmall22)
@@ -178,14 +180,14 @@ public struct CardView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func cardContentWrapperCSS(_ hasMedia: Bool) -> [AnyCSSContent] {
+	private func cardContentWrapperCSS(_ hasMedia: Bool) -> [CSSRule] {
 		display(.flex)
 		alignItems(hasMedia ? .flexStart : .center)
 		gap(spacing16)
 		width(perc(100))
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let hasDescription = !descriptionContent.isEmpty
 		let hasSupportingText = !supportingTextContent.isEmpty
 		let isLink = !url.isEmpty
@@ -194,7 +196,7 @@ public struct CardView: HTMLContent {
 		let hasMedia = hasThumbnail || hasIcon
 		let hasTitleOnly = !hasDescription && !hasSupportingText
 
-		let cardContentElement: HTMLContent = div {
+		let cardContentElement: DOMNode = div {
 			if hasThumbnail {
 				div {
 					if let thumb = thumbnail {
@@ -260,6 +262,7 @@ public struct CardView: HTMLContent {
 		.style {
 			cardContentWrapperCSS(hasMedia && !hasTitleOnly)
 		}
+		.render()
 
 		if isLink {
 			return a { cardContentElement }
@@ -268,14 +271,14 @@ public struct CardView: HTMLContent {
 			.style {
 				cardViewCSS(true)
 			}
-			.render(indent: indent)
+			.render()
 		} else {
 			return div { cardContentElement }
 			.class(`class`.isEmpty ? "card-view" : "card-view \(`class`)")
 			.style {
 				cardViewCSS(false)
 			}
-			.render(indent: indent)
+			.render()
 		}
 	}
 }

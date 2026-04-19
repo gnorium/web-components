@@ -1,12 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
-#if !os(WASI)
-import Foundation
-
-#endif
-import HTMLBuilder
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
+import Foundation
+import HTMLBuilder
+import DOMBuilder
 import WebTypes
 
 /// A Tab is one of the selectable items included within Tabs.
@@ -16,7 +15,7 @@ public struct TabView: HTMLContent, Sendable {
 	public let label: String
 	public let disabled: Bool
 	public let url: String?
-	public let content: [AnyHTMLContent]
+	public let content: [DOMNode]
 	let `class`: String
 
 	public init(
@@ -25,18 +24,18 @@ public struct TabView: HTMLContent, Sendable {
 		disabled: Bool = false,
 		url: String? = nil,
 		class: String = "",
-		@HTMLBuilder content: () -> [AnyHTMLContent]
+		@HTMLBuilder content: () -> [DOMNode]
 	) {
 		self.name = name
 		self.label = label.isEmpty ? name : label
 		self.disabled = disabled
 		self.url = url
-		self.content = content().map { AnyHTMLContent($0) }
+		self.content = content()
 		self.`class` = `class`
 	}
 
 	@CSSBuilder
-	private func tabButtonCSS(_ isActive: Bool, _ disabled: Bool, _ framed: Bool) -> [AnyCSSContent] {
+	private func tabButtonCSS(_ isActive: Bool, _ disabled: Bool, _ framed: Bool) -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -90,7 +89,7 @@ public struct TabView: HTMLContent, Sendable {
 	}
 
 	@CSSBuilder
-	private func tabPanelCSS(_ framed: Bool) -> [AnyCSSContent] {
+	private func tabPanelCSS(_ framed: Bool) -> [CSSRule] {
 		if framed {
 			padding(spacing16)
 		} else {
@@ -99,7 +98,7 @@ public struct TabView: HTMLContent, Sendable {
 	}
 
 	/// Renders the tab button (called by TabsView)
-	public func renderButton(isActive: Bool, tabindex: Int, framed: Bool, indent: Int = 0) -> String {
+	public func renderButton(isActive: Bool, tabindex: Int, framed: Bool) -> DOMNode {
 		let displayLabel = label.isEmpty ? name : label
 
 		return button { displayLabel }
@@ -115,11 +114,11 @@ public struct TabView: HTMLContent, Sendable {
 		.style {
 			tabButtonCSS(isActive, disabled, framed)
 		}
-		.render(indent: indent)
+		.render()
 	}
 
 	/// Renders the tab panel content (called by TabsView)
-	public func renderPanel(isActive: Bool, framed: Bool, indent: Int = 0) -> String {
+	public func renderPanel(isActive: Bool, framed: Bool) -> DOMNode {
 		return section {
 			content
 		}
@@ -132,12 +131,12 @@ public struct TabView: HTMLContent, Sendable {
 		.style {
 			tabPanelCSS(framed)
 		}
-		.render(indent: indent)
+		.render()
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		// TabView should not be rendered directly - use TabsView
-		return ""
+		.fragment([])
 	}
 }
 

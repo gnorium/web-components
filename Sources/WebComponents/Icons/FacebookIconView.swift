@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -28,12 +28,12 @@ public struct FacebookIconView: HTMLContent {
 		self.monochrome = monochrome
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			defs {
 				clipPath {
 					path()
-						.d(M(0, 700), H(700), V(0), H(0), Z())
+						.d(M(0, 700), H(700), V(0), H(0), Z()).render()
 				}
 				.id("facebook-clip")
 			}
@@ -64,6 +64,7 @@ public struct FacebookIconView: HTMLContent {
 		.viewBox(0, 0, 666.66668, 666.66717)
 		.xmlns("http://www.w3.org/2000/svg")
 		.xmlnsXlink("http://www.w3.org/1999/xlink")
+        .render()
 	}
 }
 

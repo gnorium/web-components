@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,10 +22,10 @@ public struct ErrorIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
-			.d(M(13.728, 1), H(6.272), L(1, 6.272), v(7.456), L(6.272, 19), h(7.456), L(19, 13.728), V(6.272), Z(), M(11, 15), H(9), v(-2), h(2), Z(), m(0, -4), H(9), V(5), h(2), Z())
+			.d(M(13.728, 1), H(6.272), L(1, 6.272), v(7.456), L(6.272, 19), h(7.456), L(19, 13.728), V(6.272), Z(), M(11, 15), H(9), v(-2), h(2), Z(), m(0, -4), H(9), V(5), h(2), Z()).render()
 		}
 		.class(`class`.isEmpty ? "error-icon-view" : "error-icon-view \(`class`)")
 		.width(width)
@@ -33,6 +33,7 @@ public struct ErrorIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

@@ -1,9 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
+import CSSBuilder
+import CSSOMBuilder
+import DesignTokens
+import DOMBuilder
 import Foundation
 import HTMLBuilder
-import CSSBuilder
-import DesignTokens
 import WebTypes
 
 public struct AlertView: HTMLContent {
@@ -15,7 +17,7 @@ public struct AlertView: HTMLContent {
 	let dismissButtonLabel: String
 	let autoDismiss: AutoDismiss
 	let clearQueryParam: String?
-	let content: [AnyHTMLContent]
+	let content: [DOMNode]
 	let `class`: String
 
 	/// Apple HIG color for the alert
@@ -52,7 +54,7 @@ public struct AlertView: HTMLContent {
 		autoDismiss: AutoDismiss = .disabled,
 		clearQueryParam: String? = nil,
 		class: String = "",
-		@HTMLBuilder content: () -> [AnyHTMLContent]
+		@HTMLBuilder content: () -> [DOMNode]
 	) {
 		self.alertColor = type
 		self.inline = inline
@@ -76,7 +78,7 @@ public struct AlertView: HTMLContent {
 		autoDismiss: AutoDismiss = .disabled,
 		clearQueryParam: String? = nil,
 		class: String = "",
-		@HTMLBuilder content: () -> [AnyHTMLContent]
+		@HTMLBuilder content: () -> [DOMNode]
 	) {
 		self.alertColor = color
 		self.inline = inline
@@ -91,7 +93,7 @@ public struct AlertView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func alertViewCSS(_ alertColor: AlertColor, _ inline: Bool) -> [AnyCSSContent] {
+	private func alertViewCSS(_ alertColor: AlertColor, _ inline: Bool) -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing8)
@@ -124,7 +126,7 @@ public struct AlertView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func alertIconCSS(_ alertColor: AlertColor) -> [AnyCSSContent] {
+	private func alertIconCSS(_ alertColor: AlertColor) -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		minWidth(sizeIconMedium)
@@ -146,7 +148,7 @@ public struct AlertView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func alertContentCSS() -> [AnyCSSContent] {
+	private func alertContentCSS() -> [CSSRule] {
 		display(.flex)
 		flexDirection(.column)
 		flexGrow(1)
@@ -159,11 +161,11 @@ public struct AlertView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func alertFadeInCSS() -> [AnyCSSContent] {
+	private func alertFadeInCSS() -> [CSSRule] {
 		animation("alert-fade-in", transitionDurationBase, transitionTimingFunctionSystem)
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let defaultIcon: String = {
 			switch alertColor {
 			case .gray:
@@ -254,13 +256,13 @@ public struct AlertView: HTMLContent {
 					alertFadeInCSS()
 				}
 			}
-			.render(indent: indent)
+			.render()
 	}
 }
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
 import WebAPIs
 import DesignTokens

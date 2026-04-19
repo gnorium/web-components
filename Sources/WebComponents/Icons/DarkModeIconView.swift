@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,13 +22,13 @@ public struct DarkModeIconView: HTMLContent {
 		self.height = height
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
 				.d(M(8, 2), a(4, 4, 0, false, false, 6, 6), a(6, 6, 0, true, true, -6, -6), Z())
 				.strokeWidth(1.5)
 				.strokeLinecap(.round)
-				.strokeLinejoin(.round)
+				.strokeLinejoin(.round).render()
 		}
 		.class(`class`.isEmpty ? "dark-mode-icon-view" : "dark-mode-icon-view \(`class`)")
 		.xmlns("http://www.w3.org/2000/svg")
@@ -37,6 +37,7 @@ public struct DarkModeIconView: HTMLContent {
 		.viewBox(0, 0, 16, 16)
 		.fill(.none)
 		.stroke(.currentColor)
+        .render()
 	}
 }
 

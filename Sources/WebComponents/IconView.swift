@@ -1,15 +1,17 @@
-#if !os(WASI)
+#if SERVER
 
+import CSSBuilder
+import CSSOMBuilder
+import DesignTokens
+import DOMBuilder
 import Foundation
 import HTMLBuilder
 import SVGBuilder
-import CSSBuilder
-import DesignTokens
 import WebTypes
 
 /// A graphical representation of an idea. Can be used inside other components.
 public struct IconView: HTMLContent {
-	let icon: [AnyHTMLContent]
+	let icon: [DOMNode]
 	let iconLabel: String?
 	let size: IconSize
 	let iconColor: CSSColor?
@@ -28,7 +30,7 @@ public struct IconView: HTMLContent {
 		iconColor: CSSColor? = nil,
 		class: String = ""
 	) {
-		self.icon = icon.map { AnyHTMLContent($0) }
+		self.icon = icon.map { $0.render() }
 		self.iconLabel = iconLabel
 		self.size = size
 		self.iconColor = iconColor
@@ -43,7 +45,7 @@ public struct IconView: HTMLContent {
 		iconColor: CSSColor? = nil,
 		class: String = ""
 	) {
-		self.icon = icon().map { AnyHTMLContent($0) }
+		self.icon = icon().map { $0.render() }
 		self.iconLabel = iconLabel
 		self.size = size
 		self.iconColor = iconColor
@@ -59,7 +61,7 @@ public struct IconView: HTMLContent {
 		class: String = ""
 	) {
 		let actualSize = Self.sizeToLength(size)
-		self.icon = icon(actualSize).map { AnyHTMLContent($0) }
+		self.icon = icon(actualSize).map { $0.render() }
 		self.iconLabel = iconLabel
 		self.size = size
 		self.iconColor = iconColor
@@ -79,7 +81,7 @@ public struct IconView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func iconViewCSS(_ size: IconSize, _ iconColor: CSSColor?) -> [AnyCSSContent] {
+	private func iconViewCSS(_ size: IconSize, _ iconColor: CSSColor?) -> [CSSRule] {
 		display(.flex)
         alignItems(.center)
         justifyContent(.center)
@@ -102,7 +104,7 @@ public struct IconView: HTMLContent {
 		}
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let iconClasses = {
 			var classes = "icon-view"
 			classes += " icon-\(size.rawValue)"
@@ -122,9 +124,9 @@ public struct IconView: HTMLContent {
 		}
 
 		if let iconLabel = iconLabel {
-			return baseElement.ariaLabel(iconLabel).render(indent: indent)
+			return baseElement.ariaLabel(iconLabel).render()
 		} else {
-			return baseElement.render(indent: indent)
+			return baseElement.render()
 		}
 	}
 }

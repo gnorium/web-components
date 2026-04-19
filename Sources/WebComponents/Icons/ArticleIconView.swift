@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,10 +22,10 @@ public struct ArticleIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
-				.d(M(5, 1), a(2, 2, 0, false, false, -2, 2), v(14), a(2, 2, 0, false, false, 2, 2), h(10), a(2, 2, 0, false, false, 2, -2), V(3), a(2, 2, 0, false, false, -2, -2), Z(), m(0, 3), h(5), v(1), H(5), Z(), m(0, 2), h(5), v(1), H(5), Z(), m(0, 2), h(5), v(1), H(5), Z(), m(10, 7), H(5), v(-1), h(10), Z(), m(0, -2), H(5), v(-1), h(10), Z(), m(0, -2), H(5), v(-1), h(10), Z(), m(0, -2), h(-4), V(4), h(4), Z())
+				.d(M(5, 1), a(2, 2, 0, false, false, -2, 2), v(14), a(2, 2, 0, false, false, 2, 2), h(10), a(2, 2, 0, false, false, 2, -2), V(3), a(2, 2, 0, false, false, -2, -2), Z(), m(0, 3), h(5), v(1), H(5), Z(), m(0, 2), h(5), v(1), H(5), Z(), m(0, 2), h(5), v(1), H(5), Z(), m(10, 7), H(5), v(-1), h(10), Z(), m(0, -2), H(5), v(-1), h(10), Z(), m(0, -2), H(5), v(-1), h(10), Z(), m(0, -2), h(-4), V(4), h(4), Z()).render()
 		}
 		.class(`class`.isEmpty ? "article-icon-view" : "article-icon-view \(`class`)")
 		.width(width)
@@ -33,6 +33,7 @@ public struct ArticleIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

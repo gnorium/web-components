@@ -1,9 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
+import CSSBuilder
+import CSSOMBuilder
+import DesignTokens
+import DOMBuilder
 import Foundation
 import HTMLBuilder
-import CSSBuilder
-import DesignTokens
 import WebTypes
 
 /// A list of links to the parent pages of the current page in hierarchical order.
@@ -36,7 +38,7 @@ public struct BreadcrumbView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func breadcrumbViewCSS() -> [AnyCSSContent] {
+	private func breadcrumbViewCSS() -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		flexWrap(.wrap)
@@ -48,14 +50,14 @@ public struct BreadcrumbView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func breadcrumbItemCSS() -> [AnyCSSContent] {
+	private func breadcrumbItemCSS() -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing4)
 	}
 
 	@CSSBuilder
-	private func breadcrumbLinkCSS() -> [AnyCSSContent] {
+	private func breadcrumbLinkCSS() -> [CSSRule] {
 		color(colorBlue)
 		textDecoration(.none)
 		maxWidth(px(350))
@@ -75,7 +77,7 @@ public struct BreadcrumbView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func breadcrumbCurrentCSS() -> [AnyCSSContent] {
+	private func breadcrumbCurrentCSS() -> [CSSRule] {
 		color(colorBase)
 		fontWeight(fontWeightNormal)
 		maxWidth(px(350))
@@ -85,19 +87,19 @@ public struct BreadcrumbView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func breadcrumbSeparatorCSS() -> [AnyCSSContent] {
+	private func breadcrumbSeparatorCSS() -> [CSSRule] {
 		color(colorSubtle)
 		userSelect(.none)
 	}
 
 	@CSSBuilder
-	private func breadcrumbOverflowCSS() -> [AnyCSSContent] {
+	private func breadcrumbOverflowCSS() -> [CSSRule] {
 		display(.inlineFlex)
 		alignItems(.center)
 		gap(spacing4)
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let visibleItems: [BreadcrumbItem]
 		let overflowItems: [BreadcrumbItem]
 
@@ -219,7 +221,7 @@ public struct BreadcrumbView: HTMLContent {
 		.style {
 			breadcrumbViewCSS()
 		}
-		.render(indent: indent)
+		.render()
 	}
 }
 

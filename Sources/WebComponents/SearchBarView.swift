@@ -1,16 +1,18 @@
-#if !os(WASI)
+#if SERVER
 
-import HTMLBuilder
 import CSSBuilder
-import Foundation
+import CSSOMBuilder
 import DesignTokens
+import Foundation
+import DOMBuilder
+import HTMLBuilder
 import WebTypes
 
 public struct SearchBarView: HTMLContent {
 	let inSidebar: Bool
 	let openDialog: Bool
 	let `class`: String
-	let style: [AnyCSSContent]
+	let style: [CSSRule]
 	let placeholder: String
 	let ariaLabel: String
 	let searchField: String
@@ -26,7 +28,7 @@ public struct SearchBarView: HTMLContent {
 		searchField: String = "q",
 		searchEndpoint: String = "/api/search",
 		resultUrlBase: String = "/results",
-		@CSSBuilder style: () -> [AnyCSSContent] = { [] }
+		@CSSBuilder style: () -> [CSSRule] = { [] }
 	) {
 		self.inSidebar = inSidebar
 		self.openDialog = openDialog
@@ -39,7 +41,7 @@ public struct SearchBarView: HTMLContent {
 		self.style = style()
 	}
 	
-	public func style(@CSSBuilder _ content: () -> [AnyCSSContent]) -> SearchBarView {
+	public func style(@CSSBuilder _ content: () -> [CSSRule]) -> SearchBarView {
 		return SearchBarView(
 			inSidebar: self.inSidebar,
 			openDialog: self.openDialog,
@@ -53,7 +55,7 @@ public struct SearchBarView: HTMLContent {
 		)
 	}
 	
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		div {
 			// Input - if openDialog is true, make it read-only and use it as a trigger
 			input()
@@ -186,11 +188,9 @@ public struct SearchBarView: HTMLContent {
 			flex(1)
 			boxSizing(.borderBox)
 			
-			for sty in style {
-				sty
-			}
+			style
 		}
-		.render(indent: indent)
+		.render()
 	}
 
 	private func buildClass() -> String {
@@ -204,12 +204,12 @@ public struct SearchBarView: HTMLContent {
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import DesignTokens
-import WebTypes
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 public class SearchBarHydration: @unchecked Sendable {
 	private var container: Element?

@@ -1,8 +1,10 @@
-#if !os(WASI)
+#if SERVER
 
-import HTMLBuilder
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
 import WebTypes
 
 /// A Label provides a descriptive title for an input or form field.
@@ -16,8 +18,8 @@ public struct LabelView: HTMLContent {
 	let inputID: String?
 	let descriptionID: String?
 	let disabled: Bool
-	let labelContent: [AnyHTMLContent]
-	let descriptionContent: [AnyHTMLContent]
+	let labelContent: [DOMNode]
+	let descriptionContent: [DOMNode]
 	let `class`: String
 	let labelFontWeight: CSSFontWeight
 	let labelFontSize: Length
@@ -34,8 +36,8 @@ public struct LabelView: HTMLContent {
 		labelFontWeight: CSSFontWeight = fontWeightBold,
 		labelFontSize: Length = fontSizeMedium16,
 		class: String = "",
-		@HTMLBuilder label: () -> [AnyHTMLContent],
-		@HTMLBuilder description: () -> [AnyHTMLContent] = { [] }
+		@HTMLBuilder label: () -> [DOMNode],
+		@HTMLBuilder description: () -> [DOMNode] = { [] }
 	) {
 		self.icon = icon
 		self.optional = optional
@@ -53,7 +55,7 @@ public struct LabelView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func labelViewCSS() -> [AnyCSSContent] {
+	private func labelViewCSS() -> [CSSRule] {
 		display(.flex)
 		flexDirection(.column)
 		gap(spacing4)
@@ -64,7 +66,7 @@ public struct LabelView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func visuallyHiddenCSS() -> [AnyCSSContent] {
+	private func visuallyHiddenCSS() -> [CSSRule] {
 		position(.absolute)
 		width(px(1))
 		height(px(1))
@@ -77,7 +79,7 @@ public struct LabelView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func labelTextCSS() -> [AnyCSSContent] {
+	private func labelTextCSS() -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing4)
@@ -89,7 +91,7 @@ public struct LabelView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func labelIconCSS() -> [AnyCSSContent] {
+	private func labelIconCSS() -> [CSSRule] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -100,13 +102,13 @@ public struct LabelView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func labelOptionalFlagCSS() -> [AnyCSSContent] {
+	private func labelOptionalFlagCSS() -> [CSSRule] {
 		color(disabled ? colorDisabled : colorSubtle)
 		fontWeight(fontWeightNormal)
 	}
 
 	@CSSBuilder
-	private func labelDescriptionCSS() -> [AnyCSSContent] {
+	private func labelDescriptionCSS() -> [CSSRule] {
 		display(.block)
 		fontSize(fontSizeSmall14)
 		lineHeight(lineHeightSmall22)
@@ -114,7 +116,7 @@ public struct LabelView: HTMLContent {
 		fontWeight(fontWeightNormal)
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let hasDescription = !descriptionContent.isEmpty
 
 		if isLegend {
@@ -161,7 +163,7 @@ public struct LabelView: HTMLContent {
 					visuallyHiddenCSS()
 				}
 			}
-			.render(indent: indent)
+			.render()
 		} else {
 			return div {
 				if let forID = inputID {
@@ -234,7 +236,7 @@ public struct LabelView: HTMLContent {
 					visuallyHiddenCSS()
 				}
 			}
-			.render(indent: indent)
+			.render()
 		}
 	}
 }

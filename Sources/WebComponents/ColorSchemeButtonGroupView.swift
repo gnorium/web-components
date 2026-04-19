@@ -1,8 +1,10 @@
-#if !os(WASI)
+#if SERVER
 
-import HTMLBuilder
 import CSSBuilder
 import DesignTokens
+import DOMBuilder
+import Foundation
+import HTMLBuilder
 import WebTypes
 
 /// A button group for selecting color scheme (Light / Dark).
@@ -14,7 +16,7 @@ public struct ColorSchemeButtonGroupView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		div {
 			optionButton(value: "light", label: "Light") {
 				IconView(icon: { s in LightModeIconView(width: s, height: s) }, size: .medium)
@@ -31,10 +33,10 @@ public struct ColorSchemeButtonGroupView: HTMLContent {
 			flexDirection(.column)
 			gap(spacing4)
 		}
-		.render(indent: indent)
+		.render()
 	}
 
-	private func optionButton(value: String, label: String, @HTMLBuilder icon: () -> [AnyHTMLContent]) -> HTMLContent {
+	private func optionButton(value: String, label: String, @HTMLBuilder icon: () -> [DOMNode]) -> HTMLContent {
 		div {
 			span { icon() }
 			.class("option-icon")
@@ -80,12 +82,12 @@ public struct ColorSchemeButtonGroupView: HTMLContent {
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import DesignTokens
-import WebTypes
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 /// Hydrates all ColorSchemeButtonGroupView instances on the page.
 /// Initializes from localStorage / system preference, binds click events,

@@ -1,14 +1,17 @@
-#if !os(WASI)
+#if SERVER
 
-import HTMLBuilder
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
+import DOMBuilder
+import Foundation
+import HTMLBuilder
 import WebTypes
 
 /// A button that can be toggled on and off with state persistence.
 public struct ToggleButtonView: HTMLContent {
 	let label: String
-	let icon: AnyHTMLContent?
+	let icon: DOMNode?
 	let modelValue: Bool
 	let weight: ButtonView.ButtonWeight
 	let disabled: Bool
@@ -35,7 +38,7 @@ public struct ToggleButtonView: HTMLContent {
 		labelFontWeight: CSSFontWeight = fontWeightBold
 	) {
 		self.label = label
-		self.icon = icon.map { AnyHTMLContent($0) }
+		self.icon = icon.map { $0.render() }
 		self.modelValue = modelValue
 		self.weight = weight
 		self.disabled = disabled
@@ -48,7 +51,7 @@ public struct ToggleButtonView: HTMLContent {
 		self.labelFontWeight = labelFontWeight
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let isIconOnly = iconOnly || (icon != nil && label.isEmpty)
 		let fullClass = `class`.isEmpty ? "toggle-button-view" : "toggle-button-view \(`class`)"
 		
@@ -97,11 +100,11 @@ public struct ToggleButtonView: HTMLContent {
         .style {
             toggleStateCSS()
         }
-        .render(indent: indent)
+        .render()
     }
 	
 	@CSSBuilder
-	private func toggleStateCSS() -> [AnyCSSContent] {
+	private func toggleStateCSS() -> [CSSRule] {
 		// Toggle-specific state styling
 		// Subtle/solid toggled state
 		if weight == .subtle || weight == .solid {
@@ -149,12 +152,12 @@ public struct ToggleButtonView: HTMLContent {
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import DesignTokens
-import WebTypes
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 private class ToggleButtonInstance: @unchecked Sendable {
 	private var button: Element

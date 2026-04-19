@@ -1,9 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
+import CSSBuilder
+import CSSOMBuilder
+import DesignTokens
+import DOMBuilder
 import Foundation
 import HTMLBuilder
-import CSSBuilder
-import DesignTokens
 import WebTypes
 
 /// A Menu displays a list of available options, suggestions, or actions.
@@ -20,8 +22,8 @@ public struct MenuView: HTMLContent {
 	let hideDescriptionOverflow: Bool
 	let searchQuery: String
 	let multiselect: Bool
-	let pendingContent: [AnyHTMLContent]
-	let noResultsContent: [AnyHTMLContent]
+	let pendingContent: [DOMNode]
+	let noResultsContent: [DOMNode]
 	let showNoResultsSlot: Bool?
 	let `class`: String
 
@@ -63,8 +65,8 @@ public struct MenuView: HTMLContent {
 		multiselect: Bool = false,
 		showNoResultsSlot: Bool? = nil,
 		class: String = "",
-		@HTMLBuilder pending: () -> [AnyHTMLContent] = { [] },
-		@HTMLBuilder noResults: () -> [AnyHTMLContent] = { [] }
+		@HTMLBuilder pending: () -> [DOMNode] = { [] },
+		@HTMLBuilder noResults: () -> [DOMNode] = { [] }
 	) {
 		self.menuItems = menuItems
 		self.menuGroups = menuGroups
@@ -85,7 +87,7 @@ public struct MenuView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func menuViewCSS(_ expanded: Bool, _ hasVisibleLimit: Bool) -> [AnyCSSContent] {
+	private func menuViewCSS(_ expanded: Bool, _ hasVisibleLimit: Bool) -> [CSSRule] {
 		position(.absolute)
 		top(perc(100))
 		insetInlineStart(0)
@@ -110,7 +112,7 @@ public struct MenuView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func menuListCSS(_ hasVisibleLimit: Bool, _ visibleItemLimit: Int?) -> [AnyCSSContent] {
+	private func menuListCSS(_ hasVisibleLimit: Bool, _ visibleItemLimit: Int?) -> [CSSRule] {
 		listStyle(.none)
 		margin(0)
 		padding(0)
@@ -122,14 +124,14 @@ public struct MenuView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func menuGroupCSS() -> [AnyCSSContent] {
+	private func menuGroupCSS() -> [CSSRule] {
 		listStyle(.none)
 		margin(0)
 		padding(0)
 	}
 
 	@CSSBuilder
-	private func menuGroupHeaderCSS(_ hideTitle: Bool) -> [AnyCSSContent] {
+	private func menuGroupHeaderCSS(_ hideTitle: Bool) -> [CSSRule] {
 		if !hideTitle {
 			display(.flex)
 			alignItems(.center)
@@ -139,7 +141,7 @@ public struct MenuView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func menuGroupTitleCSS(_ hideTitle: Bool) -> [AnyCSSContent] {
+	private func menuGroupTitleCSS(_ hideTitle: Bool) -> [CSSRule] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeSmall14)
 		fontWeight(fontWeightBold)
@@ -161,7 +163,7 @@ public struct MenuView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func menuGroupDescriptionCSS() -> [AnyCSSContent] {
+	private func menuGroupDescriptionCSS() -> [CSSRule] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeXSmall12)
 		lineHeight(lineHeightSmall22)
@@ -170,7 +172,7 @@ public struct MenuView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func menuGroupDividerCSS() -> [AnyCSSContent] {
+	private func menuGroupDividerCSS() -> [CSSRule] {
 		height(borderWidthBase)
 		backgroundColor(borderColorSubtle)
 		margin(spacing8, spacing0)
@@ -178,12 +180,12 @@ public struct MenuView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func menuPendingCSS() -> [AnyCSSContent] {
+	private func menuPendingCSS() -> [CSSRule] {
 		padding(spacing12)
 	}
 
 	@CSSBuilder
-	private func menuNoResultsCSS() -> [AnyCSSContent] {
+	private func menuNoResultsCSS() -> [CSSRule] {
 		padding(spacing12)
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
@@ -192,7 +194,7 @@ public struct MenuView: HTMLContent {
 		textAlign(.center)
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let hasVisibleLimit = visibleItemLimit != nil && visibleItemLimit! > 0
 		let allItems = menuItems + menuGroups.flatMap { $0.items }
 		let hasItems = !allItems.isEmpty
@@ -341,18 +343,18 @@ public struct MenuView: HTMLContent {
 		.style {
 			menuViewCSS(expanded, hasVisibleLimit)
 		}
-		.render(indent: indent)
+		.render()
 	}
 }
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import DesignTokens
-import WebTypes
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 private class MenuInstance: @unchecked Sendable {
 	private var menu: Element

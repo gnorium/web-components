@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -19,13 +19,13 @@ public struct SearchIconView: HTMLContent {
 		self.height = height
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
 			.d(M(11, 3), a(8, 8, 0, true, false, 0, 16), a(8, 8, 0, false, false, 0, -16), Z())
 
 			path()
-			.d(m(21, 21), l(-4.35, -4.35))
+			.d(m(21, 21), l(-4.35, -4.35)).render()
 		}
 		.class("search-bar-icon-view")
 		.width(width)
@@ -37,6 +37,7 @@ public struct SearchIconView: HTMLContent {
 		.strokeWidth(2)
 		.strokeLinecap(.round)
 		.strokeLinejoin(.round)
+        .render()
 	}
 }
 

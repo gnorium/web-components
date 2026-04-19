@@ -1,12 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
-#if !os(WASI)
-import Foundation
-
-#endif
-import HTMLBuilder
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
+import DOMBuilder
+import Foundation
+import HTMLBuilder
 import WebTypes
 
 /// A visual element used to indicate the ongoing, indefinite progress of an action or process.
@@ -14,7 +13,7 @@ public struct ProgressIndicatorView: HTMLContent {
 	let showLabel: Bool
 	let ariaHidden: Bool
 	let ariaLabel: String?
-	let content: [AnyHTMLContent]
+	let content: [DOMNode]
 	let `class`: String
 
 	public init(
@@ -22,7 +21,7 @@ public struct ProgressIndicatorView: HTMLContent {
 		ariaHidden: Bool = false,
 		ariaLabel: String? = nil,
 		class: String = "",
-		@HTMLBuilder content: () -> [AnyHTMLContent] = { [] }
+		@HTMLBuilder content: () -> [DOMNode] = { [] }
 	) {
 		self.showLabel = showLabel
 		self.ariaHidden = ariaHidden
@@ -32,7 +31,7 @@ public struct ProgressIndicatorView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func progressIndicatorViewCSS() -> [AnyCSSContent] {
+	private func progressIndicatorViewCSS() -> [CSSRule] {
 		display(.inlineFlex)
 		alignItems(.center)
 		gap(spacing8)
@@ -44,7 +43,7 @@ public struct ProgressIndicatorView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func progressIndicatorSpinnerCSS() -> [AnyCSSContent] {
+	private func progressIndicatorSpinnerCSS() -> [CSSRule] {
 		display(.inlineBlock)
 		width(sizeIconMedium)
 		height(sizeIconMedium)
@@ -58,11 +57,11 @@ public struct ProgressIndicatorView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func progressIndicatorLabelCSS() -> [AnyCSSContent] {
+	private func progressIndicatorLabelCSS() -> [CSSRule] {
 		display(.inline)
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let hasContent = !content.isEmpty
 
 		var progressIndicator = div {
@@ -98,7 +97,7 @@ public struct ProgressIndicatorView: HTMLContent {
 			.style {
 				progressIndicatorViewCSS()
 			}
-			.render(indent: indent)
+			.render()
 	}
 }
 

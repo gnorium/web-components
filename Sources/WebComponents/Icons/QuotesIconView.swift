@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,10 +22,10 @@ public struct QuotesIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
-				.d(m(7, 6), l(1, -2), H(6), C(3.79, 4, 2, 6.79, 2, 9), v(7), h(7), V(9), H(5), c(0, -3, 2, -3, 2, -3), m(7, 3), c(0, -3, 2, -3, 2, -3), l(1, -2), h(-2), c(-2.21, 0, -4, 2.79, -4, 5), v(7), h(7), V(9), Z())
+				.d(m(7, 6), l(1, -2), H(6), C(3.79, 4, 2, 6.79, 2, 9), v(7), h(7), V(9), H(5), c(0, -3, 2, -3, 2, -3), m(7, 3), c(0, -3, 2, -3, 2, -3), l(1, -2), h(-2), c(-2.21, 0, -4, 2.79, -4, 5), v(7), h(7), V(9), Z()).render()
 		}
 		.class(`class`.isEmpty ? "quotes-icon-view" : "quotes-icon-view \(`class`)")
 		.width(width)
@@ -33,6 +33,7 @@ public struct QuotesIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

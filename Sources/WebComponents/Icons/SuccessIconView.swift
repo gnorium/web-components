@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,10 +22,10 @@ public struct SuccessIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
-			.d(M(10, 20), a(10, 10, 0, false, true, 0, -20), a(10, 10, 0, true, true, 0, 20), m(-2, -5), l(9, -8.5), L(15.5, 5), L(8, 12), L(4.5, 8.5), L(3, 10), Z())
+			.d(M(10, 20), a(10, 10, 0, false, true, 0, -20), a(10, 10, 0, true, true, 0, 20), m(-2, -5), l(9, -8.5), L(15.5, 5), L(8, 12), L(4.5, 8.5), L(3, 10), Z()).render()
 		}
 		.class(`class`.isEmpty ? "success-icon-view" : "success-icon-view \(`class`)")
 		.width(width)
@@ -33,6 +33,7 @@ public struct SuccessIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

@@ -1,7 +1,9 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
+import DOMBuilder
 import HTMLBuilder
 import WebTypes
 
@@ -13,7 +15,7 @@ public struct SidebarMenuButtonView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		div {
 			ButtonView(
 				icon: IconView(icon: { size in
@@ -30,7 +32,7 @@ public struct SidebarMenuButtonView: HTMLContent {
 		.ariaExpanded(false)
 		.ariaControls("navbar-slide-menu")
 		.style {
-			// Hidden by default — WASI shows via inline display:flex when sidebar exists
+			// Hidden by default — CLIENT shows via inline display:flex when sidebar exists
 			display(.none)
 
 			// On desktop the sidebar column is visible, so never show hamburger
@@ -38,7 +40,7 @@ public struct SidebarMenuButtonView: HTMLContent {
 				display(.none).important()
 			}
 		}
-		.render(indent: indent)
+		.render()
 	}
 }
 

@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,7 +22,7 @@ public struct SettingsIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			g {
 				path()
@@ -39,7 +39,7 @@ public struct SettingsIconView: HTMLContent {
 
 				use()
 					.href("#a")
-					.transform(rotate(135))
+					.transform(rotate(135)).render()
 			}
 			.xmlnsXlink("http://www.w3.org/1999/xlink")
 			.transform(translate(10, 10))
@@ -53,6 +53,7 @@ public struct SettingsIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

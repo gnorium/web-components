@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -28,7 +28,7 @@ public struct InstagramIconView: HTMLContent {
 		self.monochrome = monochrome
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			if !monochrome {
 				defs {
@@ -81,7 +81,7 @@ public struct InstagramIconView: HTMLContent {
 					.cy(628.4379)
 					.r(52.3515)
 					.gradientUnits(.userSpaceOnUse)
-					.gradientTransform(matrix(-3.10797, 0.87652, -0.6315, -2.23914, 1345.6503, 1374.1983))
+					.gradientTransform(matrix(-3.10797, 0.87652, -0.6315, -2.23914, 1345.6503, 1374.1983)).render()
 				}
 
 				g {
@@ -136,6 +136,7 @@ public struct InstagramIconView: HTMLContent {
 		.viewBox(0, 0, 264.5833, 264.5833)
 		.xmlns("http://www.w3.org/2000/svg")
 		.xmlnsXlink("http://www.w3.org/1999/xlink")
+        .render()
 	}
 }
 

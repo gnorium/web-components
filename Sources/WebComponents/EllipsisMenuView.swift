@@ -1,7 +1,9 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
+import DOMBuilder
 import HTMLBuilder
 import WebTypes
 
@@ -11,19 +13,19 @@ import WebTypes
 public struct EllipsisMenuView: HTMLContent {
 	let `class`: String
 	let navbarHeight: Int
-	let content: [AnyHTMLContent]
+	let content: [DOMNode]
 
 	public init(
 		class: String = "",
 		navbarHeight: Int = 96,
-		@HTMLBuilder content: () -> [AnyHTMLContent]
+		@HTMLBuilder content: () -> [DOMNode]
 	) {
 		self.class = `class`
 		self.navbarHeight = navbarHeight
 		self.content = content()
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		div {
 			// Backdrop with blur effect
 			div {}
@@ -59,13 +61,13 @@ public struct EllipsisMenuView: HTMLContent {
 		.style {
 			ellipsisMenuViewCSS()
 		}
-		.render(indent: indent)
+		.render()
 	}
 
 	// MARK: - CSS
 
 	@CSSBuilder
-	private func ellipsisMenuViewCSS() -> [AnyCSSContent] {
+	private func ellipsisMenuViewCSS() -> [CSSRule] {
 		display(.none)
 		position(.fixed)
 		top(px(navbarHeight))
@@ -76,7 +78,7 @@ public struct EllipsisMenuView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func ellipsisMenuBackdropCSS() -> [AnyCSSContent] {
+	private func ellipsisMenuBackdropCSS() -> [CSSRule] {
 		position(.fixed)
 		top(px(navbarHeight))
 		insetInlineStart(0)
@@ -91,7 +93,7 @@ public struct EllipsisMenuView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func ellipsisMenuContainerCSS() -> [AnyCSSContent] {
+	private func ellipsisMenuContainerCSS() -> [CSSRule] {
 		position(.relative)
 		width(perc(100))
 		backgroundColor(backgroundColorBase)
@@ -115,14 +117,14 @@ public struct EllipsisMenuView: HTMLContent {
 	// MARK: - Public Section Helpers
 
 	@CSSBuilder
-	public static func sectionCSS() -> [AnyCSSContent] {
+	public static func sectionCSS() -> [CSSRule] {
 		display(.flex)
 		flexDirection(.column)
 		gap(spacing8)
 	}
 
 	@CSSBuilder
-	public static func sectionHeaderCSS() -> [AnyCSSContent] {
+	public static func sectionHeaderCSS() -> [CSSRule] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeXSmall12)
 		fontWeight(fontWeightSemiBold)
@@ -131,7 +133,7 @@ public struct EllipsisMenuView: HTMLContent {
 	}
 
 	@CSSBuilder
-	public static func dividerCSS() -> [AnyCSSContent] {
+	public static func dividerCSS() -> [CSSRule] {
 		height(px(1))
 		backgroundColor(borderColorSubtle)
 	}

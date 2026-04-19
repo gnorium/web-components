@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,10 +22,10 @@ public struct MoveFirstIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
-				.d(M(3, 1), h(2), v(18), H(3), Z(), m(13.5, 1.5), L(15, 1), l(-9, 9), l(9, 9), l(1.5, -1.5), L(9, 10), Z())
+				.d(M(3, 1), h(2), v(18), H(3), Z(), m(13.5, 1.5), L(15, 1), l(-9, 9), l(9, 9), l(1.5, -1.5), L(9, 10), Z()).render()
 		}
 		.class(`class`.isEmpty ? "move-first-icon-view" : "move-first-icon-view \(`class`)")
 		.width(width)
@@ -33,6 +33,7 @@ public struct MoveFirstIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

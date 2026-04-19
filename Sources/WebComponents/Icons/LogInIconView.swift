@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,10 +22,10 @@ public struct LogInIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
-				.d(M(1, 11), v(6), c(0, 1.1, 0.9, 2, 2, 2), h(14), c(1.1, 0, 2, -0.9, 2, -2), V(3), c(0, -1.1, -0.9, -2, -2, -2), H(3), c(-1.1, 0, -2, 0.9, -2, 2), v(6), h(8), V(5), l(4.75, 5), L(9, 15), v(-4), Z())
+				.d(M(1, 11), v(6), c(0, 1.1, 0.9, 2, 2, 2), h(14), c(1.1, 0, 2, -0.9, 2, -2), V(3), c(0, -1.1, -0.9, -2, -2, -2), H(3), c(-1.1, 0, -2, 0.9, -2, 2), v(6), h(8), V(5), l(4.75, 5), L(9, 15), v(-4), Z()).render()
 		}
 		.class(`class`.isEmpty ? "log-in-icon-view" : "log-in-icon-view \(`class`)")
 		.width(width)
@@ -33,6 +33,7 @@ public struct LogInIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

@@ -20,14 +20,21 @@ let package = Package(
         .target(
             name: "WebComponents",
             dependencies: [
+                .product(name: "CSSBuilder", package: "web-builders"),
+                .product(name: "CSSOMBuilder", package: "web-builders"),
                 .product(name: "DesignTokens", package: "design-tokens"),
                 .product(name: "DiffEngine", package: "diff-engine"),
-                .product(name: "WebAPIs", package: "web-apis"),
+                .product(name: "DOMBuilder", package: "web-builders"),
+                .product(name: "EmbeddedSwiftUtilities", package: "embedded-swift-utilities"),
                 .product(name: "HTMLBuilder", package: "web-builders"),
-                .product(name: "CSSBuilder", package: "web-builders"),
                 .product(name: "SVGBuilder", package: "web-builders"),
-                .product(name: "WebTypes", package: "web-types"),
-                .product(name: "EmbeddedSwiftUtilities", package: "embedded-swift-utilities")
+                .product(name: "WebAPIs", package: "web-apis"),
+                .product(name: "WebTypes", package: "web-types")
+            ],
+            swiftSettings: [
+                .enableExperimentalFeature("Embedded", .when(platforms: [.wasi])),
+                .define("CLIENT", .when(platforms: [.wasi])),
+                .define("SERVER", .when(platforms: [.macOS, .linux, .windows]))
             ]
         )
     ]

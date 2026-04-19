@@ -1,12 +1,10 @@
-#if !os(WASI)
+#if SERVER
 
-#if !os(WASI)
-import Foundation
-
-#endif
-import HTMLBuilder
 import CSSBuilder
 import DesignTokens
+import DOMBuilder
+import Foundation
+import HTMLBuilder
 import WebTypes
 
 /// Renders a `<time>` element with an ISO 8601 `datetime` attribute and a UTC fallback display.
@@ -29,7 +27,7 @@ public struct LocalTimeView: HTMLContent {
 		self.fallbackSuffix = fallbackSuffix
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let isoFormatter = ISO8601DateFormatter()
 		let displayFormatter = DateFormatter()
 		displayFormatter.dateStyle = .medium
@@ -43,15 +41,17 @@ public struct LocalTimeView: HTMLContent {
 			fontSize(size)
 			color(textColor)
 		}
-		.render(indent: indent)
+		.render()
 	}
 }
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
+import EmbeddedSwiftUtilities
 import WebAPIs
+import WebTypes
 
 /// Hydrates all `<time class="local-time">` elements on the page,
 /// converting their UTC fallback text to the user's local timezone.

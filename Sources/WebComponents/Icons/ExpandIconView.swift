@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,10 +22,10 @@ public struct ExpandIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
-			.d(m(2.5, 4.75), l(7.5, 7.5), l(7.5, -7.5), l(1.5, 1.5), l(-9, 9), l(-9, -9), Z())
+			.d(m(2.5, 4.75), l(7.5, 7.5), l(7.5, -7.5), l(1.5, 1.5), l(-9, 9), l(-9, -9), Z()).render()
 		}
 		.class(`class`.isEmpty ? "expand-icon-view" : "expand-icon-view \(`class`)")
 		.width(width)
@@ -33,6 +33,7 @@ public struct ExpandIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

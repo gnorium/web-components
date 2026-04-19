@@ -1,8 +1,9 @@
-#if !os(WASI)
+#if SERVER
 
-import HTMLBuilder
 import CSSBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
 import WebTypes
 
 public struct CloseButtonView: HTMLContent {
@@ -17,7 +18,7 @@ public struct CloseButtonView: HTMLContent {
 		self.class = customClass
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		ButtonView(
 			icon: IconView {
 				CloseIconView()
@@ -27,7 +28,7 @@ public struct CloseButtonView: HTMLContent {
 			ariaLabel: ariaLabel,
 			class: "close-button-view \(`class`)"
 		)
-		.render(indent: indent)
+		.render()
 	}
 }
 

@@ -1,9 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
+import CSSBuilder
+import CSSOMBuilder
+import DesignTokens
+import DOMBuilder
 import Foundation
 import HTMLBuilder
-import CSSBuilder
-import DesignTokens
 import WebTypes
 
 /// A visual element used to display content in various formats and states.
@@ -67,7 +69,7 @@ public struct ImageView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func imageViewCSS(_ imagePosition: Position?, _ aspectRatio: AspectRatio?) -> [AnyCSSContent] {
+	private func imageViewCSS(_ imagePosition: Position?, _ aspectRatio: AspectRatio?) -> [CSSRule] {
 		display(.block)
 		position(.relative)
 		overflow(.hidden)
@@ -100,7 +102,7 @@ public struct ImageView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func imageImageCSS(_ objectFitVal: CSSObjectFit, _ objectPositionVal: CSSObjectPosition, _ hasAspectRatio: Bool) -> [AnyCSSContent] {
+	private func imageImageCSS(_ objectFitVal: CSSObjectFit, _ objectPositionVal: CSSObjectPosition, _ hasAspectRatio: Bool) -> [CSSRule] {
 		display(.block)
 		width(perc(100))
 		height(perc(100))
@@ -116,7 +118,7 @@ public struct ImageView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func imagePlaceholderCSS() -> [AnyCSSContent] {
+	private func imagePlaceholderCSS() -> [CSSRule] {
 		position(.absolute)
 		insetBlockStart(0)
 		insetInlineStart(0)
@@ -130,7 +132,7 @@ public struct ImageView: HTMLContent {
 		fontSize(sizeIconMedium)
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let hasImage = !src.isEmpty
 		let hasAspectRatio = aspectRatio != nil
 
@@ -183,7 +185,7 @@ public struct ImageView: HTMLContent {
 		.style {
 			imageViewCSS(imagePosition, aspectRatio)
 		}
-		.render(indent: indent)
+		.render()
 	}
 }
 

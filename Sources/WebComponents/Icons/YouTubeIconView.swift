@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -28,7 +28,7 @@ public struct YouTubeIconView: HTMLContent {
 		self.monochrome = monochrome
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			// YouTube rounded rectangle background
 			path()
@@ -38,13 +38,14 @@ public struct YouTubeIconView: HTMLContent {
 			// Play button
 			path()
 				.d(M(11.4253, 14.2854), L(18.8477, 10.0004), L(11.4253, 5.71533), Z())
-				.fill(monochrome ? SVGPaint(colorInverted) : SVGPaint(.white))
+				.fill(monochrome ? SVGPaint(colorInverted) : SVGPaint(.white)).render()
 		}
 		.class(`class`.isEmpty ? "youtube-icon-view" : "youtube-icon-view \(`class`)")
 		.width(width)
 		.height(height)
 		.viewBox(0, 0, 28.57, 20)
 		.xmlns("http://www.w3.org/2000/svg")
+        .render()
 	}
 }
 

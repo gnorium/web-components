@@ -1,9 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
+import CSSBuilder
+import CSSOMBuilder
+import DesignTokens
+import DOMBuilder
 import Foundation
 import HTMLBuilder
-import CSSBuilder
-import DesignTokens
 import WebTypes
 
 /// A radio input with label and optional description that supports single selection from a group.
@@ -16,9 +18,9 @@ public struct RadioView: HTMLContent {
 	let disabled: Bool
 	let hideLabel: Bool
 	let status: ValidationStatus
-	let labelContent: [AnyHTMLContent]
-	let descriptionContent: [AnyHTMLContent]
-	let customInputContent: [AnyHTMLContent]
+	let labelContent: [DOMNode]
+	let descriptionContent: [DOMNode]
+	let customInputContent: [DOMNode]
 	let `class`: String
 
 	public enum ValidationStatus: String, Sendable {
@@ -36,9 +38,9 @@ public struct RadioView: HTMLContent {
 		hideLabel: Bool = false,
 		status: ValidationStatus = .default,
 		class: String = "",
-		@HTMLBuilder label: () -> [AnyHTMLContent],
-		@HTMLBuilder description: () -> [AnyHTMLContent] = { [] },
-		@HTMLBuilder customInput: () -> [AnyHTMLContent] = { [] }
+		@HTMLBuilder label: () -> [DOMNode],
+		@HTMLBuilder description: () -> [DOMNode] = { [] },
+		@HTMLBuilder customInput: () -> [DOMNode] = { [] }
 	) {
 		self.id = id
 		self.name = name
@@ -55,7 +57,7 @@ public struct RadioView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func radioViewCSS(_ inline: Bool) -> [AnyCSSContent] {
+	private func radioViewCSS(_ inline: Bool) -> [CSSRule] {
 		if inline {
 			display(.inlineFlex)
 		} else {
@@ -68,7 +70,7 @@ public struct RadioView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func radioInputCSS(_ disabled: Bool, _ status: ValidationStatus) -> [AnyCSSContent] {
+	private func radioInputCSS(_ disabled: Bool, _ status: ValidationStatus) -> [CSSRule] {
 		position(.absolute)
 		width(minSizeInputBinary)
 		height(minSizeInputBinary)
@@ -99,7 +101,7 @@ public struct RadioView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func radioIconCSS(_ disabled: Bool, _ status: ValidationStatus) -> [AnyCSSContent] {
+	private func radioIconCSS(_ disabled: Bool, _ status: ValidationStatus) -> [CSSRule] {
 		display(.inlineBlock)
 		position(.relative)
 		width(minSizeInputBinary)
@@ -113,7 +115,7 @@ public struct RadioView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func radioLabelWrapperCSS(_ disabled: Bool) -> [AnyCSSContent] {
+	private func radioLabelWrapperCSS(_ disabled: Bool) -> [CSSRule] {
 		display(.flex)
 		flexDirection(.column)
 		gap(spacing4)
@@ -122,7 +124,7 @@ public struct RadioView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func radioLabelTextCSS(_ disabled: Bool) -> [AnyCSSContent] {
+	private func radioLabelTextCSS(_ disabled: Bool) -> [CSSRule] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		lineHeight(lineHeightSmall22)
@@ -131,14 +133,14 @@ public struct RadioView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func radioDescriptionCSS(_ disabled: Bool) -> [AnyCSSContent] {
+	private func radioDescriptionCSS(_ disabled: Bool) -> [CSSRule] {
 		fontSize(fontSizeSmall14)
 		lineHeight(lineHeightSmall22)
 		color(disabled ? colorDisabled : colorSubtle)
 	}
 
 	@CSSBuilder
-	private func visuallyHiddenCSS() -> [AnyCSSContent] {
+	private func visuallyHiddenCSS() -> [CSSRule] {
 		position(.absolute)
 		width(px(1))
 		height(px(1))
@@ -150,7 +152,7 @@ public struct RadioView: HTMLContent {
 		borderWidth(0)
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let hasDescription = !descriptionContent.isEmpty
 		let hasCustomInput = !customInputContent.isEmpty
 		let descriptionID = hasDescription ? "\(id)-description" : nil
@@ -230,7 +232,7 @@ public struct RadioView: HTMLContent {
 			.style {
 				radioViewCSS(inline)
 			}
-			.render(indent: indent)
+			.render()
 	}
 }
 

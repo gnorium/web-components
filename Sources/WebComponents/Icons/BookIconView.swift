@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,13 +22,13 @@ public struct BookIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
 			.d(M(15, 2), a(7.65, 7.65, 0, false, false, -5, 2), a(7.65, 7.65, 0, false, false, -5, -2), H(1), v(15), h(4), a(7.65, 7.65, 0, false, true, 5, 2), a(7.65, 7.65, 0, false, true, 5, -2), h(4), V(2), Z(), m(2.5, 13.5), H(14), a(4.38, 4.38, 0, false, false, -3, 1), V(5), s(1, -1.5, 4, -1.5), h(2.5), Z())
 
 			path()
-				.d(M(9, 3.5), h(2), v(1), H(9), Z())
+				.d(M(9, 3.5), h(2), v(1), H(9), Z()).render()
 		}
 		.class(`class`.isEmpty ? "book-icon-view" : "book-icon-view \(`class`)")
 		.width(width)
@@ -36,6 +36,7 @@ public struct BookIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

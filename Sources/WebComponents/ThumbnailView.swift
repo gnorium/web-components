@@ -1,12 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
-#if !os(WASI)
-import Foundation
-
-#endif
-import HTMLBuilder
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
+import DOMBuilder
+import Foundation
+import HTMLBuilder
 import WebTypes
 
 /// A visual element used to display a small preview of an image.
@@ -29,7 +28,7 @@ public struct ThumbnailView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func thumbnailViewCSS() -> [AnyCSSContent] {
+	private func thumbnailViewCSS() -> [CSSRule] {
 		display(.block)
 		position(.relative)
 		minWidth(size256)
@@ -43,7 +42,7 @@ public struct ThumbnailView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func thumbnailImageCSS() -> [AnyCSSContent] {
+	private func thumbnailImageCSS() -> [CSSRule] {
 		display(.block)
 		width(perc(100))
 		height(perc(100))
@@ -52,7 +51,7 @@ public struct ThumbnailView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func thumbnailPlaceholderCSS() -> [AnyCSSContent] {
+	private func thumbnailPlaceholderCSS() -> [CSSRule] {
 		position(.absolute)
 		insetBlockStart(0)
 		insetInlineStart(0)
@@ -65,7 +64,7 @@ public struct ThumbnailView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func thumbnailPlaceholderIconCSS() -> [AnyCSSContent] {
+	private func thumbnailPlaceholderIconCSS() -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -75,7 +74,7 @@ public struct ThumbnailView: HTMLContent {
 		fontSize(sizeIconMedium)
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let hasThumbnail = src != nil && !(src?.isEmpty ?? true)
 
 		let container = span {
@@ -123,7 +122,7 @@ public struct ThumbnailView: HTMLContent {
 		return container.style {
 			thumbnailViewCSS()
 		}
-		.render(indent: indent)
+		.render()
 	}
 }
 

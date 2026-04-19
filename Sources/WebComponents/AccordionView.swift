@@ -1,9 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
+import CSSBuilder
+import CSSOMBuilder
+import DesignTokens
+import DOMBuilder
 import Foundation
 import HTMLBuilder
-import CSSBuilder
-import DesignTokens
 import WebTypes
 
 public struct AccordionView: HTMLContent {
@@ -15,9 +17,9 @@ public struct AccordionView: HTMLContent {
 	let separation: Separation
 	let headingLevel: HeadingLevel
 	let headerDirection: HeaderDirection
-	let titleContent: [AnyHTMLContent]
-	let descriptionContent: [AnyHTMLContent]
-	let contentSlot: [AnyHTMLContent]
+	let titleContent: [DOMNode]
+	let descriptionContent: [DOMNode]
+	let contentSlot: [DOMNode]
 	let `class`: String
 
 	public enum HeaderDirection: Sendable {
@@ -71,9 +73,9 @@ public struct AccordionView: HTMLContent {
 		headingLevel: HeadingLevel = .h3,
 		headerDirection: HeaderDirection = .column,
 		class: String = "",
-		@HTMLBuilder title: () -> [AnyHTMLContent],
-		@HTMLBuilder description: () -> [AnyHTMLContent] = { [] },
-		@HTMLBuilder content: () -> [AnyHTMLContent]
+		@HTMLBuilder title: () -> [DOMNode],
+		@HTMLBuilder description: () -> [DOMNode] = { [] },
+		@HTMLBuilder content: () -> [DOMNode]
 	) {
 		self.id = id
 		self.open = open
@@ -90,7 +92,7 @@ public struct AccordionView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func accordionViewCSS(_ separation: Separation) -> [AnyCSSContent] {
+	private func accordionViewCSS(_ separation: Separation) -> [CSSRule] {
 		display(.block)
 
 		if separation == .outline {
@@ -101,7 +103,7 @@ public struct AccordionView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func accordionSummaryCSS(_ separation: Separation, _ hasAction: Bool) -> [AnyCSSContent] {
+	private func accordionSummaryCSS(_ separation: Separation, _ hasAction: Bool) -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing8)
@@ -141,7 +143,7 @@ public struct AccordionView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func accordionExpandIconCSS() -> [AnyCSSContent] {
+	private func accordionExpandIconCSS() -> [CSSRule] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -153,7 +155,7 @@ public struct AccordionView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func accordionHeaderWrapperCSS() -> [AnyCSSContent] {
+	private func accordionHeaderWrapperCSS() -> [CSSRule] {
 		display(.flex)
 		if headerDirection == .row {
 			flexDirection(.row)
@@ -168,7 +170,7 @@ public struct AccordionView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func accordionTitleCSS() -> [AnyCSSContent] {
+	private func accordionTitleCSS() -> [CSSRule] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		fontWeight(fontWeightSemiBold)
@@ -179,7 +181,7 @@ public struct AccordionView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func accordionDescriptionCSS() -> [AnyCSSContent] {
+	private func accordionDescriptionCSS() -> [CSSRule] {
 		fontSize(fontSizeSmall14)
 		lineHeight(lineHeightSmall22)
 		color(colorSubtle)
@@ -187,7 +189,7 @@ public struct AccordionView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func accordionActionButtonCSS(_ actionAlwaysVisible: Bool) -> [AnyCSSContent] {
+	private func accordionActionButtonCSS(_ actionAlwaysVisible: Bool) -> [CSSRule] {
 		if actionAlwaysVisible {
 			display(.inlineFlex)
 		} else {
@@ -223,7 +225,7 @@ public struct AccordionView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func accordionContentCSS(_ separation: Separation) -> [AnyCSSContent] {
+	private func accordionContentCSS(_ separation: Separation) -> [CSSRule] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		lineHeight(lineHeightSmall22)
@@ -238,44 +240,50 @@ public struct AccordionView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func accordionDividerCSS() -> [AnyCSSContent] {
+	private func accordionDividerCSS() -> [CSSRule] {
 		height(borderWidthBase)
 		backgroundColor(borderColorSubtle)
 		margin(spacing0)
 		border(.none)
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let hasDescription = !descriptionContent.isEmpty
 		let hasAction = actionIcon != nil
 
 		// Render heading with appropriate level
-		let titleElement: HTMLContent
+		let titleElement: DOMNode
 		switch headingLevel {
 		case .h1:
 			titleElement = h1 { titleContent }
 				.class("accordion-title")
 				.style { accordionTitleCSS() }
+				.render()
 		case .h2:
 			titleElement = h2 { titleContent }
 				.class("accordion-title")
 				.style { accordionTitleCSS() }
+				.render()
 		case .h3:
 			titleElement = h3 { titleContent }
 				.class("accordion-title")
 				.style { accordionTitleCSS() }
+				.render()
 		case .h4:
 			titleElement = h4 { titleContent }
 				.class("accordion-title")
 				.style { accordionTitleCSS() }
+				.render()
 		case .h5:
 			titleElement = h5 { titleContent }
 				.class("accordion-title")
 				.style { accordionTitleCSS() }
+				.render()
 		case .h6:
 			titleElement = h6 { titleContent }
 				.class("accordion-title")
 				.style { accordionTitleCSS() }
+				.render()
 		}
 
 		let detailsElement: HTMLDetailsElement = details {
@@ -356,7 +364,7 @@ public struct AccordionView: HTMLContent {
 			.style {
 				accordionViewCSS(separation)
 			}
-			.render(indent: indent)
+			.render()
 		} else {
 			return div {
 				detailsElement
@@ -366,21 +374,23 @@ public struct AccordionView: HTMLContent {
 			.style {
 				accordionViewCSS(separation)
 			}
-			.render(indent: indent)
+			.render()
 		}
 	}
 }
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
-import DesignTokens
-import WebTypes
-import EmbeddedSwiftUtilities
 import CSSBuilder
+import CSSOMBuilder
+import DesignTokens
+import DOMBuilder
+import EmbeddedSwiftUtilities
 import HTMLBuilder
+import WebAPIs
+import WebTypes
 
 private class AccordionInstance: @unchecked Sendable {
 	private var accordion: Element
@@ -518,7 +528,7 @@ public class AccordionHydration: @unchecked Sendable {
 	}
 }
 
-/// WASI factory for creating AccordionView DOM elements dynamically.
+/// CLIENT factory for creating AccordionView DOM elements dynamically.
 /// Produces the same structure as the server-rendered AccordionView.
 public enum AccordionFactory {
 	/// Creates an AccordionView DOM element matching the server-rendered structure.
@@ -654,7 +664,7 @@ public enum AccordionFactory {
 
 		// Scoped style for marker suppression and focus states
 		let style = document.createElement(.style)
-		style.textContent = renderCSS {
+		style.textContent = serializeCSS {
 			selector("#\(id)") {
 				selector("summary::marker", "summary::-webkit-details-marker") {
 					display(.none).important()

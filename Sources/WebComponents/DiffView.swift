@@ -1,8 +1,10 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
 import DiffEngine
+import DOMBuilder
 import HTMLBuilder
 import WebTypes
 
@@ -40,7 +42,7 @@ public struct DiffView: HTMLContent {
 		self.stats = DiffStats(inserted: inserted, deleted: deleted, unchanged: unchanged)
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let rootClass = `class`.isEmpty
 			? "diff-view"
 			: "diff-view \(`class`)"
@@ -132,20 +134,20 @@ public struct DiffView: HTMLContent {
 		}
 		.class(rootClass)
 		.style { diffViewCSS() }
-		.render(indent: indent)
+		.render()
 	}
 
 	// MARK: - Styles
 
 	@CSSBuilder
-	private func diffViewCSS() -> [AnyCSSContent] {
+	private func diffViewCSS() -> [CSSRule] {
 		display(.flex)
 		flexDirection(.column)
 		gap(spacing16)
 	}
 
 	@CSSBuilder
-	private func diffStatsCSS() -> [AnyCSSContent] {
+	private func diffStatsCSS() -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing12)
@@ -154,39 +156,39 @@ public struct DiffView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func diffStatDeletedCSS() -> [AnyCSSContent] {
+	private func diffStatDeletedCSS() -> [CSSRule] {
 		color(colorRed)
 		fontWeight(fontWeightBold)
 	}
 
 	@CSSBuilder
-	private func diffStatInsertedCSS() -> [AnyCSSContent] {
+	private func diffStatInsertedCSS() -> [CSSRule] {
 		color(colorGreen)
 		fontWeight(fontWeightBold)
 	}
 
 	@CSSBuilder
-	private func diffStatSummaryCSS() -> [AnyCSSContent] {
+	private func diffStatSummaryCSS() -> [CSSRule] {
 		color(colorSubtle)
 		fontWeight(fontWeightNormal)
 	}
 
 	@CSSBuilder
-	private func diffLegendCSS() -> [AnyCSSContent] {
+	private func diffLegendCSS() -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing16)
 	}
 
 	@CSSBuilder
-	private func diffLegendItemCSS() -> [AnyCSSContent] {
+	private func diffLegendItemCSS() -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing4)
 	}
 
 	@CSSBuilder
-	private func diffLegendSwatchDeletedCSS() -> [AnyCSSContent] {
+	private func diffLegendSwatchDeletedCSS() -> [CSSRule] {
 		display(.inlineBlock)
 		width(px(14))
 		height(px(14))
@@ -195,7 +197,7 @@ public struct DiffView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func diffLegendSwatchInsertedCSS() -> [AnyCSSContent] {
+	private func diffLegendSwatchInsertedCSS() -> [CSSRule] {
 		display(.inlineBlock)
 		width(px(14))
 		height(px(14))
@@ -204,14 +206,14 @@ public struct DiffView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func diffLegendLabelCSS() -> [AnyCSSContent] {
+	private func diffLegendLabelCSS() -> [CSSRule] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeXSmall12)
 		color(colorSubtle)
 	}
 
 	@CSSBuilder
-	private func diffContentCSS() -> [AnyCSSContent] {
+	private func diffContentCSS() -> [CSSRule] {
 		display(.block)
 		fontFamily(typographyFontMono)
 		fontSize(fontSizeSmall14)
@@ -229,7 +231,7 @@ public struct DiffView: HTMLContent {
 
 	// Word-level: strong highlight on specific changed words
 	@CSSBuilder
-	private func diffDeletedCSS() -> [AnyCSSContent] {
+	private func diffDeletedCSS() -> [CSSRule] {
 		backgroundColor(backgroundColorRed)
 		color(colorInvertedFixed)
 		textDecoration(.none)
@@ -238,7 +240,7 @@ public struct DiffView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func diffInsertedCSS() -> [AnyCSSContent] {
+	private func diffInsertedCSS() -> [CSSRule] {
 		backgroundColor(backgroundColorGreen)
 		color(colorInvertedFixed)
 		textDecoration(.none)
@@ -248,24 +250,24 @@ public struct DiffView: HTMLContent {
 
 	// Line-level: subtle background on entire changed lines
 	@CSSBuilder
-	private func diffDeletedContextCSS() -> [AnyCSSContent] {
+	private func diffDeletedContextCSS() -> [CSSRule] {
 		backgroundColor(backgroundColorRedSubtle)
 	}
 
 	@CSSBuilder
-	private func diffInsertedContextCSS() -> [AnyCSSContent] {
+	private func diffInsertedContextCSS() -> [CSSRule] {
 		backgroundColor(backgroundColorGreenSubtle)
 	}
 
 	@CSSBuilder
-	private func diffEmptyBoxCSS() -> [AnyCSSContent] {
+	private func diffEmptyBoxCSS() -> [CSSRule] {
 		backgroundColor(backgroundColorNeutralSubtle)
 		border(borderWidthBase, .solid, borderColorSubtle)
 		borderRadius(borderRadiusBase)
 	}
 
 	@CSSBuilder
-	private func diffEmptyCSS() -> [AnyCSSContent] {
+	private func diffEmptyCSS() -> [CSSRule] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		color(colorSubtle)

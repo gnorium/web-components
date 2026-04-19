@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,10 +22,10 @@ public struct MergeIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
-				.d(M(1, 4.4), L(2.4, 3), l(4.85, 4.83), A(3.98, 3.98, 0, false, false, 10.07, 9), h(5.1), L(13.6, 7.4), L(15, 6), l(4, 4), l(-4, 4), l(-1.4, -1.4), l(1.58, -1.6), h(-5.1), a(3.95, 3.95, 0, false, false, -2.83, 1.18), L(2.4, 17), L(1, 15.6), L(6.6, 10), Z())
+				.d(M(1, 4.4), L(2.4, 3), l(4.85, 4.83), A(3.98, 3.98, 0, false, false, 10.07, 9), h(5.1), L(13.6, 7.4), L(15, 6), l(4, 4), l(-4, 4), l(-1.4, -1.4), l(1.58, -1.6), h(-5.1), a(3.95, 3.95, 0, false, false, -2.83, 1.18), L(2.4, 17), L(1, 15.6), L(6.6, 10), Z()).render()
 		}
 		.class(`class`.isEmpty ? "merge-icon-view" : "merge-icon-view \(`class`)")
 		.width(width)
@@ -33,6 +33,7 @@ public struct MergeIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

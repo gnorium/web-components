@@ -1,12 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
-#if !os(WASI)
-import Foundation
-
-#endif
-import HTMLBuilder
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
+import DOMBuilder
+import Foundation
+import HTMLBuilder
 import WebTypes
 
 /// A Combobox is a text input with a dropdown menu of selectable options.
@@ -53,14 +52,14 @@ public struct ComboboxView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func comboboxViewCSS() -> [AnyCSSContent] {
+	private func comboboxViewCSS() -> [CSSRule] {
 		position(.relative)
 		display(.inlineBlock)
 		minWidth(px(256))
 	}
 
 	@CSSBuilder
-	private func comboboxIndicatorCSS() -> [AnyCSSContent] {
+	private func comboboxIndicatorCSS() -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -72,7 +71,7 @@ public struct ComboboxView: HTMLContent {
 		transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		return div {
 			// Integrate TextInputView for the input field
 			div {
@@ -111,7 +110,7 @@ public struct ComboboxView: HTMLContent {
 		.style {
 			comboboxViewCSS()
 		}
-		.render(indent: indent)
+		.render()
 	}
 }
 

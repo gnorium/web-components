@@ -1,16 +1,11 @@
-#if os(WASI)
+#if SERVER
 
-import WebAPIs
-import EmbeddedSwiftUtilities
-
-#endif
-
-#if !os(WASI)
-
+import CSSBuilder
+import CSSOMBuilder
+import DesignTokens
+import DOMBuilder
 import Foundation
 import HTMLBuilder
-import CSSBuilder
-import DesignTokens
 import WebTypes
 
 /// A Checkbox is a binary input that can appear by itself or in a multiselect group.
@@ -25,9 +20,9 @@ public struct CheckboxView: HTMLContent {
 	let inline: Bool
 	let hideLabel: Bool
 	let status: ValidationStatus
-	let labelContent: [AnyHTMLContent]
-	let descriptionContent: [AnyHTMLContent]
-	let customInputContent: [AnyHTMLContent]
+	let labelContent: [DOMNode]
+	let descriptionContent: [DOMNode]
+	let customInputContent: [DOMNode]
 	let `class`: String
 	let labelFontWeight: CSSFontWeight
 	let labelFontSize: Length
@@ -50,9 +45,9 @@ public struct CheckboxView: HTMLContent {
 		class: String = "",
 		labelFontWeight: CSSFontWeight = fontWeightNormal,
 		labelFontSize: Length = fontSizeSmall14,
-		@HTMLBuilder label: () -> [AnyHTMLContent],
-		@HTMLBuilder description: () -> [AnyHTMLContent] = { [] },
-		@HTMLBuilder customInput: () -> [AnyHTMLContent] = { [] }
+		@HTMLBuilder label: () -> [DOMNode],
+		@HTMLBuilder description: () -> [DOMNode] = { [] },
+		@HTMLBuilder customInput: () -> [DOMNode] = { [] }
 	) {
 		self.id = id
 		self.name = name
@@ -84,9 +79,9 @@ public struct CheckboxView: HTMLContent {
 		class: String = "",
 		labelFontWeight: CSSFontWeight = fontWeightNormal,
 		labelFontSize: Length = fontSizeSmall14,
-		@HTMLBuilder label: () -> [AnyHTMLContent],
-		@HTMLBuilder description: () -> [AnyHTMLContent] = { [] },
-		@HTMLBuilder customInput: () -> [AnyHTMLContent] = { [] }
+		@HTMLBuilder label: () -> [DOMNode],
+		@HTMLBuilder description: () -> [DOMNode] = { [] },
+		@HTMLBuilder customInput: () -> [DOMNode] = { [] }
 	) {
 		self.init(
 			id: id,
@@ -108,7 +103,7 @@ public struct CheckboxView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func checkboxViewCSS(_ inline: Bool) -> [AnyCSSContent] {
+	private func checkboxViewCSS(_ inline: Bool) -> [CSSRule] {
 		if inline {
 			display(.inlineFlex)
 		} else {
@@ -135,14 +130,14 @@ public struct CheckboxView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func checkboxIconWrapperCSS() -> [AnyCSSContent] {
+	private func checkboxIconWrapperCSS() -> [CSSRule] {
 		display(.inlineFlex)
 		position(.relative)
 		verticalAlign(.middle)
 	}
 
 	@CSSBuilder
-	private func checkboxInputCSS(_ disabled: Bool) -> [AnyCSSContent] {
+	private func checkboxInputCSS(_ disabled: Bool) -> [CSSRule] {
 		position(.absolute)
 		width(perc(100))
 		height(perc(100))
@@ -218,7 +213,7 @@ public struct CheckboxView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func checkboxIconCSS(_ status: ValidationStatus, _ disabled: Bool, _ checked: Bool, _ indeterminate: Bool) -> [AnyCSSContent] {
+	private func checkboxIconCSS(_ status: ValidationStatus, _ disabled: Bool, _ checked: Bool, _ indeterminate: Bool) -> [CSSRule] {
 		display(.inlineBlock)
 		position(.relative)
 		pointerEvents(.none)
@@ -278,16 +273,16 @@ public struct CheckboxView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func checkboxLabelWrapperCSS() -> [AnyCSSContent] {
+	private func checkboxLabelWrapperCSS() -> [CSSRule] {
 		flex(1)
 	}
 
 	@CSSBuilder
-	private func checkboxCustomInputCSS() -> [AnyCSSContent] {
+	private func checkboxCustomInputCSS() -> [CSSRule] {
 		display(.block)
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let hasDescription = !descriptionContent.isEmpty
 		let hasCustomInput = !customInputContent.isEmpty
 		let descriptionID = hasDescription ? "\(id)-description" : nil
@@ -353,7 +348,7 @@ public struct CheckboxView: HTMLContent {
 		.style {
 			checkboxViewCSS(inline)
 		}
-		.render(indent: indent)
+		.render()
 	}
 }
 

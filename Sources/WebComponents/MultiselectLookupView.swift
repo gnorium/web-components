@@ -1,12 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
-#if !os(WASI)
-import Foundation
-
-#endif
-import HTMLBuilder
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
+import DOMBuilder
+import Foundation
+import HTMLBuilder
 import WebTypes
 
 /// A predictive input that allows users to make multiple selections from a menu of options.
@@ -79,13 +78,13 @@ public struct MultiselectLookupView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func multiselectLookupViewCSS() -> [AnyCSSContent] {
+	private func multiselectLookupViewCSS() -> [CSSRule] {
 		position(.relative)
 		display(.inlineBlock)
 		minWidth(px(256))
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		var view = div {
 			ChipInputView(
 				id: id,
@@ -126,18 +125,18 @@ public struct MultiselectLookupView: HTMLContent {
 			.style {
 				multiselectLookupViewCSS()
 			}
-			.render(indent: indent)
+			.render()
 	}
 }
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import DesignTokens
-import WebTypes
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 private class MultiselectLookupInstance: @unchecked Sendable {
 	private var lookup: Element

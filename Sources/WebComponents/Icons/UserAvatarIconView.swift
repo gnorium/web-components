@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,7 +22,7 @@ public struct UserAvatarIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
 				.d(M(10, 11), c(-5.92, 0, -8, 3, -8, 5), v(3), h(16), v(-3), c(0, -2, -2.08, -5, -8, -5))
@@ -30,7 +30,7 @@ public struct UserAvatarIconView: HTMLContent {
 			circle()
 				.cx(10)
 				.cy(5.5)
-				.r(4.5)
+				.r(4.5).render()
 		}
 		.class(`class`.isEmpty ? "user-avatar-icon-view" : "user-avatar-icon-view \(`class`)")
 		.width(width)
@@ -38,6 +38,7 @@ public struct UserAvatarIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

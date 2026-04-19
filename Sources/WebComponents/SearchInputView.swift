@@ -1,9 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
-import Foundation
-import HTMLBuilder
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
+import Foundation
+import DOMBuilder
+import HTMLBuilder
 import WebTypes
 
 /// A SearchInput allows users to enter and submit a search query.
@@ -46,7 +48,7 @@ public struct SearchInputView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func searchInputViewCSS(_ useButton: Bool) -> [AnyCSSContent] {
+	private func searchInputViewCSS(_ useButton: Bool) -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		position(.relative)
@@ -58,7 +60,7 @@ public struct SearchInputView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func searchInputWrapperCSS(_ useButton: Bool) -> [AnyCSSContent] {
+	private func searchInputWrapperCSS(_ useButton: Bool) -> [CSSRule] {
 		position(.relative)
 		display(.flex)
 		alignItems(.center)
@@ -71,7 +73,7 @@ public struct SearchInputView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func searchInputCSS(_ hasStartIcon: Bool, _ clearable: Bool, _ status: ValidationStatus) -> [AnyCSSContent] {
+	private func searchInputCSS(_ hasStartIcon: Bool, _ clearable: Bool, _ status: ValidationStatus) -> [CSSRule] {
 		width(perc(100))
 		minHeight(minSizeInteractivePointer)
 		padding(spacing12, spacing16)
@@ -126,7 +128,7 @@ public struct SearchInputView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func searchInputStartIconCSS() -> [AnyCSSContent] {
+	private func searchInputStartIconCSS() -> [CSSRule] {
 		position(.absolute)
 		insetInlineStart(spacing4)
 		marginInlineStart(spacing8)
@@ -143,7 +145,7 @@ public struct SearchInputView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func searchInputViewDetailsIconCSS() -> [AnyCSSContent] {
+	private func searchInputViewDetailsIconCSS() -> [CSSRule] {
 		position(.absolute)
 		right(spacing40)  // Position to the left of clear button
 		top(perc(50))
@@ -159,7 +161,7 @@ public struct SearchInputView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func searchInputClearButtonCSS() -> [AnyCSSContent] {
+	private func searchInputClearButtonCSS() -> [CSSRule] {
 		position(.absolute)
 		insetInlineEnd(spacing4)
 		marginInlineEnd(spacing8)
@@ -214,7 +216,7 @@ public struct SearchInputView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func searchInputButtonCSS(_ disabled: Bool) -> [AnyCSSContent] {
+	private func searchInputButtonCSS(_ disabled: Bool) -> [CSSRule] {
 		minHeight(minSizeInteractivePointer)
 		padding(spacing12, spacing16)
 		fontFamily(typographyFontSans)
@@ -251,13 +253,13 @@ public struct SearchInputView: HTMLContent {
 		}
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		return div {
 			div {
 				if !hideIcon {
 					span {
 						IconView(
-							icon: { [SearchIconView()] },
+							icon: { SearchIconView() },
 							size: .medium
 						)
 					}
@@ -283,7 +285,7 @@ public struct SearchInputView: HTMLContent {
 					// View details icon (positioned to the left of clear button)
 					span {
 						IconView(
-							icon: { [ViewDetailsIconView()] },
+							icon: { ViewDetailsIconView() },
 							size: .medium
 						)
 					}
@@ -295,7 +297,7 @@ public struct SearchInputView: HTMLContent {
 
 					button {
 						IconView(
-							icon: { [DeleteIconView()] },
+							icon: { DeleteIconView() },
 							size: .medium
 						)
 					}
@@ -330,18 +332,18 @@ public struct SearchInputView: HTMLContent {
 		.style {
 			searchInputViewCSS(useButton)
 		}
-		.render(indent: indent)
+		.render()
 	}
 }
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import DesignTokens
-import WebTypes
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 private class SearchInputInstance: @unchecked Sendable {
 	private var searchInputElement: Element

@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,10 +22,10 @@ public struct NextIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
-				.d(M(7, 1), L(5.6, 2.5), L(13, 10), l(-7.4, 7.5), L(7, 19), l(9, -9), Z())
+				.d(M(7, 1), L(5.6, 2.5), L(13, 10), l(-7.4, 7.5), L(7, 19), l(9, -9), Z()).render()
 		}
 		.class(`class`.isEmpty ? "next-icon-view" : "next-icon-view \(`class`)")
 		.width(width)
@@ -33,6 +33,7 @@ public struct NextIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

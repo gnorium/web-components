@@ -1,8 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
-import HTMLBuilder
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
+import Foundation
+import DOMBuilder
+import HTMLBuilder
 import WebTypes
 
 /// A ToggleButton that displays a Menu with actions when toggled on.
@@ -10,7 +13,7 @@ public struct MenuButtonView: HTMLContent {
 	public struct MenuItem: Sendable {
 		public let value: String
 		public let label: String
-		public let icon: AnyHTMLContent?
+		public let icon: DOMNode?
 		public let url: String?
 		public let disabled: Bool
 		public let destructive: Bool
@@ -19,7 +22,7 @@ public struct MenuButtonView: HTMLContent {
 			value: String,
 			label: String,
 			url: String? = nil,
-			icon: AnyHTMLContent? = nil,
+			icon: DOMNode? = nil,
 			disabled: Bool = false,
 			destructive: Bool = false
 		) {
@@ -33,7 +36,7 @@ public struct MenuButtonView: HTMLContent {
 	}
 
 	let buttonLabel: String
-	let buttonIcon: AnyHTMLContent?
+	let buttonIcon: DOMNode?
 	let iconOnly: Bool
 	let menuItems: [MenuItem]
 	let buttonWeight: ButtonView.ButtonWeight
@@ -46,7 +49,7 @@ public struct MenuButtonView: HTMLContent {
 	
 	public init(
 		buttonLabel: String,
-		buttonIcon: AnyHTMLContent? = nil,
+		buttonIcon: DOMNode? = nil,
 		iconOnly: Bool = false,
 		menuItems: [MenuItem],
 		buttonWeight: ButtonView.ButtonWeight = .subtle,
@@ -70,7 +73,7 @@ public struct MenuButtonView: HTMLContent {
 		self.indicateSelection = indicateSelection
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		return div {
 			// Toggle Button
 			ToggleButtonView(
@@ -134,17 +137,17 @@ public struct MenuButtonView: HTMLContent {
 		.style {
 			menuButtonViewCSS()
 		}
-		.render(indent: indent)
+		.render()
 	}
 
-    @CSSBuilder
-	private func menuButtonViewCSS() -> [AnyCSSContent] {
+	@CSSBuilder
+	private func menuButtonViewCSS() -> [CSSRule] {
 		position(.relative)
 		display(.inlineBlock)
 	}
 
 	@CSSBuilder
-	private func menuButtonMenuCSS() -> [AnyCSSContent] {
+	private func menuButtonMenuCSS() -> [CSSRule] {
 		position(.absolute)
 		top(perc(100))
 		insetInlineStart(0)
@@ -163,7 +166,7 @@ public struct MenuButtonView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func menuItemCSS(_ item: MenuItem) -> [AnyCSSContent] {
+	private func menuItemCSS(_ item: MenuItem) -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing12)
@@ -210,7 +213,7 @@ public struct MenuButtonView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func menuItemIconCSS() -> [AnyCSSContent] {
+	private func menuItemIconCSS() -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -220,12 +223,12 @@ public struct MenuButtonView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func menuItemTextCSS() -> [AnyCSSContent] {
+	private func menuItemTextCSS() -> [CSSRule] {
 		flex(1)
 	}
 
     @HTMLBuilder
-		func renderItemContent(_ item: MenuItem) -> [AnyHTMLContent] {
+		func renderItemContent(_ item: MenuItem) -> [DOMNode] {
 			if let icon = item.icon {
 				span { icon }
                 .class("menu-item-icon")
@@ -235,17 +238,18 @@ public struct MenuButtonView: HTMLContent {
 			span { item.label }
             .class("menu-item-text")
             .style { menuItemTextCSS() }
+            .render()
 		}
 }
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import DesignTokens
-import WebTypes
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 public class MenuButtonHydration: @unchecked Sendable {
 	private var instances: [MenuButtonInstance] = []

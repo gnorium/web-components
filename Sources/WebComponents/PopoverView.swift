@@ -1,9 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
+import CSSBuilder
+import CSSOMBuilder
+import DesignTokens
+import DOMBuilder
 import Foundation
 import HTMLBuilder
-import CSSBuilder
-import DesignTokens
 import WebTypes
 
 /// A non-disruptive container that is overlaid on a web page or app, positioned near its trigger.
@@ -18,9 +20,9 @@ public struct PopoverView: HTMLContent {
 	let stackedActions: Bool
 	let renderInPlace: Bool
 	let placement: Placement
-	let headerContent: [AnyHTMLContent]
-	let bodyContent: [AnyHTMLContent]
-	let footerContent: [AnyHTMLContent]
+	let headerContent: [DOMNode]
+	let bodyContent: [DOMNode]
+	let footerContent: [DOMNode]
 	let `class`: String
 	
 	public enum Placement: String, Sendable {
@@ -87,9 +89,9 @@ public struct PopoverView: HTMLContent {
 		renderInPlace: Bool = false,
 		placement: Placement = .bottom,
 		class: String = "",
-		@HTMLBuilder header: () -> [AnyHTMLContent] = { [] },
-		@HTMLBuilder body: () -> [AnyHTMLContent] = { [] },
-		@HTMLBuilder footer: () -> [AnyHTMLContent] = { [] }
+		@HTMLBuilder header: () -> [DOMNode] = { [] },
+		@HTMLBuilder body: () -> [DOMNode] = { [] },
+		@HTMLBuilder footer: () -> [DOMNode] = { [] }
 	) {
 		self.open = open
 		self.title = title
@@ -108,7 +110,7 @@ public struct PopoverView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func popoverViewCSS(_ open: Bool) -> [AnyCSSContent] {
+	private func popoverViewCSS(_ open: Bool) -> [CSSRule] {
 		position(.absolute)
 		backgroundColor(backgroundColorBase)
 		border(borderWidthBase, .solid, borderColorSubtle)
@@ -125,7 +127,7 @@ public struct PopoverView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func popoverArrowCSS(_ placement: Placement) -> [AnyCSSContent] {
+	private func popoverArrowCSS(_ placement: Placement) -> [CSSRule] {
 		position(.absolute)
 		width(px(12))
 		height(px(12))
@@ -172,7 +174,7 @@ public struct PopoverView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func popoverHeaderCSS(_ hasCustomHeader: Bool) -> [AnyCSSContent] {
+	private func popoverHeaderCSS(_ hasCustomHeader: Bool) -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing8)
@@ -185,7 +187,7 @@ public struct PopoverView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func popoverHeaderContentCSS() -> [AnyCSSContent] {
+	private func popoverHeaderContentCSS() -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing8)
@@ -194,7 +196,7 @@ public struct PopoverView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func popoverIconCSS() -> [AnyCSSContent] {
+	private func popoverIconCSS() -> [CSSRule] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -206,7 +208,7 @@ public struct PopoverView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func popoverTitleCSS() -> [AnyCSSContent] {
+	private func popoverTitleCSS() -> [CSSRule] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		fontWeight(fontWeightBold)
@@ -218,7 +220,7 @@ public struct PopoverView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func popoverBodyCSS() -> [AnyCSSContent] {
+	private func popoverBodyCSS() -> [CSSRule] {
 		padding(spacing12)
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
@@ -227,7 +229,7 @@ public struct PopoverView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func popoverFooterCSS(_ hasActions: Bool, _ stackedActions: Bool) -> [AnyCSSContent] {
+	private func popoverFooterCSS(_ hasActions: Bool, _ stackedActions: Bool) -> [CSSRule] {
 		if hasActions {
 			display(.flex)
 			gap(spacing8)
@@ -247,14 +249,14 @@ public struct PopoverView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func popoverPrimaryButtonCSS(_ stackedActions: Bool) -> [AnyCSSContent] {
+	private func popoverPrimaryButtonCSS(_ stackedActions: Bool) -> [CSSRule] {
 		if stackedActions {
 			// Primary button on top in stacked layout
 			order(-1)
 		}
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let hasCustomHeader = !headerContent.isEmpty
 		let hasIcon = icon != nil
 		let hasTitle = !title.isEmpty
@@ -369,18 +371,18 @@ public struct PopoverView: HTMLContent {
 		.style {
 			popoverViewCSS(open)
 		}
-		.render(indent: indent)
+		.render()
 	}
 }
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import DesignTokens
-import WebTypes
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 private class PopoverInstance: @unchecked Sendable {
 	private var popover: Element

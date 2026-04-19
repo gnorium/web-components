@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,10 +22,10 @@ public struct BookmarkIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
-				.d(M(5, 1), a(2, 2, 0, false, false, -2, 2), v(16), l(7, -5), l(7, 5), V(3), a(2, 2, 0, false, false, -2, -2), Z())
+				.d(M(5, 1), a(2, 2, 0, false, false, -2, 2), v(16), l(7, -5), l(7, 5), V(3), a(2, 2, 0, false, false, -2, -2), Z()).render()
 		}
 		.class(`class`.isEmpty ? "bookmark-icon-view" : "bookmark-icon-view \(`class`)")
 		.width(width)
@@ -33,6 +33,7 @@ public struct BookmarkIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

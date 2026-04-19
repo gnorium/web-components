@@ -1,8 +1,9 @@
-#if !os(WASI)
+#if SERVER
 
-import HTMLBuilder
 import CSSBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
 import WebTypes
 
 /// Banner component to remind users to verify their email
@@ -15,7 +16,7 @@ public struct EmailVerificationBannerView: HTMLContent {
 		self.`class` = `class`
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		div {
 			div {
 				// Icon
@@ -93,16 +94,17 @@ public struct EmailVerificationBannerView: HTMLContent {
 			borderBlockEnd(borderWidthBase, .solid, borderColorOrange)
 			padding(spacing12, spacing16)
 		}
-		.render(indent: indent)
+		.render()
 	}
 }
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 public class EmailVerificationBannerHydration: @unchecked Sendable {
 	nonisolated(unsafe) private var banner: Element?

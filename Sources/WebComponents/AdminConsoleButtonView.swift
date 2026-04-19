@@ -1,8 +1,10 @@
-#if !os(WASI)
+#if SERVER
 
-import HTMLBuilder
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
 import WebTypes
 
 /// Specialized button for the Admin Console link
@@ -15,7 +17,7 @@ public struct AdminConsoleButtonView: HTMLContent {
         self.size = size
     }
 
-    public func render(indent: Int = 0) -> String {
+    public func render() -> DOMNode {
         div {
             ButtonView(
                 label: "",
@@ -34,7 +36,7 @@ public struct AdminConsoleButtonView: HTMLContent {
             alignItems(.center)
             justifyContent(.center)
         }
-        .render(indent: indent)
+        .render()
     }
 }
 

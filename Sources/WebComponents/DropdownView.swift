@@ -1,9 +1,10 @@
-#if !os(WASI)
+#if SERVER
 
-import HTMLBuilder
 import CSSBuilder
-import SVGBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
+import SVGBuilder
 import WebTypes
 
 public struct DropdownView: HTMLContent {
@@ -75,7 +76,7 @@ public struct DropdownView: HTMLContent {
         self.contentJustifyContent = contentJustifyContent
     }
 
-    public func render(indent: Int = 0) -> String {
+    public func render() -> DOMNode {
         div {
             // Label
             if !labelText.isEmpty {
@@ -236,6 +237,7 @@ public struct DropdownView: HTMLContent {
                                     color(colorInvertedFixed).important()
                                 }
                             }
+                            .render()
                         }
                     }
                     .class("dropdown-options-list")
@@ -299,18 +301,18 @@ public struct DropdownView: HTMLContent {
 				}
 			}
 		}
-        .render(indent: indent)
+        .render()
     }
 }
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import DesignTokens
-import WebTypes
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 private class DropdownInstance: @unchecked Sendable {
 	private var container: Element?

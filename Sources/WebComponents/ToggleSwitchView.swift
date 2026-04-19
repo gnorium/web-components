@@ -1,12 +1,10 @@
-#if !os(WASI)
+#if SERVER
 
-#if !os(WASI)
-import Foundation
-
-#endif
-import HTMLBuilder
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
 import WebTypes
 
 /// A ToggleSwitch enables the user to instantly toggle between on and off states.
@@ -21,8 +19,8 @@ public struct ToggleSwitchView: HTMLContent {
 	let alignSwitch: Bool
 	let hideLabel: Bool
 	let disabled: Bool
-	let labelContent: [AnyHTMLContent]
-	let descriptionContent: [AnyHTMLContent]
+	let labelContent: [DOMNode]
+	let descriptionContent: [DOMNode]
 	let `class`: String
 
 	public init(
@@ -34,8 +32,8 @@ public struct ToggleSwitchView: HTMLContent {
 		hideLabel: Bool = false,
 		disabled: Bool = false,
 		class: String = "",
-		@HTMLBuilder label: () -> [AnyHTMLContent],
-		@HTMLBuilder description: () -> [AnyHTMLContent] = { [] }
+		@HTMLBuilder label: () -> [DOMNode],
+		@HTMLBuilder description: () -> [DOMNode] = { [] }
 	) {
 		self.id = id
 		self.name = name
@@ -50,7 +48,7 @@ public struct ToggleSwitchView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func toggleSwitchViewCSS(_ alignSwitch: Bool) -> [AnyCSSContent] {
+	private func toggleSwitchViewCSS(_ alignSwitch: Bool) -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		minHeight(minSizeInteractivePointer)
@@ -62,7 +60,7 @@ public struct ToggleSwitchView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func toggleSwitchInputCSS(_ disabled: Bool) -> [AnyCSSContent] {
+	private func toggleSwitchInputCSS(_ disabled: Bool) -> [CSSRule] {
 		position(.absolute)
 		width(px(1))
 		height(px(1))
@@ -98,7 +96,7 @@ public struct ToggleSwitchView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func toggleSwitchSwitchCSS(_ disabled: Bool) -> [AnyCSSContent] {
+	private func toggleSwitchSwitchCSS(_ disabled: Bool) -> [CSSRule] {
 		position(.relative)
 		display(.inlineBlock)
 		flexShrink(0)
@@ -118,7 +116,7 @@ public struct ToggleSwitchView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func toggleSwitchGripCSS() -> [AnyCSSContent] {
+	private func toggleSwitchGripCSS() -> [CSSRule] {
 		position(.absolute)
 		top(perc(50))
 		left(spacingToggleSwitchGripStart)
@@ -132,13 +130,13 @@ public struct ToggleSwitchView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func toggleSwitchLabelWrapperCSS(_ alignSwitch: Bool) -> [AnyCSSContent] {
+	private func toggleSwitchLabelWrapperCSS(_ alignSwitch: Bool) -> [CSSRule] {
 		if alignSwitch {
 			flex(1).important()
 		}
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let hasDescription = !descriptionContent.isEmpty
 		let descriptionID = hasDescription ? "\(id)-description" : nil
 
@@ -201,18 +199,17 @@ public struct ToggleSwitchView: HTMLContent {
 		.style {
 			toggleSwitchViewCSS(alignSwitch)
 		}
-		.render(indent: indent)
+		.render()
 	}
 }
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
-import DesignTokens
-import WebTypes
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 private class ToggleSwitchInstance: @unchecked Sendable {
 	private var toggleSwitch: Element

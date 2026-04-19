@@ -1,12 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
-#if !os(WASI)
-import Foundation
-
-#endif
-import HTMLBuilder
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
+import DOMBuilder
+import Foundation
+import HTMLBuilder
 import WebTypes
 
 /// Tabs consist of two or more tab items for navigating between different sections of content.
@@ -40,7 +39,7 @@ public struct TabsView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func tabsViewCSS(_ framed: Bool) -> [AnyCSSContent] {
+	private func tabsViewCSS(_ framed: Bool) -> [CSSRule] {
 		display(.block)
 		fontFamily(typographyFontSans)
 
@@ -51,7 +50,7 @@ public struct TabsView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func tabsHeaderCSS(_ variant: Variant) -> [AnyCSSContent] {
+	private func tabsHeaderCSS(_ variant: Variant) -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		position(.relative)
@@ -66,7 +65,7 @@ public struct TabsView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func tabsListCSS(_ variant: Variant) -> [AnyCSSContent] {
+	private func tabsListCSS(_ variant: Variant) -> [CSSRule] {
 		display(.flex)
 		margin(0)
 		padding(0)
@@ -89,7 +88,7 @@ public struct TabsView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func tabButtonCSS(_ isActive: Bool, _ disabled: Bool, _ framed: Bool, _ variant: Variant) -> [AnyCSSContent] {
+	private func tabButtonCSS(_ isActive: Bool, _ disabled: Bool, _ framed: Bool, _ variant: Variant) -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -159,14 +158,14 @@ public struct TabsView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func tabPanelCSS(_ framed: Bool) -> [AnyCSSContent] {
+	private func tabPanelCSS(_ framed: Bool) -> [CSSRule] {
 		if framed {
 			padding(spacing16)
 		}
 	}
 
 	@CSSBuilder
-	private func tabsScrollButtonCSS() -> [AnyCSSContent] {
+	private func tabsScrollButtonCSS() -> [CSSRule] {
 		display(.none)
 		alignItems(.center)
 		justifyContent(.center)
@@ -193,7 +192,7 @@ public struct TabsView: HTMLContent {
 		}
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let active = activeTab ?? tabs.first?.name ?? ""
 
 		return div {
@@ -294,18 +293,18 @@ public struct TabsView: HTMLContent {
 		.style {
 			tabsViewCSS(framed)
 		}
-		.render(indent: indent)
+		.render()
 	}
 }
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import DesignTokens
-import WebTypes
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 private class TabsInstance: @unchecked Sendable {
 	private var tabsElement: Element

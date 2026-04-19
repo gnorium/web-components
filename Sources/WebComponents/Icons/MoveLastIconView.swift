@@ -1,10 +1,8 @@
-#if !os(WASI)
+#if SERVER
 
-import CSSBuilder
-import DesignTokens
-import DOMBuilder
-import HTMLBuilder
 import SVGBuilder
+import HTMLBuilder
+import DOMBuilder
 import WebTypes
 
 public struct MoveLastIconView: HTMLContent {
@@ -22,10 +20,10 @@ public struct MoveLastIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
-				.d(M(15, 1), h(2), v(18), h(-2), Z(), M(3.5, 2.5), L(11, 10), l(-7.5, 7.5), L(5, 19), l(9, -9), l(-9, -9), Z())
+				.d(M(15, 1), h(2), v(18), h(-2), Z(), M(3.5, 2.5), L(11, 10), l(-7.5, 7.5), L(5, 19), l(9, -9), l(-9, -9), Z()).render()
 		}
 		.class(`class`.isEmpty ? "move-last-icon-view" : "move-last-icon-view \(`class`)")
 		.width(width)
@@ -33,6 +31,7 @@ public struct MoveLastIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

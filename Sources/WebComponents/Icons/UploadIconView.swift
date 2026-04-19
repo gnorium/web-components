@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,13 +22,13 @@ public struct UploadIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
 				.d(M(17, 12), v(5), H(3), v(-5), H(1), v(5), a(2, 2, 0, false, false, 2, 2), h(14), a(2, 2, 0, false, false, 2, -2), v(-5), Z())
 
 			path()
-				.d(M(10, 1), L(5, 7), h(4), v(8), h(2), V(7), h(4), Z())
+				.d(M(10, 1), L(5, 7), h(4), v(8), h(2), V(7), h(4), Z()).render()
 		}
 		.class(`class`.isEmpty ? "upload-icon-view" : "upload-icon-view \(`class`)")
 		.width(width)
@@ -36,6 +36,7 @@ public struct UploadIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

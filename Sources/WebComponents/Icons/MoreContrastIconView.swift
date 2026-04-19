@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,7 +22,7 @@ public struct MoreContrastIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			// Outer circle
 			circle()
@@ -40,7 +40,7 @@ public struct MoreContrastIconView: HTMLContent {
 				.stroke(.currentColor)
 				.strokeWidth(2)
 				.strokeLinecap(.round)
-				.strokeLinejoin(.round)
+				.strokeLinejoin(.round).render()
 		}
 		.class(`class`.isEmpty ? "more-contrast-icon-view" : "more-contrast-icon-view \(`class`)")
 		.width(width)
@@ -48,6 +48,7 @@ public struct MoreContrastIconView: HTMLContent {
 		.viewBox(0, 0, 24, 24)
 		.xmlns("http://www.w3.org/2000/svg")
 		.ariaHidden(true)
+        .render()
 	}
 }
 

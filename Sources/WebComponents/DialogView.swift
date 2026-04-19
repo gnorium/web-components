@@ -1,9 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
-import Foundation
-import HTMLBuilder
 import CSSBuilder
 import DesignTokens
+import CSSOMBuilder
+import DOMBuilder
+import Foundation
+import HTMLBuilder
 import WebTypes
 
 /// A Dialog is a container that is overlaid on a web page or app in order to present necessary information and tasks.
@@ -18,10 +20,10 @@ public struct DialogView: HTMLContent {
 	let primaryAction: PrimaryAction?
 	let defaultAction: DefaultAction?
 	let stackedActions: Bool
-	let headerContent: [AnyHTMLContent]
-	let bodyContent: [AnyHTMLContent]
-	let footerContent: [AnyHTMLContent]
-	let footerTextContent: [AnyHTMLContent]
+	let headerContent: [DOMNode]
+	let bodyContent: [DOMNode]
+	let footerContent: [DOMNode]
+	let footerTextContent: [DOMNode]
 	let `class`: String
 
 	public struct PrimaryAction: Sendable {
@@ -78,10 +80,10 @@ public struct DialogView: HTMLContent {
 		defaultAction: DefaultAction? = nil,
 		stackedActions: Bool = false,
 		class: String = "",
-		@HTMLBuilder header: () -> [AnyHTMLContent] = { [] },
-		@HTMLBuilder body: () -> [AnyHTMLContent],
-		@HTMLBuilder footer: () -> [AnyHTMLContent] = { [] },
-		@HTMLBuilder footerText: () -> [AnyHTMLContent] = { [] }
+		@HTMLBuilder header: () -> [DOMNode] = { [] },
+		@HTMLBuilder body: () -> [DOMNode],
+		@HTMLBuilder footer: () -> [DOMNode] = { [] },
+		@HTMLBuilder footerText: () -> [DOMNode] = { [] }
 	) {
 		self.open = open
 		self.title = title
@@ -101,7 +103,7 @@ public struct DialogView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func dialogBackdropCSS() -> [AnyCSSContent] {
+	private func dialogBackdropCSS() -> [CSSRule] {
 		position(.fixed)
 		insetBlockStart(0)
 		insetInlineStart(0)
@@ -118,7 +120,7 @@ public struct DialogView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func dialogShellCSS() -> [AnyCSSContent] {
+	private func dialogShellCSS() -> [CSSRule] {
 		position(.relative)
 		display(.flex)
 		flexDirection(.column)
@@ -130,7 +132,7 @@ public struct DialogView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func dialogHeaderCSS(_ hasCustomHeader: Bool) -> [AnyCSSContent] {
+	private func dialogHeaderCSS(_ hasCustomHeader: Bool) -> [CSSRule] {
 		if !hasCustomHeader {
 			display(.flex)
 			flexDirection(.column)
@@ -141,7 +143,7 @@ public struct DialogView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func dialogHeaderTitleGroupCSS() -> [AnyCSSContent] {
+	private func dialogHeaderTitleGroupCSS() -> [CSSRule] {
 		display(.flex)
 		alignItems(.flexStart)
 		gap(spacing16)
@@ -149,7 +151,7 @@ public struct DialogView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func dialogHeaderTextCSS() -> [AnyCSSContent] {
+	private func dialogHeaderTextCSS() -> [CSSRule] {
 		display(.flex)
 		flexDirection(.column)
 		gap(spacing4)
@@ -158,7 +160,7 @@ public struct DialogView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func dialogHeaderTitleCSS(_ hideTitle: Bool) -> [AnyCSSContent] {
+	private func dialogHeaderTitleCSS(_ hideTitle: Bool) -> [CSSRule] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeLarge18)
 		fontWeight(fontWeightBold)
@@ -181,7 +183,7 @@ public struct DialogView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func dialogHeaderSubtitleCSS() -> [AnyCSSContent] {
+	private func dialogHeaderSubtitleCSS() -> [CSSRule] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeSmall14)
 		fontWeight(fontWeightNormal)
@@ -192,7 +194,7 @@ public struct DialogView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func dialogCloseButtonCSS() -> [AnyCSSContent] {
+	private func dialogCloseButtonCSS() -> [CSSRule] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -226,7 +228,7 @@ public struct DialogView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func dialogBodyCSS() -> [AnyCSSContent] {
+	private func dialogBodyCSS() -> [CSSRule] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		lineHeight(lineHeightMedium26)
@@ -237,7 +239,7 @@ public struct DialogView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func dialogFooterCSS(_ hasCustomFooter: Bool, _ hasFooterText: Bool) -> [AnyCSSContent] {
+	private func dialogFooterCSS(_ hasCustomFooter: Bool, _ hasFooterText: Bool) -> [CSSRule] {
 		if !hasCustomFooter {
 			display(.flex)
 			flexDirection(.column)
@@ -254,7 +256,7 @@ public struct DialogView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func dialogFooterTextCSS() -> [AnyCSSContent] {
+	private func dialogFooterTextCSS() -> [CSSRule] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeSmall14)
 		lineHeight(lineHeightSmall22)
@@ -263,7 +265,7 @@ public struct DialogView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func dialogFooterActionsCSS(_ stackedActions: Bool) -> [AnyCSSContent] {
+	private func dialogFooterActionsCSS(_ stackedActions: Bool) -> [CSSRule] {
 		display(.flex)
 		gap(spacing12)
 
@@ -277,14 +279,14 @@ public struct DialogView: HTMLContent {
 		}
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let hasCustomHeader = !headerContent.isEmpty
 		let hasCustomFooter = !footerContent.isEmpty
 		let hasFooterText = !footerTextContent.isEmpty
 		let hasActions = primaryAction != nil || defaultAction != nil
 
 		// Default header (when no custom header provided)
-		let defaultHeader: HTMLContent = div {
+		let defaultHeader: DOMNode = div {
 			div {
 				div {
 					h2 { title }
@@ -333,9 +335,10 @@ public struct DialogView: HTMLContent {
 		.style {
 			dialogHeaderCSS(hasCustomHeader)
 		}
+		.render()
 
 		// Default footer (when no custom footer provided)
-		let defaultFooter: HTMLContent = div {
+		let defaultFooter: DOMNode = div {
 			if hasFooterText {
 				div { footerTextContent }
 					.class("dialog-footer-text")
@@ -382,6 +385,7 @@ public struct DialogView: HTMLContent {
 		.style {
 			dialogFooterCSS(hasCustomFooter, hasFooterText)
 		}
+		.render()
 
 		return div {
 			div {
@@ -425,18 +429,18 @@ public struct DialogView: HTMLContent {
 				display(.none).important()
 			}
 		}
-		.render(indent: indent)
+		.render()
 	}
 }
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import DesignTokens
-import WebTypes
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 public class DialogHydration: @unchecked Sendable {
 	private var instances: [Int32: DialogInstance] = [:]

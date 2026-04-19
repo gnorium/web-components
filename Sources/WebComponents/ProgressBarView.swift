@@ -1,12 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
-#if !os(WASI)
-import Foundation
-
-#endif
-import HTMLBuilder
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
+import DOMBuilder
+import Foundation
+import HTMLBuilder
 import WebTypes
 
 /// A visual element used to indicate the progress of an action or process.
@@ -32,7 +31,7 @@ public struct ProgressBarView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func progressBarViewCSS(_ inline: Bool, _ disabled: Bool) -> [AnyCSSContent] {
+	private func progressBarViewCSS(_ inline: Bool, _ disabled: Bool) -> [CSSRule] {
 		display(.block)
 		position(.relative)
 		backgroundColor(backgroundColorBlueSubtle)
@@ -53,7 +52,7 @@ public struct ProgressBarView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func progressBarBarCSS() -> [AnyCSSContent] {
+	private func progressBarBarCSS() -> [CSSRule] {
 		position(.absolute)
 		top(0)
 		left(0)
@@ -65,7 +64,7 @@ public struct ProgressBarView: HTMLContent {
 		animation("progress-bar-indeterminate", s(2), .linear, .infinite)
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let progressBarClasses = {
 			var classes = "progress-bar-view"
 			if inline {
@@ -101,7 +100,7 @@ public struct ProgressBarView: HTMLContent {
 			.style {
 				progressBarViewCSS(inline, disabled)
 			}
-			.render(indent: indent)
+			.render()
 	}
 }
 

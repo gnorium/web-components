@@ -1,10 +1,8 @@
-#if !os(WASI)
+#if SERVER
 
-import CSSBuilder
-import DesignTokens
-import DOMBuilder
-import HTMLBuilder
 import SVGBuilder
+import HTMLBuilder
+import DOMBuilder
 import WebTypes
 
 public struct MenuIconView: HTMLContent {
@@ -22,7 +20,7 @@ public struct MenuIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
 				.d(M(1, 3), v(2), h(18), V(3), Z(),
@@ -35,6 +33,7 @@ public struct MenuIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

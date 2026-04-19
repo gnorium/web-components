@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,10 +22,10 @@ public struct CancelIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
-				.d(M(10, 0), a(10, 10, 0, true, false, 10, 10), A(10, 10, 0, false, false, 10, 0), M(2, 10), a(8, 8, 0, false, true, 1.69, -4.9), L(14.9, 16.31), A(8, 8, 0, false, true, 2, 10), m(14.31, 4.9), L(5.1, 3.69), A(8, 8, 0, false, true, 16.31, 14.9))
+				.d(M(10, 0), a(10, 10, 0, true, false, 10, 10), A(10, 10, 0, false, false, 10, 0), M(2, 10), a(8, 8, 0, false, true, 1.69, -4.9), L(14.9, 16.31), A(8, 8, 0, false, true, 2, 10), m(14.31, 4.9), L(5.1, 3.69), A(8, 8, 0, false, true, 16.31, 14.9)).render()
 		}
 		.class(`class`.isEmpty ? "cancel-icon-view" : "cancel-icon-view \(`class`)")
 		.width(width)
@@ -33,6 +33,7 @@ public struct CancelIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

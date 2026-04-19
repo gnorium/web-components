@@ -1,9 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
+import CSSBuilder
+import CSSOMBuilder
+import DesignTokens
+import DOMBuilder
 import Foundation
 import HTMLBuilder
-import CSSBuilder
-import DesignTokens
 import WebTypes
 
 /// A form element that lets users input and edit a single-line text value.
@@ -82,14 +84,14 @@ public struct TextInputView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func textInputViewCSS() -> [AnyCSSContent] {
+	private func textInputViewCSS() -> [CSSRule] {
 		position(.relative)
 		display(.inlineBlock)
 		width(perc(100))
 	}
 
 	@CSSBuilder
-	private func textInputInputCSS(_ disabled: Bool, _ readonly: Bool, _ status: ValidationStatus, _ hasStartIcon: Bool, _ hasEndIcon: Bool, _ clearable: Bool) -> [AnyCSSContent] {
+	private func textInputInputCSS(_ disabled: Bool, _ readonly: Bool, _ status: ValidationStatus, _ hasStartIcon: Bool, _ hasEndIcon: Bool, _ clearable: Bool) -> [CSSRule] {
 		width(perc(100))
 		minHeight(minSizeInteractivePointer)
 		padding(spacing8, spacing12)
@@ -128,7 +130,7 @@ public struct TextInputView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func textInputIconCSS(_ isStartIcon: Bool) -> [AnyCSSContent] {
+	private func textInputIconCSS(_ isStartIcon: Bool) -> [CSSRule] {
 		position(.absolute)
 		top(perc(50))
 		transform(translateY(perc(-50)))
@@ -148,7 +150,7 @@ public struct TextInputView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func textInputClearButtonCSS(_ disabled: Bool) -> [AnyCSSContent] {
+	private func textInputClearButtonCSS(_ disabled: Bool) -> [CSSRule] {
 		position(.absolute)
 		top(perc(50))
 		right(spacing12)
@@ -185,7 +187,7 @@ public struct TextInputView: HTMLContent {
 		}
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let hasStartIcon = startIcon != nil
 		let hasEndIcon = endIcon != nil
 		let htmlInputType = getHTMLInputType(type)
@@ -261,7 +263,7 @@ public struct TextInputView: HTMLContent {
 		return container.style {
 			textInputViewCSS()
 		}
-		.render(indent: indent)
+		.render()
 	}
 
 	private func getHTMLInputType(_ type: InputType) -> HTMLInput.`Type` {
@@ -284,12 +286,12 @@ public struct TextInputView: HTMLContent {
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import DesignTokens
-import WebTypes
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 private class TextInputInstance: @unchecked Sendable {
 	private var textInput: Element

@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,7 +22,7 @@ public struct ListBulletIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
 				.d(M(7, 15), h(12), v(2), H(7), Z(), m(0, -6), h(12), v(2), H(7), Z(), m(0, -6), h(12), v(2), H(7), Z())
@@ -40,7 +40,7 @@ public struct ListBulletIconView: HTMLContent {
 			circle()
 				.cx(3)
 				.cy(16)
-				.r(2)
+				.r(2).render()
 		}
 		.class(`class`.isEmpty ? "list-bullet-icon-view" : "list-bullet-icon-view \(`class`)")
 		.width(width)
@@ -48,6 +48,7 @@ public struct ListBulletIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

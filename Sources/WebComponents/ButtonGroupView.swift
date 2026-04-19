@@ -1,9 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
+import CSSBuilder
+import CSSOMBuilder
+import DesignTokens
+import DOMBuilder
 import Foundation
 import HTMLBuilder
-import CSSBuilder
-import DesignTokens
 import WebTypes
 
 /// A ButtonGroup consists of a set of two or more normal buttons.
@@ -11,14 +13,14 @@ public struct ButtonGroupView: HTMLContent {
 	public struct ButtonItem: Sendable {
 		public let value: String
 		public let label: String
-		public let icon: AnyHTMLContent?
+		public let icon: DOMNode?
 		public let disabled: Bool
 		public let ariaLabel: String?
 
 		public init(
 			value: String,
 			label: String,
-			icon: AnyHTMLContent? = nil,
+			icon: DOMNode? = nil,
 			disabled: Bool = false,
 			ariaLabel: String? = nil
 		) {
@@ -45,13 +47,13 @@ public struct ButtonGroupView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func buttonGroupViewCSS() -> [AnyCSSContent] {
+	private func buttonGroupViewCSS() -> [CSSRule] {
 		display(.inlineFlex)
 		flexWrap(.wrap)
 	}
 
 	@CSSBuilder
-	private func buttonGroupButtonCSS(_ isDisabled: Bool) -> [AnyCSSContent] {
+	private func buttonGroupButtonCSS(_ isDisabled: Bool) -> [CSSRule] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -132,7 +134,7 @@ public struct ButtonGroupView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func buttonIconCSS() -> [AnyCSSContent] {
+	private func buttonIconCSS() -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -140,7 +142,7 @@ public struct ButtonGroupView: HTMLContent {
 		height(sizeIconSmall)
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		div {
 			for button in buttons {
 				let isDisabled = disabled || button.disabled
@@ -175,18 +177,18 @@ public struct ButtonGroupView: HTMLContent {
 		.style {
 			buttonGroupViewCSS()
 		}
-		.render(indent: indent)
+		.render()
 	}
 }
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import DesignTokens
-import WebTypes
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 private class ButtonGroupInstance: @unchecked Sendable {
 	private var buttons: [Element] = []

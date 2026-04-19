@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,12 +22,12 @@ public struct CopyIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
 				.d(M(3, 3), h(8), v(2), h(2), V(3), c(0, -1.1, -0.895, -2, -2, -2), H(3), c(-1.1, 0, -2, 0.895, -2, 2), v(8), c(0, 1.1, 0.895, 2, 2, 2), h(2), v(-2), H(3), Z())
 			path()
-				.d(M(9, 9), h(8), v(8), H(9), Z(), m(0, -2), c(-1.1, 0, -2, 0.895, -2, 2), v(8), c(0, 1.1, 0.895, 2, 2, 2), h(8), c(1.1, 0, 2, -0.895, 2, -2), V(9), c(0, -1.1, -0.895, -2, -2, -2), Z())
+				.d(M(9, 9), h(8), v(8), H(9), Z(), m(0, -2), c(-1.1, 0, -2, 0.895, -2, 2), v(8), c(0, 1.1, 0.895, 2, 2, 2), h(8), c(1.1, 0, 2, -0.895, 2, -2), V(9), c(0, -1.1, -0.895, -2, -2, -2), Z()).render()
 		}
 		.class(`class`.isEmpty ? "copy-icon-view" : "copy-icon-view \(`class`)")
 		.width(width)
@@ -35,6 +35,7 @@ public struct CopyIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

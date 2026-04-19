@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,7 +22,7 @@ public struct ViewDetailsIconView: HTMLContent {
 		self.height = height
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			rect()
 				.width(px(7))
@@ -39,7 +39,7 @@ public struct ViewDetailsIconView: HTMLContent {
 				.rx(px(1))
 
 			path()
-				.d(M(14, 4), h(7), M(14, 9), h(7), M(14, 15), h(7), M(14, 20), h(7))
+				.d(M(14, 4), h(7), M(14, 9), h(7), M(14, 15), h(7), M(14, 20), h(7)).render()
 		}
 		.class(`class`.isEmpty ? "view-details-icon-view" : "view-details-icon-view \(`class`)")
 		.width(width)
@@ -51,6 +51,7 @@ public struct ViewDetailsIconView: HTMLContent {
 		.strokeLinecap(.round)
 		.strokeLinejoin(.round)
 		.strokeWidth(px(2))
+        .render()
 	}
 }
 

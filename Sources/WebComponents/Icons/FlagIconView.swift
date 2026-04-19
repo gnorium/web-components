@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,10 +22,10 @@ public struct FlagIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
-				.d(M(17, 6), L(3, 1), v(18), h(2), v(-6.87), Z())
+				.d(M(17, 6), L(3, 1), v(18), h(2), v(-6.87), Z()).render()
 		}
 		.class(`class`.isEmpty ? "flag-icon-view" : "flag-icon-view \(`class`)")
 		.width(width)
@@ -33,6 +33,7 @@ public struct FlagIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

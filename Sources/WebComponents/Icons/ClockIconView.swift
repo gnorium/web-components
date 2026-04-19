@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,10 +22,10 @@ public struct ClockIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
-				.d(M(10, 0), a(10, 10, 0, true, false, 10, 10), A(10, 10, 0, false, false, 10, 0), m(2.5, 14.5), L(9, 11), V(4), h(2), v(6), l(3, 3), Z())
+				.d(M(10, 0), a(10, 10, 0, true, false, 10, 10), A(10, 10, 0, false, false, 10, 0), m(2.5, 14.5), L(9, 11), V(4), h(2), v(6), l(3, 3), Z()).render()
 		}
 		.class(`class`.isEmpty ? "clock-icon-view" : "clock-icon-view \(`class`)")
 		.width(width)
@@ -33,6 +33,7 @@ public struct ClockIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

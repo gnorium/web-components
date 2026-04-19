@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import HTMLBuilder
 import SVGBuilder
@@ -22,10 +22,10 @@ public struct HeartIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
-			.d(M(14.75, 1), A(5.24, 5.24, 0, false, false, 10, 4), A(5.24, 5.24, 0, false, false, 0, 6.25), C(0, 11.75, 10, 19, 10, 19), s(10, -7.25, 10, -12.75), A(5.25, 5.25, 0, false, false, 14.75, 1))
+			.d(M(14.75, 1), A(5.24, 5.24, 0, false, false, 10, 4), A(5.24, 5.24, 0, false, false, 0, 6.25), C(0, 11.75, 10, 19, 10, 19), s(10, -7.25, 10, -12.75), A(5.25, 5.25, 0, false, false, 14.75, 1)).render()
 		}
 		.class(`class`.isEmpty ? "heart-icon-view" : "heart-icon-view \(`class`)")
 		.width(width)
@@ -33,6 +33,7 @@ public struct HeartIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

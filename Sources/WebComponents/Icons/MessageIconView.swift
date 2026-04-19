@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,13 +22,13 @@ public struct MessageIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
 			.d(M(0, 8), v(8), a(2, 2, 0, false, false, 2, 2), h(16), a(2, 2, 0, false, false, 2, -2), V(8), l(-10, 4), Z())
 
 			path()
-			.d(M(2, 2), a(2, 2, 0, false, false, -2, 2), v(2), l(10, 4), l(10, -4), V(4), a(2, 2, 0, false, false, -2, -2), Z())
+			.d(M(2, 2), a(2, 2, 0, false, false, -2, 2), v(2), l(10, 4), l(10, -4), V(4), a(2, 2, 0, false, false, -2, -2), Z()).render()
 		}
 		.class(`class`.isEmpty ? "message-icon-view" : "message-icon-view \(`class`)")
 		.width(width)
@@ -36,6 +36,7 @@ public struct MessageIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

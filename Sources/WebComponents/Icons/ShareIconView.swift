@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,10 +22,10 @@ public struct ShareIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
-				.d(M(12, 6), V(2), l(7, 7), l(-7, 7), v(-4), c(-5, 0, -8.5, 1.5, -11, 5), l(0.8, -3), l(0.2, -0.4), A(12, 12, 0, false, true, 12, 6))
+				.d(M(12, 6), V(2), l(7, 7), l(-7, 7), v(-4), c(-5, 0, -8.5, 1.5, -11, 5), l(0.8, -3), l(0.2, -0.4), A(12, 12, 0, false, true, 12, 6)).render()
 		}
 		.class(`class`.isEmpty ? "share-icon-view" : "share-icon-view \(`class`)")
 		.width(width)
@@ -33,6 +33,7 @@ public struct ShareIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

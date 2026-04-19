@@ -1,9 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
+import CSSBuilder
+import CSSOMBuilder
+import DesignTokens
+import DOMBuilder
 import Foundation
 import HTMLBuilder
-import CSSBuilder
-import DesignTokens
 import WebTypes
 
 /// Navigates the user to another page, view or section.
@@ -18,7 +20,7 @@ public struct LinkView: HTMLContent {
 	let redLink: Bool
 	let external: Bool
 	let weight: LinkWeight
-	let content: [AnyHTMLContent]
+	let content: [DOMNode]
 	let `class`: String
 
 	public init(
@@ -28,7 +30,7 @@ public struct LinkView: HTMLContent {
 		external: Bool = false,
 		weight: LinkWeight = .default,
 		class: String = "",
-		@HTMLBuilder content: () -> [AnyHTMLContent]
+		@HTMLBuilder content: () -> [DOMNode]
 	) {
 		self.url = url
 		self.underlined = underlined
@@ -40,7 +42,7 @@ public struct LinkView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func linkViewCSS(_ underlined: Bool, _ redLink: Bool) -> [AnyCSSContent] {
+	private func linkViewCSS(_ underlined: Bool, _ redLink: Bool) -> [CSSRule] {
 		if redLink {
 			color(colorRed)
 		} else {
@@ -86,7 +88,7 @@ public struct LinkView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func linkViewPlainCSS() -> [AnyCSSContent] {
+	private func linkViewPlainCSS() -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing8)
@@ -108,7 +110,7 @@ public struct LinkView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func linkExternalIconCSS() -> [AnyCSSContent] {
+	private func linkExternalIconCSS() -> [CSSRule] {
 		display(.inlineBlock)
 		width(sizeIconXSmall)
 		height(sizeIconXSmall)
@@ -117,7 +119,7 @@ public struct LinkView: HTMLContent {
 		fontSize(sizeIconXSmall)
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let linkClasses = {
 			var classes = "link-view"
 			if weight == .plain {
@@ -167,7 +169,7 @@ public struct LinkView: HTMLContent {
 					linkViewCSS(underlined, redLink)
 				}
 			}
-			.render(indent: indent)
+			.render()
 	}
 }
 

@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,10 +22,10 @@ public struct CheckIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
-				.d(M(7, 14.17), L(2.83, 10), l(-1.41, 1.41), L(7, 17), L(19, 5), l(-1.41, -1.42), Z())
+				.d(M(7, 14.17), L(2.83, 10), l(-1.41, 1.41), L(7, 17), L(19, 5), l(-1.41, -1.42), Z()).render()
 		}
 		.class(`class`.isEmpty ? "check-icon-view" : "check-icon-view \(`class`)")
 		.width(width)
@@ -33,6 +33,7 @@ public struct CheckIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

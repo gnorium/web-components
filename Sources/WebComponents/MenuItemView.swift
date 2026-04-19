@@ -1,12 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
-#if !os(WASI)
-import Foundation
-
-#endif
-import HTMLBuilder
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
+import DOMBuilder
+import Foundation
+import HTMLBuilder
 import WebTypes
 
 /// A MenuItem is a selectable option within a Menu.
@@ -31,7 +30,7 @@ public struct MenuItemView: HTMLContent {
 	let hideDescriptionOverflow: Bool
 	let itemColor: MenuItemColor
 	let multiselect: Bool
-	let content: [AnyHTMLContent]
+	let content: [DOMNode]
 	let `class`: String
 
 	public struct Thumbnail: Sendable {
@@ -104,7 +103,7 @@ public struct MenuItemView: HTMLContent {
 		action: MenuItemColor = .default,
 		multiselect: Bool = false,
 		class: String = "",
-		@HTMLBuilder content: () -> [AnyHTMLContent] = { [] }
+		@HTMLBuilder content: () -> [DOMNode] = { [] }
 	) {
 		self.id = id
 		self.value = value
@@ -131,7 +130,7 @@ public struct MenuItemView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func menuItemViewCSS(_ disabled: Bool, _ selected: Bool, _ active: Bool, _ highlighted: Bool, _ itemColor: MenuItemColor) -> [AnyCSSContent] {
+	private func menuItemViewCSS(_ disabled: Bool, _ selected: Bool, _ active: Bool, _ highlighted: Bool, _ itemColor: MenuItemColor) -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing12)
@@ -182,7 +181,7 @@ public struct MenuItemView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func menuItemCheckboxCSS(_ selected: Bool) -> [AnyCSSContent] {
+	private func menuItemCheckboxCSS(_ selected: Bool) -> [CSSRule] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -196,14 +195,14 @@ public struct MenuItemView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func menuItemCheckmarkCSS() -> [AnyCSSContent] {
+	private func menuItemCheckmarkCSS() -> [CSSRule] {
 		fontSize(fontSizeSmall14)
 		color(colorInvertedFixed)
 		lineHeight(1)
 	}
 
 	@CSSBuilder
-	private func menuItemThumbnailCSS() -> [AnyCSSContent] {
+	private func menuItemThumbnailCSS() -> [CSSRule] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -216,20 +215,20 @@ public struct MenuItemView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func menuItemThumbnailImageCSS() -> [AnyCSSContent] {
+	private func menuItemThumbnailImageCSS() -> [CSSRule] {
 		width(perc(100))
 		height(perc(100))
 		objectFit(.cover)
 	}
 
 	@CSSBuilder
-	private func menuItemThumbnailPlaceholderCSS() -> [AnyCSSContent] {
+	private func menuItemThumbnailPlaceholderCSS() -> [CSSRule] {
 		fontSize(fontSizeLarge18)
 		color(colorPlaceholder)
 	}
 
 	@CSSBuilder
-	private func menuItemIconCSS() -> [AnyCSSContent] {
+	private func menuItemIconCSS() -> [CSSRule] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -241,7 +240,7 @@ public struct MenuItemView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func menuItemTextCSS() -> [AnyCSSContent] {
+	private func menuItemTextCSS() -> [CSSRule] {
 		display(.flex)
 		flexDirection(.column)
 		gap(spacing4)
@@ -250,7 +249,7 @@ public struct MenuItemView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func menuItemTitleCSS() -> [AnyCSSContent] {
+	private func menuItemTitleCSS() -> [CSSRule] {
 		display(.flex)
 		alignItems(.baseline)
 		gap(spacing4)
@@ -258,7 +257,7 @@ public struct MenuItemView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func menuItemLabelCSS(_ boldLabel: Bool, _ hasSearchQuery: Bool) -> [AnyCSSContent] {
+	private func menuItemLabelCSS(_ boldLabel: Bool, _ hasSearchQuery: Bool) -> [CSSRule] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		fontWeight(boldLabel || hasSearchQuery ? fontWeightBold : fontWeightNormal)
@@ -268,7 +267,7 @@ public struct MenuItemView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func menuItemSearchQueryCSS() -> [AnyCSSContent] {
+	private func menuItemSearchQueryCSS() -> [CSSRule] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		fontWeight(fontWeightNormal)
@@ -277,7 +276,7 @@ public struct MenuItemView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func menuItemMatchCSS() -> [AnyCSSContent] {
+	private func menuItemMatchCSS() -> [CSSRule] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		fontWeight(fontWeightNormal)
@@ -286,7 +285,7 @@ public struct MenuItemView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func menuItemSupportingTextCSS() -> [AnyCSSContent] {
+	private func menuItemSupportingTextCSS() -> [CSSRule] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		fontWeight(fontWeightNormal)
@@ -295,7 +294,7 @@ public struct MenuItemView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func menuItemDescriptionCSS(_ hideOverflow: Bool) -> [AnyCSSContent] {
+	private func menuItemDescriptionCSS(_ hideOverflow: Bool) -> [CSSRule] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeSmall14)
 		lineHeight(lineHeightSmall22)
@@ -310,7 +309,7 @@ public struct MenuItemView: HTMLContent {
 		}
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let hasCustomContent = !content.isEmpty
 		let displayLabel = label.isEmpty ? value : label
 		let hasSearchQuery = !searchQuery.isEmpty
@@ -323,7 +322,7 @@ public struct MenuItemView: HTMLContent {
 
 		// Highlight search query in label
 		@HTMLBuilder
-		func renderLabelWithHighlight() -> [AnyHTMLContent] {
+		func renderLabelWithHighlight() -> [DOMNode] {
 			if hasSearchQuery && displayLabel.lowercased().contains(searchQuery.lowercased()) {
 				let lowerLabel = displayLabel.lowercased()
 				let lowerQuery = searchQuery.lowercased()
@@ -360,12 +359,12 @@ public struct MenuItemView: HTMLContent {
 		}
 
 		// Main content
-		let itemContent: [AnyHTMLContent] = {
+		let itemContent: [DOMNode] = {
 			if hasCustomContent {
 				return content
 			}
 
-			var items: [AnyHTMLContent] = []
+			var items: [DOMNode] = []
 
 			// Multiselect checkbox
 			if multiselect {
@@ -382,7 +381,8 @@ public struct MenuItemView: HTMLContent {
 				.class("menu-item-checkbox")
 				.style {
 					menuItemCheckboxCSS(selected)
-				})
+				}
+				.render())
 			}
 
 			// Thumbnail
@@ -400,7 +400,8 @@ public struct MenuItemView: HTMLContent {
 					.class("menu-item-thumbnail")
 					.style {
 						menuItemThumbnailCSS()
-					})
+					}
+                    .render())
 				} else {
 					items.append(span {
 						span { icon ?? "📷" }
@@ -413,7 +414,8 @@ public struct MenuItemView: HTMLContent {
 					.class("menu-item-thumbnail")
 					.style {
 						menuItemThumbnailCSS()
-					})
+					}
+                    .render())
 				}
 			}
 
@@ -424,7 +426,8 @@ public struct MenuItemView: HTMLContent {
 					.ariaHidden(true)
 					.style {
 						menuItemIconCSS()
-					})
+					}
+                    .render())
 			}
 
 			// Text content
@@ -457,16 +460,17 @@ public struct MenuItemView: HTMLContent {
 				// Description
 				if hasDescription {
 					span { description! }
-						.class("menu-item-description")
-						.style {
-							menuItemDescriptionCSS(hideDescriptionOverflow)
-						}
+                    .class("menu-item-description")
+                    .style {
+                        menuItemDescriptionCSS(hideDescriptionOverflow)
+                    }
 				}
 			}
 			.class("menu-item-text")
 			.style {
 				menuItemTextCSS()
-			})
+			}
+            .render())
 
 			return items
 		}()
@@ -500,7 +504,7 @@ public struct MenuItemView: HTMLContent {
 				.style {
 					menuItemViewCSS(disabled, selected, active, highlighted, itemColor)
 				}
-				.render(indent: indent)
+				.render()
 		} else {
 			var listItem = li {
 				itemContent
@@ -524,19 +528,19 @@ public struct MenuItemView: HTMLContent {
 				.style {
 					menuItemViewCSS(disabled, selected, active, highlighted, itemColor)
 				}
-				.render(indent: indent)
+				.render()
 		}
 	}
 }
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import DesignTokens
-import WebTypes
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 private class MenuItemInstance: @unchecked Sendable {
 	private var menuItem: Element

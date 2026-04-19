@@ -1,9 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
+import CSSBuilder
+import CSSOMBuilder
+import DesignTokens
+import DOMBuilder
 import HTMLBuilder
 import SVGBuilder
-import CSSBuilder
-import DesignTokens
 import WebTypes
 
 /// An animated chevron SVG that rotates between collapsed (> right) and
@@ -13,7 +15,7 @@ import WebTypes
 /// for the collapsed (right-pointing) state. Expanding transitions to
 /// 0deg (down-pointing). The transition is purely CSS — no SMIL needed.
 ///
-/// To trigger the animation from JS/WASI:
+/// To trigger the animation from JS/CLIENT:
 /// ```js
 /// let svg = document.querySelector('#my-id-chevron');
 /// svg.style.transform = svg.dataset.expanded === 'true'
@@ -54,13 +56,12 @@ public struct AnimatedRightDownChevronView: HTMLContent {
 	// This shape is CSS-rotated -90deg to appear as a right-pointing chevron (>),
 	// then transitions to 0deg (down-pointing v) when expanded.
 
-	static let chevronPoints = "2.5,4.75 10,12.25 17.5,4.75 19,6.25 10,15.25 1,6.25"
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		return svg {
 			polygon()
-			.points(Self.chevronPoints)
-			.fill(.currentColor)
+				.points((2.5, 4.75), (10, 12.25), (17.5, 4.75), (19, 6.25), (10, 15.25), (1, 6.25))
+				.fill(.currentColor)
 		}
 		.class(`class`.isEmpty ? "animated-chevron" : "animated-chevron \(`class`)")
 		.id("\(id)-chevron")
@@ -74,18 +75,19 @@ public struct AnimatedRightDownChevronView: HTMLContent {
 			transform(rotate(expanded ? deg(0) : deg(-90)))
 			transformOrigin(perc(50))
 		}
-		.render(indent: indent)
+		.render()
 	}
 }
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
-/// WASI factory for creating AnimatedRightDownChevronView DOM elements dynamically.
+/// CLIENT factory for creating AnimatedRightDownChevronView DOM elements dynamically.
 public enum AnimatedRightDownChevronFactory {
 	/// The SVG innerHTML for the down-pointing chevron polygon (20×20 viewBox).
 	/// CSS-rotated -90deg for collapsed (right-pointing), 0deg for expanded (down-pointing).
@@ -95,7 +97,7 @@ public enum AnimatedRightDownChevronFactory {
 	/// - Parameters:
 	///   - id: Base ID (element gets id="\(id)-chevron")
 	///   - expanded: Initial state (false = right-pointing >, true = down-pointing v)
-	/// - Returns: A wrapper element containing the SVG (use innerHTML injection since createElementNS is complex in WASI)
+	/// - Returns: A wrapper element containing the SVG (use innerHTML injection since createElementNS is complex in CLIENT)
 	public static func createElement(id: String, expanded: Bool = false) -> Element {
 		let wrapper = document.createElement("span")
 		let rotation = expanded ? "rotate(0deg)" : "rotate(-90deg)"

@@ -1,9 +1,10 @@
-#if !os(WASI)
+#if SERVER
 
-import Foundation
-import HTMLBuilder
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
 import WebTypes
 
 /// A structural component used to arrange data in rows and columns.
@@ -21,14 +22,14 @@ public struct TableView: HTMLContent {
 	let paginate: Bool
 	let paginationPosition: PaginationPosition
 	let paginationSizeDefault: Int
-	let headerContent: [AnyHTMLContent]
-	let theadContent: [AnyHTMLContent]
-	let tbodyContent: [AnyHTMLContent]
-	let tfootContent: [AnyHTMLContent]
-	let footerContent: [AnyHTMLContent]
-	let emptyStateContent: [AnyHTMLContent]
-	let theadStyle: (@Sendable () -> [AnyCSSContent])?
-	let thStyle: (@Sendable (Column.Alignment) -> [AnyCSSContent])?
+	let headerContent: [DOMNode]
+	let theadContent: [DOMNode]
+	let tbodyContent: [DOMNode]
+	let tfootContent: [DOMNode]
+	let footerContent: [DOMNode]
+	let emptyStateContent: [DOMNode]
+	let theadStyle: (@Sendable () -> [CSSRule])?
+	let thStyle: (@Sendable (Column.Alignment) -> [CSSRule])?
 	let `class`: String
 
 	public struct Column: Sendable {
@@ -166,15 +167,15 @@ public struct TableView: HTMLContent {
 		paginate: Bool = false,
 		paginationPosition: PaginationPosition = .bottom,
 		paginationSizeDefault: Int = 10,
-		theadStyle: (@Sendable () -> [AnyCSSContent])? = nil,
-		thStyle: (@Sendable (Column.Alignment) -> [AnyCSSContent])? = nil,
+		theadStyle: (@Sendable () -> [CSSRule])? = nil,
+		thStyle: (@Sendable (Column.Alignment) -> [CSSRule])? = nil,
 		class: String = "",
-		@HTMLBuilder header: () -> [AnyHTMLContent] = { [] },
-		@HTMLBuilder thead: () -> [AnyHTMLContent] = { [] },
-		@HTMLBuilder tbody: () -> [AnyHTMLContent] = { [] },
-		@HTMLBuilder tfoot: () -> [AnyHTMLContent] = { [] },
-		@HTMLBuilder footer: () -> [AnyHTMLContent] = { [] },
-		@HTMLBuilder emptyState: () -> [AnyHTMLContent] = { [] }
+		@HTMLBuilder header: () -> [DOMNode] = { [] },
+		@HTMLBuilder thead: () -> [DOMNode] = { [] },
+		@HTMLBuilder tbody: () -> [DOMNode] = { [] },
+		@HTMLBuilder tfoot: () -> [DOMNode] = { [] },
+		@HTMLBuilder footer: () -> [DOMNode] = { [] },
+		@HTMLBuilder emptyState: () -> [DOMNode] = { [] }
 	) {
 		self.captionContent = captionContent
 		self.hideCaption = hideCaption
@@ -192,15 +193,15 @@ public struct TableView: HTMLContent {
 		self.theadStyle = theadStyle
 		self.thStyle = thStyle
 		self.`class` = `class`
-		self.headerContent = header().map { AnyHTMLContent($0) }
-		self.theadContent = thead().map { AnyHTMLContent($0) }
-		self.tbodyContent = tbody().map { AnyHTMLContent($0) }
-		self.tfootContent = tfoot().map { AnyHTMLContent($0) }
-		self.footerContent = footer().map { AnyHTMLContent($0) }
-		self.emptyStateContent = emptyState().map { AnyHTMLContent($0) }
+		self.headerContent = header()
+		self.theadContent = thead()
+		self.tbodyContent = tbody()
+		self.tfootContent = tfoot()
+		self.footerContent = footer()
+		self.emptyStateContent = emptyState()
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let hasCustomHeader = !headerContent.isEmpty
 		let hasCustomThead = !theadContent.isEmpty
 		let hasCustomTbody = !tbodyContent.isEmpty
@@ -594,7 +595,7 @@ public struct TableView: HTMLContent {
 		.style {
 			tableViewCSS()
 		}
-		.render(indent: indent)
+		.render()
 	}
 
 	private func buildTableViewClass(isEmpty: Bool) -> String {
@@ -613,8 +614,8 @@ public struct TableView: HTMLContent {
 		return classes.joined(separator: " ")
 	}
 
-    @CSSBuilder
-	private func tableViewCSS() -> [AnyCSSContent] {
+	@CSSBuilder
+	private func tableViewCSS() -> [CSSRule] {
 		width(perc(100))
 
 		// Row styles — applied universally (both auto-generated and custom tbody)
@@ -674,7 +675,7 @@ public struct TableView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func tableHeaderCSS() -> [AnyCSSContent] {
+	private func tableHeaderCSS() -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.spaceBetween)
@@ -684,7 +685,7 @@ public struct TableView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func tableHeaderTitleCSS() -> [AnyCSSContent] {
+	private func tableHeaderTitleCSS() -> [CSSRule] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeLarge18)
 		fontWeight(fontWeightBold)
@@ -694,14 +695,14 @@ public struct TableView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func tableWrapperCSS() -> [AnyCSSContent] {
+	private func tableWrapperCSS() -> [CSSRule] {
 		overflowX(.auto)
 		border(borderWidthBase, .solid, borderColorSubtle)
 		borderRadius(borderRadiusBase)
 	}
 
 	@CSSBuilder
-	private func tableTableCSS(_ showVerticalBorders: Bool) -> [AnyCSSContent] {
+	private func tableTableCSS(_ showVerticalBorders: Bool) -> [CSSRule] {
 		width(perc(100))
 		borderCollapse(.collapse)
 		fontFamily(typographyFontSans)
@@ -721,7 +722,7 @@ public struct TableView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func tableCaptionCSS(_ hideCaption: Bool) -> [AnyCSSContent] {
+	private func tableCaptionCSS(_ hideCaption: Bool) -> [CSSRule] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeMedium16)
 		fontWeight(fontWeightBold)
@@ -744,13 +745,13 @@ public struct TableView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func tableTheadCSS() -> [AnyCSSContent] {
+	private func tableTheadCSS() -> [CSSRule] {
 		backgroundColor(backgroundColorNeutralSubtle)
 		borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
 	}
 
 	@CSSBuilder
-	private func tableThCSS(_ align: Column.Alignment) -> [AnyCSSContent] {
+	private func tableThCSS(_ align: Column.Alignment) -> [CSSRule] {
 		padding(spacing12)
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeSmall14)
@@ -772,7 +773,7 @@ public struct TableView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func tableSortButtonCSS() -> [AnyCSSContent] {
+	private func tableSortButtonCSS() -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing4)
@@ -807,7 +808,7 @@ public struct TableView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func tableSortIconCSS() -> [AnyCSSContent] {
+	private func tableSortIconCSS() -> [CSSRule] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -817,7 +818,7 @@ public struct TableView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func tableTdCSS(_ align: Column.Alignment) -> [AnyCSSContent] {
+	private func tableTdCSS(_ align: Column.Alignment) -> [CSSRule] {
 		padding(spacing12)
 
 		switch align {
@@ -834,14 +835,14 @@ public struct TableView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func tableTfootCSS() -> [AnyCSSContent] {
+	private func tableTfootCSS() -> [CSSRule] {
 		backgroundColor(backgroundColorNeutralSubtle)
 		borderBlockStart(borderWidthBase, .solid, borderColorSubtle)
 		fontWeight(fontWeightBold)
 	}
 
 	@CSSBuilder
-	private func tableEmptyStateCSS() -> [AnyCSSContent] {
+	private func tableEmptyStateCSS() -> [CSSRule] {
 		padding(spacing48)
 		textAlign(.center)
 		color(colorSubtle)
@@ -851,13 +852,13 @@ public struct TableView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func tableFooterCSS() -> [AnyCSSContent] {
+	private func tableFooterCSS() -> [CSSRule] {
 		padding(spacing12)
 		marginBlockStart(spacing8)
 	}
 
 	@CSSBuilder
-	private func tablePaginationCSS() -> [AnyCSSContent] {
+	private func tablePaginationCSS() -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		justifyContent(.spaceBetween)
@@ -868,7 +869,7 @@ public struct TableView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func paginationInfoCSS() -> [AnyCSSContent] {
+	private func paginationInfoCSS() -> [CSSRule] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeSmall14)
 		lineHeight(lineHeightSmall22)
@@ -876,7 +877,7 @@ public struct TableView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func paginationControlsCSS() -> [AnyCSSContent] {
+	private func paginationControlsCSS() -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing8)
@@ -885,12 +886,12 @@ public struct TableView: HTMLContent {
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import DesignTokens
-import WebTypes
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 private class TableInstance: @unchecked Sendable {
     private var table: Element

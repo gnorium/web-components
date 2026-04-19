@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,13 +22,13 @@ public struct DownloadIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
 				.d(M(17, 12), v(5), H(3), v(-5), H(1), v(5), a(2, 2, 0, false, false, 2, 2), h(14), a(2, 2, 0, false, false, 2, -2), v(-5), Z())
 
 			path()
-				.d(M(15, 9), h(-4), V(1), H(9), v(8), H(5), l(5, 6), Z())
+				.d(M(15, 9), h(-4), V(1), H(9), v(8), H(5), l(5, 6), Z()).render()
 		}
 		.class(`class`.isEmpty ? "download-icon-view" : "download-icon-view \(`class`)")
 		.width(width)
@@ -36,6 +36,7 @@ public struct DownloadIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

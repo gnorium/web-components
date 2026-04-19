@@ -1,9 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
+import CSSBuilder
+import CSSOMBuilder
+import DesignTokens
+import DOMBuilder
 import Foundation
 import HTMLBuilder
-import CSSBuilder
-import DesignTokens
 import WebTypes
 
 /// A multi-line text input that allows manual resizing if needed.
@@ -58,7 +60,7 @@ public struct TextAreaView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func textAreaViewCSS(_ hasStartIcon: Bool, _ hasEndIcon: Bool) -> [AnyCSSContent] {
+	private func textAreaViewCSS(_ hasStartIcon: Bool, _ hasEndIcon: Bool) -> [CSSRule] {
 		position(.relative)
 		display(.inlineBlock)
 		width(perc(100))
@@ -71,7 +73,7 @@ public struct TextAreaView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func textAreaInputCSS(_ disabled: Bool, _ readonly: Bool, _ status: ValidationStatus, _ autosize: Bool, _ hasStartIcon: Bool, _ hasEndIcon: Bool) -> [AnyCSSContent] {
+	private func textAreaInputCSS(_ disabled: Bool, _ readonly: Bool, _ status: ValidationStatus, _ autosize: Bool, _ hasStartIcon: Bool, _ hasEndIcon: Bool) -> [CSSRule] {
 		width(perc(100))
 		minHeight(px(rows * 24))
 		padding(spacing12)
@@ -121,7 +123,7 @@ public struct TextAreaView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func textAreaIconCSS(_ isStartIcon: Bool) -> [AnyCSSContent] {
+	private func textAreaIconCSS(_ isStartIcon: Bool) -> [CSSRule] {
 		position(.absolute)
 		top(spacing12)
 		display(.inlineFlex)
@@ -139,7 +141,7 @@ public struct TextAreaView: HTMLContent {
 		}
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let hasStartIcon = startIcon != nil
 		let hasEndIcon = endIcon != nil
 
@@ -192,7 +194,7 @@ public struct TextAreaView: HTMLContent {
 			return container.style {
 				textAreaViewCSS(hasStartIcon, hasEndIcon)
 			}
-			.render(indent: indent)
+			.render()
 		} else {
 			var textAreaInput = textarea(value)
             .id(id)
@@ -224,19 +226,18 @@ public struct TextAreaView: HTMLContent {
 			return container.style {
 				textAreaViewCSS(hasStartIcon, hasEndIcon)
 			}
-			.render(indent: indent)
+			.render()
 		}
 	}
 }
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
-import DesignTokens
-import WebTypes
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 private class TextAreaInstance: @unchecked Sendable {
 	private var textArea: Element

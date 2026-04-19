@@ -1,12 +1,10 @@
-#if !os(WASI)
+#if SERVER
 
-#if !os(WASI)
-import Foundation
-
-#endif
-import HTMLBuilder
 import CSSBuilder
 import DesignTokens
+import DOMBuilder
+import Foundation
+import HTMLBuilder
 import WebTypes
 
 public struct PaginationView: HTMLContent {
@@ -39,7 +37,7 @@ public struct PaginationView: HTMLContent {
         self.`class` = `class`
     }
 
-    public func render(indent: Int = 0) -> String {
+    public func render() -> DOMNode {
         let currentPageIndex = pageNumbers?.firstIndex(where: { $0.isActive }) ?? 0
         let currentPage = currentPageIndex + 1
         let totalPages = pageNumbers?.count ?? 0
@@ -202,16 +200,17 @@ public struct PaginationView: HTMLContent {
             margin(0, .auto)
             gap(spacing16)
         }
-        .render(indent: indent)
+        .render()
     }
 }
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 public class PaginationHydration: @unchecked Sendable {
 	public init() {

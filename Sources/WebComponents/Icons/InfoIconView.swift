@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,10 +22,10 @@ public struct InfoIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
-			.d(M(4, 10), a(6, 6, 0, true, false, 12, 0), a(6, 6, 0, false, false, -12, 0), m(6, -8), a(8, 8, 0, true, true, 0, 16), a(8, 8, 0, false, true, 0, -16), m(1, 7), v(5), H(9), V(9), Z(), m(0, -1), V(6), H(9), v(2), Z())
+			.d(M(4, 10), a(6, 6, 0, true, false, 12, 0), a(6, 6, 0, false, false, -12, 0), m(6, -8), a(8, 8, 0, true, true, 0, 16), a(8, 8, 0, false, true, 0, -16), m(1, 7), v(5), H(9), V(9), Z(), m(0, -1), V(6), H(9), v(2), Z()).render()
 		}
 		.class(`class`.isEmpty ? "info-icon-view" : "info-icon-view \(`class`)")
 		.width(width)
@@ -33,6 +33,7 @@ public struct InfoIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

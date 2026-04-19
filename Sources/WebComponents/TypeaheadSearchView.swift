@@ -1,12 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
-#if !os(WASI)
-import Foundation
-
-#endif
-import HTMLBuilder
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
+import DOMBuilder
+import Foundation
+import HTMLBuilder
 import WebTypes
 
 /// TypeaheadSearch is a search input that provides a menu of options based on the current search query.
@@ -81,20 +80,20 @@ public struct TypeaheadSearchView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func typeaheadSearchViewCSS() -> [AnyCSSContent] {
+	private func typeaheadSearchViewCSS() -> [CSSRule] {
 		position(.relative)
 		width(perc(100))
 		fontFamily(typographyFontSans)
 	}
 
 	@CSSBuilder
-	private func typeaheadSearchFormCSS() -> [AnyCSSContent] {
+	private func typeaheadSearchFormCSS() -> [CSSRule] {
 		position(.relative)
 		width(perc(100))
 	}
 
 	@CSSBuilder
-	private func typeaheadSearchInputWrapperCSS(_ autoExpandWidth: Bool, _ showThumbnail: Bool) -> [AnyCSSContent] {
+	private func typeaheadSearchInputWrapperCSS(_ autoExpandWidth: Bool, _ showThumbnail: Bool) -> [CSSRule] {
 		position(.relative)
 		width(perc(100))
 
@@ -104,7 +103,7 @@ public struct TypeaheadSearchView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func typeaheadSearchMenuCSS() -> [AnyCSSContent] {
+	private func typeaheadSearchMenuCSS() -> [CSSRule] {
 		display(.flex)
 		flexDirection(.column)
 		gap(spacing8)
@@ -113,21 +112,21 @@ public struct TypeaheadSearchView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func typeaheadSearchPendingCSS() -> [AnyCSSContent] {
+	private func typeaheadSearchPendingCSS() -> [CSSRule] {
 		padding(spacing12, spacing16)
 		color(colorSubtle)
 		fontSize(fontSizeSmall14)
 	}
 
 	@CSSBuilder
-	private func typeaheadSearchNoResultsCSS() -> [AnyCSSContent] {
+	private func typeaheadSearchNoResultsCSS() -> [CSSRule] {
 		padding(spacing12, spacing16)
 		color(colorSubtle)
 		fontSize(fontSizeSmall14)
 		textAlign(.center)
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let showMenu = !searchResults.isEmpty || showEmptyQueryResults
 		let visibleResults = if let limit = visibleItemLimit {
 			Array(searchResults.prefix(limit))
@@ -191,18 +190,18 @@ public struct TypeaheadSearchView: HTMLContent {
 		.style {
 			typeaheadSearchViewCSS()
 		}
-		.render(indent: indent)
+		.render()
 	}
 }
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import DesignTokens
-import WebTypes
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 private class TypeaheadSearchInstance: @unchecked Sendable {
 	private var typeaheadSearchElement: Element

@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,13 +22,13 @@ public struct LogOutIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
 				.d(M(3, 3), h(8), V(1), H(3), a(2, 2, 0, false, false, -2, 2), v(14), a(2, 2, 0, false, false, 2, 2), h(8), v(-2), H(3), Z())
 
 			path()
-				.d(M(13, 5), v(4), H(5), v(2), h(8), v(4), l(6, -5), Z())
+				.d(M(13, 5), v(4), H(5), v(2), h(8), v(4), l(6, -5), Z()).render()
 		}
 		.class(`class`.isEmpty ? "log-out-icon-view" : "log-out-icon-view \(`class`)")
 		.width(width)
@@ -36,6 +36,7 @@ public struct LogOutIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

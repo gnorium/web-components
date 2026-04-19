@@ -1,8 +1,9 @@
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import DesignTokens
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 /// Monitors scroll position and highlights the navigation link whose target section
 /// is closest to the viewport top. Discovers links via `.scroll-spy-link` class;

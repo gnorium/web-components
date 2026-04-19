@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,7 +22,7 @@ public struct ArticleDisambiguationIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
 				.d(M(15, 1), H(5), c(-1.1, 0, -2, 0.9, -2, 2), v(6), h(4.6), l(3.7, -3.7), L(10, 4), h(4), v(4), l(-1.3, -1.3), L(9.4, 10), l(3.3, 3.3), L(14, 12), v(4), h(-4), l(1.3, -1.3), L(7.6, 11), H(3), v(6), c(0, 1.1, 0.9, 2, 2, 2), h(10), c(1.1, 0, 2, -0.9, 2, -2), V(3), c(0, -1.1, -0.9, -2, -2, -2))
@@ -33,6 +33,7 @@ public struct ArticleDisambiguationIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+		.render()
 	}
 }
 

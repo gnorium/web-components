@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -28,13 +28,13 @@ public struct LightModeIconView: HTMLContent {
         self.strokeWidth = strokeWidth
     }
 
-    public func toNode() -> DOMNode {
+    public func render() -> DOMNode {
         svg {
             defs {
                 clipPath {
 					rect().width(16).height(16).fill(.white)
                 }
-                .id("clip")
+                .id("clip").render()
             }
 
             g {
@@ -101,6 +101,7 @@ public struct LightModeIconView: HTMLContent {
         .fill(.none)
         .stroke(stroke)
         .xmlns("http://www.w3.org/2000/svg")
+        .render()
     }
 }
 

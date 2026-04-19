@@ -1,12 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
-#if !os(WASI)
-import Foundation
-
-#endif
-import HTMLBuilder
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
+import DOMBuilder
+import Foundation
+import HTMLBuilder
 import WebTypes
 
 /// A predictive text input that presents a dropdown menu with suggestions based on the current input value.
@@ -61,13 +60,13 @@ public struct LookupView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func lookupViewCSS() -> [AnyCSSContent] {
+	private func lookupViewCSS() -> [CSSRule] {
 		position(.relative)
 		display(.inlineBlock)
 		minWidth(px(256))
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		return div {
 			TextInputView(
 				id: id,
@@ -97,18 +96,18 @@ public struct LookupView: HTMLContent {
 		.style {
 			lookupViewCSS()
 		}
-		.render(indent: indent)
+		.render()
 	}
 }
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import DesignTokens
-import WebTypes
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 private class LookupInstance: @unchecked Sendable {
 	private var lookup: Element

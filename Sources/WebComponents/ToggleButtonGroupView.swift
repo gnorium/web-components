@@ -1,12 +1,10 @@
-#if !os(WASI)
+#if SERVER
 
-#if !os(WASI)
-import Foundation
-
-#endif
-import HTMLBuilder
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
 import WebTypes
 
 /// A ToggleButtonGroup is a group of ToggleButtons that allows single or multi-select.
@@ -46,7 +44,7 @@ public struct ToggleButtonGroupView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func toggleButtonGroupViewCSS() -> [AnyCSSContent] {
+	private func toggleButtonGroupViewCSS() -> [CSSRule] {
 		display(.inlineFlex)
 		flexWrap(.wrap)
 		gap(0)
@@ -77,7 +75,7 @@ public struct ToggleButtonGroupView: HTMLContent {
 		}
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		var container = div {
 			for buttonItem in buttons {
 				let isSelected = selectedValues.contains(buttonItem.value)
@@ -85,7 +83,7 @@ public struct ToggleButtonGroupView: HTMLContent {
 
 				ToggleButtonView(
 					label: buttonItem.label,
-					icon: buttonItem.icon.map { iconStr in span { iconStr } },
+					icon: buttonItem.icon.map { iconStr in span(content: { iconStr }) },
 					modelValue: isSelected,
 					weight: .subtle,
 					disabled: isDisabled,
@@ -105,16 +103,17 @@ public struct ToggleButtonGroupView: HTMLContent {
 		return container.style {
 			toggleButtonGroupViewCSS()
 		}
-		.render(indent: indent)
+		.render()
 	}
 }
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 public class ToggleButtonGroupHydration: @unchecked Sendable {
 	public init() {}

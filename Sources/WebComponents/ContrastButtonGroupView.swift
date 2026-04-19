@@ -1,8 +1,9 @@
-#if !os(WASI)
+#if SERVER
 
-import HTMLBuilder
 import CSSBuilder
 import DesignTokens
+import DOMBuilder
+import HTMLBuilder
 import WebTypes
 
 /// A button group for selecting contrast level (Standard / Increased).
@@ -14,7 +15,7 @@ public struct ContrastButtonGroupView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		div {
 			optionButton(value: "standard", label: "Standard") {
 				IconView(icon: { s in LessContrastIconView(width: s, height: s) }, size: .medium)
@@ -31,10 +32,10 @@ public struct ContrastButtonGroupView: HTMLContent {
 			flexDirection(.column)
 			gap(spacing4)
 		}
-		.render(indent: indent)
+		.render()
 	}
 
-	private func optionButton(value: String, label: String, @HTMLBuilder icon: () -> [AnyHTMLContent]) -> HTMLContent {
+	private func optionButton(value: String, label: String, @HTMLBuilder icon: () -> [DOMNode]) -> HTMLContent {
 		div {
 			span { icon() }
 			.class("option-icon")
@@ -80,12 +81,12 @@ public struct ContrastButtonGroupView: HTMLContent {
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import DesignTokens
-import WebTypes
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 /// Hydrates all ContrastButtonGroupView instances on the page.
 /// Initializes from localStorage / system preference, binds click events,

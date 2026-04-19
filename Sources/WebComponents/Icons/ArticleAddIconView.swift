@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
@@ -22,10 +22,10 @@ public struct ArticleAddIconView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func toNode() -> DOMNode {
+	public func render() -> DOMNode {
 		svg {
 			path()
-				.d(M(5, 1), c(-1.1, 0, -2, 0.9, -2, 2), v(14), c(0, 1.1, 0.9, 2, 2, 2), h(10), c(1.1, 0, 2, -0.9, 2, -2), V(3), c(0, -1.1, -0.9, -2, -2, -2), Z(), m(10, 10), h(-4), v(4), H(9), v(-4), H(5), V(9), h(4), V(5), h(2), v(4), h(4), Z())
+				.d(M(5, 1), c(-1.1, 0, -2, 0.9, -2, 2), v(14), c(0, 1.1, 0.9, 2, 2, 2), h(10), c(1.1, 0, 2, -0.9, 2, -2), V(3), c(0, -1.1, -0.9, -2, -2, -2), Z(), m(10, 10), h(-4), v(4), H(9), v(-4), H(5), V(9), h(4), V(5), h(2), v(4), h(4), Z()).render()
 		}
 		.class(`class`.isEmpty ? "article-add-icon-view" : "article-add-icon-view \(`class`)")
 		.width(width)
@@ -33,6 +33,7 @@ public struct ArticleAddIconView: HTMLContent {
 		.viewBox(0, 0, 20, 20)
 		.xmlns("http://www.w3.org/2000/svg")
 		.fill(.currentColor)
+        .render()
 	}
 }
 

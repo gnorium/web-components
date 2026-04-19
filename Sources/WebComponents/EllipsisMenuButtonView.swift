@@ -1,7 +1,8 @@
-#if !os(WASI)
+#if SERVER
 
 import CSSBuilder
 import DesignTokens
+import DOMBuilder
 import HTMLBuilder
 import WebTypes
 
@@ -13,7 +14,7 @@ public struct EllipsisMenuButtonView: HTMLContent {
 		self.class = `class`
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		div {
 			ButtonView(
 				icon: IconView(icon: { size in
@@ -32,7 +33,7 @@ public struct EllipsisMenuButtonView: HTMLContent {
 		.style {
 			position(.relative)
 		}
-		.render(indent: indent)
+		.render()
 	}
 }
 

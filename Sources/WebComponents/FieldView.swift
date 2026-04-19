@@ -1,9 +1,11 @@
-#if !os(WASI)
+#if SERVER
 
+import CSSBuilder
+import CSSOMBuilder
+import DesignTokens
+import DOMBuilder
 import Foundation
 import HTMLBuilder
-import CSSBuilder
-import DesignTokens
 import WebTypes
 
 /// A form field with a label, an input or control, and an optional validation message.
@@ -17,10 +19,10 @@ public struct FieldView: HTMLContent {
 	let isFieldset: Bool
 	let disabled: Bool
 	let status: ValidationStatus
-	let labelContent: [AnyHTMLContent]
-	let descriptionContent: [AnyHTMLContent]
-	let inputContent: [AnyHTMLContent]
-	let helpTextContent: [AnyHTMLContent]
+	let labelContent: [DOMNode]
+	let descriptionContent: [DOMNode]
+	let inputContent: [DOMNode]
+	let helpTextContent: [DOMNode]
 	let messages: ValidationMessages
 	let `class`: String
 	let labelFontWeight: CSSFontWeight
@@ -58,10 +60,10 @@ public struct FieldView: HTMLContent {
 		labelFontWeight: CSSFontWeight = fontWeightBold,
 		labelFontSize: Length = fontSizeMedium16,
 		class: String = "",
-		@HTMLBuilder label: () -> [AnyHTMLContent],
-		@HTMLBuilder description: () -> [AnyHTMLContent] = { [] },
-		@HTMLBuilder input: () -> [AnyHTMLContent],
-		@HTMLBuilder helpText: () -> [AnyHTMLContent] = { [] }
+		@HTMLBuilder label: () -> [DOMNode],
+		@HTMLBuilder description: () -> [DOMNode] = { [] },
+		@HTMLBuilder input: () -> [DOMNode],
+		@HTMLBuilder helpText: () -> [DOMNode] = { [] }
 	) {
 		self.id = id
 		self.labelIcon = labelIcon
@@ -82,7 +84,7 @@ public struct FieldView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func fieldViewCSS() -> [AnyCSSContent] {
+	private func fieldViewCSS() -> [CSSRule] {
 		display(.flex)
 		flexDirection(.column)
 		gap(spacing8)
@@ -93,12 +95,12 @@ public struct FieldView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func fieldInputWrapperCSS() -> [AnyCSSContent] {
+	private func fieldInputWrapperCSS() -> [CSSRule] {
 		display(.block)
 	}
 
 	@CSSBuilder
-	private func fieldHelpTextCSS() -> [AnyCSSContent] {
+	private func fieldHelpTextCSS() -> [CSSRule] {
 		display(.block)
 		fontSize(fontSizeSmall14)
 		lineHeight(lineHeightSmall22)
@@ -106,7 +108,7 @@ public struct FieldView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func fieldValidationMessageCSS() -> [AnyCSSContent] {
+	private func fieldValidationMessageCSS() -> [CSSRule] {
 		display(.flex)
 		alignItems(.flexStart)
 		gap(spacing4)
@@ -115,7 +117,7 @@ public struct FieldView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func fieldValidationIconCSS() -> [AnyCSSContent] {
+	private func fieldValidationIconCSS() -> [CSSRule] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -124,11 +126,11 @@ public struct FieldView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func fieldValidationTextCSS() -> [AnyCSSContent] {
+	private func fieldValidationTextCSS() -> [CSSRule] {
 		flex(1)
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		let hasDescription = !descriptionContent.isEmpty
 		let hasHelpText = !helpTextContent.isEmpty
 		let descriptionID = hasDescription ? "\(id)-description" : nil
@@ -246,7 +248,7 @@ public struct FieldView: HTMLContent {
 				minWidth(0)
 				fieldViewCSS()
 			}
-			.render(indent: indent)
+			.render()
 		} else {
 			return div {
 				LabelView(
@@ -355,7 +357,7 @@ public struct FieldView: HTMLContent {
 			.style {
 				fieldViewCSS()
 			}
-			.render(indent: indent)
+			.render()
 		}
 	}
 }

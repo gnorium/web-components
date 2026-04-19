@@ -1,10 +1,12 @@
-#if !os(WASI)
+#if SERVER
 
-import Foundation
-import HTMLBuilder
 import CSSBuilder
-import SVGBuilder
+import CSSOMBuilder
 import DesignTokens
+import Foundation
+import DOMBuilder
+import HTMLBuilder
+import SVGBuilder
 import WebTypes
 
 public struct SearchMenuView: HTMLContent {
@@ -58,7 +60,7 @@ public struct SearchMenuView: HTMLContent {
 		self.resultUrlBase = resultUrlBase
 	}
 
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		// Full-screen search menu - iOS-style
 		div {
 			// Backdrop with blur effect
@@ -154,11 +156,11 @@ public struct SearchMenuView: HTMLContent {
 		.style {
 			searchMenuViewCSS()
 		}
-		.render(indent: indent)
+		.render()
 	}
 
 	@CSSBuilder
-	private func searchMenuViewCSS() -> [AnyCSSContent] {
+	private func searchMenuViewCSS() -> [CSSRule] {
 		// Hidden by default, positioned right below navbar
 		display(.none)
 		position(.fixed)
@@ -170,7 +172,7 @@ public struct SearchMenuView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func searchMenuBackdropCSS() -> [AnyCSSContent] {
+	private func searchMenuBackdropCSS() -> [CSSRule] {
 		position(.fixed)
 		top(px(96))  // Start below navbar (navbar height is 96px)
 		insetInlineStart(0)
@@ -185,7 +187,7 @@ public struct SearchMenuView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func searchMenuContainerCSS() -> [AnyCSSContent] {
+	private func searchMenuContainerCSS() -> [CSSRule] {
 		position(.relative)
 		width(perc(100))
 		backgroundColor(backgroundColorBase)
@@ -209,7 +211,7 @@ public struct SearchMenuView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func searchMenuFooterCSS() -> [AnyCSSContent] {
+	private func searchMenuFooterCSS() -> [CSSRule] {
 		// Hide keyboard hints on mobile
 		display(.none)
 		alignItems(.center)
@@ -223,7 +225,7 @@ public struct SearchMenuView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func keyboardHintContainerCSS() -> [AnyCSSContent] {
+	private func keyboardHintContainerCSS() -> [CSSRule] {
 		display(.flex)
 		gap(spacing16)
 		alignItems(.center)
@@ -231,14 +233,14 @@ public struct SearchMenuView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func keyboardHintGroupCSS() -> [AnyCSSContent] {
+	private func keyboardHintGroupCSS() -> [CSSRule] {
 		display(.flex)
 		alignItems(.center)
 		gap(spacing6)
 	}
 
 	@CSSBuilder
-	private func keyboardHintKeyCSS() -> [AnyCSSContent] {
+	private func keyboardHintKeyCSS() -> [CSSRule] {
 		display(.inlineFlex)
 		alignItems(.center)
 		justifyContent(.center)
@@ -257,7 +259,7 @@ public struct SearchMenuView: HTMLContent {
 	}
 
 	@CSSBuilder
-	private func keyboardHintLabelCSS() -> [AnyCSSContent] {
+	private func keyboardHintLabelCSS() -> [CSSRule] {
 		fontFamily(typographyFontSans)
 		fontSize(fontSizeXSmall12)
 		color(colorSubtle)
@@ -266,12 +268,12 @@ public struct SearchMenuView: HTMLContent {
 
 #endif
 
-#if os(WASI)
+#if CLIENT
 
-import WebAPIs
 import DesignTokens
-import WebTypes
 import EmbeddedSwiftUtilities
+import WebAPIs
+import WebTypes
 
 public class SearchMenuHydration: @unchecked Sendable {
 	private var searchField: String = ""

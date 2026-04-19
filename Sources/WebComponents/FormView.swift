@@ -1,10 +1,12 @@
-#if !os(WASI)
+#if SERVER
 
+import CSSBuilder
+import CSSOMBuilder
+import DesignTokens
+import DOMBuilder
 import Foundation
 import HTMLBuilder
 import WebTypes
-import CSSBuilder
-import DesignTokens
 
 /// Generic form view component for creating and editing records.
 /// Auto-generates form fields based on configuration.
@@ -84,7 +86,7 @@ public struct FormView: HTMLContent {
 		self.cancelLabel = cancelLabel
 	}
 	
-	public func render(indent: Int = 0) -> String {
+	public func render() -> DOMNode {
 		div {
 			// Header
 			h1 { title }
@@ -166,11 +168,11 @@ public struct FormView: HTMLContent {
 			flexDirection(.column)
 			gap(spacing32)
 		}
-		.render(indent: indent)
+		.render()
 	}
 	
 	@HTMLBuilder
-	private func renderField(_ field: Field) -> [AnyHTMLContent] {
+	private func renderField(_ field: Field) -> [DOMNode] {
 		if field.type == .hidden {
 			input()
 				.type(.hidden)
@@ -240,7 +242,7 @@ public struct FormView: HTMLContent {
 	}
 	
 	@HTMLBuilder
-	private func fieldInput(_ field: Field) -> [AnyHTMLContent] {
+	private func fieldInput(_ field: Field) -> [DOMNode] {
 		switch field.type {
 		case .textarea:
 			textarea(field.value)
@@ -343,7 +345,7 @@ public struct FormView: HTMLContent {
 	}
 	
 	@CSSBuilder
-	private func inputStyle() -> [AnyCSSContent] {
+	private func inputStyle() -> [CSSRule] {
 		width(perc(100))
 		padding(spacing12, spacing16)
 		fontFamily(typographyFontSans)
