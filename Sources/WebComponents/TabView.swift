@@ -1,143 +1,139 @@
 #if SERVER
+  import CSSBuilder
+  import CSSOMBuilder
+  import DesignTokens
+  import Foundation
+  import HTMLBuilder
+  import DOMBuilder
+  import WebTypes
 
-import CSSBuilder
-import CSSOMBuilder
-import DesignTokens
-import Foundation
-import HTMLBuilder
-import DOMBuilder
-import WebTypes
+  /// A Tab is one of the selectable items included within Tabs.
+  /// Must be used with Tabs component - this component is only meant to be used inside TabsView.
+  public struct TabView: HTMLContent, Sendable {
+    public let name: String
+    public let label: String
+    public let disabled: Bool
+    public let url: String?
+    public let content: [Node]
+    let `class`: String
 
-/// A Tab is one of the selectable items included within Tabs.
-/// Must be used with Tabs component - this component is only meant to be used inside TabsView.
-public struct TabView: HTMLContent, Sendable {
-	public let name: String
-	public let label: String
-	public let disabled: Bool
-	public let url: String?
-	public let content: [DOMNode]
-	let `class`: String
+    public init(
+      name: String,
+      label: String = "",
+      disabled: Bool = false,
+      url: String? = nil,
+      class: String = "",
+      @HTMLBuilder content: () -> [Node]
+    ) {
+      self.name = name
+      self.label = label.isEmpty ? name : label
+      self.disabled = disabled
+      self.url = url
+      self.content = content()
+      self.`class` = `class`
+    }
 
-	public init(
-		name: String,
-		label: String = "",
-		disabled: Bool = false,
-		url: String? = nil,
-		class: String = "",
-		@HTMLBuilder content: () -> [DOMNode]
-	) {
-		self.name = name
-		self.label = label.isEmpty ? name : label
-		self.disabled = disabled
-		self.url = url
-		self.content = content()
-		self.`class` = `class`
-	}
+    @CSSBuilder
+    private func tabButtonCSS(_ isActive: Bool, _ disabled: Bool, _ framed: Bool) -> [CSSRule] {
+      display(.flex)
+      alignItems(.center)
+      justifyContent(.center)
+      minWidth(px(64))
+      padding(spacing12, spacing16)
+      fontSize(fontSizeMedium16)
+      fontWeight(fontWeightNormal)
+      lineHeight(lineHeightSmall22)
+      whiteSpace(.nowrap)
+      textAlign(.center)
+      backgroundColor(.transparent)
+      border(.none)
+      cursor(disabled ? cursorBaseDisabled : cursorBaseHover)
+      transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+      position(.relative)
 
-	@CSSBuilder
-	private func tabButtonCSS(_ isActive: Bool, _ disabled: Bool, _ framed: Bool) -> [CSSRule] {
-		display(.flex)
-		alignItems(.center)
-		justifyContent(.center)
-		minWidth(px(64))
-		padding(spacing12, spacing16)
-		fontSize(fontSizeMedium16)
-		fontWeight(fontWeightNormal)
-		lineHeight(lineHeightSmall22)
-		whiteSpace(.nowrap)
-		textAlign(.center)
-		backgroundColor(.transparent)
-		border(.none)
-		cursor(disabled ? cursorBaseDisabled : cursorBaseHover)
-		transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-		position(.relative)
+      if isActive {
+        color(colorBlue)
+        fontWeight(fontWeightBold)
 
-		if isActive {
-			color(colorBlue)
-			fontWeight(fontWeightBold)
+        if !framed {
+          borderBlockEnd(borderWidthThick, .solid, borderColorBlue)
+        } else {
+          backgroundColor(backgroundColorBase)
+        }
+      } else {
+        color(colorBase)
+        borderBlockEnd(borderWidthThick, .solid, borderColorTransparent)
+      }
 
-			if !framed {
-				borderBlockEnd(borderWidthThick, .solid, borderColorBlue)
-			} else {
-				backgroundColor(backgroundColorBase)
-			}
-		} else {
-			color(colorBase)
-			borderBlockEnd(borderWidthThick, .solid, borderColorTransparent)
-		}
+      if disabled {
+        color(colorDisabled)
+        cursor(cursorBaseDisabled)
+      }
 
-		if disabled {
-			color(colorDisabled)
-			cursor(cursorBaseDisabled)
-		}
+      if !disabled && !isActive {
+        pseudoClass(.hover) {
+          color(colorBlue).important()
+          backgroundColor(backgroundColorBlueSubtle).important()
+        }
 
-		if !disabled && !isActive {
-			pseudoClass(.hover) {
-				color(colorBlue).important()
-				backgroundColor(backgroundColorBlueSubtle).important()
-			}
+        pseudoClass(.active) {
+          backgroundColor(backgroundColorBlueSubtle).important()
+        }
+      }
 
-			pseudoClass(.active) {
-				backgroundColor(backgroundColorBlueSubtle).important()
-			}
-		}
+      pseudoClass(.focus) {
+        outline(borderWidthThick, .solid, borderColorBlue).important()
+        outlineOffset(px(-2)).important()
+      }
+    }
 
-		pseudoClass(.focus) {
-			outline(borderWidthThick, .solid, borderColorBlue).important()
-			outlineOffset(px(-2)).important()
-		}
-	}
+    @CSSBuilder
+    private func tabPanelCSS(_ framed: Bool) -> [CSSRule] {
+      if framed {
+        padding(spacing16)
+      } else {
+        padding(spacing16, 0)
+      }
+    }
 
-	@CSSBuilder
-	private func tabPanelCSS(_ framed: Bool) -> [CSSRule] {
-		if framed {
-			padding(spacing16)
-		} else {
-			padding(spacing16, 0)
-		}
-	}
+    /// Renders the tab button (called by TabsView)
+    public func renderButton(isActive: Bool, tabindex: Int, framed: Bool) -> Node {
+      let displayLabel = label.isEmpty ? name : label
 
-	/// Renders the tab button (called by TabsView)
-	public func renderButton(isActive: Bool, tabindex: Int, framed: Bool) -> DOMNode {
-		let displayLabel = label.isEmpty ? name : label
+      return button { displayLabel }
+        .type(.button)
+        .class(`class`.isEmpty ? "tab-view" : "tab-view \(`class`)")
+        .role("tab")
+        .ariaSelected(isActive)
+        .ariaControls("panel-\(name)")
+        .id("tab-\(name)")
+        .data("tab-name", name)
+        .disabled(disabled)
+        .tabindex(tabindex)
+        .style {
+          tabButtonCSS(isActive, disabled, framed)
+        }
+    }
 
-		return button { displayLabel }
-		.type(.button)
-		.class(`class`.isEmpty ? "tab-view" : "tab-view \(`class`)")
-		.role("tab")
-		.ariaSelected(isActive)
-		.ariaControls("panel-\(name)")
-		.id("tab-\(name)")
-		.data("tab-name", name)
-		.disabled(disabled)
-		.tabindex(tabindex)
-		.style {
-			tabButtonCSS(isActive, disabled, framed)
-		}
-		.render()
-	}
+    /// Renders the tab panel content (called by TabsView)
+    public func renderPanel(isActive: Bool, framed: Bool) -> Node {
+      return section {
+        content
+      }
+      .class("tab-panel")
+      .role("tabpanel")
+      .id("panel-\(name)")
+      .ariaLabelledby("tab-\(name)")
+      .tabindex(0)
+      .hidden(!isActive)
+      .style {
+        tabPanelCSS(framed)
+      }
+    }
 
-	/// Renders the tab panel content (called by TabsView)
-	public func renderPanel(isActive: Bool, framed: Bool) -> DOMNode {
-		return section {
-			content
-		}
-		.class("tab-panel")
-		.role("tabpanel")
-		.id("panel-\(name)")
-		.ariaLabelledby("tab-\(name)")
-		.tabindex(0)
-		.hidden(!isActive)
-		.style {
-			tabPanelCSS(framed)
-		}
-		.render()
-	}
-
-	public func render() -> DOMNode {
-		// TabView should not be rendered directly - use TabsView
-		.fragment([])
-	}
-}
-
+    public func render() -> Node {
+      // TabView should not be rendered directly - use TabsView
+      .fragment([])
+    }
+  }
 #endif

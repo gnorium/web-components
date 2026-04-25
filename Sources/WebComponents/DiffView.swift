@@ -1,280 +1,278 @@
 #if SERVER
+  import CSSBuilder
+  import CSSOMBuilder
+  import DesignTokens
+  import DiffEngine
+  import DOMBuilder
+  import HTMLBuilder
+  import WebTypes
 
-import CSSBuilder
-import CSSOMBuilder
-import DesignTokens
-import DiffEngine
-import DOMBuilder
-import HTMLBuilder
-import WebTypes
+  /// Inline diff view with two levels of highlighting:
+  /// - Line-level: subtle red/green background on entire changed lines
+  /// - Word-level: strong red/green highlight on specific changed words
+  public struct DiffView: HTMLContent {
+    let segments: [DiffSegment]
+    let stats: DiffStats
+    let `class`: String
 
-/// Inline diff view with two levels of highlighting:
-/// - Line-level: subtle red/green background on entire changed lines
-/// - Word-level: strong red/green highlight on specific changed words
-public struct DiffView: HTMLContent {
-	let segments: [DiffSegment]
-	let stats: DiffStats
-	let `class`: String
+    public struct DiffStats: Sendable {
+      public let inserted: Int
+      public let deleted: Int
+      public let unchanged: Int
 
-	public struct DiffStats: Sendable {
-		public let inserted: Int
-		public let deleted: Int
-		public let unchanged: Int
+      public var hasChanges: Bool { inserted > 0 || deleted > 0 }
+    }
 
-		public var hasChanges: Bool { inserted > 0 || deleted > 0 }
-	}
+    public init(old: String, new: String, class: String = "") {
+      self.segments = DiffEngine.diff(old: old, new: new)
+      self.`class` = `class`
 
-	public init(old: String, new: String, class: String = "") {
-		self.segments = DiffEngine.diff(old: old, new: new)
-		self.`class` = `class`
+      var inserted = 0
+      var deleted = 0
+      var unchanged = 0
+      for segment in segments {
+        switch segment {
+        case .inserted(let t): inserted += t.count
+        case .deleted(let t): deleted += t.count
+        case .unchanged(let t), .deletedContext(let t), .insertedContext(let t):
+          unchanged += t.count
+        }
+      }
+      self.stats = DiffStats(inserted: inserted, deleted: deleted, unchanged: unchanged)
+    }
 
-		var inserted = 0
-		var deleted = 0
-		var unchanged = 0
-		for segment in segments {
-			switch segment {
-			case .inserted(let t): inserted += t.count
-			case .deleted(let t): deleted += t.count
-			case .unchanged(let t), .deletedContext(let t), .insertedContext(let t):
-				unchanged += t.count
-			}
-		}
-		self.stats = DiffStats(inserted: inserted, deleted: deleted, unchanged: unchanged)
-	}
+    public func render() -> Node {
+      let rootClass =
+        `class`.isEmpty
+        ? "diff-view"
+        : "diff-view \(`class`)"
 
-	public func render() -> DOMNode {
-		let rootClass = `class`.isEmpty
-			? "diff-view"
-			: "diff-view \(`class`)"
+      return div {
+        // Stats bar
+        if stats.hasChanges {
+          div {
+            if stats.deleted > 0 {
+              span { "\u{2212}\(stats.deleted)" }
+                .class("diff-stat-deleted")
+                .style { diffStatDeletedCSS() }
+            }
 
-		return div {
-			// Stats bar
-			if stats.hasChanges {
-				div {
-					if stats.deleted > 0 {
-						span { "\u{2212}\(stats.deleted)" }
-						.class("diff-stat-deleted")
-						.style { diffStatDeletedCSS() }
-					}
+            if stats.inserted > 0 {
+              span { "+\(stats.inserted)" }
+                .class("diff-stat-inserted")
+                .style { diffStatInsertedCSS() }
+            }
 
-					if stats.inserted > 0 {
-						span { "+\(stats.inserted)" }
-						.class("diff-stat-inserted")
-						.style { diffStatInsertedCSS() }
-					}
+            span { "\(stats.deleted + stats.inserted) chars changed" }
+              .style { diffStatSummaryCSS() }
+          }
+          .class("diff-stats")
+          .style { diffStatsCSS() }
+        }
 
-					span { "\(stats.deleted + stats.inserted) chars changed" }
-					.style { diffStatSummaryCSS() }
-				}
-				.class("diff-stats")
-				.style { diffStatsCSS() }
-			}
+        // Legend
+        div {
+          div {
+            span {}
+              .class("diff-legend-swatch-deleted")
+              .style { diffLegendSwatchDeletedCSS() }
 
-			// Legend
-			div {
-				div {
-					span {}
-					.class("diff-legend-swatch-deleted")
-					.style { diffLegendSwatchDeletedCSS() }
+            span { "Removed" }
+              .style { diffLegendLabelCSS() }
+          }
+          .style { diffLegendItemCSS() }
 
-					span { "Removed" }
-					.style { diffLegendLabelCSS() }
-				}
-				.style { diffLegendItemCSS() }
+          div {
+            span {}
+              .class("diff-legend-swatch-inserted")
+              .style { diffLegendSwatchInsertedCSS() }
 
-				div {
-					span {}
-					.class("diff-legend-swatch-inserted")
-					.style { diffLegendSwatchInsertedCSS() }
+            span { "Added" }
+              .style { diffLegendLabelCSS() }
+          }
+          .style { diffLegendItemCSS() }
+        }
+        .class("diff-legend")
+        .style { diffLegendCSS() }
 
-					span { "Added" }
-					.style { diffLegendLabelCSS() }
-				}
-				.style { diffLegendItemCSS() }
-			}
-			.class("diff-legend")
-			.style { diffLegendCSS() }
+        // Diff content
+        if stats.hasChanges {
+          code {
+            for segment in segments {
+              switch segment {
+              case .unchanged(let text):
+                text
+              case .deleted(let text):
+                del(text)
+                  .class("diff-deleted")
+                  .style { diffDeletedCSS() }
+              case .inserted(let text):
+                ins(text)
+                  .class("diff-inserted")
+                  .style { diffInsertedCSS() }
+              case .deletedContext(let text):
+                span { text }
+                  .class("diff-deleted-context")
+                  .style { diffDeletedContextCSS() }
+              case .insertedContext(let text):
+                span { text }
+                  .class("diff-inserted-context")
+                  .style { diffInsertedContextCSS() }
+              }
+            }
+          }
+          .class("diff-content")
+          .style { diffContentCSS() }
+        } else {
+          div {
+            p { "No changes between these versions." }
+              .style { diffEmptyCSS() }
+          }
+          .class("diff-empty-box")
+          .style { diffEmptyBoxCSS() }
+        }
+      }
+      .class(rootClass)
+      .style { diffViewCSS() }
+    }
 
-			// Diff content
-			if stats.hasChanges {
-				code {
-					for segment in segments {
-						switch segment {
-						case .unchanged(let text):
-							text
-						case .deleted(let text):
-							del(text)
-							.class("diff-deleted")
-							.style { diffDeletedCSS() }
-						case .inserted(let text):
-							ins(text)
-							.class("diff-inserted")
-							.style { diffInsertedCSS() }
-						case .deletedContext(let text):
-							span { text }
-							.class("diff-deleted-context")
-							.style { diffDeletedContextCSS() }
-						case .insertedContext(let text):
-							span { text }
-							.class("diff-inserted-context")
-							.style { diffInsertedContextCSS() }
-						}
-					}
-				}
-				.class("diff-content")
-				.style { diffContentCSS() }
-			} else {
-				div {
-					p { "No changes between these versions." }
-					.style { diffEmptyCSS() }
-				}
-				.class("diff-empty-box")
-				.style { diffEmptyBoxCSS() }
-			}
-		}
-		.class(rootClass)
-		.style { diffViewCSS() }
-		.render()
-	}
+    // MARK: - Styles
 
-	// MARK: - Styles
+    @CSSBuilder
+    private func diffViewCSS() -> [CSSRule] {
+      display(.flex)
+      flexDirection(.column)
+      gap(spacing16)
+    }
 
-	@CSSBuilder
-	private func diffViewCSS() -> [CSSRule] {
-		display(.flex)
-		flexDirection(.column)
-		gap(spacing16)
-	}
+    @CSSBuilder
+    private func diffStatsCSS() -> [CSSRule] {
+      display(.flex)
+      alignItems(.center)
+      gap(spacing12)
+      fontFamily(typographyFontMono)
+      fontSize(fontSizeSmall14)
+    }
 
-	@CSSBuilder
-	private func diffStatsCSS() -> [CSSRule] {
-		display(.flex)
-		alignItems(.center)
-		gap(spacing12)
-		fontFamily(typographyFontMono)
-		fontSize(fontSizeSmall14)
-	}
+    @CSSBuilder
+    private func diffStatDeletedCSS() -> [CSSRule] {
+      color(colorRed)
+      fontWeight(fontWeightBold)
+    }
 
-	@CSSBuilder
-	private func diffStatDeletedCSS() -> [CSSRule] {
-		color(colorRed)
-		fontWeight(fontWeightBold)
-	}
+    @CSSBuilder
+    private func diffStatInsertedCSS() -> [CSSRule] {
+      color(colorGreen)
+      fontWeight(fontWeightBold)
+    }
 
-	@CSSBuilder
-	private func diffStatInsertedCSS() -> [CSSRule] {
-		color(colorGreen)
-		fontWeight(fontWeightBold)
-	}
+    @CSSBuilder
+    private func diffStatSummaryCSS() -> [CSSRule] {
+      color(colorSubtle)
+      fontWeight(fontWeightNormal)
+    }
 
-	@CSSBuilder
-	private func diffStatSummaryCSS() -> [CSSRule] {
-		color(colorSubtle)
-		fontWeight(fontWeightNormal)
-	}
+    @CSSBuilder
+    private func diffLegendCSS() -> [CSSRule] {
+      display(.flex)
+      alignItems(.center)
+      gap(spacing16)
+    }
 
-	@CSSBuilder
-	private func diffLegendCSS() -> [CSSRule] {
-		display(.flex)
-		alignItems(.center)
-		gap(spacing16)
-	}
+    @CSSBuilder
+    private func diffLegendItemCSS() -> [CSSRule] {
+      display(.flex)
+      alignItems(.center)
+      gap(spacing4)
+    }
 
-	@CSSBuilder
-	private func diffLegendItemCSS() -> [CSSRule] {
-		display(.flex)
-		alignItems(.center)
-		gap(spacing4)
-	}
+    @CSSBuilder
+    private func diffLegendSwatchDeletedCSS() -> [CSSRule] {
+      display(.inlineBlock)
+      width(px(14))
+      height(px(14))
+      borderRadius(borderRadiusMinimal)
+      backgroundColor(colorRed)
+    }
 
-	@CSSBuilder
-	private func diffLegendSwatchDeletedCSS() -> [CSSRule] {
-		display(.inlineBlock)
-		width(px(14))
-		height(px(14))
-		borderRadius(borderRadiusMinimal)
-		backgroundColor(colorRed)
-	}
+    @CSSBuilder
+    private func diffLegendSwatchInsertedCSS() -> [CSSRule] {
+      display(.inlineBlock)
+      width(px(14))
+      height(px(14))
+      borderRadius(borderRadiusMinimal)
+      backgroundColor(colorGreen)
+    }
 
-	@CSSBuilder
-	private func diffLegendSwatchInsertedCSS() -> [CSSRule] {
-		display(.inlineBlock)
-		width(px(14))
-		height(px(14))
-		borderRadius(borderRadiusMinimal)
-		backgroundColor(colorGreen)
-	}
+    @CSSBuilder
+    private func diffLegendLabelCSS() -> [CSSRule] {
+      fontFamily(typographyFontSans)
+      fontSize(fontSizeXSmall12)
+      color(colorSubtle)
+    }
 
-	@CSSBuilder
-	private func diffLegendLabelCSS() -> [CSSRule] {
-		fontFamily(typographyFontSans)
-		fontSize(fontSizeXSmall12)
-		color(colorSubtle)
-	}
+    @CSSBuilder
+    private func diffContentCSS() -> [CSSRule] {
+      display(.block)
+      fontFamily(typographyFontMono)
+      fontSize(fontSizeSmall14)
+      lineHeight(1.618)
+      color(colorBase)
+      backgroundColor(backgroundColorNeutralSubtle)
+      border(borderWidthBase, .solid, borderColorSubtle)
+      borderRadius(borderRadiusBase)
+      padding(spacing16)
+      margin(0)
+      whiteSpace(.preWrap)
+      wordBreak(.breakWord)
+      overflow(.auto)
+    }
 
-	@CSSBuilder
-	private func diffContentCSS() -> [CSSRule] {
-		display(.block)
-		fontFamily(typographyFontMono)
-		fontSize(fontSizeSmall14)
-		lineHeight(1.618)
-		color(colorBase)
-		backgroundColor(backgroundColorNeutralSubtle)
-		border(borderWidthBase, .solid, borderColorSubtle)
-		borderRadius(borderRadiusBase)
-		padding(spacing16)
-		margin(0)
-		whiteSpace(.preWrap)
-		wordBreak(.breakWord)
-		overflow(.auto)
-	}
+    // Word-level: strong highlight on specific changed words
+    @CSSBuilder
+    private func diffDeletedCSS() -> [CSSRule] {
+      backgroundColor(backgroundColorRed)
+      color(colorInvertedFixed)
+      textDecoration(.none)
+      borderRadius(borderRadiusMinimal)
+      padding(0, spacing4)
+    }
 
-	// Word-level: strong highlight on specific changed words
-	@CSSBuilder
-	private func diffDeletedCSS() -> [CSSRule] {
-		backgroundColor(backgroundColorRed)
-		color(colorInvertedFixed)
-		textDecoration(.none)
-		borderRadius(borderRadiusMinimal)
-		padding(0, spacing4)
-	}
+    @CSSBuilder
+    private func diffInsertedCSS() -> [CSSRule] {
+      backgroundColor(backgroundColorGreen)
+      color(colorInvertedFixed)
+      textDecoration(.none)
+      borderRadius(borderRadiusMinimal)
+      padding(0, spacing4)
+    }
 
-	@CSSBuilder
-	private func diffInsertedCSS() -> [CSSRule] {
-		backgroundColor(backgroundColorGreen)
-		color(colorInvertedFixed)
-		textDecoration(.none)
-		borderRadius(borderRadiusMinimal)
-		padding(0, spacing4)
-	}
+    // Line-level: subtle background on entire changed lines
+    @CSSBuilder
+    private func diffDeletedContextCSS() -> [CSSRule] {
+      backgroundColor(backgroundColorRedSubtle)
+    }
 
-	// Line-level: subtle background on entire changed lines
-	@CSSBuilder
-	private func diffDeletedContextCSS() -> [CSSRule] {
-		backgroundColor(backgroundColorRedSubtle)
-	}
+    @CSSBuilder
+    private func diffInsertedContextCSS() -> [CSSRule] {
+      backgroundColor(backgroundColorGreenSubtle)
+    }
 
-	@CSSBuilder
-	private func diffInsertedContextCSS() -> [CSSRule] {
-		backgroundColor(backgroundColorGreenSubtle)
-	}
+    @CSSBuilder
+    private func diffEmptyBoxCSS() -> [CSSRule] {
+      backgroundColor(backgroundColorNeutralSubtle)
+      border(borderWidthBase, .solid, borderColorSubtle)
+      borderRadius(borderRadiusBase)
+    }
 
-	@CSSBuilder
-	private func diffEmptyBoxCSS() -> [CSSRule] {
-		backgroundColor(backgroundColorNeutralSubtle)
-		border(borderWidthBase, .solid, borderColorSubtle)
-		borderRadius(borderRadiusBase)
-	}
-
-	@CSSBuilder
-	private func diffEmptyCSS() -> [CSSRule] {
-		fontFamily(typographyFontSans)
-		fontSize(fontSizeMedium16)
-		color(colorSubtle)
-		textAlign(.center)
-		padding(spacing32)
-		margin(0)
-	}
-}
-
+    @CSSBuilder
+    private func diffEmptyCSS() -> [CSSRule] {
+      fontFamily(typographyFontSans)
+      fontSize(fontSizeMedium16)
+      color(colorSubtle)
+      textAlign(.center)
+      padding(spacing32)
+      margin(0)
+    }
+  }
 #endif

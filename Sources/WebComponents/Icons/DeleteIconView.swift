@@ -1,44 +1,44 @@
 #if SERVER
+  import CSSBuilder
+  import DesignTokens
+  import DOMBuilder
+  import HTMLBuilder
+  import SVGBuilder
+  import WebTypes
 
-import CSSBuilder
-import DesignTokens
-import DOMBuilder
-import HTMLBuilder
-import SVGBuilder
-import WebTypes
+  public struct DeleteIconView: HTMLContent {
+    let `class`: String
+    let width: Length
+    let height: Length
 
-public struct DeleteIconView: HTMLContent {
-	let `class`: String
-	let width: Length
-	let height: Length
+    public init(
+      class: String = "",
+      width: Length = px(18),
+      height: Length = px(18)
+    ) {
+      self.class = `class`
+      self.width = width
+      self.height = height
+    }
 
-	public init(
-		class: String = "",
-		width: Length = px(18),
-		height: Length = px(18)
-	) {
-		self.class = `class`
-		self.width = width
-		self.height = height
-	}
+    public func render() -> Node {
+      svg {
+        path()
+          .d(
+            M(20, 5), H(9), l(-7, 7), l(7, 7), h(11), a(2, 2, 0, false, false, 2, -2), V(7),
+            a(2, 2, 0, false, false, -2, -2), Z(), M(18, 9), l(-6, 6), M(12, 9), l(6, 6))
+      }
+      .class(`class`.isEmpty ? "delete-icon-view" : "delete-icon-view \(`class`)")
+      .width(width)
+      .height(height)
+      .viewBox(0, 0, 24, 24)
+      .xmlns("http://www.w3.org/2000/svg")
+      .fill(.none)
+      .stroke(.currentColor)
+      .strokeLinecap(.round)
+      .strokeLinejoin(.round)
+      .strokeWidth(px(2))
 
-	public func render() -> DOMNode {
-		svg {
-			path()
-				.d(M(20, 5), H(9), l(-7, 7), l(7, 7), h(11), a(2, 2, 0, false, false, 2, -2), V(7), a(2, 2, 0, false, false, -2, -2), Z(), M(18, 9), l(-6, 6), M(12, 9), l(6, 6)).render()
-		}
-		.class(`class`.isEmpty ? "delete-icon-view" : "delete-icon-view \(`class`)")
-		.width(width)
-		.height(height)
-		.viewBox(0, 0, 24, 24)
-		.xmlns("http://www.w3.org/2000/svg")
-		.fill(.none)
-		.stroke(.currentColor)
-		.strokeLinecap(.round)
-		.strokeLinejoin(.round)
-		.strokeWidth(px(2))
-        .render()
-	}
-}
-
+    }
+  }
 #endif

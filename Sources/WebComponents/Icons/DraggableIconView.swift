@@ -1,40 +1,40 @@
 #if SERVER
+  import CSSBuilder
+  import DesignTokens
+  import DOMBuilder
+  import HTMLBuilder
+  import SVGBuilder
+  import WebTypes
 
-import CSSBuilder
-import DesignTokens
-import DOMBuilder
-import HTMLBuilder
-import SVGBuilder
-import WebTypes
+  public struct DraggableIconView: HTMLContent {
+    let width: Length
+    let height: Length
+    let `class`: String
 
-public struct DraggableIconView: HTMLContent {
-	let width: Length
-	let height: Length
-	let `class`: String
+    public init(
+      width: Length = px(20),
+      height: Length = px(20),
+      class: String = ""
+    ) {
+      self.width = width
+      self.height = height
+      self.class = `class`
+    }
 
-	public init(
-		width: Length = px(20),
-		height: Length = px(20),
-		class: String = ""
-	) {
-		self.width = width
-		self.height = height
-		self.class = `class`
-	}
+    public func render() -> Node {
+      svg {
+        path()
+          .d(
+            M(2, 11), h(16), v(2), H(2), Z(), m(0, -4), h(16), v(2), H(2), Z(), m(11, 8), H(7),
+            l(3, 3), Z(), M(7, 5), h(6), l(-3, -3), Z())
+      }
+      .class(`class`.isEmpty ? "draggable-icon-view" : "draggable-icon-view \(`class`)")
+      .width(width)
+      .height(height)
+      .viewBox(0, 0, 20, 20)
+      .xmlns("http://www.w3.org/2000/svg")
+      .fill(.currentColor)
 
-	public func render() -> DOMNode {
-		svg {
-			path()
-				.d(M(2, 11), h(16), v(2), H(2), Z(), m(0, -4), h(16), v(2), H(2), Z(), m(11, 8), H(7), l(3, 3), Z(), M(7, 5), h(6), l(-3, -3), Z()).render()
-		}
-		.class(`class`.isEmpty ? "draggable-icon-view" : "draggable-icon-view \(`class`)")
-		.width(width)
-		.height(height)
-		.viewBox(0, 0, 20, 20)
-		.xmlns("http://www.w3.org/2000/svg")
-		.fill(.currentColor)
-        .render()
-	}
-}
-
+    }
+  }
 #endif

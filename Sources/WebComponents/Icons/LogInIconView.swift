@@ -1,40 +1,41 @@
 #if SERVER
+  import CSSBuilder
+  import DesignTokens
+  import DOMBuilder
+  import HTMLBuilder
+  import SVGBuilder
+  import WebTypes
 
-import CSSBuilder
-import DesignTokens
-import DOMBuilder
-import HTMLBuilder
-import SVGBuilder
-import WebTypes
+  public struct LogInIconView: HTMLContent {
+    let width: Length
+    let height: Length
+    let `class`: String
 
-public struct LogInIconView: HTMLContent {
-	let width: Length
-	let height: Length
-	let `class`: String
+    public init(
+      width: Length = px(20),
+      height: Length = px(20),
+      class: String = ""
+    ) {
+      self.width = width
+      self.height = height
+      self.class = `class`
+    }
 
-	public init(
-		width: Length = px(20),
-		height: Length = px(20),
-		class: String = ""
-	) {
-		self.width = width
-		self.height = height
-		self.class = `class`
-	}
+    public func render() -> Node {
+      svg {
+        path()
+          .d(
+            M(1, 11), v(6), c(0, 1.1, 0.9, 2, 2, 2), h(14), c(1.1, 0, 2, -0.9, 2, -2), V(3),
+            c(0, -1.1, -0.9, -2, -2, -2), H(3), c(-1.1, 0, -2, 0.9, -2, 2), v(6), h(8), V(5),
+            l(4.75, 5), L(9, 15), v(-4), Z())
+      }
+      .class(`class`.isEmpty ? "log-in-icon-view" : "log-in-icon-view \(`class`)")
+      .width(width)
+      .height(height)
+      .viewBox(0, 0, 20, 20)
+      .xmlns("http://www.w3.org/2000/svg")
+      .fill(.currentColor)
 
-	public func render() -> DOMNode {
-		svg {
-			path()
-				.d(M(1, 11), v(6), c(0, 1.1, 0.9, 2, 2, 2), h(14), c(1.1, 0, 2, -0.9, 2, -2), V(3), c(0, -1.1, -0.9, -2, -2, -2), H(3), c(-1.1, 0, -2, 0.9, -2, 2), v(6), h(8), V(5), l(4.75, 5), L(9, 15), v(-4), Z()).render()
-		}
-		.class(`class`.isEmpty ? "log-in-icon-view" : "log-in-icon-view \(`class`)")
-		.width(width)
-		.height(height)
-		.viewBox(0, 0, 20, 20)
-		.xmlns("http://www.w3.org/2000/svg")
-		.fill(.currentColor)
-        .render()
-	}
-}
-
+    }
+  }
 #endif

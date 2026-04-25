@@ -1,307 +1,315 @@
 #if SERVER
+  import CSSBuilder
+  import CSSOMBuilder
+  import DesignTokens
+  import DOMBuilder
+  import Foundation
+  import HTMLBuilder
+  import WebTypes
 
-import CSSBuilder
-import CSSOMBuilder
-import DesignTokens
-import DOMBuilder
-import Foundation
-import HTMLBuilder
-import WebTypes
+  /// A multi-line text input that allows manual resizing if needed.
+  public struct TextAreaView: HTMLContent {
+    let id: String
+    let name: String
+    let placeholder: String
+    let value: String
+    let status: ValidationStatus
+    let disabled: Bool
+    let readonly: Bool
+    let required: Bool
+    let rows: Int
+    let autosize: Bool
+    let startIcon: String?
+    let endIcon: String?
+    let `class`: String
 
-/// A multi-line text input that allows manual resizing if needed.
-public struct TextAreaView: HTMLContent {
-	let id: String
-	let name: String
-	let placeholder: String
-	let value: String
-	let status: ValidationStatus
-	let disabled: Bool
-	let readonly: Bool
-	let required: Bool
-	let rows: Int
-	let autosize: Bool
-	let startIcon: String?
-	let endIcon: String?
-	let `class`: String
+    public enum ValidationStatus: String, Sendable {
+      case `default`
+      case error
+    }
 
-	public enum ValidationStatus: String, Sendable {
-		case `default`
-		case error
-	}
+    public init(
+      id: String,
+      name: String,
+      placeholder: String = "",
+      value: String = "",
+      status: ValidationStatus = .default,
+      disabled: Bool = false,
+      readonly: Bool = false,
+      required: Bool = false,
+      rows: Int = 4,
+      autosize: Bool = false,
+      startIcon: String? = nil,
+      endIcon: String? = nil,
+      class: String = ""
+    ) {
+      self.id = id
+      self.name = name
+      self.placeholder = placeholder
+      self.value = value
+      self.status = status
+      self.disabled = disabled
+      self.readonly = readonly
+      self.required = required
+      self.rows = rows
+      self.autosize = autosize
+      self.startIcon = startIcon
+      self.endIcon = endIcon
+      self.`class` = `class`
+    }
 
-	public init(
-		id: String,
-		name: String,
-		placeholder: String = "",
-		value: String = "",
-		status: ValidationStatus = .default,
-		disabled: Bool = false,
-		readonly: Bool = false,
-		required: Bool = false,
-		rows: Int = 4,
-		autosize: Bool = false,
-		startIcon: String? = nil,
-		endIcon: String? = nil,
-		class: String = ""
-	) {
-		self.id = id
-		self.name = name
-		self.placeholder = placeholder
-		self.value = value
-		self.status = status
-		self.disabled = disabled
-		self.readonly = readonly
-		self.required = required
-		self.rows = rows
-		self.autosize = autosize
-		self.startIcon = startIcon
-		self.endIcon = endIcon
-		self.`class` = `class`
-	}
+    @CSSBuilder
+    private func textAreaViewCSS(_ hasStartIcon: Bool, _ hasEndIcon: Bool) -> [CSSRule] {
+      position(.relative)
+      display(.inlineBlock)
+      width(perc(100))
 
-	@CSSBuilder
-	private func textAreaViewCSS(_ hasStartIcon: Bool, _ hasEndIcon: Bool) -> [CSSRule] {
-		position(.relative)
-		display(.inlineBlock)
-		width(perc(100))
+      if hasStartIcon || hasEndIcon {
+        display(.flex)
+        alignItems(.flexStart)
+        gap(spacing8)
+      }
+    }
 
-		if hasStartIcon || hasEndIcon {
-			display(.flex)
-			alignItems(.flexStart)
-			gap(spacing8)
-		}
-	}
+    @CSSBuilder
+    private func textAreaInputCSS(
+      _ disabled: Bool, _ readonly: Bool, _ status: ValidationStatus, _ autosize: Bool,
+      _ hasStartIcon: Bool, _ hasEndIcon: Bool
+    ) -> [CSSRule] {
+      width(perc(100))
+      minHeight(px(rows * 24))
+      padding(spacing12)
+      fontFamily(typographyFontSans)
+      fontSize(fontSizeSmall14)
+      lineHeight(lineHeightSmall22)
+      color(disabled ? colorDisabled : colorBase)
+      backgroundColor(
+        disabled
+          ? backgroundColorDisabled
+          : (readonly ? backgroundColorNeutralSubtle : backgroundColorBase))
+      border(
+        borderWidthBase, .solid,
+        status == .error ? borderColorRed : (disabled ? borderColorDisabled : borderColorSubtle))
+      borderRadius(borderRadiusBase)
+      transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+      outline(.none)
+      cursor(disabled ? cursorBaseDisabled : cursorBase)
 
-	@CSSBuilder
-	private func textAreaInputCSS(_ disabled: Bool, _ readonly: Bool, _ status: ValidationStatus, _ autosize: Bool, _ hasStartIcon: Bool, _ hasEndIcon: Bool) -> [CSSRule] {
-		width(perc(100))
-		minHeight(px(rows * 24))
-		padding(spacing12)
-		fontFamily(typographyFontSans)
-		fontSize(fontSizeMedium16)
-		lineHeight(lineHeightSmall22)
-		color(disabled ? colorDisabled : colorBase)
-		backgroundColor(disabled ? backgroundColorDisabled : (readonly ? backgroundColorNeutralSubtle : backgroundColorBase))
-		border(borderWidthBase, .solid, status == .error ? borderColorRed : (disabled ? borderColorDisabled : borderColorSubtle))
-		borderRadius(borderRadiusBase)
-		transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-		outline(.none)
-		cursor(disabled ? cursorBaseDisabled : cursorBase)
+      if autosize {
+        resize(.none)
+        overflowY(.auto)
+        fieldSizing(.content)
+        minHeight(em(2.5))
+        maxHeight(rem(18))
+      } else {
+        resize(.vertical)
+        overflowY(.auto)
+      }
 
-		if autosize {
-			resize(.none)
-			overflow(.hidden)
-			fieldSizing(.content)
-			minHeight(em(2.5))
-			maxHeight(rem(18))
-		} else {
-			resize(.vertical)
-			overflowY(.auto)
-		}
+      if hasStartIcon {
+        paddingInlineStart(calc(spacing12 + sizeIconMedium + spacing8)).important()
+      }
 
-		if hasStartIcon {
-			paddingInlineStart(calc(spacing12 + sizeIconMedium + spacing8)).important()
-		}
+      if hasEndIcon {
+        paddingInlineEnd(calc(spacing12 + sizeIconMedium + spacing8)).important()
+      }
 
-		if hasEndIcon {
-			paddingInlineEnd(calc(spacing12 + sizeIconMedium + spacing8)).important()
-		}
+      pseudoElement(.placeholder) {
+        color(colorPlaceholder).important()
+        opacity(opacityIconPlaceholder).important()
+      }
 
-		pseudoElement(.placeholder) {
-			color(colorPlaceholder).important()
-			opacity(opacityIconPlaceholder).important()
-		}
+      pseudoClass(.focus, not(.disabled), not(.readOnly)) {
+        borderColor(borderColorBlueFocus).important()
+        boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
+      }
 
-		pseudoClass(.focus, not(.disabled), not(.readOnly)) {
-			borderColor(borderColorBlueFocus).important()
-			boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
-		}
+      pseudoClass(.hover, not(.disabled), not(.readOnly)) {
+        borderColor(borderColorBase).important()
+      }
+    }
 
-		pseudoClass(.hover, not(.disabled), not(.readOnly)) {
-			borderColor(borderColorBase).important()
-		}
-	}
+    @CSSBuilder
+    private func textAreaIconCSS(_ isStartIcon: Bool) -> [CSSRule] {
+      position(.absolute)
+      top(spacing12)
+      display(.inlineFlex)
+      alignItems(.center)
+      justifyContent(.center)
+      width(sizeIconMedium)
+      height(sizeIconMedium)
+      color(colorSubtle)
+      pointerEvents(.none)
 
-	@CSSBuilder
-	private func textAreaIconCSS(_ isStartIcon: Bool) -> [CSSRule] {
-		position(.absolute)
-		top(spacing12)
-		display(.inlineFlex)
-		alignItems(.center)
-		justifyContent(.center)
-		width(sizeIconMedium)
-		height(sizeIconMedium)
-		color(colorSubtle)
-		pointerEvents(.none)
+      if isStartIcon {
+        left(spacing12)
+      } else {
+        right(spacing12)
+      }
+    }
 
-		if isStartIcon {
-			left(spacing12)
-		} else {
-			right(spacing12)
-		}
-	}
+    public func render() -> Node {
+      let hasStartIcon = startIcon != nil
+      let hasEndIcon = endIcon != nil
 
-	public func render() -> DOMNode {
-		let hasStartIcon = startIcon != nil
-		let hasEndIcon = endIcon != nil
+      if hasStartIcon || hasEndIcon {
+        var textAreaInput = textarea(value)
+          .id(id)
+          .name(name)
+          .placeholder(placeholder)
+          .disabled(disabled)
+          .readonly(readonly)
+          .required(required)
+          .rows(rows)
+          .class("text-area-input")
 
-		if hasStartIcon || hasEndIcon {
-			var textAreaInput = textarea(value)
-				.id(id)
-				.name(name)
-				.placeholder(placeholder)
-				.disabled(disabled)
-				.readonly(readonly)
-				.required(required)
-				.rows(rows)
-				.class("text-area-input")
+        if autosize {
+          textAreaInput = textAreaInput.data("autosize", "true")
+        }
 
-			if autosize {
-				textAreaInput = textAreaInput.data("autosize", "true")
-			}
+        textAreaInput = textAreaInput.style {
+          textAreaInputCSS(disabled, readonly, status, autosize, hasStartIcon, hasEndIcon)
+        }
 
-			textAreaInput = textAreaInput.style {
-				textAreaInputCSS(disabled, readonly, status, autosize, hasStartIcon, hasEndIcon)
-			}
+        var container = div {
+          if let icon = startIcon {
+            span { icon }
+              .class("text-area-start-icon")
+              .ariaHidden(true)
+              .style {
+                textAreaIconCSS(true)
+              }
+          }
 
-			var container = div {
-				if let icon = startIcon {
-					span { icon }
-						.class("text-area-start-icon")
-						.ariaHidden(true)
-						.style {
-							textAreaIconCSS(true)
-						}
-				}
+          textAreaInput
 
-				textAreaInput
+          if let icon = endIcon {
+            span { icon }
+              .class("text-area-end-icon")
+              .ariaHidden(true)
+              .style {
+                textAreaIconCSS(false)
+              }
+          }
+        }
+        .class(`class`.isEmpty ? "text-area-view" : "text-area-view \(`class`)")
 
-				if let icon = endIcon {
-					span { icon }
-						.class("text-area-end-icon")
-						.ariaHidden(true)
-						.style {
-							textAreaIconCSS(false)
-						}
-				}
-			}
-			.class(`class`.isEmpty ? "text-area-view" : "text-area-view \(`class`)")
+        if status == .error {
+          container = container.data("status", "error")
+        }
 
-			if status == .error {
-				container = container.data("status", "error")
-			}
+        return container.style {
+          textAreaViewCSS(hasStartIcon, hasEndIcon)
+        }
 
-			return container.style {
-				textAreaViewCSS(hasStartIcon, hasEndIcon)
-			}
-			.render()
-		} else {
-			var textAreaInput = textarea(value)
-            .id(id)
-            .name(name)
-            .placeholder(placeholder)
-            .disabled(disabled)
-            .readonly(readonly)
-            .required(required)
-            .rows(rows)
-            .class("text-area-input")
+      } else {
+        var textAreaInput = textarea(value)
+          .id(id)
+          .name(name)
+          .placeholder(placeholder)
+          .disabled(disabled)
+          .readonly(readonly)
+          .required(required)
+          .rows(rows)
+          .class("text-area-input")
 
-			if autosize {
-				textAreaInput = textAreaInput.data("autosize", "true")
-			}
+        if autosize {
+          textAreaInput = textAreaInput.data("autosize", "true")
+        }
 
-			textAreaInput = textAreaInput.style {
-				textAreaInputCSS(disabled, readonly, status, autosize, hasStartIcon, hasEndIcon)
-			}
+        textAreaInput = textAreaInput.style {
+          textAreaInputCSS(disabled, readonly, status, autosize, hasStartIcon, hasEndIcon)
+        }
 
-			var container = div {
-				textAreaInput
-			}
-			.class(`class`.isEmpty ? "text-area-view" : "text-area-view \(`class`)")
+        var container = div {
+          textAreaInput
+        }
+        .class(`class`.isEmpty ? "text-area-view" : "text-area-view \(`class`)")
 
-			if status == .error {
-				container = container.data("status", "error")
-			}
+        if status == .error {
+          container = container.data("status", "error")
+        }
 
-			return container.style {
-				textAreaViewCSS(hasStartIcon, hasEndIcon)
-			}
-			.render()
-		}
-	}
-}
+        return container.style {
+          textAreaViewCSS(hasStartIcon, hasEndIcon)
+        }
 
+      }
+    }
+  }
 #endif
 
 #if CLIENT
+  import DOMBuilder
+  import EmbeddedSwiftUtilities
+  import HTMLBuilder
+  import WebAPIs
+  import WebTypes
 
-import EmbeddedSwiftUtilities
-import WebAPIs
-import WebTypes
+  private class TextAreaInstance: @unchecked Sendable {
+    private var textArea: Element
+    private var input: Element?
+    private var autosize: Bool = false
 
-private class TextAreaInstance: @unchecked Sendable {
-	private var textArea: Element
-	private var input: Element?
-	private var autosize: Bool = false
+    init(textArea: Element) {
+      self.textArea = textArea
 
-	init(textArea: Element) {
-		self.textArea = textArea
+      input = textArea.querySelector(".text-area-input")
 
-		input = textArea.querySelector(".text-area-input")
+      // Check if autosize is enabled
+      if let autosizeAttr = textArea.querySelector(".text-area-input")?.getAttribute(
+        "data-autosize")
+      {
+        autosize = stringEquals(autosizeAttr, "true")
+      }
 
-		// Check if autosize is enabled
-		if let autosizeAttr = textArea.querySelector(".text-area-input")?.getAttribute("data-autosize") {
-			autosize = stringEquals(autosizeAttr, "true")
-		}
+      if autosize {
+        bindAutosizeEvents()
+        // Initial resize
+        resizeToFit()
+      }
+    }
 
-		if autosize {
-			bindAutosizeEvents()
-			// Initial resize
-			resizeToFit()
-		}
-	}
+    private func bindAutosizeEvents() {
+      guard let input else { return }
 
-	private func bindAutosizeEvents() {
-		guard let input else { return }
+      // Resize on input
+      _ = input.addEventListener(.input) { [self] _ in
+        self.resizeToFit()
+      }
 
-		// Resize on input
-		_ = input.addEventListener(.input) { [self] _ in
-			self.resizeToFit()
-		}
+      // Resize on window resize (in case of layout changes)
+      window.addEventListener(.resize) { [self] _ in
+        self.resizeToFit()
+      }
+    }
 
-		// Resize on window resize (in case of layout changes)
-		window.addEventListener(.resize) { [self] _ in
-			self.resizeToFit()
-		}
-	}
+    private func resizeToFit() {
+      guard let input = input else { return }
 
-	private func resizeToFit() {
-		guard let input = input else { return }
+      // Reset height to auto to get the correct scrollHeight
+      input.style.height(.auto)
 
-		// Reset height to auto to get the correct scrollHeight
-		input.style.height(.auto)
+      // Set height to scrollHeight to fit content
+      let scrollHeight = input.scrollHeight
+      input.style.height(px(scrollHeight))
+    }
+  }
 
-		// Set height to scrollHeight to fit content
-		let scrollHeight = input.scrollHeight
-		input.style.height(px(scrollHeight))
-	}
-}
+  public class TextAreaHydration: @unchecked Sendable {
+    private var instances: [TextAreaInstance] = []
 
-public class TextAreaHydration: @unchecked Sendable {
-	private var instances: [TextAreaInstance] = []
+    public init() {
+      hydrateAllTextAreas()
+    }
 
-	public init() {
-		hydrateAllTextAreas()
-	}
+    private func hydrateAllTextAreas() {
+      let allTextAreas = document.querySelectorAll(".text-area-view")
 
-	private func hydrateAllTextAreas() {
-		let allTextAreas = document.querySelectorAll(".text-area-view")
-
-		for textArea in allTextAreas {
-			let instance = TextAreaInstance(textArea: textArea)
-			instances.append(instance)
-		}
-	}
-}
-
+      for textArea in allTextAreas {
+        let instance = TextAreaInstance(textArea: textArea)
+        instances.append(instance)
+      }
+    }
+  }
 #endif

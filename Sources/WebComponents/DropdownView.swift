@@ -1,23 +1,22 @@
 #if SERVER
+  import CSSBuilder
+  import DesignTokens
+  import DOMBuilder
+  import HTMLBuilder
+  import SVGBuilder
+  import WebTypes
 
-import CSSBuilder
-import DesignTokens
-import DOMBuilder
-import HTMLBuilder
-import SVGBuilder
-import WebTypes
-
-public struct DropdownView: HTMLContent {
+  public struct DropdownView: HTMLContent {
     public struct DropdownOption: Sendable {
-        public let value: String
-        public let display: String
-        public let altDisplay: String?
+      public let value: String
+      public let display: String
+      public let altDisplay: String?
 
-        public init(value: String, display: String, altDisplay: String? = nil) {
-            self.value = value
-            self.display = display
-            self.altDisplay = altDisplay
-        }
+      public init(value: String, display: String, altDisplay: String? = nil) {
+        self.value = value
+        self.display = display
+        self.altDisplay = altDisplay
+      }
     }
 
     let id: String
@@ -39,511 +38,519 @@ public struct DropdownView: HTMLContent {
     let contentJustifyContent: CSSJustifyContent
 
     public init(
-        id: String,
-        name: String,
-        label: String,
-        options: [DropdownOption],
-        placeholder: String = "Select an option",
-        selectedValue: String? = nil,
-        required: Bool = false,
-        disabled: Bool = false,
-        tooltip: String? = nil,
-        class: String = "",
-        buttonWeight: ButtonView.ButtonWeight = .subtle,
-        buttonSize: ButtonView.ButtonSize = .medium,
-        fullWidth: Bool = true,
-        width: Length? = nil,
-        menuWidth: Length? = nil,
-        fontSize: Length = fontSizeSmall14,
-        contentJustifyContent: CSSJustifyContent = .spaceBetween
+      id: String,
+      name: String,
+      label: String,
+      options: [DropdownOption],
+      placeholder: String = "Select an option",
+      selectedValue: String? = nil,
+      required: Bool = false,
+      disabled: Bool = false,
+      tooltip: String? = nil,
+      class: String = "",
+      buttonWeight: ButtonView.ButtonWeight = .subtle,
+      buttonSize: ButtonView.ButtonSize = .medium,
+      fullWidth: Bool = true,
+      width: Length? = nil,
+      menuWidth: Length? = nil,
+      fontSize: Length = fontSizeSmall14,
+      contentJustifyContent: CSSJustifyContent = .spaceBetween
     ) {
-        self.id = id
-        self.name = name
-        self.labelText = label
-        self.options = options
-        self.placeholder = placeholder
-        self.selectedValue = selectedValue
-        self.required = required
-        self.disabled = disabled
-        self.tooltip = tooltip
-        self.`class` = `class`
-        self.buttonWeight = buttonWeight
-        self.buttonSize = buttonSize
-        self.fullWidth = fullWidth
-        self.dropdownWidth = width
-        self.menuWidth = menuWidth
-        self.textFontSize = fontSize
-        self.contentJustifyContent = contentJustifyContent
+      self.id = id
+      self.name = name
+      self.labelText = label
+      self.options = options
+      self.placeholder = placeholder
+      self.selectedValue = selectedValue
+      self.required = required
+      self.disabled = disabled
+      self.tooltip = tooltip
+      self.`class` = `class`
+      self.buttonWeight = buttonWeight
+      self.buttonSize = buttonSize
+      self.fullWidth = fullWidth
+      self.dropdownWidth = width
+      self.menuWidth = menuWidth
+      self.textFontSize = fontSize
+      self.contentJustifyContent = contentJustifyContent
     }
 
-    public func render() -> DOMNode {
-        div {
-            // Label
-            if !labelText.isEmpty {
-                label {
-                    span { labelText }
-                    .class("dropdown-label-text")
+    public func render() -> Node {
+      div {
+        // Label
+        if !labelText.isEmpty {
+          label {
+            span { labelText }
+              .class("dropdown-label-text")
 
-                    if let tooltipText = tooltip {
-						TooltipView(tooltip: tooltipText, placement: .bottom) {
-							IconView {
-								InfoIconView()
-							}
-						}
-                    }
+            if let tooltipText = tooltip {
+              TooltipView(tooltip: tooltipText, placement: .bottom) {
+                IconView {
+                  InfoIconView()
                 }
-                .for(id)
-                .style {
-                    display(.flex)
-                    alignItems(.center)
-                    gap(spacing4)
-                    fontSize(textFontSize)
-                    fontWeight(600)
-                    color(colorBase)
-                    fontFamily(typographyFontSans)
-                }
+              }
             }
-
-            // Dropdown container
-            div {
-                // Hidden input to store the selected value
-                input()
-                .type(.hidden)
-                .id("\(id)-value")
-                .name(name)
-                .value(selectedValue ?? "")
-                .required(required)
-                .disabled(disabled)
-
-                // Determine display text - use selected option's display or placeholder
-                let displayText: String = {
-                    if let value = selectedValue,
-                       let option = options.first(where: { $0.value == value }) {
-                        return option.display
-                    }
-                    return placeholder
-                }()
-                // Trigger button
-                div {
-                    ButtonView(
-                        label: "",
-                        weight: buttonWeight,
-                        size: buttonSize,
-                        disabled: disabled,
-                        fullWidth: fullWidth,
-                        class: "dropdown-trigger",
-                        labelFontWeight: fontWeightNormal,
-                        contentJustifyContent: contentJustifyContent
-                    ) {
-                        span { displayText }
-                        .class("dropdown-selected-text")
-                        .data("dropdown-selected-text", true)
-                        .style {
-                            textAlign(.start)
-                            color(colorBase)
-                            whiteSpace(.nowrap)
-                        }
-                        .title(options.first { $0.value == selectedValue }?.altDisplay ?? displayText)
-
-                        // Animated chevron icon
-                        AnimatedRightDownChevronView(
-                            id: "dropdown-\(id)",
-                            expanded: false,
-                            width: buttonSize == .small ? px(12) : buttonSize == .medium ? px(16) : px(20),
-                            height: buttonSize == .small ? px(12) : buttonSize == .medium ? px(16) : px(20),
-                            class: "dropdown-chevron"
-                        )
-                    }
-                }
-				.class("dropdown-trigger-wrapper")
-                .data("dropdown-trigger", true)
-                .data("dropdown-id", id)
-                .style {
-                    if let w = dropdownWidth {
-                        width(w)
-                    } else if fullWidth {
-                        width(perc(100))
-                    } else {
-                        width(.fitContent)
-                    }
-                    display(.flex)
-                    flex(1)
-                    justifyContent(.spaceBetween)
-                    media(maxWidth(maxWidthBreakpointMobile)) {
-                        width(perc(100)).important()
-                    }
-                }
-
-                // Dropdown menu
-                div {
-                    // Search input
-                    div {
-                        input()
-						.type(.text)
-						.placeholder("Search...")
-						.class("dropdown-search-input")
-						.data("dropdown-search", true)
-						.style {
-							width(perc(100))
-							padding(spacing8, spacing12)
-							fontSize(textFontSize)
-							lineHeight(1.5)
-							color(colorBase)
-							backgroundColor(backgroundColorBase)
-							border(borderWidthBase, .solid, borderColorBase)
-							borderRadius(borderRadiusBase)
-							boxSizing(.borderBox)
-							pseudoClass(.focus) {
-								outline(borderWidthThick, .solid, colorBlue).important()
-								borderColor(borderColorBlue).important()
-							}
-						}
-                    }
-                    .style {
-                        padding(spacing8)
-                        borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
-                    }
-
-                    // Options list
-                    div {
-                        options.map { option in
-                            let isSelected = option.value == selectedValue
-                            return div {
-                                span { option.display }
-                                if let alt = option.altDisplay, !alt.isEmpty {
-                                    span { alt }
-                                    .style {
-                                        marginInlineStart(.auto)
-                                    }
-                                }
-                            }
-                            .class(isSelected ? "dropdown-option is-selected" : "dropdown-option")
-                            .data("dropdown-option", true)
-                            .data("value", option.value)
-                            .data("display", option.display)
-                            .data("alt-display", option.altDisplay ?? "")
-                            .style {
-                                display(.flex)
-                                alignItems(.center)
-                                gap(spacing8)
-                                padding(spacing8, spacing12)
-                                fontSize(textFontSize)
-                                color(isSelected ? colorInvertedFixed : colorBase)
-                                backgroundColor(isSelected ? backgroundColorBlue : backgroundColorTransparent)
-                                cursor(cursorBaseHover)
-                                transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-                                pseudoClass(.hover) {
-                                    backgroundColor(backgroundColorBlue).important()
-                                    color(colorInvertedFixed).important()
-                                }
-                            }
-                            .render()
-                        }
-                    }
-                    .class("dropdown-options-list")
-                    .data("dropdown-options-list", true)
-                    .style {
-                        maxHeight(px(300))
-                        overflowY(.auto)
-                    }
-                }
-                .class("dropdown-menu")
-                .data("dropdown-menu", true)
-                .style {
-                    position(.absolute)
-                    top(perc(100))
-                    insetInlineStart(0)
-                    if let mw = menuWidth {
-                        width(mw)
-                    } else if dropdownWidth != nil {
-                        minWidth(px(250))
-                    } else {
-                        insetInlineEnd(0)
-                    }
-                    marginBlockStart(spacing4)
-                    backgroundColor(backgroundColorBase)
-                    border(borderWidthBase, .solid, borderColorBase)
-                    borderRadius(borderRadiusBase)
-                    boxShadow(boxShadowMedium)
-                    zIndex(zIndexDropdown)
-                    display(.none)
-                    overflow(.hidden)
-                    media(maxWidth(maxWidthBreakpointMobile)) {
-                        width(perc(100)).important()
-                        insetInlineStart(0).important()
-                        insetInlineEnd(0).important()
-                    }
-                }
-            }
-            .class("dropdown-container")
-            .data("dropdown-container", true)
-            .data("dropdown-disabled", disabled)
-            .style {
-                position(.relative)
-                if disabled {
-                    pointerEvents(.none)
-                }
-                media(maxWidth(maxWidthBreakpointMobile)) {
-                    width(perc(100)).important()
-                }
-            }
+          }
+          .for(id)
+          .style {
+            display(.flex)
+            alignItems(.center)
+            gap(spacing4)
+            fontSize(textFontSize)
+            fontWeight(600)
+            color(colorBase)
+            fontFamily(typographyFontSans)
+          }
         }
-        .class(`class`.isEmpty ? "dropdown-view" : "dropdown-view \(`class`)")
-		.style {
-			display(.flex)
-			flexDirection(.column)
-			gap(spacing8)
-			if fullWidth {
-				width(perc(100))
-			} else {
-				media(maxWidth(maxWidthBreakpointMobile)) {
-					width(perc(100)).important()
-				}
-			}
-		}
-        .render()
-    }
-}
 
+        // Dropdown container
+        div {
+          // Hidden input to store the selected value
+          input()
+            .type(.hidden)
+            .id("\(id)-value")
+            .name(name)
+            .value(selectedValue ?? "")
+            .required(required)
+            .disabled(disabled)
+
+          // Determine display text - use selected option's display or placeholder
+          let displayText: String = {
+            if let value = selectedValue,
+              let option = options.first(where: { $0.value == value })
+            {
+              return option.display
+            }
+            return placeholder
+          }()
+          // Trigger button
+          div {
+            ButtonView(
+              label: "",
+              weight: buttonWeight,
+              size: buttonSize,
+              disabled: disabled,
+              fullWidth: fullWidth,
+              class: "dropdown-trigger",
+              labelFontWeight: fontWeightNormal,
+              contentJustifyContent: contentJustifyContent
+            ) {
+              span { displayText }
+                .class("dropdown-selected-text")
+                .data("dropdown-selected-text", true)
+                .style {
+                  textAlign(.start)
+                  color(colorBase)
+                  whiteSpace(.nowrap)
+                }
+                .title(options.first { $0.value == selectedValue }?.altDisplay ?? displayText)
+
+              // Animated chevron icon
+              AnimatedRightDownChevronView(
+                id: "dropdown-\(id)",
+                expanded: false,
+                width: buttonSize == .small ? px(12) : buttonSize == .medium ? px(16) : px(20),
+                height: buttonSize == .small ? px(12) : buttonSize == .medium ? px(16) : px(20),
+                class: "dropdown-chevron"
+              )
+            }
+          }
+          .class("dropdown-trigger-wrapper")
+          .data("dropdown-trigger", true)
+          .data("dropdown-id", id)
+          .style {
+            if let w = dropdownWidth {
+              width(w)
+            } else if fullWidth {
+              width(perc(100))
+            } else {
+              width(.fitContent)
+            }
+            display(.flex)
+            flex(1)
+            justifyContent(.spaceBetween)
+            media(maxWidth(maxWidthBreakpointMobile)) {
+              width(perc(100)).important()
+            }
+          }
+
+          // Dropdown menu
+          div {
+            // Search input
+            div {
+              input()
+                .type(.text)
+                .placeholder("Search...")
+                .class("dropdown-search-input")
+                .data("dropdown-search", true)
+                .style {
+                  width(perc(100))
+                  padding(spacing8, spacing12)
+                  fontSize(textFontSize)
+                  lineHeight(1.5)
+                  color(colorBase)
+                  backgroundColor(backgroundColorBase)
+                  border(borderWidthBase, .solid, borderColorBase)
+                  borderRadius(borderRadiusBase)
+                  boxSizing(.borderBox)
+                  pseudoClass(.focus) {
+                    outline(borderWidthThick, .solid, colorBlue).important()
+                    borderColor(borderColorBlue).important()
+                  }
+                }
+            }
+            .style {
+              padding(spacing8)
+              borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
+            }
+
+            // Options list
+            div {
+              options.map { option in
+                let isSelected = option.value == selectedValue
+                return div {
+                  span { option.display }
+                  if let alt = option.altDisplay, !alt.isEmpty {
+                    span { alt }
+                      .style {
+                        marginInlineStart(.auto)
+                      }
+                  }
+                }
+                .class(isSelected ? "dropdown-option is-selected" : "dropdown-option")
+                .data("dropdown-option", true)
+                .data("value", option.value)
+                .data("display", option.display)
+                .data("alt-display", option.altDisplay ?? "")
+                .style {
+                  display(.flex)
+                  alignItems(.center)
+                  gap(spacing8)
+                  padding(spacing8, spacing12)
+                  fontSize(textFontSize)
+                  color(isSelected ? colorInvertedFixed : colorBase)
+                  backgroundColor(isSelected ? backgroundColorBlue : backgroundColorTransparent)
+                  cursor(cursorBaseHover)
+                  transition(
+                    transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+                  pseudoClass(.hover) {
+                    backgroundColor(backgroundColorBlue).important()
+                    color(colorInvertedFixed).important()
+                  }
+                }
+
+              }
+            }
+            .class("dropdown-options-list")
+            .data("dropdown-options-list", true)
+            .style {
+              maxHeight(px(300))
+              overflowY(.auto)
+            }
+          }
+          .class("dropdown-menu")
+          .data("dropdown-menu", true)
+          .style {
+            position(.absolute)
+            top(perc(100))
+            insetInlineStart(0)
+            if let mw = menuWidth {
+              width(mw)
+            } else if dropdownWidth != nil {
+              minWidth(px(250))
+            } else {
+              insetInlineEnd(0)
+            }
+            marginBlockStart(spacing4)
+            backgroundColor(backgroundColorBase)
+            border(borderWidthBase, .solid, borderColorBase)
+            borderRadius(borderRadiusBase)
+            boxShadow(boxShadowMedium)
+            zIndex(zIndexDropdown)
+            display(.none)
+            overflow(.hidden)
+            media(maxWidth(maxWidthBreakpointMobile)) {
+              width(perc(100)).important()
+              insetInlineStart(0).important()
+              insetInlineEnd(0).important()
+            }
+          }
+        }
+        .class("dropdown-container")
+        .data("dropdown-container", true)
+        .data("dropdown-disabled", disabled)
+        .style {
+          position(.relative)
+          if disabled {
+            pointerEvents(.none)
+          }
+          media(maxWidth(maxWidthBreakpointMobile)) {
+            width(perc(100)).important()
+          }
+        }
+      }
+      .class(`class`.isEmpty ? "dropdown-view" : "dropdown-view \(`class`)")
+      .style {
+        display(.flex)
+        flexDirection(.column)
+        gap(spacing8)
+        if fullWidth {
+          width(perc(100))
+        } else {
+          media(maxWidth(maxWidthBreakpointMobile)) {
+            width(perc(100)).important()
+          }
+        }
+      }
+
+    }
+  }
 #endif
 
 #if CLIENT
+  import DesignTokens
+  import DOMBuilder
+  import EmbeddedSwiftUtilities
+  import HTMLBuilder
+  import WebAPIs
+  import WebTypes
 
-import DesignTokens
-import EmbeddedSwiftUtilities
-import WebAPIs
-import WebTypes
+  private class DropdownInstance: @unchecked Sendable {
+    private var container: Element?
+    private var trigger: Element?
+    private var menu: Element?
+    private var searchInput: Element?
+    private var optionsList: Element?
+    private var selectedText: Element?
+    private var hiddenInput: Element?
+    private var chevronSvg: Element?
+    private var isOpen: Bool = false
+    private var allOptions: [Element] = []
 
-private class DropdownInstance: @unchecked Sendable {
-	private var container: Element?
-	private var trigger: Element?
-	private var menu: Element?
-	private var searchInput: Element?
-	private var optionsList: Element?
-	private var selectedText: Element?
-	private var hiddenInput: Element?
-	private var chevronSvg: Element?
-	private var isOpen: Bool = false
-	private var allOptions: [Element] = []
+    init(container: Element, dropdownID: String) {
+      self.container = container
+      trigger = container.querySelector("[data-dropdown-trigger=\"true\"]")
+      menu = container.querySelector("[data-dropdown-menu=\"true\"]")
+      searchInput = container.querySelector("[data-dropdown-search=\"true\"]")
+      optionsList = container.querySelector("[data-dropdown-options-list=\"true\"]")
+      selectedText = container.querySelector("[data-dropdown-selected-text=\"true\"]")
+      chevronSvg = container.querySelector(".animated-chevron")
 
-	init(container: Element, dropdownID: String) {
-		self.container = container
-		trigger = container.querySelector("[data-dropdown-trigger=\"true\"]")
-		menu = container.querySelector("[data-dropdown-menu=\"true\"]")
-		searchInput = container.querySelector("[data-dropdown-search=\"true\"]")
-		optionsList = container.querySelector("[data-dropdown-options-list=\"true\"]")
-		selectedText = container.querySelector("[data-dropdown-selected-text=\"true\"]")
-		chevronSvg = container.querySelector(".animated-chevron")
+      // Find hidden input relative to container
+      hiddenInput = container.querySelector("input[type=\"hidden\"]")
+      if hiddenInput == nil {
+        hiddenInput = container.parentElement?.querySelector("input[type=\"hidden\"]")
+      }
 
-		// Find hidden input relative to container
-		hiddenInput = container.querySelector("input[type=\"hidden\"]")
-		if hiddenInput == nil {
-			hiddenInput = container.parentElement?.querySelector("input[type=\"hidden\"]")
-		}
+      // Get all options
+      if let optionsList {
+        allOptions = Array(optionsList.querySelectorAll("[data-dropdown-option=\"true\"]"))
+      }
 
-		// Get all options
-		if let optionsList {
-			allOptions = Array(optionsList.querySelectorAll("[data-dropdown-option=\"true\"]"))
-		}
+      bindEvents()
+    }
 
-		bindEvents()
-	}
+    private func bindEvents() {
+      guard let trigger, let searchInput else { return }
 
-	private func bindEvents() {
-		guard let trigger, let searchInput else { return }
+      // Toggle dropdown on trigger click
+      _ = trigger.addEventListener(.click) { [self] _ in
+        self.toggleDropdown()
+      }
 
-		// Toggle dropdown on trigger click
-		_ = trigger.addEventListener(.click) { [self] _ in
-			self.toggleDropdown()
-		}
+      // Search functionality
+      _ = searchInput.addEventListener(.input) { [self] _ in
+        self.filterOptions()
+      }
 
-		// Search functionality
-		_ = searchInput.addEventListener(.input) { [self] _ in
-			self.filterOptions()
-		}
+      // Option click handlers
+      for option in allOptions {
+        _ = option.addEventListener(.click) { [self] _ in
+          self.selectOption(option)
+        }
+      }
 
-		// Option click handlers
-		for option in allOptions {
-			_ = option.addEventListener(.click) { [self] _ in
-				self.selectOption(option)
-			}
-		}
+      // Click outside handler
+      _ = document.addEventListener(.click) { [self] event in
+        guard self.isOpen,
+          let target = event.target,
+          let container = self.container
+        else { return }
 
-		// Click outside handler
-		_ = document.addEventListener(.click) { [self] event in
-			guard self.isOpen,
-				  let target = event.target,
-				  let container = self.container else { return }
+        // Close if click is outside the dropdown container
+        if !container.contains(target) {
+          self.closeDropdown()
+        }
+      }
 
-			// Close if click is outside the dropdown container
-			if !container.contains(target) {
-				self.closeDropdown()
-			}
-		}
+      // Keydown handler for auto-focusing search
+      _ = document.addEventListener(.keydown) { [self] event in
+        guard self.isOpen, let searchInput = self.searchInput else { return }
 
-		// Keydown handler for auto-focusing search
-		_ = document.addEventListener(.keydown) { [self] event in
-			guard self.isOpen, let searchInput = self.searchInput else { return }
-            
-            // Get key from event
-            let key = event.key
+        // Get key from event
+        let key = event.key
 
-            // Check if it's a single printable character (and not a modifier combo if possible to check)
-            // Note: Simplistic check for length 1 and alphanumeric ranges could work
-            // Check if it's a single printable character (and not a modifier combo if possible to check)
-            // Note: Simplistic check for length 1 and alphanumeric ranges could work
-            if key.utf8.count == 1, let charByte = key.utf8.first {
-                // Check if it's a letter or number (ASCII only to avoid Unicode normalization code bloat)
-                // a-z: 97-122
-                // A-Z: 65-90
-                // 0-9: 48-57
-                let isLetterOrNumber = (charByte >= 97 && charByte <= 122) || 
-                                       (charByte >= 65 && charByte <= 90) || 
-                                       (charByte >= 48 && charByte <= 57)
-                
-                if isLetterOrNumber {
-                    searchInput.focus()
-                }
-            }
-		}
-	}
+        // Check if it's a single printable character (and not a modifier combo if possible to check)
+        // Note: Simplistic check for length 1 and alphanumeric ranges could work
+        // Check if it's a single printable character (and not a modifier combo if possible to check)
+        // Note: Simplistic check for length 1 and alphanumeric ranges could work
+        if key.utf8.count == 1, let charByte = key.utf8.first {
+          // Check if it's a letter or number (ASCII only to avoid Unicode normalization code bloat)
+          // a-z: 97-122
+          // A-Z: 65-90
+          // 0-9: 48-57
+          let isLetterOrNumber =
+            (charByte >= 97 && charByte <= 122) || (charByte >= 65 && charByte <= 90)
+            || (charByte >= 48 && charByte <= 57)
 
-	private func toggleDropdown() {
-		if isOpen {
-			closeDropdown()
-		} else {
-			openDropdown()
-		}
-	}
+          if isLetterOrNumber {
+            searchInput.focus()
+          }
+        }
+      }
+    }
 
-	private func openDropdown() {
-		menu?.style.display(.block)
-		morphChevron()
-		isOpen = true
-	}
+    private func toggleDropdown() {
+      if isOpen {
+        closeDropdown()
+      } else {
+        openDropdown()
+      }
+    }
 
-	private func closeDropdown() {
-		menu?.style.display(.none)
-		morphChevron()
-		isOpen = false
-		(searchInput as? HTMLInputElement)?.value = ""
-		filterOptions() // Reset filter
-	}
+    private func openDropdown() {
+      menu?.style.display(.block)
+      morphChevron()
+      isOpen = true
+    }
 
-	private func morphChevron() {
-		guard let svg = chevronSvg else { return }
-		if isOpen {
-			svg.style.transform(rotate(deg(0)))
-			svg.setAttribute(data("expanded"), true)
-		} else {
-			svg.style.transform(rotate(deg(-90)))
-			svg.setAttribute(data("expanded"), false)
-		}
-	}
+    private func closeDropdown() {
+      menu?.style.display(.none)
+      morphChevron()
+      isOpen = false
+      (searchInput as? HTMLInputElement)?.value = ""
+      filterOptions()  // Reset filter
+    }
 
-	private func filterOptions() {
-		guard let searchInput else { return }
+    private func morphChevron() {
+      guard let svg = chevronSvg else { return }
+      if isOpen {
+        svg.style.transform(rotate(deg(0)))
+        svg.setAttribute(data("expanded"), true)
+      } else {
+        svg.style.transform(rotate(deg(-90)))
+        svg.setAttribute(data("expanded"), false)
+      }
+    }
 
-		let searchValue = (searchInput as? HTMLInputElement)?.value ?? ""
+    private func filterOptions() {
+      guard let searchInput else { return }
 
-		for option in allOptions {
-			guard let displayValue = option.getAttribute(data("display")) else {
-				option.style.display(.none)
-				continue
-			}
+      let searchValue = (searchInput as? HTMLInputElement)?.value ?? ""
 
-			// Use utility function for case-insensitive substring match
-			let matches = stringContainsCaseInsensitive(displayValue, searchValue) ||
-                          stringContainsCaseInsensitive(option.getAttribute(data("alt-display")) ?? "", searchValue)
-			if matches {
-				option.style.display(.flex)
-			} else {
-				option.style.display(.none)
-			}
-		}
-	}
-    
-	private func selectOption(_ option: Element) {
-		guard let value = option.getAttribute(data("value")),
-			  let display = option.getAttribute(data("display")) else { return }
+      for option in allOptions {
+        guard let displayValue = option.getAttribute(data("display")) else {
+          option.style.display(.none)
+          continue
+        }
 
-		// Update hidden input
-		(hiddenInput as? HTMLInputElement)?.value = value
+        // Use utility function for case-insensitive substring match
+        let matches =
+          stringContainsCaseInsensitive(displayValue, searchValue)
+          || stringContainsCaseInsensitive(
+            option.getAttribute(data("alt-display")) ?? "", searchValue)
+        if matches {
+          option.style.display(.flex)
+        } else {
+          option.style.display(.none)
+        }
+      }
+    }
 
-		// Get altDisplay for tooltip
-		let altDisplay = option.getAttribute(data("alt-display")) ?? display
+    private func selectOption(_ option: Element) {
+      guard let value = option.getAttribute(data("value")),
+        let display = option.getAttribute(data("display"))
+      else { return }
 
-		// Update selected text and title (tooltip)
-		selectedText?.innerHTML = display
-		selectedText?.setAttribute(.title, altDisplay)
+      // Update hidden input
+      (hiddenInput as? HTMLInputElement)?.value = value
 
-		// Update selected state in menu
-		for opt in allOptions {
-			_ = opt.classList.remove("is-selected")
-			opt.style.backgroundColor(backgroundColorTransparent)
-			opt.style.color(colorBase)
-		}
-		_ = option.classList.add("is-selected")
-		option.style.backgroundColor(backgroundColorBlue)
-		option.style.color(colorInvertedFixed)
+      // Get altDisplay for tooltip
+      let altDisplay = option.getAttribute(data("alt-display")) ?? display
 
-		// Dispatch change event on hidden input
-		if let hiddenInput {
-			hiddenInput.dispatchEvent(.change)
-		}
+      // Update selected text and title (tooltip)
+      selectedText?.innerHTML = display
+      selectedText?.setAttribute(.title, altDisplay)
 
-		closeDropdown()
-	}
-}
+      // Update selected state in menu
+      for opt in allOptions {
+        _ = opt.classList.remove("is-selected")
+        opt.style.backgroundColor(backgroundColorTransparent)
+        opt.style.color(colorBase)
+      }
+      _ = option.classList.add("is-selected")
+      option.style.backgroundColor(backgroundColorBlue)
+      option.style.color(colorInvertedFixed)
 
-public class DropdownHydration: @unchecked Sendable {
+      // Dispatch change event on hidden input
+      if let hiddenInput {
+        hiddenInput.dispatchEvent(.change)
+      }
+
+      closeDropdown()
+    }
+  }
+
+  public class DropdownHydration: @unchecked Sendable {
     private var instances: [DropdownInstance] = []
 
     public init() {
-        hydrateAllDropdowns()
+      hydrateAllDropdowns()
     }
 
     private func hydrateAllDropdowns() {
-        let allContainers = document.querySelectorAll("[data-dropdown-container=\"true\"]")
-        for container in allContainers {
-            if container.hasAttribute("data-dropdown-hydrated") { continue }
+      let allContainers = document.querySelectorAll("[data-dropdown-container=\"true\"]")
+      for container in allContainers {
+        if container.hasAttribute("data-dropdown-hydrated") { continue }
 
-            guard let trigger = container.querySelector("[data-dropdown-trigger=\"true\"]"),
-                  let dropdownID = trigger.getAttribute("data-dropdown-id") else { continue }
+        guard let trigger = container.querySelector("[data-dropdown-trigger=\"true\"]"),
+          let dropdownID = trigger.getAttribute("data-dropdown-id")
+        else { continue }
 
-            let instance = DropdownInstance(container: container, dropdownID: dropdownID)
-            instances.append(instance)
-            container.setAttribute(data("dropdown-hydrated"), true)
-        }
+        let instance = DropdownInstance(container: container, dropdownID: dropdownID)
+        instances.append(instance)
+        container.setAttribute(data("dropdown-hydrated"), true)
+      }
     }
 
     public func hydrate(element: Element) {
-        if element.hasAttribute("data-dropdown-hydrated") { return }
-        
-        guard let trigger = element.querySelector("[data-dropdown-trigger=\"true\"]"),
-              let dropdownID = trigger.getAttribute("data-dropdown-id") else { return }
+      if element.hasAttribute("data-dropdown-hydrated") { return }
 
-        let instance = DropdownInstance(container: element, dropdownID: dropdownID)
-        instances.append(instance)
-        element.setAttribute(data("dropdown-hydrated"), true)
+      guard let trigger = element.querySelector("[data-dropdown-trigger=\"true\"]"),
+        let dropdownID = trigger.getAttribute("data-dropdown-id")
+      else { return }
+
+      let instance = DropdownInstance(container: element, dropdownID: dropdownID)
+      instances.append(instance)
+      element.setAttribute(data("dropdown-hydrated"), true)
     }
 
     public func hydrateDropdown(dropdownID: String) {
-        let allContainers = document.querySelectorAll("[data-dropdown-container=\"true\"]")
+      let allContainers = document.querySelectorAll("[data-dropdown-container=\"true\"]")
 
-        for container in allContainers {
-            if container.hasAttribute("data-dropdown-hydrated") { continue }
+      for container in allContainers {
+        if container.hasAttribute("data-dropdown-hydrated") { continue }
 
-            guard let trigger = container.querySelector("[data-dropdown-trigger=\"true\"]"),
-                  let id = trigger.getAttribute("data-dropdown-id"),
-                  stringEquals(id, dropdownID) else { continue }
+        guard let trigger = container.querySelector("[data-dropdown-trigger=\"true\"]"),
+          let id = trigger.getAttribute("data-dropdown-id"),
+          stringEquals(id, dropdownID)
+        else { continue }
 
-            let instance = DropdownInstance(container: container, dropdownID: dropdownID)
-            instances.append(instance)
-            container.setAttribute(data("dropdown-hydrated"), true)
-            break
-        }
+        let instance = DropdownInstance(container: container, dropdownID: dropdownID)
+        instances.append(instance)
+        container.setAttribute(data("dropdown-hydrated"), true)
+        break
+      }
     }
-}
-
+  }
 #endif

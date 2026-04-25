@@ -1,52 +1,50 @@
 #if SERVER
+  import CSSBuilder
+  import DesignTokens
+  import DOMBuilder
+  import HTMLBuilder
+  import SVGBuilder
+  import WebTypes
 
-import CSSBuilder
-import DesignTokens
-import DOMBuilder
-import HTMLBuilder
-import SVGBuilder
-import WebTypes
+  public struct EllipsisIconView: HTMLContent {
+    let width: Length
+    let height: Length
+    let `class`: String
 
-public struct EllipsisIconView: HTMLContent {
-	let width: Length
-	let height: Length
-	let `class`: String
+    public init(
+      width: Length = px(20),
+      height: Length = px(20),
+      class: String = ""
+    ) {
+      self.width = width
+      self.height = height
+      self.class = `class`
+    }
 
-	public init(
-		width: Length = px(20),
-		height: Length = px(20),
-		class: String = ""
-	) {
-		self.width = width
-		self.height = height
-		self.class = `class`
-	}
+    public func render() -> Node {
+      svg {
+        circle()
+          .cx(3)
+          .cy(10)
+          .r(2)
 
-	public func render() -> DOMNode {
-		svg {
-			circle()
-				.cx(3)
-				.cy(10)
-				.r(2)
+        circle()
+          .cx(10)
+          .cy(10)
+          .r(2)
 
-			circle()
-				.cx(10)
-				.cy(10)
-				.r(2)
+        circle()
+          .cx(17)
+          .cy(10)
+          .r(2)
+      }
+      .class(`class`.isEmpty ? "ellipsis-icon-view" : "ellipsis-icon-view \(`class`)")
+      .width(width)
+      .height(height)
+      .viewBox(0, 0, 20, 20)
+      .xmlns("http://www.w3.org/2000/svg")
+      .fill(.currentColor)
 
-			circle()
-				.cx(17)
-				.cy(10)
-				.r(2).render()
-		}
-		.class(`class`.isEmpty ? "ellipsis-icon-view" : "ellipsis-icon-view \(`class`)")
-		.width(width)
-		.height(height)
-		.viewBox(0, 0, 20, 20)
-		.xmlns("http://www.w3.org/2000/svg")
-		.fill(.currentColor)
-        .render()
-	}
-}
-
+    }
+  }
 #endif
