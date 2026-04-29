@@ -314,6 +314,17 @@
         if stringEquals(key, "Escape") || stringEquals(key, "Esc") {
           self.closeMenu()
         }
+
+        // Open menu with '/' shortcut
+        if stringEquals(key, "/") && !self.isMenuOpen {
+          // Check if user is not already in an input/textarea
+          let activeElement = document.activeElement
+          let tagName = activeElement?.tagName ?? ""
+          if !stringEquals(tagName, "INPUT") && !stringEquals(tagName, "TEXTAREA") {
+            event.preventDefault()
+            self.openMenu()
+          }
+        }
       }
 
       // Close menu when clicking backdrop
