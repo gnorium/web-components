@@ -422,23 +422,21 @@
       if stringEquals(key, "Escape") || stringEquals(key, "Esc") {
         clearInput()
       } else if stringEquals(key, "Enter") {
+        event.preventDefault()
+        event.stopPropagation()
         handleSubmit()
       } else if stringEquals(key, "ArrowDown") {
-        console.log("SearchInputView: Arrow key detected: \(key)")
         // Prevent cursor movement in input
         event.preventDefault()
         // Forward navigation keys to parent typeahead
         let customEvent = CustomEvent(type: "arrow-down", detail: key)
         searchInputElement.dispatchEvent(customEvent)
-        console.log("SearchInputView: Dispatched arrow-down event")
       } else if stringEquals(key, "ArrowUp") {
-        console.log("SearchInputView: Arrow key detected: \(key)")
         // Prevent cursor movement in input
         event.preventDefault()
         // Forward navigation keys to parent typeahead
         let customEvent = CustomEvent(type: "arrow-up", detail: key)
         searchInputElement.dispatchEvent(customEvent)
-        console.log("SearchInputView: Dispatched arrow-up event")
       }
     }
 

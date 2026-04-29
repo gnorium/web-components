@@ -2,7 +2,6 @@
   import CSSBuilder
   import CSSOMBuilder
   import DesignTokens
-  import Foundation
   import DOMBuilder
   import HTMLBuilder
   import SVGBuilder
@@ -308,22 +307,23 @@
         }
       }
 
-      // Listen for ESC key to close menu
       document.addEventListener(.keydown) { [self] event in
         let key = event.key
-        if stringEquals(key, "Escape") || stringEquals(key, "Esc") {
-          self.closeMenu()
-        }
-
+        
         // Open menu with '/' shortcut
         if stringEquals(key, "/") && !self.isMenuOpen {
           // Check if user is not already in an input/textarea
           let activeElement = document.activeElement
           let tagName = activeElement?.tagName ?? ""
+          
           if !stringEquals(tagName, "INPUT") && !stringEquals(tagName, "TEXTAREA") {
             event.preventDefault()
             self.openMenu()
           }
+        }
+
+        if stringEquals(key, "Escape") || stringEquals(key, "Esc") {
+          self.closeMenu()
         }
       }
 
@@ -405,15 +405,29 @@
       }
 
       typeahead.addEventListener("submit") { [self] event in
-        let query = event.detail
-        guard !query.isEmpty else { return }
+        var rawDetail = event.detail
+
+        // Strip quotes if JSON-stringified
+        let detailBytes = Array(rawDetail.utf8)
+        if detailBytes.count >= 2, detailBytes.first == 34, detailBytes.last == 34 {
+          let innerBytes = detailBytes[1..<detailBytes.count - 1]
+          rawDetail = String(decoding: innerBytes, as: UTF8.self)
+        }
+
+        let query = rawDetail
+
+        guard !query.isEmpty else { 
+          return 
+        }
         let encodedQuery = encodeURIComponent(query)
         // If resultUrlBase is "/articles", we use a direct query param, otherwise old style for Gnorium
+        let targetUrl: String
         if stringEquals(resultUrlBase, "/articles") {
-          window.location.href = "\(resultUrlBase)?\(searchField)=\(encodedQuery)"
+          targetUrl = "\(resultUrlBase)?\(searchField)=\(encodedQuery)"
         } else {
-          window.location.href = "\(resultUrlBase)?value=\(encodedQuery)&field=\(searchField)"
+          targetUrl = "\(resultUrlBase)?value=\(encodedQuery)&field=\(searchField)"
         }
+        window.location.href = targetUrl
       }
     }
 

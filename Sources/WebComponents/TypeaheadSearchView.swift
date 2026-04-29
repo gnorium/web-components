@@ -265,12 +265,10 @@
 
         // Listen for arrow navigation from SearchInputInstance
         _ = view.addEventListener("arrow-down") { [self] (_: Event) in
-          console.log("TypeaheadSearchView: Received arrow-down event")
           self.handleKeydown(key: "ArrowDown")
         }
 
         _ = view.addEventListener("arrow-up") { [self] (_: Event) in
-          console.log("TypeaheadSearchView: Received arrow-up event")
           self.handleKeydown(key: "ArrowUp")
         }
       }
@@ -302,6 +300,7 @@
     private func handleMenuUpdate() {
       guard let menu = menuElement else { return }
       self.menuItems = Array(menu.querySelectorAll(".menu-item-view"))
+      self.selectedIndex = -1 // Reset selection on new results
 
       // Re-bind events for new items
       for (index, item) in menuItems.enumerated() {
@@ -356,21 +355,15 @@
     }
 
     private func handleKeydown(key: String) {
-      console.log(
-        "TypeaheadSearchView: handleKeydown called with key: \(key), menuItems.count: \(menuItems.count), selectedIndex: \(selectedIndex)"
-      )
-
       if stringEquals(key, "ArrowDown") {
         if selectedIndex < menuItems.count - 1 {
           selectedIndex += 1
-          console.log("TypeaheadSearchView: ArrowDown - new selectedIndex: \(selectedIndex)")
           updateMenuItemStates()
           scrollToSelected()
         }
       } else if stringEquals(key, "ArrowUp") {
-        if selectedIndex > 0 {
+        if selectedIndex >= 0 {
           selectedIndex -= 1
-          console.log("TypeaheadSearchView: ArrowUp - new selectedIndex: \(selectedIndex)")
           updateMenuItemStates()
           scrollToSelected()
         }
@@ -399,8 +392,12 @@
     }
 
     private func handleSubmit() {
-      let event = CustomEvent(type: "submit", detail: currentQuery)
-      typeaheadSearchElement.dispatchEvent(event)
+      if selectedIndex >= 0 && selectedIndex < menuItems.count {
+        selectResult(index: selectedIndex)
+      } else {
+        let event = CustomEvent(type: "submit", detail: currentQuery)
+        typeaheadSearchElement.dispatchEvent(event)
+      }
     }
 
     private func showMenu() {
@@ -420,13 +417,16 @@
         if index == selectedIndex {
           _ = item.classList.add("menu-item-selected")
           item.setAttribute(.ariaSelected, true)
-          // Apply highlighted styles
+          // Premium selected state
+          item.style.backgroundColor(backgroundColorBlueSubtle)
           item.style.color(colorBlue)
           item.style.border(borderWidthBase, .solid, borderColorBlue)
+          item.style.transition(.all, transitionDurationBase, transitionTimingFunctionSystem)
         } else {
           _ = item.classList.remove("menu-item-selected")
           item.setAttribute(.ariaSelected, false)
-          // Apply default styles
+          // Default state
+          item.style.backgroundColor(backgroundColorTransparent)
           item.style.color(colorSubtle)
           item.style.border(borderWidthBase, .solid, borderColorSubtle)
         }
