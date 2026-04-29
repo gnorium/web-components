@@ -87,6 +87,9 @@
 
     @CSSBuilder
     private func typeaheadSearchFormCSS() -> [CSSRule] {
+      display(.flex)
+      flexDirection(.column)
+      gap(spacing8)
       position(.relative)
       width(perc(100))
     }

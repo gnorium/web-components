@@ -16,6 +16,9 @@
     let searchField: String
     let searchEndpoint: String
     let resultUrlBase: String
+    let resultTitleKey: String
+    let resultSubtitleKey: String
+    let resultUrlKey: String
 
     public struct SearchResult: Sendable {
       let id: String
@@ -50,7 +53,10 @@
       class: String = "",
       searchField: String = "q",
       searchEndpoint: String = "/api/search",
-      resultUrlBase: String = "/results"
+      resultUrlBase: String = "/results",
+      resultTitleKey: String = "title",
+      resultSubtitleKey: String = "subtitle",
+      resultUrlKey: String = "url"
     ) {
       self.id = id
       self.placeholder = placeholder
@@ -59,6 +65,9 @@
       self.searchField = searchField
       self.searchEndpoint = searchEndpoint
       self.resultUrlBase = resultUrlBase
+      self.resultTitleKey = resultTitleKey
+      self.resultSubtitleKey = resultSubtitleKey
+      self.resultUrlKey = resultUrlKey
     }
 
     public func render() -> Node {
@@ -148,6 +157,9 @@
         .data("search-field", searchField)
         .data("search-endpoint", searchEndpoint)
         .data("result-url-base", resultUrlBase)
+        .data("result-title-key", resultTitleKey)
+        .data("result-subtitle-key", resultSubtitleKey)
+        .data("result-url-key", resultUrlKey)
         .style {
           searchMenuContainerCSS()
         }
@@ -279,6 +291,9 @@
     private var searchField: String = ""
     private var searchEndpoint: String = ""
     private var resultUrlBase: String = ""
+    private var resultTitleKey: String = "title"
+    private var resultSubtitleKey: String = "subtitle"
+    private var resultUrlKey: String = "url"
     private var isMenuOpen: Bool = false
 
     public init() {}
@@ -334,6 +349,10 @@
       resultUrlBase = container.dataset["resultUrlBase"] ?? ""
       if stringEquals(resultUrlBase, "") { resultUrlBase = "/results" }
 
+      resultTitleKey = container.dataset["resultTitleKey"] ?? "title"
+      resultSubtitleKey = container.dataset["resultSubtitleKey"] ?? "subtitle"
+      resultUrlKey = container.dataset["resultUrlKey"] ?? "url"
+
       // Ensure input exists but we don't need the reference
       guard typeahead.querySelector("input") != nil else {
         return
@@ -377,15 +396,21 @@
       typeahead.addEventListener("submit") { [self] event in
         let query = event.detail
         guard !query.isEmpty else { return }
-        window.location.href = "\(resultUrlBase)?value=\(query)&field=\(searchField)"
+        let encodedQuery = encodeURIComponent(query)
+        // If resultUrlBase is "/articles", we use a direct query param, otherwise old style for Gnorium
+        if stringEquals(resultUrlBase, "/articles") {
+          window.location.href = "\(resultUrlBase)?\(searchField)=\(encodedQuery)"
+        } else {
+          window.location.href = "\(resultUrlBase)?value=\(encodedQuery)&field=\(searchField)"
+        }
       }
     }
 
-    private struct SuggestedLemma: Sendable {
+    private struct SearchResultItem: Sendable {
       let id: Int
-      let lemma: String
-      let language: String
-      let languageCode: String
+      let title: String
+      let subtitle: String
+      let urlSegment: String
       let homograph: Int
     }
 
@@ -402,8 +427,13 @@
       // Encode query to be URL safe
       let encodedQuery = encodeURIComponent(cleanQuery)
 
-      // Remove trailing slash to prevent redirect stripping params
-      let url = "\(searchEndpoint)?value=\(encodedQuery)&field=\(searchField)"
+      // If resultUrlBase is "/articles", we use a direct query param, otherwise old style for Gnorium
+      let url: String
+      if stringEquals(resultUrlBase, "/articles") {
+        url = "\(searchEndpoint)?\(searchField)=\(encodedQuery)"
+      } else {
+        url = "\(searchEndpoint)?value=\(encodedQuery)&field=\(searchField)"
+      }
 
       console.log("Performing search: \(url)")  // Debug log
 
@@ -453,7 +483,7 @@
       return String(decoding: bytes, as: UTF8.self)
     }
 
-    private func updateTypeaheadMenu(typeahead: Element, results: [SuggestedLemma]) {
+    private func updateTypeaheadMenu(typeahead: Element, results: [SearchResultItem]) {
       guard let menu = typeahead.querySelector(".typeahead-search-menu") else {
         console.log("SearchDialogView: Menu element not found")
         return
@@ -468,7 +498,7 @@
       for result in results {
         let item = document.createElement(.div)
         item.className = "menu-item-view"
-        item.setAttribute(data("value"), result.lemma)
+        item.setAttribute(data("value"), result.title)
         item.setAttribute(.role, .option)
         item.setAttribute(.tabindex, -1)
 
@@ -493,7 +523,12 @@
           transitionPropertyBase, transitionDurationBase, transitionTimingFunctionUser)
 
         // Construct URL for navigation
-        let href = "\(resultUrlBase)/\(result.languageCode)/\(result.lemma)/\(result.homograph)"
+        let href: String
+        if stringEquals(resultUrlBase, "/articles") {
+          href = "\(resultUrlBase)/\(result.urlSegment)"
+        } else {
+          href = "\(resultUrlBase)/\(result.urlSegment)/\(result.title)/\(result.homograph)"
+        }
         item.setAttribute(data("url"), href)
 
         // Text Content Wrapper
@@ -514,7 +549,7 @@
 
         let label = document.createElement(.span)
         label.className = "menu-item-label"
-        label.textContent = result.lemma
+        label.textContent = result.title
         label.style.fontFamily(typographyFontSans)
         label.style.fontSize(fontSizeMedium16)
         label.style.fontWeight(fontWeightNormal)
@@ -528,7 +563,7 @@
         // Description
         let description = document.createElement(.span)
         description.className = "menu-item-description"
-        description.textContent = result.language
+        description.textContent = result.subtitle
         description.style.fontFamily(typographyFontSans)
         description.style.fontSize(fontSizeSmall14)
         description.style.fontWeight(fontWeightNormal)
@@ -585,11 +620,11 @@
       console.log("SearchDialogView: Menu update complete")
     }
 
-    private func parseSearchResponse(_ json: String) -> [SuggestedLemma]? {
+    private func parseSearchResponse(_ json: String) -> [SearchResultItem]? {
       let jsonString = json
 
       // Manual JSONFormattable Parsing to avoid Foundation dependency in Wasm
-      var results: [SuggestedLemma] = []
+      var results: [SearchResultItem] = []
 
       // Helper to extract JSONFormattable array
       func extractArray(from source: String, key: String) -> [String] {
@@ -605,7 +640,11 @@
         let arrayContent = stringSubstring(afterKey, from: start + 1, to: end)
         if stringTrim(arrayContent).isEmpty { return [] }
 
-        // Split by object close brace with comma (},{)
+        return splitJsonArray(arrayContent)
+      }
+
+      // Helper to split JSON array into object strings
+      func splitJsonArray(_ arrayContent: String) -> [String] {
         var objects: [String] = []
         var braceDepth = 0
         var objStart = 0
@@ -630,7 +669,6 @@
           }
           i += 1
         }
-
         return objects
       }
 
@@ -667,22 +705,34 @@
       let exactStrs = extractArray(from: jsonString, key: "exact")
       let partialStrs = extractArray(from: jsonString, key: "partial")
 
-      for str in exactStrs + partialStrs {
-        let lemma = extractValue(from: str, key: "lemma")
-        let language = extractValue(from: str, key: "language")
-        let languageCode = extractValue(from: str, key: "languageCode")
+      var allStrs = exactStrs + partialStrs
+      
+      // If no exact/partial arrays found, try parsing as a simple array of objects
+      if allStrs.isEmpty {
+        let trimmed = stringTrim(jsonString)
+        if stringStartsWith(trimmed, "[") && stringEndsWith(trimmed, "]") {
+          let content = stringSubstring(trimmed, from: 1, to: cStringLength(trimmed) - 1)
+          allStrs = splitJsonArray(content)
+        }
+      }
+
+      for str in allStrs {
+        let title = extractValue(from: str, key: resultTitleKey)
+        let subtitle = extractValue(from: str, key: resultSubtitleKey)
+        let urlSegment = extractValue(from: str, key: resultUrlKey)
+        
         let homographStr = extractValue(from: str, key: "homograph")
         let homograph = safeParseInt(homographStr) ?? 1
         let idStr = extractValue(from: str, key: "id")
         let id = safeParseInt(idStr) ?? 0
 
-        if !lemma.isEmpty {
+        if !title.isEmpty {
           results.append(
-            SuggestedLemma(
+            SearchResultItem(
               id: id,
-              lemma: lemma,
-              language: language,
-              languageCode: languageCode,
+              title: title,
+              subtitle: subtitle,
+              urlSegment: urlSegment,
               homograph: homograph
             ))
         }
