@@ -420,9 +420,9 @@
           return 
         }
         let encodedQuery = encodeURIComponent(query)
-        // If resultUrlBase is "/articles", we use a direct query param, otherwise old style for Gnorium
+        // If searchField is "q" or resultUrlBase contains "/articles", use direct query format
         let targetUrl: String
-        if stringEquals(resultUrlBase, "/articles") {
+        if stringEquals(searchField, "q") || stringContains(resultUrlBase, "/articles") {
           targetUrl = "\(resultUrlBase)?\(searchField)=\(encodedQuery)"
         } else {
           targetUrl = "\(resultUrlBase)?value=\(encodedQuery)&field=\(searchField)"
@@ -452,31 +452,23 @@
       // Encode query to be URL safe
       let encodedQuery = encodeURIComponent(cleanQuery)
 
-      // If resultUrlBase is "/articles", we use a direct query param, otherwise old style for Gnorium
+      // If searchField is "q" or resultUrlBase contains "/articles", use direct query format
       let url: String
-      if stringEquals(resultUrlBase, "/articles") {
+      if stringEquals(searchField, "q") || stringContains(resultUrlBase, "/articles") {
         url = "\(searchEndpoint)?\(searchField)=\(encodedQuery)"
       } else {
         url = "\(searchEndpoint)?value=\(encodedQuery)&field=\(searchField)"
       }
 
-      console.log("Performing search: \(url)")  // Debug log
-
       typeahead.fetch(url) { [self] (jsonString: String?) in
         guard let json = jsonString else {
-          console.log("SearchDialogView: No JSONFormattable response received")
           return
         }
 
-        console.log("SearchDialogView: Received JSONFormattable response")
-
         // Parse JSONFormattable results
         if let results = self.parseSearchResponse(json) {
-          console.log("SearchDialogView: Parsed \(results.count) results")
           // Update Typeahead menu
           self.updateTypeaheadMenu(typeahead: typeahead, results: results)
-        } else {
-          console.log("SearchDialogView: Failed to parse search response")
         }
       }
     }
@@ -510,11 +502,8 @@
 
     private func updateTypeaheadMenu(typeahead: Element, results: [SearchResultItem]) {
       guard let menu = typeahead.querySelector(".typeahead-search-menu") else {
-        console.log("SearchDialogView: Menu element not found")
         return
       }
-
-      console.log("SearchDialogView: Updating menu with \(results.count) items")
 
       // Clear existing
       menu.innerHTML = ""
@@ -549,7 +538,7 @@
 
         // Construct URL for navigation
         let href: String
-        if stringEquals(resultUrlBase, "/articles") {
+        if stringEquals(searchField, "q") || stringContains(resultUrlBase, "/articles") {
           href = "\(resultUrlBase)/\(result.urlSegment)"
         } else {
           href = "\(resultUrlBase)/\(result.urlSegment)/\(result.title)/\(result.homograph)"
@@ -637,12 +626,8 @@
         menu.appendChild(item)
       }
 
-      console.log("SearchDialogView: Menu items appended, dispatching update event")
-
       // Dispatch event for TypeaheadSearchInstance to re-scan menu items
       typeahead.dispatchEvent(CustomEvent(type: "typeahead-menu-updated", detail: "{}"))
-
-      console.log("SearchDialogView: Menu update complete")
     }
 
     private func parseSearchResponse(_ json: String) -> [SearchResultItem]? {
