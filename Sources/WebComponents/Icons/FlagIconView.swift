@@ -21,7 +21,7 @@
       self.class = `class`
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       svg {
         path()
           .d(M(17, 6), L(3, 1), v(18), h(2), v(-6.87), Z())

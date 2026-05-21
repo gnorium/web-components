@@ -27,7 +27,7 @@
       self.monochrome = monochrome
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       svg {
         // YouTube rounded rectangle background
         path()

@@ -83,7 +83,7 @@
       minWidth(px(256))
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       var view = div {
         ChipInputView(
           id: id,

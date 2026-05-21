@@ -14,6 +14,7 @@
     let framed: Bool
     let variant: Variant
     let `class`: String
+    let fullWidth: Bool
 
     /// Visual style variant for tab buttons
     public enum Variant: String, Sendable {
@@ -28,13 +29,15 @@
       activeTab: String? = nil,
       framed: Bool = false,
       variant: Variant = .quiet,
-      class: String = ""
+      class: String = "",
+      fullWidth: Bool = false
     ) {
       self.tabs = tabs
       self.activeTab = activeTab ?? tabs.first?.name
       self.framed = framed
       self.variant = variant
       self.`class` = `class`
+      self.fullWidth = fullWidth
     }
 
     @CSSBuilder
@@ -193,7 +196,7 @@
       }
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       let active = activeTab ?? tabs.first?.name ?? ""
 
       return div {
@@ -295,6 +298,9 @@
       .data("active-tab", active)
       .style {
         tabsViewCSS(framed)
+        if fullWidth {
+          width(perc(100))
+        }
       }
     }
   }

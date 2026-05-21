@@ -41,7 +41,7 @@
       self.stats = DiffStats(inserted: inserted, deleted: deleted, unchanged: unchanged)
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       let rootClass =
         `class`.isEmpty
         ? "diff-view"

@@ -14,7 +14,7 @@
       self.class = `class`
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       div {
         optionButton(value: "standard", label: "Standard") {
           IconView(icon: { s in LessContrastIconView(width: s, height: s) }, size: .medium)

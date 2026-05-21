@@ -39,10 +39,7 @@
         public static let progressive = ActionColor.blue
         public static let destructive = ActionColor.red
       }
-
-      /// Legacy alias
-      public typealias ActionType = ActionColor
-
+      
       public init(label: String, color: ActionColor = .blue, disabled: Bool = false) {
         self.label = label
         self.color = color
@@ -278,7 +275,7 @@
       }
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       let hasCustomHeader = !headerContent.isEmpty
       let hasCustomFooter = !footerContent.isEmpty
       let hasFooterText = !footerTextContent.isEmpty
@@ -468,7 +465,7 @@
           // Find the closest element with the data attribute (in case click target is a child span/icon)
           guard let targetElement = event.target?.closest("[data-dialog-trigger]"),
             let dialogIDStr = targetElement.dataset["dialogTrigger"],
-            let dialogID = safeParseInt(dialogIDStr),
+            let dialogID = parseInt(dialogIDStr),
             let instance = self.instances[Int32(dialogID)]
           else {
             return

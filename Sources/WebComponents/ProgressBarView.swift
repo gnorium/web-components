@@ -63,7 +63,7 @@
       animation("progress-bar-indeterminate", s(2), .linear, .infinite)
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       let progressBarClasses = {
         var classes = "progress-bar-view"
         if inline {

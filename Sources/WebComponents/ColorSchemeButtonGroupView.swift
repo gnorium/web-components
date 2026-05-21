@@ -15,7 +15,7 @@
       self.class = `class`
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       div {
         optionButton(value: "light", label: "Light") {
           IconView(icon: { s in LightModeIconView(width: s, height: s) }, size: .medium)

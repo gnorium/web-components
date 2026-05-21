@@ -37,7 +37,7 @@
       labelFontWeight: CSSFontWeight = fontWeightBold
     ) {
       self.label = label
-      self.icon = icon.map { $0.render() }
+      self.icon = icon.map { $0.build() }
       self.modelValue = modelValue
       self.weight = weight
       self.disabled = disabled
@@ -50,7 +50,7 @@
       self.labelFontWeight = labelFontWeight
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       let isIconOnly = iconOnly || (icon != nil && label.isEmpty)
       let fullClass = `class`.isEmpty ? "toggle-button-view" : "toggle-button-view \(`class`)"
 

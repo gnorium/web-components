@@ -73,7 +73,7 @@
       fontSize(sizeIconMedium)
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       let hasThumbnail = src != nil && !(src?.isEmpty ?? true)
 
       let container = span {

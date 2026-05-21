@@ -141,7 +141,7 @@
       height(sizeIconSmall)
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       div {
         for button in buttons {
           let isDisabled = disabled || button.disabled

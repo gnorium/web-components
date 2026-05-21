@@ -29,7 +29,7 @@
       iconColor: CSSColor? = nil,
       class: String = ""
     ) {
-      self.icon = icon.map { $0.render() }
+      self.icon = icon.map { $0.build() }
       self.iconLabel = iconLabel
       self.size = size
       self.iconColor = iconColor
@@ -44,7 +44,7 @@
       iconColor: CSSColor? = nil,
       class: String = ""
     ) {
-      self.icon = icon().map { $0.render() }
+      self.icon = icon().map { $0.build() }
       self.iconLabel = iconLabel
       self.size = size
       self.iconColor = iconColor
@@ -60,7 +60,7 @@
       class: String = ""
     ) {
       let actualSize = Self.sizeToLength(size)
-      self.icon = icon(actualSize).map { $0.render() }
+      self.icon = icon(actualSize).map { $0.build() }
       self.iconLabel = iconLabel
       self.size = size
       self.iconColor = iconColor
@@ -103,7 +103,7 @@
       }
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       let iconClasses = {
         var classes = "icon-view"
         classes += " icon-\(size.rawValue)"

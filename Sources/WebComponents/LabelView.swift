@@ -58,10 +58,6 @@ public struct LabelView: HTMLContent {
     display(.flex)
     flexDirection(.column)
     gap(spacing4)
-
-    if disabled {
-      opacity(opacityMedium)
-    }
   }
 
   @CSSBuilder
@@ -115,7 +111,7 @@ public struct LabelView: HTMLContent {
     fontWeight(fontWeightNormal)
   }
 
-  public func render() -> Node {
+  public func build() -> Node {
     let hasDescription = !descriptionContent.isEmpty
 
     if isLegend {
@@ -281,7 +277,7 @@ public struct LabelView: HTMLContent {
         label: { title },
         description: { description }
       )
-      wrapper.innerHTML = buildHTML { view.render() }
+      wrapper.innerHTML = renderHTML { view.render() }
       return wrapper.firstElementChild ?? wrapper
     }
   }

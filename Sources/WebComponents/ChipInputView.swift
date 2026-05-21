@@ -188,7 +188,7 @@
       }
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       let chipElements = chips.map { chip in
         div {
           if let icon = chip.icon {

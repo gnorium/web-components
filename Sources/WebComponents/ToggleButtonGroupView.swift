@@ -74,7 +74,7 @@
       }
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       var container = div {
         for buttonItem in buttons {
           let isSelected = selectedValues.contains(buttonItem.value)

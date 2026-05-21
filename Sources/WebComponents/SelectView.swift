@@ -128,7 +128,7 @@
       color(disabled ? colorDisabled : colorSubtle)
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       let selectedItem =
         menuItems.first(where: { $0.value == selectedValue })
         ?? menuGroups.flatMap(\.items).first(where: { $0.value == selectedValue })

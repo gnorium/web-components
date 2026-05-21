@@ -21,7 +21,7 @@
       self.height = height
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       svg {
         rect()
           .width(px(7))

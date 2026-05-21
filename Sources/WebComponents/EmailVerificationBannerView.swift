@@ -15,7 +15,7 @@
       self.`class` = `class`
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       div {
         div {
           // Icon

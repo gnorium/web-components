@@ -175,7 +175,7 @@
       }
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       return span {
         span {
           children

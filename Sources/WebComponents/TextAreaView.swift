@@ -148,7 +148,7 @@
       }
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       let hasStartIcon = startIcon != nil
       let hasEndIcon = endIcon != nil
 

@@ -85,7 +85,7 @@
       self.cancelLabel = cancelLabel
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       div {
         // Header
         h1 { title }

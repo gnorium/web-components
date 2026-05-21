@@ -130,7 +130,7 @@
       textAlign(.center)
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       let showMenu = !searchResults.isEmpty || showEmptyQueryResults
       let visibleResults =
         if let limit = visibleItemLimit {

@@ -115,7 +115,7 @@ public struct AccordionView: HTMLContent {
     self.contentSlot = content()
   }
 
-  public func render() -> Node {
+  public func build() -> Node {
     let hasDescription = !descriptionContent.isEmpty
     var hasAction = false
     if let _ = actionIcon {
@@ -189,7 +189,7 @@ public struct AccordionView: HTMLContent {
 
         // Animated chevron that morphs between v (closed) and ^ (open)
         span {
-          AnimatedRightDownChevronView(
+          AnimatedUpDownChevronView(
             id: "accordion-\(id)",
             expanded: isOpen
           )
@@ -413,7 +413,7 @@ public struct AccordionView: HTMLContent {
     private var details: Element?
     private var summary: Element?
     private var actionButton: Element?
-    private var chevronSvg: Element?
+    private var chevronInstance: AnimatedUpDownChevronInstance?
     private var isOpen: Bool
 
     init(accordion: Element) {
@@ -422,7 +422,9 @@ public struct AccordionView: HTMLContent {
       details = accordion.querySelector(".accordion-details")
       summary = accordion.querySelector(".accordion-summary")
       actionButton = accordion.querySelector(".accordion-action-button")
-      chevronSvg = accordion.querySelector(".animated-chevron")
+      if let chevronEl = accordion.querySelector(".animated-up-down-chevron-view") {
+        chevronInstance = AnimatedUpDownChevronFactory.from(element: chevronEl)
+      }
       if let d = details {
         isOpen = d.hasAttribute(.open)
       } else {
@@ -445,16 +447,12 @@ public struct AccordionView: HTMLContent {
           event.preventDefault()
           self.isOpen = false
 
-          // Rotate chevron back to right
-          if let svg = self.chevronSvg {
-            svg.style.setProperty("transform", "rotate(-90deg)")
-            svg.setAttribute(data("expanded"), "false")
-          }
+          chevronInstance?.setState(expanded: false, animated: true)
 
           // Animate content sliding up, then manually close
           if let content = details.querySelector(".accordion-content") {
-            content.style.setProperty("transition", "transform 0.25s ease")
-            content.style.setProperty("transform", "translateY(-100%)")
+            content.style.setProperty(.transition, (.transform, s(0.25), .ease))
+            content.style.setProperty(.transform, translateY(perc(-100)))
           }
           window.setTimeout(250) {
             details.removeAttribute(.open)
@@ -477,20 +475,16 @@ public struct AccordionView: HTMLContent {
           // Let browser add [open] natively, then animate content in
           self.isOpen = true
 
-          // Rotate chevron to down
-          if let svg = self.chevronSvg {
-            svg.style.setProperty("transform", "rotate(0deg)")
-            svg.setAttribute(data("expanded"), "true")
-          }
+          chevronInstance?.setState(expanded: true, animated: true)
 
           // Wait for browser to add [open], then animate content slide-in
           window.requestAnimationFrame {
             if let content = details.querySelector(".accordion-content") {
-              content.style.setProperty("transition", "none")
-              content.style.setProperty("transform", "translateY(-100%)")
+              content.style.setProperty(.transition, .none)
+              content.style.setProperty(.transform, translateY(perc(-100)))
               window.requestAnimationFrame {
-                content.style.setProperty("transition", "transform 0.25s ease")
-                content.style.setProperty("transform", "translateY(0)")
+                content.style.setProperty(.transition, (.transform, s(0.25), .ease))
+                content.style.setProperty(.transform, translateY(0))
               }
             }
           }
@@ -567,6 +561,8 @@ public struct AccordionView: HTMLContent {
       separation: Separation = .outline,
       title: String,
       headingLevel: HeadingLevel = .h3,
+      headerDirection: HeaderDirection = .column,
+      @HTMLBuilder description: () -> [Node] = { [] },
       content: () -> Element
     ) -> Element {
       let wrapper = document.createElement(.div)
@@ -575,10 +571,12 @@ public struct AccordionView: HTMLContent {
         isOpen: isOpen,
         separation: separation,
         headingLevel: headingLevel,
+        headerDirection: headerDirection,
         title: { title },
+        description: description,
         content: { content() }
       )
-      wrapper.innerHTML = buildHTML { view.render() }
+      wrapper.innerHTML = renderHTML { view.render() }
 
       return wrapper.firstElementChild ?? wrapper
     }

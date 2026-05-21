@@ -26,7 +26,7 @@
       self.fallbackSuffix = fallbackSuffix
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       let isoFormatter = ISO8601DateFormatter()
       let displayFormatter = DateFormatter()
       displayFormatter.dateStyle = .medium

@@ -69,7 +69,7 @@
       self.resultUrlKey = resultUrlKey
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       // Full-screen search menu - iOS-style
       div {
         // Backdrop with blur effect
@@ -732,9 +732,9 @@
         let urlSegment = extractValue(from: str, key: resultUrlKey)
         
         let homographStr = extractValue(from: str, key: "homograph")
-        let homograph = safeParseInt(homographStr) ?? 1
+        let homograph = parseInt(homographStr) ?? 1
         let idStr = extractValue(from: str, key: "id")
-        let id = safeParseInt(idStr) ?? 0
+        let id = parseInt(idStr) ?? 0
 
         if !title.isEmpty {
           results.append(

@@ -101,21 +101,28 @@ public struct CheckboxView: HTMLContent {
   }
 
   @CSSBuilder
-  private func checkboxViewCSS(_ inline: Bool) -> [CSSRule] {
+  private func checkboxViewCSS(_ inline: Bool, _ hideLabel: Bool, _ hasCustomInput: Bool) -> [CSSRule] {
     if inline {
       display(.inlineFlex)
     } else {
       display(.flex)
     }
     alignItems(.center)
+    if hideLabel && !hasCustomInput {
+      justifyContent(.center)
+    }
     position(.relative)
     if !inline {
       minHeight(minSizeInputBinary)
     }
-    gap(spacing8)
+    if !hideLabel || hasCustomInput {
+      gap(spacing8)
+    }
 
     if inline {
-      marginInlineEnd(spacing16)
+      if !hideLabel || hasCustomInput {
+        marginInlineEnd(spacing16)
+      }
 
       pseudoClass(.lastChild) {
         marginInlineEnd(0).important()
@@ -139,6 +146,8 @@ public struct CheckboxView: HTMLContent {
   @CSSBuilder
   private func checkboxInputCSS(_ disabled: Bool) -> [CSSRule] {
     position(.absolute)
+    top(0)
+    left(0)
     width(perc(100))
     height(perc(100))
     margin(0)
@@ -177,12 +186,24 @@ public struct CheckboxView: HTMLContent {
       nextSibling(".checkbox-icon") {
         backgroundColor(backgroundColorDisabledSubtle).important()
         borderColor(borderColorDisabled).important()
+        pseudoElement(.before) {
+          borderRightColor(colorDisabled).important()
+          borderBottomColor(colorDisabled).important()
+        }
+      }
+    }
+
+    pseudoClass(.indeterminate, .disabled) {
+      nextSibling(".checkbox-icon") {
+        pseudoElement(.before) {
+          backgroundColor(backgroundColorDisabledSubtle).important()
+        }
       }
     }
 
     pseudoClass(.focus) {
       nextSibling(".checkbox-icon") {
-        borderColor(borderColorBlueFocus).important()
+        borderColor(borderColorInputBinaryFocus).important()
         boxShadow(px(0), px(0), px(8), boxShadowColorBlueFocus).important()
       }
     }
@@ -196,7 +217,7 @@ public struct CheckboxView: HTMLContent {
     pseudoClass(.enabled, .hover, .checked) {
       nextSibling(".checkbox-icon") {
         backgroundColor(backgroundColorInputBinaryChecked).important()
-        borderColor(borderColorInputBinaryHover).important()
+        borderColor(borderColorInputBinaryCheckedHover).important()
       }
     }
 
@@ -210,7 +231,7 @@ public struct CheckboxView: HTMLContent {
     pseudoClass(.enabled, .active, .checked) {
       nextSibling(".checkbox-icon") {
         backgroundColor(backgroundColorInputBinaryChecked).important()
-        borderColor(borderColorInputBinaryActive).important()
+        borderColor(borderColorInputBinaryCheckedActive).important()
       }
     }
   }
@@ -247,18 +268,18 @@ public struct CheckboxView: HTMLContent {
       left(perc(50))
       pointerEvents(.none)
       transition(.all, s(0.2), .easeInOut)
-      opacity(disabled && checked ? 1 : 0)  // Shown when input is checked/indeterminate
+      opacity(0)  // Shown via .checkbox-input:checked + .checkbox-icon::before
       transform(translate(perc(-50), (indeterminate ? perc(-50) : perc(-60))), scale(0.5))
 
       if indeterminate {
         width(px(10))
         height(px(2))
-        backgroundColor(disabled ? colorSubtle : colorInvertedFixed)
+        backgroundColor(colorInvertedFixed)
       } else {
         width(px(5))
         height(px(10))
-        borderRight(px(2), .solid, disabled ? colorSubtle : colorInvertedFixed)
-        borderBottom(px(2), .solid, disabled ? colorSubtle : colorInvertedFixed)
+        borderRight(px(2), .solid, colorInvertedFixed)
+        borderBottom(px(2), .solid, colorInvertedFixed)
         // Standard checkmark: rotate L-shape 45 degrees clockwise
         transform(translate(perc(-50), perc(-60)), rotate(deg(45)), scale(0.5))
       }
@@ -268,8 +289,10 @@ public struct CheckboxView: HTMLContent {
   }
 
   @CSSBuilder
-  private func checkboxLabelWrapperCSS() -> [CSSRule] {
-    flex(1)
+  private func checkboxLabelWrapperCSS(_ hideLabel: Bool, _ hasCustomInput: Bool) -> [CSSRule] {
+    if !hideLabel || hasCustomInput {
+      flex(1)
+    }
   }
 
   @CSSBuilder
@@ -277,7 +300,7 @@ public struct CheckboxView: HTMLContent {
     display(.block)
   }
 
-  public func render() -> Node {
+  public func build() -> Node {
     let hasDescription = !descriptionContent.isEmpty
     let hasCustomInput = !customInputContent.isEmpty
     let descriptionID = hasDescription ? "\(id)-description" : nil
@@ -336,12 +359,12 @@ public struct CheckboxView: HTMLContent {
       }
       .class("checkbox-label-wrapper")
       .style {
-        checkboxLabelWrapperCSS()
+        checkboxLabelWrapperCSS(hideLabel, hasCustomInput)
       }
     }
     .class(stringIsEmpty(`class`) ? "checkbox-view" : "checkbox-view \(`class`)")
     .style {
-      checkboxViewCSS(inline)
+      checkboxViewCSS(inline, hideLabel, hasCustomInput)
     }
   }
 }
@@ -383,7 +406,7 @@ public struct CheckboxView: HTMLContent {
         labelFontSize: labelFontSize,
         label: { title }
       )
-      wrapper.innerHTML = buildHTML { view.render() }
+      wrapper.innerHTML = renderHTML { view.render() }
       return wrapper.firstElementChild ?? wrapper
     }
   }

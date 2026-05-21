@@ -27,7 +27,7 @@
       self.monochrome = monochrome
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       svg {
         if !monochrome {
           defs {

@@ -61,7 +61,7 @@
       }
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       return div {
         content
       }

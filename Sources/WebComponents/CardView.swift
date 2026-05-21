@@ -187,7 +187,7 @@
       width(perc(100))
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       let hasDescription = !descriptionContent.isEmpty
       let hasSupportingText = !supportingTextContent.isEmpty
       let isLink = !url.isEmpty

@@ -125,7 +125,7 @@ public struct ButtonView: HTMLContent {
     self.buttonColor = buttonColor
     self.weight = weight
     self.size = size
-    self.icon = icon.render()
+    self.icon = icon.build()
     self.iconOnly = false
     self.disabled = disabled
     self.ariaLabel = ariaLabel
@@ -159,7 +159,7 @@ public struct ButtonView: HTMLContent {
     self.buttonColor = buttonColor
     self.weight = weight
     self.size = size
-    self.icon = icon.render()
+    self.icon = icon.build()
     self.iconOnly = true
     self.disabled = disabled
     self.ariaLabel = ariaLabel
@@ -206,7 +206,7 @@ public struct ButtonView: HTMLContent {
     self.contentJustifyContent = contentJustifyContent
   }
 
-  public func render() -> Node {
+  public func build() -> Node {
     let baseClasses = "button-view button-color-\(buttonColor.rawValue) button-weight-\(weight.rawValue) button-size-\(size.rawValue)\(iconOnly ? " button-icon-only" : "")"
     let fullClass = stringIsEmpty(`class`) ? baseClasses : "\(baseClasses) \(`class`)"
 
@@ -706,7 +706,7 @@ public struct ButtonView: HTMLContent {
         labelFontWeight: labelFontWeight,
         contentJustifyContent: contentJustifyContent
       )
-      wrapper.innerHTML = buildHTML { view.render() }
+      wrapper.innerHTML = renderHTML { view.render() }
       return wrapper.firstElementChild ?? wrapper
     }
   }

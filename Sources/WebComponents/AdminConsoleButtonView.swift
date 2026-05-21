@@ -16,7 +16,7 @@
       self.size = size
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       div {
         ButtonView(
           label: "",

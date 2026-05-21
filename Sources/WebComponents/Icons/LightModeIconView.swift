@@ -27,7 +27,7 @@
       self.strokeWidth = strokeWidth
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       svg {
         defs {
           clipPath {

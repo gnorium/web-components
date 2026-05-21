@@ -72,7 +72,7 @@
       self.indicateSelection = indicateSelection
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       return div {
         // Toggle Button
         ToggleButtonView(

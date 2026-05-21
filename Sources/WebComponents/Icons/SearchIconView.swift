@@ -18,7 +18,7 @@
       self.height = height
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       svg {
         path()
           .d(M(11, 3), a(8, 8, 0, true, false, 0, 16), a(8, 8, 0, false, false, 0, -16), Z())

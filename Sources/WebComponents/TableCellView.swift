@@ -16,24 +16,30 @@ public struct TableCellView: HTMLContent {
     case custom([Node])
   }
 
+  public let columnID: String?
   let type: CellType
   let `class`: String
   let align: TableView.Column.Alignment
   let vAlign: CSSVerticalAlign
   let useMonoFont: Bool
+  let showVerticalBorders: Bool
 
   public init(
+    columnID: String? = nil,
     _ type: CellType,
     class: String = "",
     align: TableView.Column.Alignment = .start,
     verticalAlign: CSSVerticalAlign = .middle,
-    useMonoFont: Bool = false
+    useMonoFont: Bool = false,
+    showVerticalBorders: Bool = false
   ) {
+    self.columnID = columnID
     self.type = type
     self.`class` = `class`
     self.align = align
     self.vAlign = verticalAlign
     self.useMonoFont = useMonoFont
+    self.showVerticalBorders = showVerticalBorders
   }
 
   @CSSBuilder
@@ -58,6 +64,12 @@ public struct TableCellView: HTMLContent {
 
     fontSize(fontSizeSmall14)
     color(colorBase)
+    overflow(.hidden)
+    textOverflow(.ellipsis)
+    whiteSpace(.nowrap)
+    if showVerticalBorders {
+      borderInlineEnd(borderWidthBase, .solid, borderColorSubtle)
+    }
   }
 
   @CSSBuilder
@@ -75,11 +87,11 @@ public struct TableCellView: HTMLContent {
     lineHeight(1)
   }
 
-  public func render() -> Node {
+  public func build() -> Node {
     td {
       switch type {
       case .text(let text):
-        text
+        Text(text)
       case .mono(let text):
         span { text }.style { fontFamily(typographyFontMono) }
       case .selection(let id, let name, let value, let checked):
@@ -92,6 +104,7 @@ public struct TableCellView: HTMLContent {
             .checked(checked)
             .style { cursor(.pointer) }
         }
+        .class("table-selection-container")
         .style {
           display(.flex)
           alignItems(.center)
@@ -100,7 +113,9 @@ public struct TableCellView: HTMLContent {
       case .status(let icon, let bgColor):
         span { icon }.style { statusIconCSS(bgColor: bgColor) }
       case .custom(let nodes):
-        for node in nodes { node }
+        div {
+          for node in nodes { node }
+        }
       }
     }
     .class(stringIsEmpty(`class`) ? "table-cell-view" : "table-cell-view \(`class`)")

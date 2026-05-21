@@ -24,7 +24,7 @@
       self.content = content()
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       div {
         // Backdrop with blur effect
         div {}

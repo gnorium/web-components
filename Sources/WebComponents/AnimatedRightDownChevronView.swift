@@ -52,13 +52,13 @@ public struct AnimatedRightDownChevronView: HTMLContent {
     return copy
   }
 
-  public func render() -> Node {
+  public func build() -> Node {
     var svgNode = svg {
       polygon()
         .points((2.5, 4.75), (10, 12.25), (17.5, 4.75), (19, 6.25), (10, 15.25), (1, 6.25))
         .fill(.currentColor)
     }
-    .class(stringIsEmpty(`class`) ? "animated-chevron" : "animated-chevron \(`class`)")
+    .class(stringIsEmpty(`class`) ? "animated-right-down-chevron-view" : "animated-right-down-chevron-view \(`class`)")
     .id("\(id)-chevron")
     .width(width)
     .height(height)
@@ -69,14 +69,14 @@ public struct AnimatedRightDownChevronView: HTMLContent {
       transition(.transform, ms(200), .ease)
       transform(rotate(expanded ? deg(0) : deg(-90)))
       transformOrigin(perc(50))
+      
+      for sty in style {
+        sty()
+      }
     }
 
     for pair in data {
       svgNode = svgNode.data(pair.key, pair.value)
-    }
-
-    for s in style {
-      svgNode = svgNode.style(s)
     }
 
     return svgNode
@@ -90,7 +90,7 @@ public struct AnimatedRightDownChevronView: HTMLContent {
     public static func createElement(id: String, expanded: Bool = false) -> Element {
       let wrapper = document.createElement(.span)
       let view = AnimatedRightDownChevronView(id: id, expanded: expanded)
-      wrapper.innerHTML = buildHTML { view.render() }
+      wrapper.innerHTML = renderHTML { view.render() }
       if let svg = wrapper.firstElementChild {
         return svg
       }

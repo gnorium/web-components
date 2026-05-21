@@ -15,11 +15,13 @@
     let `class`: String
 
     public struct BreadcrumbItem: Sendable {
-      public let text: String
+      public let text: String?
+      public let label: Node?
       public let url: String?
 
-      public init(text: String, url: String? = nil) {
+      public init(text: String? = nil, label: Node? = nil, url: String? = nil) {
         self.text = text
+        self.label = label
         self.url = url
       }
     }
@@ -36,69 +38,7 @@
       self.`class` = `class`
     }
 
-    @CSSBuilder
-    private func breadcrumbViewCSS() -> [CSSRule] {
-      display(.flex)
-      alignItems(.center)
-      flexWrap(.wrap)
-      gap(spacing4)
-      fontFamily(typographyFontSans)
-      fontSize(fontSizeSmall14)
-      lineHeight(lineHeightXSmall20)
-      color(colorSubtle)
-    }
-
-    @CSSBuilder
-    private func breadcrumbItemCSS() -> [CSSRule] {
-      display(.flex)
-      alignItems(.center)
-      gap(spacing4)
-    }
-
-    @CSSBuilder
-    private func breadcrumbLinkCSS() -> [CSSRule] {
-      color(colorBlue)
-      textDecoration(.none)
-      maxWidth(px(350))
-      overflow(.hidden)
-      textOverflow(.ellipsis)
-      whiteSpace(.nowrap)
-
-      pseudoClass(.hover) {
-        textDecoration(.underline).important()
-      }
-
-      pseudoClass(.focus) {
-        outline(borderWidthThick, .solid, borderColorBlue).important()
-        outlineOffset(px(1)).important()
-        borderRadius(borderRadiusBase).important()
-      }
-    }
-
-    @CSSBuilder
-    private func breadcrumbCurrentCSS() -> [CSSRule] {
-      color(colorBase)
-      fontWeight(fontWeightNormal)
-      maxWidth(px(350))
-      overflow(.hidden)
-      textOverflow(.ellipsis)
-      whiteSpace(.nowrap)
-    }
-
-    @CSSBuilder
-    private func breadcrumbSeparatorCSS() -> [CSSRule] {
-      color(colorSubtle)
-      userSelect(.none)
-    }
-
-    @CSSBuilder
-    private func breadcrumbOverflowCSS() -> [CSSRule] {
-      display(.inlineFlex)
-      alignItems(.center)
-      gap(spacing4)
-    }
-
-    public func render() -> Node {
+    public func build() -> Node {
       let visibleItems: [BreadcrumbItem]
       let overflowItems: [BreadcrumbItem]
 
@@ -124,26 +64,30 @@
               if index == 0 && !overflowItems.isEmpty {
                 // First item
                 if let url = item.url {
-                  a { truncateText(item.text) }
+                  a { item.label ?? Text(truncateText(item.text ?? "")) }
                     .href(url)
+                    .title(item.text ?? "")
                     .class("breadcrumb-link")
                     .style {
                       breadcrumbLinkCSS()
                     }
                 } else {
-                  span { truncateText(item.text) }
+                  span { item.label ?? Text(truncateText(item.text ?? "")) }
+                    .title(item.text ?? "")
                     .class("breadcrumb-current")
                     .style {
                       breadcrumbCurrentCSS()
                     }
                 }
 
-                span { "›" }
-                  .class("breadcrumb-separator")
-                  .ariaHidden(true)
-                  .style {
-                    breadcrumbSeparatorCSS()
-                  }
+                div {
+                  NextIconView(width: px(8), height: px(8))
+                }
+                .class("breadcrumb-separator")
+                .ariaHidden(true)
+                .style {
+                  breadcrumbSeparatorCSS()
+                }
 
                 // Overflow menu
                 span {
@@ -152,7 +96,7 @@
                     menuItems: overflowItems.map { overflowItem in
                       MenuButtonView.MenuItem(
                         value: overflowItem.url ?? "",
-                        label: overflowItem.text
+                        label: overflowItem.text ?? ""
                       )
                     }
                   )
@@ -166,7 +110,8 @@
                 let isLast = index == visibleItems.count - 1
 
                 if isLast {
-                  span { truncateText(item.text) }
+                  span { item.label ?? Text(truncateText(item.text ?? "")) }
+                    .title(item.text ?? "")
                     .class("breadcrumb-current")
                     .ariaCurrent(.page)
                     .style {
@@ -174,14 +119,16 @@
                     }
                 } else {
                   if let url = item.url {
-                    a { truncateText(item.text) }
+                    a { item.label ?? Text(truncateText(item.text ?? "")) }
                       .href(url)
+                      .title(item.text ?? "")
                       .class("breadcrumb-link")
                       .style {
                         breadcrumbLinkCSS()
                       }
                   } else {
-                    span { truncateText(item.text) }
+                    span { item.label ?? Text(truncateText(item.text ?? "")) }
+                      .title(item.text ?? "")
                       .class("breadcrumb-current")
                       .style {
                         breadcrumbCurrentCSS()
@@ -190,12 +137,14 @@
                 }
 
                 if !isLast {
-                  span { "›" }
-                    .class("breadcrumb-separator")
-                    .ariaHidden(true)
-                    .style {
-                      breadcrumbSeparatorCSS()
-                    }
+                  div {
+                    NextIconView(width: px(8), height: px(8))
+                  }
+                  .class("breadcrumb-separator")
+                  .ariaHidden(true)
+                  .style {
+                    breadcrumbSeparatorCSS()
+                  }
                 }
               }
             }
@@ -220,6 +169,74 @@
       .style {
         breadcrumbViewCSS()
       }
+    }
+
+    @CSSBuilder
+    private func breadcrumbViewCSS() -> [CSSRule] {
+      display(.flex)
+      alignItems(.center)
+      flexWrap(.wrap)
+      gap(spacing4)
+      fontFamily(typographyFontSans)
+      fontSize(fontSizeSmall14)
+      lineHeight(1.618)
+      color(colorSubtle)
+    }
+
+    @CSSBuilder
+    private func breadcrumbItemCSS() -> [CSSRule] {
+      display(.flex)
+      alignItems(.center)
+      gap(spacing4)
+    }
+
+    @CSSBuilder
+    private func breadcrumbLinkCSS() -> [CSSRule] {
+      color(colorBlue)
+      textDecoration(.none)
+      maxWidth(px(350))
+      overflowX(.hidden)
+      textOverflow(.ellipsis)
+      whiteSpace(.nowrap)
+      transform(translateY(px(-1)))
+
+      pseudoClass(.hover) {
+        textDecoration(.underline).important()
+      }
+
+      pseudoClass(.focus) {
+        outline(borderWidthThick, .solid, borderColorBlue).important()
+        outlineOffset(px(1)).important()
+        borderRadius(borderRadiusBase).important()
+      }
+    }
+
+    @CSSBuilder
+    private func breadcrumbCurrentCSS() -> [CSSRule] {
+      color(colorBase)
+      fontWeight(fontWeightNormal)
+      maxWidth(px(350))
+      overflowX(.hidden)
+      textOverflow(.ellipsis)
+      whiteSpace(.nowrap)
+      transform(translateY(px(-1)))
+    }
+
+    @CSSBuilder
+    private func breadcrumbSeparatorCSS() -> [CSSRule] {
+      color(colorSubtle)
+      userSelect(.none)
+      display(.inlineFlex)
+      alignItems(.center)
+      justifyContent(.center)
+      lineHeight(1.618) // Increased to 1.2 to prevent clipping
+    }
+
+    @CSSBuilder
+    private func breadcrumbOverflowCSS() -> [CSSRule] {
+      display(.inlineFlex)
+      alignItems(.center)
+      gap(spacing4)
     }
   }
 #endif

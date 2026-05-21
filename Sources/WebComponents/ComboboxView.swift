@@ -70,7 +70,7 @@
       transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       return div {
         // Integrate TextInputView for the input field
         div {

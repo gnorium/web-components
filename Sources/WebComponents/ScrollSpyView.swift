@@ -12,10 +12,13 @@
   public class ScrollSpyHydration: @unchecked Sendable {
     private var ticking: Bool = false
     private let linkSelector = "a.scroll-spy-view"
+    private var cachedLinks: [Element] = []
 
     public init?() {
       let links = document.querySelectorAll(linkSelector)
       guard links.count > 0 else { return nil }
+      
+      self.cachedLinks = links
 
       updateActiveLink()
 
@@ -31,21 +34,25 @@
     }
 
     private func updateActiveLink() {
-      let links = document.querySelectorAll(linkSelector)
       var activeHref: String = ""
 
-      for link in links {
+      for link in cachedLinks {
         let href = link.getAttribute(.href) ?? ""
+        if !stringStartsWith(href, "#") { continue }
+        
         let sectionID = stringReplace(href, "#", "")
+        if stringIsEmpty(sectionID) { continue }
+        
         guard let section = document.getElementById(sectionID),
           let rect = section.getBoundingClientRect()
         else { continue }
+        
         if rect.top <= 0 {
           activeHref = href
         }
       }
 
-      for link in links {
+      for link in cachedLinks {
         let href = link.getAttribute(.href) ?? ""
         if stringEquals(href, activeHref) {
           link.style.fontWeight(fontWeightBold)

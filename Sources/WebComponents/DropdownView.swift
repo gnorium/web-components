@@ -19,6 +19,11 @@
       }
     }
 
+    public enum OptionLayout: Sendable {
+      case standard
+      case sidebar
+    }
+
     let id: String
     let name: String
     let labelText: String
@@ -36,6 +41,7 @@
     let menuWidth: Length?
     let textFontSize: Length
     let contentJustifyContent: CSSJustifyContent
+    let optionLayout: OptionLayout
 
     public init(
       id: String,
@@ -54,7 +60,8 @@
       width: Length? = nil,
       menuWidth: Length? = nil,
       fontSize: Length = fontSizeSmall14,
-      contentJustifyContent: CSSJustifyContent = .spaceBetween
+      contentJustifyContent: CSSJustifyContent = .spaceBetween,
+      optionLayout: OptionLayout = .standard
     ) {
       self.id = id
       self.name = name
@@ -73,9 +80,10 @@
       self.menuWidth = menuWidth
       self.textFontSize = fontSize
       self.contentJustifyContent = contentJustifyContent
+      self.optionLayout = optionLayout
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       div {
         // Label
         if !labelText.isEmpty {
@@ -142,11 +150,16 @@
                   textAlign(.start)
                   color(colorBase)
                   whiteSpace(.nowrap)
+                  if optionLayout == .sidebar {
+                    overflow(.hidden)
+                    textOverflow(.ellipsis)
+                    maxWidth(px(160))
+                  }
                 }
                 .title(options.first { $0.value == selectedValue }?.altDisplay ?? displayText)
 
               // Animated chevron icon
-              AnimatedRightDownChevronView(
+              AnimatedUpDownChevronView(
                 id: "dropdown-\(id)",
                 expanded: false,
                 width: buttonSize == .small ? px(12) : buttonSize == .medium ? px(16) : px(20),
@@ -187,7 +200,7 @@
                   width(perc(100))
                   padding(spacing8, spacing12)
                   fontSize(textFontSize)
-                  lineHeight(1.5)
+                  lineHeight(1.618)
                   color(colorBase)
                   backgroundColor(backgroundColorBase)
                   border(borderWidthBase, .solid, borderColorBase)
@@ -210,10 +223,33 @@
                 let isSelected = option.value == selectedValue
                 return div {
                   span { option.display }
+                    .class("dropdown-option-display-text")
+                    .style {
+                      if optionLayout == .sidebar {
+                        fontWeight(fontWeightSemiBold)
+                        fontSize(fontSizeSmall14)
+                        color(isSelected ? colorInvertedFixed : colorBase)
+                        whiteSpace(.nowrap)
+                        overflow(.hidden)
+                        textOverflow(.ellipsis)
+                        width(perc(100))
+                      }
+                    }
+                  
                   if let alt = option.altDisplay, !alt.isEmpty {
                     span { alt }
+                      .class("dropdown-option-alt-text")
                       .style {
-                        marginInlineStart(.auto)
+                        if optionLayout == .sidebar {
+                          fontSize(fontSizeXSmall12)
+                          color(isSelected ? colorInvertedFixed : colorSubtle)
+                          whiteSpace(.nowrap)
+                          overflow(.hidden)
+                          textOverflow(.ellipsis)
+                          width(perc(100))
+                        } else {
+                          marginInlineStart(.auto)
+                        }
                       }
                   }
                 }
@@ -224,9 +260,16 @@
                 .data("alt-display", option.altDisplay ?? "")
                 .style {
                   display(.flex)
-                  alignItems(.center)
-                  gap(spacing8)
-                  padding(spacing8, spacing12)
+                  if optionLayout == .sidebar {
+                    flexDirection(.column)
+                    alignItems(.flexStart)
+                    gap(spacing2)
+                    padding(spacing12)
+                  } else {
+                    alignItems(.center)
+                    gap(spacing8)
+                    padding(spacing8, spacing12)
+                  }
                   fontSize(textFontSize)
                   color(isSelected ? colorInvertedFixed : colorBase)
                   backgroundColor(isSelected ? backgroundColorBlue : backgroundColorTransparent)
@@ -236,6 +279,17 @@
                   pseudoClass(.hover) {
                     backgroundColor(backgroundColorBlue).important()
                     color(colorInvertedFixed).important()
+                    selector(".dropdown-option-display-text", ".dropdown-option-alt-text") {
+                      color(colorInvertedFixed).important()
+                    }
+                  }
+                  
+                  if isSelected {
+                    backgroundColor(backgroundColorBlue).important()
+                    color(colorInvertedFixed).important()
+                    selector(".dropdown-option-display-text", ".dropdown-option-alt-text") {
+                      color(colorInvertedFixed).important()
+                    }
                   }
                 }
 
@@ -323,9 +377,10 @@
     private var optionsList: Element?
     private var selectedText: Element?
     private var hiddenInput: Element?
-    private var chevronSvg: Element?
+    private var chevronInstance: AnimatedUpDownChevronInstance?
     private var isOpen: Bool = false
     private var allOptions: [Element] = []
+    private var placeholder: String = "Select an option"
 
     init(container: Element, dropdownID: String) {
       self.container = container
@@ -334,7 +389,13 @@
       searchInput = container.querySelector("[data-dropdown-search=\"true\"]")
       optionsList = container.querySelector("[data-dropdown-options-list=\"true\"]")
       selectedText = container.querySelector("[data-dropdown-selected-text=\"true\"]")
-      chevronSvg = container.querySelector(".animated-chevron")
+      
+      // Get placeholder from selected text if it's currently empty/showing placeholder
+      placeholder = selectedText?.innerHTML ?? "Select an option"
+
+      if let chevronEl = container.querySelector(".animated-up-down-chevron-view") {
+        chevronInstance = AnimatedUpDownChevronFactory.from(element: chevronEl)
+      }
 
       // Find hidden input relative to container
       hiddenInput = container.querySelector("input[type=\"hidden\"]")
@@ -354,7 +415,7 @@
       guard let trigger, let searchInput else { return }
 
       // Toggle dropdown on trigger click
-      _ = trigger.addEventListener(.click) { [self] _ in
+      _ = trigger.addEventListener(.click) { [self] event in
         self.toggleDropdown()
       }
 
@@ -433,14 +494,7 @@
     }
 
     private func morphChevron() {
-      guard let svg = chevronSvg else { return }
-      if isOpen {
-        svg.style.transform(rotate(deg(0)))
-        svg.setAttribute(data("expanded"), true)
-      } else {
-        svg.style.transform(rotate(deg(-90)))
-        svg.setAttribute(data("expanded"), false)
-      }
+      chevronInstance?.setState(expanded: isOpen, animated: true)
     }
 
     private func filterOptions() {
@@ -472,6 +526,14 @@
         let display = option.getAttribute(data("display"))
       else { return }
 
+      let currentVal = (hiddenInput as? HTMLInputElement)?.value ?? ""
+      
+      if stringEquals(currentVal, value) {
+        // Toggle off if already selected
+        clearSelection()
+        return
+      }
+
       // Update hidden input
       (hiddenInput as? HTMLInputElement)?.value = value
 
@@ -497,6 +559,24 @@
         hiddenInput.dispatchEvent(.change)
       }
 
+      closeDropdown()
+    }
+
+    private func clearSelection() {
+      (hiddenInput as? HTMLInputElement)?.value = ""
+      selectedText?.innerHTML = placeholder
+      selectedText?.removeAttribute(.title)
+      
+      for opt in allOptions {
+        _ = opt.classList.remove("is-selected")
+        opt.style.backgroundColor(backgroundColorTransparent)
+        opt.style.color(colorBase)
+      }
+      
+      if let hiddenInput {
+        hiddenInput.dispatchEvent(.change)
+      }
+      
       closeDropdown()
     }
   }

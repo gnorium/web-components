@@ -19,6 +19,7 @@
     let redLink: Bool
     let external: Bool
     let weight: LinkWeight
+    let linkHeight: Length?
     let content: [Node]
     let `class`: String
 
@@ -28,6 +29,7 @@
       redLink: Bool = false,
       external: Bool = false,
       weight: LinkWeight = .default,
+      linkHeight: Length? = nil,
       class: String = "",
       @HTMLBuilder content: () -> [Node]
     ) {
@@ -36,6 +38,7 @@
       self.redLink = redLink
       self.external = external
       self.weight = weight
+      self.linkHeight = linkHeight
       self.content = content()
       self.`class` = `class`
     }
@@ -74,7 +77,7 @@
 
       pseudoClass(.focus) {
         outline(borderWidthThick, .solid, borderColorBlue).important()
-        outlineOffset(px(1)).important()
+        outlineOffset(px(-2)).important()
         borderRadius(borderRadiusBase).important()
       }
 
@@ -90,7 +93,11 @@
       display(.flex)
       alignItems(.center)
       gap(spacing8)
-      height(px(44))
+      if let linkHeight = linkHeight {
+        height(linkHeight)
+      } else {
+        height(.auto)
+      }
       paddingInline(spacing16)
       fontFamily(typographyFontSans)
       fontSize(fontSizeMedium16)
@@ -102,7 +109,7 @@
 
       pseudoClass(.focus) {
         outline(borderWidthThick, .solid, borderColorBlue).important()
-        outlineOffset(px(1)).important()
+        outlineOffset(px(-2)).important()
         borderRadius(borderRadiusBase).important()
       }
     }
@@ -117,7 +124,7 @@
       fontSize(sizeIconXSmall)
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       let linkClasses = {
         var classes = "link-view"
         if weight == .plain {

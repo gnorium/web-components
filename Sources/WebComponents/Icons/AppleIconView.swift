@@ -24,7 +24,7 @@
       self.fill = fill
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       svg {
         path()
           .d(

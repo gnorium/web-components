@@ -60,7 +60,7 @@
       display(.inline)
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       let hasContent = !content.isEmpty
 
       var progressIndicator = div {

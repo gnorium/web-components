@@ -19,7 +19,7 @@ public struct RadioView: HTMLContent {
   let labelContent: [Node]
   let descriptionContent: [Node]
   let customInputContent: [Node]
-  let `class`: String
+  var `class`: String
 
   public enum ValidationStatus: String, Sendable {
     case `default`
@@ -54,6 +54,12 @@ public struct RadioView: HTMLContent {
     self.customInputContent = customInput()
   }
 
+  public func `class`(_ value: String) -> Self {
+    var copy = self
+    copy.class = value
+    return copy
+  }
+
   @CSSBuilder
   private func radioViewCSS(_ inline: Bool) -> [CSSRule] {
     if inline {
@@ -63,22 +69,31 @@ public struct RadioView: HTMLContent {
     }
     alignItems(.center)
     position(.relative)
-    minHeight(minSizeInteractivePointer)
-    gap(spacing8)
+    if hideLabel {
+      width(minSizeInputBinary)
+      height(minSizeInputBinary)
+      justifyContent(.center)
+    } else {
+      minHeight(minSizeInteractivePointer)
+      gap(spacing8)
+    }
   }
 
   @CSSBuilder
   private func radioInputCSS(_ disabled: Bool, _ status: ValidationStatus) -> [CSSRule] {
     position(.absolute)
-    width(minSizeInputBinary)
-    height(minSizeInputBinary)
+    top(0)
+    left(0)
+    width(perc(100))
+    height(perc(100))
     margin(0)
     opacity(0)
+    zIndex(zIndexAboveContent)
     cursor(disabled ? cursorBaseDisabled : cursorBaseHover)
 
-    pseudoClass(.checked, not(.disabled)) {
+    pseudoClass(.checked, .enabled) {
       nextSibling(".radio-icon") {
-        backgroundColor(backgroundColorInputBinaryChecked).important()
+        backgroundColor(backgroundColorBase).important()
         borderColor(borderColorInputBinaryChecked).important()
         borderWidth(borderWidthInputRadioChecked).important()
       }
@@ -91,9 +106,21 @@ public struct RadioView: HTMLContent {
       }
     }
 
-    pseudoClass(.hover, not(.disabled)) {
+    pseudoClass(.hover, not(.checked), .enabled) {
       nextSibling(".radio-icon") {
         borderColor(borderColorInputBinaryHover).important()
+      }
+    }
+
+    pseudoClass(.hover, .checked, .enabled) {
+      nextSibling(".radio-icon") {
+        borderColor(borderColorInputBinaryCheckedHover).important()
+      }
+    }
+
+    pseudoClass(.active, .checked, .enabled) {
+      nextSibling(".radio-icon") {
+        borderColor(borderColorInputBinaryCheckedActive).important()
       }
     }
   }
@@ -152,7 +179,7 @@ public struct RadioView: HTMLContent {
     borderWidth(0)
   }
 
-  public func render() -> Node {
+  public func build() -> Node {
     let hasDescription = !descriptionContent.isEmpty
     let hasCustomInput = !customInputContent.isEmpty
     let descriptionID = hasDescription ? "\(id)-description" : nil
@@ -267,7 +294,7 @@ public struct RadioView: HTMLContent {
         class: `class`,
         label: { title }
       )
-      wrapper.innerHTML = buildHTML { view.render() }
+      wrapper.innerHTML = renderHTML { view.render() }
       return wrapper.firstElementChild ?? wrapper
     }
   }

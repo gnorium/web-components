@@ -69,14 +69,14 @@ public struct TableRowView: HTMLContent {
     }
   }
 
-  public func render() -> Node {
+  public func build() -> Node {
     var rowNode = tr {
       for cell in cells {
         cell
       }
     }
     .id(id)
-    .class(`class`)
+    .class(stringIsEmpty(`class`) ? "table-row-view" : "table-row-view \(`class`)")
     .style { rowCSS() }
     .data("row-id", id)
 

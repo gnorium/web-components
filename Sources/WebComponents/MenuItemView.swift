@@ -51,9 +51,6 @@
       public static let destructive = MenuItemColor.red
     }
 
-    /// Legacy alias
-    public typealias MenuItemAction = MenuItemColor
-
     /// Data structure for menu items
     public struct MenuItemData: Sendable {
       let value: String
@@ -311,7 +308,7 @@
       }
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       let hasCustomContent = !content.isEmpty
       let displayLabel = label.isEmpty ? value : label
       let hasSearchQuery = !searchQuery.isEmpty

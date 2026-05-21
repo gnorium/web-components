@@ -52,10 +52,7 @@
         public static let progressive = ActionColor.blue
         public static let destructive = ActionColor.red
       }
-
-      /// Legacy alias
-      public typealias ActionType = ActionColor
-
+      
       public init(label: String, actionColor: ActionColor = .blue) {
         self.label = label
         self.actionColor = actionColor
@@ -255,7 +252,7 @@
       }
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       let hasCustomHeader = !headerContent.isEmpty
       let hasIcon = icon != nil
       let hasTitle = !title.isEmpty

@@ -1,38 +1,37 @@
-#if SERVER
-  import CSSBuilder
-  import DesignTokens
-  import DOMBuilder
-  import HTMLBuilder
-  import SVGBuilder
-  import WebTypes
+import CSSBuilder
+import DesignTokens
+import DOMBuilder
+import HTMLBuilder
+import SVGBuilder
+import WebTypes
+import EmbeddedSwiftUtilities
 
-  public struct NextIconView: HTMLContent {
-    let width: Length
-    let height: Length
-    let `class`: String
+public struct NextIconView: HTMLContent {
+  let width: Length
+  let height: Length
+  let `class`: String
 
-    public init(
-      width: Length = px(20),
-      height: Length = px(20),
-      class: String = ""
-    ) {
-      self.width = width
-      self.height = height
-      self.class = `class`
-    }
-
-    public func render() -> Node {
-      svg {
-        path()
-          .d(M(7, 1), L(5.6, 2.5), L(13, 10), l(-7.4, 7.5), L(7, 19), l(9, -9), Z())
-      }
-      .class(`class`.isEmpty ? "next-icon-view" : "next-icon-view \(`class`)")
-      .width(width)
-      .height(height)
-      .viewBox(0, 0, 20, 20)
-      .xmlns("http://www.w3.org/2000/svg")
-      .fill(.currentColor)
-
-    }
+  public init(
+    width: Length = px(20),
+    height: Length = px(20),
+    class: String = ""
+  ) {
+    self.width = width
+    self.height = height
+    self.class = `class`
   }
-#endif
+
+  public func build() -> Node {
+    svg {
+      path()
+        .d(M(7, 1), L(5.6, 2.5), L(13, 10), l(-7.4, 7.5), L(7, 19), l(9, -9), Z())
+    }
+    .class(stringIsEmpty(`class`) ? "next-icon-view" : "next-icon-view \(`class`)")
+    .width(width)
+    .height(height)
+    .viewBox(0, 0, 20, 20)
+    .xmlns("http://www.w3.org/2000/svg")
+    .fill(.currentColor)
+
+  }
+}

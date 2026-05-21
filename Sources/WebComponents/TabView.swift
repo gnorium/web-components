@@ -131,7 +131,7 @@
       }
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       // TabView should not be rendered directly - use TabsView
       .fragment([])
     }

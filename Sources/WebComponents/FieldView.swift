@@ -129,7 +129,7 @@
       flex(1)
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       let hasDescription = !descriptionContent.isEmpty
       let hasHelpText = !helpTextContent.isEmpty
       let descriptionID = hasDescription ? "\(id)-description" : nil

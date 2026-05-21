@@ -129,7 +129,7 @@
       fontSize(sizeIconMedium)
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       let hasImage = !src.isEmpty
       let hasAspectRatio = aspectRatio != nil
 

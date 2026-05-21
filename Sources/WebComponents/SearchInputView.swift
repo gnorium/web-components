@@ -254,7 +254,7 @@
       }
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       return div {
         div {
           if !hideIcon {

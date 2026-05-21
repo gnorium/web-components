@@ -65,7 +65,7 @@
       minWidth(px(256))
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       return div {
         TextInputView(
           id: id,

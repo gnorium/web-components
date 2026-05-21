@@ -33,10 +33,7 @@
       public static let error = AlertColor.red
       public static let success = AlertColor.green
     }
-
-    /// Legacy alias
-    public typealias AlertType = AlertColor
-
+    
     public enum AutoDismiss: Sendable {
       case disabled
       case `default`  // 4000ms
@@ -165,7 +162,7 @@
       animation("alert-fade-in", transitionDurationBase, transitionTimingFunctionSystem)
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       let defaultIcon: String = {
         switch alertColor {
         case .gray:
@@ -356,9 +353,6 @@
       public static let error = AlertColor.red
       public static let success = AlertColor.green
     }
-
-    /// Legacy alias
-    public typealias AlertType = AlertColor
 
     /// Show a dynamic alert without page reload
     public static func show(

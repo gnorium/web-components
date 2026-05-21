@@ -1,4 +1,5 @@
 import CSSBuilder
+import CSSOMBuilder
 import DOMBuilder
 import DesignTokens
 import EmbeddedSwiftUtilities
@@ -39,11 +40,12 @@ public struct AnimatedUpDownChevronView: HTMLContent {
     (2.5, 15.25), (10, 7.75), (17.5, 15.25), (19, 13.75), (10, 4.75), (1, 13.75),
   ]
 
-  let id: String
-  let expanded: Bool
-  let width: Length
-  let height: Length
-  let `class`: String
+  public let id: String
+  public let expanded: Bool
+  public let width: Length
+  public let height: Length
+  public var `class`: String
+  public var style: [(@Sendable () -> [CSSRule])] = []
 
   public init(
     id: String,
@@ -59,7 +61,21 @@ public struct AnimatedUpDownChevronView: HTMLContent {
     self.class = `class`
   }
 
-  public func render() -> Node {
+  // MARK: - Modifiers
+
+  public func `class`(_ value: String) -> Self {
+    var copy = self
+    copy.class = value
+    return copy
+  }
+
+  public func style(@CSSBuilder _ rules: @escaping @Sendable () -> [CSSRule]) -> Self {
+    var copy = self
+    copy.style.append(rules)
+    return copy
+  }
+
+  public func build() -> Node {
     // MARK: - Chevron Geometry (20x20 viewBox)
     // Collapsed (v down): (2.5, 4.75) (10, 12.25) (17.5, 4.75) (19, 6.25) (10, 15.25) (1, 6.25)
     // Expanded (^ up):   (2.5, 15.25) (10, 7.75) (17.5, 15.25) (19, 13.75) (10, 4.75) (1, 13.75)
@@ -99,7 +115,11 @@ public struct AnimatedUpDownChevronView: HTMLContent {
     .height(height)
     .viewBox(0, 0, 20, 20)
     .xmlns("http://www.w3.org/2000/svg")
-
+    .style {
+      for sty in style {
+        sty()
+      }
+    }
   }
 }
 
@@ -130,7 +150,7 @@ public struct AnimatedUpDownChevronView: HTMLContent {
         if let animateEl = polygon.querySelector("animate") {
           let from = animateEl.getAttribute(.from) ?? ""
           let to = animateEl.getAttribute(.to) ?? ""
-          polygon.innerHTML = buildHTML {
+          polygon.innerHTML = renderHTML {
             animate()
               .attributeName(.points)
               .from(from)
@@ -156,7 +176,7 @@ public struct AnimatedUpDownChevronView: HTMLContent {
             let to = animateEl.getAttribute(.to) ?? ""
             
             polygon.setAttribute(.points, to)
-            polygon.innerHTML = buildHTML {
+            polygon.innerHTML = renderHTML {
               animate()
                 .attributeName(.points)
                 .from(to)
@@ -180,7 +200,7 @@ public struct AnimatedUpDownChevronView: HTMLContent {
 
         if let polygon = svg.querySelector("polygon") {
           polygon.setAttribute(.points, pointsToString(targetPoints))
-          polygon.innerHTML = buildHTML {
+          polygon.innerHTML = renderHTML {
             animate()
               .attributeName(.points)
               .from(pointsToString(nextFrom))
@@ -204,7 +224,7 @@ public struct AnimatedUpDownChevronView: HTMLContent {
     public static func createElement(id: String, expanded: Bool = false) -> Element {
       let wrapper = document.createElement(.span)
       let view = AnimatedUpDownChevronView(id: id, expanded: expanded)
-      wrapper.innerHTML = buildHTML { view.render() }
+      wrapper.innerHTML = renderHTML { view.render() }
       if let svg = wrapper.firstElementChild {
         return svg
       }

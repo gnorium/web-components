@@ -14,7 +14,7 @@
       self.class = `class`
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       span {
         span {}
           .class("sidebar-toggle-icon-line sidebar-toggle-icon-line-middle")

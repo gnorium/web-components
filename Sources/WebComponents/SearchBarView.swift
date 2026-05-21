@@ -17,6 +17,7 @@
     let searchField: String
     let searchEndpoint: String
     let resultUrlBase: String
+    let value: String
 
     public init(
       inSidebar: Bool = false,
@@ -27,6 +28,7 @@
       searchField: String = "q",
       searchEndpoint: String = "/api/search",
       resultUrlBase: String = "/results",
+      value: String = "",
       @CSSBuilder style: () -> [CSSRule] = { [] }
     ) {
       self.inSidebar = inSidebar
@@ -37,6 +39,7 @@
       self.searchField = searchField
       self.searchEndpoint = searchEndpoint
       self.resultUrlBase = resultUrlBase
+      self.value = value
       self.style = style()
     }
 
@@ -50,16 +53,18 @@
         searchField: self.searchField,
         searchEndpoint: self.searchEndpoint,
         resultUrlBase: self.resultUrlBase,
+        value: self.value,
         style: { self.style + content() }
       )
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       div {
         // Input - if openDialog is true, make it read-only and use it as a trigger
         input()
           .type(.search)
           .name(searchField)
+          .value(value)
           .class("search-bar-input")
           .placeholder(placeholder)
           .ariaLabel(ariaLabel)
@@ -354,8 +359,7 @@
     private func onSearch() {
       guard activeIndex >= 0 && activeIndex < results.count else { return }
       let result = results[activeIndex]
-
-      let href = "\(resultUrlBase)/\(result.languageCode)/\(result.text)/\(result.homograph)"
+      let href = result.url.isEmpty ? "\(resultUrlBase)/\(result.languageCode)/\(result.text)/\(result.homograph)" : result.url
       location.href = href
     }
 
@@ -488,6 +492,7 @@
     let language: String
     let languageCode: String
     let homograph: Int
+    let url: String
   }
 
   extension SearchBarHydration {
@@ -562,10 +567,10 @@
         let language = extractValue(from: str, key: "language")
         let languageCode = extractValue(from: str, key: "languageCode")
         let homographStr = extractValue(from: str, key: "homograph")
-        let homograph = safeParseInt(homographStr) ?? 1
+        let homograph = parseInt(homographStr) ?? 1
         let idStr = extractValue(from: str, key: "id")
         // Handle string ID to Int conversion safely, or default to 0 if alphanumeric
-        let id = safeParseInt(idStr) ?? 0
+        let id = parseInt(idStr) ?? 0
 
         if !text.isEmpty {
           results.append(
@@ -574,7 +579,8 @@
               text: text,
               language: language,
               languageCode: languageCode,
-              homograph: homograph
+              homograph: homograph,
+              url: extractValue(from: str, key: "url")
             ))
         }
       }

@@ -193,7 +193,7 @@
       textAlign(.center)
     }
 
-    public func render() -> Node {
+    public func build() -> Node {
       let hasVisibleLimit = visibleItemLimit != nil && visibleItemLimit! > 0
       let allItems = menuItems + menuGroups.flatMap { $0.items }
       let hasItems = !allItems.isEmpty
