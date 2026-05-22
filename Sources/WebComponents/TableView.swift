@@ -923,6 +923,9 @@ public struct TableView: HTMLContent {
     }())
     .data("current-page", intToString(computedCurrentPage))
     .data("pagination-size", intToString(paginationSizeDefault))
+    .data("pagination-base-url", paginationBaseUrl ?? "")
+    .data("sort-column", sort?.columnID ?? "")
+    .data("sort-order", sort?.direction.value ?? "")
     .style {
       tableViewCSS()
     }
@@ -1645,6 +1648,12 @@ public struct TableView: HTMLContent {
       paginationNextBtns = Array(table.querySelectorAll(".pagination-next"))
       paginationPageInputs = Array(table.querySelectorAll(".page-box"))
 
+      let sortColumn = table.getAttribute(data("sort-column")) ?? ""
+      let sortOrder = table.getAttribute(data("sort-order")) ?? ""
+      if !stringIsEmpty(sortColumn) && !stringIsEmpty(sortOrder) {
+        currentSort = (sortColumn, sortOrder)
+      }
+
       bindEvents()
       autoSizeAllColumnsOnMount()
       TableInstance.updateZebraStriping(for: table)
@@ -2183,6 +2192,20 @@ public struct TableView: HTMLContent {
     }
 
     private func toggleSort(columnID: String) {
+      let isServerPaginated = stringEquals(table.getAttribute(data("paginate-server")) ?? "false", "true")
+      let baseUrl = table.getAttribute(data("pagination-base-url")) ?? ""
+
+      if isServerPaginated && !stringIsEmpty(baseUrl) {
+        var direction = "asc"
+        if let current = currentSort, stringEquals(current.columnID, columnID) {
+          direction = stringEquals(current.direction, "asc") ? "desc" : "asc"
+        }
+        let base = window.location.pathname
+        let url = "\(base)?sort=\(columnID)&order=\(direction)&page=1"
+        window.location.href = url
+        return
+      }
+
       // Toggle sort direction
       if let current = currentSort, stringEquals(current.columnID, columnID) {
         let newDirection = stringEquals(current.direction, "asc") ? "desc" : "asc"
