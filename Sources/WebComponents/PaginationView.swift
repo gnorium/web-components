@@ -13,6 +13,7 @@ public struct PaginationView: HTMLContent {
   public let previousUrl: String?
   public let nextUrl: String?
   public let pageNumbers: [PageNumber]?
+  public let totalPages: Int
   let `class`: String
 
   public struct PageNumber: Sendable {
@@ -31,18 +32,20 @@ public struct PaginationView: HTMLContent {
     previousUrl: String? = nil,
     nextUrl: String? = nil,
     pageNumbers: [PageNumber]? = nil,
+    totalPages: Int = 0,
     class: String = ""
   ) {
     self.previousUrl = previousUrl
     self.nextUrl = nextUrl
     self.pageNumbers = pageNumbers
+    self.totalPages = totalPages
     self.`class` = `class`
   }
 
   public func build() -> Node {
     let currentPageIndex = pageNumbers?.firstIndex(where: { $0.isActive }) ?? 0
     let currentPage = currentPageIndex + 1
-    let totalPages = pageNumbers?.count ?? 0
+    let totalPages = totalPages > 0 ? totalPages : (pageNumbers?.count ?? 0)
 
     // Calculate dynamic width based on total pages digit count
     let totalPagesStr = "\(totalPages)"
@@ -133,7 +136,7 @@ public struct PaginationView: HTMLContent {
           }
 
         // "of [Total]"
-        span { "of \(totalPages)" }
+        span { "of \(formatNumberWithCommas(totalPages))" }
           .style {
             fontFamily(typographyFontSans)
             fontSize(fontSizeMedium16)

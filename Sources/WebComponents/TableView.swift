@@ -4,8 +4,6 @@ import DOMBuilder
 import DesignTokens
 import EmbeddedSwiftUtilities
 import HTMLBuilder
-import SVGBuilder
-import Utilities
 import WebTypes
 
 /// A structural component used to arrange data in rows and columns.
@@ -325,18 +323,43 @@ public struct TableView: HTMLContent {
     let computedTotalItems = totalItems ?? data.count
     let computedTotalPages = totalPages ?? (data.isEmpty ? 1 : (data.count + paginationSizeDefault - 1) / paginationSizeDefault)
 
-    let pageNumbers = (1...computedTotalPages).map { pageNum in
-      let pageUrl: String
-      if let baseUrl = paginationBaseUrl {
-        pageUrl = "\(baseUrl)\(pageNum)"
-      } else {
-        pageUrl = "#"
+    let pageNumbers: [PaginationView.PageNumber]
+    if computedTotalPages <= 10 {
+      pageNumbers = (1...computedTotalPages).map { pageNum in
+        let pageUrl: String
+        if let baseUrl = paginationBaseUrl {
+          pageUrl = "\(baseUrl)\(pageNum)"
+        } else {
+          pageUrl = "#"
+        }
+        return PaginationView.PageNumber(
+          label: "\(pageNum)",
+          url: pageUrl,
+          isActive: pageNum == computedCurrentPage
+        )
       }
-      return PaginationView.PageNumber(
-        label: "\(pageNum)",
-        url: pageUrl,
-        isActive: pageNum == computedCurrentPage
-      )
+    } else {
+      var pages: [Int] = []
+      pages.append(1)
+      if computedCurrentPage > 7 { pages.append(-1) }
+      let rangeStart = max(2, computedCurrentPage - 5)
+      let rangeEnd = min(computedTotalPages - 1, computedCurrentPage + 5)
+      for i in rangeStart...rangeEnd { pages.append(i) }
+      if computedCurrentPage < computedTotalPages - 6 { pages.append(-1) }
+      if computedTotalPages > 1 { pages.append(computedTotalPages) }
+      pageNumbers = pages.map { pageNum in
+        let pageUrl: String
+        if let baseUrl = paginationBaseUrl {
+          pageUrl = "\(baseUrl)\(max(pageNum, 1))"
+        } else {
+          pageUrl = "#"
+        }
+        return PaginationView.PageNumber(
+          label: pageNum < 0 ? "..." : "\(pageNum)",
+          url: pageNum < 0 ? "#" : pageUrl,
+          isActive: pageNum == computedCurrentPage
+        )
+      }
     }
 
     let startRange: Int
@@ -398,6 +421,7 @@ public struct TableView: HTMLContent {
             previousUrl: prevUrl,
             nextUrl: nextUrl,
             pageNumbers: pageNumbers,
+            totalPages: computedTotalPages,
             class: "table-pagination-controls"
           )
         }
@@ -894,6 +918,7 @@ public struct TableView: HTMLContent {
             previousUrl: prevUrl,
             nextUrl: nextUrl,
             pageNumbers: pageNumbers,
+            totalPages: computedTotalPages,
             class: "table-pagination-controls"
           )
         }

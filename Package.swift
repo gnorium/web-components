@@ -15,7 +15,6 @@ let package = Package(
     .package(url: "https://github.com/gnorium/web-builders", branch: "main"),
     .package(url: "https://github.com/gnorium/web-types", branch: "main"),
     .package(url: "https://github.com/gnorium/embedded-swift-utilities", branch: "main"),
-    .package(url: "https://github.com/gnorium/gnorium-shared", branch: "main"),
   ],
   targets: [
     .target(
@@ -27,7 +26,6 @@ let package = Package(
         .product(name: "DiffEngine", package: "diff-engine"),
         .product(name: "DOMBuilder", package: "web-builders"),
         .product(name: "EmbeddedSwiftUtilities", package: "embedded-swift-utilities"),
-        .product(name: "Utilities", package: "gnorium-shared"),
         .product(name: "HTMLBuilder", package: "web-builders"),
         .product(name: "SVGBuilder", package: "web-builders"),
         .product(name: "WebAPIs", package: "web-apis"),
