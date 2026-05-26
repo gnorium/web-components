@@ -1680,7 +1680,6 @@ public struct TableView: HTMLContent {
       }
 
       bindEvents()
-      autoSizeAllColumnsOnMount()
       TableInstance.updateZebraStriping(for: table)
 
       let isServerPaginated = stringEquals(table.getAttribute(data("paginate-server")) ?? "false", "true")

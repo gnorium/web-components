@@ -33,12 +33,7 @@ public struct ButtonView: HTMLContent {
 
   /// Button color — Apple HIG color for the button's action identity
   public enum ButtonColor: String, Sendable {
-    /// Neutral buttons for actions that are neutral or secondary in importance
-    case gray
-    /// Blue buttons for primary/progressive actions
-    case blue
-    /// Red buttons for destructive/removal actions
-    case red
+    case gray, red, orange, yellow, green, mint, teal, cyan, blue, indigo, purple, pink, brown
   }
 
   /// Button weight (visual prominence)
@@ -412,302 +407,95 @@ public struct ButtonView: HTMLContent {
 
   @CSSBuilder
   private func applyColorWeightCSS() -> [CSSRule] {
+    let c = buttonColor.rawValue.lowercased()
+
     switch (buttonColor, weight) {
-    // Gray + Subtle
+    // Gray — uses generic interactive tokens
     case (.gray, .subtle):
       backgroundColor(backgroundColorBase)
       color(colorBase)
       borderColor(borderColorBase)
+      pseudoClass(.hover, not(.disabled)) { backgroundColor(backgroundColorInteractiveSubtleHover).important() }
+      pseudoClass(.active, not(.disabled)) { backgroundColor(backgroundColorInteractiveSubtleActive).important(); color(colorEmphasized).important(); borderColor(borderColorBase).important() }
 
-      pseudoClass(.hover, not(.disabled)) {
-        backgroundColor(backgroundColorInteractiveSubtleHover).important()
-      }
-
-      pseudoClass(.active, not(.disabled)) {
-        backgroundColor(backgroundColorInteractiveSubtleActive).important()
-        color(colorEmphasized).important()
-        borderColor(borderColorBase).important()
-      }
-
-    // Gray + Solid
     case (.gray, .solid):
       backgroundColor(backgroundColorInteractive)
       color(colorBase)
       borderColor(borderColorBase)
+      pseudoClass(.hover, not(.disabled)) { backgroundColor(backgroundColorInteractiveHover).important() }
+      pseudoClass(.active, not(.disabled)) { backgroundColor(backgroundColorInteractiveActive).important(); color(colorEmphasized).important(); borderColor(borderColorBase).important() }
 
-      pseudoClass(.hover, not(.disabled)) {
-        backgroundColor(backgroundColorInteractiveHover).important()
-      }
-
-      pseudoClass(.active, not(.disabled)) {
-        backgroundColor(backgroundColorInteractiveActive).important()
-        color(colorEmphasized).important()
-        borderColor(borderColorBase).important()
-      }
-
-    // Gray + Quiet
     case (.gray, .quiet):
       backgroundColor(.transparent)
       color(colorBase)
       borderColor(.transparent)
+      pseudoClass(.hover, not(.disabled)) { backgroundColor(backgroundColorInteractiveSubtle).important(); borderColor(.transparent).important() }
+      pseudoClass(.active, not(.disabled)) { backgroundColor(backgroundColorInteractiveSubtleActive).important(); color(colorEmphasized).important(); borderColor(.transparent).important() }
+      pseudoClass(.focus) { borderColor(.transparent).important(); boxShadow(.none).important() }
 
-      pseudoClass(.hover, not(.disabled)) {
-        backgroundColor(backgroundColorInteractiveSubtle).important()
-        borderColor(.transparent).important()
-      }
-
-      pseudoClass(.active, not(.disabled)) {
-        backgroundColor(backgroundColorInteractiveSubtleActive).important()
-        color(colorEmphasized).important()
-        borderColor(.transparent).important()
-      }
-
-      pseudoClass(.focus) {
-        borderColor(.transparent).important()
-        boxShadow(.none).important()
-      }
-
-    // Gray + Plain
     case (.gray, .plain):
       backgroundColor(.transparent)
       color(colorBase)
       borderColor(.transparent)
+      pseudoClass(.hover, not(.disabled)) { backgroundColor(.transparent).important(); color(colorBase).important(); borderColor(.transparent).important() }
+      pseudoClass(.active, not(.disabled)) { backgroundColor(.transparent).important(); color(colorEmphasized).important(); borderColor(.transparent).important() }
+      pseudoClass(.focus) { borderColor(.transparent).important(); boxShadow(.none).important() }
 
+    // Colored buttons — use color-specific tokens
+    case (_, .subtle):
+      backgroundColor(`var`("--background-color-\(c)-subtle"))
+      color(`var`("--color-\(c)"))
+      borderColor(`var`("--border-color-\(c)"))
       pseudoClass(.hover, not(.disabled)) {
-        backgroundColor(.transparent).important()
-        color(colorBase).important()
-        borderColor(.transparent).important()
+        backgroundColor(`var`("--background-color-\(c)-subtle-hover")).important()
+        borderColor(`var`("--border-color-\(c)-hover")).important()
       }
-
       pseudoClass(.active, not(.disabled)) {
-        backgroundColor(.transparent).important()
-        color(colorEmphasized).important()
-        borderColor(.transparent).important()
+        backgroundColor(`var`("--background-color-\(c)-subtle-active")).important()
+        borderColor(`var`("--border-color-\(c)-active")).important()
+        color(`var`("--color-\(c)-active")).important()
       }
-
       pseudoClass(.focus) {
-        borderColor(.transparent).important()
-        boxShadow(.none).important()
+        borderColor(`var`("--border-color-\(c)-focus")).important()
       }
 
-    // Blue + Subtle
-    case (.blue, .subtle):
-      backgroundColor(backgroundColorBlueSubtle)
-      color(colorBlue)
-      borderColor(borderColorBlue)
-
+    case (_, .solid):
+      backgroundColor(`var`("--background-color-\(c)"))
+      color(`var`("--color-inverted-fixed"))
+      borderColor(`var`("--background-color-\(c)"))
       pseudoClass(.hover, not(.disabled)) {
-        backgroundColor(backgroundColorBlueSubtleHover).important()
-        borderColor(borderColorBlueHover).important()
+        backgroundColor(`var`("--background-color-\(c)-hover")).important()
+        borderColor(`var`("--background-color-\(c)-hover")).important()
       }
-
       pseudoClass(.active, not(.disabled)) {
-        backgroundColor(backgroundColorBlueSubtleActive).important()
-        borderColor(borderColorBlueActive).important()
-        color(colorBlueActive).important()
+        backgroundColor(`var`("--background-color-\(c)-active")).important()
+        borderColor(`var`("--background-color-\(c)-active")).important()
       }
-
       pseudoClass(.focus) {
-        borderColor(borderColorBlueFocus).important()
-        boxShadow(boxShadowOutsetSmall, boxShadowColorBlueFocus).important()
+        borderColor(`var`("--border-color-\(c)-focus")).important()
       }
 
-    // Blue + Solid
-    case (.blue, .solid):
-      backgroundColor(backgroundColorBlue)
-      color(colorInvertedFixed)
-      borderColor(borderColorBlue)
-
-      pseudoClass(.hover, not(.disabled)) {
-        backgroundColor(backgroundColorBlueHover).important()
-        borderColor(borderColorBlueHover).important()
-      }
-
-      pseudoClass(.active, not(.disabled)) {
-        backgroundColor(backgroundColorBlueActive).important()
-        borderColor(borderColorBlueActive).important()
-      }
-
-      pseudoClass(.focus) {
-        borderColor(borderColorBlueFocus).important()
-        boxShadow(boxShadowOutsetSmall, boxShadowColorBlueFocus).important()
-      }
-
-    // Blue + Quiet
-    case (.blue, .quiet):
+    case (_, .quiet):
       backgroundColor(.transparent)
-      color(colorBlue)
+      color(`var`("--color-\(c)"))
       borderColor(.transparent)
+      pseudoClass(.hover, not(.disabled)) { backgroundColor(`var`("--background-color-\(c)-subtle")).important() }
+      pseudoClass(.active, not(.disabled)) { backgroundColor(`var`("--background-color-\(c)-subtle-active")).important(); color(`var`("--color-\(c)-active")).important() }
+      pseudoClass(.focus) { borderColor(.transparent).important(); boxShadow(.none).important() }
 
-      pseudoClass(.hover, not(.disabled)) {
-        backgroundColor(backgroundColorBlueSubtle).important()
-        borderColor(.transparent).important()
-      }
-
-      pseudoClass(.active, not(.disabled)) {
-        backgroundColor(backgroundColorBlueSubtleHover).important()
-        color(colorBlueActive).important()
-        borderColor(.transparent).important()
-      }
-
-      pseudoClass(.focus) {
-        borderColor(.transparent).important()
-        boxShadow(.none).important()
-      }
-
-    // Blue + Plain
-    case (.blue, .plain):
+    case (_, .plain):
       backgroundColor(.transparent)
-      color(colorBlue)
+      color(`var`("--color-\(c)"))
       borderColor(.transparent)
+      pseudoClass(.hover, not(.disabled)) { backgroundColor(.transparent).important(); color(colorBase).important() }
+      pseudoClass(.active, not(.disabled)) { backgroundColor(.transparent).important(); color(`var`("--color-\(c)-active")).important() }
+      pseudoClass(.focus) { borderColor(.transparent).important(); boxShadow(.none).important() }
+    }
 
-      pseudoClass(.hover, not(.disabled)) {
-        backgroundColor(.transparent).important()
-        color(colorBlueHover).important()
-        borderColor(.transparent).important()
-      }
-
-      pseudoClass(.active, not(.disabled)) {
-        backgroundColor(.transparent).important()
-        color(colorBlueActive).important()
-        borderColor(.transparent).important()
-      }
-
-      pseudoClass(.focus) {
-        borderColor(.transparent).important()
-        boxShadow(.none).important()
-      }
-
-    // Red + Subtle
-    case (.red, .subtle):
-      backgroundColor(backgroundColorRedSubtle)
-      color(colorRed)
-      borderColor(borderColorRed)
-
-      pseudoClass(.hover, not(.disabled)) {
-        backgroundColor(backgroundColorRedSubtleHover).important()
-        borderColor(borderColorRedHover).important()
-      }
-
-      pseudoClass(.active, not(.disabled)) {
-        backgroundColor(backgroundColorRedSubtleActive).important()
-        borderColor(borderColorRedActive).important()
-        color(colorRedActive).important()
-      }
-
-      pseudoClass(.focus) {
-        borderColor(borderColorRedFocus).important()
-        boxShadow(boxShadowOutsetSmall, boxShadowColorRedFocus).important()
-      }
-
-    // Red + Solid
-    case (.red, .solid):
-      backgroundColor(backgroundColorRed)
-      color(colorInvertedFixed)
-      borderColor(borderColorRed)
-
-      pseudoClass(.hover, not(.disabled)) {
-        backgroundColor(backgroundColorRedHover).important()
-        borderColor(borderColorRedHover).important()
-      }
-
-      pseudoClass(.active, not(.disabled)) {
-        backgroundColor(backgroundColorRedActive).important()
-        borderColor(borderColorRedActive).important()
-      }
-
-      pseudoClass(.focus) {
-        borderColor(borderColorRedFocus).important()
-        boxShadow(boxShadowOutsetSmall, boxShadowColorRedFocus).important()
-      }
-
-    // Red + Quiet
-    case (.red, .quiet):
-      backgroundColor(.transparent)
-      color(colorRed)
-      borderColor(.transparent)
-
-      pseudoClass(.hover, not(.disabled)) {
-        backgroundColor(backgroundColorRedSubtle).important()
-        borderColor(.transparent).important()
-      }
-
-      pseudoClass(.active, not(.disabled)) {
-        backgroundColor(backgroundColorRedSubtleHover).important()
-        color(colorRedActive).important()
-        borderColor(.transparent).important()
-      }
-
-      pseudoClass(.focus) {
-        borderColor(.transparent).important()
-        boxShadow(.none).important()
-      }
-
-    // Red + Plain
-    case (.red, .plain):
-      backgroundColor(.transparent)
-      color(colorRed)
-      borderColor(.transparent)
-
-      pseudoClass(.hover, not(.disabled)) {
-        backgroundColor(.transparent).important()
-        color(colorRedHover).important()
-        borderColor(.transparent).important()
-      }
-
-      pseudoClass(.active, not(.disabled)) {
-        backgroundColor(.transparent).important()
-        color(colorRedActive).important()
-        borderColor(.transparent).important()
-      }
-
-      pseudoClass(.focus) {
-        borderColor(.transparent).important()
-        boxShadow(.none).important()
-      }
+    pseudoClass(.active, not(.disabled)) {
+      backgroundColor(backgroundColorInteractiveSubtleActive).important()
+      color(colorEmphasized).important()
+      borderColor(borderColorBase).important()
     }
   }
 }
-
-#if CLIENT
-  import WebAPIs
-
-  /// CLIENT factory for creating ButtonView DOM elements dynamically.
-  public enum ButtonFactory {
-    /// Creates a ButtonView DOM element matching the server-rendered ButtonView.
-    public static func createElement(
-      label: String,
-      buttonColor: ButtonView.ButtonColor = .gray,
-      weight: ButtonView.ButtonWeight = .subtle,
-      size: ButtonView.ButtonSize = .medium,
-      disabled: Bool = false,
-      url: String? = nil,
-      type: ButtonView.ButtonType = .button,
-      ariaLabel: String? = nil,
-      onClick: String? = nil,
-      fullWidth: Bool = false,
-      class: String = "",
-      labelFontWeight: CSSFontWeight = fontWeightBold,
-      contentJustifyContent: CSSJustifyContent = .center
-    ) -> Element {
-      let wrapper = document.createElement(.span)
-      let view = ButtonView(
-        label: label,
-        buttonColor: buttonColor,
-        weight: weight,
-        size: size,
-        disabled: disabled,
-        url: url,
-        type: type,
-        ariaLabel: ariaLabel,
-        onClick: onClick,
-        fullWidth: fullWidth,
-        class: `class`,
-        labelFontWeight: labelFontWeight,
-        contentJustifyContent: contentJustifyContent
-      )
-      wrapper.innerHTML = renderHTML { view.render() }
-      return wrapper.firstElementChild ?? wrapper
-    }
-  }
-#endif

@@ -230,6 +230,7 @@
                   .style {
                     tabButtonCSS(isActive, tab.disabled, framed, variant)
                     textDecoration(.none)
+                    if fullWidth { flex(1) }
                   }
               } else {
                 // Panel-switching tabs render as buttons
@@ -245,6 +246,7 @@
                   .tabindex(isActive ? 0 : -1)
                   .style {
                     tabButtonCSS(isActive, tab.disabled, framed, variant)
+                    if fullWidth { flex(1) }
                   }
               }
             }
@@ -371,6 +373,8 @@
     private func selectTab(_ tabName: String, setFocus: Bool) {
       activeTabName = tabName
 
+      let isSolid = tabsElement.classList.contains("tabs-solid")
+
       for button in tabButtons {
         let isActive = stringEquals(button.getAttribute(data("tab-name")) ?? "", tabName)
         button.setAttribute(.ariaSelected, isActive ? true : false)
@@ -378,11 +382,27 @@
 
         if isActive {
           _ = button.classList.add("tab-active")
-          if setFocus {
-            button.focus()
+          if setFocus { button.focus() }
+          if isSolid {
+            button.style.backgroundColor(colorBlue)
+            button.style.color(colorInvertedFixed)
+            button.style.fontWeight(fontWeightBold)
+          } else {
+            button.style.backgroundColor(.transparent)
+            button.style.color(colorBase)
+            button.style.fontWeight(fontWeightSemiBold)
           }
         } else {
           _ = button.classList.remove("tab-active")
+          if isSolid {
+            button.style.backgroundColor(.transparent)
+            button.style.color(colorBlue)
+            button.style.fontWeight(fontWeightNormal)
+          } else {
+            button.style.backgroundColor(.transparent)
+            button.style.color(colorSubtle)
+            button.style.fontWeight(fontWeightNormal)
+          }
         }
       }
 

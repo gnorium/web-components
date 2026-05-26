@@ -375,10 +375,11 @@
       self.query = query
 
       let url = "\(searchEndpoint)?value=\(query)&field=\(searchField)"
+      console.log("SearchBar fetching \(url)")
 
       input.fetch(url) { [self] (jsonString: String?) in
         guard let json = jsonString else {
-          console.error("SearchBar: Failed to fetch")
+          console.error("SearchBar fetch failed")
           self.results = []
           self.isOpen = false
           return
@@ -386,6 +387,7 @@
 
         // Parse JSONFormattable response manually
         if let parsed = self.parseSearchResponse(json) {
+          if parsed.isEmpty { console.log("SearchBar 0 results for \(query)") }
           self.results = parsed
           self.isOpen = !parsed.isEmpty
           self.activeIndex = -1

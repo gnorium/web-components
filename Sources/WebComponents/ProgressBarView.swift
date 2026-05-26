@@ -13,6 +13,7 @@
     let ariaLabel: String?
     let ariaHidden: Bool
     let disabled: Bool
+    let value: Double  // 0.0 - 1.0
     let `class`: String
 
     public init(
@@ -20,12 +21,14 @@
       ariaLabel: String? = nil,
       ariaHidden: Bool = false,
       disabled: Bool = false,
+      value: Double = 0,
       class: String = ""
     ) {
       self.inline = inline
       self.ariaLabel = ariaLabel
       self.ariaHidden = ariaHidden
       self.disabled = disabled
+      self.value = value
       self.`class` = `class`
     }
 
@@ -39,10 +42,8 @@
 
       if inline {
         height(px(2))
-        minWidth(px(64))
       } else {
         height(px(8))
-        minWidth(px(256))
       }
 
       if disabled {
@@ -55,12 +56,11 @@
       position(.absolute)
       top(0)
       left(0)
-      width(perc(0))
+      width(perc(value * 100))
       height(perc(100))
       backgroundColor(backgroundColorBlue)
       borderRadius(borderRadiusPill)
       transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-      animation("progress-bar-indeterminate", s(2), .linear, .infinite)
     }
 
     public func build() -> Node {

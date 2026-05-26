@@ -11,9 +11,9 @@
   public struct SearchInputView: HTMLContent {
     let modelValue: String
     let useButton: Bool
-    let hideIcon: Bool
     let clearable: Bool
     let buttonLabel: String
+    let searchIcon: Bool
     let disabled: Bool
     let status: ValidationStatus
     let placeholder: String
@@ -27,9 +27,9 @@
     public init(
       modelValue: String = "",
       useButton: Bool = false,
-      hideIcon: Bool = false,
       clearable: Bool = false,
       buttonLabel: String = "",
+      searchIcon: Bool = false,
       disabled: Bool = false,
       status: ValidationStatus = .default,
       placeholder: String = "",
@@ -37,9 +37,9 @@
     ) {
       self.modelValue = modelValue
       self.useButton = useButton
-      self.hideIcon = hideIcon
       self.clearable = clearable
       self.buttonLabel = buttonLabel.isEmpty ? "Search" : buttonLabel
+      self.searchIcon = searchIcon
       self.disabled = disabled
       self.status = status
       self.placeholder = placeholder
@@ -52,9 +52,12 @@
       alignItems(.center)
       position(.relative)
       width(perc(100))
+      gap(spacing8)
 
       if useButton {
-        gap(spacing8)
+        flexGrow(1)
+      } else {
+        flex(1)
       }
     }
 
@@ -72,12 +75,14 @@
     }
 
     @CSSBuilder
-    private func searchInputCSS(_ hasStartIcon: Bool, _ clearable: Bool, _ status: ValidationStatus)
+    private func searchInputCSS(_ clearable: Bool, _ status: ValidationStatus)
       -> [CSSRule]
     {
       width(perc(100))
       minHeight(minSizeInteractivePointer)
-      padding(spacing12, spacing16)
+      paddingBlock(spacing12)
+      paddingInlineStart(px(16))
+      paddingInlineEnd(px(132))
       fontFamily(typographyFontSans)
       fontSize(fontSizeMedium16)
       lineHeight(lineHeightSmall22)
@@ -87,14 +92,6 @@
       borderRadius(borderRadiusBase)
       transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
       boxSizing(.borderBox)
-
-      if hasStartIcon {
-        paddingInlineStart(px(36))
-      }
-
-      if clearable {
-        paddingInlineEnd(spacing64)  // Increased to accommodate both icons
-      }
 
       if status == .error {
         borderColor(borderColorRed)
@@ -129,48 +126,24 @@
     }
 
     @CSSBuilder
-    private func searchInputStartIconCSS() -> [CSSRule] {
-      position(.absolute)
-      insetInlineStart(spacing4)
-      marginInlineStart(spacing8)
-      top(perc(50))
-      transform(translateY(perc(-50)))
-      width(sizeIconMedium)
-      height(sizeIconMedium)
-      padding(spacing8)
-      color(colorPlaceholder)
-      pointerEvents(.none)
-      display(.flex)
-      alignItems(.center)
-      justifyContent(.center)
-    }
-
-    @CSSBuilder
     private func searchInputViewDetailsIconCSS() -> [CSSRule] {
       position(.absolute)
-      right(spacing40)  // Position to the left of clear button
+      right(px(52))
       top(perc(50))
       transform(translateY(perc(-50)))
-      width(sizeIconMedium)
-      height(sizeIconMedium)
-      padding(spacing8)
+      padding(spacing4)
       color(colorSubtle)
       display(.flex)
       alignItems(.center)
-      justifyContent(.center)
-      pointerEvents(.none)
     }
 
     @CSSBuilder
     private func searchInputClearButtonCSS() -> [CSSRule] {
       position(.absolute)
-      insetInlineEnd(spacing4)
-      marginInlineEnd(spacing8)
+      insetInlineEnd(px(88))
       top(perc(50))
       transform(translateY(perc(-50)))
-      width(sizeIconMedium)
-      height(sizeIconMedium)
-      padding(spacing8)
+      padding(spacing4)
       backgroundColor(.transparent)
       border(.none)
       borderRadius(borderRadiusBase)
@@ -257,19 +230,6 @@
     public func build() -> Node {
       return div {
         div {
-          if !hideIcon {
-            span {
-              IconView(
-                icon: { SearchIconView() },
-                size: .medium
-              )
-            }
-            .class("search-input-start-icon")
-            .ariaHidden(true)
-            .style {
-              searchInputStartIconCSS()
-            }
-          }
 
           input()
             .type(.search)
@@ -279,23 +239,11 @@
             .disabled(disabled)
             .ariaInvalid(status == .error)
             .style {
-              searchInputCSS(!hideIcon, clearable, status)
+              searchInputCSS(clearable, status)
             }
 
           if clearable {
-            // View details icon (positioned to the left of clear button)
-            span {
-              IconView(
-                icon: { ViewDetailsIconView() },
-                size: .medium
-              )
-            }
-            .class("search-input-view-details-icon")
-            .ariaHidden(true)
-            .style {
-              searchInputViewDetailsIconCSS()
-            }
-
+            // Clear button
             button {
               IconView(
                 icon: { DeleteIconView() },
@@ -310,6 +258,47 @@
               searchInputClearButtonCSS()
               if modelValue.isEmpty {
                 opacity(opacityIconBaseDisabled)
+              }
+            }
+
+            // View details icon (positioned to the left of clear button)
+            span {
+              IconView(
+                icon: { ViewDetailsIconView() },
+                size: .medium
+              )
+            }
+            .class("search-input-view-details-icon")
+            .ariaHidden(true)
+            .style {
+              searchInputViewDetailsIconCSS()
+            }
+          }
+
+          if searchIcon {
+            button {
+              SearchIconView(width: px(20), height: px(20))
+            }
+            .type(.submit)
+            .class("search-input-search-icon")
+            .ariaLabel("Search")
+            .style {
+              position(.absolute)
+              insetInlineEnd(px(16))
+              top(perc(50))
+              transform(translateY(perc(-50)))
+              background(.transparent)
+              border(.none)
+              color(colorSubtle)
+              cursor(cursorBaseHover)
+              padding(spacing4)
+              display(.flex)
+              alignItems(.center)
+              justifyContent(.center)
+              zIndex(1)
+
+              pseudoClass(.hover) {
+                color(colorBlue)
               }
             }
           }

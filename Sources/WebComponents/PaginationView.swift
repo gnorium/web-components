@@ -43,8 +43,8 @@ public struct PaginationView: HTMLContent {
   }
 
   public func build() -> Node {
-    let currentPageIndex = pageNumbers?.firstIndex(where: { $0.isActive }) ?? 0
-    let currentPage = currentPageIndex + 1
+    let activePage = pageNumbers?.first(where: { $0.isActive })
+    let currentPage = activePage.flatMap { Int($0.label) } ?? 1
     let totalPages = totalPages > 0 ? totalPages : (pageNumbers?.count ?? 0)
 
     // Calculate dynamic width based on total pages digit count

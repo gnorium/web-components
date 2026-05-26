@@ -13,8 +13,8 @@
 
     public init(
       class: String = "",
-      width: Length = px(18),
-      height: Length = px(18)
+      width: Length = px(20),
+      height: Length = px(20)
     ) {
       self.class = `class`
       self.width = width

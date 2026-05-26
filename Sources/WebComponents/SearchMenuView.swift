@@ -15,9 +15,50 @@
     let searchField: String
     let searchEndpoint: String
     let resultUrlBase: String
-    let resultTitleKey: String
-    let resultSubtitleKey: String
+    let resultTextKey: String
+    let resultSubtextKey: String
     let resultUrlKey: String
+    let resultPosKey: String
+    let resultHomographKey: String
+    let resultColorKey: String
+    let tabs: [SearchMenuTab]
+    let localStorageKey: String
+
+    public struct SearchMenuTab: Sendable {
+      let name: String
+      let label: String
+      let searchEndpoint: String
+      let searchField: String
+      let resultUrlBase: String
+      let resultTextKey: String
+      let resultSubtextKey: String
+      let resultUrlKey: String
+      let resultPosKey: String
+      let resultHomographKey: String
+      let resultColorKey: String
+
+      public init(
+        name: String, label: String,
+        searchEndpoint: String, searchField: String,
+        resultUrlBase: String,
+        resultTextKey: String, resultSubtextKey: String, resultUrlKey: String,
+        resultPosKey: String = "partsOfSpeech",
+        resultHomographKey: String = "homograph",
+        resultColorKey: String = "color"
+      ) {
+        self.name = name
+        self.label = label
+        self.searchEndpoint = searchEndpoint
+        self.searchField = searchField
+        self.resultUrlBase = resultUrlBase
+        self.resultTextKey = resultTextKey
+        self.resultSubtextKey = resultSubtextKey
+        self.resultUrlKey = resultUrlKey
+        self.resultPosKey = resultPosKey
+        self.resultHomographKey = resultHomographKey
+        self.resultColorKey = resultColorKey
+      }
+    }
 
     public struct SearchResult: Sendable {
       let id: String
@@ -53,9 +94,14 @@
       searchField: String = "q",
       searchEndpoint: String = "/api/search",
       resultUrlBase: String = "/results",
-      resultTitleKey: String = "title",
-      resultSubtitleKey: String = "subtitle",
-      resultUrlKey: String = "url"
+      resultTextKey: String = "title",
+      resultSubtextKey: String = "subtitle",
+      resultUrlKey: String = "url",
+      resultPosKey: String = "partsOfSpeech",
+      resultHomographKey: String = "homograph",
+      resultColorKey: String = "color",
+      tabs: [SearchMenuTab] = [],
+      localStorageKey: String = "search-tab"
     ) {
       self.id = id
       self.placeholder = placeholder
@@ -64,9 +110,37 @@
       self.searchField = searchField
       self.searchEndpoint = searchEndpoint
       self.resultUrlBase = resultUrlBase
-      self.resultTitleKey = resultTitleKey
-      self.resultSubtitleKey = resultSubtitleKey
+      self.resultTextKey = resultTextKey
+      self.resultSubtextKey = resultSubtextKey
       self.resultUrlKey = resultUrlKey
+      self.resultPosKey = resultPosKey
+      self.resultHomographKey = resultHomographKey
+      self.resultColorKey = resultColorKey
+      self.tabs = tabs
+      self.localStorageKey = localStorageKey
+    }
+
+    private func tabConfigsJSON() -> String {
+      var entries: [String] = []
+      for tab in tabs {
+        let esc = { (s: String) -> String in
+          s.replacingOccurrences(of: "\\", with: "\\\\")
+           .replacingOccurrences(of: "\"", with: "\\\"")
+        }
+        entries.append(
+          "\"\(esc(tab.name))\":{"
+          + "\"searchEndpoint\":\"\(esc(tab.searchEndpoint))\""
+          + ",\"searchField\":\"\(esc(tab.searchField))\""
+          + ",\"resultUrlBase\":\"\(esc(tab.resultUrlBase))\""
+          + ",\"resultTextKey\":\"\(esc(tab.resultTextKey))\""
+          + ",\"resultSubtextKey\":\"\(esc(tab.resultSubtextKey))\""
+          + ",\"resultUrlKey\":\"\(esc(tab.resultUrlKey))\""
+          + ",\"resultPosKey\":\"\(esc(tab.resultPosKey))\""
+          + ",\"resultHomographKey\":\"\(esc(tab.resultHomographKey))\""
+          + ",\"resultColorKey\":\"\(esc(tab.resultColorKey))\""          + "}"
+        )
+      }
+      return "{\(entries.joined(separator: ","))}"
     }
 
     public func build() -> Node {
@@ -83,6 +157,17 @@
         // Search menu container - full screen
         div {
           ContainerView(size: .xLarge) {
+        div {
+          // Search category tabs
+          if !tabs.isEmpty {
+            TabsView(
+              tabs: tabs.map { TabView(name: $0.name, label: $0.label) {} },
+              activeTab: tabs.first?.name ?? "",
+              variant: .solid,
+              class: "search-menu-tabs",
+              fullWidth: true
+            )
+          }
             div {
               // Search input at top
               TypeaheadSearchView(
@@ -91,10 +176,17 @@
                 highlightQuery: true,
                 showThumbnail: false,
                 autoExpandWidth: false,
-                showEmptyQueryResults: true,
+                showEmptyQueryResults: false,
                 placeholder: placeholder,
+                searchIcon: true,
                 class: "search-menu-typeahead"
               )
+            }
+            .style {
+              display(.flex)
+              flexDirection(.row)
+              alignItems(.center)
+            }
 
               // Footer with keyboard hints
               div {
@@ -156,9 +248,15 @@
         .data("search-field", searchField)
         .data("search-endpoint", searchEndpoint)
         .data("result-url-base", resultUrlBase)
-        .data("result-title-key", resultTitleKey)
-        .data("result-subtitle-key", resultSubtitleKey)
+        .data("result-text-key", resultTextKey)
+        .data("result-subtext-key", resultSubtextKey)
         .data("result-url-key", resultUrlKey)
+        .data("result-pos-key", resultPosKey)
+        .data("result-homograph-key", resultHomographKey)
+        .data("result-color-key", resultColorKey)
+        .data("local-storage-key", localStorageKey)
+        .data("has-tabs", tabs.isEmpty ? "false" : "true")
+        .data("tab-configs", tabConfigsJSON())
         .style {
           searchMenuContainerCSS()
         }
@@ -290,21 +388,30 @@
     private var searchField: String = ""
     private var searchEndpoint: String = ""
     private var resultUrlBase: String = ""
-    private var resultTitleKey: String = "title"
-    private var resultSubtitleKey: String = "subtitle"
+    private var resultTextKey: String = "title"
+    private var resultSubtextKey: String = "subtitle"
     private var resultUrlKey: String = "url"
+    private var resultPosKey: String = "partsOfSpeech"
+    private var resultHomographKey: String = "homograph"
+    private var resultColorKey: String = "color"
+    private var localStorageKey: String = "search-tab"
     private var isMenuOpen: Bool = false
 
     public init() {}
 
     public func hydrate() {
-      // Listen for all search trigger clicks (desktop and mobile)
+      // Listen for search trigger clicks (navbar button)
       let searchTriggers = document.querySelectorAll("[data-search-trigger=\"true\"]")
       for searchTrigger in searchTriggers {
         _ = searchTrigger.addEventListener(.click) { [self] event in
           event.preventDefault()
           self.toggleMenu()
         }
+      }
+
+      let typeaheadElements = document.querySelectorAll(".search-menu-typeahead")
+      for typeahead in typeaheadElements {
+        hydrateTypeahead(typeahead)
       }
 
       document.addEventListener(.keydown) { [self] event in
@@ -339,11 +446,92 @@
         if self.isMenuOpen { self.closeMenu() }
       }
 
-      // Hydrate search functionality
-      let typeaheadElements = document.querySelectorAll(".search-menu-typeahead")
-      for typeahead in typeaheadElements {
-        hydrateTypeahead(typeahead)
+      // Hydrate search functionality (already done above)
+
+      // Close typeahead dropdown when clicking outside the typeahead
+      document.addEventListener(.click) { event in
+        let target = event.target
+        for typeahead in typeaheadElements {
+          guard let menu = typeahead.querySelector(".typeahead-search-menu") else { continue }
+          var el = target
+          var inside = false
+          while el != nil {
+            if el === typeahead { inside = true; break }
+            el = el?.parentElement
+          }
+          if !inside {
+            menu.style.display(.none)
+            if !self.isMenuOpen {
+              document.body.style.overflow(.auto)
+            }
+          }
+        }
       }
+
+      // Tab switching for search category
+      let tabButtons = document.querySelectorAll(".search-menu-tabs [role='tab']")
+
+      // Read localStorageKey and tab configs from container
+      guard let container = document.querySelector("[data-search-menu-container=\"true\"]") else { return }
+      let lsKey = container.dataset["localStorageKey"] ?? "search-tab"
+      let rawTabConfigs = container.dataset["tabConfigs"] ?? "{}"
+
+      // Restore saved tab from localStorage
+      if let savedTab = localStorage.getItem(lsKey), !stringIsEmpty(savedTab) {
+        for btn in tabButtons {
+          if stringEquals(btn.getAttribute(data("tab-name")) ?? "", savedTab) {
+            btn.click()
+            break
+          }
+        }
+      }
+
+      for button in tabButtons {
+        _ = button.addEventListener(.click) { [self] _ in
+          guard let tabName = button.getAttribute(data("tab-name")),
+                let container = document.querySelector("[data-search-menu-container=\"true\"]")
+          else { return }
+
+          localStorage.setItem(lsKey, tabName)
+
+          // Read tab config from the serialized JSON on container
+          searchEndpoint = extractJSONValue(rawTabConfigs, tabName, "searchEndpoint") ?? "/api/search"
+          searchField = extractJSONValue(rawTabConfigs, tabName, "searchField") ?? "q"
+          resultUrlBase = extractJSONValue(rawTabConfigs, tabName, "resultUrlBase") ?? "/results"
+          resultTextKey = extractJSONValue(rawTabConfigs, tabName, "resultTextKey") ?? "text"
+          resultSubtextKey = extractJSONValue(rawTabConfigs, tabName, "resultSubtextKey") ?? "language"
+          resultUrlKey = extractJSONValue(rawTabConfigs, tabName, "resultUrlKey") ?? "id"
+          resultPosKey = extractJSONValue(rawTabConfigs, tabName, "resultPosKey") ?? "partsOfSpeech"
+          resultHomographKey = extractJSONValue(rawTabConfigs, tabName, "resultHomographKey") ?? "homograph"
+          resultColorKey = extractJSONValue(rawTabConfigs, tabName, "resultColorKey") ?? "color"
+
+          // Update data attributes for persistence
+          _ = container.dataset["searchEndpoint"] = searchEndpoint
+          _ = container.dataset["searchField"] = searchField
+          _ = container.dataset["resultUrlBase"] = resultUrlBase
+          _ = container.dataset["resultTextKey"] = resultTextKey
+          _ = container.dataset["resultSubtextKey"] = resultSubtextKey
+          _ = container.dataset["resultUrlKey"] = resultUrlKey
+          _ = container.dataset["resultPosKey"] = resultPosKey
+          _ = container.dataset["resultHomographKey"] = resultHomographKey
+          _ = container.dataset["resultColorKey"] = resultColorKey
+
+          // Clear current results and re-search with current query
+          if let typeahead = document.querySelector(".search-menu-typeahead"),
+             let input = typeahead.querySelector("input") as? HTMLInputElement
+          {
+            if let menu = typeahead.querySelector(".typeahead-search-menu") {
+              menu.innerHTML = ""
+              menu.style.display(.none)
+            }
+            let query = input.value
+            if !stringIsEmpty(query) {
+              self.performSearch(query: query, typeahead: typeahead)
+            }
+          }
+        }
+      }
+
     }
 
     private func hydrateTypeahead(_ typeahead: Element) {
@@ -360,21 +548,36 @@
       resultUrlBase = container.dataset["resultUrlBase"] ?? ""
       if stringEquals(resultUrlBase, "") { resultUrlBase = "/results" }
 
-      resultTitleKey = container.dataset["resultTitleKey"] ?? "title"
-      resultSubtitleKey = container.dataset["resultSubtitleKey"] ?? "subtitle"
+      resultTextKey = container.dataset["resultTextKey"] ?? "title"
+      resultSubtextKey = container.dataset["resultSubtextKey"] ?? "subtitle"
       resultUrlKey = container.dataset["resultUrlKey"] ?? "url"
+      resultPosKey = container.dataset["resultPosKey"] ?? "partsOfSpeech"
+      resultHomographKey = container.dataset["resultHomographKey"] ?? "homograph"
+      resultColorKey = container.dataset["resultColorKey"] ?? "color"
 
       // Ensure input exists but we don't need the reference
       guard typeahead.querySelector("input") != nil else {
         return
       }
 
-      // Listen for custom 'input' event from TypeaheadSearchInstance
-      typeahead.addEventListener("input") { [self] event in
-        // event.detail is JSONFormattable-stringified, so we need to parse it
+      // Click on the form area re-shows the dropdown if it was dismissed
+      if let form = typeahead.querySelector(".typeahead-search-form") {
+        _ = form.addEventListener(.click) { _ in
+          if let menu = typeahead.querySelector(".typeahead-search-menu") {
+            let display = menu.style.getPropertyValue(.display)
+            if stringEquals(display, "none") {
+              menu.style.display(.flex)
+            }
+          }
+        }
+      }
+
+      // Listen for custom 'typeahead-input' event from TypeaheadSearchInstance
+      typeahead.addEventListener("typeahead-input") { [self] event in
+
+
         var rawDetail = event.detail
 
-        // Strip quotes if JSONFormattable-stringified (e.g., "\"hello\"" -> "hello")
         let detailBytes = Array(rawDetail.utf8)
         if detailBytes.count >= 2, detailBytes.first == 34, detailBytes.last == 34 {
           let innerBytes = detailBytes[1..<detailBytes.count - 1]
@@ -383,13 +586,11 @@
 
         let query = rawDetail
 
-        // Ignore single character "0" which appears to be a spurious event
-        // from the disabled state changes in SearchInputInstance
-        if stringEquals(query, "0") {
-          return
-        }
-
         guard !query.isEmpty else {
+          if let menu = typeahead.querySelector(".typeahead-search-menu") {
+            menu.innerHTML = ""
+            menu.style.display(.none)
+          }
           return
         }
 
@@ -416,11 +617,11 @@
 
         let query = rawDetail
 
-        guard !query.isEmpty else { 
-          return 
+        if stringIsEmpty(query) {
+          window.location.href = resultUrlBase
+          return
         }
         let encodedQuery = encodeURIComponent(query)
-        // If searchField is "q" or resultUrlBase contains "/articles", use direct query format
         let targetUrl: String
         if stringEquals(searchField, "q") || stringContains(resultUrlBase, "/articles") {
           targetUrl = "\(resultUrlBase)?\(searchField)=\(encodedQuery)"
@@ -433,10 +634,12 @@
 
     private struct SearchResultItem: Sendable {
       let id: Int
-      let title: String
-      let subtitle: String
+      let text: String
+      let subtext: String
+      let pos: String
       let urlSegment: String
       let homograph: Int
+      let color: String
     }
 
     private func performSearch(query: String, typeahead: Element) {
@@ -461,16 +664,34 @@
       }
 
       typeahead.fetch(url) { [self] (jsonString: String?) in
-        guard let json = jsonString else {
-          return
-        }
+        guard let json = jsonString else { return }
 
-        // Parse JSONFormattable results
         if let results = self.parseSearchResponse(json) {
-          // Update Typeahead menu
           self.updateTypeaheadMenu(typeahead: typeahead, results: results)
         }
       }
+    }
+
+    /// Extract a string value from a JSON object keyed by tab name.
+    /// JSON format: {"tabName":{"key":"value",...}}
+    /// Uses manual parsing (no Foundation dependency).
+    private func extractJSONValue(_ json: String, _ tabName: String, _ key: String) -> String? {
+      // Find tabName key
+      let tabSearch = "\"\(tabName)\":"
+      guard let tabOffset = stringIndexOf(json, tabSearch) else { return nil }
+      let afterTab = stringSubstring(json, from: tabOffset + cStringLength(tabSearch))
+      // Find key in the tab's object
+      let keySearch = "\"\(key)\":\""
+      guard let keyOffset = stringIndexOf(afterTab, keySearch) else { return nil }
+      let afterKey = stringSubstring(afterTab, from: keyOffset + cStringLength(keySearch))
+      // Read until closing quote
+      var result: [UInt8] = []
+      for byte in Array(afterKey.utf8) {
+        if byte == 34 { break }  // "
+        if byte == 92 { continue }  // \ skip escape
+        result.append(byte)
+      }
+      return result.isEmpty ? nil : String(decoding: result, as: UTF8.self)
     }
 
     private func encodeURIComponent(_ string: String) -> String {
@@ -501,18 +722,36 @@
     }
 
     private func updateTypeaheadMenu(typeahead: Element, results: [SearchResultItem]) {
-      guard let menu = typeahead.querySelector(".typeahead-search-menu") else {
+      if results.isEmpty {
+        if let existing = typeahead.querySelector(".typeahead-search-menu") {
+          existing.style.display(.none)
+        }
         return
       }
 
-      // Clear existing
+      let limitedResults = Array(results.prefix(16))
+
+      let menu: Element
+      if let existing = typeahead.querySelector(".typeahead-search-menu") {
+        menu = existing
+      } else {
+        menu = document.createElement(.div)
+        menu.className = "typeahead-search-menu"
+        typeahead.appendChild(menu)
+      }
+      menu.style.display(.flex)
+      menu.style.flexDirection(.column)
+      menu.style.gap(spacing8)
+      menu.style.maxHeight(calc(vh(100) - px(256)))
+      menu.style.overflowY(.auto)
+
       menu.innerHTML = ""
 
       // Create new menu items using DOM API
-      for result in results {
+      for result in limitedResults {
         let item = document.createElement(.div)
         item.className = "menu-item-view"
-        item.setAttribute(data("value"), result.title)
+        item.setAttribute(data("value"), result.text)
         item.setAttribute(.role, .option)
         item.setAttribute(.tabindex, -1)
 
@@ -521,11 +760,11 @@
         item.style.alignItems(.center)
         item.style.gap(spacing12)
         item.style.padding(spacing8, spacing12)
-        item.style.minHeight(minSizeInteractivePointer)
+        item.style.minHeight(spacing64)
         item.style.fontFamily(typographyFontSans)
         item.style.fontSize(fontSizeMedium16)
         item.style.lineHeight(lineHeightSmall22)
-        item.style.color(colorSubtle)
+        item.style.color(colorBase)
         item.style.backgroundColor(backgroundColorTransparent)
         item.style.border(borderWidthBase, .solid, borderColorSubtle)
         item.style.borderRadius(borderRadiusBase)
@@ -533,15 +772,14 @@
         item.style.userSelect(.none)
         item.style.textDecoration(textDecorationNone)
         item.style.boxSizing(.borderBox)
-        item.style.transition(
-          transitionPropertyBase, transitionDurationBase, transitionTimingFunctionUser)
+        item.style.transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionUser)
 
         // Construct URL for navigation
         let href: String
         if stringEquals(searchField, "q") || stringContains(resultUrlBase, "/articles") {
           href = "\(resultUrlBase)/\(result.urlSegment)"
         } else {
-          href = "\(resultUrlBase)/\(result.urlSegment)/\(result.title)/\(result.homograph)"
+          href = "\(resultUrlBase)/\(result.urlSegment)/\(result.text)/\(result.homograph)"
         }
         item.setAttribute(data("url"), href)
 
@@ -555,67 +793,114 @@
         textContent.style.flex(1)
 
         // Title Wrapper
-        let titleWrapper = document.createElement(.span)
-        titleWrapper.className = "menu-item-title"
-        titleWrapper.style.display(.flex)
-        titleWrapper.style.alignItems(.center)
-        titleWrapper.style.gap(spacing4)
+        let textWrapper = document.createElement(.span)
+        textWrapper.className = "menu-item-title"
+        textWrapper.style.display(.flex)
+        textWrapper.style.alignItems(.center)
+        textWrapper.style.gap(spacing4)
 
+        // Title label
         let label = document.createElement(.span)
         label.className = "menu-item-label"
-        label.textContent = result.title
+        label.textContent = result.text
         label.style.fontFamily(typographyFontSans)
         label.style.fontSize(fontSizeMedium16)
         label.style.fontWeight(fontWeightNormal)
         label.style.lineHeight(lineHeightSmall22)
-        label.style.color(colorBase)
+        label.style.setProperty(.color, `var`("--color-\(result.color)"))
+        label.style.opacity(1)
 
-        titleWrapper.appendChild(label)
+        textWrapper.appendChild(label)
 
-        textContent.appendChild(titleWrapper)
+        // POS + homograph superscript after lemma
+        if !stringIsEmpty(result.pos) {
+          let posSpan = document.createElement(.span)
+          posSpan.className = "menu-item-pos"
+          posSpan.textContent = result.pos
+          posSpan.style.fontFamily(typographyFontSans)
+          posSpan.style.fontSize(fontSizeSmall14)
+          posSpan.style.fontWeight(fontWeightNormal)
+          posSpan.style.lineHeight(lineHeightSmall22)
+          posSpan.style.color(colorSubtle)
+          textWrapper.appendChild(posSpan)
+
+          if result.homograph > 1 {
+            let posSup = document.createElement(.sup)
+            posSup.textContent = "\(result.homograph)"
+            posSup.style.fontSize(fontSizeSmall14)
+            posSup.style.color(colorSubtle)
+            textWrapper.appendChild(posSup)
+          }
+        }
+        textContent.appendChild(textWrapper)
 
         // Description
         let description = document.createElement(.span)
         description.className = "menu-item-description"
-        description.textContent = result.subtitle
+        description.textContent = result.subtext
         description.style.fontFamily(typographyFontSans)
         description.style.fontSize(fontSizeSmall14)
         description.style.fontWeight(fontWeightNormal)
         description.style.lineHeight(lineHeightSmall22)
         description.style.color(colorSubtle)
-
         textContent.appendChild(description)
+
         item.appendChild(textContent)
 
         // Add hover/active/focus event listeners for progressive styling
         _ = item.addEventListener(.mouseenter) { (event: Event) in
           item.style.color(colorBlue)
           item.style.border(borderWidthBase, .solid, borderColorBlue)
+          item.style.outline(borderWidthBase, .solid, borderColorBlue)
+          item.style.outlineOffset(px(-2))
           item.style.cursor(cursorBaseHover)
+          if let label = item.querySelector(".menu-item-label") {
+            label.style.color(colorBlue)
+          }
+          if let pos = item.querySelector(".menu-item-pos") {
+            pos.style.color(colorBase)
+          }
+          if let desc = item.querySelector(".menu-item-description") {
+            desc.style.color(colorBase)
+          }
         }
 
         _ = item.addEventListener(.mouseleave) { (event: Event) in
           item.style.color(colorSubtle)
           item.style.border(borderWidthBase, .solid, borderColorSubtle)
+          item.style.outline(.none)
           item.style.cursor(cursorBase)
+          if let label = item.querySelector(".menu-item-label") {
+            label.style.color(colorBase)
+          }
+          if let pos = item.querySelector(".menu-item-pos") {
+            pos.style.color(colorSubtle)
+          }
+          if let desc = item.querySelector(".menu-item-description") {
+            desc.style.color(colorSubtle)
+          }
         }
 
         _ = item.addEventListener(.mousedown) { (event: Event) in
           item.style.color(colorBlue)
           item.style.border(borderWidthBase, .solid, borderColorBlue)
+          item.style.outline(borderWidthBase, .solid, borderColorBlue)
+          item.style.outlineOffset(px(-2))
           item.style.cursor(cursorBaseHover)
         }
 
         _ = item.addEventListener(.mouseup) { (event: Event) in
           item.style.color(colorBlue)
           item.style.border(borderWidthBase, .solid, borderColorBlue)
+          item.style.outline(borderWidthBase, .solid, borderColorBlue)
+          item.style.outlineOffset(px(-2))
           item.style.cursor(cursorBaseHover)
         }
 
         _ = item.addEventListener(.focus) { (event: Event) in
           item.style.color(colorBlueFocus)
           item.style.outline(borderWidthBase, .solid, borderColorBlueFocus)
-          item.style.outlineOffset(px(-1))
+          item.style.outlineOffset(px(-2))
         }
 
         _ = item.addEventListener(.blur) { (event: Event) in
@@ -623,11 +908,25 @@
           item.style.outline(.none)
         }
 
+        _ = item.addEventListener(.click) { _ in
+          if let url = item.getAttribute(data("url")), !stringIsEmpty(url) {
+            window.location.href = url
+          }
+          let value = item.getAttribute(data("value")) ?? ""
+          let event = CustomEvent(type: "search-result-click", detail: value)
+          typeahead.dispatchEvent(event)
+        }
+
         menu.appendChild(item)
       }
 
       // Dispatch event for TypeaheadSearchInstance to re-scan menu items
       typeahead.dispatchEvent(CustomEvent(type: "typeahead-menu-updated", detail: "{}"))
+
+      // Lock body scroll when dropdown is shown
+      if !results.isEmpty {
+        document.body.style.overflow(.hidden)
+      }
     }
 
     private func parseSearchResponse(_ json: String) -> [SearchResultItem]? {
@@ -727,23 +1026,29 @@
       }
 
       for str in allStrs {
-        let title = extractValue(from: str, key: resultTitleKey)
-        let subtitle = extractValue(from: str, key: resultSubtitleKey)
+        let textValue = extractValue(from: str, key: resultTextKey)
+        let subtextValue = extractValue(from: str, key: resultSubtextKey)
         let urlSegment = extractValue(from: str, key: resultUrlKey)
+        let posValue = extractValue(from: str, key: resultPosKey)
         
-        let homographStr = extractValue(from: str, key: "homograph")
+        let homographStr = extractValue(from: str, key: resultHomographKey)
         let homograph = parseInt(homographStr) ?? 1
         let idStr = extractValue(from: str, key: "id")
         let id = parseInt(idStr) ?? 0
 
-        if !title.isEmpty {
+        let colorValue = extractValue(from: str, key: resultColorKey)
+        let color = colorValue.isEmpty ? "blue" : colorValue
+
+        if !textValue.isEmpty {
           results.append(
             SearchResultItem(
               id: id,
-              title: title,
-              subtitle: subtitle,
+              text: textValue,
+              subtext: subtextValue,
+              pos: posValue,
               urlSegment: urlSegment,
-              homograph: homograph
+              homograph: homograph,
+              color: color
             ))
         }
       }
@@ -770,7 +1075,7 @@
 
       if let menu = document.querySelector("[data-search-menu=\"true\"]") {
         // Show menu
-        menu.style.display(.block)
+        menu.style.display(.flex)
         menu.style.pointerEvents(.auto)
 
         // Use requestAnimationFrame to ensure initial state is rendered before animating

@@ -11,8 +11,8 @@
     let height: Length
 
     public init(
-      width: Length = px(16),
-      height: Length = px(16)
+      width: Length = px(20),
+      height: Length = px(20)
     ) {
       self.width = width
       self.height = height

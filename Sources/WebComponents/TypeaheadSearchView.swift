@@ -44,6 +44,8 @@
     let visibleItemLimit: Int?
     let showEmptyQueryResults: Bool
     let placeholder: String
+    let searchEndpoint: String
+    let searchIcon: Bool
     let `class`: String
 
     public init(
@@ -60,6 +62,8 @@
       visibleItemLimit: Int? = nil,
       showEmptyQueryResults: Bool = false,
       placeholder: String = "",
+      searchEndpoint: String = "",
+      searchIcon: Bool = false,
       class: String = ""
     ) {
       self.id = id
@@ -75,6 +79,8 @@
       self.visibleItemLimit = visibleItemLimit
       self.showEmptyQueryResults = showEmptyQueryResults
       self.placeholder = placeholder
+      self.searchEndpoint = searchEndpoint
+      self.searchIcon = searchIcon
       self.`class` = `class`
     }
 
@@ -83,6 +89,9 @@
       position(.relative)
       width(perc(100))
       fontFamily(typographyFontSans)
+      display(.flex)
+      flexDirection(.column)
+      gap(spacing8)
     }
 
     @CSSBuilder
@@ -108,10 +117,10 @@
 
     @CSSBuilder
     private func typeaheadSearchMenuCSS() -> [CSSRule] {
-      display(.flex)
+      display(.none)
       flexDirection(.column)
       gap(spacing8)
-      maxHeight(min(calc(vh(100) - px(128)), px(900)))
+      maxHeight(calc(vh(100) - px(213)))
       overflowY(.auto)
     }
 
@@ -147,6 +156,7 @@
               useButton: useButton,
               clearable: true,
               buttonLabel: buttonLabel,
+              searchIcon: searchIcon,
               placeholder: placeholder
             )
           }
@@ -324,7 +334,16 @@
 
     private func handleInput() {
       guard let input = inputElement else { return }
-      currentQuery = (input as? HTMLInputElement)?.value ?? ""
+      let newValue = (input as? HTMLInputElement)?.value ?? ""
+      
+      // Clear immediately only when input is emptied (backspace to empty)
+      if newValue.isEmpty && !currentQuery.isEmpty {
+        currentQuery = ""
+        emitInputEvent()
+        return
+      }
+      
+      currentQuery = newValue
 
       // Debounce input
       if let timer = debounceTimer {
@@ -337,7 +356,7 @@
     }
 
     private func emitInputEvent() {
-      let event = CustomEvent(type: "input", detail: currentQuery)
+      let event = CustomEvent(type: "typeahead-input", detail: currentQuery)
       typeaheadSearchElement.dispatchEvent(event)
 
       // Show/hide menu based on query
@@ -414,21 +433,28 @@
 
     private func updateMenuItemStates() {
       for (index, item) in menuItems.enumerated() {
+        let label = item.querySelector(".menu-item-label")
+        let posE = item.querySelector(".menu-item-pos")
+        let desc = item.querySelector(".menu-item-description")
         if index == selectedIndex {
           _ = item.classList.add("menu-item-selected")
           item.setAttribute(.ariaSelected, true)
-          // Premium selected state
           item.style.backgroundColor(backgroundColorBlueSubtle)
-          item.style.color(colorBlue)
           item.style.border(borderWidthBase, .solid, borderColorBlue)
-          item.style.transition(.all, transitionDurationBase, transitionTimingFunctionSystem)
+          item.style.outline(borderWidthBase, .solid, borderColorBlue)
+          item.style.outlineOffset(px(-2))
+          if let lbl = label { lbl.style.color(colorBlue) }
+          if let p = posE { p.style.color(colorBase) }
+          if let d = desc { d.style.color(colorBase) }
         } else {
           _ = item.classList.remove("menu-item-selected")
           item.setAttribute(.ariaSelected, false)
-          // Default state
           item.style.backgroundColor(backgroundColorTransparent)
-          item.style.color(colorSubtle)
           item.style.border(borderWidthBase, .solid, borderColorSubtle)
+          item.style.outline(.none)
+          if let lbl = label { lbl.style.color(colorBase) }
+          if let p = posE { p.style.color(colorSubtle) }
+          if let d = desc { d.style.color(colorSubtle) }
         }
       }
     }
