@@ -329,6 +329,13 @@ public struct ButtonView: HTMLContent {
     }
     minHeight(size.minSize)
 
+    if size == .large {
+      media(maxWidth(maxWidthBreakpointMobile)) {
+        minHeight(ButtonSize.medium.minSize).important()
+        minWidth(ButtonSize.medium.minSize).important()
+      }
+    }
+
     // Border
     borderWidth(borderWidthBase)
     borderStyle(.solid)
@@ -351,6 +358,9 @@ public struct ButtonView: HTMLContent {
         padding(0, spacingHorizontalButton)
       case .large:
         padding(0, spacingHorizontalButtonLarge)
+        media(maxWidth(maxWidthBreakpointMobile)) {
+          padding(0, spacingHorizontalButton).important()
+        }
       }
     }
 

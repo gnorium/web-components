@@ -1328,6 +1328,9 @@ public struct TableView: HTMLContent {
     justifyContent(.spaceBetween)
     gap(spacing12)
     flexWrap(.wrap)
+    media(maxWidth(maxWidthBreakpointMobile)) {
+      justifyContent(.center).important()
+    }
   }
 
   @CSSBuilder
