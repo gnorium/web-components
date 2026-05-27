@@ -374,7 +374,7 @@
       }
       self.query = query
 
-      let url = "\(searchEndpoint)?value=\(query)&field=\(searchField)"
+      let url = "\(searchEndpoint)?\(searchField)=\(query)"
       console.log("SearchBar fetching \(url)")
 
       input.fetch(url) { [self] (jsonString: String?) in

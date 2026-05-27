@@ -622,12 +622,7 @@
           return
         }
         let encodedQuery = encodeURIComponent(query)
-        let targetUrl: String
-        if stringEquals(searchField, "q") || stringContains(resultUrlBase, "/articles") {
-          targetUrl = "\(resultUrlBase)?\(searchField)=\(encodedQuery)"
-        } else {
-          targetUrl = "\(resultUrlBase)?value=\(encodedQuery)&field=\(searchField)"
-        }
+        let targetUrl = "\(resultUrlBase)?\(searchField)=\(encodedQuery)"
         window.location.href = targetUrl
       }
     }
@@ -655,13 +650,7 @@
       // Encode query to be URL safe
       let encodedQuery = encodeURIComponent(cleanQuery)
 
-      // If searchField is "q" or resultUrlBase contains "/articles", use direct query format
-      let url: String
-      if stringEquals(searchField, "q") || stringContains(resultUrlBase, "/articles") {
-        url = "\(searchEndpoint)?\(searchField)=\(encodedQuery)"
-      } else {
-        url = "\(searchEndpoint)?value=\(encodedQuery)&field=\(searchField)"
-      }
+      let url = "\(searchEndpoint)?\(searchField)=\(encodedQuery)"
 
       typeahead.fetch(url) { [self] (jsonString: String?) in
         guard let json = jsonString else { return }

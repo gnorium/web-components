@@ -22,6 +22,7 @@ public struct ButtonView: HTMLContent {
   let fullWidth: Bool
   var `class`: String
   let labelFontWeight: CSSFontWeight
+  let labelFontFamily: CSSFontFamily
   let contentJustifyContent: CSSJustifyContent
 
   /// Button type attribute
@@ -81,6 +82,7 @@ public struct ButtonView: HTMLContent {
     fullWidth: Bool = false,
     class: String = "",
     labelFontWeight: CSSFontWeight = fontWeightBold,
+    labelFontFamily: CSSFontFamily = typographyFontSans,
     contentJustifyContent: CSSJustifyContent = .center
   ) {
     self.label = label
@@ -97,6 +99,7 @@ public struct ButtonView: HTMLContent {
     self.fullWidth = fullWidth
     self.class = `class`
     self.labelFontWeight = labelFontWeight
+    self.labelFontFamily = labelFontFamily
     self.contentJustifyContent = contentJustifyContent
   }
 
@@ -114,6 +117,7 @@ public struct ButtonView: HTMLContent {
     fullWidth: Bool = false,
     class: String = "",
     labelFontWeight: CSSFontWeight = fontWeightBold,
+    labelFontFamily: CSSFontFamily = typographyFontSans,
     contentJustifyContent: CSSJustifyContent = .center
   ) {
     self.label = label
@@ -130,6 +134,7 @@ public struct ButtonView: HTMLContent {
     self.fullWidth = fullWidth
     self.class = `class`
     self.labelFontWeight = labelFontWeight
+    self.labelFontFamily = labelFontFamily
     self.contentJustifyContent = contentJustifyContent
   }
 
@@ -148,6 +153,7 @@ public struct ButtonView: HTMLContent {
     fullWidth: Bool = false,
     class: String = "",
     labelFontWeight: CSSFontWeight = fontWeightBold,
+    labelFontFamily: CSSFontFamily = typographyFontSans,
     contentJustifyContent: CSSJustifyContent = .center
   ) {
     self.label = ""
@@ -164,6 +170,7 @@ public struct ButtonView: HTMLContent {
     self.fullWidth = fullWidth
     self.class = `class`
     self.labelFontWeight = labelFontWeight
+    self.labelFontFamily = labelFontFamily
     self.contentJustifyContent = contentJustifyContent
   }
 
@@ -181,6 +188,7 @@ public struct ButtonView: HTMLContent {
     fullWidth: Bool = false,
     class: String = "",
     labelFontWeight: CSSFontWeight = fontWeightBold,
+    labelFontFamily: CSSFontFamily = typographyFontSans,
     contentJustifyContent: CSSJustifyContent = .center,
     @HTMLBuilder content: () -> [Node]
   ) {
@@ -198,6 +206,7 @@ public struct ButtonView: HTMLContent {
     self.fullWidth = fullWidth
     self.class = `class`
     self.labelFontWeight = labelFontWeight
+    self.labelFontFamily = labelFontFamily
     self.contentJustifyContent = contentJustifyContent
   }
 
@@ -297,7 +306,7 @@ public struct ButtonView: HTMLContent {
     alignItems(.center)
     justifyContent(contentJustifyContent)
     gap(spacingHorizontalButton)
-    fontFamily(fontFamilyBase)
+    fontFamily(labelFontFamily)
     fontSize(fontSizeMedium16)
     fontWeight(labelFontWeight)
     lineHeight(1)
@@ -345,8 +354,9 @@ public struct ButtonView: HTMLContent {
       }
     }
 
-    // Color + Weight combinations
-    applyColorWeightCSS()
+    // Color + Weight — base styles inline, interactive states via pseudo-class
+    applyColorBaseCSS()
+    applyColorInteractiveCSS()
 
     // Focus state
     pseudoClass(.focus) {
@@ -406,46 +416,65 @@ public struct ButtonView: HTMLContent {
   }
 
   @CSSBuilder
-  private func applyColorWeightCSS() -> [CSSRule] {
+  private func applyColorBaseCSS() -> [CSSRule] {
     let c = buttonColor.rawValue.lowercased()
 
     switch (buttonColor, weight) {
-    // Gray — uses generic interactive tokens
     case (.gray, .subtle):
       backgroundColor(backgroundColorBase)
       color(colorBase)
       borderColor(borderColorBase)
-      pseudoClass(.hover, not(.disabled)) { backgroundColor(backgroundColorInteractiveSubtleHover).important() }
-      pseudoClass(.active, not(.disabled)) { backgroundColor(backgroundColorInteractiveSubtleActive).important(); color(colorEmphasized).important(); borderColor(borderColorBase).important() }
-
     case (.gray, .solid):
       backgroundColor(backgroundColorInteractive)
       color(colorBase)
       borderColor(borderColorBase)
-      pseudoClass(.hover, not(.disabled)) { backgroundColor(backgroundColorInteractiveHover).important() }
-      pseudoClass(.active, not(.disabled)) { backgroundColor(backgroundColorInteractiveActive).important(); color(colorEmphasized).important(); borderColor(borderColorBase).important() }
-
     case (.gray, .quiet):
       backgroundColor(.transparent)
       color(colorBase)
       borderColor(.transparent)
-      pseudoClass(.hover, not(.disabled)) { backgroundColor(backgroundColorInteractiveSubtle).important(); borderColor(.transparent).important() }
-      pseudoClass(.active, not(.disabled)) { backgroundColor(backgroundColorInteractiveSubtleActive).important(); color(colorEmphasized).important(); borderColor(.transparent).important() }
-      pseudoClass(.focus) { borderColor(.transparent).important(); boxShadow(.none).important() }
-
     case (.gray, .plain):
       backgroundColor(.transparent)
       color(colorBase)
       borderColor(.transparent)
-      pseudoClass(.hover, not(.disabled)) { backgroundColor(.transparent).important(); color(colorBase).important(); borderColor(.transparent).important() }
-      pseudoClass(.active, not(.disabled)) { backgroundColor(.transparent).important(); color(colorEmphasized).important(); borderColor(.transparent).important() }
-      pseudoClass(.focus) { borderColor(.transparent).important(); boxShadow(.none).important() }
-
-    // Colored buttons — use color-specific tokens
     case (_, .subtle):
       backgroundColor(`var`("--background-color-\(c)-subtle"))
       color(`var`("--color-\(c)"))
       borderColor(`var`("--border-color-\(c)"))
+    case (_, .solid):
+      backgroundColor(`var`("--background-color-\(c)"))
+      color(colorInvertedFixed)
+      borderColor(`var`("--background-color-\(c)"))
+    case (_, .quiet):
+      backgroundColor(.transparent)
+      color(`var`("--color-\(c)"))
+      borderColor(.transparent)
+    case (_, .plain):
+      backgroundColor(.transparent)
+      color(`var`("--color-\(c)"))
+      borderColor(.transparent)
+    }
+  }
+
+  @CSSBuilder
+  private func applyColorInteractiveCSS() -> [CSSRule] {
+    let c = buttonColor.rawValue.lowercased()
+
+    switch (buttonColor, weight) {
+    case (.gray, .subtle):
+      pseudoClass(.hover, not(.disabled)) { backgroundColor(backgroundColorInteractiveSubtleHover).important() }
+      pseudoClass(.active, not(.disabled)) { backgroundColor(backgroundColorInteractiveSubtleActive).important(); color(colorEmphasized).important(); borderColor(borderColorBase).important() }
+    case (.gray, .solid):
+      pseudoClass(.hover, not(.disabled)) { backgroundColor(backgroundColorInteractiveHover).important() }
+      pseudoClass(.active, not(.disabled)) { backgroundColor(backgroundColorInteractiveActive).important(); color(colorEmphasized).important(); borderColor(borderColorBase).important() }
+    case (.gray, .quiet):
+      pseudoClass(.hover, not(.disabled)) { backgroundColor(backgroundColorInteractiveSubtle).important(); borderColor(.transparent).important() }
+      pseudoClass(.active, not(.disabled)) { backgroundColor(backgroundColorInteractiveSubtleActive).important(); color(colorEmphasized).important(); borderColor(.transparent).important() }
+      pseudoClass(.focus) { borderColor(.transparent).important(); boxShadow(.none).important() }
+    case (.gray, .plain):
+      pseudoClass(.hover, not(.disabled)) { backgroundColor(.transparent).important(); color(colorBase).important(); borderColor(.transparent).important() }
+      pseudoClass(.active, not(.disabled)) { backgroundColor(.transparent).important(); color(colorEmphasized).important(); borderColor(.transparent).important() }
+      pseudoClass(.focus) { borderColor(.transparent).important(); boxShadow(.none).important() }
+    case (_, .subtle):
       pseudoClass(.hover, not(.disabled)) {
         backgroundColor(`var`("--background-color-\(c)-subtle-hover")).important()
         borderColor(`var`("--border-color-\(c)-hover")).important()
@@ -455,14 +484,8 @@ public struct ButtonView: HTMLContent {
         borderColor(`var`("--border-color-\(c)-active")).important()
         color(`var`("--color-\(c)-active")).important()
       }
-      pseudoClass(.focus) {
-        borderColor(`var`("--border-color-\(c)-focus")).important()
-      }
-
+      pseudoClass(.focus) { borderColor(`var`("--border-color-\(c)-focus")).important() }
     case (_, .solid):
-      backgroundColor(`var`("--background-color-\(c)"))
-      color(`var`("--color-inverted-fixed"))
-      borderColor(`var`("--background-color-\(c)"))
       pseudoClass(.hover, not(.disabled)) {
         backgroundColor(`var`("--background-color-\(c)-hover")).important()
         borderColor(`var`("--background-color-\(c)-hover")).important()
@@ -471,31 +494,15 @@ public struct ButtonView: HTMLContent {
         backgroundColor(`var`("--background-color-\(c)-active")).important()
         borderColor(`var`("--background-color-\(c)-active")).important()
       }
-      pseudoClass(.focus) {
-        borderColor(`var`("--border-color-\(c)-focus")).important()
-      }
-
+      pseudoClass(.focus) { borderColor(`var`("--border-color-\(c)-focus")).important() }
     case (_, .quiet):
-      backgroundColor(.transparent)
-      color(`var`("--color-\(c)"))
-      borderColor(.transparent)
       pseudoClass(.hover, not(.disabled)) { backgroundColor(`var`("--background-color-\(c)-subtle")).important() }
       pseudoClass(.active, not(.disabled)) { backgroundColor(`var`("--background-color-\(c)-subtle-active")).important(); color(`var`("--color-\(c)-active")).important() }
       pseudoClass(.focus) { borderColor(.transparent).important(); boxShadow(.none).important() }
-
     case (_, .plain):
-      backgroundColor(.transparent)
-      color(`var`("--color-\(c)"))
-      borderColor(.transparent)
       pseudoClass(.hover, not(.disabled)) { backgroundColor(.transparent).important(); color(colorBase).important() }
       pseudoClass(.active, not(.disabled)) { backgroundColor(.transparent).important(); color(`var`("--color-\(c)-active")).important() }
       pseudoClass(.focus) { borderColor(.transparent).important(); boxShadow(.none).important() }
-    }
-
-    pseudoClass(.active, not(.disabled)) {
-      backgroundColor(backgroundColorInteractiveSubtleActive).important()
-      color(colorEmphasized).important()
-      borderColor(borderColorBase).important()
     }
   }
 }
