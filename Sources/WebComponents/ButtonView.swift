@@ -330,9 +330,12 @@ public struct ButtonView: HTMLContent {
     minHeight(size.minSize)
 
     if size == .large {
+      let ms = ButtonSize.medium.minSize
       media(maxWidth(maxWidthBreakpointMobile)) {
-        minHeight(ButtonSize.medium.minSize).important()
-        minWidth(ButtonSize.medium.minSize).important()
+        height(ms).important()
+        width(ms).important()
+        minHeight(ms).important()
+        minWidth(ms).important()
       }
     }
 
