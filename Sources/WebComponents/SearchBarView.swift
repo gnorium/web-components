@@ -234,9 +234,9 @@
       static let debounceMs = 250.0
     }
 
-    public init?() {
-      container = document.querySelector("[data-search-container=\"true\"]")
-      guard let container else { return nil }
+    public init?(container: Element? = nil) {
+      self.container = container ?? document.querySelector("[data-search-container=\"true\"]")
+      guard let container = self.container else { return nil }
 
       input = container.querySelector("[data-search-input=\"true\"]")
       guard input != nil else { return nil }
@@ -357,10 +357,19 @@
     }
 
     private func onSearch() {
-      guard activeIndex >= 0 && activeIndex < results.count else { return }
-      let result = results[activeIndex]
-      let href = result.url.isEmpty ? "\(resultUrlBase)/\(result.languageCode)/\(result.text)/\(result.homograph)" : result.url
-      location.href = href
+      if activeIndex >= 0 && activeIndex < results.count {
+        let result = results[activeIndex]
+        let base = stripQuery(resultUrlBase)
+        let href = result.url.isEmpty ? "\(base)/\(result.languageCode)/\(result.text)/\(result.homograph)" : result.url
+        location.href = href
+        return
+      }
+      let q = (input as? HTMLInputElement)?.value ?? ""
+      if q.isEmpty {
+        location.href = resultUrlBase
+      } else {
+        location.href = "\(resultUrlBase)?\(searchField)=\(q)"
+      }
     }
 
     private func fetchResults() {
@@ -375,7 +384,6 @@
       self.query = query
 
       let url = "\(searchEndpoint)?\(searchField)=\(query)"
-      console.log("SearchBar fetching \(url)")
 
       input.fetch(url) { [self] (jsonString: String?) in
         guard let json = jsonString else {
@@ -485,6 +493,11 @@
 
         searchBarSuggestions.appendChild(li)
       }
+    }
+
+    private func stripQuery(_ url: String) -> String {
+      let parts = stringSplit(url, separator: "?")
+      return parts.count > 0 ? parts[0] : url
     }
   }
 

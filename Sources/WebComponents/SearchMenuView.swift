@@ -765,10 +765,11 @@
 
         // Construct URL for navigation
         let href: String
+        let base = stripQuery(resultUrlBase)
         if stringEquals(searchField, "q") || stringContains(resultUrlBase, "/articles") {
-          href = "\(resultUrlBase)/\(result.urlSegment)"
+          href = "\(base)/\(result.urlSegment)"
         } else {
-          href = "\(resultUrlBase)/\(result.urlSegment)/\(result.text)/\(result.homograph)"
+          href = "\(base)/\(result.urlSegment)/\(result.text)/\(result.homograph)"
         }
         item.setAttribute(data("url"), href)
 
@@ -1140,6 +1141,11 @@
           resultsMenu.innerHTML = ""
         }
       }
+    }
+
+    private func stripQuery(_ url: String) -> String {
+      let parts = stringSplit(url, separator: "?")
+      return parts.count > 0 ? parts[0] : url
     }
   }
 #endif
