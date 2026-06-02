@@ -59,13 +59,13 @@
     }
 
     @CSSBuilder
-    private func lookupViewCSS() -> [CSSRule] {
+    private func lookupViewCSS() -> [CSSOM.CSSRule] {
       position(.relative)
       display(.inlineBlock)
       minWidth(px(256))
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       return div {
         TextInputView(
           id: id,
@@ -108,14 +108,14 @@
   import WebTypes
 
   private class LookupInstance: @unchecked Sendable {
-    private var lookup: Element
-    private var input: Element?
-    private var menu: Element?
-    private var menuItems: [Element] = []
+    private var lookup: DOM.Element
+    private var input: DOM.Element?
+    private var menu: DOM.Element?
+    private var menuItems: [DOM.Element] = []
     private var isOpen: Bool = false
     private var currentFocusIndex: Int = -1
 
-    init(lookup: Element) {
+    init(lookup: DOM.Element) {
       self.lookup = lookup
 
       input = lookup.querySelector(".text-input-view input")
@@ -149,7 +149,7 @@
         self.openMenu()
         // Dispatch input event for filtering
         let event = CustomEvent(
-          type: "lookup-input", detail: (input as? HTMLInputElement)?.value ?? "")
+          type: "lookup-input", detail: (input as? HTML.HTMLInputElement)?.value ?? "")
         self.lookup.dispatchEvent(event)
       }
 
@@ -185,7 +185,7 @@
       currentFocusIndex = -1
     }
 
-    private func selectMenuItem(_ item: Element) {
+    private func selectMenuItem(_ item: DOM.Element) {
       guard let ariaDisabled = item.getAttribute("aria-disabled"),
         !stringEquals(ariaDisabled, "true")
       else { return }
@@ -194,7 +194,7 @@
 
       // Update input value
       if let input = input {
-        (input as? HTMLInputElement)?.value = value
+        (input as? HTML.HTMLInputElement)?.value = value
       }
 
       // Emit selection event

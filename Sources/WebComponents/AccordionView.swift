@@ -56,9 +56,11 @@ public struct AccordionView: HTMLContent {
   let separation: Separation
   let headingLevel: HeadingLevel
   let headerDirection: HeaderDirection
-  let titleContent: [Node]
-  let descriptionContent: [Node]
-  let contentSlot: [Node]
+  let titleFontSize: CSS.Length
+  let titleFontWeight: CSS.FontWeight
+  let titleContent: [DOM.Node]
+  let descriptionContent: [DOM.Node]
+  let contentSlot: [DOM.Node]
   let `class`: String
 
   public init(
@@ -70,10 +72,12 @@ public struct AccordionView: HTMLContent {
     separation: Separation = .divider,
     headingLevel: HeadingLevel = .h3,
     headerDirection: HeaderDirection = .column,
+    titleFontSize: CSS.Length = fontSizeMedium16,
+    titleFontWeight: CSS.FontWeight = fontWeightSemiBold,
     class: String = "",
-    @HTMLBuilder title: () -> [Node],
-    @HTMLBuilder description: () -> [Node] = { [] },
-    @HTMLBuilder content: () -> [Node]
+    @HTMLBuilder title: () -> [DOM.Node],
+    @HTMLBuilder description: () -> [DOM.Node] = { [] },
+    @HTMLBuilder content: () -> [DOM.Node]
   ) {
     self.id = id
     self.isOpen = isOpen
@@ -83,6 +87,8 @@ public struct AccordionView: HTMLContent {
     self.separation = separation
     self.headingLevel = headingLevel
     self.headerDirection = headerDirection
+    self.titleFontSize = titleFontSize
+    self.titleFontWeight = titleFontWeight
     self.`class` = `class`
     self.titleContent = title()
     self.descriptionContent = description()
@@ -96,10 +102,12 @@ public struct AccordionView: HTMLContent {
     separation: Separation = .divider,
     headingLevel: HeadingLevel = .h3,
     headerDirection: HeaderDirection = .column,
+    titleFontSize: CSS.Length = fontSizeMedium16,
+    titleFontWeight: CSS.FontWeight = fontWeightSemiBold,
     class: String = "",
-    @HTMLBuilder title: () -> [Node],
-    @HTMLBuilder description: () -> [Node] = { [] },
-    @HTMLBuilder content: () -> [Node]
+    @HTMLBuilder title: () -> [DOM.Node],
+    @HTMLBuilder description: () -> [DOM.Node] = { [] },
+    @HTMLBuilder content: () -> [DOM.Node]
   ) {
     self.id = id
     self.isOpen = open
@@ -109,13 +117,15 @@ public struct AccordionView: HTMLContent {
     self.separation = separation
     self.headingLevel = headingLevel
     self.headerDirection = headerDirection
+    self.titleFontSize = titleFontSize
+    self.titleFontWeight = titleFontWeight
     self.`class` = `class`
     self.titleContent = title()
     self.descriptionContent = description()
     self.contentSlot = content()
   }
 
-  public func build() -> Node {
+  public func build() -> DOM.Node {
     let hasDescription = !descriptionContent.isEmpty
     var hasAction = false
     if let _ = actionIcon {
@@ -123,7 +133,7 @@ public struct AccordionView: HTMLContent {
     }
 
     // Render heading with appropriate level
-    let titleElement: Node
+    let titleElement: DOM.Node
     switch headingLevel {
     case .h1:
       titleElement = h1 { titleContent }
@@ -156,7 +166,7 @@ public struct AccordionView: HTMLContent {
         .style { accordionTitleCSS() }
     }
 
-    let detailsElement: HTMLDetailsElement = details {
+    let detailsElement: HTML.HTMLDetailsElement = details {
       summary {
         div {
           titleElement
@@ -187,9 +197,9 @@ public struct AccordionView: HTMLContent {
           }
         }
 
-        // Animated chevron that morphs between v (closed) and ^ (open)
+        // Animated chevron — right (collapsed) to down (open)
         span {
-          AnimatedUpDownChevronView(
+          AnimatedRightDownChevronView(
             id: "accordion-\(id)",
             expanded: isOpen
           )
@@ -207,16 +217,29 @@ public struct AccordionView: HTMLContent {
         accordionSummaryCSS(separation, hasAction)
       }
 
-      div { contentSlot }
-        .class("accordion-content")
-        .style {
-          accordionContentCSS(separation)
-        }
+      // Clip wrapper sits BELOW the summary so the content's translateY slide is
+      // masked at the title's bottom edge (slides under the title, not over it).
+      div {
+        div { contentSlot }
+          .class("accordion-content")
+          .style {
+            accordionContentCSS(separation)
+          }
+      }
+      .class("accordion-content-clip")
+      .style { overflow(.hidden) }
     }
     .open(isOpen)
+    .data("open-finished", isOpen ? "true" : "false")
     .class("accordion-details")
     .id(id)
-    .style { overflow(.hidden) }
+    .style {
+      attribute(data("open-finished"), "true") {
+        descendant(".accordion-content-clip") {
+          overflow(.visible).important()
+        }
+      }
+    }
 
     if separation == .divider {
       return div {
@@ -249,8 +272,17 @@ public struct AccordionView: HTMLContent {
   }
 
   @CSSBuilder
-  private func accordionViewCSS(_ separation: Separation) -> [CSSRule] {
+  private func accordionViewCSS(_ separation: Separation) -> [CSSOM.CSSRule] {
     display(.block)
+    position(.relative)
+
+    pseudoClass(.hover) {
+      zIndex(zIndexToolbar).important()
+    }
+
+    pseudoClass(.focusWithin) {
+      zIndex(zIndexToolbar).important()
+    }
 
     if separation == .outline {
       border(borderWidthBase, .solid, borderColorSubtle)
@@ -260,7 +292,7 @@ public struct AccordionView: HTMLContent {
   }
 
   @CSSBuilder
-  private func accordionSummaryCSS(_ separation: Separation, _ hasAction: Bool) -> [CSSRule] {
+  private func accordionSummaryCSS(_ separation: Separation, _ hasAction: Bool) -> [CSSOM.CSSRule] {
     display(.flex)
     alignItems(.center)
     gap(spacing8)
@@ -300,7 +332,7 @@ public struct AccordionView: HTMLContent {
   }
 
   @CSSBuilder
-  private func accordionExpandIconCSS() -> [CSSRule] {
+  private func accordionExpandIconCSS() -> [CSSOM.CSSRule] {
     display(.inlineFlex)
     alignItems(.center)
     justifyContent(.center)
@@ -312,7 +344,7 @@ public struct AccordionView: HTMLContent {
   }
 
   @CSSBuilder
-  private func accordionHeaderWrapperCSS() -> [CSSRule] {
+  private func accordionHeaderWrapperCSS() -> [CSSOM.CSSRule] {
     display(.flex)
     if headerDirection == .row {
       flexDirection(.row)
@@ -327,10 +359,10 @@ public struct AccordionView: HTMLContent {
   }
 
   @CSSBuilder
-  private func accordionTitleCSS() -> [CSSRule] {
+  private func accordionTitleCSS() -> [CSSOM.CSSRule] {
     fontFamily(typographyFontSans)
-    fontSize(fontSizeMedium16)
-    fontWeight(fontWeightSemiBold)
+    fontSize(titleFontSize)
+    fontWeight(titleFontWeight)
     lineHeight(lineHeightSmall22)
     color(colorBase)
     margin(0)
@@ -338,7 +370,7 @@ public struct AccordionView: HTMLContent {
   }
 
   @CSSBuilder
-  private func accordionDescriptionCSS() -> [CSSRule] {
+  private func accordionDescriptionCSS() -> [CSSOM.CSSRule] {
     fontSize(fontSizeSmall14)
     lineHeight(lineHeightSmall22)
     color(colorSubtle)
@@ -346,7 +378,7 @@ public struct AccordionView: HTMLContent {
   }
 
   @CSSBuilder
-  private func accordionActionButtonCSS(_ actionAlwaysVisible: Bool) -> [CSSRule] {
+  private func accordionActionButtonCSS(_ actionAlwaysVisible: Bool) -> [CSSOM.CSSRule] {
     if actionAlwaysVisible {
       display(.inlineFlex)
     } else {
@@ -382,7 +414,7 @@ public struct AccordionView: HTMLContent {
   }
 
   @CSSBuilder
-  private func accordionContentCSS(_ separation: Separation) -> [CSSRule] {
+  private func accordionContentCSS(_ separation: Separation) -> [CSSOM.CSSRule] {
     fontFamily(typographyFontSans)
     fontSize(fontSizeMedium16)
     lineHeight(lineHeightSmall22)
@@ -397,7 +429,7 @@ public struct AccordionView: HTMLContent {
   }
 
   @CSSBuilder
-  private func accordionDividerCSS() -> [CSSRule] {
+  private func accordionDividerCSS() -> [CSSOM.CSSRule] {
     height(borderWidthBase)
     backgroundColor(borderColorSubtle)
     margin(spacing0)
@@ -409,22 +441,20 @@ public struct AccordionView: HTMLContent {
   import WebAPIs
 
   private class AccordionInstance: @unchecked Sendable {
-    private var accordion: Element
-    private var details: Element?
-    private var summary: Element?
-    private var actionButton: Element?
-    private var chevronInstance: AnimatedUpDownChevronInstance?
+    private var accordion: DOM.Element
+    private var details: DOM.Element?
+    private var summary: DOM.Element?
+    private var actionButton: DOM.Element?
+    private var chevronEl: DOM.Element?
     private var isOpen: Bool
 
-    init(accordion: Element) {
+    init(accordion: DOM.Element) {
       self.accordion = accordion
 
       details = accordion.querySelector(".accordion-details")
       summary = accordion.querySelector(".accordion-summary")
       actionButton = accordion.querySelector(".accordion-action-button")
-      if let chevronEl = accordion.querySelector(".animated-up-down-chevron-view") {
-        chevronInstance = AnimatedUpDownChevronFactory.from(element: chevronEl)
-      }
+      chevronEl = accordion.querySelector(".animated-right-down-chevron-view")
       if let d = details {
         isOpen = d.hasAttribute(.open)
       } else {
@@ -446,12 +476,14 @@ public struct AccordionView: HTMLContent {
           // Prevent native close so we can animate first
           event.preventDefault()
           self.isOpen = false
+          details.setAttribute(data("open-finished"), "false")
 
-          chevronInstance?.setState(expanded: false, animated: true)
+          chevronEl?.style.transform(rotate(deg(-90)))
+          chevronEl?.setAttribute(data("expanded"), "false")
 
           // Animate content sliding up, then manually close
           if let content = details.querySelector(".accordion-content") {
-            content.style.setProperty(.transition, (.transform, s(0.25), .ease))
+            content.style.setProperty(.transition, (.transform, transitionDurationMedium, .ease))
             content.style.setProperty(.transform, translateY(perc(-100)))
           }
           window.setTimeout(250) {
@@ -475,7 +507,8 @@ public struct AccordionView: HTMLContent {
           // Let browser add [open] natively, then animate content in
           self.isOpen = true
 
-          chevronInstance?.setState(expanded: true, animated: true)
+          chevronEl?.style.transform(rotate(deg(0)))
+          chevronEl?.setAttribute(data("expanded"), "true")
 
           // Wait for browser to add [open], then animate content slide-in
           window.requestAnimationFrame {
@@ -483,7 +516,7 @@ public struct AccordionView: HTMLContent {
               content.style.setProperty(.transition, .none)
               content.style.setProperty(.transform, translateY(perc(-100)))
               window.requestAnimationFrame {
-                content.style.setProperty(.transition, (.transform, s(0.25), .ease))
+                content.style.setProperty(.transition, (.transform, transitionDurationMedium, .ease))
                 content.style.setProperty(.transform, translateY(0))
               }
             }
@@ -501,6 +534,12 @@ public struct AccordionView: HTMLContent {
           // Dispatch custom event
           let openEvent = CustomEvent(type: "accordion-toggle", detail: "true")
           self.accordion.dispatchEvent(openEvent)
+
+          window.setTimeout(250) { [self] in
+            if self.isOpen {
+              details.setAttribute(data("open-finished"), "true")
+            }
+          }
         }
       }
 
@@ -536,7 +575,7 @@ public struct AccordionView: HTMLContent {
     }
 
     /// Hydrates a dynamically created accordion element (e.g. from AccordionFactory).
-    public func hydrate(_ element: Element) {
+    public func hydrate(_ element: DOM.Element) {
       let instance = AccordionInstance(accordion: element)
       instances.append(instance)
     }
@@ -551,7 +590,7 @@ public struct AccordionView: HTMLContent {
     ///   - id: Unique ID for the accordion (used on the `<details>` element)
     ///   - open: Whether the accordion starts expanded
     ///   - separation: Visual separation style (.none, .minimal, .divider, .outline)
-    ///   - title: Text content for the accordion title
+    ///   - title: DOM.Text content for the accordion title
     ///   - headingLevel: Heading level (e.g. .h3, .h5). Default .h3
     ///   - content: Closure that returns the content element to place inside `.accordion-content`
     /// - Returns: The root `.accordion-view` div element (call AccordionHydration.hydrate to bind animations)
@@ -562,9 +601,9 @@ public struct AccordionView: HTMLContent {
       title: String,
       headingLevel: HeadingLevel = .h3,
       headerDirection: HeaderDirection = .column,
-      @HTMLBuilder description: () -> [Node] = { [] },
-      content: () -> Element
-    ) -> Element {
+      @HTMLBuilder description: () -> [DOM.Node] = { [] },
+      content: () -> DOM.Element
+    ) -> DOM.Element {
       let wrapper = document.createElement(.div)
       let view = AccordionView(
         id: id,

@@ -7,13 +7,13 @@
   import WebTypes
 
   public struct CollapseIconView: HTMLContent {
-    let width: Length
-    let height: Length
+    let width: CSS.Length
+    let height: CSS.Length
     let `class`: String
 
     public init(
-      width: Length = px(20),
-      height: Length = px(20),
+      width: CSS.Length = px(20),
+      height: CSS.Length = px(20),
       class: String = ""
     ) {
       self.width = width
@@ -21,7 +21,7 @@
       self.class = `class`
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       svg {
         path()
           .d(m(2.5, 15.25), l(7.5, -7.5), l(7.5, 7.5), l(1.5, -1.5), l(-9, -9), l(-9, 9), Z())

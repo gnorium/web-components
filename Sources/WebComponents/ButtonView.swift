@@ -12,7 +12,7 @@ public struct ButtonView: HTMLContent {
   let buttonColor: ButtonColor
   let weight: ButtonWeight
   let size: ButtonSize
-  let icon: Node?
+  let icon: DOM.Node?
   let iconOnly: Bool
   let disabled: Bool
   let ariaLabel: String?
@@ -21,9 +21,11 @@ public struct ButtonView: HTMLContent {
   let type: ButtonType
   let fullWidth: Bool
   var `class`: String
-  let labelFontWeight: CSSFontWeight
-  let labelFontFamily: CSSFontFamily
-  let contentJustifyContent: CSSJustifyContent
+  let labelFontWeight: CSS.FontWeight
+  let labelFontFamily: CSS.FontFamily
+  let contentJustifyContent: CSS.JustifyContent
+  let style: @Sendable () -> [CSSOM.CSSRule]
+  let buttonBorderRadius: CSS.Length
 
   /// Button type attribute
   public enum ButtonType: String, Sendable {
@@ -43,6 +45,8 @@ public struct ButtonView: HTMLContent {
     case solid
     /// Subtle buttons are the default — light background, colored text, border
     case subtle
+    /// Static buttons — no interactive feedback at all (for structured controls like dropdowns)
+    case `static`
     /// Quiet buttons — transparent, no border, hover shows subtle background
     case quiet
     /// Plain buttons — transparent, no background change on hover
@@ -58,7 +62,7 @@ public struct ButtonView: HTMLContent {
     /// Large: For accessibility on touchscreens (increases touch area)
     case large
 
-    var minSize: Length {
+    var minSize: CSS.Length {
       switch self {
       case .small: return px(24)
       case .medium: return px(32)
@@ -81,9 +85,11 @@ public struct ButtonView: HTMLContent {
     onClick: String? = nil,
     fullWidth: Bool = false,
     class: String = "",
-    labelFontWeight: CSSFontWeight = fontWeightBold,
-    labelFontFamily: CSSFontFamily = typographyFontSans,
-    contentJustifyContent: CSSJustifyContent = .center
+    labelFontWeight: CSS.FontWeight = fontWeightBold,
+    labelFontFamily: CSS.FontFamily = typographyFontSans,
+    contentJustifyContent: CSS.JustifyContent = .center,
+    borderRadius: CSS.Length = borderRadiusPill,
+    @CSSBuilder style: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] }
   ) {
     self.label = label
     self.buttonColor = buttonColor
@@ -101,6 +107,8 @@ public struct ButtonView: HTMLContent {
     self.labelFontWeight = labelFontWeight
     self.labelFontFamily = labelFontFamily
     self.contentJustifyContent = contentJustifyContent
+    self.style = style
+    self.buttonBorderRadius = borderRadius
   }
 
   public init<T: HTMLContent>(
@@ -116,9 +124,11 @@ public struct ButtonView: HTMLContent {
     onClick: String? = nil,
     fullWidth: Bool = false,
     class: String = "",
-    labelFontWeight: CSSFontWeight = fontWeightBold,
-    labelFontFamily: CSSFontFamily = typographyFontSans,
-    contentJustifyContent: CSSJustifyContent = .center
+    labelFontWeight: CSS.FontWeight = fontWeightBold,
+    labelFontFamily: CSS.FontFamily = typographyFontSans,
+    contentJustifyContent: CSS.JustifyContent = .center,
+    borderRadius: CSS.Length = borderRadiusPill,
+    @CSSBuilder style: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] }
   ) {
     self.label = label
     self.buttonColor = buttonColor
@@ -136,6 +146,8 @@ public struct ButtonView: HTMLContent {
     self.labelFontWeight = labelFontWeight
     self.labelFontFamily = labelFontFamily
     self.contentJustifyContent = contentJustifyContent
+    self.style = style
+    self.buttonBorderRadius = borderRadius
   }
 
   /// Create an icon-only button
@@ -152,9 +164,11 @@ public struct ButtonView: HTMLContent {
     onClick: String? = nil,
     fullWidth: Bool = false,
     class: String = "",
-    labelFontWeight: CSSFontWeight = fontWeightBold,
-    labelFontFamily: CSSFontFamily = typographyFontSans,
-    contentJustifyContent: CSSJustifyContent = .center
+    labelFontWeight: CSS.FontWeight = fontWeightBold,
+    labelFontFamily: CSS.FontFamily = typographyFontSans,
+    contentJustifyContent: CSS.JustifyContent = .center,
+    borderRadius: CSS.Length = borderRadiusPill,
+    @CSSBuilder style: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] }
   ) {
     self.label = ""
     self.buttonColor = buttonColor
@@ -172,6 +186,8 @@ public struct ButtonView: HTMLContent {
     self.labelFontWeight = labelFontWeight
     self.labelFontFamily = labelFontFamily
     self.contentJustifyContent = contentJustifyContent
+    self.style = style
+    self.buttonBorderRadius = borderRadius
   }
 
   /// Create a button with custom content
@@ -187,10 +203,12 @@ public struct ButtonView: HTMLContent {
     onClick: String? = nil,
     fullWidth: Bool = false,
     class: String = "",
-    labelFontWeight: CSSFontWeight = fontWeightBold,
-    labelFontFamily: CSSFontFamily = typographyFontSans,
-    contentJustifyContent: CSSJustifyContent = .center,
-    @HTMLBuilder content: () -> [Node]
+    labelFontWeight: CSS.FontWeight = fontWeightBold,
+    labelFontFamily: CSS.FontFamily = typographyFontSans,
+    contentJustifyContent: CSS.JustifyContent = .center,
+    borderRadius: CSS.Length = borderRadiusPill,
+    @CSSBuilder style: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] },
+    @HTMLBuilder content: () -> [DOM.Node]
   ) {
     self.label = label
     self.buttonColor = buttonColor
@@ -208,14 +226,16 @@ public struct ButtonView: HTMLContent {
     self.labelFontWeight = labelFontWeight
     self.labelFontFamily = labelFontFamily
     self.contentJustifyContent = contentJustifyContent
+    self.style = style
+    self.buttonBorderRadius = borderRadius
   }
 
-  public func build() -> Node {
+  public func build() -> DOM.Node {
     let baseClasses = "button-view button-color-\(buttonColor.rawValue) button-weight-\(weight.rawValue) button-size-\(size.rawValue)\(iconOnly ? " button-icon-only" : "")"
     let fullClass = stringIsEmpty(`class`) ? baseClasses : "\(baseClasses) \(`class`)"
 
     @HTMLBuilder
-    func renderContent() -> [Node] {
+    func renderContent() -> [DOM.Node] {
       if let icon = icon {
         if stringIsEmpty(label) && iconOnly {
           span { icon }
@@ -291,7 +311,7 @@ public struct ButtonView: HTMLContent {
   }
 
   @CSSBuilder
-  private func buttonViewCSS() -> [CSSRule] {
+  private func buttonViewCSS() -> [CSSOM.CSSRule] {
     // Base button styles
     if iconOnly {
       display(.flex)
@@ -309,7 +329,6 @@ public struct ButtonView: HTMLContent {
     fontFamily(labelFontFamily)
     fontSize(fontSizeMedium16)
     fontWeight(labelFontWeight)
-    lineHeight(1)
     textDecoration(.none)
     textAlign(.center)
     verticalAlign(.middle)
@@ -330,19 +349,24 @@ public struct ButtonView: HTMLContent {
     minHeight(size.minSize)
 
     if size == .large {
-      let ms = ButtonSize.medium.minSize
-      media(maxWidth(maxWidthBreakpointMobile)) {
-        height(ms).important()
-        width(ms).important()
-        minHeight(ms).important()
-        minWidth(ms).important()
+      let isNavbarBtn = stringContains(self.class, "navbar-ellipsis-btn") || stringContains(self.class, "navbar-sidebar-btn") || stringContains(self.class, "navbar-search-btn")
+      if isNavbarBtn {
+        let ms = ButtonSize.medium.minSize
+        media(maxWidth(maxWidthBreakpointMobile)) {
+          height(ms).important()
+          minHeight(ms).important()
+          if iconOnly {
+            width(ms).important()
+            minWidth(ms).important()
+          }
+        }
       }
     }
 
     // Border
     borderWidth(borderWidthBase)
     borderStyle(.solid)
-    borderRadius(borderRadiusPill)
+    borderRadius(buttonBorderRadius)
 
     // Interaction
     cursor(.pointer)
@@ -369,7 +393,7 @@ public struct ButtonView: HTMLContent {
 
     // Color + Weight — base styles inline, interactive states via pseudo-class
     applyColorBaseCSS()
-    applyColorInteractiveCSS()
+    if weight != .`static` { applyColorInteractiveCSS() }
 
     // Focus state
     pseudoClass(.focus) {
@@ -398,10 +422,13 @@ public struct ButtonView: HTMLContent {
         }
       }
     }
+
+    // Custom styles
+    style()
   }
 
   @CSSBuilder
-  private func buttonIconCSS() -> [CSSRule] {
+  private func buttonIconCSS() -> [CSSOM.CSSRule] {
     display(.flex)
     alignItems(.center)
     justifyContent(.center)
@@ -429,7 +456,7 @@ public struct ButtonView: HTMLContent {
   }
 
   @CSSBuilder
-  private func applyColorBaseCSS() -> [CSSRule] {
+  private func applyColorBaseCSS() -> [CSSOM.CSSRule] {
     let c = buttonColor.rawValue.lowercased()
 
     switch (buttonColor, weight) {
@@ -449,6 +476,10 @@ public struct ButtonView: HTMLContent {
       backgroundColor(.transparent)
       color(colorBase)
       borderColor(.transparent)
+    case (.gray, .`static`):
+      backgroundColor(backgroundColorBase)
+      color(colorBase)
+      borderColor(borderColorBase)
     case (_, .subtle):
       backgroundColor(`var`("--background-color-\(c)-subtle"))
       color(`var`("--color-\(c)"))
@@ -465,11 +496,15 @@ public struct ButtonView: HTMLContent {
       backgroundColor(.transparent)
       color(`var`("--color-\(c)"))
       borderColor(.transparent)
+    case (_, .`static`):
+      backgroundColor(backgroundColorBase)
+      color(colorBase)
+      borderColor(borderColorBase)
     }
   }
 
   @CSSBuilder
-  private func applyColorInteractiveCSS() -> [CSSRule] {
+  private func applyColorInteractiveCSS() -> [CSSOM.CSSRule] {
     let c = buttonColor.rawValue.lowercased()
 
     switch (buttonColor, weight) {
@@ -516,6 +551,9 @@ public struct ButtonView: HTMLContent {
       pseudoClass(.hover, not(.disabled)) { backgroundColor(.transparent).important(); color(colorBase).important() }
       pseudoClass(.active, not(.disabled)) { backgroundColor(.transparent).important(); color(`var`("--color-\(c)-active")).important() }
       pseudoClass(.focus) { borderColor(.transparent).important(); boxShadow(.none).important() }
+    case (_, .static):
+      // Static weight is non-interactive — no hover/active/focus styling.
+      if false { color(colorBase) }
     }
   }
 }

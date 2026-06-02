@@ -14,7 +14,7 @@
       self.class = `class`
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       div {
         ButtonView(
           icon: IconView(
@@ -24,7 +24,7 @@
           weight: .quiet,
           size: .large,
           ariaLabel: "Open menu",
-          class: "sidebar-menu-btn"
+          class: "navbar-sidebar-btn sidebar-menu-btn"
         )
       }
       .class(`class`.isEmpty ? "sidebar-menu-button-view" : "sidebar-menu-button-view \(`class`)")

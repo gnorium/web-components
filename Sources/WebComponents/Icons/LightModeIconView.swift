@@ -8,17 +8,17 @@
 
   public struct LightModeIconView: HTMLContent {
     let `class`: String
-    let width: Length
-    let height: Length
-    let stroke: SVGPaint
-    let strokeWidth: Length
+    let width: CSS.Length
+    let height: CSS.Length
+    let stroke: CSS.Color
+    let strokeWidth: CSS.Length
 
     public init(
       class: String = "",
-      width: Length = px(16),
-      height: Length = px(16),
-      stroke: SVGPaint = .currentColor,
-      strokeWidth: Length = 1.5
+      width: CSS.Length = px(16),
+      height: CSS.Length = px(16),
+      stroke: CSS.Color = .currentColor,
+      strokeWidth: CSS.Length = 1.5
     ) {
       self.class = `class`
       self.width = width
@@ -27,7 +27,7 @@
       self.strokeWidth = strokeWidth
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       svg {
         defs {
           clipPath {

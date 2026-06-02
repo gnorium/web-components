@@ -43,7 +43,7 @@
     }
 
     @CSSBuilder
-    private func toggleButtonGroupViewCSS() -> [CSSRule] {
+    private func toggleButtonGroupViewCSS() -> [CSSOM.CSSRule] {
       display(.inlineFlex)
       flexWrap(.wrap)
       gap(0)
@@ -74,7 +74,7 @@
       }
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       var container = div {
         for buttonItem in buttons {
           let isSelected = selectedValues.contains(buttonItem.value)

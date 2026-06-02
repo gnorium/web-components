@@ -18,14 +18,14 @@
     let isFieldset: Bool
     let disabled: Bool
     let status: ValidationStatus
-    let labelContent: [Node]
-    let descriptionContent: [Node]
-    let inputContent: [Node]
-    let helpTextContent: [Node]
+    let labelContent: [DOM.Node]
+    let descriptionContent: [DOM.Node]
+    let inputContent: [DOM.Node]
+    let helpTextContent: [DOM.Node]
     let messages: ValidationMessages
     let `class`: String
-    let labelFontWeight: CSSFontWeight
-    let labelFontSize: Length
+    let labelFontWeight: CSS.FontWeight
+    let labelFontSize: CSS.Length
 
     public enum ValidationStatus: String, Sendable {
       case `default`
@@ -56,13 +56,13 @@
       disabled: Bool = false,
       status: ValidationStatus = .default,
       messages: ValidationMessages = ValidationMessages(),
-      labelFontWeight: CSSFontWeight = fontWeightBold,
-      labelFontSize: Length = fontSizeMedium16,
+      labelFontWeight: CSS.FontWeight = fontWeightBold,
+      labelFontSize: CSS.Length = fontSizeMedium16,
       class: String = "",
-      @HTMLBuilder label: () -> [Node],
-      @HTMLBuilder description: () -> [Node] = { [] },
-      @HTMLBuilder input: () -> [Node],
-      @HTMLBuilder helpText: () -> [Node] = { [] }
+      @HTMLBuilder label: () -> [DOM.Node],
+      @HTMLBuilder description: () -> [DOM.Node] = { [] },
+      @HTMLBuilder input: () -> [DOM.Node],
+      @HTMLBuilder helpText: () -> [DOM.Node] = { [] }
     ) {
       self.id = id
       self.labelIcon = labelIcon
@@ -83,7 +83,7 @@
     }
 
     @CSSBuilder
-    private func fieldViewCSS() -> [CSSRule] {
+    private func fieldViewCSS() -> [CSSOM.CSSRule] {
       display(.flex)
       flexDirection(.column)
       gap(spacing8)
@@ -94,12 +94,12 @@
     }
 
     @CSSBuilder
-    private func fieldInputWrapperCSS() -> [CSSRule] {
+    private func fieldInputWrapperCSS() -> [CSSOM.CSSRule] {
       display(.block)
     }
 
     @CSSBuilder
-    private func fieldHelpTextCSS() -> [CSSRule] {
+    private func fieldHelpTextCSS() -> [CSSOM.CSSRule] {
       display(.block)
       fontSize(fontSizeSmall14)
       lineHeight(lineHeightSmall22)
@@ -107,7 +107,7 @@
     }
 
     @CSSBuilder
-    private func fieldValidationMessageCSS() -> [CSSRule] {
+    private func fieldValidationMessageCSS() -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.flexStart)
       gap(spacing4)
@@ -116,7 +116,7 @@
     }
 
     @CSSBuilder
-    private func fieldValidationIconCSS() -> [CSSRule] {
+    private func fieldValidationIconCSS() -> [CSSOM.CSSRule] {
       display(.inlineFlex)
       alignItems(.center)
       justifyContent(.center)
@@ -125,11 +125,11 @@
     }
 
     @CSSBuilder
-    private func fieldValidationTextCSS() -> [CSSRule] {
+    private func fieldValidationTextCSS() -> [CSSOM.CSSRule] {
       flex(1)
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       let hasDescription = !descriptionContent.isEmpty
       let hasHelpText = !helpTextContent.isEmpty
       let descriptionID = hasDescription ? "\(id)-description" : nil

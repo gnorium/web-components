@@ -11,7 +11,7 @@
     let inSidebar: Bool
     let openDialog: Bool
     let `class`: String
-    let style: [CSSRule]
+    let style: [CSSOM.CSSRule]
     let placeholder: String
     let ariaLabel: String
     let searchField: String
@@ -29,7 +29,7 @@
       searchEndpoint: String = "/api/search",
       resultUrlBase: String = "/results",
       value: String = "",
-      @CSSBuilder style: () -> [CSSRule] = { [] }
+      @CSSBuilder style: () -> [CSSOM.CSSRule] = { [] }
     ) {
       self.inSidebar = inSidebar
       self.openDialog = openDialog
@@ -43,7 +43,7 @@
       self.style = style()
     }
 
-    public func style(@CSSBuilder _ content: () -> [CSSRule]) -> SearchBarView {
+    public func style(@CSSBuilder _ content: () -> [CSSOM.CSSRule]) -> SearchBarView {
       return SearchBarView(
         inSidebar: self.inSidebar,
         openDialog: self.openDialog,
@@ -58,7 +58,7 @@
       )
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       div {
         // Input - if openDialog is true, make it read-only and use it as a trigger
         input()
@@ -215,11 +215,11 @@
   import WebTypes
 
   public class SearchBarHydration: @unchecked Sendable {
-    private var container: Element?
-    private var input: Element?
-    private var button: Element?
-    private var dropdown: Element?
-    private var searchBarSuggestions: Element?
+    private var container: DOM.Element?
+    private var input: DOM.Element?
+    private var button: DOM.Element?
+    private var dropdown: DOM.Element?
+    private var searchBarSuggestions: DOM.Element?
 
     private var query = ""
     private var results: [SearchBarSuggestedLemma] = []
@@ -234,7 +234,7 @@
       static let debounceMs = 250.0
     }
 
-    public init?(container: Element? = nil) {
+    public init?(container: DOM.Element? = nil) {
       self.container = container ?? document.querySelector("[data-search-container=\"true\"]")
       guard let container = self.container else { return nil }
 
@@ -364,7 +364,7 @@
         location.href = href
         return
       }
-      let q = (input as? HTMLInputElement)?.value ?? ""
+      let q = (input as? HTML.HTMLInputElement)?.value ?? ""
       if q.isEmpty {
         location.href = resultUrlBase
       } else {
@@ -374,7 +374,7 @@
 
     private func fetchResults() {
       guard let input else { return }
-      let query = (input as? HTMLInputElement)?.value ?? ""
+      let query = (input as? HTML.HTMLInputElement)?.value ?? ""
       guard !query.isEmpty else {
         results = []
         isOpen = false

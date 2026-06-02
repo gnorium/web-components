@@ -12,7 +12,7 @@
     let showLabel: Bool
     let ariaHidden: Bool
     let ariaLabel: String?
-    let content: [Node]
+    let content: [DOM.Node]
     let `class`: String
 
     public init(
@@ -20,7 +20,7 @@
       ariaHidden: Bool = false,
       ariaLabel: String? = nil,
       class: String = "",
-      @HTMLBuilder content: () -> [Node] = { [] }
+      @HTMLBuilder content: () -> [DOM.Node] = { [] }
     ) {
       self.showLabel = showLabel
       self.ariaHidden = ariaHidden
@@ -30,7 +30,7 @@
     }
 
     @CSSBuilder
-    private func progressIndicatorViewCSS() -> [CSSRule] {
+    private func progressIndicatorViewCSS() -> [CSSOM.CSSRule] {
       display(.inlineFlex)
       alignItems(.center)
       gap(spacing8)
@@ -42,7 +42,7 @@
     }
 
     @CSSBuilder
-    private func progressIndicatorSpinnerCSS() -> [CSSRule] {
+    private func progressIndicatorSpinnerCSS() -> [CSSOM.CSSRule] {
       display(.inlineBlock)
       width(sizeIconMedium)
       height(sizeIconMedium)
@@ -56,11 +56,11 @@
     }
 
     @CSSBuilder
-    private func progressIndicatorLabelCSS() -> [CSSRule] {
+    private func progressIndicatorLabelCSS() -> [CSSOM.CSSRule] {
       display(.inline)
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       let hasContent = !content.isEmpty
 
       var progressIndicator = div {

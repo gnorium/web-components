@@ -42,16 +42,16 @@ public struct AnimatedUpDownChevronView: HTMLContent {
 
   public let id: String
   public let expanded: Bool
-  public let width: Length
-  public let height: Length
+  public let width: CSS.Length
+  public let height: CSS.Length
   public var `class`: String
-  public var style: [(@Sendable () -> [CSSRule])] = []
+  public var style: [(@Sendable () -> [CSSOM.CSSRule])] = []
 
   public init(
     id: String,
     expanded: Bool = false,
-    width: Length = px(20),
-    height: Length = px(20),
+    width: CSS.Length = px(20),
+    height: CSS.Length = px(20),
     class: String = ""
   ) {
     self.id = id
@@ -69,13 +69,13 @@ public struct AnimatedUpDownChevronView: HTMLContent {
     return copy
   }
 
-  public func style(@CSSBuilder _ rules: @escaping @Sendable () -> [CSSRule]) -> Self {
+  public func style(@CSSBuilder _ rules: @escaping @Sendable () -> [CSSOM.CSSRule]) -> Self {
     var copy = self
     copy.style.append(rules)
     return copy
   }
 
-  public func build() -> Node {
+  public func build() -> DOM.Node {
     // MARK: - Chevron Geometry (20x20 viewBox)
     // Collapsed (v down): (2.5, 4.75) (10, 12.25) (17.5, 4.75) (19, 6.25) (10, 15.25) (1, 6.25)
     // Expanded (^ up):   (2.5, 15.25) (10, 7.75) (17.5, 15.25) (19, 13.75) (10, 4.75) (1, 13.75)
@@ -129,9 +129,9 @@ public struct AnimatedUpDownChevronView: HTMLContent {
   /// CLIENT controller for an AnimatedUpDownChevronView DOM element.
   /// Handles SMIL animation morphing between collapsed and expanded states.
   public class AnimatedUpDownChevronInstance: @unchecked Sendable {
-    private let svg: Element
+    private let svg: DOM.Element
 
-    public init?(element: Element) {
+    public init?(element: DOM.Element) {
       if element.classList.contains("animated-up-down-chevron-view") {
         self.svg = element
       } else if let found = element.querySelector(".animated-up-down-chevron-view") {
@@ -221,7 +221,7 @@ public struct AnimatedUpDownChevronView: HTMLContent {
     ///   - id: Base ID (element gets id="\(id)-up-down-chevron")
     ///   - expanded: Initial state (false = down v, true = up ^)
     /// - Returns: A wrapper element containing the SVG
-    public static func createElement(id: String, expanded: Bool = false) -> Element {
+    public static func createElement(id: String, expanded: Bool = false) -> DOM.Element {
       let wrapper = document.createElement(.span)
       let view = AnimatedUpDownChevronView(id: id, expanded: expanded)
       wrapper.innerHTML = renderHTML { view.render() }
@@ -232,12 +232,12 @@ public struct AnimatedUpDownChevronView: HTMLContent {
     }
 
     /// Obtains an instance controller for an existing chevron element.
-    public static func from(element: Element) -> AnimatedUpDownChevronInstance? {
+    public static func from(element: DOM.Element) -> AnimatedUpDownChevronInstance? {
       return AnimatedUpDownChevronInstance(element: element)
     }
 
     /// Hydrates all chevrons within a container.
-    public static func hydrateAll(in container: Element) {
+    public static func hydrateAll(in container: DOM.Element) {
       let chevrons = container.querySelectorAll(".animated-up-down-chevron-view")
       for chevron in chevrons {
         _ = AnimatedUpDownChevronInstance(element: chevron)

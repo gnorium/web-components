@@ -7,13 +7,13 @@
   import WebTypes
 
   public struct AddIconView: HTMLContent {
-    let width: Length
-    let height: Length
+    let width: CSS.Length
+    let height: CSS.Length
     let `class`: String
 
     public init(
-      width: Length = px(20),
-      height: Length = px(20),
+      width: CSS.Length = px(20),
+      height: CSS.Length = px(20),
       class: String = ""
     ) {
       self.width = width
@@ -21,7 +21,7 @@
       self.class = `class`
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       svg {
         path()
           .d(M(11, 9), V(4), H(9), v(5), H(4), v(2), h(5), v(5), h(2), v(-5), h(5), V(9), Z())

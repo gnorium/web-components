@@ -77,13 +77,13 @@
     }
 
     @CSSBuilder
-    private func multiselectLookupViewCSS() -> [CSSRule] {
+    private func multiselectLookupViewCSS() -> [CSSOM.CSSRule] {
       position(.relative)
       display(.inlineBlock)
       minWidth(px(256))
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       var view = div {
         ChipInputView(
           id: id,
@@ -139,15 +139,15 @@
   import WebTypes
 
   private class MultiselectLookupInstance: @unchecked Sendable {
-    private var lookup: Element
-    private var chipInput: Element?
-    private var input: Element?
-    private var menu: Element?
-    private var chips: [Element] = []
+    private var lookup: DOM.Element
+    private var chipInput: DOM.Element?
+    private var input: DOM.Element?
+    private var menu: DOM.Element?
+    private var chips: [DOM.Element] = []
     private var isOpen: Bool = false
     private var keepInputOnSelection: Bool = false
 
-    init(lookup: Element) {
+    init(lookup: DOM.Element) {
       self.lookup = lookup
 
       chipInput = lookup.querySelector(".chip-input-view")
@@ -186,7 +186,7 @@
         self.openMenu()
         // Dispatch input event for filtering
         let event = CustomEvent(
-          type: "multiselect-lookup-input", detail: (input as? HTMLInputElement)?.value ?? "")
+          type: "multiselect-lookup-input", detail: (input as? HTML.HTMLInputElement)?.value ?? "")
         self.lookup.dispatchEvent(event)
       }
 
@@ -231,13 +231,13 @@
       // Clear input unless keepInputOnSelection is true
       if !keepInputOnSelection {
         if let input = input {
-          (input as? HTMLInputElement)?.value = value
+          (input as? HTML.HTMLInputElement)?.value = value
         }
         closeMenu()
       }
     }
 
-    private func removeChip(_ chip: Element) {
+    private func removeChip(_ chip: DOM.Element) {
       guard let chipID = chip.getAttribute("data-chip-id") else { return }
 
       // Emit chip remove event
@@ -258,7 +258,7 @@
         }
       } else if stringEquals(key, "Backspace") {
         // If input is empty, focus last chip
-        if let input = input, stringEquals((input as? HTMLInputElement)?.value ?? "", "") {
+        if let input = input, stringEquals((input as? HTML.HTMLInputElement)?.value ?? "", "") {
           if !chips.isEmpty {
             chips[chips.count - 1].focus()
           }

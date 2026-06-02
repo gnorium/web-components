@@ -41,7 +41,7 @@
       self.stats = DiffStats(inserted: inserted, deleted: deleted, unchanged: unchanged)
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       let rootClass =
         `class`.isEmpty
         ? "diff-view"
@@ -139,14 +139,14 @@
     // MARK: - Styles
 
     @CSSBuilder
-    private func diffViewCSS() -> [CSSRule] {
+    private func diffViewCSS() -> [CSSOM.CSSRule] {
       display(.flex)
       flexDirection(.column)
       gap(spacing16)
     }
 
     @CSSBuilder
-    private func diffStatsCSS() -> [CSSRule] {
+    private func diffStatsCSS() -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       gap(spacing12)
@@ -155,39 +155,39 @@
     }
 
     @CSSBuilder
-    private func diffStatDeletedCSS() -> [CSSRule] {
+    private func diffStatDeletedCSS() -> [CSSOM.CSSRule] {
       color(colorRed)
       fontWeight(fontWeightBold)
     }
 
     @CSSBuilder
-    private func diffStatInsertedCSS() -> [CSSRule] {
+    private func diffStatInsertedCSS() -> [CSSOM.CSSRule] {
       color(colorGreen)
       fontWeight(fontWeightBold)
     }
 
     @CSSBuilder
-    private func diffStatSummaryCSS() -> [CSSRule] {
+    private func diffStatSummaryCSS() -> [CSSOM.CSSRule] {
       color(colorSubtle)
       fontWeight(fontWeightNormal)
     }
 
     @CSSBuilder
-    private func diffLegendCSS() -> [CSSRule] {
+    private func diffLegendCSS() -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       gap(spacing16)
     }
 
     @CSSBuilder
-    private func diffLegendItemCSS() -> [CSSRule] {
+    private func diffLegendItemCSS() -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       gap(spacing4)
     }
 
     @CSSBuilder
-    private func diffLegendSwatchDeletedCSS() -> [CSSRule] {
+    private func diffLegendSwatchDeletedCSS() -> [CSSOM.CSSRule] {
       display(.inlineBlock)
       width(px(14))
       height(px(14))
@@ -196,7 +196,7 @@
     }
 
     @CSSBuilder
-    private func diffLegendSwatchInsertedCSS() -> [CSSRule] {
+    private func diffLegendSwatchInsertedCSS() -> [CSSOM.CSSRule] {
       display(.inlineBlock)
       width(px(14))
       height(px(14))
@@ -205,14 +205,14 @@
     }
 
     @CSSBuilder
-    private func diffLegendLabelCSS() -> [CSSRule] {
+    private func diffLegendLabelCSS() -> [CSSOM.CSSRule] {
       fontFamily(typographyFontSans)
       fontSize(fontSizeXSmall12)
       color(colorSubtle)
     }
 
     @CSSBuilder
-    private func diffContentCSS() -> [CSSRule] {
+    private func diffContentCSS() -> [CSSOM.CSSRule] {
       display(.block)
       fontFamily(typographyFontMono)
       fontSize(fontSizeSmall14)
@@ -230,7 +230,7 @@
 
     // Word-level: strong highlight on specific changed words
     @CSSBuilder
-    private func diffDeletedCSS() -> [CSSRule] {
+    private func diffDeletedCSS() -> [CSSOM.CSSRule] {
       backgroundColor(backgroundColorRed)
       color(colorInvertedFixed)
       textDecoration(.none)
@@ -239,7 +239,7 @@
     }
 
     @CSSBuilder
-    private func diffInsertedCSS() -> [CSSRule] {
+    private func diffInsertedCSS() -> [CSSOM.CSSRule] {
       backgroundColor(backgroundColorGreen)
       color(colorInvertedFixed)
       textDecoration(.none)
@@ -249,24 +249,24 @@
 
     // Line-level: subtle background on entire changed lines
     @CSSBuilder
-    private func diffDeletedContextCSS() -> [CSSRule] {
+    private func diffDeletedContextCSS() -> [CSSOM.CSSRule] {
       backgroundColor(backgroundColorRedSubtle)
     }
 
     @CSSBuilder
-    private func diffInsertedContextCSS() -> [CSSRule] {
+    private func diffInsertedContextCSS() -> [CSSOM.CSSRule] {
       backgroundColor(backgroundColorGreenSubtle)
     }
 
     @CSSBuilder
-    private func diffEmptyBoxCSS() -> [CSSRule] {
+    private func diffEmptyBoxCSS() -> [CSSOM.CSSRule] {
       backgroundColor(backgroundColorNeutralSubtle)
       border(borderWidthBase, .solid, borderColorSubtle)
       borderRadius(borderRadiusBase)
     }
 
     @CSSBuilder
-    private func diffEmptyCSS() -> [CSSRule] {
+    private func diffEmptyCSS() -> [CSSOM.CSSRule] {
       fontFamily(typographyFontSans)
       fontSize(fontSizeMedium16)
       color(colorSubtle)

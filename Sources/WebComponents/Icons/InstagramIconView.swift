@@ -8,16 +8,16 @@
 
   public struct InstagramIconView: HTMLContent {
     let `class`: String
-    let width: Length
-    let height: Length
-    let fill: SVGPaint
+    let width: CSS.Length
+    let height: CSS.Length
+    let fill: CSS.Color
     let monochrome: Bool
 
     public init(
       class: String = "",
-      width: Length = px(20),
-      height: Length = px(20),
-      fill: SVGPaint = SVGPaint(colorBase),
+      width: CSS.Length = px(20),
+      height: CSS.Length = px(20),
+      fill: CSS.Color = colorBase,
       monochrome: Bool = false
     ) {
       self.class = `class`
@@ -27,7 +27,7 @@
       self.monochrome = monochrome
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       svg {
         if !monochrome {
           defs {
@@ -261,7 +261,7 @@
                 c(-18.111, 0, -32.7913, -14.6714, -32.7913, -32.767),
                 c(0, -18.0976, 14.6803, -32.767, 32.7913, -32.767), z()
               )
-              .fill(SVGPaint(.white))
+              .fill(.white)
           }
         }
 
@@ -360,7 +360,7 @@
               c(-18.111, 0, -32.7913, -14.6714, -32.7913, -32.767),
               c(0, -18.0976, 14.6803, -32.767, 32.7913, -32.767), z()
             )
-            .fill(SVGPaint(colorInverted))
+            .fill(colorInverted)
         }
       }
       .class(`class`.isEmpty ? "instagram-icon-view" : "instagram-icon-view \(`class`)")

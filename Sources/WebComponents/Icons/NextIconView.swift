@@ -7,13 +7,13 @@ import WebTypes
 import EmbeddedSwiftUtilities
 
 public struct NextIconView: HTMLContent {
-  let width: Length
-  let height: Length
+  let width: CSS.Length
+  let height: CSS.Length
   let `class`: String
 
   public init(
-    width: Length = px(20),
-    height: Length = px(20),
+    width: CSS.Length = px(20),
+    height: CSS.Length = px(20),
     class: String = ""
   ) {
     self.width = width
@@ -21,7 +21,7 @@ public struct NextIconView: HTMLContent {
     self.class = `class`
   }
 
-  public func build() -> Node {
+  public func build() -> DOM.Node {
     svg {
       path()
         .d(M(7, 1), L(5.6, 2.5), L(13, 10), l(-7.4, 7.5), L(7, 19), l(9, -9), Z())

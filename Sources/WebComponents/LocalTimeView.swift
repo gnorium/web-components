@@ -10,14 +10,14 @@
   /// WASM hydration converts the display to the user's local timezone.
   public struct LocalTimeView: HTMLContent {
     let date: Date
-    let size: Length
-    let textColor: CSSColor
+    let size: CSS.Length
+    let textColor: CSS.Color
     let fallbackSuffix: String
 
     public init(
       date: Date,
-      size: Length = fontSizeSmall14,
-      textColor: CSSColor = colorBase,
+      size: CSS.Length = fontSizeSmall14,
+      textColor: CSS.Color = colorBase,
       fallbackSuffix: String = "UTC"
     ) {
       self.date = date
@@ -26,7 +26,7 @@
       self.fallbackSuffix = fallbackSuffix
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       let isoFormatter = ISO8601DateFormatter()
       let displayFormatter = DateFormatter()
       displayFormatter.dateStyle = .medium

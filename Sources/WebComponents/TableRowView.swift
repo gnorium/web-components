@@ -15,7 +15,7 @@ public struct TableRowView: HTMLContent {
   public let isGroupChild: Bool
   public var `class`: String
   public var data: [TableView.AttributePair] = []
-  public var style: [(@Sendable () -> [CSSRule])] = []
+  public var style: [(@Sendable () -> [CSSOM.CSSRule])] = []
 
   public init(
     id: String,
@@ -49,14 +49,14 @@ public struct TableRowView: HTMLContent {
     return copy
   }
 
-  public func style(@CSSBuilder _ rules: @escaping @Sendable () -> [CSSRule]) -> Self {
+  public func style(@CSSBuilder _ rules: @escaping @Sendable () -> [CSSOM.CSSRule]) -> Self {
     var copy = self
     copy.style.append(rules)
     return copy
   }
 
   @CSSBuilder
-  private func rowCSS() -> [CSSRule] {
+  private func rowCSS() -> [CSSOM.CSSRule] {
     borderBottom(px(1), .solid, borderColorSubtle)
 
     pseudoClass(.hover) {
@@ -69,7 +69,7 @@ public struct TableRowView: HTMLContent {
     }
   }
 
-  public func build() -> Node {
+  public func build() -> DOM.Node {
     var rowNode = tr {
       for cell in cells {
         cell

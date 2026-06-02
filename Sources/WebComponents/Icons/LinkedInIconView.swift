@@ -8,16 +8,16 @@
 
   public struct LinkedInIconView: HTMLContent {
     let `class`: String
-    let width: Length
-    let height: Length
-    let fill: SVGPaint
+    let width: CSS.Length
+    let height: CSS.Length
+    let fill: CSS.Color
     let monochrome: Bool
 
     public init(
       class: String = "",
-      width: Length = px(20),
-      height: Length = px(20),
-      fill: SVGPaint = SVGPaint(colorBase),
+      width: CSS.Length = px(20),
+      height: CSS.Length = px(20),
+      fill: CSS.Color = colorBase,
       monochrome: Bool = false
     ) {
       self.class = `class`
@@ -27,7 +27,7 @@
       self.monochrome = monochrome
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       svg {
         // Background rounded square
         path()
@@ -37,7 +37,7 @@
             C(3.581722, 8.11624501e-16, -5.41083001e-16, 3.581722, 0, 8), L(0, 64),
             C(5.41083001e-16, 68.418278, 3.581722, 72, 8, 72), Z()
           )
-          .fill(monochrome ? fill : SVGPaint(hex(0x007EBB)))
+          .fill(monochrome ? fill : hex(0x007EBB))
 
         // LinkedIn "in" mark
         path()
@@ -56,7 +56,7 @@
             M(11.0325521, 62), L(21.769401, 62), L(21.769401, 27.3333333),
             L(11.0325521, 27.3333333), L(11.0325521, 62), Z()
           )
-          .fill(monochrome ? SVGPaint(colorInverted) : SVGPaint(.white))
+          .fill(monochrome ? colorInverted : .white)
       }
       .class(`class`.isEmpty ? "linkedin-icon-view" : "linkedin-icon-view \(`class`)")
       .width(width)

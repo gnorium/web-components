@@ -14,7 +14,7 @@
     public let label: String
     public let disabled: Bool
     public let url: String?
-    public let content: [Node]
+    public let content: [DOM.Node]
     let `class`: String
 
     public init(
@@ -23,7 +23,7 @@
       disabled: Bool = false,
       url: String? = nil,
       class: String = "",
-      @HTMLBuilder content: () -> [Node]
+      @HTMLBuilder content: () -> [DOM.Node]
     ) {
       self.name = name
       self.label = label.isEmpty ? name : label
@@ -34,7 +34,7 @@
     }
 
     @CSSBuilder
-    private func tabButtonCSS(_ isActive: Bool, _ disabled: Bool, _ framed: Bool) -> [CSSRule] {
+    private func tabButtonCSS(_ isActive: Bool, _ disabled: Bool, _ framed: Bool) -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       justifyContent(.center)
@@ -88,7 +88,7 @@
     }
 
     @CSSBuilder
-    private func tabPanelCSS(_ framed: Bool) -> [CSSRule] {
+    private func tabPanelCSS(_ framed: Bool) -> [CSSOM.CSSRule] {
       if framed {
         padding(spacing16)
       } else {
@@ -97,7 +97,7 @@
     }
 
     /// Renders the tab button (called by TabsView)
-    public func renderButton(isActive: Bool, tabindex: Int, framed: Bool) -> Node {
+    public func renderButton(isActive: Bool, tabindex: Int, framed: Bool) -> DOM.Node {
       let displayLabel = label.isEmpty ? name : label
 
       return button { displayLabel }
@@ -116,7 +116,7 @@
     }
 
     /// Renders the tab panel content (called by TabsView)
-    public func renderPanel(isActive: Bool, framed: Bool) -> Node {
+    public func renderPanel(isActive: Bool, framed: Bool) -> DOM.Node {
       return section {
         content
       }
@@ -131,7 +131,7 @@
       }
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       // TabView should not be rendered directly - use TabsView
       .fragment([])
     }

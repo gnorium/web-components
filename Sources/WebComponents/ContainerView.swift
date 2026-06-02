@@ -10,7 +10,7 @@
   /// A flexible layout wrapper that adapts across different breakpoints and screen sizes.
   public struct ContainerView: HTMLContent {
     let size: Size
-    let content: [Node]
+    let content: [DOM.Node]
     let `class`: String
 
     public enum Size: String, Sendable {
@@ -23,7 +23,7 @@
     public init(
       size: Size = .full,
       class: String = "",
-      @HTMLBuilder content: () -> [Node]
+      @HTMLBuilder content: () -> [DOM.Node]
     ) {
       self.size = size
       self.`class` = `class`
@@ -31,7 +31,7 @@
     }
 
     @CSSBuilder
-    private func containerViewCSS(_ size: Size) -> [CSSRule] {
+    private func containerViewCSS(_ size: Size) -> [CSSOM.CSSRule] {
       width(perc(100))
       marginInline(.auto)
       boxSizing(.borderBox)
@@ -61,7 +61,7 @@
       }
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       return div {
         content
       }

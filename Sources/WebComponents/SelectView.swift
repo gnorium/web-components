@@ -53,14 +53,14 @@
     }
 
     @CSSBuilder
-    private func selectViewCSS() -> [CSSRule] {
+    private func selectViewCSS() -> [CSSOM.CSSRule] {
       position(.relative)
       display(.inlineBlock)
       minWidth(px(256))
     }
 
     @CSSBuilder
-    private func selectHandleCSS(_ disabled: Bool, _ status: ValidationStatus) -> [CSSRule] {
+    private func selectHandleCSS(_ disabled: Bool, _ status: ValidationStatus) -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       justifyContent(.spaceBetween)
@@ -93,7 +93,7 @@
     }
 
     @CSSBuilder
-    private func selectLabelCSS(_ hasSelection: Bool) -> [CSSRule] {
+    private func selectLabelCSS(_ hasSelection: Bool) -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       gap(spacing8)
@@ -108,7 +108,7 @@
     }
 
     @CSSBuilder
-    private func selectIconCSS() -> [CSSRule] {
+    private func selectIconCSS() -> [CSSOM.CSSRule] {
       display(.inlineFlex)
       alignItems(.center)
       justifyContent(.center)
@@ -118,7 +118,7 @@
     }
 
     @CSSBuilder
-    private func selectIndicatorCSS(_ disabled: Bool) -> [CSSRule] {
+    private func selectIndicatorCSS(_ disabled: Bool) -> [CSSOM.CSSRule] {
       display(.inlineFlex)
       alignItems(.center)
       justifyContent(.center)
@@ -128,7 +128,7 @@
       color(disabled ? colorDisabled : colorSubtle)
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       let selectedItem =
         menuItems.first(where: { $0.value == selectedValue })
         ?? menuGroups.flatMap(\.items).first(where: { $0.value == selectedValue })
@@ -209,12 +209,12 @@
   import WebTypes
 
   private class SelectInstance: @unchecked Sendable {
-    private var select: Element
-    private var handle: Element?
-    private var menu: Element?
+    private var select: DOM.Element
+    private var handle: DOM.Element?
+    private var menu: DOM.Element?
     private var isOpen: Bool = false
 
-    init(select: Element) {
+    init(select: DOM.Element) {
       self.select = select
 
       handle = select.querySelector(".select-handle")

@@ -41,7 +41,7 @@
     }
 
     @CSSBuilder
-    private func tabsViewCSS(_ framed: Bool) -> [CSSRule] {
+    private func tabsViewCSS(_ framed: Bool) -> [CSSOM.CSSRule] {
       display(.block)
       fontFamily(typographyFontSans)
 
@@ -52,7 +52,7 @@
     }
 
     @CSSBuilder
-    private func tabsHeaderCSS(_ variant: Variant) -> [CSSRule] {
+    private func tabsHeaderCSS(_ variant: Variant) -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       position(.relative)
@@ -67,7 +67,7 @@
     }
 
     @CSSBuilder
-    private func tabsListCSS(_ variant: Variant) -> [CSSRule] {
+    private func tabsListCSS(_ variant: Variant) -> [CSSOM.CSSRule] {
       display(.flex)
       margin(0)
       padding(0)
@@ -92,7 +92,7 @@
     @CSSBuilder
     private func tabButtonCSS(
       _ isActive: Bool, _ disabled: Bool, _ framed: Bool, _ variant: Variant
-    ) -> [CSSRule] {
+    ) -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       justifyContent(.center)
@@ -162,14 +162,14 @@
     }
 
     @CSSBuilder
-    private func tabPanelCSS(_ framed: Bool) -> [CSSRule] {
+    private func tabPanelCSS(_ framed: Bool) -> [CSSOM.CSSRule] {
       if framed {
         padding(spacing16)
       }
     }
 
     @CSSBuilder
-    private func tabsScrollButtonCSS() -> [CSSRule] {
+    private func tabsScrollButtonCSS() -> [CSSOM.CSSRule] {
       display(.none)
       alignItems(.center)
       justifyContent(.center)
@@ -196,7 +196,7 @@
       }
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       let active = activeTab ?? tabs.first?.name ?? ""
 
       return div {
@@ -317,15 +317,15 @@
   import WebTypes
 
   private class TabsInstance: @unchecked Sendable {
-    private var tabsElement: Element
-    private var tabButtons: [Element] = []
-    private var tabPanels: [Element] = []
-    private var scrollPrevButton: Element?
-    private var scrollNextButton: Element?
-    private var tabsList: Element?
+    private var tabsElement: DOM.Element
+    private var tabButtons: [DOM.Element] = []
+    private var tabPanels: [DOM.Element] = []
+    private var scrollPrevButton: DOM.Element?
+    private var scrollNextButton: DOM.Element?
+    private var tabsList: DOM.Element?
     private var activeTabName: String = ""
 
-    init(tabs: Element) {
+    init(tabs: DOM.Element) {
       self.tabsElement = tabs
       self.tabButtons = Array(tabs.querySelectorAll(".tabs-list [role='tab']"))
       self.tabPanels = Array(tabs.querySelectorAll(".tab-panel"))
@@ -423,7 +423,7 @@
       tabsElement.dispatchEvent(event)
     }
 
-    private func handleKeydown(key: String, currentButton: Element) {
+    private func handleKeydown(key: String, currentButton: DOM.Element) {
       let currentID = currentButton.getAttribute(.id) ?? ""
       guard
         let currentIndex = tabButtons.firstIndex(where: {

@@ -143,7 +143,7 @@
       return "{\(entries.joined(separator: ","))}"
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       // Full-screen search menu - iOS-style
       div {
         // Backdrop with blur effect
@@ -269,7 +269,7 @@
     }
 
     @CSSBuilder
-    private func searchMenuViewCSS() -> [CSSRule] {
+    private func searchMenuViewCSS() -> [CSSOM.CSSRule] {
       // Hidden by default, positioned right below navbar
       display(.none)
       position(.fixed)
@@ -281,7 +281,7 @@
     }
 
     @CSSBuilder
-    private func searchMenuBackdropCSS() -> [CSSRule] {
+    private func searchMenuBackdropCSS() -> [CSSOM.CSSRule] {
       position(.fixed)
       top(px(96))  // Start below navbar (navbar height is 96px)
       insetInlineStart(0)
@@ -296,7 +296,7 @@
     }
 
     @CSSBuilder
-    private func searchMenuContainerCSS() -> [CSSRule] {
+    private func searchMenuContainerCSS() -> [CSSOM.CSSRule] {
       position(.relative)
       width(perc(100))
       backgroundColor(backgroundColorBase)
@@ -320,7 +320,7 @@
     }
 
     @CSSBuilder
-    private func searchMenuFooterCSS() -> [CSSRule] {
+    private func searchMenuFooterCSS() -> [CSSOM.CSSRule] {
       // Hide keyboard hints on mobile
       display(.none)
       alignItems(.center)
@@ -334,7 +334,7 @@
     }
 
     @CSSBuilder
-    private func keyboardHintContainerCSS() -> [CSSRule] {
+    private func keyboardHintContainerCSS() -> [CSSOM.CSSRule] {
       display(.flex)
       gap(spacing16)
       alignItems(.center)
@@ -342,14 +342,14 @@
     }
 
     @CSSBuilder
-    private func keyboardHintGroupCSS() -> [CSSRule] {
+    private func keyboardHintGroupCSS() -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       gap(spacing6)
     }
 
     @CSSBuilder
-    private func keyboardHintKeyCSS() -> [CSSRule] {
+    private func keyboardHintKeyCSS() -> [CSSOM.CSSRule] {
       display(.inlineFlex)
       alignItems(.center)
       justifyContent(.center)
@@ -368,7 +368,7 @@
     }
 
     @CSSBuilder
-    private func keyboardHintLabelCSS() -> [CSSRule] {
+    private func keyboardHintLabelCSS() -> [CSSOM.CSSRule] {
       fontFamily(typographyFontSans)
       fontSize(fontSizeXSmall12)
       color(colorSubtle)
@@ -518,8 +518,14 @@
 
           // Clear current results and re-search with current query
           if let typeahead = document.querySelector(".search-menu-typeahead"),
-             let input = typeahead.querySelector("input") as? HTMLInputElement
+             let input = typeahead.querySelector("input") as? HTML.HTMLInputElement
           {
+            if stringEquals(tabName, "biblio-records") {
+              input.setAttribute("placeholder", "Search title")
+            } else if stringEquals(tabName, "lexico-records") {
+              input.setAttribute("placeholder", "Search lemma")
+            }
+
             if let menu = typeahead.querySelector(".typeahead-search-menu") {
               menu.innerHTML = ""
               menu.style.display(.none)
@@ -534,7 +540,7 @@
 
     }
 
-    private func hydrateTypeahead(_ typeahead: Element) {
+    private func hydrateTypeahead(_ typeahead: DOM.Element) {
       // Read configuration from data attributes on the search menu container
       guard let container = document.querySelector("[data-search-menu-container=\"true\"]") else {
         return
@@ -637,7 +643,7 @@
       let color: String
     }
 
-    private func performSearch(query: String, typeahead: Element) {
+    private func performSearch(query: String, typeahead: DOM.Element) {
       // Strip surrounding quotes if present (likely due to event serialization)
       // Use UTF8 bytes to detect quotes (34) to avoid Grapheme breaking dependency
       var cleanQuery = query
@@ -710,7 +716,7 @@
       return String(decoding: bytes, as: UTF8.self)
     }
 
-    private func updateTypeaheadMenu(typeahead: Element, results: [SearchResultItem]) {
+    private func updateTypeaheadMenu(typeahead: DOM.Element, results: [SearchResultItem]) {
       if results.isEmpty {
         if let existing = typeahead.querySelector(".typeahead-search-menu") {
           existing.style.display(.none)
@@ -720,7 +726,7 @@
 
       let limitedResults = Array(results.prefix(16))
 
-      let menu: Element
+      let menu: DOM.Element
       if let existing = typeahead.querySelector(".typeahead-search-menu") {
         menu = existing
       } else {
@@ -773,7 +779,7 @@
         }
         item.setAttribute(data("url"), href)
 
-        // Text Content Wrapper
+        // DOM.Text Content Wrapper
         let textContent = document.createElement(.span)
         textContent.className = "menu-item-text"
         textContent.style.display(.flex)
@@ -1132,7 +1138,7 @@
 
         // Clear search input
         if let input = menu.querySelector("input") {
-          (input as? HTMLInputElement)?.value = ""
+          (input as? HTML.HTMLInputElement)?.value = ""
           input.blur()
         }
 

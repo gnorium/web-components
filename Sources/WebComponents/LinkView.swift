@@ -19,8 +19,8 @@
     let redLink: Bool
     let external: Bool
     let weight: LinkWeight
-    let linkHeight: Length?
-    let content: [Node]
+    let linkHeight: CSS.Length?
+    let content: [DOM.Node]
     let `class`: String
 
     public init(
@@ -29,9 +29,9 @@
       redLink: Bool = false,
       external: Bool = false,
       weight: LinkWeight = .default,
-      linkHeight: Length? = nil,
+      linkHeight: CSS.Length? = nil,
       class: String = "",
-      @HTMLBuilder content: () -> [Node]
+      @HTMLBuilder content: () -> [DOM.Node]
     ) {
       self.url = url
       self.underlined = underlined
@@ -44,7 +44,7 @@
     }
 
     @CSSBuilder
-    private func linkViewCSS(_ underlined: Bool, _ redLink: Bool) -> [CSSRule] {
+    private func linkViewCSS(_ underlined: Bool, _ redLink: Bool) -> [CSSOM.CSSRule] {
       if redLink {
         color(colorRed)
       } else {
@@ -89,7 +89,7 @@
     }
 
     @CSSBuilder
-    private func linkViewPlainCSS() -> [CSSRule] {
+    private func linkViewPlainCSS() -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       gap(spacing8)
@@ -98,7 +98,6 @@
       } else {
         height(.auto)
       }
-      paddingInline(spacing16)
       fontFamily(typographyFontSans)
       fontSize(fontSizeMedium16)
       fontWeight(fontWeightNormal)
@@ -115,7 +114,7 @@
     }
 
     @CSSBuilder
-    private func linkExternalIconCSS() -> [CSSRule] {
+    private func linkExternalIconCSS() -> [CSSOM.CSSRule] {
       display(.inlineBlock)
       width(sizeIconXSmall)
       height(sizeIconXSmall)
@@ -124,7 +123,7 @@
       fontSize(sizeIconXSmall)
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       let linkClasses = {
         var classes = "link-view"
         if weight == .plain {

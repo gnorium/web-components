@@ -10,7 +10,7 @@
   /// A button that can be toggled on and off with state persistence.
   public struct ToggleButtonView: HTMLContent {
     let label: String
-    let icon: Node?
+    let icon: DOM.Node?
     let modelValue: Bool
     let weight: ButtonView.ButtonWeight
     let disabled: Bool
@@ -20,7 +20,7 @@
     let indicateSelection: Bool
     let size: ButtonView.ButtonSize
     var `class`: String
-    let labelFontWeight: CSSFontWeight
+    let labelFontWeight: CSS.FontWeight
 
     public init<T: HTMLContent>(
       label: String,
@@ -34,7 +34,7 @@
       indicateSelection: Bool = true,
       size: ButtonView.ButtonSize = .medium,
       class: String = "",
-      labelFontWeight: CSSFontWeight = fontWeightBold
+      labelFontWeight: CSS.FontWeight = fontWeightBold
     ) {
       self.label = label
       self.icon = icon.map { $0.build() }
@@ -50,7 +50,7 @@
       self.labelFontWeight = labelFontWeight
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       let isIconOnly = iconOnly || (icon != nil && label.isEmpty)
       let fullClass = `class`.isEmpty ? "toggle-button-view" : "toggle-button-view \(`class`)"
 
@@ -103,7 +103,7 @@
     }
 
     @CSSBuilder
-    private func toggleStateCSS() -> [CSSRule] {
+    private func toggleStateCSS() -> [CSSOM.CSSRule] {
       // Toggle-specific state styling
       // Subtle/solid toggled state
       if weight == .subtle || weight == .solid {
@@ -159,10 +159,10 @@
   import WebTypes
 
   private class ToggleButtonInstance: @unchecked Sendable {
-    private var button: Element
+    private var button: DOM.Element
     private var modelValue: Bool = false
 
-    init(button: Element) {
+    init(button: DOM.Element) {
       self.button = button
 
       // Get initial state from aria-pressed

@@ -12,19 +12,19 @@
   public struct EllipsisMenuView: HTMLContent {
     let `class`: String
     let navbarHeight: Int
-    let content: [Node]
+    let content: [DOM.Node]
 
     public init(
       class: String = "",
       navbarHeight: Int = 96,
-      @HTMLBuilder content: () -> [Node]
+      @HTMLBuilder content: () -> [DOM.Node]
     ) {
       self.class = `class`
       self.navbarHeight = navbarHeight
       self.content = content()
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       div {
         // Backdrop with blur effect
         div {}
@@ -65,7 +65,7 @@
     // MARK: - CSS
 
     @CSSBuilder
-    private func ellipsisMenuViewCSS() -> [CSSRule] {
+    private func ellipsisMenuViewCSS() -> [CSSOM.CSSRule] {
       display(.none)
       position(.fixed)
       top(px(navbarHeight))
@@ -76,7 +76,7 @@
     }
 
     @CSSBuilder
-    private func ellipsisMenuBackdropCSS() -> [CSSRule] {
+    private func ellipsisMenuBackdropCSS() -> [CSSOM.CSSRule] {
       position(.fixed)
       top(px(navbarHeight))
       insetInlineStart(0)
@@ -91,7 +91,7 @@
     }
 
     @CSSBuilder
-    private func ellipsisMenuContainerCSS() -> [CSSRule] {
+    private func ellipsisMenuContainerCSS() -> [CSSOM.CSSRule] {
       position(.relative)
       width(perc(100))
       backgroundColor(backgroundColorBase)
@@ -115,14 +115,14 @@
     // MARK: - Public Section Helpers
 
     @CSSBuilder
-    public static func sectionCSS() -> [CSSRule] {
+    public static func sectionCSS() -> [CSSOM.CSSRule] {
       display(.flex)
       flexDirection(.column)
       gap(spacing8)
     }
 
     @CSSBuilder
-    public static func sectionHeaderCSS() -> [CSSRule] {
+    public static func sectionHeaderCSS() -> [CSSOM.CSSRule] {
       fontFamily(typographyFontSans)
       fontSize(fontSizeXSmall12)
       fontWeight(fontWeightSemiBold)
@@ -131,7 +131,7 @@
     }
 
     @CSSBuilder
-    public static func dividerCSS() -> [CSSRule] {
+    public static func dividerCSS() -> [CSSOM.CSSRule] {
       height(px(1))
       backgroundColor(borderColorSubtle)
     }

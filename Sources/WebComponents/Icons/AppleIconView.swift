@@ -8,15 +8,15 @@
 
   public struct AppleIconView: HTMLContent {
     let `class`: String
-    let width: Length
-    let height: Length
-    let fill: SVGPaint
+    let width: CSS.Length
+    let height: CSS.Length
+    let fill: CSS.Color
 
     public init(
       class: String = "",
-      width: Length = px(20),
-      height: Length = px(20),
-      fill: SVGPaint = SVGPaint(extreme)
+      width: CSS.Length = px(20),
+      height: CSS.Length = px(20),
+      fill: CSS.Color = extreme
     ) {
       self.class = `class`
       self.width = width
@@ -24,7 +24,7 @@
       self.fill = fill
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       svg {
         path()
           .d(

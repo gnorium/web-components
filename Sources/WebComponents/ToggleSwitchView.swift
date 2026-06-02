@@ -18,8 +18,8 @@
     let alignSwitch: Bool
     let hideLabel: Bool
     let disabled: Bool
-    let labelContent: [Node]
-    let descriptionContent: [Node]
+    let labelContent: [DOM.Node]
+    let descriptionContent: [DOM.Node]
     let `class`: String
 
     public init(
@@ -31,8 +31,8 @@
       hideLabel: Bool = false,
       disabled: Bool = false,
       class: String = "",
-      @HTMLBuilder label: () -> [Node],
-      @HTMLBuilder description: () -> [Node] = { [] }
+      @HTMLBuilder label: () -> [DOM.Node],
+      @HTMLBuilder description: () -> [DOM.Node] = { [] }
     ) {
       self.id = id
       self.name = name
@@ -47,7 +47,7 @@
     }
 
     @CSSBuilder
-    private func toggleSwitchViewCSS(_ alignSwitch: Bool) -> [CSSRule] {
+    private func toggleSwitchViewCSS(_ alignSwitch: Bool) -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       minHeight(minSizeInteractivePointer)
@@ -59,7 +59,7 @@
     }
 
     @CSSBuilder
-    private func toggleSwitchInputCSS(_ disabled: Bool) -> [CSSRule] {
+    private func toggleSwitchInputCSS(_ disabled: Bool) -> [CSSOM.CSSRule] {
       position(.absolute)
       width(px(1))
       height(px(1))
@@ -95,7 +95,7 @@
     }
 
     @CSSBuilder
-    private func toggleSwitchSwitchCSS(_ disabled: Bool) -> [CSSRule] {
+    private func toggleSwitchSwitchCSS(_ disabled: Bool) -> [CSSOM.CSSRule] {
       position(.relative)
       display(.inlineBlock)
       flexShrink(0)
@@ -115,7 +115,7 @@
     }
 
     @CSSBuilder
-    private func toggleSwitchGripCSS() -> [CSSRule] {
+    private func toggleSwitchGripCSS() -> [CSSOM.CSSRule] {
       position(.absolute)
       top(perc(50))
       left(spacingToggleSwitchGripStart)
@@ -129,18 +129,18 @@
     }
 
     @CSSBuilder
-    private func toggleSwitchLabelWrapperCSS(_ alignSwitch: Bool) -> [CSSRule] {
+    private func toggleSwitchLabelWrapperCSS(_ alignSwitch: Bool) -> [CSSOM.CSSRule] {
       if alignSwitch {
         flex(1).important()
       }
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       let hasDescription = !descriptionContent.isEmpty
       let descriptionID = hasDescription ? "\(id)-description" : nil
 
       // Create a wrapper div to hold LabelView and apply toggle-specific styles
-      let labelWrapper: HTMLDivElement = div {
+      let labelWrapper: HTML.HTMLDivElement = div {
         LabelView(
           visuallyHidden: hideLabel,
           inputID: id,
@@ -210,10 +210,10 @@
   import WebTypes
 
   private class ToggleSwitchInstance: @unchecked Sendable {
-    private var toggleSwitch: Element
-    private var input: Element?
+    private var toggleSwitch: DOM.Element
+    private var input: DOM.Element?
 
-    init(toggleSwitch: Element) {
+    init(toggleSwitch: DOM.Element) {
       self.toggleSwitch = toggleSwitch
       input = toggleSwitch.querySelector(".toggle-switch-input")
 

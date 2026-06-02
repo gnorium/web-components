@@ -8,20 +8,20 @@
 
   public struct DarkModeIconView: HTMLContent {
     let `class`: String
-    let width: Length
-    let height: Length
+    let width: CSS.Length
+    let height: CSS.Length
 
     public init(
       class: String = "",
-      width: Length = px(16),
-      height: Length = px(16)
+      width: CSS.Length = px(16),
+      height: CSS.Length = px(16)
     ) {
       self.class = `class`
       self.width = width
       self.height = height
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       svg {
         path()
           .d(M(8, 2), a(4, 4, 0, false, false, 6, 6), a(6, 6, 0, true, true, -6, -6), Z())

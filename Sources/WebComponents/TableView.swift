@@ -25,15 +25,15 @@ public struct TableView: HTMLContent {
   public let totalPages: Int?
   public let currentPage: Int?
   public let paginationBaseUrl: String?
-  public let headerContent: [Node]
-  public let theadContent: [Node]
-  public let tbodyContent: [Node]
-  public let tfootContent: [Node]
-  public let footerContent: [Node]
-  public let emptyStateContent: [Node]
-  public let theadStyle: @Sendable () -> [CSSRule]
-  public let thStyle: @Sendable (Column.Alignment) -> [CSSRule]
-  public let tdStyle: @Sendable () -> [CSSRule]
+  public let headerContent: [DOM.Node]
+  public let theadContent: [DOM.Node]
+  public let tbodyContent: [DOM.Node]
+  public let tfootContent: [DOM.Node]
+  public let footerContent: [DOM.Node]
+  public let emptyStateContent: [DOM.Node]
+  public let theadStyle: @Sendable () -> [CSSOM.CSSRule]
+  public let thStyle: @Sendable (Column.Alignment) -> [CSSOM.CSSRule]
+  public let tdStyle: @Sendable () -> [CSSOM.CSSRule]
   public let `class`: String
 
   public struct Column: Sendable {
@@ -41,8 +41,8 @@ public struct TableView: HTMLContent {
     public let label: String
     public let sortable: Bool
     public let align: Alignment
-    public let width: LengthPercentage?
-    public let minWidth: LengthPercentage?
+    public let width: CSS.LengthPercentage?
+    public let minWidth: CSS.LengthPercentage?
 
     public enum Alignment: Sendable {
       case start
@@ -65,8 +65,8 @@ public struct TableView: HTMLContent {
       label: String,
       sortable: Bool = true,
       align: Alignment = .start,
-      width: LengthPercentage? = nil,
-      minWidth: LengthPercentage? = nil
+      width: CSS.LengthPercentage? = nil,
+      minWidth: CSS.LengthPercentage? = nil
     ) {
       self.id = id
       self.label = label
@@ -81,11 +81,11 @@ public struct TableView: HTMLContent {
       label: String,
       sortable: Bool = true,
       align: Alignment = .start,
-      width: Length
+      width: CSS.Length
     ) {
       self.init(
         id: id, label: label, sortable: sortable, align: align,
-        width: LengthPercentage(width))
+        width: CSS.LengthPercentage(width))
     }
   }
 
@@ -100,8 +100,8 @@ public struct TableView: HTMLContent {
 
   public struct NodePair: Sendable {
     public let key: String
-    public let value: Node
-    public init(_ key: String, _ value: Node) {
+    public let value: DOM.Node
+    public init(_ key: String, _ value: DOM.Node) {
       self.key = key
       self.value = value
     }
@@ -146,7 +146,7 @@ public struct TableView: HTMLContent {
       ) {
         var nodePairs: [NodePair] = []
         for (key, value) in cells {
-          nodePairs.append(NodePair(key, Text(value)))
+          nodePairs.append(NodePair(key, DOM.Text(value)))
         }
         self.init(
           id: id,
@@ -161,7 +161,7 @@ public struct TableView: HTMLContent {
 
       public init(
         id: String? = nil,
-        cells: [String: Node],
+        cells: [String: DOM.Node],
         groupID: String? = nil,
         isGroupHeader: Bool = false,
         url: String? = nil,
@@ -270,16 +270,16 @@ public struct TableView: HTMLContent {
     totalPages: Int? = nil,
     currentPage: Int? = nil,
     paginationBaseUrl: String? = nil,
-    @CSSBuilder theadStyle: @escaping @Sendable () -> [CSSRule] = { [] },
-    @CSSBuilder thStyle: @escaping @Sendable (Column.Alignment) -> [CSSRule] = { _ in [] },
-    @CSSBuilder tdStyle: @escaping @Sendable () -> [CSSRule] = { [] },
+    @CSSBuilder theadStyle: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] },
+    @CSSBuilder thStyle: @escaping @Sendable (Column.Alignment) -> [CSSOM.CSSRule] = { _ in [] },
+    @CSSBuilder tdStyle: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] },
     class: String = "",
-    @HTMLBuilder header: () -> [Node] = { [] },
-    @HTMLBuilder thead: () -> [Node] = { [] },
-    @HTMLBuilder tbody: () -> [Node] = { [] },
-    @HTMLBuilder tfoot: () -> [Node] = { [] },
-    @HTMLBuilder footer: () -> [Node] = { [] },
-    @HTMLBuilder emptyState: () -> [Node] = { [] }
+    @HTMLBuilder header: () -> [DOM.Node] = { [] },
+    @HTMLBuilder thead: () -> [DOM.Node] = { [] },
+    @HTMLBuilder tbody: () -> [DOM.Node] = { [] },
+    @HTMLBuilder tfoot: () -> [DOM.Node] = { [] },
+    @HTMLBuilder footer: () -> [DOM.Node] = { [] },
+    @HTMLBuilder emptyState: () -> [DOM.Node] = { [] }
   ) {
     self.captionContent = captionContent
     self.hideCaption = hideCaption
@@ -310,7 +310,7 @@ public struct TableView: HTMLContent {
     self.emptyStateContent = emptyState()
   }
 
-  public func build() -> Node {
+  public func build() -> DOM.Node {
     let hasCustomHeader = !headerContent.isEmpty
     let hasCustomThead = !theadContent.isEmpty
     let hasCustomTbody = !tbodyContent.isEmpty
@@ -465,6 +465,9 @@ public struct TableView: HTMLContent {
                         display(.flex)
                         alignItems(.center)
                         justifyContent(.center)
+                        selector("input", "label", "button") {
+                          cursor(.pointer).important()
+                        }
                       }
                     }
 
@@ -619,6 +622,13 @@ public struct TableView: HTMLContent {
               tbodyContent
             }
             .class("table-tbody")
+            .style {
+              if isEmpty {
+                display(.flex)
+                flexDirection(.column)
+                flex(1)
+              }
+            }
           } else {
             tbody {
               if isEmpty && hasEmptyState {
@@ -628,17 +638,32 @@ public struct TableView: HTMLContent {
                       emptyStateContent
                     }
                     .class("table-empty-state-content")
+                    .style {
+                      display(.flex)
+                      flexDirection(.column)
+                      alignItems(.center)
+                      justifyContent(.center)
+                      flex(1)
+                    }
                   }
                   .colspan(columns.count + (selectionMode != nil ? 1 : 0) + 1)
                   .class("table-empty-state")
                   .style {
                     tableEmptyStateCSS()
+                    display(.flex)
+                    flexDirection(.column)
+                    alignItems(.center)
+                    justifyContent(.center)
+                    flex(1)
                   }
                 }
                 .class("table-empty-row")
                 .style {
                   backgroundColor(backgroundColorBase).important()
                   borderBlockEnd(borderWidthBase, .solid, borderColorSubtle).important()
+                  display(.flex)
+                  flexDirection(.column)
+                  flex(1)
                 }
               } else {
                 for (rowIndex, row) in data.enumerated() {
@@ -689,6 +714,9 @@ public struct TableView: HTMLContent {
                           display(.flex)
                           alignItems(.center)
                           justifyContent(.center)
+                          selector("input", "label", "button") {
+                            cursor(.pointer).important()
+                          }
                         }
                       }
                       .style {
@@ -703,10 +731,10 @@ public struct TableView: HTMLContent {
 
                     // Row cells
                     for (cellIndex, column) in columns.enumerated() {
-                      let cellContent: Node = row.cells.first(where: { stringEquals($0.key, column.id) })?.value ?? Text("")
+                      let cellContent: DOM.Node = row.cells.first(where: { stringEquals($0.key, column.id) })?.value ?? DOM.Text("")
                       let isFirstCell = cellIndex == 0
-                      var unwrappedElement: HTMLElement? = nil
-                      if let element = cellContent as? HTMLElement, (stringEquals(element.tag, "td") || stringEquals(element.tag, "th")) {
+                      var unwrappedElement: HTML.HTMLElement? = nil
+                      if let element = cellContent as? HTML.HTMLElement, (stringEquals(element.tag, "td") || stringEquals(element.tag, "th")) {
                         if showVerticalBorders {
                           _ = element.style {
                             borderInlineStart(borderWidthBase, .solid, borderColorSubtle)
@@ -867,6 +895,13 @@ public struct TableView: HTMLContent {
               }
             }
             .class("table-tbody")
+            .style {
+              if isEmpty {
+                display(.flex)
+                flexDirection(.column)
+                flex(1)
+              }
+            }
           }
 
           // tfoot
@@ -885,12 +920,16 @@ public struct TableView: HTMLContent {
         )
         .style {
           tableTableCSS(showVerticalBorders)
+          if isEmpty {
+            display(.flex)
+            flexDirection(.column)
+            flex(1)
+          }
         }
       }
       .class("table-inner-wrapper")
       .style {
-        tableWrapperCSS(paginate)
-        width(perc(100))
+        tableInnerWrapperCSS()
       }
 
       // Pagination (bottom)
@@ -973,15 +1012,13 @@ public struct TableView: HTMLContent {
   }
 
   @CSSBuilder
-  private func tableViewCSS() -> [CSSRule] {
+  private func tableViewCSS() -> [CSSOM.CSSRule] {
     width(perc(100))
     display(.flex)
     flexDirection(.column)
     gap(spacing32)
-
-    selector(".table-selection-container input", ".table-selection-container label", ".table-selection-container button") {
-      cursor(.pointer).important()
-    }
+    flex(1)
+    minHeight(0)
 
     // Disable interactions when empty or pending
     selector(".table-view-empty tbody tr:hover", ".table-view-pending tbody tr:hover") {
@@ -1060,7 +1097,7 @@ public struct TableView: HTMLContent {
   }
 
   @CSSBuilder
-  private func tableHeaderCSS() -> [CSSRule] {
+  private func tableHeaderCSS() -> [CSSOM.CSSRule] {
     display(.flex)
     alignItems(.center)
     justifyContent(.spaceBetween)
@@ -1070,7 +1107,7 @@ public struct TableView: HTMLContent {
   }
 
   @CSSBuilder
-  private func tableHeaderTitleCSS() -> [CSSRule] {
+  private func tableHeaderTitleCSS() -> [CSSOM.CSSRule] {
     fontFamily(typographyFontSans)
     fontSize(fontSizeLarge18)
     fontWeight(fontWeightBold)
@@ -1079,20 +1116,21 @@ public struct TableView: HTMLContent {
   }
 
   @CSSBuilder
-  private func tableWrapperCSS(_ paginate: Bool) -> [CSSRule] {
+  private func tableInnerWrapperCSS() -> [CSSOM.CSSRule] {
     position(.relative)
     transform(translateZ(0))
     overflow(.auto)
     border(borderWidthBase, .solid, borderColorSubtle)
     borderRadius(borderRadiusBase)
     backgroundColor(backgroundColorBase)
-    if !paginate {
-      maxHeight(px(400))
-    }
+    width(perc(100))
+    display(.flex)
+    flex(1)
+    minHeight(0)
   }
 
   @CSSBuilder
-  private func tableResizerCSS() -> [CSSRule] {
+  private func tableResizerCSS() -> [CSSOM.CSSRule] {
     position(.absolute)
     top(spacing8)
     right(px(-8))
@@ -1119,7 +1157,7 @@ public struct TableView: HTMLContent {
   }
 
   @CSSBuilder
-  private func tableTableCSS(_ showVerticalBorders: Bool) -> [CSSRule] {
+  private func tableTableCSS(_ showVerticalBorders: Bool) -> [CSSOM.CSSRule] {
     tableLayout(.fixed)
     borderCollapse(.separate)
     borderSpacing(0)
@@ -1181,7 +1219,7 @@ public struct TableView: HTMLContent {
   }
 
   @CSSBuilder
-  private func tableCaptionCSS(_ hideCaption: Bool) -> [CSSRule] {
+  private func tableCaptionCSS(_ hideCaption: Bool) -> [CSSOM.CSSRule] {
     fontFamily(typographyFontSans)
     fontSize(fontSizeMedium16)
     fontWeight(fontWeightBold)
@@ -1203,13 +1241,13 @@ public struct TableView: HTMLContent {
   }
 
   @CSSBuilder
-  private func tableTheadCSS() -> [CSSRule] {
+  private func tableTheadCSS() -> [CSSOM.CSSRule] {
     backgroundColor(backgroundColorNeutralSubtle)
     borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
   }
 
   @CSSBuilder
-  private func tableThCSS(_ align: Column.Alignment) -> [CSSRule] {
+  private func tableThCSS(_ align: Column.Alignment) -> [CSSOM.CSSRule] {
     backgroundColor(.transparent)
     padding(spacing8, spacing12)
     fontFamily(typographyFontSans)
@@ -1239,7 +1277,7 @@ public struct TableView: HTMLContent {
   }
 
   @CSSBuilder
-  private func tableSortButtonCSS() -> [CSSRule] {
+  private func tableSortButtonCSS() -> [CSSOM.CSSRule] {
     display(.flex)
     alignItems(.center)
     flexShrink(1)
@@ -1264,7 +1302,7 @@ public struct TableView: HTMLContent {
   }
 
   @CSSBuilder
-  private func tableSortIconCSS() -> [CSSRule] {
+  private func tableSortIconCSS() -> [CSSOM.CSSRule] {
     display(.inlineFlex)
     alignItems(.center)
     justifyContent(.center)
@@ -1275,7 +1313,7 @@ public struct TableView: HTMLContent {
   }
 
   @CSSBuilder
-  private func tableTdCSS(_ align: Column.Alignment) -> [CSSRule] {
+  private func tableTdCSS(_ align: Column.Alignment) -> [CSSOM.CSSRule] {
     backgroundColor(.inherit)
     padding(spacing8, spacing12)
 
@@ -1300,14 +1338,14 @@ public struct TableView: HTMLContent {
   }
 
   @CSSBuilder
-  private func tableTfootCSS() -> [CSSRule] {
+  private func tableTfootCSS() -> [CSSOM.CSSRule] {
     backgroundColor(backgroundColorNeutralSubtle)
     borderBlockStart(borderWidthBase, .solid, borderColorSubtle)
     fontWeight(fontWeightBold)
   }
 
   @CSSBuilder
-  private func tableEmptyStateCSS() -> [CSSRule] {
+  private func tableEmptyStateCSS() -> [CSSOM.CSSRule] {
     padding(spacing48)
     textAlign(.center)
     color(colorSubtle)
@@ -1316,13 +1354,13 @@ public struct TableView: HTMLContent {
   }
 
   @CSSBuilder
-  private func tableFooterCSS() -> [CSSRule] {
+  private func tableFooterCSS() -> [CSSOM.CSSRule] {
     padding(spacing12)
     marginBlockStart(spacing8)
   }
 
   @CSSBuilder
-  private func tablePaginationCSS() -> [CSSRule] {
+  private func tablePaginationCSS() -> [CSSOM.CSSRule] {
     display(.flex)
     alignItems(.center)
     justifyContent(.spaceBetween)
@@ -1334,7 +1372,7 @@ public struct TableView: HTMLContent {
   }
 
   @CSSBuilder
-  private func paginationInfoCSS() -> [CSSRule] {
+  private func paginationInfoCSS() -> [CSSOM.CSSRule] {
     fontFamily(typographyFontSans)
     fontSize(fontSizeSmall14)
     lineHeight(lineHeightSmall22)
@@ -1342,7 +1380,7 @@ public struct TableView: HTMLContent {
   }
 
   @CSSBuilder
-  private func paginationControlsCSS() -> [CSSRule] {
+  private func paginationControlsCSS() -> [CSSOM.CSSRule] {
     display(.flex)
     alignItems(.center)
     gap(spacing8)
@@ -1353,7 +1391,7 @@ public struct TableView: HTMLContent {
   import WebAPIs
 
   public class TableInstance: @unchecked Sendable {
-    public static func updateZebraStriping(for table: Element) {
+    public static func updateZebraStriping(for table: DOM.Element) {
       let rows = table.querySelectorAll(".table-tbody tr")
       var visibleIndex = 0
       for row in rows {
@@ -1370,26 +1408,26 @@ public struct TableView: HTMLContent {
       }
     }
 
-    private var table: Element
-    private var wrapper: Element
-    private var tableTable: Element
-    private var selectAllCheckbox: Element?
-    private var rowInputs: [Element] = []
-    private var sortButtons: [Element] = []
-    private var groupHeaders: [Element] = []
-    private var paginationPrevBtns: [Element] = []
-    private var paginationNextBtns: [Element] = []
-    private var paginationPageInputs: [Element] = []
+    private var table: DOM.Element
+    private var wrapper: DOM.Element
+    private var tableTable: DOM.Element
+    private var selectAllCheckbox: DOM.Element?
+    private var rowInputs: [DOM.Element] = []
+    private var sortButtons: [DOM.Element] = []
+    private var groupHeaders: [DOM.Element] = []
+    private var paginationPrevBtns: [DOM.Element] = []
+    private var paginationNextBtns: [DOM.Element] = []
+    private var paginationPageInputs: [DOM.Element] = []
     private var selectedRows: [String] = []
     private var collapsedGroups: [String] = []
     private var expandedSubrowGroups: [String] = []
     private var currentSort: (columnID: String, direction: String)?
     private var currentPage: Int = 1
     private var selectionMode: String = ""
-    private var activeResizer: Element?
+    private var activeResizer: DOM.Element?
     private var startX: Double = 0
     private var startWidth: Double = 0
-    private var targetTh: Element?
+    private var targetTh: DOM.Element?
     private var moveListenerID: Int32 = -1
     private var upListenerID: Int32 = -1
     private struct WidthPair {
@@ -1419,7 +1457,7 @@ public struct TableView: HTMLContent {
       startWidths.append(WidthPair(key: key, value: value))
     }
 
-    private func measureCellContent(_ cell: Element) -> Double {
+    private func measureCellContent(_ cell: DOM.Element) -> Double {
       let tag = cell.tagName
       let tempCell = document.createElement(tag)
       tempCell.className = cell.className
@@ -1552,7 +1590,7 @@ public struct TableView: HTMLContent {
       tempTable.style.setProperty(.width, .auto, .important)
       tempTable.style.setProperty(.display, .table, .important)
       
-      let tempSection: Element
+      let tempSection: DOM.Element
       if stringEquals(tag, "th") || stringEquals(tag, "TH") {
         tempSection = document.createElement("thead")
         if let liveThead = table.querySelector("thead") {
@@ -1602,40 +1640,58 @@ public struct TableView: HTMLContent {
       guard !headers.isEmpty else { return }
       
       let parentTr = headers[0].parentElement
-      let allHeaderCells = parentTr?.querySelectorAll("th") ?? Array<Element>()
+      let allHeaderCells = parentTr?.querySelectorAll("th") ?? Array<DOM.Element>()
+      
+      let wrapperWidth = Double(self.tableTable.parentElement?.getBoundingClientRect()?.width ?? 0)
+      
+      // Separate headers into flex (fluid) and fixed
+      let flexHeaders = headers.filter { stringEquals($0.getAttribute("data-flex") ?? "", "true") }
+      let fixedHeaders = headers.filter { !stringEquals($0.getAttribute("data-flex") ?? "", "true") }
+      
+      // Calculate fixed widths sum
+      var fixedWidthsSum: Double = 0
+      for th in fixedHeaders {
+        fixedWidthsSum += th.getBoundingClientRect()?.width ?? 50.0
+      }
+      
+      // Calculate balanced width for flex columns
+      let remainingWidth = max(0.0, wrapperWidth - fixedWidthsSum)
+      let balancedFlexWidth = flexHeaders.isEmpty ? 150.0 : max(100.0, remainingWidth / Double(flexHeaders.count))
       
       for th in headers {
         let colIndex = allHeaderCells.firstIndex(where: { stringEquals($0.idString, th.idString) }) ?? -1
         guard colIndex >= 0 else { continue }
         
-        var maxWidth: Double = 0
+        let isFlex = stringEquals(th.getAttribute("data-flex") ?? "", "true")
         
-        // Measure the header cell's content
-        maxWidth = max(maxWidth, measureCellContent(th))
-        
-        // Measure body cells at the same column index (only for currently visible rows)
-        let bodyRows = table.querySelectorAll(".table-tbody tr")
-        for row in bodyRows {
-          if row.querySelector("[colspan]") != nil { continue }
-          if let rect = row.getBoundingClientRect(), rect.height > 0 {
-            let rowCells = row.querySelectorAll(":scope > td, :scope > th")
-            if colIndex < rowCells.count {
-              let cell = rowCells[colIndex]
-              maxWidth = max(maxWidth, measureCellContent(cell))
+        if isFlex {
+          // Fluid flex columns share the remaining space perfectly equally
+          th.style.setProperty(.minWidth, px(balancedFlexWidth), .important)
+          th.style.setProperty(.width, .auto, .important)
+        } else {
+          // Fixed columns keep their specified width
+          var maxWidth: Double = 0
+          maxWidth = max(maxWidth, measureCellContent(th))
+          
+          let bodyRows = table.querySelectorAll(".table-tbody tr")
+          for row in bodyRows {
+            if row.querySelector("[colspan]") != nil { continue }
+            if let rect = row.getBoundingClientRect(), rect.height > 0 {
+              let rowCells = row.querySelectorAll(":scope > td, :scope > th")
+              if colIndex < rowCells.count {
+                let cell = rowCells[colIndex]
+                maxWidth = max(maxWidth, measureCellContent(cell))
+              }
             }
           }
+          let finalWidth = ceil(maxWidth)
+          th.style.setProperty(.minWidth, px(finalWidth), .important)
+          th.style.setProperty(.width, px(finalWidth), .important)
         }
-        
-        let finalWidth = ceil(maxWidth)
-        let columnFloor = maxWidth >= 150.0 ? 150.0 : finalWidth
-        
-        // Set the dynamic min-width floor and keep width: auto so they stretch to fill available container space
-        th.style.setProperty(.minWidth, px(columnFloor), .important)
-        th.style.setProperty(.width, .auto, .important)
       }
     }
 
-    public init(table: Element) {
+    public init(table: DOM.Element) {
       self.table = table
       self.wrapper = table.parentElement ?? table
       self.tableTable = table.querySelector(".table-table") ?? table
@@ -1684,6 +1740,7 @@ public struct TableView: HTMLContent {
 
       bindEvents()
       TableInstance.updateZebraStriping(for: table)
+      self.adjustDummyRows()
 
       let isServerPaginated = stringEquals(table.getAttribute(data("paginate-server")) ?? "false", "true")
       if !isServerPaginated {
@@ -1692,6 +1749,10 @@ public struct TableView: HTMLContent {
     }
 
     private func bindEvents() {
+      _ = window.addEventListener(.resize) { [self] _ in
+        self.adjustDummyRows()
+      }
+
       // Column resizing
       let resizers = table.querySelectorAll(".table-resizer")
       for resizer in resizers {
@@ -1769,7 +1830,7 @@ public struct TableView: HTMLContent {
 
         for pageInput in paginationPageInputs {
           _ = pageInput.addEventListener(.change) { [self] _ in
-            guard let input = pageInput as? HTMLInputElement else { return }
+            guard let input = pageInput as? HTML.HTMLInputElement else { return }
             if let page = parseInt(input.value) {
               self.goToPage(page)
             }
@@ -1777,7 +1838,7 @@ public struct TableView: HTMLContent {
           _ = pageInput.addEventListener(.keydown) { [self] (event: Event) in
             if stringEquals(event.key, "Enter") {
               event.preventDefault()
-              guard let input = pageInput as? HTMLInputElement else { return }
+              guard let input = pageInput as? HTML.HTMLInputElement else { return }
               if let page = parseInt(input.value) {
                 self.goToPage(page)
               }
@@ -1809,7 +1870,7 @@ public struct TableView: HTMLContent {
       }
     }
 
-    private func initResize(_ event: Event, resizer: Element) {
+    private func initResize(_ event: Event, resizer: DOM.Element) {
       let mouseEvent = MouseEvent(event)
       activeResizer = resizer
       targetTh = resizer.parentElement
@@ -1831,7 +1892,7 @@ public struct TableView: HTMLContent {
       
       // Calculate dynamic floor limit for this manual resize
       let parentTr = targetTh?.parentElement
-      let headerCells = parentTr?.querySelectorAll("th") ?? Array<Element>()
+      let headerCells = parentTr?.querySelectorAll("th") ?? Array<DOM.Element>()
       let colIndex = headerCells.firstIndex(where: { stringEquals($0.idString, targetTh?.idString ?? "") }) ?? -1
       
       if colIndex >= 0 {
@@ -1877,7 +1938,6 @@ public struct TableView: HTMLContent {
       // Update tableTable width to sum of all columns, pinning each column explicitly
       // to prevent table-layout: fixed from redistributing widths during resize.
       let headers = Array(self.table.querySelectorAll("thead th")).filter { !$0.classList.contains("table-th-spacer") }
-      let wrapperWidth = Double(self.tableTable.parentElement?.getBoundingClientRect()?.width ?? 0)
       var total: Double = 0
       let activeId = th.getAttribute(.id) ?? ""
       for header in headers {
@@ -1889,32 +1949,18 @@ public struct TableView: HTMLContent {
           header.style.setProperty(.minWidth, px(w), .important)
           total += w
         } else {
-          let isFlex = stringEquals(header.getAttribute("data-flex") ?? "", "true")
-          
-          if isFlex {
-            header.style.setProperty(.width, .auto, .important)
-            header.style.setProperty(.minWidth, px(150), .important)
-            total += 150.0
-          } else {
-            w = getStartWidth(for: headerId) ?? Double(header.getBoundingClientRect()?.width ?? 100)
-            header.style.setProperty(.width, px(w), .important)
-            header.style.setProperty(.minWidth, px(w), .important)
-            total += w
-          }
+          w = getStartWidth(for: headerId) ?? Double(header.getBoundingClientRect()?.width ?? 100)
+          header.style.setProperty(.width, px(w), .important)
+          header.style.setProperty(.minWidth, px(w), .important)
+          total += w
         }
       }
       
-      let isNarrower = total < wrapperWidth
-      if isNarrower {
-        self.tableTable.style.width(perc(100))
-        self.tableTable.style.minWidth(perc(100))
-      } else {
-        self.tableTable.style.width(px(total))
-        self.tableTable.style.minWidth(px(total))
-      }
+      self.tableTable.style.width(px(total))
+      self.tableTable.style.minWidth(px(total))
     }
 
-    private func snapResize(_ event: Event, resizer: Element) {
+    private func snapResize(_ event: Event, resizer: DOM.Element) {
       guard let th = resizer.parentElement else { return }
       guard let parentTr = th.parentElement else { return }
       
@@ -1949,7 +1995,6 @@ public struct TableView: HTMLContent {
       let columnFloor = maxWidth >= 150.0 ? 150.0 : finalWidth
       
       let headers = Array(self.table.querySelectorAll("thead th")).filter { !$0.classList.contains("table-th-spacer") }
-      let wrapperWidth = Double(self.tableTable.parentElement?.getBoundingClientRect()?.width ?? 0)
       
       var total: Double = 0
       let activeId = th.getAttribute(.id) ?? ""
@@ -1960,44 +2005,15 @@ public struct TableView: HTMLContent {
           header.style.setProperty(.minWidth, px(min(columnFloor, 2000.0)), .important)
           total += finalWidth
         } else {
-          let isFlex = stringEquals(header.getAttribute("data-flex") ?? "", "true")
-          if isFlex {
-            header.style.setProperty(.width, .auto, .important)
-            header.style.setProperty(.minWidth, px(150), .important)
-            total += 150.0
-          } else {
-            let inlineWidthStr = header.style.getPropertyValue("width")
-            var w = 150.0
-            if !stringIsEmpty(inlineWidthStr) && stringEndsWith(inlineWidthStr, "px") {
-              let count = Array(inlineWidthStr.utf8).count
-              let valStr = stringSubstring(inlineWidthStr, from: 0, to: count - 2)
-              if let val = parseInt(valStr) {
-                w = Double(val)
-              }
-            } else if let attrWidthStr = header.getAttribute(data("width")) {
-              if !stringIsEmpty(attrWidthStr) && stringEndsWith(attrWidthStr, "px") {
-                let count = Array(attrWidthStr.utf8).count
-                let valStr = stringSubstring(attrWidthStr, from: 0, to: count - 2)
-                if let val = parseInt(valStr) {
-                  w = Double(val)
-                }
-              }
-            }
-            header.style.setProperty(.width, px(w), .important)
-            header.style.setProperty(.minWidth, px(w), .important)
-            total += w
-          }
+          let w = getStartWidth(for: headerId) ?? Double(header.getBoundingClientRect()?.width ?? 150.0)
+          header.style.setProperty(.width, px(w), .important)
+          header.style.setProperty(.minWidth, px(w), .important)
+          total += w
         }
       }
       
-      let isNarrower = total < wrapperWidth
-      if isNarrower {
-        self.tableTable.style.width(perc(100))
-        self.tableTable.style.minWidth(perc(100))
-      } else {
-        self.tableTable.style.width(px(total))
-        self.tableTable.style.minWidth(px(total))
-      }
+      self.tableTable.style.width(px(total))
+      self.tableTable.style.minWidth(px(total))
     }
 
     private func stopResize(_ event: Event) {
@@ -2017,7 +2033,7 @@ public struct TableView: HTMLContent {
       targetTh = nil
     }
 
-    private func toggleGroup(_ header: Element) {
+    private func toggleGroup(_ header: DOM.Element) {
       guard let groupID = header.getAttribute(data("group-id")), !stringIsEmpty(groupID) else {
         return
       }
@@ -2045,10 +2061,12 @@ public struct TableView: HTMLContent {
           _ = child.getBoundingClientRect() // Force layout reflow
         }
         TableInstance.updateZebraStriping(for: self.table)
+        self.adjustDummyRows()
         window.setTimeout(20) {
           for child in childRows {
             child.classList.remove("table-row-collapsed")
           }
+          self.adjustDummyRows()
         }
       } else {
         // Collapse: add class to trigger hardware-accelerated fade & slide
@@ -2080,6 +2098,7 @@ public struct TableView: HTMLContent {
             }
           }
           TableInstance.updateZebraStriping(for: self.table)
+          self.adjustDummyRows()
         }
       }
 
@@ -2103,7 +2122,7 @@ public struct TableView: HTMLContent {
       self.table.dispatchEvent(event)
     }
 
-    private func toggleSubrowGroup(_ parentRow: Element, parentID: String) {
+    private func toggleSubrowGroup(_ parentRow: DOM.Element, parentID: String) {
       let isExpanded = expandedSubrowGroups.contains(where: { stringEquals($0, parentID) })
       
       if isExpanded {
@@ -2127,6 +2146,7 @@ public struct TableView: HTMLContent {
             }
           }
           TableInstance.updateZebraStriping(for: self.table)
+          self.adjustDummyRows()
         }
       } else {
         // Expanding → show first (starting from collapsed opacity/transform), then transition in
@@ -2138,16 +2158,17 @@ public struct TableView: HTMLContent {
           _ = subRow.getBoundingClientRect() // Force layout reflow
         }
         TableInstance.updateZebraStriping(for: self.table)
+        self.adjustDummyRows()
         
         // Ensure first radio is checked on expand
-        var radioToCheck: Element? = nil
+        var radioToCheck: DOM.Element? = nil
         for subRow in subRows {
           if let radio = subRow.querySelector("input[type='radio']") {
             radioToCheck = radio
             break
           }
         }
-        if let radio = radioToCheck as? HTMLInputElement {
+        if let radio = radioToCheck as? HTML.HTMLInputElement {
           radio.checked = true
         }
 
@@ -2155,6 +2176,7 @@ public struct TableView: HTMLContent {
           for subRow in subRows {
             subRow.classList.remove("table-row-collapsed")
           }
+          self.adjustDummyRows()
         }
       }
 
@@ -2173,10 +2195,10 @@ public struct TableView: HTMLContent {
 
     private func toggleSelectAll() {
       guard let selectAll = selectAllCheckbox else { return }
-      let isChecked = (selectAll as? HTMLInputElement)?.checked ?? false
+      let isChecked = (selectAll as? HTML.HTMLInputElement)?.checked ?? false
 
       for input in rowInputs {
-        (input as? HTMLInputElement)?.checked = isChecked
+        (input as? HTML.HTMLInputElement)?.checked = isChecked
       }
 
       updateRowSelection()
@@ -2186,7 +2208,7 @@ public struct TableView: HTMLContent {
       selectedRows = []
 
       for input in rowInputs {
-        if (input as? HTMLInputElement)?.checked == true {
+        if (input as? HTML.HTMLInputElement)?.checked == true {
           if let idStr = input.getAttribute(.id) {
             if stringStartsWith(idStr, "row-") {
               let rowID = stringSubstring(idStr, from: 4)
@@ -2200,13 +2222,13 @@ public struct TableView: HTMLContent {
       if stringEquals(selectionMode, "multiple") {
         if let selectAll = selectAllCheckbox {
           if selectedRows.isEmpty {
-            (selectAll as? HTMLInputElement)?.checked = false
+            (selectAll as? HTML.HTMLInputElement)?.checked = false
             selectAll.indeterminate = false
           } else if selectedRows.count == rowInputs.count {
-            (selectAll as? HTMLInputElement)?.checked = true
+            (selectAll as? HTML.HTMLInputElement)?.checked = true
             selectAll.indeterminate = false
           } else {
-            (selectAll as? HTMLInputElement)?.checked = false
+            (selectAll as? HTML.HTMLInputElement)?.checked = false
             selectAll.indeterminate = true
           }
         }
@@ -2265,8 +2287,8 @@ public struct TableView: HTMLContent {
       guard allRows.count > 1 else { return }
 
       // Build row groups hierarchically:
-      // - A top-level batch group (headerRow: Element, lemmaGroups: [(parentRow: Element, historyRows: [Element])])
-      var batchGroups: [(headerRow: Element, lemmaGroups: [(parentRow: Element, historyRows: [Element])])] = []
+      // - A top-level batch group (headerRow: DOM.Element, lemmaGroups: [(parentRow: DOM.Element, historyRows: [DOM.Element])])
+      var batchGroups: [(headerRow: DOM.Element, lemmaGroups: [(parentRow: DOM.Element, historyRows: [DOM.Element])])] = []
       
       for row in allRows {
         let classList = row.getAttribute(.class) ?? ""
@@ -2372,6 +2394,7 @@ public struct TableView: HTMLContent {
       let event = CustomEvent(type: "table-sort-change", detail: sortData)
       self.table.dispatchEvent(event)
       TableInstance.updateZebraStriping(for: self.table)
+      self.adjustDummyRows()
     }
 
     private func goToPage(_ page: Int) {
@@ -2380,7 +2403,7 @@ public struct TableView: HTMLContent {
       let pageSize = parseInt(sizeStr) ?? 10
 
       let rows = table.querySelectorAll(".table-tbody tr")
-      let dataRows = Array(rows).filter { !$0.classList.contains("table-empty-row") }
+      let dataRows = Array(rows).filter { !$0.classList.contains("table-empty-row") && !$0.classList.contains("table-row-dummy") }
       let totalRows = dataRows.count
 
       let maxPage = totalRows == 0 ? 1 : (totalRows + pageSize - 1) / pageSize
@@ -2391,7 +2414,7 @@ public struct TableView: HTMLContent {
 
       // Sync all pagination inputs
       for pageInput in paginationPageInputs {
-        if let input = pageInput as? HTMLInputElement {
+        if let input = pageInput as? HTML.HTMLInputElement {
           input.value = intToString(page)
         }
       }
@@ -2421,6 +2444,144 @@ public struct TableView: HTMLContent {
       let event = CustomEvent(type: "table-page-change", detail: intToString(page))
       self.table.dispatchEvent(event)
       TableInstance.updateZebraStriping(for: self.table)
+      self.adjustDummyRows()
+    }
+
+    public func adjustDummyRows() {
+      guard let tbody = table.querySelector(".table-tbody") else { return }
+
+      // Remove any existing dummy rows
+      let existingDummies = tbody.querySelectorAll(".table-row-dummy")
+      for dummy in existingDummies {
+        dummy.remove()
+      }
+
+      if table.classList.contains("table-view-empty") {
+        return
+      }
+
+      guard let innerWrapper = table.querySelector(".table-inner-wrapper") else { return }
+
+      let totalWrapperHeight = innerWrapper.getBoundingClientRect()?.height ?? 0.0
+      let tableTable = table.querySelector(".table-table") ?? table
+      let tableHeight = Double(tableTable.getBoundingClientRect()?.height ?? 0.0)
+
+      if tableHeight >= totalWrapperHeight {
+        return
+      }
+
+      let remainingHeight = totalWrapperHeight - tableHeight
+
+      func parsePx(_ value: String, defaultVal: Int) -> CSS.Length {
+        if !stringIsEmpty(value) && stringEndsWith(value, "px") {
+          let count = Array(value.utf8).count
+          let valStr = stringSubstring(value, from: 0, to: count - 2)
+          if let val = parseInt(valStr) {
+            return px(val)
+          }
+        }
+        return px(defaultVal)
+      }
+
+      var rowHeight = 44.0
+      var topPadding = px(8)
+      var bottomPadding = px(8)
+      var leftPadding = px(12)
+      var rightPadding = px(12)
+      if let firstRow = tbody.querySelector("tr:not([style*='display: none'])") {
+        let h = Double(firstRow.getBoundingClientRect()?.height ?? 0.0)
+        if h > 0 {
+          rowHeight = h
+        }
+        if let firstTd = firstRow.querySelector("td") {
+          let padTop = firstTd.style.getPropertyValue(.paddingTop)
+          topPadding = parsePx(padTop, defaultVal: 8)
+          let padBot = firstTd.style.getPropertyValue(.paddingBottom)
+          bottomPadding = parsePx(padBot, defaultVal: 8)
+          let padLeft = firstTd.style.getPropertyValue(.paddingLeft)
+          leftPadding = parsePx(padLeft, defaultVal: 12)
+          let padRight = firstTd.style.getPropertyValue(.paddingRight)
+          rightPadding = parsePx(padRight, defaultVal: 12)
+        }
+      }
+
+      let neededRows = Int(floor(remainingHeight / rowHeight))
+      if neededRows <= 0 {
+        return
+      }
+
+      guard let thead = table.querySelector("thead") else { return }
+      let headerCells = thead.querySelectorAll("tr:first-child > th")
+
+      let visibleRows = Array(tbody.querySelectorAll("tr")).filter { !stringEquals($0.style.getPropertyValue(.display), "none") }
+      var currentVisibleIndex = visibleRows.count
+
+      let showVerticalBorders = tableTable.classList.contains("table-table-borders-vertical")
+
+      for _ in 0..<neededRows {
+        let dummyTr = document.createElement("tr")
+        dummyTr.classList.add("table-row")
+        dummyTr.classList.add("table-row-dummy")
+        dummyTr.style.pointerEvents(.none)
+        dummyTr.style.userSelect(.none)
+
+        // Enforce exact row height matching the measured row height
+        dummyTr.style.setProperty(.height, px(Int(rowHeight)), .important)
+        dummyTr.style.setProperty(.borderBottom, "\(borderWidthBase.value) solid \(borderColorSubtle.value)", .important)
+
+        let isEven = currentVisibleIndex % 2 == 1
+        if isEven {
+          dummyTr.classList.add("table-row-even")
+          dummyTr.style.setProperty(.backgroundColor, backgroundColorNeutralSubtle.value, .important)
+        } else {
+          dummyTr.classList.add("table-row-odd")
+          dummyTr.style.setProperty(.backgroundColor, backgroundColorBase.value, .important)
+        }
+
+        for th in headerCells {
+          let dummyTd = document.createElement("td")
+
+          if th.classList.contains("table-th-spacer") {
+            dummyTd.classList.add("table-td-spacer")
+            dummyTd.style.setProperty(.borderRightWidth, px(0), .important)
+            dummyTd.style.setProperty(.padding, px(0), .important)
+          } else if stringEquals(th.getAttribute(.id) ?? "", "col-selection") {
+            dummyTd.innerHTML = ""
+          } else {
+            let div = document.createElement("div")
+            div.innerHTML = " "
+            
+            // Typesafe styles for the nested div to match data cell layout and heights
+            div.style.setProperty(.width, perc(100), .important)
+            div.style.setProperty(.overflow, .hidden, .important)
+            div.style.setProperty(.textOverflow, .ellipsis, .important)
+            div.style.setProperty(.whiteSpace, .nowrap, .important)
+            div.style.setProperty(.display, .block, .important)
+            
+            dummyTd.appendChild(div)
+
+            // Replicate typesafe horizontal and vertical paddings
+            dummyTd.style.setProperty(.paddingTop, topPadding, .important)
+            dummyTd.style.setProperty(.paddingBottom, bottomPadding, .important)
+            dummyTd.style.setProperty(.paddingLeft, leftPadding, .important)
+            dummyTd.style.setProperty(.paddingRight, rightPadding, .important)
+
+            let align = th.style.getPropertyValue(.textAlign)
+            if !stringIsEmpty(align) {
+              dummyTd.style.setProperty(.textAlign, align, .normal)
+            }
+          }
+
+          if showVerticalBorders {
+            dummyTd.style.setProperty(.borderLeft, "\(borderWidthBase.value) solid \(borderColorSubtle.value)", .important)
+          }
+
+          dummyTr.appendChild(dummyTd)
+        }
+
+        tbody.appendChild(dummyTr)
+        currentVisibleIndex += 1
+      }
     }
   }
 
@@ -2440,13 +2601,13 @@ public struct TableView: HTMLContent {
       paginationPosition: TableView.PaginationPosition = .bottom,
       paginationSizeDefault: Int = 10,
       customClass: String = "",
-      @HTMLBuilder header: () -> [Node] = { [] },
-      @HTMLBuilder thead: () -> [Node] = { [] },
-      @HTMLBuilder tbody: () -> [Node] = { [] },
-      @HTMLBuilder tfoot: () -> [Node] = { [] },
-      @HTMLBuilder footer: () -> [Node] = { [] },
-      @HTMLBuilder emptyState: () -> [Node] = { [] }
-    ) -> Element {
+      @HTMLBuilder header: () -> [DOM.Node] = { [] },
+      @HTMLBuilder thead: () -> [DOM.Node] = { [] },
+      @HTMLBuilder tbody: () -> [DOM.Node] = { [] },
+      @HTMLBuilder tfoot: () -> [DOM.Node] = { [] },
+      @HTMLBuilder footer: () -> [DOM.Node] = { [] },
+      @HTMLBuilder emptyState: () -> [DOM.Node] = { [] }
+    ) -> DOM.Element {
       let wrapper = document.createElement(.div)
       let view = TableView(
         captionContent: captionContent,

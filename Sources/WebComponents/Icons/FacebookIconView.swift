@@ -8,16 +8,16 @@
 
   public struct FacebookIconView: HTMLContent {
     let `class`: String
-    let width: Length
-    let height: Length
-    let fill: SVGPaint
+    let width: CSS.Length
+    let height: CSS.Length
+    let fill: CSS.Color
     let monochrome: Bool
 
     public init(
       class: String = "",
-      width: Length = px(20),
-      height: Length = px(20),
-      fill: SVGPaint = SVGPaint(colorBase),
+      width: CSS.Length = px(20),
+      height: CSS.Length = px(20),
+      fill: CSS.Color = colorBase,
       monochrome: Bool = false
     ) {
       self.class = `class`
@@ -27,7 +27,7 @@
       self.monochrome = monochrome
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       svg {
         defs {
           clipPath {
@@ -53,7 +53,7 @@
                   l(-14.028, -76.396), h(-67.631), V(-248.169),
                   C(-95.927, -233.218, 0, -127.818, 0, 0)
                 )
-                .fill(monochrome ? fill : SVGPaint(hex(0x0866FF)))
+                .fill(monochrome ? fill : hex(0x0866FF))
                 .transform(translate(600, 350))
 
               // 'f' letter
@@ -67,7 +67,7 @@
                   h(51.552), v(-166.242), c(19.343, -4.798, 39.568, -7.362, 60.394, -7.362),
                   c(10.254, 0, 20.358, 0.632, 30.288, 1.831), L(-67.63, 0), Z()
                 )
-                .fill(monochrome ? SVGPaint(colorInverted) : SVGPaint(.white))
+                .fill(monochrome ? colorInverted : .white)
                 .transform(translate(447.9175, 273.6036))
             }
             .clipPath(url("#facebook-clip"))

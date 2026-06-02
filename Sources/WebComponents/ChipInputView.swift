@@ -60,7 +60,7 @@
     }
 
     @CSSBuilder
-    private func chipInputViewCSS(_ disabled: Bool) -> [CSSRule] {
+    private func chipInputViewCSS(_ disabled: Bool) -> [CSSOM.CSSRule] {
       if disabled {
         opacity(opacityMedium)
         cursor(cursorBaseDisabled)
@@ -68,7 +68,7 @@
     }
 
     @CSSBuilder
-    private func chipCSS() -> [CSSRule] {
+    private func chipCSS() -> [CSSOM.CSSRule] {
       display(.inlineFlex)
       alignItems(.center)
       maxWidth(perc(100))
@@ -99,12 +99,12 @@
     }
 
     @CSSBuilder
-    private func chipIconCSS() -> [CSSRule] {
+    private func chipIconCSS() -> [CSSOM.CSSRule] {
       display(.inlineFlex)
     }
 
     @CSSBuilder
-    private func chipButtonCSS(_ disabled: Bool) -> [CSSRule] {
+    private func chipButtonCSS(_ disabled: Bool) -> [CSSOM.CSSRule] {
       display(.inlineFlex)
       alignItems(.center)
       justifyContent(.center)
@@ -137,7 +137,7 @@
     }
 
     @CSSBuilder
-    private func chipInputChipsCSS(_ status: ValidationStatus) -> [CSSRule] {
+    private func chipInputChipsCSS(_ status: ValidationStatus) -> [CSSOM.CSSRule] {
       display(.flex)
       flexWrap(.wrap)
       gap(spacing8)
@@ -148,7 +148,7 @@
     }
 
     @CSSBuilder
-    private func chipInputInputWrapperCSS(_ status: ValidationStatus) -> [CSSRule] {
+    private func chipInputInputWrapperCSS(_ status: ValidationStatus) -> [CSSOM.CSSRule] {
       display(.flex)
       padding(spacing8)
       backgroundColor(backgroundColorBase)
@@ -163,7 +163,7 @@
     }
 
     @CSSBuilder
-    private func chipInputItemsCSS(_ status: ValidationStatus, _ disabled: Bool) -> [CSSRule] {
+    private func chipInputItemsCSS(_ status: ValidationStatus, _ disabled: Bool) -> [CSSOM.CSSRule] {
       display(.flex)
       flexWrap(.wrap)
       alignItems(.center)
@@ -188,7 +188,7 @@
       }
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       let chipElements = chips.map { chip in
         div {
           if let icon = chip.icon {
@@ -224,7 +224,7 @@
 
       }
 
-      let containerElement: HTMLDivElement
+      let containerElement: HTML.HTMLDivElement
 
       if separateInput {
         containerElement = div {

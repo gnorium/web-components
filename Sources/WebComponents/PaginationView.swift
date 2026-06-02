@@ -42,7 +42,7 @@ public struct PaginationView: HTMLContent {
     self.`class` = `class`
   }
 
-  public func build() -> Node {
+  public func build() -> DOM.Node {
     let activePage = pageNumbers?.first(where: { $0.isActive })
     let currentPage = activePage.flatMap { Int($0.label) } ?? 1
     let totalPages = totalPages > 0 ? totalPages : (pageNumbers?.count ?? 0)
@@ -227,20 +227,20 @@ public struct PaginationView: HTMLContent {
         _ = inputEl?.addEventListener(.keydown) { [self] (event: Event) in
           if stringEquals(event.key, "Enter") {
             event.preventDefault()
-            guard let input = (inputEl as? HTMLInputElement) else { return }
+            guard let input = (inputEl as? HTML.HTMLInputElement) else { return }
             self.navigateToPage(input.value, in: view)
           }
         }
 
         // Also handle 'change' event for broader compatibility
         _ = inputEl?.addEventListener(.change) { [self] (event: Event) in
-          guard let input = (inputEl as? HTMLInputElement) else { return }
+          guard let input = (inputEl as? HTML.HTMLInputElement) else { return }
           self.navigateToPage(input.value, in: view)
         }
       }
     }
 
-    private func navigateToPage(_ page: String, in view: Element) {
+    private func navigateToPage(_ page: String, in view: DOM.Element) {
       guard !stringIsEmpty(page) else { return }
 
       // 1. Try to find a link with matching data-page (robust path-independent matching)

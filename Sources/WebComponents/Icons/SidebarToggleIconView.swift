@@ -14,7 +14,7 @@
       self.class = `class`
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       span {
         span {}
           .class("sidebar-toggle-icon-line sidebar-toggle-icon-line-middle")
@@ -47,7 +47,7 @@
     }
 
     @CSSBuilder
-    private func sidebarToggleIconLineCSS() -> [CSSRule] {
+    private func sidebarToggleIconLineCSS() -> [CSSOM.CSSRule] {
       position(.absolute)
       width(perc(100))
       height(px(2))

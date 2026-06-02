@@ -17,11 +17,11 @@ public struct LabelView: HTMLContent {
   let inputID: String?
   let descriptionID: String?
   let disabled: Bool
-  let labelContent: [Node]
-  let descriptionContent: [Node]
+  let labelContent: [DOM.Node]
+  let descriptionContent: [DOM.Node]
   let `class`: String
-  let labelFontWeight: CSSFontWeight
-  let labelFontSize: Length
+  let labelFontWeight: CSS.FontWeight
+  let labelFontSize: CSS.Length
 
   public init(
     icon: String? = nil,
@@ -32,11 +32,11 @@ public struct LabelView: HTMLContent {
     inputID: String? = nil,
     descriptionID: String? = nil,
     disabled: Bool = false,
-    labelFontWeight: CSSFontWeight = fontWeightBold,
-    labelFontSize: Length = fontSizeMedium16,
+    labelFontWeight: CSS.FontWeight = fontWeightBold,
+    labelFontSize: CSS.Length = fontSizeMedium16,
     class: String = "",
-    @HTMLBuilder label: () -> [Node],
-    @HTMLBuilder description: () -> [Node] = { [] }
+    @HTMLBuilder label: () -> [DOM.Node],
+    @HTMLBuilder description: () -> [DOM.Node] = { [] }
   ) {
     self.icon = icon
     self.optional = optional
@@ -54,14 +54,14 @@ public struct LabelView: HTMLContent {
   }
 
   @CSSBuilder
-  private func labelViewCSS() -> [CSSRule] {
+  private func labelViewCSS() -> [CSSOM.CSSRule] {
     display(.flex)
     flexDirection(.column)
     gap(spacing4)
   }
 
   @CSSBuilder
-  private func visuallyHiddenCSS() -> [CSSRule] {
+  private func visuallyHiddenCSS() -> [CSSOM.CSSRule] {
     position(.absolute)
     width(px(1))
     height(px(1))
@@ -74,7 +74,7 @@ public struct LabelView: HTMLContent {
   }
 
   @CSSBuilder
-  private func labelTextCSS() -> [CSSRule] {
+  private func labelTextCSS() -> [CSSOM.CSSRule] {
     display(.flex)
     alignItems(.center)
     gap(spacing4)
@@ -86,7 +86,7 @@ public struct LabelView: HTMLContent {
   }
 
   @CSSBuilder
-  private func labelIconCSS() -> [CSSRule] {
+  private func labelIconCSS() -> [CSSOM.CSSRule] {
     display(.inlineFlex)
     alignItems(.center)
     justifyContent(.center)
@@ -97,13 +97,13 @@ public struct LabelView: HTMLContent {
   }
 
   @CSSBuilder
-  private func labelOptionalFlagCSS() -> [CSSRule] {
+  private func labelOptionalFlagCSS() -> [CSSOM.CSSRule] {
     color(disabled ? colorDisabled : colorSubtle)
     fontWeight(fontWeightNormal)
   }
 
   @CSSBuilder
-  private func labelDescriptionCSS() -> [CSSRule] {
+  private func labelDescriptionCSS() -> [CSSOM.CSSRule] {
     display(.block)
     fontSize(fontSizeSmall14)
     lineHeight(lineHeightSmall22)
@@ -111,7 +111,7 @@ public struct LabelView: HTMLContent {
     fontWeight(fontWeightNormal)
   }
 
-  public func build() -> Node {
+  public func build() -> DOM.Node {
     let hasDescription = !descriptionContent.isEmpty
 
     if isLegend {
@@ -255,12 +255,12 @@ public struct LabelView: HTMLContent {
       inputID: String? = nil,
       descriptionID: String? = nil,
       disabled: Bool = false,
-      labelFontWeight: CSSFontWeight = fontWeightBold,
-      labelFontSize: Length = fontSizeMedium16,
+      labelFontWeight: CSS.FontWeight = fontWeightBold,
+      labelFontSize: CSS.Length = fontSizeMedium16,
       class: String = "",
       title: String = "",
       description: String = ""
-    ) -> Element {
+    ) -> DOM.Element {
       let wrapper = document.createElement(.div)
       let view = LabelView(
         icon: icon,

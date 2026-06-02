@@ -29,7 +29,7 @@
     let hideDescriptionOverflow: Bool
     let itemColor: MenuItemColor
     let multiselect: Bool
-    let content: [Node]
+    let content: [DOM.Node]
     let `class`: String
 
     public struct Thumbnail: Sendable {
@@ -99,7 +99,7 @@
       action: MenuItemColor = .default,
       multiselect: Bool = false,
       class: String = "",
-      @HTMLBuilder content: () -> [Node] = { [] }
+      @HTMLBuilder content: () -> [DOM.Node] = { [] }
     ) {
       self.id = id
       self.value = value
@@ -129,7 +129,7 @@
     private func menuItemViewCSS(
       _ disabled: Bool, _ selected: Bool, _ active: Bool, _ highlighted: Bool,
       _ itemColor: MenuItemColor
-    ) -> [CSSRule] {
+    ) -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       gap(spacing12)
@@ -180,7 +180,7 @@
     }
 
     @CSSBuilder
-    private func menuItemCheckboxCSS(_ selected: Bool) -> [CSSRule] {
+    private func menuItemCheckboxCSS(_ selected: Bool) -> [CSSOM.CSSRule] {
       display(.inlineFlex)
       alignItems(.center)
       justifyContent(.center)
@@ -194,14 +194,14 @@
     }
 
     @CSSBuilder
-    private func menuItemCheckmarkCSS() -> [CSSRule] {
+    private func menuItemCheckmarkCSS() -> [CSSOM.CSSRule] {
       fontSize(fontSizeSmall14)
       color(colorInvertedFixed)
       lineHeight(1)
     }
 
     @CSSBuilder
-    private func menuItemThumbnailCSS() -> [CSSRule] {
+    private func menuItemThumbnailCSS() -> [CSSOM.CSSRule] {
       display(.inlineFlex)
       alignItems(.center)
       justifyContent(.center)
@@ -214,20 +214,20 @@
     }
 
     @CSSBuilder
-    private func menuItemThumbnailImageCSS() -> [CSSRule] {
+    private func menuItemThumbnailImageCSS() -> [CSSOM.CSSRule] {
       width(perc(100))
       height(perc(100))
       objectFit(.cover)
     }
 
     @CSSBuilder
-    private func menuItemThumbnailPlaceholderCSS() -> [CSSRule] {
+    private func menuItemThumbnailPlaceholderCSS() -> [CSSOM.CSSRule] {
       fontSize(fontSizeLarge18)
       color(colorPlaceholder)
     }
 
     @CSSBuilder
-    private func menuItemIconCSS() -> [CSSRule] {
+    private func menuItemIconCSS() -> [CSSOM.CSSRule] {
       display(.inlineFlex)
       alignItems(.center)
       justifyContent(.center)
@@ -239,7 +239,7 @@
     }
 
     @CSSBuilder
-    private func menuItemTextCSS() -> [CSSRule] {
+    private func menuItemTextCSS() -> [CSSOM.CSSRule] {
       display(.flex)
       flexDirection(.column)
       gap(spacing4)
@@ -248,7 +248,7 @@
     }
 
     @CSSBuilder
-    private func menuItemTitleCSS() -> [CSSRule] {
+    private func menuItemTitleCSS() -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.baseline)
       gap(spacing4)
@@ -256,7 +256,7 @@
     }
 
     @CSSBuilder
-    private func menuItemLabelCSS(_ boldLabel: Bool, _ hasSearchQuery: Bool) -> [CSSRule] {
+    private func menuItemLabelCSS(_ boldLabel: Bool, _ hasSearchQuery: Bool) -> [CSSOM.CSSRule] {
       fontFamily(typographyFontSans)
       fontSize(fontSizeMedium16)
       fontWeight(boldLabel || hasSearchQuery ? fontWeightBold : fontWeightNormal)
@@ -266,7 +266,7 @@
     }
 
     @CSSBuilder
-    private func menuItemSearchQueryCSS() -> [CSSRule] {
+    private func menuItemSearchQueryCSS() -> [CSSOM.CSSRule] {
       fontFamily(typographyFontSans)
       fontSize(fontSizeMedium16)
       fontWeight(fontWeightNormal)
@@ -275,7 +275,7 @@
     }
 
     @CSSBuilder
-    private func menuItemMatchCSS() -> [CSSRule] {
+    private func menuItemMatchCSS() -> [CSSOM.CSSRule] {
       fontFamily(typographyFontSans)
       fontSize(fontSizeMedium16)
       fontWeight(fontWeightNormal)
@@ -284,7 +284,7 @@
     }
 
     @CSSBuilder
-    private func menuItemSupportingTextCSS() -> [CSSRule] {
+    private func menuItemSupportingTextCSS() -> [CSSOM.CSSRule] {
       fontFamily(typographyFontSans)
       fontSize(fontSizeMedium16)
       fontWeight(fontWeightNormal)
@@ -293,7 +293,7 @@
     }
 
     @CSSBuilder
-    private func menuItemDescriptionCSS(_ hideOverflow: Bool) -> [CSSRule] {
+    private func menuItemDescriptionCSS(_ hideOverflow: Bool) -> [CSSOM.CSSRule] {
       fontFamily(typographyFontSans)
       fontSize(fontSizeSmall14)
       lineHeight(lineHeightSmall22)
@@ -308,7 +308,7 @@
       }
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       let hasCustomContent = !content.isEmpty
       let displayLabel = label.isEmpty ? value : label
       let hasSearchQuery = !searchQuery.isEmpty
@@ -321,7 +321,7 @@
 
       // Highlight search query in label
       @HTMLBuilder
-      func renderLabelWithHighlight() -> [Node] {
+      func renderLabelWithHighlight() -> [DOM.Node] {
         if hasSearchQuery && displayLabel.lowercased().contains(searchQuery.lowercased()) {
           let lowerLabel = displayLabel.lowercased()
           let lowerQuery = searchQuery.lowercased()
@@ -364,12 +364,12 @@
       }
 
       // Main content
-      let itemContent: [Node] = {
+      let itemContent: [DOM.Node] = {
         if hasCustomContent {
           return content
         }
 
-        var items: [Node] = []
+        var items: [DOM.Node] = []
 
         // Multiselect checkbox
         if multiselect {
@@ -439,7 +439,7 @@
           )
         }
 
-        // Text content
+        // DOM.Text content
         items.append(
           span {
             // Title (label + match + supporting text)
@@ -555,9 +555,9 @@
   import WebTypes
 
   private class MenuItemInstance: @unchecked Sendable {
-    private var menuItem: Element
+    private var menuItem: DOM.Element
 
-    init(menuItem: Element) {
+    init(menuItem: DOM.Element) {
       self.menuItem = menuItem
 
       bindEvents()

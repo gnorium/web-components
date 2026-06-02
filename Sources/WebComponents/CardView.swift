@@ -14,9 +14,9 @@
     let thumbnail: Thumbnail?
     let forceThumbnail: Bool
     let customPlaceholderIcon: String?
-    let titleContent: [Node]
-    let descriptionContent: [Node]
-    let supportingTextContent: [Node]
+    let titleContent: [DOM.Node]
+    let descriptionContent: [DOM.Node]
+    let supportingTextContent: [DOM.Node]
     let `class`: String
 
     public struct Thumbnail: Sendable {
@@ -36,9 +36,9 @@
       forceThumbnail: Bool = false,
       customPlaceholderIcon: String? = nil,
       class: String = "",
-      @HTMLBuilder title: () -> [Node],
-      @HTMLBuilder description: () -> [Node] = { [] },
-      @HTMLBuilder supportingText: () -> [Node] = { [] }
+      @HTMLBuilder title: () -> [DOM.Node],
+      @HTMLBuilder description: () -> [DOM.Node] = { [] },
+      @HTMLBuilder supportingText: () -> [DOM.Node] = { [] }
     ) {
       self.url = url
       self.icon = icon
@@ -52,7 +52,7 @@
     }
 
     @CSSBuilder
-    private func cardViewCSS(_ isLink: Bool) -> [CSSRule] {
+    private func cardViewCSS(_ isLink: Bool) -> [CSSOM.CSSRule] {
       display(.block)
       backgroundColor(backgroundColorBase)
       border(borderWidthBase, .solid, borderColorSubtle)
@@ -83,7 +83,7 @@
     }
 
     @CSSBuilder
-    private func cardMediaCSS() -> [CSSRule] {
+    private func cardMediaCSS() -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       justifyContent(.center)
@@ -92,7 +92,7 @@
     }
 
     @CSSBuilder
-    private func cardThumbnailCSS() -> [CSSRule] {
+    private func cardThumbnailCSS() -> [CSSOM.CSSRule] {
       width(px(80))
       height(px(80))
       overflow(.hidden)
@@ -101,7 +101,7 @@
     }
 
     @CSSBuilder
-    private func cardThumbnailImageCSS() -> [CSSRule] {
+    private func cardThumbnailImageCSS() -> [CSSOM.CSSRule] {
       width(perc(100))
       height(perc(100))
       objectFit(.cover)
@@ -109,7 +109,7 @@
     }
 
     @CSSBuilder
-    private func cardThumbnailPlaceholderCSS() -> [CSSRule] {
+    private func cardThumbnailPlaceholderCSS() -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       justifyContent(.center)
@@ -121,7 +121,7 @@
     }
 
     @CSSBuilder
-    private func cardIconCSS() -> [CSSRule] {
+    private func cardIconCSS() -> [CSSOM.CSSRule] {
       display(.inlineFlex)
       alignItems(.center)
       justifyContent(.center)
@@ -132,7 +132,7 @@
     }
 
     @CSSBuilder
-    private func cardTextCSS(_ hasMedia: Bool) -> [CSSRule] {
+    private func cardTextCSS(_ hasMedia: Bool) -> [CSSOM.CSSRule] {
       display(.flex)
       flexDirection(.column)
       gap(spacing16)
@@ -146,7 +146,7 @@
     }
 
     @CSSBuilder
-    private func cardTitleCSS(_ isLink: Bool) -> [CSSRule] {
+    private func cardTitleCSS(_ isLink: Bool) -> [CSSOM.CSSRule] {
       fontFamily(typographyFontSans)
       fontSize(fontSizeXXLarge24)
       fontWeight(fontWeightNormal)
@@ -162,7 +162,7 @@
     }
 
     @CSSBuilder
-    private func cardDescriptionCSS() -> [CSSRule] {
+    private func cardDescriptionCSS() -> [CSSOM.CSSRule] {
       fontFamily(typographyFontSans)
       fontSize(fontSizeSmall14)
       lineHeight(lineHeightSmall22)
@@ -171,7 +171,7 @@
     }
 
     @CSSBuilder
-    private func cardSupportingTextCSS() -> [CSSRule] {
+    private func cardSupportingTextCSS() -> [CSSOM.CSSRule] {
       fontFamily(typographyFontSans)
       fontSize(fontSizeXSmall12)
       lineHeight(lineHeightSmall22)
@@ -180,14 +180,14 @@
     }
 
     @CSSBuilder
-    private func cardContentWrapperCSS(_ hasMedia: Bool) -> [CSSRule] {
+    private func cardContentWrapperCSS(_ hasMedia: Bool) -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(hasMedia ? .flexStart : .center)
       gap(spacing16)
       width(perc(100))
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       let hasDescription = !descriptionContent.isEmpty
       let hasSupportingText = !supportingTextContent.isEmpty
       let isLink = !url.isEmpty
@@ -196,7 +196,7 @@
       let hasMedia = hasThumbnail || hasIcon
       let hasTitleOnly = !hasDescription && !hasSupportingText
 
-      let cardContentElement: Node = div {
+      let cardContentElement: DOM.Node = div {
         if hasThumbnail {
           div {
             if let thumb = thumbnail {

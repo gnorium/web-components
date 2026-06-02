@@ -15,7 +15,7 @@
       self.class = `class`
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       div {
         optionButton(value: "light", label: "Light") {
           IconView(icon: { s in LightModeIconView(width: s, height: s) }, size: .medium)
@@ -38,7 +38,7 @@
       }
     }
 
-    private func optionButton(value: String, label: String, @HTMLBuilder icon: () -> [Node])
+    private func optionButton(value: String, label: String, @HTMLBuilder icon: () -> [DOM.Node])
       -> HTMLContent
     {
       div {
@@ -97,7 +97,7 @@
   /// Initializes from localStorage / system preference, binds click events,
   /// and applies color scheme changes to the document.
   public class ColorSchemeButtonGroupHydration: @unchecked Sendable {
-    nonisolated(unsafe) private var groups: [Element] = []
+    nonisolated(unsafe) private var groups: [DOM.Element] = []
 
     public init?() {
       let allGroups = document.querySelectorAll(".color-scheme-button-group-view")
@@ -111,7 +111,7 @@
     }
 
     private nonisolated func initialize() {
-      var scheme: CSSPrefersColorScheme = .light
+      var scheme: CSS.PrefersColorScheme = .light
       if let saved = localStorage.getItem("color-scheme") {
         let isDark = saved.withCString { ptr in
           ptr[0] == 100 && ptr[1] == 97 && ptr[2] == 114 && ptr[3] == 107 && ptr[4] == 0  // "dark"
@@ -139,7 +139,7 @@
       }
     }
 
-    private nonisolated func applyScheme(_ scheme: CSSPrefersColorScheme) {
+    private nonisolated func applyScheme(_ scheme: CSS.PrefersColorScheme) {
       let htmlElement = document.querySelector("html")
       switch scheme {
       case .dark:
@@ -161,7 +161,7 @@
       }
     }
 
-    private nonisolated func updateSelection(_ group: Element, selectedValue: String) {
+    private nonisolated func updateSelection(_ group: DOM.Element, selectedValue: String) {
       let buttons = group.querySelectorAll(".button-group-button")
       for button in buttons {
         if let value = button.getAttribute("data-value") {

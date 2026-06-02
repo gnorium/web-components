@@ -12,7 +12,7 @@
   public class ScrollSpyHydration: @unchecked Sendable {
     private var ticking: Bool = false
     private let linkSelector = "a.scroll-spy-view"
-    private var cachedLinks: [Element] = []
+    private var cachedLinks: [DOM.Element] = []
 
     public init?() {
       let links = document.querySelectorAll(linkSelector)

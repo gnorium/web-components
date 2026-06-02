@@ -85,7 +85,7 @@
     }
 
     @CSSBuilder
-    private func typeaheadSearchViewCSS() -> [CSSRule] {
+    private func typeaheadSearchViewCSS() -> [CSSOM.CSSRule] {
       position(.relative)
       width(perc(100))
       fontFamily(typographyFontSans)
@@ -95,7 +95,7 @@
     }
 
     @CSSBuilder
-    private func typeaheadSearchFormCSS() -> [CSSRule] {
+    private func typeaheadSearchFormCSS() -> [CSSOM.CSSRule] {
       display(.flex)
       flexDirection(.column)
       gap(spacing8)
@@ -105,7 +105,7 @@
 
     @CSSBuilder
     private func typeaheadSearchInputWrapperCSS(_ autoExpandWidth: Bool, _ showThumbnail: Bool)
-      -> [CSSRule]
+      -> [CSSOM.CSSRule]
     {
       position(.relative)
       width(perc(100))
@@ -116,7 +116,7 @@
     }
 
     @CSSBuilder
-    private func typeaheadSearchMenuCSS() -> [CSSRule] {
+    private func typeaheadSearchMenuCSS() -> [CSSOM.CSSRule] {
       display(.none)
       flexDirection(.column)
       gap(spacing8)
@@ -125,21 +125,21 @@
     }
 
     @CSSBuilder
-    private func typeaheadSearchPendingCSS() -> [CSSRule] {
+    private func typeaheadSearchPendingCSS() -> [CSSOM.CSSRule] {
       padding(spacing12, spacing16)
       color(colorSubtle)
       fontSize(fontSizeSmall14)
     }
 
     @CSSBuilder
-    private func typeaheadSearchNoResultsCSS() -> [CSSRule] {
+    private func typeaheadSearchNoResultsCSS() -> [CSSOM.CSSRule] {
       padding(spacing12, spacing16)
       color(colorSubtle)
       fontSize(fontSizeSmall14)
       textAlign(.center)
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       let showMenu = !searchResults.isEmpty || showEmptyQueryResults
       let visibleResults =
         if let limit = visibleItemLimit {
@@ -232,18 +232,18 @@
   import WebTypes
 
   private class TypeaheadSearchInstance: @unchecked Sendable {
-    private var typeaheadSearchElement: Element
-    private var formElement: Element?
-    private var inputElement: Element?
-    private var inputViewElement: Element?
-    private var menuElement: Element?
-    private var menuItems: [Element] = []
+    private var typeaheadSearchElement: DOM.Element
+    private var formElement: DOM.Element?
+    private var inputElement: DOM.Element?
+    private var inputViewElement: DOM.Element?
+    private var menuElement: DOM.Element?
+    private var menuItems: [DOM.Element] = []
     private var debounceTimer: Int32?
     private var currentQuery: String = ""
     private var selectedIndex: Int = -1
     private var highlightQuery: Bool = false
 
-    init(typeaheadSearch: Element) {
+    init(typeaheadSearch: DOM.Element) {
       self.typeaheadSearchElement = typeaheadSearch
       self.formElement = typeaheadSearch.querySelector(".typeahead-search-form")
       self.inputElement = typeaheadSearch.querySelector(".search-input")
@@ -334,7 +334,7 @@
 
     private func handleInput() {
       guard let input = inputElement else { return }
-      let newValue = (input as? HTMLInputElement)?.value ?? ""
+      let newValue = (input as? HTML.HTMLInputElement)?.value ?? ""
       
       // Clear immediately only when input is emptied (backspace to empty)
       if newValue.isEmpty && !currentQuery.isEmpty {

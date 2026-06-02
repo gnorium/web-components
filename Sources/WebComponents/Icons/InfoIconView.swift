@@ -1,41 +1,39 @@
-#if SERVER
-  import CSSBuilder
-  import DesignTokens
-  import DOMBuilder
-  import HTMLBuilder
-  import SVGBuilder
-  import WebTypes
+import CSSBuilder
+import DesignTokens
+import DOMBuilder
+import EmbeddedSwiftUtilities
+import HTMLBuilder
+import SVGBuilder
+import WebTypes
 
-  public struct InfoIconView: HTMLContent {
-    let width: Length
-    let height: Length
-    let `class`: String
+public struct InfoIconView: HTMLContent {
+  let width: CSS.Length
+  let height: CSS.Length
+  let `class`: String
 
-    public init(
-      width: Length = px(20),
-      height: Length = px(20),
-      class: String = ""
-    ) {
-      self.width = width
-      self.height = height
-      self.class = `class`
-    }
-
-    public func build() -> Node {
-      svg {
-        path()
-          .d(
-            M(4, 10), a(6, 6, 0, true, false, 12, 0), a(6, 6, 0, false, false, -12, 0), m(6, -8),
-            a(8, 8, 0, true, true, 0, 16), a(8, 8, 0, false, true, 0, -16), m(1, 7), v(5), H(9),
-            V(9), Z(), m(0, -1), V(6), H(9), v(2), Z())
-      }
-      .class(`class`.isEmpty ? "info-icon-view" : "info-icon-view \(`class`)")
-      .width(width)
-      .height(height)
-      .viewBox(0, 0, 20, 20)
-      .xmlns("http://www.w3.org/2000/svg")
-      .fill(.currentColor)
-
-    }
+  public init(
+    width: CSS.Length = px(20),
+    height: CSS.Length = px(20),
+    class: String = ""
+  ) {
+    self.width = width
+    self.height = height
+    self.class = `class`
   }
-#endif
+
+  public func build() -> DOM.Node {
+    svg {
+      path()
+        .d(
+          M(4, 10), a(6, 6, 0, true, false, 12, 0), a(6, 6, 0, false, false, -12, 0), m(6, -8),
+          a(8, 8, 0, true, true, 0, 16), a(8, 8, 0, false, true, 0, -16), m(1, 7), v(5), H(9),
+          V(9), Z(), m(0, -1), V(6), H(9), v(2), Z())
+    }
+    .class(stringIsEmpty(`class`) ? "info-icon-view" : "info-icon-view \(`class`)")
+    .width(width)
+    .height(height)
+    .viewBox(0, 0, 20, 20)
+    .xmlns("http://www.w3.org/2000/svg")
+    .fill(.currentColor)
+  }
+}

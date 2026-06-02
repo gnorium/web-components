@@ -51,14 +51,14 @@
     }
 
     @CSSBuilder
-    private func comboboxViewCSS() -> [CSSRule] {
+    private func comboboxViewCSS() -> [CSSOM.CSSRule] {
       position(.relative)
       display(.inlineBlock)
       minWidth(px(256))
     }
 
     @CSSBuilder
-    private func comboboxIndicatorCSS() -> [CSSRule] {
+    private func comboboxIndicatorCSS() -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       justifyContent(.center)
@@ -70,7 +70,7 @@
       transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       return div {
         // Integrate TextInputView for the input field
         div {

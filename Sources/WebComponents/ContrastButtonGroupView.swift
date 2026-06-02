@@ -14,7 +14,7 @@
       self.class = `class`
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       div {
         optionButton(value: "standard", label: "Standard") {
           IconView(icon: { s in LessContrastIconView(width: s, height: s) }, size: .medium)
@@ -37,7 +37,7 @@
       }
     }
 
-    private func optionButton(value: String, label: String, @HTMLBuilder icon: () -> [Node])
+    private func optionButton(value: String, label: String, @HTMLBuilder icon: () -> [DOM.Node])
       -> HTMLContent
     {
       div {
@@ -96,7 +96,7 @@
   /// Initializes from localStorage / system preference, binds click events,
   /// and applies contrast changes to the document.
   public class ContrastButtonGroupHydration: @unchecked Sendable {
-    nonisolated(unsafe) private var groups: [Element] = []
+    nonisolated(unsafe) private var groups: [DOM.Element] = []
 
     public init?() {
       let allGroups = document.querySelectorAll(".contrast-button-group-view")
@@ -110,7 +110,7 @@
     }
 
     private nonisolated func initialize() {
-      var contrast: CSSPrefersContrast = .less
+      var contrast: CSS.PrefersContrast = .less
       if let saved = localStorage.getItem("contrast") {
         let isMore = saved.withCString { ptr in
           ptr[0] == 109 && ptr[1] == 111 && ptr[2] == 114 && ptr[3] == 101 && ptr[4] == 0  // "more"
@@ -139,7 +139,7 @@
       }
     }
 
-    private nonisolated func applyContrast(_ contrast: CSSPrefersContrast) {
+    private nonisolated func applyContrast(_ contrast: CSS.PrefersContrast) {
       let htmlElement = document.querySelector("html")
       switch contrast {
       case .more:
@@ -164,7 +164,7 @@
       }
     }
 
-    private nonisolated func updateSelection(_ group: Element, selectedValue: String) {
+    private nonisolated func updateSelection(_ group: DOM.Element, selectedValue: String) {
       let buttons = group.querySelectorAll(".button-group-button")
       for button in buttons {
         if let value = button.getAttribute("data-value") {

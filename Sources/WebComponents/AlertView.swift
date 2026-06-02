@@ -17,7 +17,7 @@
     let dismissButtonLabel: String
     let autoDismiss: AutoDismiss
     let clearQueryParam: String?
-    let content: [Node]
+    let content: [DOM.Node]
     let `class`: String
 
     /// Apple HIG color for the alert
@@ -51,7 +51,7 @@
       autoDismiss: AutoDismiss = .disabled,
       clearQueryParam: String? = nil,
       class: String = "",
-      @HTMLBuilder content: () -> [Node]
+      @HTMLBuilder content: () -> [DOM.Node]
     ) {
       self.alertColor = type
       self.inline = inline
@@ -75,7 +75,7 @@
       autoDismiss: AutoDismiss = .disabled,
       clearQueryParam: String? = nil,
       class: String = "",
-      @HTMLBuilder content: () -> [Node]
+      @HTMLBuilder content: () -> [DOM.Node]
     ) {
       self.alertColor = color
       self.inline = inline
@@ -90,7 +90,7 @@
     }
 
     @CSSBuilder
-    private func alertViewCSS(_ alertColor: AlertColor, _ inline: Bool) -> [CSSRule] {
+    private func alertViewCSS(_ alertColor: AlertColor, _ inline: Bool) -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       gap(spacing8)
@@ -123,7 +123,7 @@
     }
 
     @CSSBuilder
-    private func alertIconCSS(_ alertColor: AlertColor) -> [CSSRule] {
+    private func alertIconCSS(_ alertColor: AlertColor) -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       minWidth(sizeIconMedium)
@@ -145,7 +145,7 @@
     }
 
     @CSSBuilder
-    private func alertContentCSS() -> [CSSRule] {
+    private func alertContentCSS() -> [CSSOM.CSSRule] {
       display(.flex)
       flexDirection(.column)
       flexGrow(1)
@@ -158,11 +158,11 @@
     }
 
     @CSSBuilder
-    private func alertFadeInCSS() -> [CSSRule] {
+    private func alertFadeInCSS() -> [CSSOM.CSSRule] {
       animation("alert-fade-in", transitionDurationBase, transitionTimingFunctionSystem)
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       let defaultIcon: String = {
         switch alertColor {
         case .gray:
@@ -363,11 +363,11 @@
       allowUserDismiss: Bool = true,
       autoDismiss: Bool = false,
       autoDismissTime: Int = 4000,
-      container: Element? = nil,
+      container: DOM.Element? = nil,
       onDismiss: (@Sendable () -> Void)? = nil
     ) {
 
-      let alertContainer: Element
+      let alertContainer: DOM.Element
 
       if let providedContainer = container {
         alertContainer = providedContainer
@@ -396,7 +396,7 @@
         alertContainer = c
       }
 
-      let (bgColor, borderColor, iconColor): (CSSColor, CSSColor, CSSColor) = {
+      let (bgColor, borderColor, iconColor): (CSS.Color, CSS.Color, CSS.Color) = {
         switch type {
         case .gray:
           return (backgroundColorGraySubtle, borderColorGray, colorGray)
@@ -436,7 +436,7 @@
         displayIcon = defaultIcon
       }
 
-      let ariaLive: ARIALive
+      let ariaLive: ARIA.Live
       switch type {
       case .red:
         ariaLive = .assertive
@@ -520,7 +520,7 @@
         dismissBtn.className = "alert-dismiss"
         dismissBtn.innerHTML =
           "<svg width=\"20\" height=\"20\" viewBox=\"0 0 20 20\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\"><path d=\"M4.34 2.93l12.73 12.73-1.41 1.41L2.93 4.35Z\"/><path d=\"M17.07 4.34L4.34 17.07l-1.41-1.41L15.66 2.93Z\"/></svg>"
-        let buttonType: HTMLButton.`Type` = .button
+        let buttonType: HTML.Button.`Type` = .button
         dismissBtn.setAttribute(.type, buttonType)
         dismissBtn.setAttribute(.ariaLabel, "Close")
         dismissBtn.style.display(.flex)
@@ -559,7 +559,7 @@
     }
 
     private static func dismissAlert(
-      _ element: Element, onDismiss: (@Sendable () -> Void)?, userInitiated: Bool
+      _ element: DOM.Element, onDismiss: (@Sendable () -> Void)?, userInitiated: Bool
     ) {
       element.style.animation(("alert-fade-out", s(0.3), .easeOut))
 
@@ -580,36 +580,36 @@
 
     /// Convenience methods
     public static func showNotice(
-      _ text: String, container: Element? = nil, onDismiss: (@Sendable () -> Void)? = nil
+      _ text: String, container: DOM.Element? = nil, onDismiss: (@Sendable () -> Void)? = nil
     ) {
       show(text, type: .gray, container: container, onDismiss: onDismiss)
     }
 
     public static func showWarning(
-      _ text: String, container: Element? = nil, onDismiss: (@Sendable () -> Void)? = nil
+      _ text: String, container: DOM.Element? = nil, onDismiss: (@Sendable () -> Void)? = nil
     ) {
       show(text, type: .orange, container: container, onDismiss: onDismiss)
     }
 
     public static func showError(
-      _ text: String, container: Element? = nil, onDismiss: (@Sendable () -> Void)? = nil
+      _ text: String, container: DOM.Element? = nil, onDismiss: (@Sendable () -> Void)? = nil
     ) {
       show(text, type: .red, container: container, onDismiss: onDismiss)
     }
 
     public static func showSuccess(
-      _ text: String, container: Element? = nil, onDismiss: (@Sendable () -> Void)? = nil
+      _ text: String, container: DOM.Element? = nil, onDismiss: (@Sendable () -> Void)? = nil
     ) {
       show(text, type: .green, autoDismiss: true, container: container, onDismiss: onDismiss)
     }
   }
 
   private class AlertInstance: @unchecked Sendable {
-    private var alertElement: Element
-    private var dismissButton: Element?
+    private var alertElement: DOM.Element
+    private var dismissButton: DOM.Element?
     private var autoDismissTimer: Int32?
 
-    init(alert: Element) {
+    init(alert: DOM.Element) {
       self.alertElement = alert
       self.dismissButton = alert.querySelector(".alert-dismiss")
 

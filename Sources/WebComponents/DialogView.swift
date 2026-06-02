@@ -19,10 +19,10 @@
     let primaryAction: PrimaryAction?
     let defaultAction: DefaultAction?
     let stackedActions: Bool
-    let headerContent: [Node]
-    let bodyContent: [Node]
-    let footerContent: [Node]
-    let footerTextContent: [Node]
+    let headerContent: [DOM.Node]
+    let bodyContent: [DOM.Node]
+    let footerContent: [DOM.Node]
+    let footerTextContent: [DOM.Node]
     let `class`: String
 
     public struct PrimaryAction: Sendable {
@@ -76,10 +76,10 @@
       defaultAction: DefaultAction? = nil,
       stackedActions: Bool = false,
       class: String = "",
-      @HTMLBuilder header: () -> [Node] = { [] },
-      @HTMLBuilder body: () -> [Node],
-      @HTMLBuilder footer: () -> [Node] = { [] },
-      @HTMLBuilder footerText: () -> [Node] = { [] }
+      @HTMLBuilder header: () -> [DOM.Node] = { [] },
+      @HTMLBuilder body: () -> [DOM.Node],
+      @HTMLBuilder footer: () -> [DOM.Node] = { [] },
+      @HTMLBuilder footerText: () -> [DOM.Node] = { [] }
     ) {
       self.open = open
       self.title = title
@@ -99,7 +99,7 @@
     }
 
     @CSSBuilder
-    private func dialogBackdropCSS() -> [CSSRule] {
+    private func dialogBackdropCSS() -> [CSSOM.CSSRule] {
       position(.fixed)
       insetBlockStart(0)
       insetInlineStart(0)
@@ -116,7 +116,7 @@
     }
 
     @CSSBuilder
-    private func dialogShellCSS() -> [CSSRule] {
+    private func dialogShellCSS() -> [CSSOM.CSSRule] {
       position(.relative)
       display(.flex)
       flexDirection(.column)
@@ -128,7 +128,7 @@
     }
 
     @CSSBuilder
-    private func dialogHeaderCSS(_ hasCustomHeader: Bool) -> [CSSRule] {
+    private func dialogHeaderCSS(_ hasCustomHeader: Bool) -> [CSSOM.CSSRule] {
       if !hasCustomHeader {
         display(.flex)
         flexDirection(.column)
@@ -139,7 +139,7 @@
     }
 
     @CSSBuilder
-    private func dialogHeaderTitleGroupCSS() -> [CSSRule] {
+    private func dialogHeaderTitleGroupCSS() -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.flexStart)
       gap(spacing16)
@@ -147,7 +147,7 @@
     }
 
     @CSSBuilder
-    private func dialogHeaderTextCSS() -> [CSSRule] {
+    private func dialogHeaderTextCSS() -> [CSSOM.CSSRule] {
       display(.flex)
       flexDirection(.column)
       gap(spacing4)
@@ -156,7 +156,7 @@
     }
 
     @CSSBuilder
-    private func dialogHeaderTitleCSS(_ hideTitle: Bool) -> [CSSRule] {
+    private func dialogHeaderTitleCSS(_ hideTitle: Bool) -> [CSSOM.CSSRule] {
       fontFamily(typographyFontSans)
       fontSize(fontSizeLarge18)
       fontWeight(fontWeightBold)
@@ -179,7 +179,7 @@
     }
 
     @CSSBuilder
-    private func dialogHeaderSubtitleCSS() -> [CSSRule] {
+    private func dialogHeaderSubtitleCSS() -> [CSSOM.CSSRule] {
       fontFamily(typographyFontSans)
       fontSize(fontSizeSmall14)
       fontWeight(fontWeightNormal)
@@ -190,7 +190,7 @@
     }
 
     @CSSBuilder
-    private func dialogCloseButtonCSS() -> [CSSRule] {
+    private func dialogCloseButtonCSS() -> [CSSOM.CSSRule] {
       display(.inlineFlex)
       alignItems(.center)
       justifyContent(.center)
@@ -224,7 +224,7 @@
     }
 
     @CSSBuilder
-    private func dialogBodyCSS() -> [CSSRule] {
+    private func dialogBodyCSS() -> [CSSOM.CSSRule] {
       fontFamily(typographyFontSans)
       fontSize(fontSizeMedium16)
       lineHeight(lineHeightMedium26)
@@ -235,7 +235,7 @@
     }
 
     @CSSBuilder
-    private func dialogFooterCSS(_ hasCustomFooter: Bool, _ hasFooterText: Bool) -> [CSSRule] {
+    private func dialogFooterCSS(_ hasCustomFooter: Bool, _ hasFooterText: Bool) -> [CSSOM.CSSRule] {
       if !hasCustomFooter {
         display(.flex)
         flexDirection(.column)
@@ -252,7 +252,7 @@
     }
 
     @CSSBuilder
-    private func dialogFooterTextCSS() -> [CSSRule] {
+    private func dialogFooterTextCSS() -> [CSSOM.CSSRule] {
       fontFamily(typographyFontSans)
       fontSize(fontSizeSmall14)
       lineHeight(lineHeightSmall22)
@@ -261,7 +261,7 @@
     }
 
     @CSSBuilder
-    private func dialogFooterActionsCSS(_ stackedActions: Bool) -> [CSSRule] {
+    private func dialogFooterActionsCSS(_ stackedActions: Bool) -> [CSSOM.CSSRule] {
       display(.flex)
       gap(spacing12)
 
@@ -275,14 +275,14 @@
       }
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       let hasCustomHeader = !headerContent.isEmpty
       let hasCustomFooter = !footerContent.isEmpty
       let hasFooterText = !footerTextContent.isEmpty
       let hasActions = primaryAction != nil || defaultAction != nil
 
       // Default header (when no custom header provided)
-      let defaultHeader: Node = div {
+      let defaultHeader: DOM.Node = div {
         div {
           div {
             h2 { title }
@@ -333,7 +333,7 @@
       }
 
       // Default footer (when no custom footer provided)
-      let defaultFooter: Node = div {
+      let defaultFooter: DOM.Node = div {
         if hasFooterText {
           div { footerTextContent }
             .class("dialog-footer-text")
@@ -478,12 +478,12 @@
   }
 
   private class DialogInstance: @unchecked Sendable {
-    private var dialog: Element
-    private var closeButton: Element?
-    private var primaryButton: Element?
-    private var defaultButton: Element?
+    private var dialog: DOM.Element
+    private var closeButton: DOM.Element?
+    private var primaryButton: DOM.Element?
+    private var defaultButton: DOM.Element?
 
-    init(dialog: Element) {
+    init(dialog: DOM.Element) {
       self.dialog = dialog
 
       closeButton = dialog.querySelector(".dialog-close-button")

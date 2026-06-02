@@ -8,20 +8,20 @@
 
   public struct DeleteIconView: HTMLContent {
     let `class`: String
-    let width: Length
-    let height: Length
+    let width: CSS.Length
+    let height: CSS.Length
 
     public init(
       class: String = "",
-      width: Length = px(20),
-      height: Length = px(20)
+      width: CSS.Length = px(20),
+      height: CSS.Length = px(20)
     ) {
       self.class = `class`
       self.width = width
       self.height = height
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       svg {
         path()
           .d(

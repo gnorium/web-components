@@ -12,15 +12,15 @@ public struct TableCellView: HTMLContent {
     case text(String)
     case mono(String)
     case selection(id: String, name: String, value: String, checked: Bool)
-    case status(icon: String, bgColor: CSSColor)
-    case custom([Node])
+    case status(icon: String, bgColor: CSS.Color)
+    case custom([DOM.Node])
   }
 
   public let columnID: String?
   let type: CellType
   let `class`: String
   let align: TableView.Column.Alignment
-  let vAlign: CSSVerticalAlign
+  let vAlign: CSS.VerticalAlign
   let useMonoFont: Bool
   let showVerticalBorders: Bool
 
@@ -29,7 +29,7 @@ public struct TableCellView: HTMLContent {
     _ type: CellType,
     class: String = "",
     align: TableView.Column.Alignment = .start,
-    verticalAlign: CSSVerticalAlign = .middle,
+    verticalAlign: CSS.VerticalAlign = .middle,
     useMonoFont: Bool = false,
     showVerticalBorders: Bool = false
   ) {
@@ -43,7 +43,7 @@ public struct TableCellView: HTMLContent {
   }
 
   @CSSBuilder
-  private func cellCSS() -> [CSSRule] {
+  private func cellCSS() -> [CSSOM.CSSRule] {
     padding(spacing8, spacing12)
     verticalAlign(vAlign)
 
@@ -73,7 +73,7 @@ public struct TableCellView: HTMLContent {
   }
 
   @CSSBuilder
-  private func statusIconCSS(bgColor: CSSColor) -> [CSSRule] {
+  private func statusIconCSS(bgColor: CSS.Color) -> [CSSOM.CSSRule] {
     display(.inlineFlex)
     alignItems(.center)
     justifyContent(.center)
@@ -87,11 +87,11 @@ public struct TableCellView: HTMLContent {
     lineHeight(1)
   }
 
-  public func build() -> Node {
+  public func build() -> DOM.Node {
     td {
       switch type {
       case .text(let text):
-        Text(text)
+        DOM.Text(text)
       case .mono(let text):
         span { text }.style { fontFamily(typographyFontMono) }
       case .selection(let id, let name, let value, let checked):

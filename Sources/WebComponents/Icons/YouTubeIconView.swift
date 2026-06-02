@@ -8,16 +8,16 @@
 
   public struct YouTubeIconView: HTMLContent {
     let `class`: String
-    let width: Length
-    let height: Length
-    let fill: SVGPaint
+    let width: CSS.Length
+    let height: CSS.Length
+    let fill: CSS.Color
     let monochrome: Bool
 
     public init(
       class: String = "",
-      width: Length = px(20),
-      height: Length = px(20),
-      fill: SVGPaint = SVGPaint(colorBase),
+      width: CSS.Length = px(20),
+      height: CSS.Length = px(20),
+      fill: CSS.Color = colorBase,
       monochrome: Bool = false
     ) {
       self.class = `class`
@@ -27,7 +27,7 @@
       self.monochrome = monochrome
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       svg {
         // YouTube rounded rectangle background
         path()
@@ -44,12 +44,12 @@
             C(28.5701, 14.6496, 28.5701, 10, 28.5701, 10),
             C(28.5701, 10, 28.5677, 5.35042, 27.9727, 3.12324), Z()
           )
-          .fill(monochrome ? fill : SVGPaint(hex(0xFF0000)))
+          .fill(monochrome ? fill : hex(0xFF0000))
 
         // Play button
         path()
           .d(M(11.4253, 14.2854), L(18.8477, 10.0004), L(11.4253, 5.71533), Z())
-          .fill(monochrome ? SVGPaint(colorInverted) : SVGPaint(.white))
+          .fill(monochrome ? colorInverted : .white)
       }
       .class(`class`.isEmpty ? "youtube-icon-view" : "youtube-icon-view \(`class`)")
       .width(width)

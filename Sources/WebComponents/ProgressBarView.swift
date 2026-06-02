@@ -33,7 +33,7 @@
     }
 
     @CSSBuilder
-    private func progressBarViewCSS(_ inline: Bool, _ disabled: Bool) -> [CSSRule] {
+    private func progressBarViewCSS(_ inline: Bool, _ disabled: Bool) -> [CSSOM.CSSRule] {
       display(.block)
       position(.relative)
       backgroundColor(backgroundColorBlueSubtle)
@@ -52,7 +52,7 @@
     }
 
     @CSSBuilder
-    private func progressBarBarCSS() -> [CSSRule] {
+    private func progressBarBarCSS() -> [CSSOM.CSSRule] {
       position(.absolute)
       top(0)
       left(0)
@@ -63,7 +63,7 @@
       transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       let progressBarClasses = {
         var classes = "progress-bar-view"
         if inline {

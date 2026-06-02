@@ -12,7 +12,7 @@
     public struct MenuItem: Sendable {
       public let value: String
       public let label: String
-      public let icon: Node?
+      public let icon: DOM.Node?
       public let url: String?
       public let disabled: Bool
       public let destructive: Bool
@@ -21,7 +21,7 @@
         value: String,
         label: String,
         url: String? = nil,
-        icon: Node? = nil,
+        icon: DOM.Node? = nil,
         disabled: Bool = false,
         destructive: Bool = false
       ) {
@@ -35,7 +35,7 @@
     }
 
     let buttonLabel: String
-    let buttonIcon: Node?
+    let buttonIcon: DOM.Node?
     let iconOnly: Bool
     let menuItems: [MenuItem]
     let buttonWeight: ButtonView.ButtonWeight
@@ -43,12 +43,12 @@
     let ariaLabel: String?
     let size: ButtonView.ButtonSize
     let `class`: String
-    let labelFontWeight: CSSFontWeight
+    let labelFontWeight: CSS.FontWeight
     let indicateSelection: Bool
 
     public init(
       buttonLabel: String,
-      buttonIcon: Node? = nil,
+      buttonIcon: DOM.Node? = nil,
       iconOnly: Bool = false,
       menuItems: [MenuItem],
       buttonWeight: ButtonView.ButtonWeight = .subtle,
@@ -56,7 +56,7 @@
       ariaLabel: String? = nil,
       size: ButtonView.ButtonSize = .medium,
       class: String = "",
-      labelFontWeight: CSSFontWeight = fontWeightBold,
+      labelFontWeight: CSS.FontWeight = fontWeightBold,
       indicateSelection: Bool = false
     ) {
       self.buttonLabel = buttonLabel
@@ -72,7 +72,7 @@
       self.indicateSelection = indicateSelection
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       return div {
         // Toggle Button
         ToggleButtonView(
@@ -139,13 +139,13 @@
     }
 
     @CSSBuilder
-    private func menuButtonViewCSS() -> [CSSRule] {
+    private func menuButtonViewCSS() -> [CSSOM.CSSRule] {
       position(.relative)
       display(.inlineBlock)
     }
 
     @CSSBuilder
-    private func menuButtonMenuCSS() -> [CSSRule] {
+    private func menuButtonMenuCSS() -> [CSSOM.CSSRule] {
       position(.absolute)
       top(perc(100))
       insetInlineStart(0)
@@ -164,7 +164,7 @@
     }
 
     @CSSBuilder
-    private func menuItemCSS(_ item: MenuItem) -> [CSSRule] {
+    private func menuItemCSS(_ item: MenuItem) -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       gap(spacing12)
@@ -211,7 +211,7 @@
     }
 
     @CSSBuilder
-    private func menuItemIconCSS() -> [CSSRule] {
+    private func menuItemIconCSS() -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       justifyContent(.center)
@@ -221,12 +221,12 @@
     }
 
     @CSSBuilder
-    private func menuItemTextCSS() -> [CSSRule] {
+    private func menuItemTextCSS() -> [CSSOM.CSSRule] {
       flex(1)
     }
 
     @HTMLBuilder
-    func renderItemContent(_ item: MenuItem) -> [Node] {
+    func renderItemContent(_ item: MenuItem) -> [DOM.Node] {
       if let icon = item.icon {
         span { icon }
           .class("menu-item-icon")
@@ -267,14 +267,14 @@
   }
 
   private class MenuButtonInstance: @unchecked Sendable {
-    private var menuButton: Element
-    private var trigger: Element?
-    private var menu: Element?
-    private var menuItems: [Element] = []
+    private var menuButton: DOM.Element
+    private var trigger: DOM.Element?
+    private var menu: DOM.Element?
+    private var menuItems: [DOM.Element] = []
     private var isOpen: Bool = false
     private var currentFocusIndex: Int = -1
 
-    init(menuButton: Element) {
+    init(menuButton: DOM.Element) {
       self.menuButton = menuButton
 
       trigger = menuButton.querySelector(".menu-button-trigger")
@@ -349,7 +349,7 @@
       trigger?.focus()
     }
 
-    private func selectMenuItem(_ item: Element) {
+    private func selectMenuItem(_ item: DOM.Element) {
       guard let ariaDisabled = item.getAttribute("aria-disabled"),
         !stringEquals(ariaDisabled, "true")
       else { return }

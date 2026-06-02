@@ -12,14 +12,14 @@
     public struct ButtonItem: Sendable {
       public let value: String
       public let label: String
-      public let icon: Node?
+      public let icon: DOM.Node?
       public let disabled: Bool
       public let ariaLabel: String?
 
       public init(
         value: String,
         label: String,
-        icon: Node? = nil,
+        icon: DOM.Node? = nil,
         disabled: Bool = false,
         ariaLabel: String? = nil
       ) {
@@ -46,13 +46,13 @@
     }
 
     @CSSBuilder
-    private func buttonGroupViewCSS() -> [CSSRule] {
+    private func buttonGroupViewCSS() -> [CSSOM.CSSRule] {
       display(.inlineFlex)
       flexWrap(.wrap)
     }
 
     @CSSBuilder
-    private func buttonGroupButtonCSS(_ isDisabled: Bool) -> [CSSRule] {
+    private func buttonGroupButtonCSS(_ isDisabled: Bool) -> [CSSOM.CSSRule] {
       display(.inlineFlex)
       alignItems(.center)
       justifyContent(.center)
@@ -133,7 +133,7 @@
     }
 
     @CSSBuilder
-    private func buttonIconCSS() -> [CSSRule] {
+    private func buttonIconCSS() -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       justifyContent(.center)
@@ -141,7 +141,7 @@
       height(sizeIconSmall)
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       div {
         for button in buttons {
           let isDisabled = disabled || button.disabled
@@ -189,9 +189,9 @@
   import WebTypes
 
   private class ButtonGroupInstance: @unchecked Sendable {
-    private var buttons: [Element] = []
+    private var buttons: [DOM.Element] = []
 
-    init(group: Element) {
+    init(group: DOM.Element) {
       buttons = Array(group.querySelectorAll(".button-group-button"))
       bindEvents()
     }
@@ -210,7 +210,7 @@
       }
     }
 
-    private func handleClick(_ button: Element) {
+    private func handleClick(_ button: DOM.Element) {
       guard let ariaDisabled = button.getAttribute("aria-disabled"),
         !stringEquals(ariaDisabled, "true")
       else { return }
@@ -222,7 +222,7 @@
       button.dispatchEvent(event)
     }
 
-    private func handleKeydown(_ button: Element, event: Event) {
+    private func handleKeydown(_ button: DOM.Element, event: Event) {
       guard let ariaDisabled = button.getAttribute("aria-disabled"),
         !stringEquals(ariaDisabled, "true")
       else { return }

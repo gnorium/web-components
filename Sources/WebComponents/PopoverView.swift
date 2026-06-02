@@ -19,9 +19,9 @@
     let stackedActions: Bool
     let renderInPlace: Bool
     let placement: Placement
-    let headerContent: [Node]
-    let bodyContent: [Node]
-    let footerContent: [Node]
+    let headerContent: [DOM.Node]
+    let bodyContent: [DOM.Node]
+    let footerContent: [DOM.Node]
     let `class`: String
 
     public enum Placement: String, Sendable {
@@ -85,9 +85,9 @@
       renderInPlace: Bool = false,
       placement: Placement = .bottom,
       class: String = "",
-      @HTMLBuilder header: () -> [Node] = { [] },
-      @HTMLBuilder body: () -> [Node] = { [] },
-      @HTMLBuilder footer: () -> [Node] = { [] }
+      @HTMLBuilder header: () -> [DOM.Node] = { [] },
+      @HTMLBuilder body: () -> [DOM.Node] = { [] },
+      @HTMLBuilder footer: () -> [DOM.Node] = { [] }
     ) {
       self.open = open
       self.title = title
@@ -106,7 +106,7 @@
     }
 
     @CSSBuilder
-    private func popoverViewCSS(_ open: Bool) -> [CSSRule] {
+    private func popoverViewCSS(_ open: Bool) -> [CSSOM.CSSRule] {
       position(.absolute)
       backgroundColor(backgroundColorBase)
       border(borderWidthBase, .solid, borderColorSubtle)
@@ -123,7 +123,7 @@
     }
 
     @CSSBuilder
-    private func popoverArrowCSS(_ placement: Placement) -> [CSSRule] {
+    private func popoverArrowCSS(_ placement: Placement) -> [CSSOM.CSSRule] {
       position(.absolute)
       width(px(12))
       height(px(12))
@@ -170,7 +170,7 @@
     }
 
     @CSSBuilder
-    private func popoverHeaderCSS(_ hasCustomHeader: Bool) -> [CSSRule] {
+    private func popoverHeaderCSS(_ hasCustomHeader: Bool) -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       gap(spacing8)
@@ -183,7 +183,7 @@
     }
 
     @CSSBuilder
-    private func popoverHeaderContentCSS() -> [CSSRule] {
+    private func popoverHeaderContentCSS() -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       gap(spacing8)
@@ -192,7 +192,7 @@
     }
 
     @CSSBuilder
-    private func popoverIconCSS() -> [CSSRule] {
+    private func popoverIconCSS() -> [CSSOM.CSSRule] {
       display(.inlineFlex)
       alignItems(.center)
       justifyContent(.center)
@@ -204,7 +204,7 @@
     }
 
     @CSSBuilder
-    private func popoverTitleCSS() -> [CSSRule] {
+    private func popoverTitleCSS() -> [CSSOM.CSSRule] {
       fontFamily(typographyFontSans)
       fontSize(fontSizeMedium16)
       fontWeight(fontWeightBold)
@@ -216,7 +216,7 @@
     }
 
     @CSSBuilder
-    private func popoverBodyCSS() -> [CSSRule] {
+    private func popoverBodyCSS() -> [CSSOM.CSSRule] {
       padding(spacing12)
       fontFamily(typographyFontSans)
       fontSize(fontSizeMedium16)
@@ -225,7 +225,7 @@
     }
 
     @CSSBuilder
-    private func popoverFooterCSS(_ hasActions: Bool, _ stackedActions: Bool) -> [CSSRule] {
+    private func popoverFooterCSS(_ hasActions: Bool, _ stackedActions: Bool) -> [CSSOM.CSSRule] {
       if hasActions {
         display(.flex)
         gap(spacing8)
@@ -245,14 +245,14 @@
     }
 
     @CSSBuilder
-    private func popoverPrimaryButtonCSS(_ stackedActions: Bool) -> [CSSRule] {
+    private func popoverPrimaryButtonCSS(_ stackedActions: Bool) -> [CSSOM.CSSRule] {
       if stackedActions {
         // Primary button on top in stacked layout
         order(-1)
       }
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       let hasCustomHeader = !headerContent.isEmpty
       let hasIcon = icon != nil
       let hasTitle = !title.isEmpty
@@ -380,13 +380,13 @@
   import WebTypes
 
   private class PopoverInstance: @unchecked Sendable {
-    private var popover: Element
-    private var closeButton: Element?
-    private var primaryButton: Element?
-    private var defaultButton: Element?
+    private var popover: DOM.Element
+    private var closeButton: DOM.Element?
+    private var primaryButton: DOM.Element?
+    private var defaultButton: DOM.Element?
     private var isOpen: Bool = false
 
-    init(popover: Element) {
+    init(popover: DOM.Element) {
       self.popover = popover
 
       closeButton = popover.querySelector(".popover-close-button")

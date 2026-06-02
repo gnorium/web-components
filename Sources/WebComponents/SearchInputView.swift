@@ -47,7 +47,7 @@
     }
 
     @CSSBuilder
-    private func searchInputViewCSS(_ useButton: Bool) -> [CSSRule] {
+    private func searchInputViewCSS(_ useButton: Bool) -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       position(.relative)
@@ -62,7 +62,7 @@
     }
 
     @CSSBuilder
-    private func searchInputWrapperCSS(_ useButton: Bool) -> [CSSRule] {
+    private func searchInputWrapperCSS(_ useButton: Bool) -> [CSSOM.CSSRule] {
       position(.relative)
       display(.flex)
       alignItems(.center)
@@ -76,7 +76,7 @@
 
     @CSSBuilder
     private func searchInputCSS(_ clearable: Bool, _ status: ValidationStatus)
-      -> [CSSRule]
+      -> [CSSOM.CSSRule]
     {
       width(perc(100))
       minHeight(minSizeInteractivePointer)
@@ -126,7 +126,7 @@
     }
 
     @CSSBuilder
-    private func searchInputViewDetailsIconCSS() -> [CSSRule] {
+    private func searchInputViewDetailsIconCSS() -> [CSSOM.CSSRule] {
       position(.absolute)
       right(px(52))
       top(perc(50))
@@ -138,7 +138,7 @@
     }
 
     @CSSBuilder
-    private func searchInputClearButtonCSS() -> [CSSRule] {
+    private func searchInputClearButtonCSS() -> [CSSOM.CSSRule] {
       position(.absolute)
       insetInlineEnd(px(88))
       top(perc(50))
@@ -190,7 +190,7 @@
     }
 
     @CSSBuilder
-    private func searchInputButtonCSS(_ disabled: Bool) -> [CSSRule] {
+    private func searchInputButtonCSS(_ disabled: Bool) -> [CSSOM.CSSRule] {
       minHeight(minSizeInteractivePointer)
       padding(spacing12, spacing16)
       fontFamily(typographyFontSans)
@@ -227,7 +227,7 @@
       }
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       return div {
         div {
 
@@ -341,12 +341,12 @@
   import WebTypes
 
   private class SearchInputInstance: @unchecked Sendable {
-    private var searchInputElement: Element
-    private var inputElement: Element?
-    private var clearButton: Element?
-    private var submitButton: Element?
+    private var searchInputElement: DOM.Element
+    private var inputElement: DOM.Element?
+    private var clearButton: DOM.Element?
+    private var submitButton: DOM.Element?
 
-    init(searchInput: Element) {
+    init(searchInput: DOM.Element) {
       self.searchInputElement = searchInput
       self.inputElement = searchInput.querySelector(".search-input")
       self.clearButton = searchInput.querySelector(".search-input-clear-button")
@@ -383,7 +383,7 @@
     private func handleInput() {
       guard let input = inputElement else { return }
       let value: String
-      if let inputElement = input as? HTMLInputElement {
+      if let inputElement = input as? HTML.HTMLInputElement {
         value = inputElement.value
       } else {
         value = ""
@@ -392,11 +392,11 @@
       // Update clear button disabled state and styling
       if let clear = clearButton {
         if value.isEmpty {
-          (clear as? HTMLButtonElement)?.disabled = true
+          (clear as? HTML.HTMLButtonElement)?.disabled = true
           clear.style.opacity(opacityIconBaseDisabled)
           clear.style.cursor(.notAllowed)
         } else {
-          (clear as? HTMLButtonElement)?.disabled = false
+          (clear as? HTML.HTMLButtonElement)?.disabled = false
           clear.style.opacity(opacityIconBaseSelected)
           clear.style.cursor(cursorBaseHover)
         }
@@ -431,7 +431,7 @@
 
     private func clearInput() {
       guard let input = inputElement else { return }
-      (input as? HTMLInputElement)?.value = ""
+      (input as? HTML.HTMLInputElement)?.value = ""
       input.focus()
       handleInput()
     }
@@ -439,7 +439,7 @@
     private func handleSubmit() {
       guard let input = inputElement else { return }
       let value: String
-      if let inputElement = input as? HTMLInputElement {
+      if let inputElement = input as? HTML.HTMLInputElement {
         value = inputElement.value
       } else {
         value = ""

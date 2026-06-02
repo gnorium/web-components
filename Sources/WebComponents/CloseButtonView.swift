@@ -17,7 +17,7 @@
       self.class = customClass
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       ButtonView(
         icon: IconView {
           CloseIconView()

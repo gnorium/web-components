@@ -7,13 +7,13 @@
   import WebTypes
 
   public struct EllipsisIconView: HTMLContent {
-    let width: Length
-    let height: Length
+    let width: CSS.Length
+    let height: CSS.Length
     let `class`: String
 
     public init(
-      width: Length = px(20),
-      height: Length = px(20),
+      width: CSS.Length = px(20),
+      height: CSS.Length = px(20),
       class: String = ""
     ) {
       self.width = width
@@ -21,7 +21,7 @@
       self.class = `class`
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       svg {
         circle()
           .cx(3)

@@ -21,6 +21,8 @@
     let autosize: Bool
     let startIcon: String?
     let endIcon: String?
+    let labelText: String
+    let tooltip: String?
     let `class`: String
 
     public enum ValidationStatus: String, Sendable {
@@ -41,6 +43,8 @@
       autosize: Bool = false,
       startIcon: String? = nil,
       endIcon: String? = nil,
+      label: String = "",
+      tooltip: String? = nil,
       class: String = ""
     ) {
       self.id = id
@@ -55,11 +59,13 @@
       self.autosize = autosize
       self.startIcon = startIcon
       self.endIcon = endIcon
+      self.labelText = label
+      self.tooltip = tooltip
       self.`class` = `class`
     }
 
     @CSSBuilder
-    private func textAreaViewCSS(_ hasStartIcon: Bool, _ hasEndIcon: Bool) -> [CSSRule] {
+    private func textAreaViewCSS(_ hasStartIcon: Bool, _ hasEndIcon: Bool) -> [CSSOM.CSSRule] {
       position(.relative)
       display(.inlineBlock)
       width(perc(100))
@@ -75,12 +81,12 @@
     private func textAreaInputCSS(
       _ disabled: Bool, _ readonly: Bool, _ status: ValidationStatus, _ autosize: Bool,
       _ hasStartIcon: Bool, _ hasEndIcon: Bool
-    ) -> [CSSRule] {
+    ) -> [CSSOM.CSSRule] {
       width(perc(100))
       minHeight(px(rows * 24))
       padding(spacing12)
       fontFamily(typographyFontSans)
-      fontSize(fontSizeSmall14)
+      fontSize(fontSizeMedium16)
       lineHeight(lineHeightSmall22)
       color(disabled ? colorDisabled : colorBase)
       backgroundColor(
@@ -93,7 +99,7 @@
       borderRadius(borderRadiusBase)
       transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
       outline(.none)
-      cursor(disabled ? cursorBaseDisabled : cursorBase)
+      cursor(disabled ? cursorBaseDisabled : cursorText)
 
       if autosize {
         resize(.none)
@@ -124,13 +130,13 @@
         boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
       }
 
-      pseudoClass(.hover, not(.disabled), not(.readOnly)) {
-        borderColor(borderColorBase).important()
+      pseudoClass(.hover, .focus, not(.disabled), not(.readOnly)) {
+        borderColor(borderColorBlue).important()
       }
     }
 
     @CSSBuilder
-    private func textAreaIconCSS(_ isStartIcon: Bool) -> [CSSRule] {
+    private func textAreaIconCSS(_ isStartIcon: Bool) -> [CSSOM.CSSRule] {
       position(.absolute)
       top(spacing12)
       display(.inlineFlex)
@@ -148,7 +154,7 @@
       }
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       let hasStartIcon = startIcon != nil
       let hasEndIcon = endIcon != nil
 
@@ -198,8 +204,35 @@
           container = container.data("status", "error")
         }
 
-        return container.style {
-          textAreaViewCSS(hasStartIcon, hasEndIcon)
+        if labelText.isEmpty {
+          return container.style {
+            textAreaViewCSS(hasStartIcon, hasEndIcon)
+          }
+        }
+        return div {
+          label {
+            span { labelText }
+            if let tooltip = tooltip {
+              TooltipView(tooltip: tooltip, placement: .bottom) {
+                IconView {
+                  InfoIconView()
+                }
+              }
+            }
+          }
+          .style {
+            display(.flex)
+            alignItems(.center)
+            gap(spacing4)
+            fontSize(fontSizeSmall14)
+            fontWeight(600)
+            color(colorBase)
+            marginBlockEnd(spacing4)
+            fontFamily(typographyFontSans)
+          }
+          container.style {
+            textAreaViewCSS(hasStartIcon, hasEndIcon)
+          }
         }
 
       } else {
@@ -230,8 +263,35 @@
           container = container.data("status", "error")
         }
 
-        return container.style {
-          textAreaViewCSS(hasStartIcon, hasEndIcon)
+        if labelText.isEmpty {
+          return container.style {
+            textAreaViewCSS(hasStartIcon, hasEndIcon)
+          }
+        }
+        return div {
+          label {
+            span { labelText }
+            if let tooltip = tooltip {
+              TooltipView(tooltip: tooltip, placement: .bottom) {
+                IconView {
+                  InfoIconView()
+                }
+              }
+            }
+          }
+          .style {
+            display(.flex)
+            alignItems(.center)
+            gap(spacing4)
+            fontSize(fontSizeSmall14)
+            fontWeight(600)
+            color(colorBase)
+            marginBlockEnd(spacing4)
+            fontFamily(typographyFontSans)
+          }
+          container.style {
+            textAreaViewCSS(hasStartIcon, hasEndIcon)
+          }
         }
 
       }
@@ -247,11 +307,11 @@
   import WebTypes
 
   private class TextAreaInstance: @unchecked Sendable {
-    private var textArea: Element
-    private var input: Element?
+    private var textArea: DOM.Element
+    private var input: DOM.Element?
     private var autosize: Bool = false
 
-    init(textArea: Element) {
+    init(textArea: DOM.Element) {
       self.textArea = textArea
 
       input = textArea.querySelector(".text-area-input")

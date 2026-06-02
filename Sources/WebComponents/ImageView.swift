@@ -12,12 +12,12 @@
     let src: String
     let alt: String
     let aspectRatio: AspectRatio?
-    let objectPositionVal: CSSObjectPosition
-    let objectFitVal: CSSObjectFit
+    let objectPositionVal: CSS.ObjectPosition
+    let objectFitVal: CSS.ObjectFit
     let imagePosition: Position?
-    let imageWidth: Length?
-    let imageHeight: Length?
-    let loadingPriority: HTMLLoading
+    let imageWidth: CSS.Length?
+    let imageHeight: CSS.Length?
+    let loadingPriority: HTML.Loading
     let placeholderIcon: String?
     let `class`: String
 
@@ -40,12 +40,12 @@
       src: String = "",
       alt: String,
       aspectRatio: AspectRatio? = nil,
-      objectPositionVal: CSSObjectPosition = .center,
-      objectFitVal: CSSObjectFit = .cover,
+      objectPositionVal: CSS.ObjectPosition = .center,
+      objectFitVal: CSS.ObjectFit = .cover,
       imagePosition: Position? = nil,
-      imageWidth: Length? = nil,
-      imageHeight: Length? = nil,
-      loadingPriority: HTMLLoading = .lazy,
+      imageWidth: CSS.Length? = nil,
+      imageHeight: CSS.Length? = nil,
+      loadingPriority: HTML.Loading = .lazy,
       placeholderIcon: String? = nil,
       class: String = ""
     ) {
@@ -63,7 +63,7 @@
     }
 
     @CSSBuilder
-    private func imageViewCSS(_ imagePosition: Position?, _ aspectRatio: AspectRatio?) -> [CSSRule]
+    private func imageViewCSS(_ imagePosition: Position?, _ aspectRatio: AspectRatio?) -> [CSSOM.CSSRule]
     {
       display(.block)
       position(.relative)
@@ -98,8 +98,8 @@
 
     @CSSBuilder
     private func imageImageCSS(
-      _ objectFitVal: CSSObjectFit, _ objectPositionVal: CSSObjectPosition, _ hasAspectRatio: Bool
-    ) -> [CSSRule] {
+      _ objectFitVal: CSS.ObjectFit, _ objectPositionVal: CSS.ObjectPosition, _ hasAspectRatio: Bool
+    ) -> [CSSOM.CSSRule] {
       display(.block)
       width(perc(100))
       height(perc(100))
@@ -115,7 +115,7 @@
     }
 
     @CSSBuilder
-    private func imagePlaceholderCSS() -> [CSSRule] {
+    private func imagePlaceholderCSS() -> [CSSOM.CSSRule] {
       position(.absolute)
       insetBlockStart(0)
       insetInlineStart(0)
@@ -129,7 +129,7 @@
       fontSize(sizeIconMedium)
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       let hasImage = !src.isEmpty
       let hasAspectRatio = aspectRatio != nil
 

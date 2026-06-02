@@ -7,13 +7,13 @@
   import WebTypes
 
   public struct CloseIconView: HTMLContent {
-    let width: Length
-    let height: Length
+    let width: CSS.Length
+    let height: CSS.Length
     let `class`: String
 
     public init(
-      width: Length = px(20),
-      height: Length = px(20),
+      width: CSS.Length = px(20),
+      height: CSS.Length = px(20),
       class: String = ""
     ) {
       self.width = width
@@ -21,7 +21,7 @@
       self.class = `class`
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       svg {
         path()
           .d(m(4.34, 2.93), l(12.73, 12.73), l(-1.41, 1.41), L(2.93, 4.35), Z())

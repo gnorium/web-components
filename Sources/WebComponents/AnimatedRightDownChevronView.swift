@@ -12,17 +12,17 @@ import WebTypes
 public struct AnimatedRightDownChevronView: HTMLContent {
   public let id: String
   public let expanded: Bool
-  public let width: Length
-  public let height: Length
+  public let width: CSS.Length
+  public let height: CSS.Length
   public var `class`: String
   public var data: [TableView.AttributePair] = []
-  public var style: [(@Sendable () -> [CSSRule])] = []
+  public var style: [(@Sendable () -> [CSSOM.CSSRule])] = []
 
   public init(
     id: String,
     expanded: Bool = false,
-    width: Length = px(20),
-    height: Length = px(20),
+    width: CSS.Length = px(20),
+    height: CSS.Length = px(20),
     class: String = ""
   ) {
     self.id = id
@@ -46,13 +46,13 @@ public struct AnimatedRightDownChevronView: HTMLContent {
     return copy
   }
 
-  public func style(@CSSBuilder _ rules: @escaping @Sendable () -> [CSSRule]) -> Self {
+  public func style(@CSSBuilder _ rules: @escaping @Sendable () -> [CSSOM.CSSRule]) -> Self {
     var copy = self
     copy.style.append(rules)
     return copy
   }
 
-  public func build() -> Node {
+  public func build() -> DOM.Node {
     var svgNode = svg {
       polygon()
         .points((2.5, 4.75), (10, 12.25), (17.5, 4.75), (19, 6.25), (10, 15.25), (1, 6.25))
@@ -87,7 +87,7 @@ public struct AnimatedRightDownChevronView: HTMLContent {
   import WebAPIs
 
   public enum AnimatedRightDownChevronFactory {
-    public static func createElement(id: String, expanded: Bool = false) -> Element {
+    public static func createElement(id: String, expanded: Bool = false) -> DOM.Element {
       let wrapper = document.createElement(.span)
       let view = AnimatedRightDownChevronView(id: id, expanded: expanded)
       wrapper.innerHTML = renderHTML { view.render() }

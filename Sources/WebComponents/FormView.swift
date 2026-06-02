@@ -85,7 +85,7 @@
       self.cancelLabel = cancelLabel
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       div {
         // Header
         h1 { title }
@@ -171,7 +171,7 @@
     }
 
     @HTMLBuilder
-    private func renderField(_ field: Field) -> [Node] {
+    private func renderField(_ field: Field) -> [DOM.Node] {
       if field.type == .hidden {
         input()
           .type(.hidden)
@@ -241,7 +241,7 @@
     }
 
     @HTMLBuilder
-    private func fieldInput(_ field: Field) -> [Node] {
+    private func fieldInput(_ field: Field) -> [DOM.Node] {
       switch field.type {
       case .textarea:
         textarea(field.value)
@@ -344,7 +344,7 @@
     }
 
     @CSSBuilder
-    private func inputStyle() -> [CSSRule] {
+    private func inputStyle() -> [CSSOM.CSSRule] {
       width(perc(100))
       padding(spacing12, spacing16)
       fontFamily(typographyFontSans)

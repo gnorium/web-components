@@ -7,13 +7,13 @@
   import WebTypes
 
   public struct HistoryIconView: HTMLContent {
-    let width: Length
-    let height: Length
+    let width: CSS.Length
+    let height: CSS.Length
     let `class`: String
 
     public init(
-      width: Length = px(20),
-      height: Length = px(20),
+      width: CSS.Length = px(20),
+      height: CSS.Length = px(20),
       class: String = ""
     ) {
       self.width = width
@@ -21,7 +21,7 @@
       self.class = `class`
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       svg {
         path()
           .d(M(9, 6), v(5), h(0.06), l(2.48, 2.47), l(1.41, -1.41), L(11, 10.11), V(6), Z())

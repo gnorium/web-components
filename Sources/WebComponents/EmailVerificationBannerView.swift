@@ -15,7 +15,7 @@
       self.`class` = `class`
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       div {
         div {
           // Icon
@@ -107,9 +107,9 @@
   import WebTypes
 
   public class EmailVerificationBannerHydration: @unchecked Sendable {
-    nonisolated(unsafe) private var banner: Element?
-    nonisolated(unsafe) private var resendButton: Element?
-    nonisolated(unsafe) private var dismissButton: Element?
+    nonisolated(unsafe) private var banner: DOM.Element?
+    nonisolated(unsafe) private var resendButton: DOM.Element?
+    nonisolated(unsafe) private var dismissButton: DOM.Element?
 
     public init?() {
       banner = document.querySelector(".email-verification-banner")
@@ -144,7 +144,7 @@
       guard let email = button.getAttribute("data-email") else { return }
 
       // Disable button
-      (button as? HTMLButtonElement)?.disabled = true
+      (button as? HTML.HTMLButtonElement)?.disabled = true
       button.textContent = "Sending..."
 
       // Send request to resend verification email
@@ -183,7 +183,7 @@
         } else {
           AlertAPI.showError("Failed to send verification email. Please try again.")
           if let btn = self.resendButton {
-            (btn as? HTMLButtonElement)?.disabled = false
+            (btn as? HTML.HTMLButtonElement)?.disabled = false
             btn.textContent = "Resend Email"
           }
         }

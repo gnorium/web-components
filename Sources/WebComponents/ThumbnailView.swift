@@ -27,7 +27,7 @@
     }
 
     @CSSBuilder
-    private func thumbnailViewCSS() -> [CSSRule] {
+    private func thumbnailViewCSS() -> [CSSOM.CSSRule] {
       display(.block)
       position(.relative)
       minWidth(size256)
@@ -41,7 +41,7 @@
     }
 
     @CSSBuilder
-    private func thumbnailImageCSS() -> [CSSRule] {
+    private func thumbnailImageCSS() -> [CSSOM.CSSRule] {
       display(.block)
       width(perc(100))
       height(perc(100))
@@ -50,7 +50,7 @@
     }
 
     @CSSBuilder
-    private func thumbnailPlaceholderCSS() -> [CSSRule] {
+    private func thumbnailPlaceholderCSS() -> [CSSOM.CSSRule] {
       position(.absolute)
       insetBlockStart(0)
       insetInlineStart(0)
@@ -63,7 +63,7 @@
     }
 
     @CSSBuilder
-    private func thumbnailPlaceholderIconCSS() -> [CSSRule] {
+    private func thumbnailPlaceholderIconCSS() -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       justifyContent(.center)
@@ -73,7 +73,7 @@
       fontSize(sizeIconMedium)
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       let hasThumbnail = src != nil && !(src?.isEmpty ?? true)
 
       let container = span {

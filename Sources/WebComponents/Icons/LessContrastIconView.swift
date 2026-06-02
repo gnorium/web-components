@@ -7,13 +7,13 @@
   import WebTypes
 
   public struct LessContrastIconView: HTMLContent {
-    let width: Length
-    let height: Length
+    let width: CSS.Length
+    let height: CSS.Length
     let `class`: String
 
     public init(
-      width: Length = px(16),
-      height: Length = px(16),
+      width: CSS.Length = px(16),
+      height: CSS.Length = px(16),
       class: String = ""
     ) {
       self.width = width
@@ -21,7 +21,7 @@
       self.class = `class`
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       svg {
         // Outer circle
         circle()

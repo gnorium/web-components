@@ -7,13 +7,13 @@
   import WebTypes
 
   public struct UserAvatarIconView: HTMLContent {
-    let width: Length
-    let height: Length
+    let width: CSS.Length
+    let height: CSS.Length
     let `class`: String
 
     public init(
-      width: Length = px(20),
-      height: Length = px(20),
+      width: CSS.Length = px(20),
+      height: CSS.Length = px(20),
       class: String = ""
     ) {
       self.width = width
@@ -21,7 +21,7 @@
       self.class = `class`
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       svg {
         path()
           .d(M(10, 11), c(-5.92, 0, -8, 3, -8, 5), v(3), h(16), v(-3), c(0, -2, -2.08, -5, -8, -5))

@@ -13,7 +13,7 @@
       self.class = `class`
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       button {
         SidebarToggleIconView()
       }

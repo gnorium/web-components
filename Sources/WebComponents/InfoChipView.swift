@@ -14,7 +14,7 @@ public struct InfoChipView: HTMLContent {
   let chipColor: InfoChipColor
   let weight: Weight
   let icon: String?
-  let content: [Node]
+  let content: [DOM.Node]
   let `class`: String
 
   /// Apple HIG color for the chip
@@ -41,7 +41,7 @@ public struct InfoChipView: HTMLContent {
     weight: Weight = .subtle,
     icon: String? = nil,
     class: String = "",
-    @HTMLBuilder content: () -> [Node]
+    @HTMLBuilder content: () -> [DOM.Node]
   ) {
     self.chipColor = chipColor
     self.weight = weight
@@ -56,7 +56,7 @@ public struct InfoChipView: HTMLContent {
     weight: Weight = .subtle,
     icon: String? = nil,
     class: String = "",
-    @HTMLBuilder content: () -> [Node]
+    @HTMLBuilder content: () -> [DOM.Node]
   ) {
     self.chipColor = color
     self.weight = weight
@@ -71,7 +71,7 @@ public struct InfoChipView: HTMLContent {
     weight: Weight = .subtle,
     icon: String? = nil,
     class: String = "",
-    @HTMLBuilder content: () -> [Node]
+    @HTMLBuilder content: () -> [DOM.Node]
   ) {
     self.chipColor = status
     self.weight = weight
@@ -81,7 +81,7 @@ public struct InfoChipView: HTMLContent {
   }
 
   @CSSBuilder
-  private func infoChipViewCSS(_ chipColor: InfoChipColor, _ weight: Weight) -> [CSSRule] {
+  private func infoChipViewCSS(_ chipColor: InfoChipColor, _ weight: Weight) -> [CSSOM.CSSRule] {
     display(.inlineFlex)
     alignItems(.center)
     gap(spacing4)
@@ -192,7 +192,7 @@ public struct InfoChipView: HTMLContent {
   }
 
   @CSSBuilder
-  private func infoChipIconCSS() -> [CSSRule] {
+  private func infoChipIconCSS() -> [CSSOM.CSSRule] {
     display(.inlineFlex)
     alignItems(.center)
     justifyContent(.center)
@@ -204,7 +204,7 @@ public struct InfoChipView: HTMLContent {
   }
 
   @CSSBuilder
-  private func infoChipTextCSS() -> [CSSRule] {
+  private func infoChipTextCSS() -> [CSSOM.CSSRule] {
     flex(1)
     minWidth(0)
     textOverflow(.ellipsis)
@@ -212,7 +212,7 @@ public struct InfoChipView: HTMLContent {
     whiteSpace(.nowrap)
   }
 
-  public func build() -> Node {
+  public func build() -> DOM.Node {
     let defaultIcon: String = {
       switch chipColor {
       case .gray: return "ℹ"

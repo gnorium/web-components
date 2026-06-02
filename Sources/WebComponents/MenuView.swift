@@ -21,8 +21,8 @@
     let hideDescriptionOverflow: Bool
     let searchQuery: String
     let multiselect: Bool
-    let pendingContent: [Node]
-    let noResultsContent: [Node]
+    let pendingContent: [DOM.Node]
+    let noResultsContent: [DOM.Node]
     let showNoResultsSlot: Bool?
     let `class`: String
 
@@ -64,8 +64,8 @@
       multiselect: Bool = false,
       showNoResultsSlot: Bool? = nil,
       class: String = "",
-      @HTMLBuilder pending: () -> [Node] = { [] },
-      @HTMLBuilder noResults: () -> [Node] = { [] }
+      @HTMLBuilder pending: () -> [DOM.Node] = { [] },
+      @HTMLBuilder noResults: () -> [DOM.Node] = { [] }
     ) {
       self.menuItems = menuItems
       self.menuGroups = menuGroups
@@ -86,7 +86,7 @@
     }
 
     @CSSBuilder
-    private func menuViewCSS(_ expanded: Bool, _ hasVisibleLimit: Bool) -> [CSSRule] {
+    private func menuViewCSS(_ expanded: Bool, _ hasVisibleLimit: Bool) -> [CSSOM.CSSRule] {
       position(.absolute)
       top(perc(100))
       insetInlineStart(0)
@@ -111,7 +111,7 @@
     }
 
     @CSSBuilder
-    private func menuListCSS(_ hasVisibleLimit: Bool, _ visibleItemLimit: Int?) -> [CSSRule] {
+    private func menuListCSS(_ hasVisibleLimit: Bool, _ visibleItemLimit: Int?) -> [CSSOM.CSSRule] {
       listStyle(.none)
       margin(0)
       padding(0)
@@ -123,14 +123,14 @@
     }
 
     @CSSBuilder
-    private func menuGroupCSS() -> [CSSRule] {
+    private func menuGroupCSS() -> [CSSOM.CSSRule] {
       listStyle(.none)
       margin(0)
       padding(0)
     }
 
     @CSSBuilder
-    private func menuGroupHeaderCSS(_ hideTitle: Bool) -> [CSSRule] {
+    private func menuGroupHeaderCSS(_ hideTitle: Bool) -> [CSSOM.CSSRule] {
       if !hideTitle {
         display(.flex)
         alignItems(.center)
@@ -140,7 +140,7 @@
     }
 
     @CSSBuilder
-    private func menuGroupTitleCSS(_ hideTitle: Bool) -> [CSSRule] {
+    private func menuGroupTitleCSS(_ hideTitle: Bool) -> [CSSOM.CSSRule] {
       fontFamily(typographyFontSans)
       fontSize(fontSizeSmall14)
       fontWeight(fontWeightBold)
@@ -162,7 +162,7 @@
     }
 
     @CSSBuilder
-    private func menuGroupDescriptionCSS() -> [CSSRule] {
+    private func menuGroupDescriptionCSS() -> [CSSOM.CSSRule] {
       fontFamily(typographyFontSans)
       fontSize(fontSizeXSmall12)
       lineHeight(lineHeightSmall22)
@@ -171,7 +171,7 @@
     }
 
     @CSSBuilder
-    private func menuGroupDividerCSS() -> [CSSRule] {
+    private func menuGroupDividerCSS() -> [CSSOM.CSSRule] {
       height(borderWidthBase)
       backgroundColor(borderColorSubtle)
       margin(spacing8, spacing0)
@@ -179,12 +179,12 @@
     }
 
     @CSSBuilder
-    private func menuPendingCSS() -> [CSSRule] {
+    private func menuPendingCSS() -> [CSSOM.CSSRule] {
       padding(spacing12)
     }
 
     @CSSBuilder
-    private func menuNoResultsCSS() -> [CSSRule] {
+    private func menuNoResultsCSS() -> [CSSOM.CSSRule] {
       padding(spacing12)
       fontFamily(typographyFontSans)
       fontSize(fontSizeMedium16)
@@ -193,7 +193,7 @@
       textAlign(.center)
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       let hasVisibleLimit = visibleItemLimit != nil && visibleItemLimit! > 0
       let allItems = menuItems + menuGroups.flatMap { $0.items }
       let hasItems = !allItems.isEmpty
@@ -358,12 +358,12 @@
   import WebTypes
 
   private class MenuInstance: @unchecked Sendable {
-    private var menu: Element
-    private var menuItems: [Element] = []
+    private var menu: DOM.Element
+    private var menuItems: [DOM.Element] = []
     private var highlightedIndex: Int = -1
     private var multiselect: Bool = false
 
-    init(menu: Element) {
+    init(menu: DOM.Element) {
       self.menu = menu
 
       // Get multiselect state
@@ -501,10 +501,10 @@
 
       // Scroll into view if needed
       item.scrollIntoView(
-        .init(block: DOMScrollIntoViewOptions.nearest, inline: DOMScrollIntoViewOptions.nearest))
+        .init(block: CSSOM.ScrollIntoViewOptions.nearest, inline: CSSOM.ScrollIntoViewOptions.nearest))
     }
 
-    public func getHighlightedMenuItem() -> Element? {
+    public func getHighlightedMenuItem() -> DOM.Element? {
       guard highlightedIndex >= 0 && highlightedIndex < menuItems.count else { return nil }
       return menuItems[highlightedIndex]
     }

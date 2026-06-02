@@ -8,16 +8,16 @@
 
   public struct ThreadsIconView: HTMLContent {
     let `class`: String
-    let width: Length
-    let height: Length
-    let fill: SVGPaint
+    let width: CSS.Length
+    let height: CSS.Length
+    let fill: CSS.Color
     let monochrome: Bool
 
     public init(
       class: String = "",
-      width: Length = px(20),
-      height: Length = px(20),
-      fill: SVGPaint = SVGPaint(colorBase),
+      width: CSS.Length = px(20),
+      height: CSS.Length = px(20),
+      fill: CSS.Color = colorBase,
       monochrome: Bool = false
     ) {
       self.class = `class`
@@ -27,7 +27,7 @@
       self.monochrome = monochrome
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       svg {
         // Background rounded square
         path()
@@ -36,7 +36,7 @@
             C(0, 69.58, 69.58, 0, 155.4, 0), h(649.2), C(890.42, 0, 960, 69.58, 960, 155.4),
             v(649.2), c(0, 85.82, -69.58, 155.4, -155.4, 155.4), z()
           )
-          .fill(monochrome ? fill : SVGPaint(.black))
+          .fill(monochrome ? fill : .black)
 
         // Threads icon
         path()
@@ -62,7 +62,7 @@
             c(45.06, 0, 91.35, -12.52, 98.63, -107.31),
             c(-22.85, -5.14, -39.88, -7.13, -67.49, -7.13), z()
           )
-          .fill(monochrome ? SVGPaint(colorInverted) : SVGPaint(.white))
+          .fill(monochrome ? colorInverted : .white)
       }
       .class(`class`.isEmpty ? "threads-icon-view" : "threads-icon-view \(`class`)")
       .width(width)

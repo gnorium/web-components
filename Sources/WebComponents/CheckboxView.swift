@@ -18,12 +18,12 @@ public struct CheckboxView: HTMLContent {
   let inline: Bool
   let hideLabel: Bool
   let status: ValidationStatus
-  let labelContent: [Node]
-  let descriptionContent: [Node]
-  let customInputContent: [Node]
+  let labelContent: [DOM.Node]
+  let descriptionContent: [DOM.Node]
+  let customInputContent: [DOM.Node]
   let `class`: String
-  let labelFontWeight: CSSFontWeight
-  let labelFontSize: Length
+  let labelFontWeight: CSS.FontWeight
+  let labelFontSize: CSS.Length
 
   public enum ValidationStatus: String, Sendable {
     case `default`
@@ -41,11 +41,11 @@ public struct CheckboxView: HTMLContent {
     hideLabel: Bool = false,
     status: ValidationStatus = .default,
     class: String = "",
-    labelFontWeight: CSSFontWeight = fontWeightNormal,
-    labelFontSize: Length = fontSizeSmall14,
-    @HTMLBuilder label: () -> [Node],
-    @HTMLBuilder description: () -> [Node] = { [] },
-    @HTMLBuilder customInput: () -> [Node] = { [] }
+    labelFontWeight: CSS.FontWeight = fontWeightNormal,
+    labelFontSize: CSS.Length = fontSizeSmall14,
+    @HTMLBuilder label: () -> [DOM.Node],
+    @HTMLBuilder description: () -> [DOM.Node] = { [] },
+    @HTMLBuilder customInput: () -> [DOM.Node] = { [] }
   ) {
     self.id = id
     self.name = name
@@ -75,11 +75,11 @@ public struct CheckboxView: HTMLContent {
     hideLabel: Bool = false,
     status: ValidationStatus = .default,
     class: String = "",
-    labelFontWeight: CSSFontWeight = fontWeightNormal,
-    labelFontSize: Length = fontSizeSmall14,
-    @HTMLBuilder label: () -> [Node],
-    @HTMLBuilder description: () -> [Node] = { [] },
-    @HTMLBuilder customInput: () -> [Node] = { [] }
+    labelFontWeight: CSS.FontWeight = fontWeightNormal,
+    labelFontSize: CSS.Length = fontSizeSmall14,
+    @HTMLBuilder label: () -> [DOM.Node],
+    @HTMLBuilder description: () -> [DOM.Node] = { [] },
+    @HTMLBuilder customInput: () -> [DOM.Node] = { [] }
   ) {
     self.init(
       id: id,
@@ -101,7 +101,7 @@ public struct CheckboxView: HTMLContent {
   }
 
   @CSSBuilder
-  private func checkboxViewCSS(_ inline: Bool, _ hideLabel: Bool, _ hasCustomInput: Bool) -> [CSSRule] {
+  private func checkboxViewCSS(_ inline: Bool, _ hideLabel: Bool, _ hasCustomInput: Bool) -> [CSSOM.CSSRule] {
     if inline {
       display(.inlineFlex)
     } else {
@@ -137,14 +137,14 @@ public struct CheckboxView: HTMLContent {
   }
 
   @CSSBuilder
-  private func checkboxIconWrapperCSS() -> [CSSRule] {
+  private func checkboxIconWrapperCSS() -> [CSSOM.CSSRule] {
     display(.inlineFlex)
     position(.relative)
     verticalAlign(.middle)
   }
 
   @CSSBuilder
-  private func checkboxInputCSS(_ disabled: Bool) -> [CSSRule] {
+  private func checkboxInputCSS(_ disabled: Bool) -> [CSSOM.CSSRule] {
     position(.absolute)
     top(0)
     left(0)
@@ -210,7 +210,7 @@ public struct CheckboxView: HTMLContent {
 
     pseudoClass(.enabled, .hover) {
       nextSibling(".checkbox-icon") {
-        borderColor(borderColorInputBinaryHover).important()
+        borderColor(borderColorInputBinary).important()
       }
     }
 
@@ -224,7 +224,7 @@ public struct CheckboxView: HTMLContent {
     pseudoClass(.enabled, .active) {
       nextSibling(".checkbox-icon") {
         backgroundColor(backgroundColorInputBinaryChecked).important()
-        borderColor(borderColorInputBinaryActive).important()
+        borderColor(borderColorInputBinary).important()
       }
     }
 
@@ -239,7 +239,7 @@ public struct CheckboxView: HTMLContent {
   @CSSBuilder
   private func checkboxIconCSS(
     _ status: ValidationStatus, _ disabled: Bool, _ checked: Bool, _ indeterminate: Bool
-  ) -> [CSSRule] {
+  ) -> [CSSOM.CSSRule] {
     display(.inlineBlock)
     position(.relative)
     pointerEvents(.none)
@@ -267,9 +267,8 @@ public struct CheckboxView: HTMLContent {
       top(perc(50))
       left(perc(50))
       pointerEvents(.none)
-      transition(.all, s(0.2), .easeInOut)
       opacity(0)  // Shown via .checkbox-input:checked + .checkbox-icon::before
-      transform(translate(perc(-50), (indeterminate ? perc(-50) : perc(-60))), scale(0.5))
+      transform(translate(perc(-50), (indeterminate ? perc(-50) : perc(-60))), scale(1))
 
       if indeterminate {
         width(px(10))
@@ -281,7 +280,7 @@ public struct CheckboxView: HTMLContent {
         borderRight(px(2), .solid, colorInvertedFixed)
         borderBottom(px(2), .solid, colorInvertedFixed)
         // Standard checkmark: rotate L-shape 45 degrees clockwise
-        transform(translate(perc(-50), perc(-60)), rotate(deg(45)), scale(0.5))
+        transform(translate(perc(-50), perc(-60)), rotate(deg(45)), scale(1))
       }
     }
 
@@ -289,18 +288,18 @@ public struct CheckboxView: HTMLContent {
   }
 
   @CSSBuilder
-  private func checkboxLabelWrapperCSS(_ hideLabel: Bool, _ hasCustomInput: Bool) -> [CSSRule] {
+  private func checkboxLabelWrapperCSS(_ hideLabel: Bool, _ hasCustomInput: Bool) -> [CSSOM.CSSRule] {
     if !hideLabel || hasCustomInput {
       flex(1)
     }
   }
 
   @CSSBuilder
-  private func checkboxCustomInputCSS() -> [CSSRule] {
+  private func checkboxCustomInputCSS() -> [CSSOM.CSSRule] {
     display(.block)
   }
 
-  public func build() -> Node {
+  public func build() -> DOM.Node {
     let hasDescription = !descriptionContent.isEmpty
     let hasCustomInput = !customInputContent.isEmpty
     let descriptionID = hasDescription ? "\(id)-description" : nil
@@ -386,10 +385,10 @@ public struct CheckboxView: HTMLContent {
       hideLabel: Bool = false,
       status: CheckboxView.ValidationStatus = .default,
       class: String = "",
-      labelFontWeight: CSSFontWeight = fontWeightNormal,
-      labelFontSize: Length = fontSizeSmall14,
+      labelFontWeight: CSS.FontWeight = fontWeightNormal,
+      labelFontSize: CSS.Length = fontSizeSmall14,
       title: String = ""
-    ) -> Element {
+    ) -> DOM.Element {
       let wrapper = document.createElement(.div)
       let view = CheckboxView(
         id: id,

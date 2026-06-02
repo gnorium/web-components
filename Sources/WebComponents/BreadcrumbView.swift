@@ -16,10 +16,10 @@
 
     public struct BreadcrumbItem: Sendable {
       public let text: String?
-      public let label: Node?
+      public let label: DOM.Node?
       public let url: String?
 
-      public init(text: String? = nil, label: Node? = nil, url: String? = nil) {
+      public init(text: String? = nil, label: DOM.Node? = nil, url: String? = nil) {
         self.text = text
         self.label = label
         self.url = url
@@ -38,7 +38,7 @@
       self.`class` = `class`
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       let visibleItems: [BreadcrumbItem]
       let overflowItems: [BreadcrumbItem]
 
@@ -64,7 +64,7 @@
               if index == 0 && !overflowItems.isEmpty {
                 // First item
                 if let url = item.url {
-                  a { item.label ?? Text(truncateText(item.text ?? "")) }
+                  a { item.label ?? DOM.Text(truncateText(item.text ?? "")) }
                     .href(url)
                     .title(item.text ?? "")
                     .class("breadcrumb-link")
@@ -72,7 +72,7 @@
                       breadcrumbLinkCSS()
                     }
                 } else {
-                  span { item.label ?? Text(truncateText(item.text ?? "")) }
+                  span { item.label ?? DOM.Text(truncateText(item.text ?? "")) }
                     .title(item.text ?? "")
                     .class("breadcrumb-current")
                     .style {
@@ -110,7 +110,7 @@
                 let isLast = index == visibleItems.count - 1
 
                 if isLast {
-                  span { item.label ?? Text(truncateText(item.text ?? "")) }
+                  span { item.label ?? DOM.Text(truncateText(item.text ?? "")) }
                     .title(item.text ?? "")
                     .class("breadcrumb-current")
                     .ariaCurrent(.page)
@@ -119,7 +119,7 @@
                     }
                 } else {
                   if let url = item.url {
-                    a { item.label ?? Text(truncateText(item.text ?? "")) }
+                    a { item.label ?? DOM.Text(truncateText(item.text ?? "")) }
                       .href(url)
                       .title(item.text ?? "")
                       .class("breadcrumb-link")
@@ -127,7 +127,7 @@
                         breadcrumbLinkCSS()
                       }
                   } else {
-                    span { item.label ?? Text(truncateText(item.text ?? "")) }
+                    span { item.label ?? DOM.Text(truncateText(item.text ?? "")) }
                       .title(item.text ?? "")
                       .class("breadcrumb-current")
                       .style {
@@ -172,7 +172,7 @@
     }
 
     @CSSBuilder
-    private func breadcrumbViewCSS() -> [CSSRule] {
+    private func breadcrumbViewCSS() -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       flexWrap(.wrap)
@@ -184,14 +184,14 @@
     }
 
     @CSSBuilder
-    private func breadcrumbItemCSS() -> [CSSRule] {
+    private func breadcrumbItemCSS() -> [CSSOM.CSSRule] {
       display(.flex)
       alignItems(.center)
       gap(spacing4)
     }
 
     @CSSBuilder
-    private func breadcrumbLinkCSS() -> [CSSRule] {
+    private func breadcrumbLinkCSS() -> [CSSOM.CSSRule] {
       color(colorBlue)
       textDecoration(.none)
       maxWidth(px(350))
@@ -212,7 +212,7 @@
     }
 
     @CSSBuilder
-    private func breadcrumbCurrentCSS() -> [CSSRule] {
+    private func breadcrumbCurrentCSS() -> [CSSOM.CSSRule] {
       color(colorBase)
       fontWeight(fontWeightNormal)
       maxWidth(px(350))
@@ -223,7 +223,7 @@
     }
 
     @CSSBuilder
-    private func breadcrumbSeparatorCSS() -> [CSSRule] {
+    private func breadcrumbSeparatorCSS() -> [CSSOM.CSSRule] {
       color(colorSubtle)
       userSelect(.none)
       display(.inlineFlex)
@@ -233,7 +233,7 @@
     }
 
     @CSSBuilder
-    private func breadcrumbOverflowCSS() -> [CSSRule] {
+    private func breadcrumbOverflowCSS() -> [CSSOM.CSSRule] {
       display(.inlineFlex)
       alignItems(.center)
       gap(spacing4)

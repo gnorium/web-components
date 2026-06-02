@@ -7,18 +7,18 @@
   import WebTypes
 
   public struct SearchIconView: HTMLContent {
-    let width: Length
-    let height: Length
+    let width: CSS.Length
+    let height: CSS.Length
 
     public init(
-      width: Length = px(20),
-      height: Length = px(20)
+      width: CSS.Length = px(20),
+      height: CSS.Length = px(20)
     ) {
       self.width = width
       self.height = height
     }
 
-    public func build() -> Node {
+    public func build() -> DOM.Node {
       svg {
         path()
           .d(M(11, 3), a(8, 8, 0, true, false, 0, 16), a(8, 8, 0, false, false, 0, -16), Z())

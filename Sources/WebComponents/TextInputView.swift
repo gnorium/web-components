@@ -1,295 +1,329 @@
-#if SERVER
-  import CSSBuilder
-  import CSSOMBuilder
-  import DesignTokens
-  import DOMBuilder
-  import Foundation
-  import HTMLBuilder
-  import WebTypes
+import CSSBuilder
+import CSSOMBuilder
+import DesignTokens
+import DOMBuilder
+import EmbeddedSwiftUtilities
+import HTMLBuilder
+import WebTypes
 
-  /// A form element that lets users input and edit a single-line text value.
-  public struct TextInputView: HTMLContent {
-    let id: String
-    let name: String
-    let placeholder: String
-    let value: String
-    let type: InputType
-    let status: ValidationStatus
-    let disabled: Bool
-    let readonly: Bool
-    let required: Bool
-    let clearable: Bool
-    let startIcon: String?
-    let endIcon: String?
-    let inputFontSize: Length
-    let `class`: String
-    let min: Int?
-    let max: Int?
+/// A form element that lets users input and edit a single-line text value.
+public struct TextInputView: HTMLContent {
+  let id: String
+  let name: String
+  let placeholder: String
+  let value: String
+  let type: InputType
+  let status: ValidationStatus
+  let disabled: Bool
+  let readonly: Bool
+  let required: Bool
+  let clearable: Bool
+  let startIcon: String?
+  let endIcon: String?
+  let inputFontSize: CSS.Length
+  let labelText: String
+  let tooltip: String?
+  let `class`: String
+  let min: Int?
+  let max: Int?
 
-    public enum InputType: String, Sendable {
-      case text
-      case search
-      case number
-      case email
-      case password
-      case tel
-      case url
-      case week
-      case month
-      case date
-      case datetimeLocal = "datetime-local"
-      case time
+  public enum InputType: String, Sendable {
+    case text
+    case search
+    case number
+    case email
+    case password
+    case tel
+    case url
+    case week
+    case month
+    case date
+    case datetimeLocal = "datetime-local"
+    case time
+  }
+
+  public enum ValidationStatus: String, Sendable {
+    case `default`
+    case error
+  }
+
+  public init(
+    id: String,
+    name: String,
+    placeholder: String = "",
+    value: String = "",
+    type: InputType = .text,
+    status: ValidationStatus = .default,
+    disabled: Bool = false,
+    readonly: Bool = false,
+    required: Bool = false,
+    clearable: Bool = false,
+    startIcon: String? = nil,
+    endIcon: String? = nil,
+    inputFontSize: CSS.Length = fontSizeMedium16,
+    label: String = "",
+    tooltip: String? = nil,
+    class: String = "",
+    min: Int? = nil,
+    max: Int? = nil
+  ) {
+    self.id = id
+    self.name = name
+    self.placeholder = placeholder
+    self.value = value
+    self.type = type
+    self.status = status
+    self.disabled = disabled
+    self.readonly = readonly
+    self.required = required
+    self.clearable = clearable
+    self.startIcon = startIcon
+    self.endIcon = endIcon
+    self.inputFontSize = inputFontSize
+    self.labelText = label
+    self.tooltip = tooltip
+    self.`class` = `class`
+    self.min = min
+    self.max = max
+  }
+
+  @CSSBuilder
+  private func textInputViewCSS() -> [CSSOM.CSSRule] {
+    position(.relative)
+    display(.inlineBlock)
+    width(perc(100))
+  }
+
+  @CSSBuilder
+  private func textInputInputCSS(
+    _ disabled: Bool, _ readonly: Bool, _ status: ValidationStatus, _ hasStartIcon: Bool,
+    _ hasEndIcon: Bool, _ clearable: Bool
+  ) -> [CSSOM.CSSRule] {
+    let isError: Bool = switch status { case .error: true; case .default: false }
+    width(perc(100))
+    minHeight(minSizeInteractivePointer)
+    padding(spacing8, spacing12)
+    fontFamily(typographyFontSans)
+    fontSize(inputFontSize)
+    color(disabled ? colorDisabled : colorBase)
+    backgroundColor(
+      disabled
+        ? backgroundColorDisabled
+        : (readonly ? backgroundColorNeutralSubtle : backgroundColorBase))
+    border(
+      borderWidthBase, .solid,
+      isError ? borderColorRed : (disabled ? borderColorDisabled : borderColorBase))
+    borderRadius(borderRadiusBase)
+    transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+    outline(.none)
+    cursor(disabled ? cursorBaseDisabled : cursorText)
+    boxSizing(.borderBox)
+
+    if hasStartIcon {
+      paddingInlineStart(calc(spacing12 + sizeIconMedium + spacing8)).important()
     }
 
-    public enum ValidationStatus: String, Sendable {
-      case `default`
-      case error
+    if hasEndIcon || clearable {
+      paddingInlineEnd(calc(spacing12 + sizeIconMedium + spacing8)).important()
     }
 
-    public init(
-      id: String,
-      name: String,
-      placeholder: String = "",
-      value: String = "",
-      type: InputType = .text,
-      status: ValidationStatus = .default,
-      disabled: Bool = false,
-      readonly: Bool = false,
-      required: Bool = false,
-      clearable: Bool = false,
-      startIcon: String? = nil,
-      endIcon: String? = nil,
-      inputFontSize: Length = fontSizeSmall14,
-      class: String = "",
-      min: Int? = nil,
-      max: Int? = nil
-    ) {
-      self.id = id
-      self.name = name
-      self.placeholder = placeholder
-      self.value = value
-      self.type = type
-      self.status = status
-      self.disabled = disabled
-      self.readonly = readonly
-      self.required = required
-      self.clearable = clearable
-      self.startIcon = startIcon
-      self.endIcon = endIcon
-      self.inputFontSize = inputFontSize
-      self.`class` = `class`
-      self.min = min
-      self.max = max
+    pseudoElement(.placeholder) {
+      color(colorPlaceholder).important()
     }
 
-    @CSSBuilder
-    private func textInputViewCSS() -> [CSSRule] {
-      position(.relative)
-      display(.inlineBlock)
-      width(perc(100))
+    pseudoClass(.focus, not(.disabled), not(.readOnly)) {
+      borderColor(borderColorBlueFocus).important()
+      boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
     }
 
-    @CSSBuilder
-    private func textInputInputCSS(
-      _ disabled: Bool, _ readonly: Bool, _ status: ValidationStatus, _ hasStartIcon: Bool,
-      _ hasEndIcon: Bool, _ clearable: Bool
-    ) -> [CSSRule] {
-      width(perc(100))
-      minHeight(minSizeInteractivePointer)
-      padding(spacing8, spacing12)
-      fontFamily(typographyFontSans)
-      fontSize(inputFontSize)
-      lineHeight(lineHeightSmall22)
-      color(disabled ? colorDisabled : colorBase)
-      backgroundColor(
-        disabled
-          ? backgroundColorDisabled
-          : (readonly ? backgroundColorNeutralSubtle : backgroundColorBase))
-      border(
-        borderWidthBase, .solid,
-        status == .error ? borderColorRed : (disabled ? borderColorDisabled : borderColorBase))
-      borderRadius(borderRadiusBase)
-      transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-      outline(.none)
-      cursor(disabled ? cursorBaseDisabled : cursorBase)
-      boxSizing(.borderBox)
-
-      if hasStartIcon {
-        paddingInlineStart(calc(spacing12 + sizeIconMedium + spacing8)).important()
-      }
-
-      if hasEndIcon || clearable {
-        paddingInlineEnd(calc(spacing12 + sizeIconMedium + spacing8)).important()
-      }
-
-      pseudoElement(.placeholder) {
-        color(colorPlaceholder).important()
-      }
-
-      pseudoClass(.focus, not(.disabled), not(.readOnly)) {
-        borderColor(borderColorBlueFocus).important()
-        boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
-      }
-
-      pseudoClass(.hover, not(.disabled), not(.readOnly)) {
-        borderColor(borderColorInputHover).important()
-      }
-    }
-
-    @CSSBuilder
-    private func textInputIconCSS(_ isStartIcon: Bool) -> [CSSRule] {
-      position(.absolute)
-      top(perc(50))
-      transform(translateY(perc(-50)))
-      display(.inlineFlex)
-      alignItems(.center)
-      justifyContent(.center)
-      width(sizeIconMedium)
-      height(sizeIconMedium)
-      color(colorSubtle)
-      pointerEvents(.none)
-
-      if isStartIcon {
-        left(spacing12)
-      } else {
-        right(spacing12)
-      }
-    }
-
-    @CSSBuilder
-    private func textInputClearButtonCSS(_ disabled: Bool) -> [CSSRule] {
-      position(.absolute)
-      top(perc(50))
-      right(spacing12)
-      transform(translateY(perc(-50)))
-      display(.none)
-      alignItems(.center)
-      justifyContent(.center)
-      width(sizeIconMedium)
-      height(sizeIconMedium)
-      padding(0)
-      backgroundColor(.transparent)
-      border(.none)
-      borderRadius(borderRadiusCircle)
-      color(colorSubtle)
-      cursor(disabled ? cursorBaseDisabled : cursorBase)
-      transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-
-      pseudoClass(.hover, not(.disabled)) {
-        backgroundColor(backgroundColorInteractiveSubtleHover).important()
-        color(colorBase).important()
-      }
-
-      pseudoClass(.active, not(.disabled)) {
-        backgroundColor(backgroundColorInteractiveSubtleActive).important()
-      }
-
-      pseudoClass(.focus) {
-        outline(px(2), .solid, borderColorBlueFocus).important()
-        outlineOffset(px(-2)).important()
-      }
-
-      if disabled {
-        opacity(opacityMedium).important()
-      }
-    }
-
-    public func build() -> Node {
-      let hasStartIcon = startIcon != nil
-      let hasEndIcon = endIcon != nil
-      let htmlInputType = getHTMLInputType(type)
-
-      // Build input element before the div block
-      var inputEl = input()
-        .type(htmlInputType)
-        .id(id)
-        .name(name)
-        .placeholder(placeholder)
-        .value(value)
-        .disabled(disabled)
-        .readonly(readonly)
-        .required(required)
-        .class("text-input-input")
-
-      if let minValue = min {
-        inputEl = inputEl.min(minValue)
-      }
-      if let maxValue = max {
-        inputEl = inputEl.max(maxValue)
-      }
-
-      let styledInput = inputEl.style {
-        textInputInputCSS(disabled, readonly, status, hasStartIcon, hasEndIcon, clearable)
-      }
-
-      var container = div {
-        if let icon = startIcon {
-          span { icon }
-            .class("text-input-start-icon")
-            .ariaHidden(true)
-            .style {
-              textInputIconCSS(true)
-            }
-        }
-
-        styledInput
-
-        if clearable {
-          button {
-            span { "×" }
-              .ariaHidden(true)
-          }
-          .type(.button)
-          .class("text-input-clear-button")
-          .ariaLabel("Clear")
-          .tabindex(-1)
-          .style {
-            textInputClearButtonCSS(disabled)
-          }
-        }
-
-        if let icon = endIcon {
-          span { icon }
-            .class("text-input-end-icon")
-            .ariaHidden(true)
-            .style {
-              textInputIconCSS(false)
-            }
-        }
-      }
-      .class(`class`.isEmpty ? "text-input-view" : "text-input-view \(`class`)")
-
-      if status == .error {
-        container = container.data("status", "error")
-      }
-
-      if clearable {
-        container = container.data("clearable", "true")
-      }
-
-      return container.style {
-        textInputViewCSS()
-      }
-    }
-
-    private func getHTMLInputType(_ type: InputType) -> HTMLInput.`Type` {
-      switch type {
-      case .text: return .text
-      case .search: return .search
-      case .number: return .number
-      case .email: return .email
-      case .password: return .password
-      case .tel: return .tel
-      case .url: return .url
-      case .week: return .week
-      case .month: return .month
-      case .date: return .date
-      case .datetimeLocal: return .datetimeLocal
-      case .time: return .time
-      }
+    pseudoClass(.hover, .focus, not(.disabled), not(.readOnly)) {
+      borderColor(borderColorBlue).important()
     }
   }
-#endif
+
+  @CSSBuilder
+  private func textInputIconCSS(_ isStartIcon: Bool) -> [CSSOM.CSSRule] {
+    position(.absolute)
+    top(perc(50))
+    transform(translateY(perc(-50)))
+    display(.inlineFlex)
+    alignItems(.center)
+    justifyContent(.center)
+    width(sizeIconMedium)
+    height(sizeIconMedium)
+    color(colorSubtle)
+    pointerEvents(.none)
+
+    if isStartIcon {
+      left(spacing12)
+    } else {
+      right(spacing12)
+    }
+  }
+
+  @CSSBuilder
+  private func textInputClearButtonCSS(_ disabled: Bool) -> [CSSOM.CSSRule] {
+    position(.absolute)
+    top(perc(50))
+    right(spacing12)
+    transform(translateY(perc(-50)))
+    display(.none)
+    alignItems(.center)
+    justifyContent(.center)
+    width(sizeIconMedium)
+    height(sizeIconMedium)
+    padding(0)
+    backgroundColor(.transparent)
+    border(.none)
+    borderRadius(borderRadiusCircle)
+    color(colorSubtle)
+    cursor(disabled ? cursorBaseDisabled : cursorBase)
+    transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+
+    pseudoClass(.hover, not(.disabled)) {
+      backgroundColor(backgroundColorInteractiveSubtleHover).important()
+      color(colorBase).important()
+    }
+
+    pseudoClass(.active, not(.disabled)) {
+      backgroundColor(backgroundColorInteractiveSubtleActive).important()
+    }
+
+    pseudoClass(.focus) {
+      outline(px(2), .solid, borderColorBlueFocus).important()
+      outlineOffset(px(-2)).important()
+    }
+
+    if disabled {
+      opacity(opacityMedium).important()
+    }
+  }
+
+  public func build() -> DOM.Node {
+    let hasStartIcon = startIcon != nil
+    let hasEndIcon = endIcon != nil
+    let htmlInputType = getHTMLInputType(type)
+
+    // Build input element before the div block
+    var inputEl = input()
+      .type(htmlInputType)
+      .id(id)
+      .name(name)
+      .placeholder(placeholder)
+      .value(value)
+      .disabled(disabled)
+      .readonly(readonly)
+      .required(required)
+      .class("text-input-input")
+
+    if let minValue = min {
+      inputEl = inputEl.min(minValue)
+    }
+    if let maxValue = max {
+      inputEl = inputEl.max(maxValue)
+    }
+
+    let styledInput = inputEl.style {
+      textInputInputCSS(disabled, readonly, status, hasStartIcon, hasEndIcon, clearable)
+    }
+
+    var container = div {
+      if let icon = startIcon {
+        span { icon }
+          .class("text-input-start-icon")
+          .ariaHidden(true)
+          .style {
+            textInputIconCSS(true)
+          }
+      }
+
+      styledInput
+
+      if clearable {
+        button {
+          span { "×" }
+            .ariaHidden(true)
+        }
+        .type(.button)
+        .class("text-input-clear-button")
+        .ariaLabel("Clear")
+        .tabindex(-1)
+        .style {
+          textInputClearButtonCSS(disabled)
+        }
+      }
+
+      if let icon = endIcon {
+        span { icon }
+          .class("text-input-end-icon")
+          .ariaHidden(true)
+          .style {
+            textInputIconCSS(false)
+          }
+      }
+    }
+    .class(stringIsEmpty(`class`) ? "text-input-view" : "text-input-view \(`class`)")
+
+    if case .error = status {
+      container = container.data("status", "error")
+    }
+
+    if clearable {
+      container = container.data("clearable", "true")
+    }
+
+    let wrapper = container.style {
+      textInputViewCSS()
+    }
+
+    if stringIsEmpty(labelText) {
+      return wrapper
+    }
+
+    return div {
+      label {
+        span { labelText }
+        .class("text-input-label")
+        if let tooltip = tooltip {
+          TooltipView(tooltip: tooltip, placement: .bottom) {
+            IconView {
+              InfoIconView()
+            }
+          }
+        }
+      }
+      .style {
+        display(.flex)
+        alignItems(.center)
+        gap(spacing4)
+        fontSize(fontSizeSmall14)
+        fontWeight(600)
+        color(colorBase)
+        marginBlockEnd(spacing4)
+        fontFamily(typographyFontSans)
+      }
+
+      wrapper
+    }
+  }
+
+  private func getHTMLInputType(_ type: InputType) -> HTML.Input.`Type` {
+    switch type {
+    case .text: return .text
+    case .search: return .search
+    case .number: return .number
+    case .email: return .email
+    case .password: return .password
+    case .tel: return .tel
+    case .url: return .url
+    case .week: return .week
+    case .month: return .month
+    case .date: return .date
+    case .datetimeLocal: return .datetimeLocal
+    case .time: return .time
+    }
+  }
+}
 
 #if CLIENT
   import DesignTokens
@@ -300,12 +334,12 @@
   import WebTypes
 
   private class TextInputInstance: @unchecked Sendable {
-    private var textInput: Element
-    private var input: Element?
-    private var clearButton: Element?
+    private var textInput: DOM.Element
+    private var input: DOM.Element?
+    private var clearButton: DOM.Element?
     private var isClearable: Bool = false
 
-    init(textInput: Element) {
+    init(textInput: DOM.Element) {
       self.textInput = textInput
 
       input = textInput.querySelector(".text-input-input")
@@ -334,7 +368,7 @@
       // Clear input when clear button is clicked
       _ = clearButton.addEventListener(.click) { [self] _ in
         guard let input = self.input else { return }
-        (input as? HTMLInputElement)?.value = ""
+        (input as? HTML.HTMLInputElement)?.value = ""
         self.updateClearButtonVisibility()
         input.focus()
 
@@ -355,7 +389,7 @@
     private func updateClearButtonVisibility() {
       guard let input = input, let clearButton = clearButton else { return }
 
-      if !stringEquals((input as? HTMLInputElement)?.value ?? "", "") {
+      if !stringEquals((input as? HTML.HTMLInputElement)?.value ?? "", "") {
         clearButton.style.display(.flex)
       } else {
         clearButton.style.display(.none)
