@@ -95,36 +95,6 @@ public struct AccordionView: HTMLContent {
     self.contentSlot = content()
   }
 
-  /// Convenience init for existing usage
-  public init(
-    id: String,
-    open: Bool = false,
-    separation: Separation = .divider,
-    headingLevel: HeadingLevel = .h3,
-    headerDirection: HeaderDirection = .column,
-    titleFontSize: CSS.Length = fontSizeMedium16,
-    titleFontWeight: CSS.FontWeight = fontWeightSemiBold,
-    class: String = "",
-    @HTMLBuilder title: () -> [DOM.Node],
-    @HTMLBuilder description: () -> [DOM.Node] = { [] },
-    @HTMLBuilder content: () -> [DOM.Node]
-  ) {
-    self.id = id
-    self.isOpen = open
-    self.actionIcon = nil
-    self.actionAlwaysVisible = false
-    self.actionButtonLabel = ""
-    self.separation = separation
-    self.headingLevel = headingLevel
-    self.headerDirection = headerDirection
-    self.titleFontSize = titleFontSize
-    self.titleFontWeight = titleFontWeight
-    self.`class` = `class`
-    self.titleContent = title()
-    self.descriptionContent = description()
-    self.contentSlot = content()
-  }
-
   public func build() -> DOM.Node {
     let hasDescription = !descriptionContent.isEmpty
     var hasAction = false
@@ -285,7 +255,7 @@ public struct AccordionView: HTMLContent {
     }
 
     if separation == .outline {
-      border(borderWidthBase, .solid, borderColorSubtle)
+      border(borderWidthBase, .solid, borderColorBase)
       borderRadius(borderRadiusBase)
       padding(spacing4)
     }
@@ -431,7 +401,7 @@ public struct AccordionView: HTMLContent {
   @CSSBuilder
   private func accordionDividerCSS() -> [CSSOM.CSSRule] {
     height(borderWidthBase)
-    backgroundColor(borderColorSubtle)
+    backgroundColor(borderColorBase)
     margin(spacing0)
     border(.none)
   }
@@ -538,6 +508,10 @@ public struct AccordionView: HTMLContent {
           window.setTimeout(250) { [self] in
             if self.isOpen {
               details.setAttribute(data("open-finished"), "true")
+              if let content = details.querySelector(".accordion-content") {
+                content.style.removeProperty(.transform)
+                content.style.removeProperty(.transition)
+              }
             }
           }
         }

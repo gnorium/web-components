@@ -121,7 +121,7 @@
         backgroundColor(backgroundColorDisabled).important()
         color(colorDisabled).important()
         borderColor(borderColorDisabled).important()
-        cursor(cursorBaseDisabled).important()
+        cursor(cursorNotAllowed).important()
       }
     }
 
@@ -201,14 +201,14 @@
       backgroundColor(.transparent)
       border(borderWidthBase, .solid, borderColorBlue)
       borderRadius(borderRadiusBase)
-      cursor(disabled ? cursorBaseDisabled : cursorBaseHover)
+      cursor(disabled ? cursorNotAllowed : cursorBaseHover)
       transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
       whiteSpace(.nowrap)
 
       if disabled {
         color(colorDisabled)
         borderColor(borderColorDisabled)
-        cursor(cursorBaseDisabled)
+        cursor(cursorNotAllowed)
       } else {
         pseudoClass(.hover) {
           backgroundColor(backgroundColorBlueSubtle).important()

@@ -19,7 +19,9 @@
     let disabled: Bool
     let status: ValidationStatus
     let visibleItemLimit: Int?
+    let submitFormOnChange: Bool
     let `class`: String
+    let fullWidth: Bool
 
     public enum ValidationStatus: String, Sendable {
       case `default`
@@ -37,7 +39,9 @@
       disabled: Bool = false,
       status: ValidationStatus = .default,
       visibleItemLimit: Int? = nil,
-      class: String = ""
+      submitFormOnChange: Bool = false,
+      class: String = "",
+      fullWidth: Bool = true
     ) {
       self.id = id
       self.name = name
@@ -49,14 +53,21 @@
       self.disabled = disabled
       self.status = status
       self.visibleItemLimit = visibleItemLimit
+      self.submitFormOnChange = submitFormOnChange
       self.`class` = `class`
+      self.fullWidth = fullWidth
     }
 
     @CSSBuilder
     private func selectViewCSS() -> [CSSOM.CSSRule] {
       position(.relative)
-      display(.inlineBlock)
-      minWidth(px(256))
+      if fullWidth {
+        display(.block)
+        width(perc(100))
+      } else {
+        display(.inlineBlock)
+        minWidth(px(256))
+      }
     }
 
     @CSSBuilder
@@ -77,7 +88,7 @@
       fontFamily(typographyFontSans)
       fontSize(fontSizeMedium16)
       lineHeight(lineHeightSmall22)
-      cursor(disabled ? cursorBaseDisabled : cursorBase)
+      cursor(disabled ? cursorNotAllowed : cursorBase)
       transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
       userSelect(.none)
 
@@ -117,17 +128,6 @@
       height(sizeIconSmall)
     }
 
-    @CSSBuilder
-    private func selectIndicatorCSS(_ disabled: Bool) -> [CSSOM.CSSRule] {
-      display(.inlineFlex)
-      alignItems(.center)
-      justifyContent(.center)
-      flexShrink(0)
-      width(sizeIconSmall)
-      height(sizeIconSmall)
-      color(disabled ? colorDisabled : colorSubtle)
-    }
-
     public func build() -> DOM.Node {
       let selectedItem =
         menuItems.first(where: { $0.value == selectedValue })
@@ -153,12 +153,13 @@
             selectLabelCSS(hasSelection)
           }
 
-        span { "▼" }
-          .class("select-indicator")
-          .ariaHidden(true)
-          .style {
-            selectIndicatorCSS(disabled)
-          }
+        AnimatedUpDownChevronView(
+          id: "\(id)-chevron",
+          expanded: false,
+          width: sizeIconSmall,
+          height: sizeIconSmall,
+          class: "select-indicator"
+        )
       }
       .class("select-handle")
       .id(id)
@@ -180,7 +181,7 @@
         selectHandleCSS(disabled, status)
       }
 
-      return div {
+      var root = div {
         selectHandle
 
         MenuView(
@@ -191,11 +192,23 @@
           visibleItemLimit: visibleItemLimit,
           class: "select-menu"
         )
+
+        input()
+          .type(.hidden)
+          .name(name)
+          .value(selectedValue ?? "")
+          .class("select-hidden-input")
       }
       .class(`class`.isEmpty ? "select-view" : "select-view \(`class`)")
       .style {
         selectViewCSS()
       }
+
+      if submitFormOnChange {
+        root = root.data("submitFormOnChange", "true")
+      }
+
+      return root
     }
   }
 #endif
@@ -212,6 +225,7 @@
     private var select: DOM.Element
     private var handle: DOM.Element?
     private var menu: DOM.Element?
+    private var chevron: AnimatedUpDownChevronInstance?
     private var isOpen: Bool = false
 
     init(select: DOM.Element) {
@@ -219,6 +233,9 @@
 
       handle = select.querySelector(".select-handle")
       menu = select.querySelector(".menu-view")
+      if let h = handle {
+        chevron = AnimatedUpDownChevronInstance(element: h)
+      }
 
       bindEvents()
     }
@@ -264,6 +281,7 @@
       menu?.dataset["expanded"] = "true"
       menu?.style.display(.flex)
       handle?.setAttribute(.ariaExpanded, "true")
+      chevron?.morph(toExpanded: true)
       isOpen = true
     }
 
@@ -271,6 +289,7 @@
       menu?.dataset["expanded"] = "false"
       menu?.style.display(.none)
       handle?.setAttribute(.ariaExpanded, "false")
+      chevron?.morph(toExpanded: false)
       isOpen = false
     }
 
@@ -279,6 +298,11 @@
 
       // Update handle data-value
       handle.dataset["value"] = value
+
+      // Update hidden input for form submission
+      if let hiddenInput = select.querySelector(".select-hidden-input") as? HTML.HTMLInputElement {
+        hiddenInput.value = value
+      }
 
       // Update label (find selected item from MenuView)
       if let selectedItem = menu?.querySelector(".menu-item-view[data-value='\(value)']") {
@@ -302,6 +326,13 @@
       select.dispatchEvent(event)
 
       closeMenu()
+
+      // Submit closest form if requested
+      if stringEquals(select.dataset["submitFormOnChange"], "true") {
+        if let form = select.closest("form") as? HTML.HTMLFormElement {
+          form.submit()
+        }
+      }
     }
 
     private func handleKeydown(_ event: Event) {

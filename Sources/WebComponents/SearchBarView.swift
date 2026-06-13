@@ -481,7 +481,7 @@
         // Create list item
         let li = document.createElement(.li)
         li.className = "search-bar-suggestion-item"
-        li.style.listStyle(.none)
+        li.style.listStyleType(.none)
         li.style.padding(px(8), px(12))
 
         // Only add border if not the last item

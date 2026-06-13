@@ -116,11 +116,14 @@ public struct IconView: HTMLContent {
     }
     let iconClasses = stringJoin(classParts, separator: " ")
 
+    let isHidden: Bool
+    if let _ = iconLabel { isHidden = false } else { isHidden = true }
+
     let baseElement = span {
       icon
     }
     .class(iconClasses)
-    .ariaHidden(iconLabel == nil)
+    .ariaHidden(isHidden)
     .style {
       iconViewCSS(size, iconColor)
     }

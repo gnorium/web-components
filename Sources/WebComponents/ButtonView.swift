@@ -316,11 +316,13 @@ public struct ButtonView: HTMLContent {
     if iconOnly {
       display(.flex)
       justifyContent(.center)
+      alignSelf(.flexStart)
     } else {
       if fullWidth {
         display(.flex)
       } else {
         display(.inlineFlex)
+        alignSelf(.flexStart)
       }
     }
     alignItems(.center)
@@ -402,7 +404,7 @@ public struct ButtonView: HTMLContent {
 
     // Disabled state
     pseudoClass(.disabled) {
-      color(colorInvertedFixed).important()
+      color(colorDisabled).important()
       if weight == .quiet {
         backgroundColor(.transparent).important()
         borderColor(.transparent).important()
@@ -410,15 +412,14 @@ public struct ButtonView: HTMLContent {
         backgroundColor(backgroundColorDisabled).important()
         borderColor(borderColorDisabled).important()
       }
-      cursor(.default).important()
-      pointerEvents(.none).important()
+      cursor(cursorNotAllowed).important()
     }
 
     // Icon hover color when button is disabled
     pseudoClass(.disabled) {
       descendant(".icon-view") {
         pseudoClass(.hover) {
-          color(colorInvertedFixed).important()
+          color(colorDisabled).important()
         }
       }
     }
@@ -457,7 +458,7 @@ public struct ButtonView: HTMLContent {
 
   @CSSBuilder
   private func applyColorBaseCSS() -> [CSSOM.CSSRule] {
-    let c = buttonColor.rawValue.lowercased()
+    let c = stringLowercased(buttonColor.rawValue)
 
     switch (buttonColor, weight) {
     case (.gray, .subtle):
@@ -505,7 +506,7 @@ public struct ButtonView: HTMLContent {
 
   @CSSBuilder
   private func applyColorInteractiveCSS() -> [CSSOM.CSSRule] {
-    let c = buttonColor.rawValue.lowercased()
+    let c = stringLowercased(buttonColor.rawValue)
 
     switch (buttonColor, weight) {
     case (.gray, .subtle):
@@ -557,3 +558,31 @@ public struct ButtonView: HTMLContent {
     }
   }
 }
+
+#if CLIENT
+  import WebAPIs
+
+  public enum ButtonViewFactory {
+    public static func createElement(
+      label: String,
+      buttonColor: ButtonView.ButtonColor = .gray,
+      weight: ButtonView.ButtonWeight = .subtle,
+      size: ButtonView.ButtonSize = .medium,
+      type: ButtonView.ButtonType = .button,
+      class: String = ""
+    ) -> DOM.Element {
+      let wrapper = document.createElement(.div)
+      let view = ButtonView(
+        label: label,
+        buttonColor: buttonColor,
+        weight: weight,
+        size: size,
+        type: type,
+        class: `class`,
+        labelFontWeight: fontWeightSemiBold
+      )
+      wrapper.innerHTML = renderHTML { view.render() }
+      return wrapper.firstElementChild ?? wrapper
+    }
+  }
+#endif

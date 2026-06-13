@@ -47,7 +47,7 @@
       textAlign(.center)
       backgroundColor(.transparent)
       border(.none)
-      cursor(disabled ? cursorBaseDisabled : cursorBaseHover)
+      cursor(disabled ? cursorNotAllowed : cursorBaseHover)
       transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
       position(.relative)
 
@@ -67,7 +67,7 @@
 
       if disabled {
         color(colorDisabled)
-        cursor(cursorBaseDisabled)
+        cursor(cursorNotAllowed)
       }
 
       if !disabled && !isActive {

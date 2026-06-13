@@ -64,13 +64,9 @@
               if index == 0 && !overflowItems.isEmpty {
                 // First item
                 if let url = item.url {
-                  a { item.label ?? DOM.Text(truncateText(item.text ?? "")) }
-                    .href(url)
-                    .title(item.text ?? "")
-                    .class("breadcrumb-link")
-                    .style {
-                      breadcrumbLinkCSS()
-                    }
+                  LinkView(url: url, class: "breadcrumb-link", title: item.text) {
+                    item.label ?? DOM.Text(truncateText(item.text ?? ""))
+                  }
                 } else {
                   span { item.label ?? DOM.Text(truncateText(item.text ?? "")) }
                     .title(item.text ?? "")
@@ -119,13 +115,9 @@
                     }
                 } else {
                   if let url = item.url {
-                    a { item.label ?? DOM.Text(truncateText(item.text ?? "")) }
-                      .href(url)
-                      .title(item.text ?? "")
-                      .class("breadcrumb-link")
-                      .style {
-                        breadcrumbLinkCSS()
-                      }
+                    LinkView(url: url, class: "breadcrumb-link", title: item.text) {
+                      item.label ?? DOM.Text(truncateText(item.text ?? ""))
+                    }
                   } else {
                     span { item.label ?? DOM.Text(truncateText(item.text ?? "")) }
                       .title(item.text ?? "")
@@ -188,27 +180,6 @@
       display(.flex)
       alignItems(.center)
       gap(spacing4)
-    }
-
-    @CSSBuilder
-    private func breadcrumbLinkCSS() -> [CSSOM.CSSRule] {
-      color(colorBlue)
-      textDecoration(.none)
-      maxWidth(px(350))
-      overflowX(.hidden)
-      textOverflow(.ellipsis)
-      whiteSpace(.nowrap)
-      transform(translateY(px(-1)))
-
-      pseudoClass(.hover) {
-        textDecoration(.underline).important()
-      }
-
-      pseudoClass(.focus) {
-        outline(borderWidthThick, .solid, borderColorBlue).important()
-        outlineOffset(px(1)).important()
-        borderRadius(borderRadiusBase).important()
-      }
     }
 
     @CSSBuilder

@@ -47,7 +47,7 @@
     }
 
     public init(
-      id: String,
+      id: String = "",
       labelIcon: String? = nil,
       optional: Bool = false,
       optionalFlag: String = "(optional)",
@@ -249,14 +249,13 @@
         }
 
       } else {
-        return div {
+        return label {
           LabelView(
             icon: labelIcon,
             optional: optional,
             optionalFlag: optionalFlag,
             visuallyHidden: hideLabel,
             isLegend: false,
-            inputID: id,
             descriptionID: descriptionID,
             disabled: disabled,
             labelFontWeight: labelFontWeight,
@@ -357,6 +356,26 @@
           fieldViewCSS()
         }
 
+      }
+    }
+  }
+#endif
+
+#if CLIENT
+  import DOMBuilder
+  import WebAPIs
+  import WebTypes
+
+  public class FieldViewHydration: @unchecked Sendable {
+    public init() {
+      let labels = document.querySelectorAll("label.field-view")
+      for label in labels {
+        _ = label.addEventListener(.click) { event in
+          guard let target = event.target else { return }
+          if target.closest(".label-view") != nil {
+            event.preventDefault()
+          }
+        }
       }
     }
   }

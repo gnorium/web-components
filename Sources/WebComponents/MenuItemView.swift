@@ -142,7 +142,7 @@
       backgroundColor(backgroundColorTransparent)
       border(borderWidthBase, .solid, disabled ? borderColorDisabled : borderColorSubtle)
       borderRadius(borderRadiusBase)
-      cursor(disabled ? cursorBaseDisabled : cursorBase)
+      cursor(disabled ? cursorNotAllowed : cursorBase)
       userSelect(.none)
       textDecoration(.none)
       boxSizing(.borderBox)

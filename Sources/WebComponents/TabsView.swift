@@ -15,6 +15,7 @@
     let variant: Variant
     let `class`: String
     let fullWidth: Bool
+    let localStorageKey: String?
 
     /// Visual style variant for tab buttons
     public enum Variant: String, Sendable {
@@ -30,7 +31,8 @@
       framed: Bool = false,
       variant: Variant = .quiet,
       class: String = "",
-      fullWidth: Bool = false
+      fullWidth: Bool = false,
+      localStorageKey: String? = nil
     ) {
       self.tabs = tabs
       self.activeTab = activeTab ?? tabs.first?.name
@@ -38,6 +40,7 @@
       self.variant = variant
       self.`class` = `class`
       self.fullWidth = fullWidth
+      self.localStorageKey = localStorageKey
     }
 
     @CSSBuilder
@@ -99,7 +102,7 @@
       whiteSpace(.nowrap)
       textAlign(.center)
       border(.none)
-      cursor(disabled ? cursorBaseDisabled : (isActive ? .default : cursorBaseHover))
+      cursor(disabled ? cursorNotAllowed : (isActive ? .default : cursorBaseHover))
       transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
       position(.relative)
       fontFamily(typographyFontSans)
@@ -140,7 +143,7 @@
 
       if disabled {
         color(colorDisabled)
-        cursor(cursorBaseDisabled)
+        cursor(cursorNotAllowed)
       }
 
       pseudoClass(.hover, not(.disabled), not(attribute(.ariaSelected, true))) {
@@ -192,7 +195,7 @@
 
       pseudoClass(.disabled) {
         color(colorDisabled).important()
-        cursor(cursorBaseDisabled).important()
+        cursor(cursorNotAllowed).important()
       }
     }
 
@@ -298,6 +301,7 @@
         ].compactMap { $0 }.joined(separator: " ")
       )
       .data("active-tab", active)
+      .data("local-storage-key", localStorageKey ?? "")
       .style {
         tabsViewCSS(framed)
         if fullWidth {
@@ -336,6 +340,47 @@
 
       bindEvents()
       updateScrollButtons()
+      restoreOrSaveTabPreference()
+    }
+
+    private func restoreOrSaveTabPreference() {
+      let lsKey = tabsElement.getAttribute(data("local-storage-key")) ?? ""
+      guard !stringIsEmpty(lsKey) else { return }
+
+      let search = location.search
+      var queryTab: String? = nil
+      if !stringIsEmpty(search) && stringContains(search, "tab=") {
+        if let idx = stringIndexOf(search, "tab=") {
+          let suffix = stringSubstring(search, from: idx + 4)
+          if let ampIdx = stringIndexOf(suffix, "&") {
+            queryTab = stringSubstring(suffix, from: 0, to: ampIdx)
+          } else {
+            queryTab = suffix
+          }
+        }
+      }
+
+      if let tab = queryTab, !stringIsEmpty(tab) {
+        localStorage.setItem(lsKey, tab)
+      } else {
+        if let saved = localStorage.getItem(lsKey), !stringIsEmpty(saved) {
+          let hasTab = tabButtons.contains { button in
+            stringEquals(button.getAttribute(data("tab-name")) ?? "", saved)
+          }
+          if hasTab {
+            for button in tabButtons {
+              if stringEquals(button.getAttribute(data("tab-name")) ?? "", saved) {
+                if let url = button.getAttribute("href"), !stringIsEmpty(url) {
+                  location.href = url
+                  return
+                } else {
+                  selectTab(saved, setFocus: false)
+                }
+              }
+            }
+          }
+        }
+      }
     }
 
     private func bindEvents() {
@@ -372,6 +417,11 @@
 
     private func selectTab(_ tabName: String, setFocus: Bool) {
       activeTabName = tabName
+
+      let lsKey = tabsElement.getAttribute(data("local-storage-key")) ?? ""
+      if !stringIsEmpty(lsKey) {
+        localStorage.setItem(lsKey, tabName)
+      }
 
       let isSolid = tabsElement.classList.contains("tabs-solid")
 

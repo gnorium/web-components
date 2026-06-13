@@ -36,7 +36,7 @@
     
     public enum AutoDismiss: Sendable {
       case disabled
-      case `default`  // 4000ms
+      case `default`  // 10000ms
       case custom(Int)  // milliseconds
     }
 
@@ -193,7 +193,7 @@
         case .disabled:
           return nil
         case .default:
-          return 4000
+          return 10000
         case .custom(let ms):
           return alertColor == .red ? nil : ms
         }
@@ -362,7 +362,7 @@
       customIcon: String? = nil,
       allowUserDismiss: Bool = true,
       autoDismiss: Bool = false,
-      autoDismissTime: Int = 4000,
+      autoDismissTime: Int = 10000,
       container: DOM.Element? = nil,
       onDismiss: (@Sendable () -> Void)? = nil
     ) {

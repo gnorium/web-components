@@ -20,7 +20,7 @@ public struct CheckboxView: HTMLContent {
   let status: ValidationStatus
   let labelContent: [DOM.Node]
   let descriptionContent: [DOM.Node]
-  let customInputContent: [DOM.Node]
+  let afterLabelContent: [DOM.Node]
   let `class`: String
   let labelFontWeight: CSS.FontWeight
   let labelFontSize: CSS.Length
@@ -45,7 +45,7 @@ public struct CheckboxView: HTMLContent {
     labelFontSize: CSS.Length = fontSizeSmall14,
     @HTMLBuilder label: () -> [DOM.Node],
     @HTMLBuilder description: () -> [DOM.Node] = { [] },
-    @HTMLBuilder customInput: () -> [DOM.Node] = { [] }
+    @HTMLBuilder afterLabel: () -> [DOM.Node] = { [] }
   ) {
     self.id = id
     self.name = name
@@ -61,25 +61,25 @@ public struct CheckboxView: HTMLContent {
     self.labelFontSize = labelFontSize
     self.labelContent = label()
     self.descriptionContent = description()
-    self.customInputContent = customInput()
+    self.afterLabelContent = afterLabel()
   }
 
   public init(
-    id: String,
-    name: String,
-    value: Bool,
-    checked: Bool = false,
-    disabled: Bool = false,
-    indeterminate: Bool = false,
-    inline: Bool = false,
-    hideLabel: Bool = false,
-    status: ValidationStatus = .default,
-    class: String = "",
-    labelFontWeight: CSS.FontWeight = fontWeightNormal,
-    labelFontSize: CSS.Length = fontSizeSmall14,
-    @HTMLBuilder label: () -> [DOM.Node],
-    @HTMLBuilder description: () -> [DOM.Node] = { [] },
-    @HTMLBuilder customInput: () -> [DOM.Node] = { [] }
+  id: String,
+  name: String,
+  value: Bool,
+  checked: Bool = false,
+  disabled: Bool = false,
+  indeterminate: Bool = false,
+  inline: Bool = false,
+  hideLabel: Bool = false,
+  status: ValidationStatus = .default,
+  class: String = "",
+  labelFontWeight: CSS.FontWeight = fontWeightNormal,
+  labelFontSize: CSS.Length = fontSizeSmall14,
+  @HTMLBuilder label: () -> [DOM.Node],
+  @HTMLBuilder description: () -> [DOM.Node] = { [] },
+  @HTMLBuilder afterLabel: () -> [DOM.Node] = { [] }
   ) {
     self.init(
       id: id,
@@ -96,31 +96,33 @@ public struct CheckboxView: HTMLContent {
       labelFontSize: labelFontSize,
       label: label,
       description: description,
-      customInput: customInput
+      afterLabel: afterLabel
     )
   }
 
   @CSSBuilder
-  private func checkboxViewCSS(_ inline: Bool, _ hideLabel: Bool, _ hasCustomInput: Bool) -> [CSSOM.CSSRule] {
+  private func checkboxViewCSS(_ inline: Bool, _ hideLabel: Bool, _ hasAfterLabel: Bool) -> [CSSOM.CSSRule] {
     if inline {
       display(.inlineFlex)
     } else {
       display(.flex)
     }
     alignItems(.center)
-    if hideLabel && !hasCustomInput {
+    if hideLabel && !hasAfterLabel {
       justifyContent(.center)
     }
+
     position(.relative)
     if !inline {
       minHeight(minSizeInputBinary)
     }
-    if !hideLabel || hasCustomInput {
+    if !hideLabel || hasAfterLabel {
       gap(spacing8)
     }
 
+    // Layout: inline (flex row) or block with label above
     if inline {
-      if !hideLabel || hasCustomInput {
+      if !hideLabel || hasAfterLabel {
         marginInlineEnd(spacing16)
       }
 
@@ -153,7 +155,7 @@ public struct CheckboxView: HTMLContent {
     margin(0)
     opacity(0)
     zIndex(zIndexAboveContent)
-    cursor(disabled ? cursorBaseDisabled : .pointer)
+    cursor(disabled ? cursorNotAllowed : .pointer)
 
     // Checkmark visibility
     pseudoClass(.checked) {
@@ -258,7 +260,6 @@ public struct CheckboxView: HTMLContent {
       border(borderWidthBase, .solid, borderColorInputBinary)
     }
     borderRadius(borderRadiusMinimal)
-    transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
     flexShrink(0)
 
     pseudoElement(.before) {
@@ -288,20 +289,17 @@ public struct CheckboxView: HTMLContent {
   }
 
   @CSSBuilder
-  private func checkboxLabelWrapperCSS(_ hideLabel: Bool, _ hasCustomInput: Bool) -> [CSSOM.CSSRule] {
-    if !hideLabel || hasCustomInput {
-      flex(1)
-    }
+  private func checkboxLabelWrapperCSS(_ hideLabel: Bool, _ hasAfterLabel: Bool) -> [CSSOM.CSSRule] {
   }
 
   @CSSBuilder
-  private func checkboxCustomInputCSS() -> [CSSOM.CSSRule] {
+  private func checkboxAfterLabelCSS() -> [CSSOM.CSSRule] {
     display(.block)
   }
 
   public func build() -> DOM.Node {
     let hasDescription = !descriptionContent.isEmpty
-    let hasCustomInput = !customInputContent.isEmpty
+    let hasAfterLabel = !afterLabelContent.isEmpty
     let descriptionID = hasDescription ? "\(id)-description" : nil
 
     return div {
@@ -346,24 +344,24 @@ public struct CheckboxView: HTMLContent {
           }
         }
 
-        if hasCustomInput {
+        if hasAfterLabel {
           div {
-            customInputContent
+            afterLabelContent
           }
-          .class("checkbox-custom-input")
+          .class("checkbox-after-label")
           .style {
-            checkboxCustomInputCSS()
+            checkboxAfterLabelCSS()
           }
         }
       }
       .class("checkbox-label-wrapper")
       .style {
-        checkboxLabelWrapperCSS(hideLabel, hasCustomInput)
+        checkboxLabelWrapperCSS(hideLabel, hasAfterLabel)
       }
     }
     .class(stringIsEmpty(`class`) ? "checkbox-view" : "checkbox-view \(`class`)")
     .style {
-      checkboxViewCSS(inline, hideLabel, hasCustomInput)
+      checkboxViewCSS(inline, hideLabel, hasAfterLabel)
     }
   }
 }

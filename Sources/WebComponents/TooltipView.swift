@@ -74,7 +74,7 @@ public struct TooltipView: HTMLContent {
   private func tooltipContentCSS(_ placement: Placement) -> [CSSOM.CSSRule] {
     position(.absolute)
     padding(spacing8, spacing12)
-    minWidth(px(160))
+    minWidth(px(150))
     maxWidth(px(320))
     backgroundColor(backgroundColorInverted)
     color(colorInverted)
@@ -91,7 +91,9 @@ public struct TooltipView: HTMLContent {
     zIndex(zIndexTooltip)
     boxShadow(boxShadowOutsetSmall)
     textAlign(.start)
-
+    backfaceVisibility(.hidden)
+    willChange(.transform, .opacity)
+    // Force GPU acceleration to prevent horizontal subpixel rendering jitter on hover
     // Position based on placement
     switch placement {
     case .bottom, .bottomStart, .bottomEnd:
@@ -108,18 +110,17 @@ public struct TooltipView: HTMLContent {
       marginLeft(spacing8)
     }
 
-    // Horizontal alignment
     switch placement {
     case .bottom, .top:
       left(perc(50))
-      transform(translateX(perc(-50)))
+      transform(translate(perc(-50), perc(0)))
     case .bottomStart, .topStart:
       left(0)
     case .bottomEnd, .topEnd:
       right(0)
     case .left, .right:
       top(perc(50))
-      transform(translateY(perc(-50)))
+      transform(translate(perc(0), perc(-50)))
     case .leftStart, .rightStart:
       top(0)
     case .leftEnd, .rightEnd:
@@ -196,9 +197,7 @@ public struct TooltipView: HTMLContent {
         }
       }
     }
-    .class(
-      stringIsEmpty(`class`) ? "tooltip-view tooltip-trigger" : "tooltip-view tooltip-trigger \(`class`)"
-    )
+    .class(stringIsEmpty(`class`) ? "tooltip-view tooltip-trigger" : "tooltip-view tooltip-trigger \(`class`)")
     .data("tooltip", "true")
     .data("placement", placement.rawValue)
     .style {
@@ -208,12 +207,7 @@ public struct TooltipView: HTMLContent {
 }
 
 #if CLIENT
-  import DesignTokens
-  import DOMBuilder
-  import EmbeddedSwiftUtilities
-  import HTMLBuilder
   import WebAPIs
-  import WebTypes
 
   private class TooltipInstance: @unchecked Sendable {
     private var trigger: DOM.Element
@@ -230,7 +224,7 @@ public struct TooltipView: HTMLContent {
     }
 
     private func bindEvents() {
-      guard content != nil else { return }
+      guard let _ = content else { return }
 
       // Hover for desktop
       _ = trigger.addEventListener(.mouseenter) { [self] _ in
@@ -331,6 +325,23 @@ public struct TooltipView: HTMLContent {
         let instance = TooltipInstance(tooltip: tooltip)
         instances.append(instance)
       }
+    }
+  }
+
+  public enum TooltipFactory {
+    /// Creates a tooltip trigger element wrapping an info icon, matching TooltipView output.
+    public static func createElement(
+      text: String,
+      placement: TooltipView.Placement = .top
+    ) -> DOM.Element {
+      let wrapper = document.createElement(.span)
+      let view = TooltipView(tooltip: text, placement: placement) {
+        InfoIconView(width: px(20), height: px(20))
+      }
+      wrapper.innerHTML = renderHTML { view.render() }
+      let element = wrapper.firstElementChild ?? wrapper
+      _ = TooltipInstance(tooltip: element)
+      return element
     }
   }
 #endif

@@ -63,7 +63,7 @@
     private func chipInputViewCSS(_ disabled: Bool) -> [CSSOM.CSSRule] {
       if disabled {
         opacity(opacityMedium)
-        cursor(cursorBaseDisabled)
+        cursor(cursorNotAllowed)
       }
     }
 
@@ -114,7 +114,7 @@
       backgroundColor(.transparent)
       border(.none)
       color(colorSubtle)
-      cursor(disabled ? cursorBaseDisabled : cursorBase)
+      cursor(disabled ? cursorNotAllowed : cursorBase)
       borderRadius(borderRadiusCircle)
 
       pseudoClass(.hover) {

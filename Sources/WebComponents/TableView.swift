@@ -595,12 +595,10 @@ public struct TableView: HTMLContent {
                     position(.sticky)
                     top(0)
                     zIndex(zIndexSticky).important()
-                    backgroundColor(backgroundColorBase).important()
+                    backgroundColor(backgroundColorNeutralSubtle).important()
                     tableThCSS(.start)
                     borderRightWidth(px(0))
                     padding(px(0))
-                    width(px(0))
-                    minWidth(px(0))
                   }
               }
             }
@@ -758,7 +756,7 @@ public struct TableView: HTMLContent {
                           th {
                             // Group header gets animated triangle toggle
                             if row.isGroupHeader, let gid = row.groupID {
-                              AnimatedUpDownChevronView(
+                              AnimatedRightDownChevronView(
                                 id: "table-group-\(gid)",
                                 expanded: false,
                                 width: px(20),
@@ -778,9 +776,6 @@ public struct TableView: HTMLContent {
                           .scope(.row)
                           .style {
                             tableThCSS(column.align)
-                            if row.isGroupHeader {
-                              fontWeight(fontWeightBold)
-                            }
                           }
                         } else {
                           td {
@@ -794,9 +789,9 @@ public struct TableView: HTMLContent {
                             }
                             div {
                               if isFirstCell, let url = row.url {
-                                a { cellContent }
-                                  .href(url)
-                                  .class("table-row-link-anchor")
+                                LinkView(url: url) {
+                                  cellContent
+                                }
                               } else {
                                 cellContent
                               }
@@ -814,9 +809,6 @@ public struct TableView: HTMLContent {
                             let styles = tdStyle()
                             if !styles.isEmpty {
                               styles
-                            }
-                            if row.isGroupHeader {
-                              fontWeight(fontWeightBold)
                             }
                           }
                         }
@@ -891,6 +883,44 @@ public struct TableView: HTMLContent {
                   }
 
                   trNode
+                }
+              }
+
+              // SSR dummy rows: pre-fill remaining page slots with alternating stripes so
+              // the initial render already looks like the post-WASM state for full pages.
+              // WASM's adjustDummyRows removes all .table-row-dummy and re-adds measured ones.
+              if paginate && !isEmpty {
+                let ssrDummyCount = max(0, paginationSizeDefault - data.count)
+                for dummyIndex in 0..<ssrDummyCount {
+                  let isEven = (data.count + dummyIndex) % 2 == 1
+                  tr {
+                    for _ in columns {
+                      td { " " }
+                        .style {
+                          padding(spacing8, spacing12)
+                          backgroundColor(.inherit)
+                          overflow(.hidden)
+                          textOverflow(.ellipsis)
+                          whiteSpace(.nowrap)
+                          verticalAlign(.middle)
+                        }
+                    }
+                    td { "" }
+                      .class("table-td-spacer")
+                      .style {
+                        padding(px(0))
+                        borderRightWidth(px(0))
+                        backgroundColor(.inherit)
+                      }
+                  }
+                  .class("table-row table-row-dummy")
+                  .style {
+                    height(px(39))
+                    pointerEvents(.none)
+                    userSelect(.none)
+                    backgroundColor(isEven ? backgroundColorNeutralSubtle : backgroundColorBase)
+                    borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
+                  }
                 }
               }
             }
@@ -1050,11 +1080,6 @@ public struct TableView: HTMLContent {
       pointerEvents(.none)
     }
 
-    selector(".table-row-link-anchor") {
-      textDecoration(.none)
-      color(.inherit)
-    }
-
     // Level 1 Cell Stacking: Top level rows sit on top of everything
     selector(
       ".table-group-header td",
@@ -1103,7 +1128,6 @@ public struct TableView: HTMLContent {
     justifyContent(.spaceBetween)
     gap(spacing12)
     padding(spacing12)
-    marginBlockEnd(spacing8)
   }
 
   @CSSBuilder
@@ -1164,7 +1188,8 @@ public struct TableView: HTMLContent {
     fontFamily(typographyFontSans)
     fontSize(fontSizeMedium16)
     color(colorBase)
-    minWidth(perc(100))
+    width(perc(100))
+    alignSelf(.flexStart)
 
     selector(".table-row:nth-child(even)", ".table-row-view:nth-child(even)", ".table-tbody tr:nth-child(even)") {
       backgroundColor(backgroundColorNeutralSubtle)
@@ -1197,16 +1222,6 @@ public struct TableView: HTMLContent {
       selector("td:last-child", "th:last-child") {
         borderInlineEnd(.none)
       }
-    }
-
-    selector(".table-row-link-anchor") {
-      color(.inherit)
-      textDecoration(.inherit)
-      whiteSpace(.inherit)
-      textOverflow(.inherit)
-      overflow(.inherit)
-      display(.block)
-      width(perc(100))
     }
 
     selector("td > div", "th > div", "th > button", "td > span", "th > span") {
@@ -1248,7 +1263,7 @@ public struct TableView: HTMLContent {
 
   @CSSBuilder
   private func tableThCSS(_ align: Column.Alignment) -> [CSSOM.CSSRule] {
-    backgroundColor(.transparent)
+    backgroundColor(.inherit)
     padding(spacing8, spacing12)
     fontFamily(typographyFontSans)
     fontSize(fontSizeSmall14)
@@ -1437,6 +1452,7 @@ public struct TableView: HTMLContent {
 
     private var startWidths: [WidthPair] = []
     private var dragFloor: Double = 150.0
+    private var hasDragged: Bool = false
 
     private func getStartWidth(for key: String) -> Double? {
       for pair in startWidths {
@@ -1734,7 +1750,8 @@ public struct TableView: HTMLContent {
 
       let sortColumn = table.getAttribute(data("sort-column")) ?? ""
       let sortOrder = table.getAttribute(data("sort-order")) ?? ""
-      if !stringIsEmpty(sortColumn) && !stringIsEmpty(sortOrder) {
+      let hasInitialSort = !stringIsEmpty(sortColumn) && !stringIsEmpty(sortOrder)
+      if hasInitialSort {
         currentSort = (sortColumn, sortOrder)
       }
 
@@ -1744,6 +1761,13 @@ public struct TableView: HTMLContent {
 
       let isServerPaginated = stringEquals(table.getAttribute(data("paginate-server")) ?? "false", "true")
       if !isServerPaginated {
+        if hasInitialSort {
+          // Apply initial sort by setting the opposite direction first so toggleSort
+          // flips it back to the intended direction and reorders the DOM.
+          let opposite = stringEquals(sortOrder, "asc") ? "desc" : "asc"
+          currentSort = (sortColumn, opposite)
+          toggleSort(columnID: sortColumn)
+        }
         self.goToPage(1)
       }
     }
@@ -1875,6 +1899,7 @@ public struct TableView: HTMLContent {
       activeResizer = resizer
       targetTh = resizer.parentElement
       startX = mouseEvent.clientX
+      hasDragged = false
       let currentRect = targetTh?.getBoundingClientRect()
       startWidth = Double(currentRect?.width ?? 0)
       
@@ -1930,6 +1955,7 @@ public struct TableView: HTMLContent {
       guard let th = targetTh else { return }
       let mouseEvent = MouseEvent(event)
       let delta = mouseEvent.clientX - startX
+      hasDragged = true
       let newWidth = max(dragFloor, startWidth + delta)
       
       th.style.setProperty(.width, px(newWidth), .important)
@@ -1955,8 +1981,7 @@ public struct TableView: HTMLContent {
           total += w
         }
       }
-      
-      self.tableTable.style.width(px(total))
+
       self.tableTable.style.minWidth(px(total))
     }
 
@@ -2012,7 +2037,6 @@ public struct TableView: HTMLContent {
         }
       }
       
-      self.tableTable.style.width(px(total))
       self.tableTable.style.minWidth(px(total))
     }
 
@@ -2281,16 +2305,17 @@ public struct TableView: HTMLContent {
       }
       guard columnIndex >= 0 else { return }
 
-      // Get tbody and its rows
+      // Get tbody and its rows — exclude dummy rows from sort entirely
       guard let tbodyEl = self.table.querySelector("tbody") else { return }
       let allRows = Array(tbodyEl.querySelectorAll("tr"))
-      guard allRows.count > 1 else { return }
+      let sortableRows = allRows.filter { !$0.classList.contains("table-row-dummy") }
+      guard sortableRows.count > 1 else { return }
 
       // Build row groups hierarchically:
       // - A top-level batch group (headerRow: DOM.Element, lemmaGroups: [(parentRow: DOM.Element, historyRows: [DOM.Element])])
       var batchGroups: [(headerRow: DOM.Element, lemmaGroups: [(parentRow: DOM.Element, historyRows: [DOM.Element])])] = []
       
-      for row in allRows {
+      for row in sortableRows {
         let classList = row.getAttribute(.class) ?? ""
         let isBatchHeader = stringContains(classList, "table-group-header")
         let isLemmaHistory = stringContains(classList, "lemma-history-sub-row")
@@ -2358,6 +2383,10 @@ public struct TableView: HTMLContent {
           }
         }
       }
+
+      // Re-anchor dummy rows at the end (data rows were moved by appendChild, leaving dummies stranded at top)
+      let existingDummies = Array(tbodyEl.querySelectorAll(".table-row-dummy"))
+      for dummy in existingDummies { tbodyEl.appendChild(dummy) }
 
       // Animate sort indicator chevrons — show only on active column
       for btn in sortButtons {
@@ -2450,27 +2479,14 @@ public struct TableView: HTMLContent {
     public func adjustDummyRows() {
       guard let tbody = table.querySelector(".table-tbody") else { return }
 
-      // Remove any existing dummy rows
-      let existingDummies = tbody.querySelectorAll(".table-row-dummy")
-      for dummy in existingDummies {
-        dummy.remove()
-      }
-
       if table.classList.contains("table-view-empty") {
+        let existingDummies = tbody.querySelectorAll(".table-row-dummy")
+        for dummy in existingDummies { dummy.remove() }
         return
       }
 
-      guard let innerWrapper = table.querySelector(".table-inner-wrapper") else { return }
-
-      let totalWrapperHeight = innerWrapper.getBoundingClientRect()?.height ?? 0.0
-      let tableTable = table.querySelector(".table-table") ?? table
-      let tableHeight = Double(tableTable.getBoundingClientRect()?.height ?? 0.0)
-
-      if tableHeight >= totalWrapperHeight {
-        return
-      }
-
-      let remainingHeight = totalWrapperHeight - tableHeight
+      let sizeStr = table.getAttribute(data("pagination-size")) ?? "10"
+      let pageSize = parseInt(sizeStr) ?? 10
 
       func parsePx(_ value: String, defaultVal: Int) -> CSS.Length {
         if !stringIsEmpty(value) && stringEndsWith(value, "px") {
@@ -2483,49 +2499,78 @@ public struct TableView: HTMLContent {
         return px(defaultVal)
       }
 
-      var rowHeight = 44.0
+      var rowHeight = 39.0
       var topPadding = px(8)
       var bottomPadding = px(8)
       var leftPadding = px(12)
       var rightPadding = px(12)
-      if let firstRow = tbody.querySelector("tr:not([style*='display: none'])") {
+      let allRows = Array(tbody.querySelectorAll("tr"))
+      let firstDataRow = allRows.first {
+        !$0.classList.contains("table-row-dummy") &&
+        !$0.classList.contains("table-empty-row") &&
+        !stringEquals($0.style.getPropertyValue(.display), "none")
+      }
+      if let firstRow = firstDataRow {
         let h = Double(firstRow.getBoundingClientRect()?.height ?? 0.0)
-        if h > 0 {
-          rowHeight = h
-        }
-        if let firstTd = firstRow.querySelector("td") {
-          let padTop = firstTd.style.getPropertyValue(.paddingTop)
-          topPadding = parsePx(padTop, defaultVal: 8)
-          let padBot = firstTd.style.getPropertyValue(.paddingBottom)
-          bottomPadding = parsePx(padBot, defaultVal: 8)
-          let padLeft = firstTd.style.getPropertyValue(.paddingLeft)
-          leftPadding = parsePx(padLeft, defaultVal: 12)
-          let padRight = firstTd.style.getPropertyValue(.paddingRight)
-          rightPadding = parsePx(padRight, defaultVal: 12)
+        if h > 0 { rowHeight = h }
+        if let firstTd = firstRow.querySelector("td:not(.table-td-spacer)") {
+          topPadding = parsePx(firstTd.style.getPropertyValue(.paddingTop), defaultVal: 8)
+          bottomPadding = parsePx(firstTd.style.getPropertyValue(.paddingBottom), defaultVal: 8)
+          leftPadding = parsePx(firstTd.style.getPropertyValue(.paddingLeft), defaultVal: 12)
+          rightPadding = parsePx(firstTd.style.getPropertyValue(.paddingRight), defaultVal: 12)
         }
       }
 
-      let neededRows = Int(floor(remainingHeight / rowHeight))
-      if neededRows <= 0 {
-        return
+      let visibleDataCount = allRows.filter {
+        !$0.classList.contains("table-row-dummy") &&
+        !$0.classList.contains("table-empty-row") &&
+        !stringEquals($0.style.getPropertyValue(.display), "none")
+      }.count
+
+      let neededRows = pageSize - visibleDataCount
+      let existingDummies = Array(tbody.querySelectorAll(".table-row-dummy"))
+      let currentDummyCount = existingDummies.count
+
+      // Remove excess dummies from the end without clearing all (avoids flash)
+      if currentDummyCount > max(neededRows, 0) {
+        for i in max(neededRows, 0)..<currentDummyCount {
+          existingDummies[i].remove()
+        }
       }
+
+      if neededRows <= 0 { return }
 
       guard let thead = table.querySelector("thead") else { return }
       let headerCells = thead.querySelectorAll("tr:first-child > th")
-
-      let visibleRows = Array(tbody.querySelectorAll("tr")).filter { !stringEquals($0.style.getPropertyValue(.display), "none") }
-      var currentVisibleIndex = visibleRows.count
-
       let showVerticalBorders = tableTable.classList.contains("table-table-borders-vertical")
 
-      for _ in 0..<neededRows {
+      var currentVisibleIndex = visibleDataCount
+
+      // Update heights/colors on existing dummies in-place
+      let keepCount = min(currentDummyCount, neededRows)
+      for i in 0..<keepCount {
+        let dummyTr = existingDummies[i]
+        dummyTr.style.setProperty(.height, px(Int(rowHeight)), .important)
+        let isEven = currentVisibleIndex % 2 == 1
+        dummyTr.classList.remove("table-row-even")
+        dummyTr.classList.remove("table-row-odd")
+        if isEven {
+          dummyTr.classList.add("table-row-even")
+          dummyTr.style.setProperty(.backgroundColor, backgroundColorNeutralSubtle.value, .important)
+        } else {
+          dummyTr.classList.add("table-row-odd")
+          dummyTr.style.setProperty(.backgroundColor, backgroundColorBase.value, .important)
+        }
+        currentVisibleIndex += 1
+      }
+
+      // Append any new dummies needed beyond existing count
+      for _ in keepCount..<neededRows {
         let dummyTr = document.createElement("tr")
         dummyTr.classList.add("table-row")
         dummyTr.classList.add("table-row-dummy")
         dummyTr.style.pointerEvents(.none)
         dummyTr.style.userSelect(.none)
-
-        // Enforce exact row height matching the measured row height
         dummyTr.style.setProperty(.height, px(Int(rowHeight)), .important)
         dummyTr.style.setProperty(.borderBottom, "\(borderWidthBase.value) solid \(borderColorSubtle.value)", .important)
 
@@ -2540,42 +2585,34 @@ public struct TableView: HTMLContent {
 
         for th in headerCells {
           let dummyTd = document.createElement("td")
-
           if th.classList.contains("table-th-spacer") {
             dummyTd.classList.add("table-td-spacer")
             dummyTd.style.setProperty(.borderRightWidth, px(0), .important)
             dummyTd.style.setProperty(.padding, px(0), .important)
+            dummyTd.style.setProperty(.backgroundColor, .inherit, .important)
           } else if stringEquals(th.getAttribute(.id) ?? "", "col-selection") {
             dummyTd.innerHTML = ""
           } else {
             let div = document.createElement("div")
-            div.innerHTML = " "
-            
-            // Typesafe styles for the nested div to match data cell layout and heights
+            div.innerHTML = " "
             div.style.setProperty(.width, perc(100), .important)
             div.style.setProperty(.overflow, .hidden, .important)
             div.style.setProperty(.textOverflow, .ellipsis, .important)
             div.style.setProperty(.whiteSpace, .nowrap, .important)
             div.style.setProperty(.display, .block, .important)
-            
             dummyTd.appendChild(div)
-
-            // Replicate typesafe horizontal and vertical paddings
             dummyTd.style.setProperty(.paddingTop, topPadding, .important)
             dummyTd.style.setProperty(.paddingBottom, bottomPadding, .important)
             dummyTd.style.setProperty(.paddingLeft, leftPadding, .important)
             dummyTd.style.setProperty(.paddingRight, rightPadding, .important)
-
             let align = th.style.getPropertyValue(.textAlign)
             if !stringIsEmpty(align) {
               dummyTd.style.setProperty(.textAlign, align, .normal)
             }
           }
-
           if showVerticalBorders {
             dummyTd.style.setProperty(.borderLeft, "\(borderWidthBase.value) solid \(borderColorSubtle.value)", .important)
           }
-
           dummyTr.appendChild(dummyTd)
         }
 

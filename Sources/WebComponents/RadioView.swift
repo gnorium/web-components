@@ -89,7 +89,7 @@ public struct RadioView: HTMLContent {
     margin(0)
     opacity(0)
     zIndex(zIndexAboveContent)
-    cursor(disabled ? cursorBaseDisabled : cursorBaseHover)
+    cursor(disabled ? cursorNotAllowed : cursorBaseHover)
 
     pseudoClass(.checked, .enabled) {
       nextSibling(".radio-icon") {
@@ -138,7 +138,7 @@ public struct RadioView: HTMLContent {
       status == .error ? borderColorRed : (disabled ? borderColorDisabled : borderColorInputBinary))
     borderRadius(borderRadiusCircle)
     transition(.all, transitionDurationBase, transitionTimingFunctionSystem)
-    cursor(disabled ? cursorBaseDisabled : cursorBaseHover)
+    cursor(disabled ? cursorNotAllowed : cursorBaseHover)
   }
 
   @CSSBuilder
@@ -146,7 +146,7 @@ public struct RadioView: HTMLContent {
     display(.flex)
     flexDirection(.column)
     gap(spacing4)
-    cursor(disabled ? cursorBaseDisabled : cursorBaseHover)
+    cursor(disabled ? cursorNotAllowed : cursorBaseHover)
     userSelect(.none)
   }
 

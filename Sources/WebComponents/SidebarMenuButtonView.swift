@@ -9,9 +9,11 @@
   /// A sidebar menu button that toggles the slide-from-left sidebar panel.
   public struct SidebarMenuButtonView: HTMLContent {
     let `class`: String
+    let show: Bool
 
-    public init(class: String = "") {
+    public init(class: String = "", show: Bool = false) {
       self.class = `class`
+      self.show = show
     }
 
     public func build() -> DOM.Node {
@@ -32,12 +34,10 @@
       .ariaExpanded(false)
       .ariaControls("navbar-slide-menu")
       .style {
-        // Hidden by default — CLIENT shows via inline display:flex when sidebar exists
-        display(.none)
-
-        // On desktop the sidebar column is visible, so never show hamburger
-        media(minWidth(minWidthBreakpointTablet)) {
-          display(.none).important()
+        if show {
+          display(.flex)
+        } else {
+          display(.none)
         }
       }
     }

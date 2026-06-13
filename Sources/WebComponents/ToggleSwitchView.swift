@@ -69,7 +69,7 @@
       clip(rect(0, 0, 0, 0))
       whiteSpace(.nowrap)
       borderWidth(0)
-      cursor(disabled ? cursorBaseDisabled : cursorBase)
+      cursor(disabled ? cursorNotAllowed : cursorBase)
 
       pseudoClass(.checked, not(.disabled)) {
         nextSibling(".toggle-switch-switch") {
@@ -107,7 +107,7 @@
       border(borderWidthBase, .solid, disabled ? borderColorDisabled : borderColorInputBinary)
       borderRadius(borderRadiusPill)
       transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-      cursor(disabled ? cursorBaseDisabled : cursorBase)
+      cursor(disabled ? cursorNotAllowed : cursorBase)
 
       if disabled {
         opacity(opacityMedium).important()
@@ -160,7 +160,7 @@
 
         // Override LabelView's bold font weight and add toggle-specific styles
         fontWeight(fontWeightNormal).important()
-        cursor(disabled ? cursorBaseDisabled : cursorBase).important()
+        cursor(disabled ? cursorNotAllowed : cursorBase).important()
         userSelect(.none).important()
       }
 

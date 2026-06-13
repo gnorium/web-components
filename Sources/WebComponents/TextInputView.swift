@@ -23,6 +23,7 @@ public struct TextInputView: HTMLContent {
   let inputFontSize: CSS.Length
   let labelText: String
   let tooltip: String?
+  let fullWidth: Bool
   let `class`: String
   let min: Int?
   let max: Int?
@@ -63,6 +64,7 @@ public struct TextInputView: HTMLContent {
     inputFontSize: CSS.Length = fontSizeMedium16,
     label: String = "",
     tooltip: String? = nil,
+    fullWidth: Bool = true,
     class: String = "",
     min: Int? = nil,
     max: Int? = nil
@@ -82,6 +84,7 @@ public struct TextInputView: HTMLContent {
     self.inputFontSize = inputFontSize
     self.labelText = label
     self.tooltip = tooltip
+    self.fullWidth = fullWidth
     self.`class` = `class`
     self.min = min
     self.max = max
@@ -91,7 +94,9 @@ public struct TextInputView: HTMLContent {
   private func textInputViewCSS() -> [CSSOM.CSSRule] {
     position(.relative)
     display(.inlineBlock)
-    width(perc(100))
+    if fullWidth {
+      width(perc(100))
+    }
   }
 
   @CSSBuilder
@@ -99,32 +104,27 @@ public struct TextInputView: HTMLContent {
     _ disabled: Bool, _ readonly: Bool, _ status: ValidationStatus, _ hasStartIcon: Bool,
     _ hasEndIcon: Bool, _ clearable: Bool
   ) -> [CSSOM.CSSRule] {
-    let isError: Bool = switch status { case .error: true; case .default: false }
+    let isError = status == .error
     width(perc(100))
     minHeight(minSizeInteractivePointer)
-    padding(spacing8, spacing12)
+    padding(spacing8, px(15))
     fontFamily(typographyFontSans)
     fontSize(inputFontSize)
     color(disabled ? colorDisabled : colorBase)
-    backgroundColor(
-      disabled
-        ? backgroundColorDisabled
-        : (readonly ? backgroundColorNeutralSubtle : backgroundColorBase))
-    border(
-      borderWidthBase, .solid,
-      isError ? borderColorRed : (disabled ? borderColorDisabled : borderColorBase))
+    backgroundColor(disabled ? backgroundColorDisabled : (readonly ? backgroundColorNeutralSubtle : backgroundColorBase))
+    border(borderWidthBase, .solid, isError ? borderColorRed : (disabled ? borderColorDisabled : borderColorBase))
     borderRadius(borderRadiusBase)
     transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
     outline(.none)
-    cursor(disabled ? cursorBaseDisabled : cursorText)
+    cursor(disabled ? cursorNotAllowed : cursorText)
     boxSizing(.borderBox)
 
     if hasStartIcon {
-      paddingInlineStart(calc(spacing12 + sizeIconMedium + spacing8)).important()
+      paddingInlineStart(calc(px(15) + sizeIconMedium + spacing8)).important()
     }
 
     if hasEndIcon || clearable {
-      paddingInlineEnd(calc(spacing12 + sizeIconMedium + spacing8)).important()
+      paddingInlineEnd(calc(px(15) + sizeIconMedium + spacing8)).important()
     }
 
     pseudoElement(.placeholder) {
@@ -133,6 +133,7 @@ public struct TextInputView: HTMLContent {
 
     pseudoClass(.focus, not(.disabled), not(.readOnly)) {
       borderColor(borderColorBlueFocus).important()
+      outline(.none).important()
       boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
     }
 
@@ -155,9 +156,9 @@ public struct TextInputView: HTMLContent {
     pointerEvents(.none)
 
     if isStartIcon {
-      left(spacing12)
+      left(px(15))
     } else {
-      right(spacing12)
+      right(px(15))
     }
   }
 
@@ -165,7 +166,7 @@ public struct TextInputView: HTMLContent {
   private func textInputClearButtonCSS(_ disabled: Bool) -> [CSSOM.CSSRule] {
     position(.absolute)
     top(perc(50))
-    right(spacing12)
+    right(px(15))
     transform(translateY(perc(-50)))
     display(.none)
     alignItems(.center)
@@ -177,7 +178,7 @@ public struct TextInputView: HTMLContent {
     border(.none)
     borderRadius(borderRadiusCircle)
     color(colorSubtle)
-    cursor(disabled ? cursorBaseDisabled : cursorBase)
+    cursor(disabled ? cursorNotAllowed : cursorBase)
     transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
 
     pseudoClass(.hover, not(.disabled)) {
@@ -200,8 +201,8 @@ public struct TextInputView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
-    let hasStartIcon = startIcon != nil
-    let hasEndIcon = endIcon != nil
+    let hasStartIcon = if let _ = startIcon { true } else { false }
+    let hasEndIcon = if let _ = endIcon { true } else { false }
     let htmlInputType = getHTMLInputType(type)
 
     // Build input element before the div block
@@ -264,7 +265,7 @@ public struct TextInputView: HTMLContent {
     }
     .class(stringIsEmpty(`class`) ? "text-input-view" : "text-input-view \(`class`)")
 
-    if case .error = status {
+    if status == .error {
       container = container.data("status", "error")
     }
 
@@ -406,11 +407,41 @@ public struct TextInputView: HTMLContent {
 
     private func hydrateAllTextInputs() {
       let allTextInputs = document.querySelectorAll(".text-input-view")
-
       for textInput in allTextInputs {
         let instance = TextInputInstance(textInput: textInput)
         instances.append(instance)
       }
+    }
+
+    public func hydrate(element: DOM.Element) {
+      let instance = TextInputInstance(textInput: element)
+      instances.append(instance)
+    }
+  }
+
+  public enum TextInputFactory {
+    public static func createElement(
+      id: String,
+      name: String,
+      placeholder: String = "",
+      value: String = "",
+      fullWidth: Bool = true,
+      class: String = "",
+      hydrator: TextInputHydration? = nil
+    ) -> DOM.Element {
+      let wrapper = document.createElement(.div)
+      let view = TextInputView(
+        id: id,
+        name: name,
+        placeholder: placeholder,
+        value: value,
+        fullWidth: fullWidth,
+        class: `class`
+      )
+      wrapper.innerHTML = renderHTML { view.render() }
+      let element = wrapper.firstElementChild ?? wrapper
+      hydrator?.hydrate(element: element)
+      return element
     }
   }
 #endif

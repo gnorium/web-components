@@ -15,11 +15,14 @@ public struct DropdownView: HTMLContent {
     public let value: String
     public let display: String
     public let altDisplay: String?
+    /// Lowercase form of display, for mid-sentence use (e.g. tooltip text). Pre-computed server-side to avoid WASI string ops.
+    public let displayLower: String?
 
-    public init(value: String, display: String, altDisplay: String? = nil) {
+    public init(value: String, display: String, altDisplay: String? = nil, displayLower: String? = nil) {
       self.value = value
       self.display = display
       self.altDisplay = altDisplay
+      self.displayLower = displayLower
     }
   }
 
@@ -47,6 +50,7 @@ public struct DropdownView: HTMLContent {
   let contentJustifyContent: CSS.JustifyContent
   let optionLayout: OptionLayout
   let buttonBorderRadius: CSS.Length
+  let submitFormOnChange: Bool
 
   public init(
     id: String,
@@ -67,7 +71,8 @@ public struct DropdownView: HTMLContent {
     fontSize: CSS.Length = fontSizeSmall14,
     contentJustifyContent: CSS.JustifyContent = .spaceBetween,
     optionLayout: OptionLayout = .standard,
-    borderRadius: CSS.Length = borderRadiusBase
+    borderRadius: CSS.Length = borderRadiusBase,
+    submitFormOnChange: Bool = false
   ) {
     self.id = id
     self.name = name
@@ -88,6 +93,7 @@ public struct DropdownView: HTMLContent {
     self.contentJustifyContent = contentJustifyContent
     self.optionLayout = optionLayout
     self.buttonBorderRadius = borderRadius
+    self.submitFormOnChange = submitFormOnChange
   }
 
   public func build() -> DOM.Node {
@@ -123,7 +129,7 @@ public struct DropdownView: HTMLContent {
         // Hidden input to store the selected value
         input()
           .type(.hidden)
-          .id("\(id)-value")
+          .id(id)
           .name(name)
           .value(selectedValue ?? "")
           .required(required)
@@ -157,8 +163,12 @@ public struct DropdownView: HTMLContent {
               .data("placeholder", placeholder)
               .style {
                 textAlign(.start)
-                let hasSelectedValue = selectedValue != nil && !stringIsEmpty(selectedValue ?? "") && options.contains { stringEquals($0.value, selectedValue ?? "") }
-                color(hasSelectedValue ? colorBase : colorPlaceholder)
+                let hasSelectedValue = selectedValue.map { sv in options.contains { stringEquals($0.value, sv) } } ?? false
+                if disabled {
+                  color(hasSelectedValue ? colorDisabled : colorPlaceholder)
+                } else {
+                  color(hasSelectedValue ? colorBase : colorPlaceholder)
+                }
                 whiteSpace(.nowrap)
                 if optionLayout == .sidebar {
                   overflow(.hidden)
@@ -273,6 +283,7 @@ public struct DropdownView: HTMLContent {
               .data("dropdown-option", true)
               .data("value", option.value)
               .data("display", option.display)
+              .data("display-lower", option.displayLower ?? option.display)
               .data("alt-display", option.altDisplay ?? "")
               .style {
                 display(.flex)
@@ -351,14 +362,15 @@ public struct DropdownView: HTMLContent {
       .data("dropdown-disabled", disabled)
       .style {
         position(.relative)
-        if disabled {
-          pointerEvents(.none)
-        }
         pseudoClass(.focusWithin) {
           zIndex(zIndexDropdown).important()
         }
         selector(".is-open") {
           zIndex(zIndexDropdown).important()
+        }
+        selector(".dropdown-trigger:focus-visible") {
+          outline(.none).important()
+          boxShadow(px(0), px(0), px(0), px(2), colorBlue).important()
         }
         media(maxWidth(maxWidthBreakpointMobile)) {
           width(perc(100)).important()
@@ -366,6 +378,7 @@ public struct DropdownView: HTMLContent {
       }
     }
     .class(stringIsEmpty(`class`) ? "dropdown-view" : "dropdown-view \(`class`)")
+    .data("submitFormOnChange", submitFormOnChange ? "true" : "false")
     .style {
       display(.flex)
       flexDirection(.column)
@@ -378,7 +391,6 @@ public struct DropdownView: HTMLContent {
         }
       }
     }
-
   }
 }
 
@@ -402,6 +414,8 @@ public struct DropdownView: HTMLContent {
     private var isOpen: Bool = false
     private var allOptions: [DOM.Element] = []
     private var placeholder: String = "Select an option"
+
+    private var highlightIndex: Int = -1
 
     init(container: DOM.Element, dropdownID: String) {
       self.container = container
@@ -450,10 +464,44 @@ public struct DropdownView: HTMLContent {
         self.filterOptions()
       }
 
-      // Option click handlers
-      for option in allOptions {
+      // Option click + hover handlers
+      for (i, option) in allOptions.enumerated() {
         _ = option.addEventListener(.click) { [self] _ in
           self.selectOption(option)
+        }
+        _ = option.addEventListener(.mousemove) { [self] _ in
+          if self.highlightIndex != i {
+            if self.highlightIndex >= 0, self.highlightIndex < self.allOptions.count {
+              let prev = self.allOptions[self.highlightIndex]
+              if prev.classList.contains("is-selected") {
+                prev.style.backgroundColor(backgroundColorBlue)
+                prev.style.color(colorInvertedFixed)
+              } else {
+                prev.style.backgroundColor(backgroundColorTransparent)
+                prev.style.color(colorBase)
+              }
+            }
+            self.highlightIndex = i
+            option.style.backgroundColor(backgroundColorBlue)
+            option.style.color(colorInvertedFixed)
+          }
+        }
+      }
+
+      // Clear hover highlight when mouse leaves the options list
+      if let list = optionsList {
+        _ = list.addEventListener(.mouseleave) { [self] _ in
+          if self.highlightIndex >= 0, self.highlightIndex < self.allOptions.count {
+            let prev = self.allOptions[self.highlightIndex]
+            if prev.classList.contains("is-selected") {
+              prev.style.backgroundColor(backgroundColorBlue)
+              prev.style.color(colorInvertedFixed)
+            } else {
+              prev.style.backgroundColor(backgroundColorTransparent)
+              prev.style.color(colorBase)
+            }
+          }
+          self.highlightIndex = -1
         }
       }
 
@@ -470,29 +518,20 @@ public struct DropdownView: HTMLContent {
         }
       }
 
-      // Keydown handler for auto-focusing search
+      // Keydown handler for auto-focusing search and arrow navigation
       _ = document.addEventListener(.keydown) { [self] event in
         guard self.isOpen, let searchInput = self.searchInput else { return }
-
-        // Get key from event
-        let key = event.key
-
-        // Check if it's a single printable character (and not a modifier combo if possible to check)
-        // Note: Simplistic check for length 1 and alphanumeric ranges could work
-        // Check if it's a single printable character (and not a modifier combo if possible to check)
-        // Note: Simplistic check for length 1 and alphanumeric ranges could work
-        if key.utf8.count == 1, let charByte = key.utf8.first {
-          // Check if it's a letter or number (ASCII only to avoid Unicode normalization code bloat)
-          // a-z: 97-122
-          // A-Z: 65-90
-          // 0-9: 48-57
-          let isLetterOrNumber =
-            (charByte >= 97 && charByte <= 122) || (charByte >= 65 && charByte <= 90)
-            || (charByte >= 48 && charByte <= 57)
-
-          if isLetterOrNumber {
-            searchInput.focus()
-          }
+        if stringIsAlphanumeric(event.key) {
+          searchInput.focus()
+        } else if stringEquals(event.key, "ArrowDown") {
+          event.preventDefault()
+          self.moveHighlight(1)
+        } else if stringEquals(event.key, "ArrowUp") {
+          event.preventDefault()
+          self.moveHighlight(-1)
+        } else if stringEquals(event.key, "Enter") {
+          event.preventDefault()
+          self.selectHighlighted()
         }
       }
     }
@@ -510,6 +549,7 @@ public struct DropdownView: HTMLContent {
       _ = container?.classList.add("is-open")
       morphChevron()
       isOpen = true
+      highlightIndex = -1
     }
 
     private func closeDropdown() {
@@ -543,10 +583,13 @@ public struct DropdownView: HTMLContent {
             option.getAttribute(data("alt-display")) ?? "", searchValue)
         if matches {
           option.style.display(.flex)
+          option.setAttribute(data("hidden"), "false")
         } else {
           option.style.display(.none)
+          option.setAttribute(data("hidden"), "true")
         }
       }
+      highlightIndex = -1
     }
 
     private func selectOption(_ option: DOM.Element) {
@@ -589,6 +632,53 @@ public struct DropdownView: HTMLContent {
       }
 
       closeDropdown()
+
+      // Submit the closest form if the dropdown was configured to do so
+      if let container, stringEquals(container.dataset["submitFormOnChange"], "true") {
+        if let form = container.closest("form") as? HTML.HTMLFormElement {
+          form.submit()
+        }
+      }
+    }
+
+    private func moveHighlight(_ delta: Int) {
+      guard allOptions.count > 0 else { return }
+      if highlightIndex >= 0, highlightIndex < allOptions.count {
+        let prev = allOptions[highlightIndex]
+        if prev.classList.contains("is-selected") {
+          prev.style.backgroundColor(backgroundColorBlue)
+          prev.style.color(colorInvertedFixed)
+        } else {
+          prev.style.backgroundColor(backgroundColorTransparent)
+          prev.style.color(colorBase)
+        }
+      }
+      var steps = 0
+      while steps < allOptions.count {
+        highlightIndex = ((highlightIndex + delta) % allOptions.count + allOptions.count) % allOptions.count
+        steps += 1
+        if !stringEquals(allOptions[highlightIndex].getAttribute(data("hidden")) ?? "", "true") {
+          break
+        }
+      }
+      allOptions[highlightIndex].style.backgroundColor(backgroundColorBlue)
+      allOptions[highlightIndex].style.color(colorInvertedFixed)
+      if let list = optionsList {
+        let optionTop = allOptions[highlightIndex].offsetTop - list.offsetTop
+        let optionBottom = optionTop + allOptions[highlightIndex].offsetHeight
+        let listScrollTop = list.scrollTop
+        let listBottom = listScrollTop + Double(list.clientHeight)
+        if optionTop < listScrollTop {
+          list.scrollTop = optionTop
+        } else if optionBottom > listBottom {
+          list.scrollTop = optionBottom - Double(list.clientHeight)
+        }
+      }
+    }
+
+    private func selectHighlighted() {
+      guard highlightIndex >= 0, highlightIndex < allOptions.count else { return }
+      selectOption(allOptions[highlightIndex])
     }
 
     private func clearSelection() {
@@ -596,18 +686,24 @@ public struct DropdownView: HTMLContent {
       selectedText?.innerHTML = placeholder
       selectedText?.removeAttribute(.title)
       selectedText?.style.color(colorPlaceholder)
-      
+
       for opt in allOptions {
         _ = opt.classList.remove("is-selected")
         opt.style.backgroundColor(backgroundColorTransparent)
         opt.style.color(colorBase)
       }
-      
+
       if let hiddenInput {
         hiddenInput.dispatchEvent(.change)
       }
-      
+
       closeDropdown()
+
+      if let container, stringEquals(container.dataset["submitFormOnChange"], "true") {
+        if let form = container.closest("form") as? HTML.HTMLFormElement {
+          form.submit()
+        }
+      }
     }
   }
 
