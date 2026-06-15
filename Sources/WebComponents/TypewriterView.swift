@@ -125,6 +125,7 @@
     private let deleteIntervalMs: Double
     private let pauseAfterTypeMs: Double
     private let pauseAfterDeleteMs: Double
+    
     public init(
       charIntervalMs: Double = 40,
       deleteIntervalMs: Double = 4,
