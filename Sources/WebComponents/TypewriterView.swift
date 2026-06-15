@@ -177,6 +177,10 @@
       let persistRaw = element.getAttribute("data-typewriter-persist-caret") ?? ""
       let persistCaret = stringEquals(persistRaw, "true")
 
+      if let rect = element.getBoundingClientRect() {
+        element.style.minHeight(px(rect.height))
+      }
+
       element.textContent = ""
 
       let typingSpan = document.createElement("span")
