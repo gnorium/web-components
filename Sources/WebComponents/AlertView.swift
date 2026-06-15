@@ -160,6 +160,26 @@
     @CSSBuilder
     private func alertFadeInCSS() -> [CSSOM.CSSRule] {
       animation("alert-fade-in", transitionDurationBase, transitionTimingFunctionSystem)
+      keyframes("alert-fade-in") {
+        from {
+          opacity(0)
+          transform(translateX(perc(-100)))
+        }
+        to {
+          opacity(1)
+          transform(translateX(0))
+        }
+      }
+      keyframes("alert-fade-out") {
+        from {
+          opacity(1)
+          transform(translateX(0))
+        }
+        to {
+          opacity(0)
+          transform(translateX(perc(-100)))
+        }
+      }
     }
 
     public func build() -> DOM.Node {

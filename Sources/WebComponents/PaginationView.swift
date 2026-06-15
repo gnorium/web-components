@@ -225,17 +225,32 @@ public struct PaginationView: HTMLContent {
         let inputEl = view.querySelector(".page-box")
         // Change on Enter key
         _ = inputEl?.addEventListener(.keydown) { [self] (event: Event) in
-          if stringEquals(event.key, "Enter") {
+          let key = event.key
+          let allowed = stringEquals(key, "Enter") || stringEquals(key, "Backspace")
+            || stringEquals(key, "Delete") || stringEquals(key, "Tab")
+            || stringEquals(key, "ArrowLeft") || stringEquals(key, "ArrowRight")
+            || stringEquals(key, "ArrowUp") || stringEquals(key, "ArrowDown")
+            || (key.utf8.count == 1 && key.utf8.first.map { $0 >= 48 && $0 <= 57 } ?? false)
+          if !allowed { event.preventDefault(); return }
+          if stringEquals(key, "Enter") {
             event.preventDefault()
             guard let input = (inputEl as? HTML.HTMLInputElement) else { return }
             self.navigateToPage(input.value, in: view)
           }
         }
 
-        // Also handle 'change' event for broader compatibility
         _ = inputEl?.addEventListener(.change) { [self] (event: Event) in
           guard let input = (inputEl as? HTML.HTMLInputElement) else { return }
           self.navigateToPage(input.value, in: view)
+        }
+
+        _ = inputEl?.addEventListener(.blur) { (event: Event) in
+          guard let input = (inputEl as? HTML.HTMLInputElement) else { return }
+          if stringIsEmpty(input.value) {
+            let currentPageLink = view.querySelector("a[data-current=\"true\"]")
+            let page = currentPageLink?.getAttribute("data-page") ?? "1"
+            input.value = page
+          }
         }
       }
     }

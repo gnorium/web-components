@@ -53,6 +53,10 @@
       borderRadius(borderRadiusCircle)
       animation("progress-indicator-spin", s(1), .linear, .infinite)
       flexShrink(0)
+      keyframes("progress-indicator-spin") {
+        from { transform(rotate(deg(0))) }
+        to { transform(rotate(deg(360))) }
+      }
     }
 
     @CSSBuilder

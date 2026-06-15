@@ -658,7 +658,6 @@ public struct TableView: HTMLContent {
                 .class("table-empty-row")
                 .style {
                   backgroundColor(backgroundColorBase).important()
-                  borderBlockEnd(borderWidthBase, .solid, borderColorSubtle).important()
                   display(.flex)
                   flexDirection(.column)
                   flex(1)
@@ -1017,6 +1016,7 @@ public struct TableView: HTMLContent {
     }())
     .data("current-page", intToString(computedCurrentPage))
     .data("pagination-size", intToString(paginationSizeDefault))
+    .data("total-items", intToString(computedTotalItems))
     .data("pagination-base-url", paginationBaseUrl ?? "")
     .data("sort-column", sort?.columnID ?? "")
     .data("sort-order", sort?.direction.value ?? "")
@@ -2432,10 +2432,22 @@ public struct TableView: HTMLContent {
       let pageSize = parseInt(sizeStr) ?? 10
 
       let rows = table.querySelectorAll(".table-tbody tr")
-      let dataRows = Array(rows).filter { !$0.classList.contains("table-empty-row") && !$0.classList.contains("table-row-dummy") }
-      let totalRows = dataRows.count
+      let allDataRows = Array(rows).filter {
+        !$0.classList.contains("table-empty-row")
+        && !$0.classList.contains("table-row-dummy")
+        && !$0.classList.contains("table-sub-row")
+        && !$0.classList.contains("lemma-history-sub-row")
+      }
+      // Top-level rows only (exclude group children) for pagination and display count
+      let topLevelRows = allDataRows.filter {
+        !$0.classList.contains("table-group-child")
+        && !$0.classList.contains("batch-group-child")
+      }
+      // Use server-provided total-items when available (authoritative; avoids counting subrows)
+      let serverTotal = parseInt(table.getAttribute(data("total-items")) ?? "")
+      let displayTotal = serverTotal ?? topLevelRows.count
 
-      let maxPage = totalRows == 0 ? 1 : (totalRows + pageSize - 1) / pageSize
+      let maxPage = displayTotal == 0 ? 1 : (displayTotal + pageSize - 1) / pageSize
 
       guard page > 0 && page <= maxPage else { return }
 
@@ -2450,11 +2462,21 @@ public struct TableView: HTMLContent {
 
       if isPaginated {
         let startIdx = (page - 1) * pageSize
-        let endIdx = min(startIdx + pageSize, totalRows)
+        let endIdx = min(startIdx + pageSize, displayTotal)
 
-        for (index, row) in dataRows.enumerated() {
+        for (index, row) in allDataRows.enumerated() {
+          let isGroupChild = row.classList.contains("table-group-child") || row.classList.contains("batch-group-child")
           if index >= startIdx && index < endIdx {
-            row.style.setProperty(.display, "table-row", .important)
+            // Only show group children if their group is currently expanded
+            if isGroupChild {
+              let groupID = row.getAttribute(data("group-id")) ?? ""
+              let isCollapsed = collapsedGroups.contains(where: { stringEquals($0, groupID) })
+              if !isCollapsed {
+                row.style.setProperty(.display, "table-row", .important)
+              }
+            } else {
+              row.style.setProperty(.display, "table-row", .important)
+            }
           } else {
             row.style.setProperty(.display, "none", .important)
           }
@@ -2462,8 +2484,8 @@ public struct TableView: HTMLContent {
 
         // Update pagination info text: Showing results X–Y of Z
         let infoEls = table.querySelectorAll(".pagination-info")
-        let showingStart = totalRows == 0 ? 0 : startIdx + 1
-        let infoText = "Showing results \(showingStart)–\(endIdx) of \(totalRows)"
+        let showingStart = displayTotal == 0 ? 0 : startIdx + 1
+        let infoText = "Showing results \(showingStart)–\(endIdx) of \(displayTotal)"
         for infoEl in infoEls {
           infoEl.textContent = infoText
         }

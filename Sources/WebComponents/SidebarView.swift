@@ -49,6 +49,8 @@
           position(.sticky)
           top(0)
           left(0)
+          alignSelf(.flexStart)
+          height(vh(100))
           zIndex(zIndexSticky)
           backgroundColor(backgroundColorBase)
           borderInlineEnd(borderWidthBase, .solid, borderColorSubtle)
