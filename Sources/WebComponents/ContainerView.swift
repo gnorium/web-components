@@ -35,6 +35,10 @@
       width(perc(100))
       marginInline(.auto)
       boxSizing(.borderBox)
+      display(.flex)
+      flexDirection(.column)
+      flex(1)
+      minHeight(0)
 
       // Fluid padding that scales smoothly with viewport width
       // Formula: clamp(min, preferred, max)

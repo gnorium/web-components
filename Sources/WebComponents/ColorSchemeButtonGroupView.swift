@@ -16,71 +16,31 @@
     }
 
     public func build() -> DOM.Node {
-      div {
-        optionButton(value: "light", label: "Light") {
-          IconView(icon: { s in LightModeIconView(width: s, height: s) }, size: .medium)
+      ButtonGroupView(
+        buttons: [
+          .init(
+            value: "light", label: "Light",
+            icon: IconView(icon: { s in LightModeIconView(width: s, height: s) }, size: .medium)
+              .build(),
+            class: "", fullWidth: true,
+            labelFontWeight: fontWeightNormal, contentJustifyContent: .flexStart),
+          .init(
+            value: "dark", label: "Dark",
+            icon: IconView(icon: { s in DarkModeIconView(width: s, height: s) }, size: .medium)
+              .build(),
+            class: "", fullWidth: true,
+            labelFontWeight: fontWeightNormal, contentJustifyContent: .flexStart),
+        ],
+        shape: .apart,
+        direction: .column,
+        class: `class`.isEmpty
+          ? "color-scheme-button-group-view" : "color-scheme-button-group-view \(`class`)",
+        ariaLabel: "Color scheme",
+        style: {
+          width(perc(100))
+          gap(spacing4)
         }
-        optionButton(value: "dark", label: "Dark") {
-          IconView(icon: { s in DarkModeIconView(width: s, height: s) }, size: .medium)
-        }
-      }
-      .class(
-        `class`.isEmpty
-          ? "button-group-view color-scheme-button-group-view"
-          : "button-group-view color-scheme-button-group-view \(`class`)"
       )
-      .role(.group)
-      .ariaLabel("Color scheme")
-      .style {
-        display(.flex)
-        flexDirection(.column)
-        gap(spacing4)
-      }
-    }
-
-    private func optionButton(value: String, label: String, @HTMLBuilder icon: () -> [DOM.Node])
-      -> HTMLContent
-    {
-      div {
-        span { icon() }
-          .class("option-icon")
-          .ariaHidden(true)
-          .style {
-            display(.flex)
-            alignItems(.center)
-            justifyContent(.center)
-            width(sizeIconMedium)
-            height(sizeIconMedium)
-          }
-        span { label }
-      }
-      .class("button-group-button")
-      .data("value", value)
-      .tabindex(0)
-      .role(.button)
-      .ariaDisabled(false)
-      .style {
-        display(.flex)
-        alignItems(.center)
-        gap(spacing8)
-        padding(spacing8, spacing12)
-        fontFamily(fontFamilyBase)
-        fontSize(fontSizeMedium16)
-        fontWeight(fontWeightNormal)
-        color(colorBase)
-        backgroundColor(backgroundColorBase)
-        borderWidth(borderWidthBase)
-        borderStyle(.solid)
-        borderColor(borderColorBase)
-        borderRadius(borderRadiusPill)
-        cursor(.pointer)
-        transition(.all, s(0.1), .ease)
-        userSelect(.none)
-
-        pseudoClass(.hover) {
-          backgroundColor(backgroundColorInteractive)
-        }
-      }
     }
   }
 #endif
@@ -162,20 +122,7 @@
     }
 
     private nonisolated func updateSelection(_ group: DOM.Element, selectedValue: String) {
-      let buttons = group.querySelectorAll(".button-group-button")
-      for button in buttons {
-        if let value = button.getAttribute("data-value") {
-          if stringEquals(value, selectedValue) {
-            button.style.backgroundColor(backgroundColorBlue)
-            button.style.color(colorInvertedFixed)
-            button.style.borderColor(borderColorBlue)
-          } else {
-            button.style.backgroundColor(backgroundColorBase)
-            button.style.color(colorBase)
-            button.style.borderColor(borderColorBase)
-          }
-        }
-      }
+      selectButtonGroupValue(group, selectedValue: selectedValue)
     }
   }
 #endif

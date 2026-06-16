@@ -26,6 +26,7 @@ public struct ButtonView: HTMLContent {
   let contentJustifyContent: CSS.JustifyContent
   let style: @Sendable () -> [CSSOM.CSSRule]
   let buttonBorderRadius: CSS.Length
+  let data: [String: String]
 
   /// Button type attribute
   public enum ButtonType: String, Sendable {
@@ -89,6 +90,7 @@ public struct ButtonView: HTMLContent {
     labelFontFamily: CSS.FontFamily = typographyFontSans,
     contentJustifyContent: CSS.JustifyContent = .center,
     borderRadius: CSS.Length = borderRadiusPill,
+    data: [String: String] = [:],
     @CSSBuilder style: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] }
   ) {
     self.label = label
@@ -109,6 +111,7 @@ public struct ButtonView: HTMLContent {
     self.contentJustifyContent = contentJustifyContent
     self.style = style
     self.buttonBorderRadius = borderRadius
+    self.data = data
   }
 
   public init<T: HTMLContent>(
@@ -128,6 +131,7 @@ public struct ButtonView: HTMLContent {
     labelFontFamily: CSS.FontFamily = typographyFontSans,
     contentJustifyContent: CSS.JustifyContent = .center,
     borderRadius: CSS.Length = borderRadiusPill,
+    data: [String: String] = [:],
     @CSSBuilder style: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] }
   ) {
     self.label = label
@@ -148,6 +152,7 @@ public struct ButtonView: HTMLContent {
     self.contentJustifyContent = contentJustifyContent
     self.style = style
     self.buttonBorderRadius = borderRadius
+    self.data = data
   }
 
   /// Create an icon-only button
@@ -168,6 +173,7 @@ public struct ButtonView: HTMLContent {
     labelFontFamily: CSS.FontFamily = typographyFontSans,
     contentJustifyContent: CSS.JustifyContent = .center,
     borderRadius: CSS.Length = borderRadiusPill,
+    data: [String: String] = [:],
     @CSSBuilder style: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] }
   ) {
     self.label = ""
@@ -188,6 +194,7 @@ public struct ButtonView: HTMLContent {
     self.contentJustifyContent = contentJustifyContent
     self.style = style
     self.buttonBorderRadius = borderRadius
+    self.data = data
   }
 
   /// Create a button with custom content
@@ -207,6 +214,7 @@ public struct ButtonView: HTMLContent {
     labelFontFamily: CSS.FontFamily = typographyFontSans,
     contentJustifyContent: CSS.JustifyContent = .center,
     borderRadius: CSS.Length = borderRadiusPill,
+    data: [String: String] = [:],
     @CSSBuilder style: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] },
     @HTMLBuilder content: () -> [DOM.Node]
   ) {
@@ -228,6 +236,7 @@ public struct ButtonView: HTMLContent {
     self.contentJustifyContent = contentJustifyContent
     self.style = style
     self.buttonBorderRadius = borderRadius
+    self.data = data
   }
 
   public func build() -> DOM.Node {
@@ -285,6 +294,10 @@ public struct ButtonView: HTMLContent {
         aBtn = aBtn.onclick(click)
       }
 
+      for (key, value) in data {
+        aBtn = aBtn.data(key, value)
+      }
+
       return aBtn
     } else {
       var bBtn = button { renderContent() }
@@ -304,6 +317,10 @@ public struct ButtonView: HTMLContent {
 
       if let click = onClick {
         bBtn = bBtn.onclick(click)
+      }
+
+      for (key, value) in data {
+        bBtn = bBtn.data(key, value)
       }
 
       return bBtn
@@ -343,10 +360,6 @@ public struct ButtonView: HTMLContent {
       width(perc(100))
     } else {
       minWidth(size.minSize)
-      media(maxWidth(maxWidthBreakpointMobile)) {
-        width(perc(100)).important()
-        display(.flex).important()
-      }
     }
     minHeight(size.minSize)
 
@@ -537,11 +550,11 @@ public struct ButtonView: HTMLContent {
     case (_, .solid):
       pseudoClass(.hover, .not(.disabled)) {
         backgroundColor(`var`("--background-color-\(c)-hover")).important()
-        borderColor(`var`("--background-color-\(c)-hover")).important()
+        borderColor(`var`("--border-color-\(c)-hover")).important()
       }
       pseudoClass(.active, .not(.disabled)) {
         backgroundColor(`var`("--background-color-\(c)-active")).important()
-        borderColor(`var`("--background-color-\(c)-active")).important()
+        borderColor(`var`("--border-color-\(c)-active")).important()
       }
       pseudoClass(.focus) { borderColor(`var`("--border-color-\(c)-focus")).important() }
     case (_, .quiet):

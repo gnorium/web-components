@@ -639,6 +639,7 @@ public struct TableView: HTMLContent {
                     .style {
                       display(.flex)
                       flexDirection(.column)
+                      gap(spacing8)
                       alignItems(.center)
                       justifyContent(.center)
                       flex(1)
