@@ -270,10 +270,9 @@
 
     @CSSBuilder
     private func searchMenuViewCSS() -> [CSSOM.CSSRule] {
-      // Hidden by default, positioned right below navbar
       display(.none)
       position(.fixed)
-      top(px(96))
+      top(0)
       insetInlineStart(0)
       width(perc(100))
       zIndex(zIndexOverlay)
@@ -283,10 +282,10 @@
     @CSSBuilder
     private func searchMenuBackdropCSS() -> [CSSOM.CSSRule] {
       position(.fixed)
-      top(px(96))  // Start below navbar (navbar height is 96px)
+      top(px(96))
       insetInlineStart(0)
       width(perc(100))
-      height(calc(vh(100) - px(96)))  // Full height minus navbar
+      height(calc(vh(100) - px(96)))
       backgroundColor(rgba(0, 0, 0, 0.4))
       backdropFilter(blur(rem(1)))
       webkitBackdropFilter(blur(rem(1)))
@@ -300,11 +299,11 @@
       position(.relative)
       width(perc(100))
       backgroundColor(backgroundColorBase)
-      paddingBlockStart(spacing16)
+      paddingBlockStart(px(96 + 16))
       paddingBlockEnd(spacing16)
       borderBlockEnd(borderWidthBase, .solid, borderColorBase)
 
-      // Start hidden — translated fully above; slides down from beneath navbar
+      // Start hidden — translated fully above; slides down and wipes over the navbar
       opacity(0)
       transform(translateY(perc(-100)))
       transition(
@@ -314,7 +313,7 @@
 
       // Desktop: more vertical padding
       media(minWidth(minWidthBreakpointTablet)) {
-        paddingBlockStart(spacing20)
+        paddingBlockStart(px(96 + 20))
         paddingBlockEnd(spacing20)
       }
     }
@@ -1107,6 +1106,8 @@
     }
 
     private func closeMenu() {
+      document.dispatchEvent(CustomEvent(type: "search-menu-closed", detail: "{}"))
+
       isMenuOpen = false
 
       if let menu = document.querySelector("[data-search-menu=\"true\"]") {

@@ -8,9 +8,11 @@
   /// A button that toggles an ellipsis popover menu.
   public struct EllipsisMenuButtonView: HTMLContent {
     let `class`: String
+    let weight: ButtonView.ButtonWeight
 
-    public init(class: String = "") {
+    public init(class: String = "", weight: ButtonView.ButtonWeight = .quiet) {
       self.class = `class`
+      self.weight = weight
     }
 
     public func build() -> DOM.Node {
@@ -20,7 +22,7 @@
             icon: { size in
               EllipsisIconView(width: size, height: size)
             }, size: .medium),
-          weight: .quiet,
+          weight: weight,
           size: .large,
           ariaLabel: "Settings",
           class: "navbar-ellipsis-btn"

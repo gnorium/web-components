@@ -122,12 +122,12 @@
             borderColor(.transparent).important()
           }
 
-          attribute(ariaPressed(true), .hover, not(.disabled)) {
+          attribute(ariaPressed(true), .hover, .not(.disabled)) {
             backgroundColor(backgroundColorBlueSubtleHover).important()
             color(colorBlueHover).important()
           }
 
-          attribute(ariaPressed(true), .active, not(.disabled)) {
+          attribute(ariaPressed(true), .active, .not(.disabled)) {
             backgroundColor(backgroundColorBlueSubtleActive).important()
             color(colorBlueActive).important()
           }

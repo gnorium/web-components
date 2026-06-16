@@ -478,9 +478,9 @@ public struct ButtonView: HTMLContent {
       color(colorBase)
       borderColor(.transparent)
     case (.gray, .`static`):
-      backgroundColor(backgroundColorBase)
+      backgroundColor(.transparent)
       color(colorBase)
-      borderColor(borderColorBase)
+      borderColor(.transparent)
     case (_, .subtle):
       backgroundColor(`var`("--background-color-\(c)-subtle"))
       color(`var`("--color-\(c)"))
@@ -498,9 +498,9 @@ public struct ButtonView: HTMLContent {
       color(`var`("--color-\(c)"))
       borderColor(.transparent)
     case (_, .`static`):
-      backgroundColor(backgroundColorBase)
+      backgroundColor(.transparent)
       color(colorBase)
-      borderColor(borderColorBase)
+      borderColor(.transparent)
     }
   }
 
@@ -510,47 +510,47 @@ public struct ButtonView: HTMLContent {
 
     switch (buttonColor, weight) {
     case (.gray, .subtle):
-      pseudoClass(.hover, not(.disabled)) { backgroundColor(backgroundColorInteractiveSubtleHover).important() }
-      pseudoClass(.active, not(.disabled)) { backgroundColor(backgroundColorInteractiveSubtleActive).important(); color(colorEmphasized).important(); borderColor(borderColorBase).important() }
+      pseudoClass(.hover, .not(.disabled)) { backgroundColor(backgroundColorInteractiveSubtleHover).important() }
+      pseudoClass(.active, .not(.disabled)) { backgroundColor(backgroundColorInteractiveSubtleActive).important(); color(colorEmphasized).important(); borderColor(borderColorBase).important() }
     case (.gray, .solid):
-      pseudoClass(.hover, not(.disabled)) { backgroundColor(backgroundColorInteractiveHover).important() }
-      pseudoClass(.active, not(.disabled)) { backgroundColor(backgroundColorInteractiveActive).important(); color(colorEmphasized).important(); borderColor(borderColorBase).important() }
+      pseudoClass(.hover, .not(.disabled)) { backgroundColor(backgroundColorInteractiveHover).important() }
+      pseudoClass(.active, .not(.disabled)) { backgroundColor(backgroundColorInteractiveActive).important(); color(colorEmphasized).important(); borderColor(borderColorBase).important() }
     case (.gray, .quiet):
-      pseudoClass(.hover, not(.disabled)) { backgroundColor(backgroundColorInteractiveSubtle).important(); borderColor(.transparent).important() }
-      pseudoClass(.active, not(.disabled)) { backgroundColor(backgroundColorInteractiveSubtleActive).important(); color(colorEmphasized).important(); borderColor(.transparent).important() }
+      pseudoClass(.hover, .not(.disabled)) { backgroundColor(backgroundColorBaseHover).important(); borderColor(.transparent).important() }
+      pseudoClass(.active, .not(.disabled)) { backgroundColor(backgroundColorBaseActive).important(); color(colorEmphasized).important(); borderColor(.transparent).important() }
       pseudoClass(.focus) { borderColor(.transparent).important(); boxShadow(.none).important() }
     case (.gray, .plain):
-      pseudoClass(.hover, not(.disabled)) { backgroundColor(.transparent).important(); color(colorBase).important(); borderColor(.transparent).important() }
-      pseudoClass(.active, not(.disabled)) { backgroundColor(.transparent).important(); color(colorEmphasized).important(); borderColor(.transparent).important() }
+      pseudoClass(.hover, .not(.disabled)) { backgroundColor(.transparent).important(); color(colorBase).important(); borderColor(.transparent).important() }
+      pseudoClass(.active, .not(.disabled)) { backgroundColor(.transparent).important(); color(colorEmphasized).important(); borderColor(.transparent).important() }
       pseudoClass(.focus) { borderColor(.transparent).important(); boxShadow(.none).important() }
     case (_, .subtle):
-      pseudoClass(.hover, not(.disabled)) {
+      pseudoClass(.hover, .not(.disabled)) {
         backgroundColor(`var`("--background-color-\(c)-subtle-hover")).important()
         borderColor(`var`("--border-color-\(c)-hover")).important()
       }
-      pseudoClass(.active, not(.disabled)) {
+      pseudoClass(.active, .not(.disabled)) {
         backgroundColor(`var`("--background-color-\(c)-subtle-active")).important()
         borderColor(`var`("--border-color-\(c)-active")).important()
         color(`var`("--color-\(c)-active")).important()
       }
       pseudoClass(.focus) { borderColor(`var`("--border-color-\(c)-focus")).important() }
     case (_, .solid):
-      pseudoClass(.hover, not(.disabled)) {
+      pseudoClass(.hover, .not(.disabled)) {
         backgroundColor(`var`("--background-color-\(c)-hover")).important()
         borderColor(`var`("--background-color-\(c)-hover")).important()
       }
-      pseudoClass(.active, not(.disabled)) {
+      pseudoClass(.active, .not(.disabled)) {
         backgroundColor(`var`("--background-color-\(c)-active")).important()
         borderColor(`var`("--background-color-\(c)-active")).important()
       }
       pseudoClass(.focus) { borderColor(`var`("--border-color-\(c)-focus")).important() }
     case (_, .quiet):
-      pseudoClass(.hover, not(.disabled)) { backgroundColor(`var`("--background-color-\(c)-subtle")).important() }
-      pseudoClass(.active, not(.disabled)) { backgroundColor(`var`("--background-color-\(c)-subtle-active")).important(); color(`var`("--color-\(c)-active")).important() }
+      pseudoClass(.hover, .not(.disabled)) { backgroundColor(`var`("--background-color-\(c)-subtle")).important() }
+      pseudoClass(.active, .not(.disabled)) { backgroundColor(`var`("--background-color-\(c)-subtle-active")).important(); color(`var`("--color-\(c)-active")).important() }
       pseudoClass(.focus) { borderColor(.transparent).important(); boxShadow(.none).important() }
     case (_, .plain):
-      pseudoClass(.hover, not(.disabled)) { backgroundColor(.transparent).important(); color(colorBase).important() }
-      pseudoClass(.active, not(.disabled)) { backgroundColor(.transparent).important(); color(`var`("--color-\(c)-active")).important() }
+      pseudoClass(.hover, .not(.disabled)) { backgroundColor(.transparent).important(); color(colorBase).important() }
+      pseudoClass(.active, .not(.disabled)) { backgroundColor(.transparent).important(); color(`var`("--color-\(c)-active")).important() }
       pseudoClass(.focus) { borderColor(.transparent).important(); boxShadow(.none).important() }
     case (_, .static):
       // Static weight is non-interactive — no hover/active/focus styling.

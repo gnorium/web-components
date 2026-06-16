@@ -146,7 +146,7 @@
         cursor(cursorNotAllowed)
       }
 
-      pseudoClass(.hover, not(.disabled), not(attribute(.ariaSelected, true))) {
+      pseudoClass(.hover, .not(.disabled), .not(attribute(.ariaSelected, true))) {
         color(colorBase).important()
 
         if variant == .solid {

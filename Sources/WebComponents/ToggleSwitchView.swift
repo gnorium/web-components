@@ -71,7 +71,7 @@
       borderWidth(0)
       cursor(disabled ? cursorNotAllowed : cursorBase)
 
-      pseudoClass(.checked, not(.disabled)) {
+      pseudoClass(.checked, .not(.disabled)) {
         nextSibling(".toggle-switch-switch") {
           backgroundColor(backgroundColorInputBinaryChecked).important()
         }
@@ -87,7 +87,7 @@
         }
       }
 
-      pseudoClass(.hover, not(.disabled)) {
+      pseudoClass(.hover, .not(.disabled)) {
         nextSibling(".toggle-switch-switch") {
           borderColor(borderColorInputBinaryHover).important()
         }

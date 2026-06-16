@@ -115,6 +115,7 @@
 #if CLIENT
   import DOMBuilder
   import EmbeddedSwiftUtilities
+  import HTMLBuilder
   import WebAPIs
   import WebTypes
 
@@ -125,7 +126,7 @@
     private let deleteIntervalMs: Double
     private let pauseAfterTypeMs: Double
     private let pauseAfterDeleteMs: Double
-    
+
     public init(
       charIntervalMs: Double = 40,
       deleteIntervalMs: Double = 4,
@@ -137,9 +138,7 @@
       self.pauseAfterTypeMs = pauseAfterTypeMs
       self.pauseAfterDeleteMs = pauseAfterDeleteMs
 
-      console.log("[Typewriter] init")
       let found = document.querySelectorAll(".typewriter-view")
-      console.log("[Typewriter] found \(found.count) elements")
       guard found.count > 0 else { return }
       for element in found {
         animateElement(element)
@@ -167,12 +166,8 @@
 
     private func animateElement(_ element: DOM.Element) {
       let encoded = element.getAttribute("data-typewriter-phrases") ?? ""
-      console.log("[Typewriter] encoded='\(encoded)'")
       let phrases = splitPhrases(encoded)
-      guard !phrases.isEmpty, !stringIsEmpty(phrases[0]) else {
-        console.log("[Typewriter] skipping — no phrases")
-        return
-      }
+      guard !phrases.isEmpty, !stringIsEmpty(phrases[0]) else { return }
 
       let persistRaw = element.getAttribute("data-typewriter-persist-caret") ?? ""
       let persistCaret = stringEquals(persistRaw, "true")
@@ -188,7 +183,6 @@
       caret.textContent = "|"
       element.appendChild(caret)
 
-      console.log("[Typewriter] starting with \(phrases.count) phrase(s)")
       typePhrase(
         typingSpan: typingSpan,
         caret: caret,
@@ -210,7 +204,6 @@
       let phrase = phrases[phraseIndex]
       let length = phrase.utf8.count
       guard charIndex < length else {
-        // Finished typing — pause then delete (or stop if single phrase + no persist)
         if phrases.count == 1 && !persist {
           window.setTimeout(500.0) { caret.remove() }
           return
@@ -229,13 +222,18 @@
       }
 
       window.setTimeout(charIntervalMs) { [self] in
-        typingSpan.textContent = stringSubstring(phrase, from: 0, to: charIndex + 1)
+        // Advance to next codepoint boundary — multi-byte chars (e.g. —, é, ñ) are
+        // 2-4 UTF-8 bytes; slicing mid-codepoint produces invalid UTF-8 → "?" flash.
+        let bytes = Array(phrase.utf8)
+        var next = charIndex + 1
+        while next < bytes.count && (bytes[next] & 0xC0) == 0x80 { next += 1 }
+        typingSpan.textContent = stringSubstring(phrase, from: 0, to: next)
         self.typePhrase(
           typingSpan: typingSpan,
           caret: caret,
           phrases: phrases,
           phraseIndex: phraseIndex,
-          charIndex: charIndex + 1,
+          charIndex: next,
           persist: persist
         )
       }
@@ -250,7 +248,6 @@
       persist: Bool
     ) {
       guard charIndex > 0 else {
-        // Fully deleted — pause then type next phrase
         let nextIndex = (phraseIndex + 1) % phrases.count
         window.setTimeout(pauseAfterDeleteMs) { [self] in
           self.typePhrase(
@@ -267,13 +264,17 @@
 
       window.setTimeout(deleteIntervalMs) { [self] in
         let phrase = phrases[phraseIndex]
-        typingSpan.textContent = stringSubstring(phrase, from: 0, to: charIndex - 1)
+        // Retreat to previous codepoint start — skip back over continuation bytes.
+        let bytes = Array(phrase.utf8)
+        var prev = charIndex - 1
+        while prev > 0 && (bytes[prev] & 0xC0) == 0x80 { prev -= 1 }
+        typingSpan.textContent = stringSubstring(phrase, from: 0, to: prev)
         self.deletePhrase(
           typingSpan: typingSpan,
           caret: caret,
           phrases: phrases,
           phraseIndex: phraseIndex,
-          charIndex: charIndex - 1,
+          charIndex: prev,
           persist: persist
         )
       }

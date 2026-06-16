@@ -68,7 +68,7 @@
     private func ellipsisMenuViewCSS() -> [CSSOM.CSSRule] {
       display(.none)
       position(.fixed)
-      top(px(navbarHeight))
+      top(0)
       insetInlineStart(0)
       width(perc(100))
       zIndex(zIndexOverlay)
@@ -95,7 +95,7 @@
       position(.relative)
       width(perc(100))
       backgroundColor(backgroundColorBase)
-      paddingBlockStart(spacing16)
+      paddingBlockStart(px(navbarHeight + 16))
       paddingBlockEnd(spacing16)
       borderBlockEnd(borderWidthBase, .solid, borderColorBase)
 
@@ -107,7 +107,7 @@
       )
 
       media(minWidth(minWidthBreakpointTablet)) {
-        paddingBlockStart(spacing20)
+        paddingBlockStart(px(navbarHeight + 20))
         paddingBlockEnd(spacing20)
       }
     }

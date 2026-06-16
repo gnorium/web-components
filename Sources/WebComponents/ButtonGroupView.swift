@@ -85,7 +85,7 @@
       transition(.all, s(0.2), .easeInOut)
 
       // Shared border logic
-      pseudoClass(not(.lastChild)) {
+      pseudoClass(.not(.lastChild)) {
         borderInlineEndWidth(0)
       }
 
@@ -102,13 +102,13 @@
       }
 
       // Hover state
-      pseudoClass(.hover, not(.disabled)) {
+      pseudoClass(.hover, .not(.disabled)) {
         backgroundColor(backgroundColorInteractiveSubtleHover).important()
         zIndex(1).important()
       }
 
       // Active state
-      pseudoClass(.active, not(.disabled)) {
+      pseudoClass(.active, .not(.disabled)) {
         backgroundColor(backgroundColorInteractiveSubtleActive).important()
         color(colorEmphasized).important()
         borderColor(borderColorBase).important()

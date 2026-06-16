@@ -131,13 +131,13 @@ public struct TextInputView: HTMLContent {
       color(colorPlaceholder).important()
     }
 
-    pseudoClass(.focus, not(.disabled), not(.readOnly)) {
+    pseudoClass(.focus, .not(.disabled), .not(.readOnly)) {
       borderColor(borderColorBlueFocus).important()
       outline(.none).important()
       boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
     }
 
-    pseudoClass(.hover, .focus, not(.disabled), not(.readOnly)) {
+    pseudoClass(.hover, .focus, .not(.disabled), .not(.readOnly)) {
       borderColor(borderColorBlue).important()
     }
   }
@@ -181,12 +181,12 @@ public struct TextInputView: HTMLContent {
     cursor(disabled ? cursorNotAllowed : cursorBase)
     transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
 
-    pseudoClass(.hover, not(.disabled)) {
+    pseudoClass(.hover, .not(.disabled)) {
       backgroundColor(backgroundColorInteractiveSubtleHover).important()
       color(colorBase).important()
     }
 
-    pseudoClass(.active, not(.disabled)) {
+    pseudoClass(.active, .not(.disabled)) {
       backgroundColor(backgroundColorInteractiveSubtleActive).important()
     }
 

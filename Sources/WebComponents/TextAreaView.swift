@@ -128,13 +128,13 @@ public struct TextAreaView: HTMLContent {
       opacity(opacityIconPlaceholder).important()
     }
 
-    pseudoClass(.focus, not(.disabled), not(.readOnly)) {
+    pseudoClass(.focus, .not(.disabled), .not(.readOnly)) {
       borderColor(borderColorBlueFocus).important()
       outline(.none).important()
       boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
     }
 
-    pseudoClass(.hover, .focus, not(.disabled), not(.readOnly)) {
+    pseudoClass(.hover, .focus, .not(.disabled), .not(.readOnly)) {
       borderColor(borderColorBlue).important()
     }
   }

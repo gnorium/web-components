@@ -106,7 +106,7 @@ public struct RadioView: HTMLContent {
       }
     }
 
-    pseudoClass(.hover, not(.checked), .enabled) {
+    pseudoClass(.hover, .not(.checked), .enabled) {
       nextSibling(".radio-icon") {
         borderColor(borderColorInputBinaryHover).important()
       }

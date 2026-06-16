@@ -92,7 +92,7 @@
       transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
       userSelect(.none)
 
-      pseudoClass(.hover, not(.disabled)) {
+      pseudoClass(.hover, .not(.disabled)) {
         borderColor(borderColorInputBinaryHover).important()
       }
 

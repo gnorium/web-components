@@ -183,7 +183,7 @@
 
       transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
 
-      pseudoClass(.hover, not(.disabled)) {
+      pseudoClass(.hover, .not(.disabled)) {
         if item.destructive {
           backgroundColor(backgroundColorRedSubtle).important()
           color(colorRed).important()
