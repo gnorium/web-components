@@ -109,7 +109,7 @@
 
       // Once children have actually wrapped to multiple lines, stretch each
       // child to fill the row so a wrapped button list reads as a column.
-      selector("&[data-wrapped='true'] > *") {
+      selector("[data-wrapped='true'] > *") {
         flexGrow(1)
         flexBasis(perc(100))
       }
@@ -339,14 +339,18 @@
     // Detects when a button group's children have actually wrapped to
     // multiple lines (by comparing child offsetTop values) and toggles
     // `data-wrapped` so CSS can stretch children to full width only then.
+    //
+    // Must measure with `data-wrapped` cleared first: once set, the CSS
+    // forces each child to flex-basis 100% (its own full-width row), which
+    // makes every subsequent measurement see wrapped children regardless of
+    // available width — a sticky state that would never revert on grow.
     private func updateWrappedState(_ group: DOM.Element) {
+      group.removeAttribute("data-wrapped")
       let children = group.querySelectorAll(":scope > *")
       guard let firstTop = children.first?.offsetTop else { return }
       let wrapped = children.contains { $0.offsetTop != firstTop }
       if wrapped {
         group.setAttribute("data-wrapped", "true")
-      } else {
-        group.removeAttribute("data-wrapped")
       }
     }
   }
