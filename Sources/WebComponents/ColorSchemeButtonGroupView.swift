@@ -57,7 +57,13 @@
   /// Initializes from localStorage / system preference, binds click events,
   /// and applies color scheme changes to the document.
   public class ColorSchemeButtonGroupHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: ColorSchemeButtonGroupHydration?
     nonisolated(unsafe) private var groups: [DOM.Element] = []
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".color-scheme-button-group-view") != nil else { return }
+      instance = ColorSchemeButtonGroupHydration()
+    }
 
     public init?() {
       let allGroups = document.querySelectorAll(".color-scheme-button-group-view")

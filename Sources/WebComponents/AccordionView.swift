@@ -539,6 +539,11 @@ public struct AccordionView: HTMLContent {
       AccordionHydration.current = self
     }
 
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".accordion-view") != nil else { return }
+      current = AccordionHydration()
+    }
+
     private func hydrateAllAccordions() {
       let allAccordions = document.querySelectorAll(".accordion-view")
 

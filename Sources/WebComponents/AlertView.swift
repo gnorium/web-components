@@ -688,10 +688,16 @@
 
   /// Hydration for server-rendered alerts
   public class AlertHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: AlertHydration?
     private var instances: [AlertInstance] = []
 
     public init() {
       hydrateAllAlerts()
+    }
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".alert-view") != nil else { return }
+      instance = AlertHydration()
     }
 
     private func hydrateAllAlerts() {

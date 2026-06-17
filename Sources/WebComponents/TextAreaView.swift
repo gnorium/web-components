@@ -295,10 +295,16 @@ public struct TextAreaView: HTMLContent {
   }
 
   public class TextAreaHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: TextAreaHydration?
     private var instances: [TextAreaInstance] = []
 
     public init() {
       hydrateAllTextAreas()
+    }
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".text-area-view") != nil else { return }
+      instance = TextAreaHydration()
     }
 
     private func hydrateAllTextAreas() {

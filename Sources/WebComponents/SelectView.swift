@@ -359,10 +359,16 @@
   }
 
   public class SelectHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: SelectHydration?
     private var instances: [SelectInstance] = []
 
     public init() {
       hydrateAllSelects()
+    }
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".select-view") != nil else { return }
+      instance = SelectHydration()
     }
 
     private func hydrateAllSelects() {

@@ -56,7 +56,13 @@
   /// Initializes from localStorage / system preference, binds click events,
   /// and applies contrast changes to the document.
   public class ContrastButtonGroupHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: ContrastButtonGroupHydration?
     nonisolated(unsafe) private var groups: [DOM.Element] = []
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".contrast-button-group-view") != nil else { return }
+      instance = ContrastButtonGroupHydration()
+    }
 
     public init?() {
       let allGroups = document.querySelectorAll(".contrast-button-group-view")

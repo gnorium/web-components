@@ -505,10 +505,16 @@
   }
 
   public class PopoverHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: PopoverHydration?
     private var instances: [PopoverInstance] = []
 
     public init() {
       hydrateAllPopovers()
+    }
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".popover-view") != nil else { return }
+      instance = PopoverHydration()
     }
 
     private func hydrateAllPopovers() {

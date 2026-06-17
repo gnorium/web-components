@@ -233,10 +233,16 @@
   }
 
   public class ToggleSwitchHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: ToggleSwitchHydration?
     private var instances: [ToggleSwitchInstance] = []
 
     public init() {
       hydrateAllToggleSwitches()
+    }
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".toggle-switch-view") != nil else { return }
+      instance = ToggleSwitchHydration()
     }
 
     private func hydrateAllToggleSwitches() {

@@ -438,11 +438,17 @@
   import WebTypes
 
   public class DialogHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: DialogHydration?
     private var instances: [Int32: DialogInstance] = [:]
 
     public init() {
       hydrateAllDialogs()
       hydrateTriggers()
+    }
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".dialog-view") != nil else { return }
+      instance = DialogHydration()
     }
 
     private func hydrateAllDialogs() {

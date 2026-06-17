@@ -54,8 +54,15 @@
   /// Hydrates all `<time class="local-time">` elements on the page,
   /// converting their UTC fallback text to the user's local timezone.
   public class LocalTimeHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: LocalTimeHydration?
+
     public init() {
       hydrate()
+    }
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".local-time") != nil else { return }
+      instance = LocalTimeHydration()
     }
 
     public func hydrate() {

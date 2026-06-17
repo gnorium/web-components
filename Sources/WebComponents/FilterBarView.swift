@@ -245,8 +245,14 @@
   import WebTypes
 
   public class FilterBarHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: FilterBarHydration?
     private let dropdownHydration = DropdownHydration()
     private let textInputHydration = TextInputHydration()
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".filter-bar-view") != nil else { return }
+      instance = FilterBarHydration()
+    }
 
     public init() {
       let grids = document.querySelectorAll(".filter-bar-grid")

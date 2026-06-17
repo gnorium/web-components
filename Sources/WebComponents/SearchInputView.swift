@@ -451,10 +451,16 @@
   }
 
   public class SearchInputHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: SearchInputHydration?
     private var instances: [SearchInputInstance] = []
 
     public init() {
       hydrateAllSearchInputs()
+    }
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".search-input-view") != nil else { return }
+      instance = SearchInputHydration()
     }
 
     private func hydrateAllSearchInputs() {

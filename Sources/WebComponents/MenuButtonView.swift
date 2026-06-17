@@ -250,10 +250,16 @@
   import WebTypes
 
   public class MenuButtonHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: MenuButtonHydration?
     private var instances: [MenuButtonInstance] = []
 
     public init() {
       hydrateAllMenuButtons()
+    }
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".menu-button-view") != nil else { return }
+      instance = MenuButtonHydration()
     }
 
     private func hydrateAllMenuButtons() {

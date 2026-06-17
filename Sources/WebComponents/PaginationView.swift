@@ -215,8 +215,15 @@ public struct PaginationView: HTMLContent {
   import WebTypes
 
   public class PaginationHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: PaginationHydration?
+
     public init() {
       hydrate()
+    }
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".pagination-view") != nil else { return }
+      instance = PaginationHydration()
     }
 
     private func hydrate() {

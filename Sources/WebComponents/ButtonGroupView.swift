@@ -163,7 +163,7 @@
         div {
           for item in buttons {
             let isDisabled = disabled || item.disabled
-            let itemData = ["value": item.value]
+            let itemData = [("value", item.value)]
             let itemClass = item.class.isEmpty ? "button-group-button" : "button-group-button \(item.class)"
 
             if let icon = item.icon {
@@ -309,11 +309,17 @@
   }
 
   public class ButtonGroupHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: ButtonGroupHydration?
     private var instances: [ButtonGroupInstance] = []
 
     public init() {
       hydrateAllButtonGroups()
       hydrateWrapDetection()
+    }
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".button-group-view") != nil else { return }
+      instance = ButtonGroupHydration()
     }
 
     private func hydrateAllButtonGroups() {

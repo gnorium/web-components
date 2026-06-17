@@ -114,6 +114,15 @@
   import WebTypes
 
   public class ToggleButtonGroupHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: ToggleButtonGroupHydration?
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".toggle-button-group-view") != nil else { return }
+      let h = ToggleButtonGroupHydration()
+      h.hydrate()
+      instance = h
+    }
+
     public init() {}
 
     public func hydrate() {

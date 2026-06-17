@@ -268,10 +268,16 @@
   }
 
   public class MultiselectLookupHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: MultiselectLookupHydration?
     private var instances: [MultiselectLookupInstance] = []
 
     public init() {
       hydrateAllMultiselectLookups()
+    }
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".multiselect-lookup-view") != nil else { return }
+      instance = MultiselectLookupHydration()
     }
 
     private func hydrateAllMultiselectLookups() {

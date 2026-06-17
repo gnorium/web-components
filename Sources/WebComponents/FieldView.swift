@@ -367,6 +367,13 @@
   import WebTypes
 
   public class FieldViewHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: FieldViewHydration?
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector("label.field-view") != nil else { return }
+      instance = FieldViewHydration()
+    }
+
     public init() {
       let labels = document.querySelectorAll("label.field-view")
       for label in labels {

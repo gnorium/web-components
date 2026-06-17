@@ -399,10 +399,16 @@ public struct TextInputView: HTMLContent {
   }
 
   public class TextInputHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: TextInputHydration?
     private var instances: [TextInputInstance] = []
 
     public init() {
       hydrateAllTextInputs()
+    }
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".text-input-view") != nil else { return }
+      instance = TextInputHydration()
     }
 
     private func hydrateAllTextInputs() {

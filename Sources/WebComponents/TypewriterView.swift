@@ -122,6 +122,13 @@
   /// Discovers all `[data-typewriter="true"]` elements and drives a cycling
   /// typewriter animation: type → pause → delete → next phrase → repeat forever.
   public class TypewriterHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: TypewriterHydration?
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".typewriter-view") != nil else { return }
+      instance = TypewriterHydration()
+    }
+
     private let charIntervalMs: Double
     private let deleteIntervalMs: Double
     private let pauseAfterTypeMs: Double

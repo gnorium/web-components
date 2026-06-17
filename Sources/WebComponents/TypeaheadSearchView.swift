@@ -478,10 +478,16 @@
   }
 
   public class TypeaheadSearchHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: TypeaheadSearchHydration?
     private var instances: [TypeaheadSearchInstance] = []
 
     public init() {
       hydrateAllTypeaheadSearches()
+    }
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".typeahead-search-view") != nil else { return }
+      instance = TypeaheadSearchHydration()
     }
 
     private func hydrateAllTypeaheadSearches() {

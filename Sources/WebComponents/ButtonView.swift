@@ -26,7 +26,7 @@ public struct ButtonView: HTMLContent {
   let contentJustifyContent: CSS.JustifyContent
   let style: @Sendable () -> [CSSOM.CSSRule]
   let buttonBorderRadius: CSS.Length
-  let data: [String: String]
+  let data: [(String, String)]
 
   /// Button type attribute
   public enum ButtonType: String, Sendable {
@@ -90,7 +90,7 @@ public struct ButtonView: HTMLContent {
     labelFontFamily: CSS.FontFamily = typographyFontSans,
     contentJustifyContent: CSS.JustifyContent = .center,
     borderRadius: CSS.Length = borderRadiusPill,
-    data: [String: String] = [:],
+    data: [(String, String)] = [],
     @CSSBuilder style: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] }
   ) {
     self.label = label
@@ -131,7 +131,7 @@ public struct ButtonView: HTMLContent {
     labelFontFamily: CSS.FontFamily = typographyFontSans,
     contentJustifyContent: CSS.JustifyContent = .center,
     borderRadius: CSS.Length = borderRadiusPill,
-    data: [String: String] = [:],
+    data: [(String, String)] = [],
     @CSSBuilder style: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] }
   ) {
     self.label = label
@@ -173,7 +173,7 @@ public struct ButtonView: HTMLContent {
     labelFontFamily: CSS.FontFamily = typographyFontSans,
     contentJustifyContent: CSS.JustifyContent = .center,
     borderRadius: CSS.Length = borderRadiusPill,
-    data: [String: String] = [:],
+    data: [(String, String)] = [],
     @CSSBuilder style: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] }
   ) {
     self.label = ""
@@ -214,7 +214,7 @@ public struct ButtonView: HTMLContent {
     labelFontFamily: CSS.FontFamily = typographyFontSans,
     contentJustifyContent: CSS.JustifyContent = .center,
     borderRadius: CSS.Length = borderRadiusPill,
-    data: [String: String] = [:],
+    data: [(String, String)] = [],
     @CSSBuilder style: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] },
     @HTMLBuilder content: () -> [DOM.Node]
   ) {

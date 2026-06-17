@@ -312,10 +312,16 @@ public struct TooltipView: HTMLContent {
   }
 
   public class TooltipHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: TooltipHydration?
     private var instances: [TooltipInstance] = []
 
     public init() {
       hydrateAllTooltips()
+    }
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".tooltip-view") != nil else { return }
+      instance = TooltipHydration()
     }
 
     private func hydrateAllTooltips() {

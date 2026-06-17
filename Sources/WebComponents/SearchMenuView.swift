@@ -384,6 +384,15 @@
   import WebTypes
 
   public class SearchMenuHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: SearchMenuHydration?
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".search-menu-view") != nil else { return }
+      let h = SearchMenuHydration()
+      h.hydrate()
+      instance = h
+    }
+
     private var searchField: String = ""
     private var searchEndpoint: String = ""
     private var resultUrlBase: String = ""

@@ -511,10 +511,16 @@
   }
 
   public class MenuHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: MenuHydration?
     private var instances: [MenuInstance] = []
 
     public init() {
       hydrateAllMenus()
+    }
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".menu-view") != nil else { return }
+      instance = MenuHydration()
     }
 
     private func hydrateAllMenus() {

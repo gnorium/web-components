@@ -539,10 +539,16 @@
   }
 
   public class TabsHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: TabsHydration?
     private var instances: [TabsInstance] = []
 
     public init() {
       hydrateAllTabs()
+    }
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".tabs-view") != nil else { return }
+      instance = TabsHydration()
     }
 
     private func hydrateAllTabs() {

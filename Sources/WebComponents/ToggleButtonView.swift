@@ -205,10 +205,16 @@
   }
 
   public class ToggleButtonHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: ToggleButtonHydration?
     private var instances: [ToggleButtonInstance] = []
 
     public init() {
       hydrateAllToggleButtons()
+    }
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".toggle-button-view") != nil else { return }
+      instance = ToggleButtonHydration()
     }
 
     private func hydrateAllToggleButtons() {

@@ -708,10 +708,16 @@ public struct DropdownView: HTMLContent {
   }
 
   public class DropdownHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: DropdownHydration?
     private var instances: [DropdownInstance] = []
 
     public init() {
       hydrateAllDropdowns()
+    }
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".dropdown-view") != nil else { return }
+      instance = DropdownHydration()
     }
 
     private func hydrateAllDropdowns() {

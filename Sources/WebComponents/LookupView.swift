@@ -276,10 +276,16 @@
   }
 
   public class LookupHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: LookupHydration?
     private var instances: [LookupInstance] = []
 
     public init() {
       hydrateAllLookups()
+    }
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".lookup-view") != nil else { return }
+      instance = LookupHydration()
     }
 
     private func hydrateAllLookups() {

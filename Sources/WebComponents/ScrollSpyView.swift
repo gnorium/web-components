@@ -10,9 +10,15 @@
   /// is closest to the viewport top. Discovers links via `.scroll-spy-view` class;
   /// each link must have `href="#section-id"` pointing to an element with a matching `id`.
   public class ScrollSpyHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: ScrollSpyHydration?
     private var ticking: Bool = false
     private let linkSelector = "a.scroll-spy-view"
     private var cachedLinks: [DOM.Element] = []
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector("a.scroll-spy-view") != nil else { return }
+      instance = ScrollSpyHydration()
+    }
 
     public init?() {
       let links = document.querySelectorAll(linkSelector)

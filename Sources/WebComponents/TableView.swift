@@ -2701,10 +2701,16 @@ public struct TableView: HTMLContent {
   }
 
   public class TableHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: TableHydration?
     private var instances: [TableInstance] = []
 
     public init() {
       hydrateAllTables()
+    }
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".table-view") != nil else { return }
+      instance = TableHydration()
     }
 
     private func hydrateAllTables() {

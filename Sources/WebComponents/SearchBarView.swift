@@ -215,6 +215,16 @@
   import WebTypes
 
   public class SearchBarHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: SearchBarHydration?
+
+    public static func hydrateIfPresent() {
+      guard document.querySelector(".search-bar-view") != nil else { return }
+      let containers = document.querySelectorAll("[data-search-container=\"true\"]")
+      for container in containers {
+        instance = SearchBarHydration(container: container)
+      }
+    }
+
     private var container: DOM.Element?
     private var input: DOM.Element?
     private var button: DOM.Element?
