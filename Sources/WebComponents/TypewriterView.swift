@@ -59,35 +59,35 @@
           .data("typewriter", "true")
           .data("typewriter-persist-caret", persist)
           .data("typewriter-phrases", encoded)
-          .style { style; caretCSS() }
+          .style { style; caretCSS(); display(.none) }
       case .h2:
         return h2 { firstPhrase }
           .class(classAttr)
           .data("typewriter", "true")
           .data("typewriter-persist-caret", persist)
           .data("typewriter-phrases", encoded)
-          .style { style; caretCSS() }
+          .style { style; caretCSS(); display(.none) }
       case .h3:
         return h3 { firstPhrase }
           .class(classAttr)
           .data("typewriter", "true")
           .data("typewriter-persist-caret", persist)
           .data("typewriter-phrases", encoded)
-          .style { style; caretCSS() }
+          .style { style; caretCSS(); display(.none) }
       case .p:
         return p { firstPhrase }
           .class(classAttr)
           .data("typewriter", "true")
           .data("typewriter-persist-caret", persist)
           .data("typewriter-phrases", encoded)
-          .style { style; caretCSS() }
+          .style { style; caretCSS(); display(.none) }
       case .span:
         return span { firstPhrase }
           .class(classAttr)
           .data("typewriter", "true")
           .data("typewriter-persist-caret", persist)
           .data("typewriter-phrases", encoded)
-          .style { style; caretCSS() }
+          .style { style; caretCSS(); display(.none) }
       }
     }
 
@@ -179,6 +179,7 @@
       let persistRaw = element.getAttribute("data-typewriter-persist-caret") ?? ""
       let persistCaret = stringEquals(persistRaw, "true")
 
+      element.style.setProperty(.display, "revert")
       element.textContent = ""
 
       let typingSpan = document.createElement("span")
