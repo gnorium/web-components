@@ -68,20 +68,18 @@
     private func ellipsisMenuViewCSS() -> [CSSOM.CSSRule] {
       display(.none)
       position(.fixed)
-      top(0)
+      top(px(navbarHeight))
       insetInlineStart(0)
       width(perc(100))
+      height(calc(vh(100) - px(navbarHeight)))
       zIndex(zIndexOverlay)
       pointerEvents(.none)
     }
 
     @CSSBuilder
     private func ellipsisMenuBackdropCSS() -> [CSSOM.CSSRule] {
-      position(.fixed)
-      top(px(navbarHeight))
-      insetInlineStart(0)
-      width(perc(100))
-      height(calc(vh(100) - px(navbarHeight)))
+      position(.absolute)
+      inset(0)
       backgroundColor(rgba(0, 0, 0, 0.4))
       backdropFilter(blur(rem(1)))
       webkitBackdropFilter(blur(rem(1)))
@@ -95,7 +93,7 @@
       position(.relative)
       width(perc(100))
       backgroundColor(backgroundColorBase)
-      paddingBlockStart(px(navbarHeight + 16))
+      paddingBlockStart(spacing16)
       paddingBlockEnd(spacing16)
       borderBlockEnd(borderWidthBase, .solid, borderColorBase)
 
@@ -107,7 +105,7 @@
       )
 
       media(minWidth(minWidthBreakpointTablet)) {
-        paddingBlockStart(px(navbarHeight + 20))
+        paddingBlockStart(spacing20)
         paddingBlockEnd(spacing20)
       }
     }
