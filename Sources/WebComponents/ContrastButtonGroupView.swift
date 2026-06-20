@@ -19,14 +19,14 @@
         buttons: [
           .init(
             value: "standard", label: "Standard",
-            icon: IconView(icon: { s in LessContrastIconView(width: s, height: s) }, size: .medium)
-              .build(),
+            icon: IconView(icon: { s in LessContrastIconView(width: s, height: s) }, size: .medium).build(),
+            weight: .static,
             class: "", fullWidth: true,
             labelFontWeight: fontWeightNormal, contentJustifyContent: .flexStart),
           .init(
             value: "increased", label: "Increased",
-            icon: IconView(icon: { s in MoreContrastIconView(width: s, height: s) }, size: .medium)
-              .build(),
+            icon: IconView(icon: { s in MoreContrastIconView(width: s, height: s) }, size: .medium).build(),
+            weight: .static,
             class: "", fullWidth: true,
             labelFontWeight: fontWeightNormal, contentJustifyContent: .flexStart),
         ],
