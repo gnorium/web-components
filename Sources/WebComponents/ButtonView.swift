@@ -491,7 +491,7 @@ public struct ButtonView: HTMLContent {
       color(colorBase)
       borderColor(.transparent)
     case (.gray, .`static`):
-      backgroundColor(.transparent)
+      backgroundColor(backgroundColorBase)
       color(colorBase)
       borderColor(borderColorBase)
     case (_, .subtle):
@@ -511,7 +511,7 @@ public struct ButtonView: HTMLContent {
       color(`var`("--color-\(c)"))
       borderColor(.transparent)
     case (_, .`static`):
-      backgroundColor(.transparent)
+      backgroundColor(backgroundColorBase)
       color(colorBase)
       borderColor(`var`("--border-color-\(c)"))
     }
