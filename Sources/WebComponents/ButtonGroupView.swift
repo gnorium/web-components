@@ -143,13 +143,13 @@
         color(colorInvertedFixed).important()
       }
       selector(
-        ".button-group-button.button-group-button.button-group-button.button-group-button.button-group-button.selected:hover:not(:disabled)"
+        ".button-group-button.button-group-button.button-group-button.button-group-button.button-group-button.selected:not(.button-weight-static):hover:not(:disabled)"
       ) {
         backgroundColor(backgroundColorBlueHover).important()
         borderColor(borderColorBlueHover).important()
       }
       selector(
-        ".button-group-button.button-group-button.button-group-button.button-group-button.button-group-button.selected:active:not(:disabled)"
+        ".button-group-button.button-group-button.button-group-button.button-group-button.button-group-button.selected:not(.button-weight-static):active:not(:disabled)"
       ) {
         backgroundColor(backgroundColorBlueActive).important()
         borderColor(borderColorBlueActive).important()
