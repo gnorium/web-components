@@ -53,77 +53,20 @@ public struct LabelView: HTMLContent {
     self.descriptionContent = description()
   }
 
-  @CSSBuilder
-  private func labelViewCSS() -> [CSSOM.CSSRule] {
-    display(.flex)
-    flexDirection(.column)
-    gap(spacing4)
-  }
-
-  @CSSBuilder
-  private func visuallyHiddenCSS() -> [CSSOM.CSSRule] {
-    position(.absolute)
-    width(px(1))
-    height(px(1))
-    margin(px(-1))
-    padding(0)
-    overflow(.hidden)
-    clip(rect(px(0), px(0), px(0), px(0)))
-    whiteSpace(.nowrap)
-    borderWidth(0)
-  }
-
-  @CSSBuilder
-  private func labelTextCSS() -> [CSSOM.CSSRule] {
-    display(.flex)
-    alignItems(.center)
-    gap(spacing4)
-    fontFamily(typographyFontSans)
-    fontSize(labelFontSize)
-    fontWeight(labelFontWeight)
-    lineHeight(lineHeightMedium26)
-    color(disabled ? colorDisabled : colorBase)
-  }
-
-  @CSSBuilder
-  private func labelIconCSS() -> [CSSOM.CSSRule] {
-    display(.inlineFlex)
-    alignItems(.center)
-    justifyContent(.center)
-    width(minSizeIconMedium)
-    height(minSizeIconMedium)
-    color(disabled ? colorDisabled : colorSubtle)
-    flexShrink(0)
-  }
-
-  @CSSBuilder
-  private func labelOptionalFlagCSS() -> [CSSOM.CSSRule] {
-    color(disabled ? colorDisabled : colorSubtle)
-    fontWeight(fontWeightNormal)
-  }
-
-  @CSSBuilder
-  private func labelDescriptionCSS() -> [CSSOM.CSSRule] {
-    display(.block)
-    fontSize(fontSizeSmall14)
-    lineHeight(lineHeightSmall22)
-    color(disabled ? colorDisabled : colorSubtle)
-    fontWeight(fontWeightNormal)
-  }
-
   public func build() -> DOM.Node {
     let hasDescription = !descriptionContent.isEmpty
+    let rootClass = stringIsEmpty(`class`)
+      ? (visuallyHidden ? "label-view visually-hidden" : "label-view")
+      : (visuallyHidden ? "label-view visually-hidden \(`class`)" : "label-view \(`class`)")
+    let root: HTML.HTMLElement
 
     if isLegend {
-      return legend {
+      root = legend {
         span {
           if let iconValue = icon {
             span { iconValue }
               .class("label-icon")
               .ariaHidden(true)
-              .style {
-                labelIconCSS()
-              }
           }
 
           labelContent
@@ -131,47 +74,24 @@ public struct LabelView: HTMLContent {
           if optional {
             span { " \(optionalFlag)" }
               .class("label-optional-flag")
-              .style {
-                labelOptionalFlagCSS()
-              }
           }
         }
         .class("label-text")
-        .style {
-          labelTextCSS()
-        }
 
         if hasDescription {
           span { descriptionContent }
             .class("label-description")
             .id(descriptionID ?? "")
-            .style {
-              labelDescriptionCSS()
-            }
         }
       }
-      .class(
-        stringIsEmpty(`class`) ? (visuallyHidden ? "label-view visually-hidden" : "label-view") : (visuallyHidden ? "label-view visually-hidden \(`class`)" : "label-view \(`class`)")
-      )
-      .style {
-        labelViewCSS()
-
-        if visuallyHidden {
-          visuallyHiddenCSS()
-        }
-      }
-
     } else {
-      return div {
+      root = div {
         if let forID = inputID {
           label {
             if let iconValue = icon {
               span { iconValue }
                 .class("label-icon")
                 .ariaHidden(true)
-                .style {
-                  labelIconCSS()
-                }
             }
 
             labelContent
@@ -179,25 +99,16 @@ public struct LabelView: HTMLContent {
             if optional {
               span { " \(optionalFlag)" }
                 .class("label-optional-flag")
-                .style {
-                  labelOptionalFlagCSS()
-                }
             }
           }
           .for(forID)
           .class("label-text")
-          .style {
-            labelTextCSS()
-          }
         } else {
           span {
             if let iconValue = icon {
               span { iconValue }
                 .class("label-icon")
                 .ariaHidden(true)
-                .style {
-                  labelIconCSS()
-                }
             }
 
             labelContent
@@ -205,38 +116,69 @@ public struct LabelView: HTMLContent {
             if optional {
               span { " \(optionalFlag)" }
                 .class("label-optional-flag")
-                .style {
-                  labelOptionalFlagCSS()
-                }
             }
           }
           .class("label-text")
-          .style {
-            labelTextCSS()
-          }
         }
 
         if hasDescription {
           span { descriptionContent }
             .class("label-description")
             .id(descriptionID ?? "")
-            .style {
-              labelDescriptionCSS()
-            }
         }
       }
-      .class(
-        stringIsEmpty(`class`) ? (visuallyHidden ? "label-view visually-hidden" : "label-view") : (visuallyHidden ? "label-view visually-hidden \(`class`)" : "label-view \(`class`)")
-      )
-      .style {
-        labelViewCSS()
-
-        if visuallyHidden {
-          visuallyHiddenCSS()
-        }
-      }
-
     }
+
+    return root
+      .class(rootClass)
+      .style {
+        selector("&") {
+          display(.flex)
+          flexDirection(.column)
+          gap(spacing4)
+        }
+        selector("&.visually-hidden") {
+          position(.absolute)
+          width(px(1))
+          height(px(1))
+          margin(px(-1))
+          padding(0)
+          overflow(.hidden)
+          clip(rect(px(0), px(0), px(0), px(0)))
+          whiteSpace(.nowrap)
+          borderWidth(0)
+        }
+        descendant(".label-text") {
+          display(.flex)
+          alignItems(.center)
+          gap(spacing4)
+          fontFamily(typographyFontSans)
+          fontSize(labelFontSize)
+          fontWeight(labelFontWeight)
+          lineHeight(lineHeightMedium26)
+          color(disabled ? colorDisabled : colorBase)
+        }
+        descendant(".label-icon") {
+          display(.inlineFlex)
+          alignItems(.center)
+          justifyContent(.center)
+          width(minSizeIconMedium)
+          height(minSizeIconMedium)
+          color(disabled ? colorDisabled : colorSubtle)
+          flexShrink(0)
+        }
+        descendant(".label-optional-flag") {
+          color(disabled ? colorDisabled : colorSubtle)
+          fontWeight(fontWeightNormal)
+        }
+        descendant(".label-description") {
+          display(.block)
+          fontSize(fontSizeSmall14)
+          lineHeight(lineHeightSmall22)
+          color(disabled ? colorDisabled : colorSubtle)
+          fontWeight(fontWeightNormal)
+        }
+      }
   }
 }
 
@@ -277,7 +219,7 @@ public struct LabelView: HTMLContent {
         label: { title },
         description: { description }
       )
-      wrapper.innerHTML = renderHTML { view.render() }
+      wrapper.innerHTML = view.render()
       return wrapper.firstElementChild ?? wrapper
     }
   }

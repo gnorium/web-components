@@ -100,203 +100,6 @@ public struct CheckboxView: HTMLContent {
     )
   }
 
-  @CSSBuilder
-  private func checkboxViewCSS(_ inline: Bool, _ hideLabel: Bool, _ hasAfterLabel: Bool) -> [CSSOM.CSSRule] {
-    if inline {
-      display(.inlineFlex)
-    } else {
-      display(.flex)
-    }
-    alignItems(.center)
-    if hideLabel && !hasAfterLabel {
-      justifyContent(.center)
-    }
-
-    position(.relative)
-    if !inline {
-      minHeight(minSizeInputBinary)
-    }
-    if !hideLabel || hasAfterLabel {
-      gap(spacing8)
-    }
-
-    // Layout: inline (flex row) or block with label above
-    if inline {
-      if !hideLabel || hasAfterLabel {
-        marginInlineEnd(spacing16)
-      }
-
-      pseudoClass(.lastChild) {
-        marginInlineEnd(0).important()
-      }
-    } else {
-      marginBlockEnd(spacing8)
-
-      pseudoClass(.lastChild) {
-        marginBlockEnd(0).important()
-      }
-    }
-  }
-
-  @CSSBuilder
-  private func checkboxIconWrapperCSS() -> [CSSOM.CSSRule] {
-    display(.inlineFlex)
-    position(.relative)
-    verticalAlign(.middle)
-  }
-
-  @CSSBuilder
-  private func checkboxInputCSS(_ disabled: Bool) -> [CSSOM.CSSRule] {
-    position(.absolute)
-    top(0)
-    left(0)
-    width(perc(100))
-    height(perc(100))
-    margin(0)
-    opacity(0)
-    zIndex(zIndexAboveContent)
-    cursor(disabled ? cursorNotAllowed : .pointer)
-
-    // Checkmark visibility
-    pseudoClass(.checked) {
-      nextSibling(".checkbox-icon") {
-        pseudoElement(.before) {
-          opacity(1).important()
-          transform(translate(perc(-50), perc(-60)), rotate(deg(45)), scale(1))
-            .important()
-        }
-      }
-    }
-
-    pseudoClass(.indeterminate) {
-      nextSibling(".checkbox-icon") {
-        pseudoElement(.before) {
-          opacity(1).important()
-          transform(translate(perc(-50), perc(-50)), scale(1)).important()
-        }
-      }
-    }
-
-    pseudoClass(.checked) {
-      nextSibling(".checkbox-icon") {
-        backgroundColor(backgroundColorInputBinaryChecked).important()
-        borderColor(borderColorInputBinaryChecked).important()
-      }
-    }
-
-    pseudoClass(.checked, .disabled) {
-      nextSibling(".checkbox-icon") {
-        backgroundColor(backgroundColorDisabledSubtle).important()
-        borderColor(borderColorDisabled).important()
-        pseudoElement(.before) {
-          borderRightColor(colorDisabled).important()
-          borderBottomColor(colorDisabled).important()
-        }
-      }
-    }
-
-    pseudoClass(.indeterminate, .disabled) {
-      nextSibling(".checkbox-icon") {
-        pseudoElement(.before) {
-          backgroundColor(backgroundColorDisabledSubtle).important()
-        }
-      }
-    }
-
-    pseudoClass(.focus) {
-      nextSibling(".checkbox-icon") {
-        borderColor(borderColorInputBinaryFocus).important()
-        boxShadow(px(0), px(0), px(8), boxShadowColorBlueFocus).important()
-      }
-    }
-
-    pseudoClass(.enabled, .hover) {
-      nextSibling(".checkbox-icon") {
-        borderColor(borderColorInputBinary).important()
-      }
-    }
-
-    pseudoClass(.enabled, .hover, .checked) {
-      nextSibling(".checkbox-icon") {
-        backgroundColor(backgroundColorInputBinaryChecked).important()
-        borderColor(borderColorInputBinaryCheckedHover).important()
-      }
-    }
-
-    pseudoClass(.enabled, .active) {
-      nextSibling(".checkbox-icon") {
-        backgroundColor(backgroundColorInputBinaryChecked).important()
-        borderColor(borderColorInputBinary).important()
-      }
-    }
-
-    pseudoClass(.enabled, .active, .checked) {
-      nextSibling(".checkbox-icon") {
-        backgroundColor(backgroundColorInputBinaryChecked).important()
-        borderColor(borderColorInputBinaryCheckedActive).important()
-      }
-    }
-  }
-
-  @CSSBuilder
-  private func checkboxIconCSS(
-    _ status: ValidationStatus, _ disabled: Bool, _ checked: Bool, _ indeterminate: Bool
-  ) -> [CSSOM.CSSRule] {
-    display(.inlineBlock)
-    position(.relative)
-    pointerEvents(.none)
-    width(minSizeInputBinary)
-    height(minSizeInputBinary)
-    if disabled {
-      backgroundColor(backgroundColorDisabledSubtle)
-    } else {
-      backgroundColor(backgroundColorBase)
-    }
-    if disabled {
-      border(borderWidthBase, .solid, borderColorDisabled)
-    } else if status == .error {
-      border(borderWidthBase, .solid, borderColorRed)
-    } else {
-      border(borderWidthBase, .solid, borderColorInputBinary)
-    }
-    borderRadius(borderRadiusMinimal)
-    flexShrink(0)
-
-    pseudoElement(.before) {
-      content("\"\"")
-      position(.absolute)
-      top(perc(50))
-      left(perc(50))
-      pointerEvents(.none)
-      opacity(0)  // Shown via .checkbox-input:checked + .checkbox-icon::before
-      transform(translate(perc(-50), (indeterminate ? perc(-50) : perc(-60))), scale(1))
-
-      if indeterminate {
-        width(px(10))
-        height(px(2))
-        backgroundColor(colorInvertedFixed)
-      } else {
-        width(px(5))
-        height(px(10))
-        borderRight(px(2), .solid, colorInvertedFixed)
-        borderBottom(px(2), .solid, colorInvertedFixed)
-        // Standard checkmark: rotate L-shape 45 degrees clockwise
-        transform(translate(perc(-50), perc(-60)), rotate(deg(45)), scale(1))
-      }
-    }
-
-    // Animation handled by input + .checkbox-icon:checked::before
-  }
-
-  @CSSBuilder
-  private func checkboxLabelWrapperCSS(_ hideLabel: Bool, _ hasAfterLabel: Bool) -> [CSSOM.CSSRule] {
-  }
-
-  @CSSBuilder
-  private func checkboxAfterLabelCSS() -> [CSSOM.CSSRule] {
-    display(.block)
-  }
-
   public func build() -> DOM.Node {
     let hasDescription = !descriptionContent.isEmpty
     let hasAfterLabel = !afterLabelContent.isEmpty
@@ -314,18 +117,136 @@ public struct CheckboxView: HTMLContent {
           .ariaDescribedby(descriptionID)
           .class("checkbox-input")
           .style {
-            checkboxInputCSS(disabled)
+            selector("&") {
+              position(.absolute)
+              top(0)
+              left(0)
+              width(perc(100))
+              height(perc(100))
+              margin(0)
+              opacity(0)
+              zIndex(zIndexAboveContent)
+              cursor(.pointer)
+            }
+            pseudoClass(.disabled) { cursor(cursorNotAllowed) }
+            pseudoClass(.checked) {
+              nextSibling(".checkbox-icon") {
+                pseudoElement(.before) {
+                  opacity(1).important()
+                  transform(translate(perc(-50), perc(-60)), rotate(deg(45)), scale(1)).important()
+                }
+              }
+            }
+            pseudoClass(.indeterminate) {
+              nextSibling(".checkbox-icon") {
+                pseudoElement(.before) {
+                  opacity(1).important()
+                  transform(translate(perc(-50), perc(-50)), scale(1)).important()
+                }
+              }
+            }
+            pseudoClass(.checked) {
+              nextSibling(".checkbox-icon") {
+                backgroundColor(backgroundColorInputBinaryChecked).important()
+                borderColor(borderColorInputBinaryChecked).important()
+              }
+            }
+            pseudoClass(.checked, .disabled) {
+              nextSibling(".checkbox-icon") {
+                backgroundColor(backgroundColorDisabledSubtle).important()
+                borderColor(borderColorDisabled).important()
+                pseudoElement(.before) {
+                  borderRightColor(colorDisabled).important()
+                  borderBottomColor(colorDisabled).important()
+                }
+              }
+            }
+            pseudoClass(.indeterminate, .disabled) {
+              nextSibling(".checkbox-icon") {
+                pseudoElement(.before) { backgroundColor(backgroundColorDisabledSubtle).important() }
+              }
+            }
+            pseudoClass(.focus) {
+              nextSibling(".checkbox-icon") {
+                borderColor(borderColorInputBinaryFocus).important()
+                boxShadow(px(0), px(0), px(8), boxShadowColorBlueFocus).important()
+              }
+            }
+            pseudoClass(.enabled, .hover) {
+              nextSibling(".checkbox-icon") { borderColor(borderColorInputBinary).important() }
+            }
+            pseudoClass(.enabled, .hover, .checked) {
+              nextSibling(".checkbox-icon") {
+                backgroundColor(backgroundColorInputBinaryChecked).important()
+                borderColor(borderColorInputBinaryCheckedHover).important()
+              }
+            }
+            pseudoClass(.enabled, .active) {
+              nextSibling(".checkbox-icon") {
+                backgroundColor(backgroundColorInputBinaryChecked).important()
+                borderColor(borderColorInputBinary).important()
+              }
+            }
+            pseudoClass(.enabled, .active, .checked) {
+              nextSibling(".checkbox-icon") {
+                backgroundColor(backgroundColorInputBinaryChecked).important()
+                borderColor(borderColorInputBinaryCheckedActive).important()
+              }
+            }
           }
 
         span()
           .class("checkbox-icon")
+          .data("status", status.rawValue)
+          .data("disabled", disabled)
+          .data("indeterminate", indeterminate)
           .style {
-            checkboxIconCSS(status, disabled, checked, indeterminate)
+            selector("&") {
+              display(.inlineBlock)
+              position(.relative)
+              pointerEvents(.none)
+              width(minSizeInputBinary)
+              height(minSizeInputBinary)
+              borderRadius(borderRadiusMinimal)
+              flexShrink(0)
+              backgroundColor(backgroundColorBase)
+              border(borderWidthBase, .solid, borderColorInputBinary)
+            }
+            selector("&[data-disabled='true']") {
+              backgroundColor(backgroundColorDisabledSubtle)
+              borderColor(borderColorDisabled)
+            }
+            selector("&[data-disabled='false'][data-status='error']") { borderColor(borderColorRed) }
+            pseudoElement(.before) {
+              content("\"\"")
+              position(.absolute)
+              top(perc(50))
+              left(perc(50))
+              pointerEvents(.none)
+              opacity(0)
+            }
+            selector("&[data-indeterminate='true']::before") {
+              width(px(10))
+              height(px(2))
+              backgroundColor(colorInvertedFixed)
+              transform(translate(perc(-50), perc(-50)), scale(1))
+            }
+            selector("&[data-indeterminate='false']::before") {
+              width(px(5))
+              height(px(10))
+              borderRight(px(2), .solid, colorInvertedFixed)
+              borderBottom(px(2), .solid, colorInvertedFixed)
+              transform(translate(perc(-50), perc(-60)), rotate(deg(45)), scale(1))
+            }
           }
       }
       .class("checkbox-icon-wrapper")
       .style {
-        checkboxIconWrapperCSS()
+        selector("&") {
+          display(.inlineFlex)
+          position(.relative)
+          verticalAlign(.middle)
+        }
       }
 
       div {
@@ -350,18 +271,34 @@ public struct CheckboxView: HTMLContent {
           }
           .class("checkbox-after-label")
           .style {
-            checkboxAfterLabelCSS()
+            selector("&") { display(.block) }
           }
         }
       }
       .class("checkbox-label-wrapper")
-      .style {
-        checkboxLabelWrapperCSS(hideLabel, hasAfterLabel)
-      }
     }
     .class(stringIsEmpty(`class`) ? "checkbox-view" : "checkbox-view \(`class`)")
+    .data("inline", inline)
+    .data("hide-label", hideLabel)
+    .data("has-after-label", hasAfterLabel)
     .style {
-      checkboxViewCSS(inline, hideLabel, hasAfterLabel)
+      selector("&") {
+        display(.flex)
+        alignItems(.center)
+        position(.relative)
+      }
+      selector("&[data-inline='true']") { display(.inlineFlex) }
+      selector("&[data-inline='false']") {
+        minHeight(minSizeInputBinary)
+        marginBlockEnd(spacing8)
+      }
+      selector("&[data-hide-label='true'][data-has-after-label='false']") { justifyContent(.center) }
+      selector("&:not([data-hide-label='true']), &[data-has-after-label='true']") { gap(spacing8) }
+      selector("&[data-inline='true']:not([data-hide-label='true']), &[data-inline='true'][data-has-after-label='true']") {
+        marginInlineEnd(spacing16)
+      }
+      selector("&[data-inline='true']:last-child") { marginInlineEnd(0).important() }
+      selector("&[data-inline='false']:last-child") { marginBlockEnd(0).important() }
     }
   }
 }
@@ -403,7 +340,7 @@ public struct CheckboxView: HTMLContent {
         labelFontSize: labelFontSize,
         label: { title }
       )
-      wrapper.innerHTML = renderHTML { view.render() }
+      wrapper.innerHTML = view.render()
       return wrapper.firstElementChild ?? wrapper
     }
   }

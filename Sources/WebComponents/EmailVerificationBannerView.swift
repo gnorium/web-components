@@ -20,9 +20,7 @@
         div {
           // Icon
           span { "⚠️" }
-            .style {
-              fontSize(fontSizeMedium16)
-            }
+            .class("email-verification-banner-icon")
 
           // Alert
           span {
@@ -30,70 +28,69 @@
             strong { email }
             "."
           }
-          .style {
-            fontSize(fontSizeSmall14)
-            color(colorBase)
-            flex(1)
-          }
+          .class("email-verification-banner-message")
 
           // Resend button
           button { "Resend Email" }
             .type(.button)
             .class("resend-verification-email")
             .data("email", email)
-            .style {
-              padding(spacing8, spacing12)
-              backgroundColor(backgroundColorBase)
-              color(colorBlue)
-              border(borderWidthBase, .solid, borderColorBlue)
-              borderRadius(borderRadiusBase)
-              fontSize(fontSizeSmall14)
-              fontWeight(fontWeightBold)
-              fontFamily(fontFamilyBase)
-              cursor(cursorBaseHover)
-              transition(
-                transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-              pseudoClass(.hover) {
-                backgroundColor(backgroundColorBlueSubtle)
-              }
-              pseudoClass(.active) {
-                backgroundColor(backgroundColorBlueSubtleActive)
-              }
-            }
 
           // Dismiss button
           button { "✕" }
             .type(.button)
             .class("dismiss-verification-banner")
             .ariaLabel("Dismiss")
-            .style {
-              padding(spacing8, spacing12)
-              backgroundColor(.transparent)
-              color(colorSubtle)
-              border(.none)
-              fontSize(fontSizeMedium16)
-              cursor(cursorBaseHover)
-              transition(
-                transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-              pseudoClass(.hover) {
-                color(colorBase)
-              }
-            }
         }
-        .style {
+        .class("email-verification-banner-content")
+      }
+      .class(`class`.isEmpty ? "email-verification-banner" : "email-verification-banner \(`class`)")
+      .data("hydrate", "email-verification-banner")
+      .data("dismissed", false)
+      .style {
+        selector("&") {
+          backgroundColor(backgroundColorOrangeSubtle)
+          borderBlockEnd(borderWidthBase, .solid, borderColorOrange)
+          padding(spacing12, spacing16)
+        }
+        selector("&[data-dismissed='true']") { display(.none) }
+        descendant(".email-verification-banner-content") {
           display(.flex)
           alignItems(.center)
           gap(spacing12)
           maxWidth(px(1200))
           margin(0, .auto)
         }
-      }
-      .class(`class`.isEmpty ? "email-verification-banner" : "email-verification-banner \(`class`)")
-      .data("hydrate", "email-verification-banner")
-      .style {
-        backgroundColor(backgroundColorOrangeSubtle)
-        borderBlockEnd(borderWidthBase, .solid, borderColorOrange)
-        padding(spacing12, spacing16)
+        descendant(".email-verification-banner-icon") { fontSize(fontSizeMedium16) }
+        descendant(".email-verification-banner-message") {
+          fontSize(fontSizeSmall14)
+          color(colorBase)
+          flex(1)
+        }
+        descendant(".resend-verification-email") {
+          padding(spacing8, spacing12)
+          backgroundColor(backgroundColorBase)
+          color(colorBlue)
+          border(borderWidthBase, .solid, borderColorBlue)
+          borderRadius(borderRadiusBase)
+          fontSize(fontSizeSmall14)
+          fontWeight(fontWeightBold)
+          fontFamily(fontFamilyBase)
+          cursor(cursorBaseHover)
+          transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+        }
+        descendant(".resend-verification-email:hover") { backgroundColor(backgroundColorBlueSubtle) }
+        descendant(".resend-verification-email:active") { backgroundColor(backgroundColorBlueSubtleActive) }
+        descendant(".dismiss-verification-banner") {
+          padding(spacing8, spacing12)
+          backgroundColor(.transparent)
+          color(colorSubtle)
+          border(.none)
+          fontSize(fontSizeMedium16)
+          cursor(cursorBaseHover)
+          transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+        }
+        descendant(".dismiss-verification-banner:hover") { color(colorBase) }
       }
     }
   }
@@ -192,7 +189,7 @@
 
     nonisolated private func handleDismiss() {
       if let banner = banner {
-        banner.style.display(.none)
+        banner.setAttribute(data("dismissed"), "true")
       }
     }
   }

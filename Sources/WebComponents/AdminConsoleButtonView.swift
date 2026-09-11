@@ -33,9 +33,11 @@
       .class("admin-console-button-view")
       .title("Admin Console")
       .style {
-        display(.flex)
-        alignItems(.center)
-        justifyContent(.center)
+        selector("&") {
+          display(.flex)
+          alignItems(.center)
+          justifyContent(.center)
+        }
       }
 
     }

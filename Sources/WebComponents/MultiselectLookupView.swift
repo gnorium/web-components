@@ -9,17 +9,8 @@
 
   /// A predictive input that allows users to make multiple selections from a menu of options.
   public struct MultiselectLookupView: HTMLContent {
-    public struct Chip: Sendable {
-      let id: String
-      let value: String
-      let icon: String?
-
-      public init(id: String, value: String, icon: String? = nil) {
-        self.id = id
-        self.value = value
-        self.icon = icon
-      }
-    }
+    public typealias Chip = ChipInputView.Chip
+    public typealias ValidationStatus = ChipInputView.ValidationStatus
 
     let id: String
     let name: String
@@ -36,11 +27,6 @@
     let keepInputOnSelection: Bool
     let showNoResults: Bool
     let `class`: String
-
-    public enum ValidationStatus: String, Sendable {
-      case `default`
-      case error
-    }
 
     public init(
       id: String,
@@ -76,38 +62,26 @@
       self.`class` = `class`
     }
 
-    @CSSBuilder
-    private func multiselectLookupViewCSS() -> [CSSOM.CSSRule] {
-      position(.relative)
-      display(.inlineBlock)
-      minWidth(px(256))
-    }
-
     public func build() -> DOM.Node {
       var view = div {
         ChipInputView(
           id: id,
           name: name,
-          chips: inputChips.map { chip in
-            ChipInputView.Chip(
-              id: chip.id,
-              value: chip.value,
-              icon: chip.icon
-            )
-          },
+          chips: inputChips,
           placeholder: placeholder,
           separateInput: separateInput,
           disabled: disabled,
           readonly: readonly,
-          status: status == .error ? .error : .default
+          status: status,
+          class: "multiselect-lookup-chip-input"
         )
 
         MenuView(
           menuItems: menuItems,
           selected: selectedValues,
-          expanded: false,
           visibleItemLimit: visibleItemLimit,
-          multiselect: true, showNoResultsSlot: showNoResults,
+          multiselect: true,
+          showNoResultsSlot: showNoResults,
           class: "multiselect-lookup-menu"
         ) {
           // No results message
@@ -123,7 +97,11 @@
       return
         view
         .style {
-          multiselectLookupViewCSS()
+          selector("&") {
+            position(.relative)
+            display(.inlineBlock)
+            minWidth(px(256))
+          }
         }
 
     }

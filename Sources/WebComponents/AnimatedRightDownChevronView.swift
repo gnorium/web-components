@@ -16,7 +16,7 @@ public struct AnimatedRightDownChevronView: HTMLContent {
   public let height: CSS.Length
   public var `class`: String
   public var data: [TableView.AttributePair] = []
-  public var style: [(@Sendable () -> [CSSOM.CSSRule])] = []
+  public var customStyleRules: [(@Sendable () -> [CSSOM.CSSRule])] = []
 
   public init(
     id: String,
@@ -48,15 +48,14 @@ public struct AnimatedRightDownChevronView: HTMLContent {
 
   public func style(@CSSBuilder _ rules: @escaping @Sendable () -> [CSSOM.CSSRule]) -> Self {
     var copy = self
-    copy.style.append(rules)
+    copy.customStyleRules.append(rules)
     return copy
   }
 
   public func build() -> DOM.Node {
     var svgNode = svg {
-      polygon()
-        .points((2.5, 4.75), (10, 12.25), (17.5, 4.75), (19, 6.25), (10, 15.25), (1, 6.25))
-        .fill(.currentColor)
+      polyline()
+        .points("2,5.5 10,13.5 18,5.5")
     }
     .class(stringIsEmpty(`class`) ? "animated-right-down-chevron-view" : "animated-right-down-chevron-view \(`class`)")
     .id("\(id)-chevron")
@@ -64,13 +63,21 @@ public struct AnimatedRightDownChevronView: HTMLContent {
     .height(height)
     .viewBox(0, 0, 20, 20)
     .xmlns("http://www.w3.org/2000/svg")
+    .fill(.none)
+    .stroke(.currentColor)
+    .strokeWidth(2)
+    .strokeLinecap(.butt)
+    .strokeLinejoin(.miter)
     .data("expanded", expanded ? "true" : "false")
     .style {
-      transition(.transform, ms(200), .ease)
-      transform(rotate(expanded ? deg(0) : deg(-90)))
-      transformOrigin(perc(50))
-      
-      for sty in style {
+      selector("&") {
+        transition(.transform, ms(200), .ease)
+        transformOrigin(perc(50))
+      }
+      selector("&[data-expanded='true']") { transform(rotate(deg(0))) }
+      selector("&[data-expanded='false']") { transform(rotate(deg(-90))) }
+
+      for sty in customStyleRules {
         sty()
       }
     }
@@ -90,7 +97,7 @@ public struct AnimatedRightDownChevronView: HTMLContent {
     public static func createElement(id: String, expanded: Bool = false) -> DOM.Element {
       let wrapper = document.createElement(.span)
       let view = AnimatedRightDownChevronView(id: id, expanded: expanded)
-      wrapper.innerHTML = renderHTML { view.render() }
+      wrapper.innerHTML = view.render()
       if let svg = wrapper.firstElementChild {
         return svg
       }

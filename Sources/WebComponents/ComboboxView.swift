@@ -50,26 +50,6 @@
       self.`class` = `class`
     }
 
-    @CSSBuilder
-    private func comboboxViewCSS() -> [CSSOM.CSSRule] {
-      position(.relative)
-      display(.inlineBlock)
-      minWidth(px(256))
-    }
-
-    @CSSBuilder
-    private func comboboxIndicatorCSS() -> [CSSOM.CSSRule] {
-      display(.flex)
-      alignItems(.center)
-      justifyContent(.center)
-      width(minSizeIconMedium)
-      height(minSizeIconMedium)
-      color(colorSubtle)
-      fontSize(fontSizeXSmall12)
-      pointerEvents(.none)
-      transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-    }
-
     public func build() -> DOM.Node {
       return div {
         // Integrate TextInputView for the input field
@@ -88,9 +68,6 @@
           span { "▼" }
             .class("combobox-indicator")
             .ariaHidden(true)
-            .style {
-              comboboxIndicatorCSS()
-            }
         }
         .class("combobox-input-wrapper")
 
@@ -107,7 +84,22 @@
       }
       .class(`class`.isEmpty ? "combobox-view" : "combobox-view \(`class`)")
       .style {
-        comboboxViewCSS()
+        selector("&") {
+          position(.relative)
+          display(.inlineBlock)
+          minWidth(px(256))
+        }
+        selector(".combobox-indicator") {
+          display(.flex)
+          alignItems(.center)
+          justifyContent(.center)
+          width(minSizeIconMedium)
+          height(minSizeIconMedium)
+          color(colorSubtle)
+          fontSize(fontSizeXSmall12)
+          pointerEvents(.none)
+          transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+        }
       }
     }
   }

@@ -71,7 +71,7 @@ public struct DropdownView: HTMLContent {
     fontSize: CSS.Length = fontSizeSmall14,
     contentJustifyContent: CSS.JustifyContent = .spaceBetween,
     optionLayout: OptionLayout = .standard,
-    borderRadius: CSS.Length = borderRadiusBase,
+    buttonBorderRadius: CSS.Length = borderRadiusPill,
     submitFormOnChange: Bool = false
   ) {
     self.id = id
@@ -92,7 +92,7 @@ public struct DropdownView: HTMLContent {
     self.textFontSize = fontSize
     self.contentJustifyContent = contentJustifyContent
     self.optionLayout = optionLayout
-    self.buttonBorderRadius = borderRadius
+    self.buttonBorderRadius = buttonBorderRadius
     self.submitFormOnChange = submitFormOnChange
   }
 
@@ -113,15 +113,6 @@ public struct DropdownView: HTMLContent {
           }
         }
         .for(id)
-        .style {
-          display(.flex)
-          alignItems(.center)
-          gap(spacing4)
-          fontSize(textFontSize)
-          fontWeight(600)
-          color(colorBase)
-          fontFamily(typographyFontSans)
-        }
       }
 
       // Dropdown container
@@ -161,27 +152,15 @@ public struct DropdownView: HTMLContent {
               .class("dropdown-selected-text")
               .data("dropdown-selected-text", true)
               .data("placeholder", placeholder)
-              .style {
-                textAlign(.start)
-                let hasSelectedValue = selectedValue.map { sv in options.contains { stringEquals($0.value, sv) } } ?? false
-                if disabled {
-                  color(hasSelectedValue ? colorDisabled : colorPlaceholder)
-                } else {
-                  color(hasSelectedValue ? colorBase : colorPlaceholder)
-                }
-                whiteSpace(.nowrap)
-                if optionLayout == .sidebar {
-                  overflow(.hidden)
-                  textOverflow(.ellipsis)
-                  maxWidth(px(160))
-                }
-              }
+              .data("selected", selectedValue.map { value in options.contains { stringEquals($0.value, value) } } ?? false)
+              .data("disabled", disabled)
+              .data("sidebar", optionLayout == .sidebar)
               .title(options.first { stringEquals($0.value, selectedValue ?? "") }?.altDisplay ?? displayText)
 
             // Animated chevron icon (switch, not ==, since ButtonSize is String-raw)
             let chevronDim: CSS.Length =
               switch buttonSize {
-              case .small: px(12)
+              case .mini, .small: px(12)
               case .medium: px(16)
               case .large: px(20)
               }
@@ -197,21 +176,6 @@ public struct DropdownView: HTMLContent {
         .class("dropdown-trigger-wrapper")
         .data("dropdown-trigger", true)
         .data("dropdown-id", id)
-        .style {
-          if let w = dropdownWidth {
-            width(w)
-          } else if fullWidth {
-            width(perc(100))
-          } else {
-            width(.fitContent)
-          }
-          display(.flex)
-          flex(1)
-          justifyContent(.spaceBetween)
-          media(maxWidth(maxWidthBreakpointMobile)) {
-            width(perc(100)).important()
-          }
-        }
 
         // Dropdown menu
         div {
@@ -222,26 +186,8 @@ public struct DropdownView: HTMLContent {
               .placeholder("Search...")
               .class("dropdown-search-input")
               .data("dropdown-search", true)
-              .style {
-                width(perc(100))
-                padding(spacing8, spacing12)
-                fontSize(textFontSize)
-                lineHeight(1.618)
-                color(colorBase)
-                backgroundColor(backgroundColorBase)
-                border(borderWidthBase, .solid, borderColorBase)
-                borderRadius(borderRadiusBase)
-                boxSizing(.borderBox)
-                pseudoClass(.focus) {
-                  outline(borderWidthThick, .solid, colorBlue).important()
-                  borderColor(borderColorBlue).important()
-                }
-              }
           }
-          .style {
-            padding(spacing8)
-            borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
-          }
+          .class("dropdown-search-input-wrapper")
 
           // Options list
           div {
@@ -250,33 +196,12 @@ public struct DropdownView: HTMLContent {
               return div {
                 span { option.display }
                   .class("dropdown-option-display-text")
-                  .style {
-                    if optionLayout == .sidebar {
-                      fontWeight(fontWeightSemiBold)
-                      fontSize(fontSizeSmall14)
-                      color(isSelected ? colorInvertedFixed : colorBase)
-                      whiteSpace(.nowrap)
-                      overflow(.hidden)
-                      textOverflow(.ellipsis)
-                      width(perc(100))
-                    }
-                  }
+                  .data("sidebar", optionLayout == .sidebar)
                 
                 if let alt = option.altDisplay, !stringIsEmpty(alt) {
                   span { alt }
                     .class("dropdown-option-alt-text")
-                    .style {
-                      if optionLayout == .sidebar {
-                        fontSize(fontSizeXSmall12)
-                        color(isSelected ? colorInvertedFixed : colorSubtle)
-                        whiteSpace(.nowrap)
-                        overflow(.hidden)
-                        textOverflow(.ellipsis)
-                        width(perc(100))
-                      } else {
-                        marginInlineStart(.auto)
-                      }
-                    }
+                    .data("sidebar", optionLayout == .sidebar)
                 }
               }
               .class(isSelected ? "dropdown-option is-selected" : "dropdown-option")
@@ -285,109 +210,204 @@ public struct DropdownView: HTMLContent {
               .data("display", option.display)
               .data("display-lower", option.displayLower ?? option.display)
               .data("alt-display", option.altDisplay ?? "")
-              .style {
-                display(.flex)
-                if optionLayout == .sidebar {
-                  flexDirection(.column)
-                  alignItems(.flexStart)
-                  gap(spacing2)
-                  padding(spacing12)
-                } else {
-                  alignItems(.center)
-                  gap(spacing8)
-                  padding(spacing8, spacing12)
-                }
-                fontSize(textFontSize)
-                color(isSelected ? colorInvertedFixed : colorBase)
-                backgroundColor(isSelected ? backgroundColorBlue : backgroundColorTransparent)
-                cursor(cursorBaseHover)
-                transition(
-                  transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-                pseudoClass(.hover) {
-                  backgroundColor(backgroundColorBlue).important()
-                  color(colorInvertedFixed).important()
-                  selector(".dropdown-option-display-text", ".dropdown-option-alt-text") {
-                    color(colorInvertedFixed).important()
-                  }
-                }
-                
-                if isSelected {
-                  backgroundColor(backgroundColorBlue).important()
-                  color(colorInvertedFixed).important()
-                  selector(".dropdown-option-display-text", ".dropdown-option-alt-text") {
-                    color(colorInvertedFixed).important()
-                  }
-                }
-              }
-
+              .data("selected", isSelected)
+              .data("sidebar", optionLayout == .sidebar)
+              .data("hidden", false)
             }
           }
           .class("dropdown-options-list")
           .data("dropdown-options-list", true)
-          .style {
-            maxHeight(px(300))
-            overflowY(.auto)
-          }
         }
         .class("dropdown-menu")
         .data("dropdown-menu", true)
-        .style {
-          position(.absolute)
-          top(perc(100))
-          insetInlineStart(0)
-          if let mw = menuWidth {
-            width(mw)
-          } else if dropdownWidth != nil {
-            minWidth(px(250))
-          } else {
-            insetInlineEnd(0)
-          }
-          marginBlockStart(spacing4)
-          backgroundColor(backgroundColorBase)
-          border(borderWidthBase, .solid, borderColorBase)
-          borderRadius(borderRadiusBase)
-          boxShadow(boxShadowMedium)
-          zIndex(zIndexDropdown)
-          display(.none)
-          overflow(.hidden)
-          media(maxWidth(maxWidthBreakpointMobile)) {
-            width(perc(100)).important()
-            insetInlineStart(0).important()
-            insetInlineEnd(0).important()
-          }
-        }
+        .data("open", false)
       }
       .class("dropdown-container")
       .data("dropdown-container", true)
       .data("dropdown-disabled", disabled)
-      .style {
-        position(.relative)
-        pseudoClass(.focusWithin) {
-          zIndex(zIndexDropdown).important()
-        }
-        selector(".is-open") {
-          zIndex(zIndexDropdown).important()
-        }
-        selector(".dropdown-trigger:focus-visible") {
-          outline(.none).important()
-          boxShadow(px(0), px(0), px(0), px(2), colorBlue).important()
-        }
-        media(maxWidth(maxWidthBreakpointMobile)) {
-          width(perc(100)).important()
-        }
-      }
     }
     .class(stringIsEmpty(`class`) ? "dropdown-view" : "dropdown-view \(`class`)")
     .data("submitFormOnChange", submitFormOnChange ? "true" : "false")
     .style {
-      display(.flex)
-      flexDirection(.column)
-      gap(spacing8)
-      if fullWidth {
-        width(perc(100))
-      } else {
+      selector("&") {
+        display(.flex)
+        flexDirection(.column)
+        gap(spacing8)
+        if fullWidth {
+          width(perc(100))
+        }
+      }
+      if !fullWidth {
         media(maxWidth(maxWidthBreakpointMobile)) {
+          selector("&") {
+            width(perc(100)).important()
+          }
+        }
+      }
+      descendant(".field-label") {
+        display(.flex)
+        alignItems(.center)
+        gap(spacing4)
+        fontSize(textFontSize)
+        fontWeight(600)
+        color(colorBase)
+        fontFamily(typographyFontSans)
+      }
+      descendant(".dropdown-selected-text") {
+        textAlign(.start)
+        color(colorPlaceholder)
+        whiteSpace(.nowrap)
+      }
+      descendant(".dropdown-selected-text[data-selected='true'][data-disabled='false']") { color(colorBase) }
+      descendant(".dropdown-selected-text[data-selected='true'][data-disabled='true']") { color(colorDisabled) }
+      descendant(".dropdown-selected-text[data-sidebar='true']") {
+        overflow(.hidden)
+        textOverflow(.ellipsis)
+        maxWidth(px(160))
+      }
+      descendant(".dropdown-trigger-wrapper") {
+        if let w = dropdownWidth {
+          width(w)
+        } else if fullWidth {
+          width(perc(100))
+        } else {
+          width(.fitContent)
+        }
+        display(.flex)
+        flex(1)
+        justifyContent(.spaceBetween)
+      }
+      // Trigger radius comes from ButtonView(borderRadius:) — do not override here
+      // (shared .dropdown-view CSS would otherwise force one radius for all instances).
+      media(maxWidth(maxWidthBreakpointMobile)) {
+        descendant(".dropdown-trigger-wrapper") {
           width(perc(100)).important()
+        }
+        descendant(".dropdown-container") {
+          width(perc(100)).important()
+        }
+        descendant(".dropdown-menu") {
+          width(perc(100)).important()
+          insetInlineStart(0).important()
+          insetInlineEnd(0).important()
+        }
+      }
+      descendant(".dropdown-search-input") {
+        width(perc(100))
+        padding(spacing8, spacing12)
+        fontSize(textFontSize)
+        lineHeight(1.618)
+        color(colorBase)
+        backgroundColor(backgroundColorBase)
+        border(borderWidthBase, .solid, borderColorBase)
+        borderRadius(borderRadiusBase)
+        boxSizing(.borderBox)
+        pseudoClass(.focus) {
+          outline(borderWidthThick, .solid, colorBlue).important()
+          borderColor(borderColorBlue).important()
+        }
+      }
+      descendant(".dropdown-search-input-wrapper") {
+        padding(spacing8)
+        borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
+      }
+      descendant(".dropdown-option") {
+        display(.flex)
+        alignItems(.center)
+        gap(spacing8)
+        padding(spacing8, spacing12)
+        fontSize(textFontSize)
+        color(colorBase)
+        backgroundColor(backgroundColorTransparent)
+        cursor(cursorBaseHover)
+        transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+        pseudoClass(.hover) {
+          backgroundColor(backgroundColorBlue).important()
+          color(colorInvertedFixed).important()
+          selector(".dropdown-option-display-text", ".dropdown-option-alt-text") {
+            color(colorInvertedFixed).important()
+          }
+        }
+      }
+      descendant(".dropdown-option[data-sidebar='true']") {
+        flexDirection(.column)
+        alignItems(.flexStart)
+        gap(spacing2)
+        padding(spacing12)
+      }
+      descendant(".dropdown-option[data-hidden='true']") { display(.none) }
+      descendant(".dropdown-option[data-selected='true']") {
+        backgroundColor(backgroundColorBlue).important()
+        color(colorInvertedFixed).important()
+      }
+      selector(".dropdown-option[data-selected='true'] .dropdown-option-display-text", ".dropdown-option[data-selected='true'] .dropdown-option-alt-text") {
+        color(colorInvertedFixed).important()
+      }
+      descendant(".dropdown-option[data-highlighted='true']") {
+        backgroundColor(backgroundColorBlue).important()
+        color(colorInvertedFixed).important()
+      }
+      selector(".dropdown-option[data-highlighted='true'] .dropdown-option-display-text", ".dropdown-option[data-highlighted='true'] .dropdown-option-alt-text") {
+        color(colorInvertedFixed).important()
+      }
+      descendant(".dropdown-option-display-text[data-sidebar='true']") {
+        fontWeight(fontWeightSemiBold)
+        fontSize(fontSizeSmall14)
+        color(colorBase)
+        whiteSpace(.nowrap)
+        overflow(.hidden)
+        textOverflow(.ellipsis)
+        width(perc(100))
+      }
+      descendant(".dropdown-option-alt-text[data-sidebar='true']") {
+        fontSize(fontSizeXSmall12)
+        color(colorSubtle)
+        whiteSpace(.nowrap)
+        overflow(.hidden)
+        textOverflow(.ellipsis)
+        width(perc(100))
+      }
+      descendant(".dropdown-option-alt-text[data-sidebar='false']") {
+        marginInlineStart(.auto)
+      }
+      descendant(".dropdown-options-list") {
+        maxHeight(px(300))
+        overflowY(.auto)
+      }
+      descendant(".dropdown-menu") {
+        position(.absolute)
+        top(perc(100))
+        insetInlineStart(0)
+        if let mw = menuWidth {
+          width(mw)
+        } else if dropdownWidth != nil {
+          minWidth(px(250))
+        } else {
+          insetInlineEnd(0)
+        }
+        marginBlockStart(spacing4)
+        backgroundColor(backgroundColorBase)
+        border(borderWidthBase, .solid, borderColorBase)
+        borderRadius(borderRadiusBase)
+        boxShadow(boxShadowMedium)
+        zIndex(zIndexDropdown)
+        display(.none)
+        overflow(.hidden)
+      }
+      descendant(".dropdown-menu[data-open='true']") {
+        display(.block)
+      }
+      descendant(".dropdown-container") {
+        position(.relative)
+        pseudoClass(.focusWithin) {
+          zIndex(zIndexDropdown).important()
+        }
+        descendant(".is-open") {
+          zIndex(zIndexDropdown).important()
+        }
+        descendant(".dropdown-trigger:focus-visible") {
+          outline(.none).important()
+          boxShadow(px(0), px(0), px(0), px(2), colorBlue).important()
         }
       }
     }
@@ -472,18 +492,10 @@ public struct DropdownView: HTMLContent {
         _ = option.addEventListener(.mousemove) { [self] _ in
           if self.highlightIndex != i {
             if self.highlightIndex >= 0, self.highlightIndex < self.allOptions.count {
-              let prev = self.allOptions[self.highlightIndex]
-              if prev.classList.contains("is-selected") {
-                prev.style.backgroundColor(backgroundColorBlue)
-                prev.style.color(colorInvertedFixed)
-              } else {
-                prev.style.backgroundColor(backgroundColorTransparent)
-                prev.style.color(colorBase)
-              }
+              self.allOptions[self.highlightIndex].setAttribute(data("highlighted"), false)
             }
             self.highlightIndex = i
-            option.style.backgroundColor(backgroundColorBlue)
-            option.style.color(colorInvertedFixed)
+            option.setAttribute(data("highlighted"), true)
           }
         }
       }
@@ -492,14 +504,7 @@ public struct DropdownView: HTMLContent {
       if let list = optionsList {
         _ = list.addEventListener(.mouseleave) { [self] _ in
           if self.highlightIndex >= 0, self.highlightIndex < self.allOptions.count {
-            let prev = self.allOptions[self.highlightIndex]
-            if prev.classList.contains("is-selected") {
-              prev.style.backgroundColor(backgroundColorBlue)
-              prev.style.color(colorInvertedFixed)
-            } else {
-              prev.style.backgroundColor(backgroundColorTransparent)
-              prev.style.color(colorBase)
-            }
+            self.allOptions[self.highlightIndex].setAttribute(data("highlighted"), false)
           }
           self.highlightIndex = -1
         }
@@ -545,18 +550,18 @@ public struct DropdownView: HTMLContent {
     }
 
     private func openDropdown() {
-      menu?.style.display(.block)
+      isOpen = true
+      menu?.setAttribute(data("open"), true)
       _ = container?.classList.add("is-open")
       morphChevron()
-      isOpen = true
       highlightIndex = -1
     }
 
     private func closeDropdown() {
-      menu?.style.display(.none)
+      isOpen = false
+      menu?.setAttribute(data("open"), false)
       _ = container?.classList.remove("is-open")
       morphChevron()
-      isOpen = false
       (searchInput as? HTML.HTMLInputElement)?.value = ""
       filterOptions()  // Reset filter
     }
@@ -572,7 +577,7 @@ public struct DropdownView: HTMLContent {
 
       for option in allOptions {
         guard let displayValue = option.getAttribute(data("display")) else {
-          option.style.display(.none)
+          option.setAttribute(data("hidden"), true)
           continue
         }
 
@@ -582,10 +587,8 @@ public struct DropdownView: HTMLContent {
           || stringContainsCaseInsensitive(
             option.getAttribute(data("alt-display")) ?? "", searchValue)
         if matches {
-          option.style.display(.flex)
           option.setAttribute(data("hidden"), "false")
         } else {
-          option.style.display(.none)
           option.setAttribute(data("hidden"), "true")
         }
       }
@@ -614,17 +617,15 @@ public struct DropdownView: HTMLContent {
       // Update selected text and title (tooltip)
       selectedText?.innerHTML = display
       selectedText?.setAttribute(.title, altDisplay)
-      selectedText?.style.color(colorBase)
+      selectedText?.setAttribute(data("selected"), true)
 
       // Update selected state in menu
       for opt in allOptions {
         _ = opt.classList.remove("is-selected")
-        opt.style.backgroundColor(backgroundColorTransparent)
-        opt.style.color(colorBase)
+        opt.setAttribute(data("selected"), false)
       }
       _ = option.classList.add("is-selected")
-      option.style.backgroundColor(backgroundColorBlue)
-      option.style.color(colorInvertedFixed)
+      option.setAttribute(data("selected"), true)
 
       // Dispatch change event on hidden input
       if let hiddenInput {
@@ -644,14 +645,7 @@ public struct DropdownView: HTMLContent {
     private func moveHighlight(_ delta: Int) {
       guard allOptions.count > 0 else { return }
       if highlightIndex >= 0, highlightIndex < allOptions.count {
-        let prev = allOptions[highlightIndex]
-        if prev.classList.contains("is-selected") {
-          prev.style.backgroundColor(backgroundColorBlue)
-          prev.style.color(colorInvertedFixed)
-        } else {
-          prev.style.backgroundColor(backgroundColorTransparent)
-          prev.style.color(colorBase)
-        }
+        allOptions[highlightIndex].setAttribute(data("highlighted"), false)
       }
       var steps = 0
       while steps < allOptions.count {
@@ -661,8 +655,7 @@ public struct DropdownView: HTMLContent {
           break
         }
       }
-      allOptions[highlightIndex].style.backgroundColor(backgroundColorBlue)
-      allOptions[highlightIndex].style.color(colorInvertedFixed)
+      allOptions[highlightIndex].setAttribute(data("highlighted"), true)
       if let list = optionsList {
         let optionTop = allOptions[highlightIndex].offsetTop - list.offsetTop
         let optionBottom = optionTop + allOptions[highlightIndex].offsetHeight
@@ -685,12 +678,11 @@ public struct DropdownView: HTMLContent {
       (hiddenInput as? HTML.HTMLInputElement)?.value = ""
       selectedText?.innerHTML = placeholder
       selectedText?.removeAttribute(.title)
-      selectedText?.style.color(colorPlaceholder)
+      selectedText?.setAttribute(data("selected"), false)
 
       for opt in allOptions {
         _ = opt.classList.remove("is-selected")
-        opt.style.backgroundColor(backgroundColorTransparent)
-        opt.style.color(colorBase)
+        opt.setAttribute(data("selected"), false)
       }
 
       if let hiddenInput {
@@ -801,7 +793,7 @@ public struct DropdownView: HTMLContent {
         fullWidth: fullWidth,
         fontSize: fontSize
       )
-      wrapper.innerHTML = renderHTML { view.render() }
+      wrapper.innerHTML = view.render()
       let element = wrapper.firstElementChild ?? wrapper
       if let hydrator = hydrator,
         let container = element.querySelector("[data-dropdown-container=\"true\"]")

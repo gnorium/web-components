@@ -89,97 +89,10 @@
       self.`class` = `class`
     }
 
-    @CSSBuilder
-    private func alertViewCSS(_ alertColor: AlertColor, _ inline: Bool) -> [CSSOM.CSSRule] {
-      display(.flex)
-      alignItems(.center)
-      gap(spacing8)
-      boxSizing(.borderBox)
-
-      if !inline {
-        minHeight(px(64))
-        padding(spacing12, spacing16)
-        borderWidth(borderWidthBase)
-        borderStyle(.solid)
-        borderRadius(borderRadiusBase)
-
-        switch alertColor {
-        case .gray:
-          backgroundColor(backgroundColorGraySubtle)
-          borderColor(borderColorGray)
-        case .orange:
-          backgroundColor(backgroundColorOrangeSubtle)
-          borderColor(borderColorOrange)
-        case .red:
-          backgroundColor(backgroundColorRedSubtle)
-          borderColor(borderColorRed)
-        case .green:
-          backgroundColor(backgroundColorGreenSubtle)
-          borderColor(borderColorGreen)
-        }
-      } else {
-        padding(0)
-      }
-    }
-
-    @CSSBuilder
-    private func alertIconCSS(_ alertColor: AlertColor) -> [CSSOM.CSSRule] {
-      display(.flex)
-      alignItems(.center)
-      minWidth(sizeIconMedium)
-      width(sizeIconMedium)
-      height(sizeIconMedium)
-      flexShrink(0)
-      fontSize(sizeIconMedium)
-
-      switch alertColor {
-      case .gray:
-        color(colorGray)
-      case .orange:
-        color(colorOrange)
-      case .red:
-        color(colorRed)
-      case .green:
-        color(colorGreen)
-      }
-    }
-
-    @CSSBuilder
-    private func alertContentCSS() -> [CSSOM.CSSRule] {
-      display(.flex)
-      flexDirection(.column)
-      flexGrow(1)
-      fontFamily(typographyFontSans)
-      fontSize(fontSizeMedium16)
-      fontWeight(fontWeightNormal)
-      lineHeight(lineHeightSmall22)
-      color(colorBase)
-      justifyContent(.center)
-    }
-
-    @CSSBuilder
-    private func alertFadeInCSS() -> [CSSOM.CSSRule] {
-      animation("alert-fade-in", transitionDurationBase, transitionTimingFunctionSystem)
-      keyframes("alert-fade-in") {
-        from {
-          opacity(0)
-          transform(translateX(perc(-100)))
-        }
-        to {
-          opacity(1)
-          transform(translateX(0))
-        }
-      }
-      keyframes("alert-fade-out") {
-        from {
-          opacity(1)
-          transform(translateX(0))
-        }
-        to {
-          opacity(0)
-          transform(translateX(perc(-100)))
-        }
-      }
+    /// Registers the component stylesheet when client code may create alerts on
+    /// a page that has no server-rendered `AlertView` instance.
+    public static func preloadStyleSheet() {
+      _ = AlertView(color: .gray, inline: true, customIcon: "") { [] }.build()
     }
 
     public func build() -> DOM.Node {
@@ -234,8 +147,29 @@
           }
           .class("alert-icon")
           .ariaHidden(true)
+          .data("color", alertColor.rawValue)
           .style {
-            alertIconCSS(alertColor)
+            selector("&") {
+              display(.flex)
+              alignItems(.center)
+              justifyContent(.center)
+              minWidth(sizeIconMedium)
+              width(sizeIconMedium)
+              height(sizeIconMedium)
+              flexShrink(0)
+              fontSize(sizeIconMedium)
+              lineHeight(1)
+            }
+            selector("& svg") {
+              display(.block)
+              flexShrink(0)
+              width(sizeIconMedium)
+              height(sizeIconMedium)
+            }
+            selector("&[data-color='gray']") { color(colorGray) }
+            selector("&[data-color='orange']") { color(colorOrange) }
+            selector("&[data-color='red']") { color(colorRed) }
+            selector("&[data-color='green']") { color(colorGreen) }
           }
         }
 
@@ -244,7 +178,17 @@
         }
         .class("alert-content")
         .style {
-          alertContentCSS()
+          selector("&") {
+            display(.flex)
+            flexDirection(.column)
+            flexGrow(1)
+            fontFamily(typographyFontSans)
+            fontSize(fontSizeMedium16)
+            fontWeight(fontWeightNormal)
+            lineHeight(lineHeightSmall22)
+            color(colorBase)
+            justifyContent(.center)
+          }
         }
 
         if allowUserDismiss {
@@ -269,9 +213,79 @@
       return
         alert
         .style {
-          alertViewCSS(alertColor, inline)
-          if fadeIn {
-            alertFadeInCSS()
+          selector("&") {
+            display(.flex)
+            alignItems(.center)
+            gap(spacing8)
+            boxSizing(.borderBox)
+          }
+          selector("&:not(.alert-inline)") {
+            minHeight(px(64))
+            padding(spacing12, spacing16)
+            borderWidth(borderWidthBase)
+            borderStyle(.solid)
+            borderRadius(borderRadiusBase)
+          }
+          selector("&.alert-inline") { padding(spacing8) }
+          selector("&.alert-gray:not(.alert-inline)") {
+            backgroundColor(backgroundColorGraySubtle)
+            borderColor(borderColorGray)
+          }
+          selector("&.alert-orange:not(.alert-inline)") {
+            backgroundColor(backgroundColorOrangeSubtle)
+            borderColor(borderColorOrange)
+          }
+          selector("&.alert-red:not(.alert-inline)") {
+            backgroundColor(backgroundColorRedSubtle)
+            borderColor(borderColorRed)
+          }
+          selector("&.alert-green:not(.alert-inline)") {
+            backgroundColor(backgroundColorGreenSubtle)
+            borderColor(borderColorGreen)
+          }
+          selector("&.alert-fade-in") { animation("alert-fade-in", transitionDurationBase, transitionTimingFunctionSystem) }
+          selector("&.alert-fade-out") { animation("alert-fade-out", s(0.3), .easeOut) }
+          selector("&.alert-dynamic") {
+            pointerEvents(.auto)
+            boxShadow((px(0), px(2), px(8), rgba(0, 0, 0, 0.1)))
+          }
+          selector("&.alert-dynamic.alert-fade-in") { animation("alert-fade-in", s(0.3), .easeOut) }
+          selector("&.alert-dynamic .alert-dismiss") {
+            display(.flex)
+            alignItems(.center)
+            justifyContent(.center)
+            minWidth(sizeIconMedium)
+            width(sizeIconMedium)
+            height(sizeIconMedium)
+            marginLeft(spacing8)
+            padding(0)
+            border(borderTransparent)
+            backgroundColor(backgroundColorTransparent)
+            color(colorSubtle)
+            cursor(cursorBaseHover)
+            borderRadius(borderRadiusBase)
+            transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+            flexShrink(0)
+          }
+          keyframes("alert-fade-in") {
+            from {
+              opacity(0)
+              transform(translateX(perc(-100)))
+            }
+            to {
+              opacity(1)
+              transform(translateX(0))
+            }
+          }
+          keyframes("alert-fade-out") {
+            from {
+              opacity(1)
+              transform(translateX(0))
+            }
+            to {
+              opacity(0)
+              transform(translateX(perc(-100)))
+            }
           }
         }
 
@@ -398,36 +412,12 @@
         if existingContainer == nil {
           let newContainer = document.createElement(.div)
           newContainer.className = "alert-container"
-          newContainer.style.position(.fixed)
-          newContainer.style.top(px(80))
-          newContainer.style.left(perc(50))
-          newContainer.style.transform(translateX(perc(-50)))
-          newContainer.style.zIndex(zIndexTooltip)
-          newContainer.style.display(.flex)
-          newContainer.style.flexDirection(.column)
-          newContainer.style.gap(spacing12)
-          newContainer.style.maxWidth(px(600))
-          newContainer.style.width(calc(perc(100) - px(48)))
-          newContainer.style.pointerEvents(.none)
           document.body.appendChild(newContainer)
           existingContainer = newContainer
         }
         guard let c = existingContainer else { return }
         alertContainer = c
       }
-
-      let (bgColor, borderColor, iconColor): (CSS.Color, CSS.Color, CSS.Color) = {
-        switch type {
-        case .gray:
-          return (backgroundColorGraySubtle, borderColorGray, colorGray)
-        case .orange:
-          return (backgroundColorOrangeSubtle, borderColorOrange, colorOrange)
-        case .red:
-          return (backgroundColorRedSubtle, borderColorRed, colorRed)
-        case .green:
-          return (backgroundColorGreenSubtle, borderColorGreen, colorGreen)
-        }
-      }()
 
       let unicodeInfo = "i"
       let unicodeWarning = "⚠"
@@ -466,40 +456,23 @@
 
       // Create alert element
       let alertEl = document.createElement(.div)
-      let alertClass: String
+      let alertColorClass: String
       switch type {
       case .gray:
-        alertClass = "alert-view alert-gray alert-fade-in"
+        alertColorClass = "alert-gray"
       case .orange:
-        alertClass = "alert-view alert-orange alert-fade-in"
+        alertColorClass = "alert-orange"
       case .red:
-        alertClass = "alert-view alert-red alert-fade-in"
+        alertColorClass = "alert-red"
       case .green:
-        alertClass = "alert-view alert-green alert-fade-in"
+        alertColorClass = "alert-green"
       }
-      alertEl.className = alertClass
-      alertEl.style.animation(("alert-fade-in", s(0.3), .easeOut))
+      alertEl.className = inline
+        ? "alert-view \(alertColorClass) alert-inline alert-dynamic alert-fade-in"
+        : "alert-view \(alertColorClass) alert-dynamic alert-fade-in"
       alertEl.setAttribute(.ariaLive, ariaLive)
       if type == .red {
         alertEl.setAttribute(.role, .alert)
-      }
-
-      alertEl.style.display(.flex)
-      alertEl.style.alignItems(.center)
-      alertEl.style.boxSizing(.borderBox)
-      alertEl.style.pointerEvents(.auto)
-      alertEl.style.boxShadow((0, px(2), px(8), rgba(0, 0, 0, 0.1)))
-
-      if !inline {
-        alertEl.style.minHeight(px(64))
-        alertEl.style.padding(spacing12, spacing16)
-        alertEl.style.borderWidth(borderWidthBase)
-        alertEl.style.borderStyle(.solid)
-        alertEl.style.borderRadius(borderRadiusBase)
-        alertEl.style.backgroundColor(bgColor)
-        alertEl.style.borderColor(borderColor)
-      } else {
-        alertEl.style.padding(px(0))
       }
 
       // Icon
@@ -508,15 +481,12 @@
         icon.className = "alert-icon"
         icon.innerHTML = displayIcon
         icon.setAttribute(.ariaHidden, true)
-        icon.style.display(.flex)
-        icon.style.alignItems(.center)
-        icon.style.minWidth(sizeIconMedium)
-        icon.style.width(sizeIconMedium)
-        icon.style.height(sizeIconMedium)
-        icon.style.marginRight(spacing8)
-        icon.style.flexShrink(0)
-        icon.style.fontSize(sizeIconMedium)
-        icon.style.color(iconColor)
+        switch type {
+        case .gray: icon.setAttribute(data("color"), "gray")
+        case .orange: icon.setAttribute(data("color"), "orange")
+        case .red: icon.setAttribute(data("color"), "red")
+        case .green: icon.setAttribute(data("color"), "green")
+        }
         alertEl.appendChild(icon)
       }
 
@@ -524,14 +494,6 @@
       let content = document.createElement(.div)
       content.className = "alert-content"
       content.innerHTML = text
-      content.style.display(.flex)
-      content.style.flexDirection(.column)
-      content.style.flexGrow(1)
-      content.style.fontFamily(typographyFontSans)
-      content.style.fontSize(fontSizeMedium16)
-      content.style.fontWeight(fontWeightNormal)
-      content.style.lineHeight(lineHeightSmall22)
-      content.style.color(colorBase)
       alertEl.appendChild(content)
 
       // Dismiss button
@@ -543,22 +505,6 @@
         let buttonType: HTML.Button.`Type` = .button
         dismissBtn.setAttribute(.type, buttonType)
         dismissBtn.setAttribute(.ariaLabel, "Close")
-        dismissBtn.style.display(.flex)
-        dismissBtn.style.alignItems(.center)
-        dismissBtn.style.justifyContent(.center)
-        dismissBtn.style.minWidth(sizeIconMedium)
-        dismissBtn.style.width(sizeIconMedium)
-        dismissBtn.style.height(sizeIconMedium)
-        dismissBtn.style.marginLeft(spacing8)
-        dismissBtn.style.padding(px(0))
-        dismissBtn.style.border(borderTransparent)
-        dismissBtn.style.backgroundColor(backgroundColorTransparent)
-        dismissBtn.style.color(colorSubtle)
-        dismissBtn.style.cursor(cursorBaseHover)
-        dismissBtn.style.borderRadius(borderRadiusBase)
-        dismissBtn.style.transition(
-          transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-        dismissBtn.style.flexShrink(0)
 
         _ = dismissBtn.addEventListener(.click) { _ in
           dismissAlert(alertEl, onDismiss: onDismiss, userInitiated: true)
@@ -581,7 +527,8 @@
     private static func dismissAlert(
       _ element: DOM.Element, onDismiss: (@Sendable () -> Void)?, userInitiated: Bool
     ) {
-      element.style.animation(("alert-fade-out", s(0.3), .easeOut))
+      element.classList.remove("alert-fade-in")
+      element.classList.add("alert-fade-out")
 
       _ = setTimeout(300) {
         element.remove()
@@ -669,7 +616,8 @@
         window.replaceURL("\(pathname)\(cleaned)")
       }
 
-      alertElement.style.animation(("alert-fade-out", s(0.3), .easeOut))
+      alertElement.classList.remove("alert-fade-in")
+      alertElement.classList.add("alert-fade-out")
 
       _ = setTimeout(300) { [self] in
         self.alertElement.remove()

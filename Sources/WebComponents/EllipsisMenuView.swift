@@ -30,9 +30,6 @@
         div {}
           .class("ellipsis-menu-backdrop")
           .data("ellipsis-menu-backdrop", "true")
-          .style {
-            ellipsisMenuBackdropCSS()
-          }
 
         // Menu container — slides down from navbar
         div {
@@ -40,98 +37,81 @@
             div {
               content
             }
-            .style {
-              display(.flex)
-              flexDirection(.column)
-              gap(spacing8)
-            }
+            .class("ellipsis-menu-content")
           }
         }
         .class("ellipsis-menu-container")
         .data("ellipsis-menu-container", "true")
-        .style {
-          ellipsisMenuContainerCSS()
-        }
       }
       .id("navbar-ellipsis-menu")
       .class(`class`.isEmpty ? "ellipsis-menu-view" : "ellipsis-menu-view \(`class`)")
       .data("ellipsis-menu", "true")
+      .data("state", "closed")
       .ariaHidden(true)
       .style {
-        ellipsisMenuViewCSS()
+        selector("&") {
+          display(.none)
+          position(.fixed)
+          top(px(navbarHeight))
+          insetInlineStart(0)
+          width(perc(100))
+          height(calc(vh(100) - px(navbarHeight)))
+          zIndex(zIndexOverlay)
+          pointerEvents(.none)
+        }
+        descendant(".ellipsis-menu-backdrop") {
+          position(.absolute)
+          inset(0)
+          backgroundColor(backgroundColorBackdropDark)
+          backdropFilter(blur(rem(1)))
+          webkitBackdropFilter(blur(rem(1)))
+          opacity(0)
+          transition(.opacity, transitionDurationMedium, transitionTimingFunctionSystem)
+          zIndex(-1)
+        }
+        descendant(".ellipsis-menu-container") {
+          position(.relative)
+          width(perc(100))
+          backgroundColor(backgroundColorBase)
+          paddingBlockStart(spacing16)
+          paddingBlockEnd(spacing16)
+          borderBlockEnd(borderWidthBase, .solid, borderColorBase)
+          opacity(0)
+          transform(translateY(perc(-100)))
+          transition(
+            (.opacity, transitionDurationMedium, transitionTimingFunctionSystem),
+            (.transform, transitionDurationMedium, transitionTimingFunctionSystem)
+          )
+          media(minWidth(minWidthBreakpointTablet)) {
+            paddingBlockStart(spacing20)
+            paddingBlockEnd(spacing20)
+          }
+        }
+        descendant(".ellipsis-menu-content") {
+          display(.flex)
+          flexDirection(.column)
+          gap(spacing8)
+        }
+        selector("&[data-state='opening']", "&[data-state='open']", "&[data-state='closing']") { display(.block) }
+        selector("&[data-state='opening']", "&[data-state='open']") { pointerEvents(.auto) }
+        descendant("[data-ellipsis-menu-backdrop='true']") {
+          pointerEvents(.none)
+          opacity(0)
+        }
+        descendant("[data-ellipsis-menu-container='true']") {
+          opacity(0)
+          transform(translateY(perc(-100)))
+        }
+        selector("&[data-state='open'] [data-ellipsis-menu-backdrop='true']") {
+          opacity(1)
+          pointerEvents(.auto)
+        }
+        selector("&[data-state='open'] [data-ellipsis-menu-container='true']") {
+          opacity(1)
+          transform(translateY(px(0)))
+        }
       }
     }
 
-    // MARK: - CSS
-
-    @CSSBuilder
-    private func ellipsisMenuViewCSS() -> [CSSOM.CSSRule] {
-      display(.none)
-      position(.fixed)
-      top(px(navbarHeight))
-      insetInlineStart(0)
-      width(perc(100))
-      height(calc(vh(100) - px(navbarHeight)))
-      zIndex(zIndexOverlay)
-      pointerEvents(.none)
-    }
-
-    @CSSBuilder
-    private func ellipsisMenuBackdropCSS() -> [CSSOM.CSSRule] {
-      position(.absolute)
-      inset(0)
-      backgroundColor(rgba(0, 0, 0, 0.4))
-      backdropFilter(blur(rem(1)))
-      webkitBackdropFilter(blur(rem(1)))
-      opacity(0)
-      transition(.opacity, transitionDurationMedium, transitionTimingFunctionSystem)
-      zIndex(-1)
-    }
-
-    @CSSBuilder
-    private func ellipsisMenuContainerCSS() -> [CSSOM.CSSRule] {
-      position(.relative)
-      width(perc(100))
-      backgroundColor(backgroundColorBase)
-      paddingBlockStart(spacing16)
-      paddingBlockEnd(spacing16)
-      borderBlockEnd(borderWidthBase, .solid, borderColorBase)
-
-      opacity(0)
-      transform(translateY(perc(-100)))
-      transition(
-        (.opacity, transitionDurationMedium, transitionTimingFunctionSystem),
-        (.transform, transitionDurationMedium, transitionTimingFunctionSystem)
-      )
-
-      media(minWidth(minWidthBreakpointTablet)) {
-        paddingBlockStart(spacing20)
-        paddingBlockEnd(spacing20)
-      }
-    }
-
-    // MARK: - Public Section Helpers
-
-    @CSSBuilder
-    public static func sectionCSS() -> [CSSOM.CSSRule] {
-      display(.flex)
-      flexDirection(.column)
-      gap(spacing8)
-    }
-
-    @CSSBuilder
-    public static func sectionHeaderCSS() -> [CSSOM.CSSRule] {
-      fontFamily(typographyFontSans)
-      fontSize(fontSizeXSmall12)
-      fontWeight(fontWeightSemiBold)
-      color(colorSubtle)
-      letterSpacing(px(0.5))
-    }
-
-    @CSSBuilder
-    public static func dividerCSS() -> [CSSOM.CSSRule] {
-      height(px(1))
-      backgroundColor(borderColorSubtle)
-    }
   }
 #endif

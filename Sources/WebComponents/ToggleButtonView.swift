@@ -8,13 +8,19 @@
   import WebTypes
 
   /// A button that can be toggled on and off with state persistence.
+  ///
+  /// Unselected (off): `colorBase` label + base surface / subtle border — same language
+  /// as ColorScheme “Dark”. Selected (on): solid blue fill + inverted label — same as
+  /// ColorScheme “Light”.
   public struct ToggleButtonView: HTMLContent {
     let label: String
     let icon: DOM.Node?
     let modelValue: Bool
     let weight: ButtonView.ButtonWeight
+    let buttonColor: ButtonView.ButtonColor
     let disabled: Bool
     let iconOnly: Bool
+    let fullWidth: Bool
     let ariaLabel: String?
     let ariaExpanded: Bool?
     let indicateSelection: Bool
@@ -26,22 +32,26 @@
       label: String,
       icon: T? = nil,
       modelValue: Bool = false,
-      weight: ButtonView.ButtonWeight = .subtle,
+      weight: ButtonView.ButtonWeight = .static,
+      buttonColor: ButtonView.ButtonColor = .gray,
       disabled: Bool = false,
       iconOnly: Bool = false,
+      fullWidth: Bool = false,
       ariaLabel: String? = nil,
       ariaExpanded: Bool? = nil,
       indicateSelection: Bool = true,
       size: ButtonView.ButtonSize = .medium,
       class: String = "",
-      labelFontWeight: CSS.FontWeight = fontWeightBold
+      labelFontWeight: CSS.FontWeight = fontWeightNormal
     ) {
       self.label = label
       self.icon = icon.map { $0.build() }
       self.modelValue = modelValue
       self.weight = weight
+      self.buttonColor = buttonColor
       self.disabled = disabled
       self.iconOnly = iconOnly
+      self.fullWidth = fullWidth
       self.ariaLabel = ariaLabel
       self.ariaExpanded = ariaExpanded
       self.indicateSelection = indicateSelection
@@ -57,29 +67,36 @@
       return div {
         ButtonView(
           label: "",
+          buttonColor: buttonColor,
           weight: weight,
           size: size,
           disabled: disabled,
           ariaLabel: ariaLabel ?? label,
+          fullWidth: fullWidth,
           class: "",
-          labelFontWeight: self.labelFontWeight
+          labelFontWeight: self.labelFontWeight,
+          borderRadius: borderRadiusPill
         ) {
           if let icon = icon {
             span { icon }
               .class("button-icon")
               .ariaHidden(true)
+              .data("size", size.rawValue)
               .style {
-                display(.flex)
-                alignItems(.center)
-                justifyContent(.center)
-
-                if size == .small {
+                selector("&") {
+                  display(.flex)
+                  alignItems(.center)
+                  justifyContent(.center)
+                }
+                selector("&[data-size='mini']", "&[data-size='small']") {
                   width(sizeIconXSmall)
                   height(sizeIconXSmall)
-                } else if size == .medium {
+                }
+                selector("&[data-size='medium']") {
                   width(sizeIconSmall)
                   height(sizeIconSmall)
-                } else if size == .large {
+                }
+                selector("&[data-size='large']") {
                   width(sizeIconMedium)
                   height(sizeIconMedium)
                 }
@@ -94,57 +111,68 @@
       }
       .class(fullClass)
       .data("toggle-button", "true")
+      .data("full-width", fullWidth)
+      .data("indicate-selection", indicateSelection)
       .ariaPressed(modelValue)
       .ariaExpanded(ariaExpanded ?? false)
       .style {
-        toggleStateCSS()
-      }
-
-    }
-
-    @CSSBuilder
-    private func toggleStateCSS() -> [CSSOM.CSSRule] {
-      // Toggle-specific state styling
-      // Subtle/solid toggled state
-      if weight == .subtle || weight == .solid {
-        if indicateSelection {
-          attribute(ariaPressed(true)) {
-            color(colorInverted).important()
-            borderColor(borderColorBlue).important()
-          }
+        selector("&") {
+          flexShrink(0)
         }
-      } else {  // quiet or plain
-        if indicateSelection {
-          // Quiet style toggled state
-          attribute(ariaPressed(true)) {
-            backgroundColor(backgroundColorBlueSubtle).important()
-            color(colorBlue).important()
-            borderColor(.transparent).important()
-          }
-
-          attribute(ariaPressed(true), .hover, .not(.disabled)) {
-            backgroundColor(backgroundColorBlueSubtleHover).important()
-            color(colorBlueHover).important()
-          }
-
-          attribute(ariaPressed(true), .active, .not(.disabled)) {
-            backgroundColor(backgroundColorBlueSubtleActive).important()
-            color(colorBlueActive).important()
-          }
+        selector("&[data-full-width='true']") {
+          display(.flex)
         }
-      }
+        selector("&[data-full-width='false']") {
+          display(.inlineFlex)
+        }
 
-      // Accessibility hidden label styling
-      descendant(".toggle-button-label-hidden") {
-        position(.absolute)
-        width(px(1))
-        height(px(1))
-        padding(0)
-        margin(px(-1))
-        overflow(.hidden)
-        clip(rect(0, 0, 0, 0))
-        whiteSpace(.nowrap)
-        borderWidth(0)
+        // Off: colorBase (ColorScheme unselected / “Dark”).
+        selector("&[aria-pressed='false'] .button-view") {
+          color(colorBase).important()
+        }
+        selector("&[aria-pressed='false'] .button-view .button-label") {
+          color(colorBase).important()
+        }
+        selector("&[aria-pressed='false'] .button-view .button-icon") {
+          color(colorBase).important()
+        }
+
+        // On: solid blue pill (ColorScheme selected / “Light”).
+        selector("&[data-indicate-selection='true'][aria-pressed='true'] .button-view") {
+          backgroundColor(backgroundColorBlue).important()
+          borderColor(backgroundColorBlue).important()
+          color(colorInvertedFixed).important()
+        }
+        selector("&[data-indicate-selection='true'][aria-pressed='true'] .button-view .button-label") {
+          color(colorInvertedFixed).important()
+        }
+        selector("&[data-indicate-selection='true'][aria-pressed='true'] .button-view .button-icon") {
+          color(colorInvertedFixed).important()
+        }
+        selector(
+          "&[data-indicate-selection='true'][aria-pressed='true'] .button-view:hover:not(:disabled)"
+        ) {
+          backgroundColor(backgroundColorBlueHover).important()
+          borderColor(borderColorBlueHover).important()
+        }
+        selector(
+          "&[data-indicate-selection='true'][aria-pressed='true'] .button-view:active:not(:disabled)"
+        ) {
+          backgroundColor(backgroundColorBlueActive).important()
+          borderColor(borderColorBlueActive).important()
+        }
+
+        descendant(".toggle-button-label-hidden") {
+          position(.absolute)
+          width(px(1))
+          height(px(1))
+          padding(0)
+          margin(px(-1))
+          overflow(.hidden)
+          clip(rect(0, 0, 0, 0))
+          whiteSpace(.nowrap)
+          borderWidth(0)
+        }
       }
     }
   }
@@ -165,7 +193,6 @@
     init(button: DOM.Element) {
       self.button = button
 
-      // Get initial state from aria-pressed
       if let ariaPressed = button.getAttribute("aria-pressed") {
         modelValue = stringEquals(ariaPressed, "true")
       }
@@ -174,12 +201,10 @@
     }
 
     private func bindEvents() {
-      // Click event
       _ = button.addEventListener(.click) { [self] _ in
         self.toggle()
       }
 
-      // Keyboard events (Enter and Space)
       _ = button.addEventListener(.keydown) { [self] (event: Event) in
         let key = event.key
         if stringEquals(key, "Enter") || stringEquals(key, " ") {
@@ -189,8 +214,6 @@
     }
 
     private func toggle() {
-      // Re-read current state from DOM to stay in sync with other hydrators that might
-      // have changed the state during initialization or via system preference observers
       if let ariaPressed = button.getAttribute("aria-pressed") {
         modelValue = stringEquals(ariaPressed, "true")
       }
@@ -198,7 +221,6 @@
       modelValue.toggle()
       button.setAttribute(.ariaPressed, modelValue ? true : false)
 
-      // Emit custom event for update:modelValue
       let event = CustomEvent(type: "toggle-button-update", detail: modelValue ? "true" : "false")
       button.dispatchEvent(event)
     }

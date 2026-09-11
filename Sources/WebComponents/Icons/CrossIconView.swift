@@ -6,8 +6,9 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-/// Overlapping-rectangles copy glyph. Available on SERVER + CLIENT for CopyIconFactory.
-public struct CopyIconView: HTMLContent {
+/// Visual cross / x-mark leaf. Use for close, failed, or clear — meaning is call-site.
+/// Available on SERVER + CLIENT so CrossIconFactory can render without hand-built SVG replicas.
+public struct CrossIconView: HTMLContent {
   let width: CSS.Length
   let height: CSS.Length
   let `class`: String
@@ -25,17 +26,13 @@ public struct CopyIconView: HTMLContent {
   public func build() -> DOM.Node {
     svg {
       path()
-        .d(
-          M(3, 3), h(8), v(2), h(2), V(3), c(0, -1.1, -0.895, -2, -2, -2), H(3),
-          c(-1.1, 0, -2, 0.895, -2, 2), v(8), c(0, 1.1, 0.895, 2, 2, 2), h(2), v(-2), H(3), Z())
+        .d(M(1.9943, 0), L(20, 18.0057), L(18.0057, 20), L(0, 2.0085), Z())
+
       path()
-        .d(
-          M(9, 9), h(8), v(8), H(9), Z(), m(0, -2), c(-1.1, 0, -2, 0.895, -2, 2), v(8),
-          c(0, 1.1, 0.895, 2, 2, 2), h(8), c(1.1, 0, 2, -0.895, 2, -2), V(9),
-          c(0, -1.1, -0.895, -2, -2, -2), Z())
+        .d(M(20, 1.9943), L(1.9943, 20), L(0, 18.0057), L(18.0057, 0), Z())
     }
     .class(
-      stringIsEmpty(`class`) ? "copy-icon-view" : "copy-icon-view \(`class`)"
+      stringIsEmpty(`class`) ? "cross-icon-view" : "cross-icon-view \(`class`)"
     )
     .width(width)
     .height(height)
@@ -48,14 +45,15 @@ public struct CopyIconView: HTMLContent {
 #if CLIENT
   import WebAPIs
 
-  public enum CopyIconFactory {
+  /// CLIENT factory — create CrossIconView DOM matching server-rendered markup.
+  public enum CrossIconFactory {
     public static func createElement(
       width: CSS.Length = px(20),
       height: CSS.Length = px(20),
       class: String = ""
     ) -> DOM.Element {
       let wrapper = document.createElement(.span)
-      let view = CopyIconView(width: width, height: height, class: `class`)
+      let view = CrossIconView(width: width, height: height, class: `class`)
       wrapper.innerHTML = renderHTML { view.render() }
       if let svg = wrapper.firstElementChild {
         return svg

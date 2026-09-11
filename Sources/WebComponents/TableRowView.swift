@@ -15,7 +15,7 @@ public struct TableRowView: HTMLContent {
   public let isGroupChild: Bool
   public var `class`: String
   public var data: [TableView.AttributePair] = []
-  public var style: [(@Sendable () -> [CSSOM.CSSRule])] = []
+  public var customStyleRules: [(@Sendable () -> [CSSOM.CSSRule])] = []
 
   public init(
     id: String,
@@ -51,22 +51,8 @@ public struct TableRowView: HTMLContent {
 
   public func style(@CSSBuilder _ rules: @escaping @Sendable () -> [CSSOM.CSSRule]) -> Self {
     var copy = self
-    copy.style.append(rules)
+    copy.customStyleRules.append(rules)
     return copy
-  }
-
-  @CSSBuilder
-  private func rowCSS() -> [CSSOM.CSSRule] {
-    borderBottom(px(1), .solid, borderColorSubtle)
-
-    pseudoClass(.hover) {
-      backgroundColor(backgroundColorInteractiveSubtleHover)
-    }
-
-    if isGroupHeader {
-      backgroundColor(backgroundColorNeutralSubtle)
-      fontWeight(fontWeightSemiBold)
-    }
   }
 
   public func build() -> DOM.Node {
@@ -77,8 +63,16 @@ public struct TableRowView: HTMLContent {
     }
     .id(id)
     .class(stringIsEmpty(`class`) ? "table-row-view" : "table-row-view \(`class`)")
-    .style { rowCSS() }
     .data("row-id", id)
+    .data("group-header", isGroupHeader)
+    .style {
+      selector("&") { borderBottom(px(1), .solid, borderColorSubtle) }
+      pseudoClass(.hover) { backgroundColor(backgroundColorInteractiveSubtleHover) }
+      selector("&[data-group-header='true']") {
+        backgroundColor(backgroundColorNeutralSubtle)
+        fontWeight(fontWeightSemiBold)
+      }
+    }
 
     // Apply dynamic data attributes for WASM hydration
     for attr in data {
@@ -94,8 +88,8 @@ public struct TableRowView: HTMLContent {
       rowNode = rowNode.data(pair.key, pair.value)
     }
 
-    for s in style {
-      rowNode = rowNode.style(s)
+    for s in customStyleRules {
+      rowNode = rowNode.style { selector("&") { s() } }
     }
 
     return rowNode

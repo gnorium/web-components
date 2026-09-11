@@ -100,64 +100,6 @@
       self.style = style
     }
 
-    @CSSBuilder
-    private func buttonGroupViewCSS() -> [CSSOM.CSSRule] {
-      display(.flex)
-      flexDirection(direction)
-      flexWrap(.wrap)
-      gap(shape == .apart ? spacingHorizontalButton : 0)
-
-      // Once children have actually wrapped to multiple lines, stretch each
-      // child to fill the row so a wrapped button list reads as a column.
-      selector("[data-wrapped='true'] > *") {
-        flexGrow(1)
-        flexBasis(perc(100))
-      }
-
-      if shape == .fused {
-        selector(".button-view") {
-          borderRadius(0).important()
-        }
-        selector(".button-view:first-child") {
-          borderStartStartRadius(borderRadiusBase).important()
-          borderEndStartRadius(borderRadiusBase).important()
-        }
-        selector(".button-view:last-child") {
-          borderStartEndRadius(borderRadiusBase).important()
-          borderEndEndRadius(borderRadiusBase).important()
-        }
-      }
-
-      // Self-contained "selected" override — entirely local to this group's
-      // own stylesheet, independent of which button-color-*/button-weight-*
-      // combination any individual button happens to render with. The
-      // repeated ".button-group-button" classes exist purely to push
-      // specificity above the base per-button color/weight rule (which can
-      // have up to 5 class selectors), so this reliably wins regardless of
-      // what color/weight the button itself was given.
-      selector(
-        ".button-group-button.button-group-button.button-group-button.button-group-button.button-group-button.selected"
-      ) {
-        backgroundColor(backgroundColorBlue).important()
-        borderColor(backgroundColorBlue).important()
-        color(colorInvertedFixed).important()
-      }
-      selector(
-        ".button-group-button.button-group-button.button-group-button.button-group-button.button-group-button.selected:not(.button-weight-static):hover:not(:disabled)"
-      ) {
-        backgroundColor(backgroundColorBlueHover).important()
-        borderColor(borderColorBlueHover).important()
-      }
-      selector(
-        ".button-group-button.button-group-button.button-group-button.button-group-button.button-group-button.selected:not(.button-weight-static):active:not(:disabled)"
-      ) {
-        backgroundColor(backgroundColorBlueActive).important()
-        borderColor(borderColorBlueActive).important()
-      }
-
-      style()
-    }
-
     public func build() -> DOM.Node {
       var group =
         div {
@@ -206,7 +148,50 @@
         .role(.group)
         .ariaLabel(ariaLabel)
         .style {
-          buttonGroupViewCSS()
+          selector("&") {
+            display(.flex)
+            flexDirection(direction)
+            flexWrap(.wrap)
+            gap(shape == .apart ? spacingHorizontalButton : 0)
+            style()
+          }
+
+          // Once children have actually wrapped to multiple lines, stretch
+          // each child to fill the row so a wrapped group reads as a column.
+          selector("[data-wrapped='true'] > *") {
+            flexGrow(1)
+            flexBasis(perc(100))
+          }
+
+          if shape == .fused {
+            selector(".button-view") {
+              borderRadius(0).important()
+            }
+            selector(".button-view:first-child") {
+              borderStartStartRadius(borderRadiusBase).important()
+              borderEndStartRadius(borderRadiusBase).important()
+            }
+            selector(".button-view:last-child") {
+              borderStartEndRadius(borderRadiusBase).important()
+              borderEndEndRadius(borderRadiusBase).important()
+            }
+          }
+
+          // The repeated class raises specificity above an individual
+          // ButtonView's color/weight rules regardless of its variants.
+          selector(".button-group-button.button-group-button.button-group-button.button-group-button.button-group-button.selected") {
+            backgroundColor(backgroundColorBlue).important()
+            borderColor(backgroundColorBlue).important()
+            color(colorInvertedFixed).important()
+          }
+          selector(".button-group-button.button-group-button.button-group-button.button-group-button.button-group-button.selected:not(.button-weight-static):hover:not(:disabled)") {
+            backgroundColor(backgroundColorBlueHover).important()
+            borderColor(borderColorBlueHover).important()
+          }
+          selector(".button-group-button.button-group-button.button-group-button.button-group-button.button-group-button.selected:not(.button-weight-static):active:not(:disabled)") {
+            backgroundColor(backgroundColorBlueActive).important()
+            borderColor(borderColorBlueActive).important()
+          }
         }
 
       for (key, value) in data {
@@ -229,7 +214,7 @@
   /// Toggles a single `selected` class on each `.button-group-button` inside `group` —
   /// the button matching `selectedValue` (compared against its `data-value` attribute)
   /// gets `.selected`, every other button has it removed. Styling for `.selected` is
-  /// emitted once, self-contained, by `ButtonGroupView.buttonGroupViewCSS()` — it does
+  /// emitted once, self-contained, by `ButtonGroupView` — it does
   /// not depend on any other button on the page sharing a particular color/weight, so
   /// it can't drift out of sync the way swapping `button-color-*`/`button-weight-*`
   /// classes across buttons could.
@@ -243,20 +228,8 @@
 
       if stringEquals(value, selectedValue) {
         button.classList.add("selected")
-        // Inline, because it's the same element ButtonView's own SSR styling sets
-        // background-color/border-color/color on — an inline declaration always beats
-        // anything from the `.selected` rule in the external stylesheet, so we override
-        // inline here too rather than relying on the stylesheet rule to win.
-        button.style.backgroundColor(backgroundColorBlue)
-        button.style.borderColor(backgroundColorBlue)
-        button.style.color(colorInvertedFixed)
       } else {
         button.classList.remove("selected")
-        // Restore (not remove) — removing would also wipe the SSR-baked base inline
-        // declarations, since inline styles aren't tagged with who set them.
-        button.style.backgroundColor(backgroundColorBase)
-        button.style.borderColor(borderColorBase)
-        button.style.color(colorBase)
       }
     }
   }

@@ -28,17 +28,22 @@
 
     public func build() -> DOM.Node {
       let isoFormatter = ISO8601DateFormatter()
+      // Match client `formatLocalDate`: "Jun 15, 2026 at 9:10 AM" (+ UTC before hydrate)
       let displayFormatter = DateFormatter()
-      displayFormatter.dateStyle = .medium
-      displayFormatter.timeStyle = .short
+      displayFormatter.locale = Locale(identifier: "en_US_POSIX")
       displayFormatter.timeZone = TimeZone(identifier: "UTC")
+      displayFormatter.dateFormat = "MMM d, yyyy 'at' h:mm a"
 
       return time { displayFormatter.string(from: date) + " " + fallbackSuffix }
         .datetime(isoFormatter.string(from: date))
         .class("local-time")
+        .data("local-time-size", size.value)
+        .data("local-time-color", textColor.value)
         .style {
-          fontSize(size)
-          color(textColor)
+          selector("&[data-local-time-size='\(size.value)'][data-local-time-color='\(textColor.value)']") {
+            fontSize(size)
+            color(textColor)
+          }
         }
     }
   }

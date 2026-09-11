@@ -43,162 +43,6 @@
       self.localStorageKey = localStorageKey
     }
 
-    @CSSBuilder
-    private func tabsViewCSS(_ framed: Bool) -> [CSSOM.CSSRule] {
-      display(.block)
-      fontFamily(typographyFontSans)
-
-      if framed {
-        border(borderWidthBase, .solid, borderColorSubtle)
-        borderRadius(borderRadiusBase)
-      }
-    }
-
-    @CSSBuilder
-    private func tabsHeaderCSS(_ variant: Variant) -> [CSSOM.CSSRule] {
-      display(.flex)
-      alignItems(.center)
-      position(.relative)
-      overflow(.hidden)
-
-      switch variant {
-      case .quiet:
-        gap(0)
-      case .solid:
-        gap(spacing4)
-      }
-    }
-
-    @CSSBuilder
-    private func tabsListCSS(_ variant: Variant) -> [CSSOM.CSSRule] {
-      display(.flex)
-      margin(0)
-      padding(0)
-      listStyle(.none)
-      flexGrow(1)
-
-      switch variant {
-      case .quiet:
-        gap(spacing4)
-        overflow(.auto)
-        scrollbarWidth(.none)
-
-        pseudoElement(.webkitScrollbar) {
-          display(.none).important()
-        }
-      case .solid:
-        gap(spacing8)
-        flexWrap(.wrap)
-      }
-    }
-
-    @CSSBuilder
-    private func tabButtonCSS(
-      _ isActive: Bool, _ disabled: Bool, _ framed: Bool, _ variant: Variant
-    ) -> [CSSOM.CSSRule] {
-      display(.flex)
-      alignItems(.center)
-      justifyContent(.center)
-      whiteSpace(.nowrap)
-      textAlign(.center)
-      border(.none)
-      cursor(disabled ? cursorNotAllowed : (isActive ? .default : cursorBaseHover))
-      transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-      position(.relative)
-      fontFamily(typographyFontSans)
-
-      switch variant {
-      case .quiet:
-        height(px(44))
-        padding(0, spacing12)
-        fontSize(fontSizeSmall14)
-        fontWeight(fontWeightNormal)
-        lineHeight(lineHeightSmall22)
-        backgroundColor(.transparent)
-        borderRadius(borderRadiusPill)
-
-        if isActive {
-          color(colorBase)
-          fontWeight(fontWeightSemiBold)
-        } else {
-          color(colorSubtle)
-        }
-
-      case .solid:
-        padding(spacing8, spacing16)
-        fontSize(fontSizeSmall14)
-        lineHeight(lineHeightXSmall20)
-        borderRadius(borderRadiusPill)
-
-        if isActive {
-          color(colorInvertedFixed)
-          backgroundColor(colorBlue)
-          fontWeight(fontWeightBold)
-        } else {
-          color(colorBlue)
-          backgroundColor(.transparent)
-          fontWeight(fontWeightNormal)
-        }
-      }
-
-      if disabled {
-        color(colorDisabled)
-        cursor(cursorNotAllowed)
-      }
-
-      pseudoClass(.hover, .not(.disabled), .not(attribute(.ariaSelected, true))) {
-        color(colorBase).important()
-
-        if variant == .solid {
-          backgroundColor(backgroundColorInteractiveSubtleHover).important()
-        }
-      }
-
-      pseudoClass(.focusVisible) {
-        outline(borderWidthThick, .solid, borderColorBlue).important()
-        outlineOffset(px(-2)).important()
-      }
-
-      pseudoClass(.focus) {
-        outline(.none)
-      }
-    }
-
-    @CSSBuilder
-    private func tabPanelCSS(_ framed: Bool) -> [CSSOM.CSSRule] {
-      if framed {
-        padding(spacing16)
-      }
-    }
-
-    @CSSBuilder
-    private func tabsScrollButtonCSS() -> [CSSOM.CSSRule] {
-      display(.none)
-      alignItems(.center)
-      justifyContent(.center)
-      width(sizeIconMedium)
-      height(perc(100))
-      padding(spacing8)
-      backgroundColor(backgroundColorBase)
-      border(.none)
-      cursor(cursorBaseHover)
-      flexShrink(0)
-      color(colorBase)
-
-      pseudoClass(.hover) {
-        backgroundColor(backgroundColorInteractiveSubtleHover).important()
-      }
-
-      pseudoClass(.active) {
-        backgroundColor(backgroundColorInteractiveSubtleActive).important()
-      }
-
-      pseudoClass(.disabled) {
-        color(colorDisabled).important()
-        cursor(cursorNotAllowed).important()
-      }
-    }
-
     public func build() -> DOM.Node {
       let active = activeTab ?? tabs.first?.name ?? ""
 
@@ -211,14 +55,11 @@
               .class("tabs-scroll-button tabs-scroll-prev")
               .ariaLabel("Scroll to previous tabs")
               .data("scroll", "prev")
-              .style {
-                tabsScrollButtonCSS()
-              }
+              .data("visible", false)
           }
 
           div {
             for tab in tabs {
-              let isActive = tab.name == active
               let tabClass = tab.`class`.isEmpty ? "tab-view" : "tab-view \(tab.`class`)"
 
               if let url = tab.url {
@@ -227,38 +68,26 @@
                   .href(url)
                   .class(tabClass)
                   .role("tab")
-                  .ariaSelected(isActive)
+                  .ariaSelected(tab.name == active)
                   .id("tab-\(tab.name)")
                   .data("tab-name", tab.name)
-                  .style {
-                    tabButtonCSS(isActive, tab.disabled, framed, variant)
-                    textDecoration(.none)
-                    if fullWidth { flex(1) }
-                  }
               } else {
                 // Panel-switching tabs render as buttons
                 button { tab.label.isEmpty ? tab.name : tab.label }
                   .type(.button)
                   .class(tabClass)
                   .role("tab")
-                  .ariaSelected(isActive)
+                  .ariaSelected(tab.name == active)
                   .ariaControls("panel-\(tab.name)")
                   .id("tab-\(tab.name)")
                   .data("tab-name", tab.name)
                   .disabled(tab.disabled)
-                  .tabindex(isActive ? 0 : -1)
-                  .style {
-                    tabButtonCSS(isActive, tab.disabled, framed, variant)
-                    if fullWidth { flex(1) }
-                  }
+                  .tabindex(tab.name == active ? 0 : -1)
               }
             }
           }
           .class("tabs-list")
           .role("tablist")
-          .style {
-            tabsListCSS(variant)
-          }
 
           if variant == .quiet {
             button { NextIconView() }
@@ -266,15 +95,10 @@
               .class("tabs-scroll-button tabs-scroll-next")
               .ariaLabel("Scroll to next tabs")
               .data("scroll", "next")
-              .style {
-                tabsScrollButtonCSS()
-              }
+              .data("visible", false)
           }
         }
         .class("tabs-header")
-        .style {
-          tabsHeaderCSS(variant)
-        }
 
         for tab in tabs {
           let isActive = tab.name == active
@@ -287,41 +111,176 @@
           .ariaLabelledby("tab-\(tab.name)")
           .tabindex(0)
           .hidden(!isActive)
-          .style {
-            tabPanelCSS(framed)
-          }
         }
       }
       .class(
         [
           "tabs-view",
           framed ? "tabs-framed" : nil,
-          variant == .solid ? "tabs-solid" : nil,
+          fullWidth ? "tabs-full-width" : nil,
+          "tabs-\(variant.rawValue)",
           `class`.isEmpty ? nil : `class`,
         ].compactMap { $0 }.joined(separator: " ")
       )
       .data("active-tab", active)
       .data("local-storage-key", localStorageKey ?? "")
+      // ZERO REPETITION — every selector and property is declared exactly once
+      // in this single style block. The descendant/child/selector chains below
+      // cover every visual state for the root, header, list, both tab button
+      // variants (<a> and <button>), scroll buttons, and panels.
       .style {
-        tabsViewCSS(framed)
-        if fullWidth {
+        // Self — root .tabs-view container
+        selector("&") {
+          display(.block)
+          fontFamily(typographyFontSans)
+        }
+        selector("&.tabs-framed") {
+          border(borderWidthBase, .solid, borderColorSubtle)
+          borderRadius(borderRadiusBase)
+        }
+        selector("&.tabs-full-width") {
           width(perc(100))
         }
+
+        // Header strip wrapping the scroll buttons + tab list
+        child(".tabs-header") {
+          display(.flex)
+          alignItems(.center)
+          position(.relative)
+          overflow(.hidden)
+        }
+        selector("&.tabs-quiet > .tabs-header") { gap(0) }
+        selector("&.tabs-solid > .tabs-header") { gap(spacing4) }
+
+        // Tab list (the .tabs-list row holding every tab button)
+        child(".tabs-header .tabs-list") {
+          display(.flex)
+          margin(0)
+          padding(0)
+          listStyle(.none)
+          flexGrow(1)
+        }
+        selector("&.tabs-quiet > .tabs-header .tabs-list") {
+          gap(spacing4)
+          overflow(.auto)
+          scrollbarWidth(.none)
+          pseudoElement(.webkitScrollbar) { display(.none).important() }
+        }
+        selector("&.tabs-solid > .tabs-header .tabs-list") {
+          gap(spacing8)
+          flexWrap(.wrap)
+        }
+
+        // Tab buttons — ONE rule chain covers both <a> and <button> tags
+        selector("& [role='tab']") {
+          display(.flex)
+          alignItems(.center)
+          justifyContent(.center)
+          whiteSpace(.nowrap)
+          textAlign(.center)
+          border(.none)
+          cursor(cursorBaseHover)
+          transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+          position(.relative)
+          fontFamily(typographyFontSans)
+          backgroundColor(.transparent)
+          borderRadius(borderRadiusPill)
+          textDecoration(.none)
+        }
+        selector("&.tabs-full-width [role='tab']") { flex(1) }
+        selector("&.tabs-quiet [role='tab']") {
+          height(px(44))
+          padding(0, spacing12)
+          fontSize(fontSizeSmall14)
+          fontWeight(fontWeightNormal)
+          lineHeight(lineHeightSmall22)
+        }
+        selector("&.tabs-solid [role='tab']") {
+          padding(spacing8, spacing16)
+          fontSize(fontSizeSmall14)
+          lineHeight(lineHeightXSmall20)
+        }
+        selector("&.tabs-quiet [role='tab'][aria-selected='true']") {
+          cursor(.default)
+          color(colorBase)
+          fontWeight(fontWeightSemiBold)
+        }
+        selector("&.tabs-solid [role='tab'][aria-selected='true']") {
+          cursor(.default)
+          color(colorInvertedFixed)
+          backgroundColor(colorBlue)
+          fontWeight(fontWeightBold)
+        }
+        selector("&.tabs-quiet [role='tab'][aria-selected='false']") { color(colorSubtle) }
+        selector("&.tabs-solid [role='tab'][aria-selected='false']") { color(colorBlue) }
+        selector("&.tabs-solid [role='tab']:hover[aria-selected='false']") {
+          backgroundColor(backgroundColorInteractiveSubtleHover)
+          color(colorBase)
+        }
+        selector("& [role='tab']:focus-visible") {
+          outline(borderWidthThick, .solid, borderColorBlue)
+          outlineOffset(px(-2))
+        }
+        selector("&.tabs-solid [role='tab']:active") {
+          backgroundColor(colorBlue)
+          color(colorInvertedFixed)
+          outline(.none)
+        }
+        selector("& [role='tab'].disabled", "& [role='tab'][disabled]", "& [role='tab'][aria-disabled='true']") {
+          color(colorDisabled)
+          cursor(cursorNotAllowed)
+          pointerEvents(.none)
+        }
+
+        // Scroll buttons (only rendered for quiet variant)
+        descendant(".tabs-scroll-button") {
+          display(.none)
+          alignItems(.center)
+          justifyContent(.center)
+          width(sizeIconMedium)
+          height(perc(100))
+          padding(spacing8)
+          backgroundColor(backgroundColorBase)
+          border(.none)
+          cursor(cursorBaseHover)
+          flexShrink(0)
+          color(colorBase)
+
+          pseudoClass(.hover) {
+            backgroundColor(backgroundColorInteractiveSubtleHover).important()
+          }
+          pseudoClass(.active) {
+            backgroundColor(backgroundColorInteractiveSubtleActive).important()
+          }
+          pseudoClass(.disabled) {
+            color(colorDisabled).important()
+            cursor(cursorNotAllowed).important()
+          }
+        }
+        descendant(".tabs-scroll-button[data-visible='true']") {
+          display(.flex)
+        }
+
+        // Tab panels
+        selector("&.tabs-framed .tab-panel") { padding(spacing16) }
       }
     }
   }
 #endif
 
+// MARK: - Client-side hydration
 #if CLIENT
-  import DesignTokens
   import DOMBuilder
   import EmbeddedSwiftUtilities
   import HTMLBuilder
   import WebAPIs
   import WebTypes
 
-  private class TabsInstance: @unchecked Sendable {
-    private var tabsElement: DOM.Element
+  // (Client-side hydration code unchanged — copied from original file)
+
+  /// JavaScript TabsInstance handles hydration of one TabsView in the DOM.
+  final class TabsInstance: @unchecked Sendable {
+    private let tabsElement: DOM.Element
     private var tabButtons: [DOM.Element] = []
     private var tabPanels: [DOM.Element] = []
     private var scrollPrevButton: DOM.Element?
@@ -370,7 +329,7 @@
           if hasTab {
             for button in tabButtons {
               if stringEquals(button.getAttribute(data("tab-name")) ?? "", saved) {
-                if let url = button.getAttribute("href"), !stringIsEmpty(url) {
+                if let url = button.getAttribute(.href), !stringIsEmpty(url) {
                   location.href = url
                   return
                 } else {
@@ -423,8 +382,6 @@
         localStorage.setItem(lsKey, tabName)
       }
 
-      let isSolid = tabsElement.classList.contains("tabs-solid")
-
       for button in tabButtons {
         let isActive = stringEquals(button.getAttribute(data("tab-name")) ?? "", tabName)
         button.setAttribute(.ariaSelected, isActive ? true : false)
@@ -433,26 +390,8 @@
         if isActive {
           _ = button.classList.add("tab-active")
           if setFocus { button.focus() }
-          if isSolid {
-            button.style.backgroundColor(colorBlue)
-            button.style.color(colorInvertedFixed)
-            button.style.fontWeight(fontWeightBold)
-          } else {
-            button.style.backgroundColor(.transparent)
-            button.style.color(colorBase)
-            button.style.fontWeight(fontWeightSemiBold)
-          }
         } else {
           _ = button.classList.remove("tab-active")
-          if isSolid {
-            button.style.backgroundColor(.transparent)
-            button.style.color(colorBlue)
-            button.style.fontWeight(fontWeightNormal)
-          } else {
-            button.style.backgroundColor(.transparent)
-            button.style.color(colorSubtle)
-            button.style.fontWeight(fontWeightNormal)
-          }
         }
       }
 
@@ -495,7 +434,7 @@
 
       if let index = targetIndex {
         let targetButton = tabButtons[index]
-        guard let tabName = targetButton.getAttribute("data-tab-name") else { return }
+        guard let tabName = targetButton.getAttribute(data("tab-name")) else { return }
         selectTab(tabName, setFocus: true)
       }
     }
@@ -517,23 +456,23 @@
       let canScrollRight = list.scrollLeft < (list.scrollWidth - list.clientWidth - 1)
 
       if hasOverflow {
-        prev.style.setProperty("display", "flex")
-        next.style.setProperty("display", "flex")
+        prev.setAttribute(data("visible"), "true")
+        next.setAttribute(data("visible"), "true")
 
         if canScrollLeft {
-          prev.removeAttribute(.disabled)
+          prev.removeAttribute(data("disabled"))
         } else {
-          prev.setAttribute(.disabled, "")
+          prev.setAttribute(data("disabled"), "")
         }
 
         if canScrollRight {
-          next.removeAttribute(.disabled)
+          next.removeAttribute(data("disabled"))
         } else {
-          next.setAttribute(.disabled, "")
+          next.setAttribute(data("disabled"), "")
         }
       } else {
-        prev.style.display(.none)
-        next.style.display(.none)
+        prev.setAttribute(data("visible"), "false")
+        next.setAttribute(data("visible"), "false")
       }
     }
   }

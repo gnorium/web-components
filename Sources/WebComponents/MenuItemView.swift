@@ -3,6 +3,7 @@
   import CSSOMBuilder
   import DesignTokens
   import DOMBuilder
+  import EmbeddedSwiftUtilities
   import Foundation
   import HTMLBuilder
   import WebTypes
@@ -125,189 +126,6 @@
       self.content = content()
     }
 
-    @CSSBuilder
-    private func menuItemViewCSS(
-      _ disabled: Bool, _ selected: Bool, _ active: Bool, _ highlighted: Bool,
-      _ itemColor: MenuItemColor
-    ) -> [CSSOM.CSSRule] {
-      display(.flex)
-      alignItems(.center)
-      gap(spacing12)
-      padding(spacing8, spacing12)
-      minHeight(minSizeInteractivePointer)
-      fontFamily(typographyFontSans)
-      fontSize(fontSizeMedium16)
-      lineHeight(lineHeightSmall22)
-      color(disabled ? colorDisabled : (itemColor == .red ? colorRed : colorSubtle))
-      backgroundColor(backgroundColorTransparent)
-      border(borderWidthBase, .solid, disabled ? borderColorDisabled : borderColorSubtle)
-      borderRadius(borderRadiusBase)
-      cursor(disabled ? cursorNotAllowed : cursorBase)
-      userSelect(.none)
-      textDecoration(.none)
-      boxSizing(.borderBox)
-      transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-
-      if highlighted && !disabled {
-        color(colorBlue)
-        border(borderWidthBase, .solid, borderColorBlue)
-      }
-
-      if active && !disabled {
-        color(colorBlue)
-        border(borderWidthBase, .solid, borderColorBlue)
-      }
-
-      if !disabled {
-        pseudoClass(.hover) {
-          color(colorBlue).important()
-          border(borderWidthBase, .solid, borderColorBlue).important()
-          cursor(cursorBaseHover).important()
-        }
-
-        pseudoClass(.active) {
-          color(colorBlue).important()
-          border(borderWidthBase, .solid, borderColorBlue).important()
-          cursor(cursorBaseHover).important()
-        }
-
-        pseudoClass(.focus) {
-          color(colorBlueFocus).important()
-          outline(borderWidthBase, .solid, borderColorBlueFocus).important()
-          outlineOffset(px(-1)).important()
-        }
-      }
-    }
-
-    @CSSBuilder
-    private func menuItemCheckboxCSS(_ selected: Bool) -> [CSSOM.CSSRule] {
-      display(.inlineFlex)
-      alignItems(.center)
-      justifyContent(.center)
-      width(sizeIconMedium)
-      height(sizeIconMedium)
-      flexShrink(0)
-      border(borderWidthBase, .solid, borderColorInputBinary)
-      borderRadius(borderRadiusBase)
-      backgroundColor(selected ? backgroundColorInputBinaryChecked : backgroundColorBase)
-      transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-    }
-
-    @CSSBuilder
-    private func menuItemCheckmarkCSS() -> [CSSOM.CSSRule] {
-      fontSize(fontSizeSmall14)
-      color(colorInvertedFixed)
-      lineHeight(1)
-    }
-
-    @CSSBuilder
-    private func menuItemThumbnailCSS() -> [CSSOM.CSSRule] {
-      display(.inlineFlex)
-      alignItems(.center)
-      justifyContent(.center)
-      width(px(40))
-      height(px(40))
-      flexShrink(0)
-      borderRadius(borderRadiusBase)
-      overflow(.hidden)
-      backgroundColor(backgroundColorNeutralSubtle)
-    }
-
-    @CSSBuilder
-    private func menuItemThumbnailImageCSS() -> [CSSOM.CSSRule] {
-      width(perc(100))
-      height(perc(100))
-      objectFit(.cover)
-    }
-
-    @CSSBuilder
-    private func menuItemThumbnailPlaceholderCSS() -> [CSSOM.CSSRule] {
-      fontSize(fontSizeLarge18)
-      color(colorPlaceholder)
-    }
-
-    @CSSBuilder
-    private func menuItemIconCSS() -> [CSSOM.CSSRule] {
-      display(.inlineFlex)
-      alignItems(.center)
-      justifyContent(.center)
-      width(sizeIconMedium)
-      height(sizeIconMedium)
-      flexShrink(0)
-      color(colorSubtle)
-      fontSize(fontSizeLarge18)
-    }
-
-    @CSSBuilder
-    private func menuItemTextCSS() -> [CSSOM.CSSRule] {
-      display(.flex)
-      flexDirection(.column)
-      gap(spacing4)
-      flex(1)
-      minWidth(0)
-    }
-
-    @CSSBuilder
-    private func menuItemTitleCSS() -> [CSSOM.CSSRule] {
-      display(.flex)
-      alignItems(.baseline)
-      gap(spacing4)
-      flexWrap(.wrap)
-    }
-
-    @CSSBuilder
-    private func menuItemLabelCSS(_ boldLabel: Bool, _ hasSearchQuery: Bool) -> [CSSOM.CSSRule] {
-      fontFamily(typographyFontSans)
-      fontSize(fontSizeMedium16)
-      fontWeight(boldLabel || hasSearchQuery ? fontWeightBold : fontWeightNormal)
-      lineHeight(lineHeightSmall22)
-      color(colorBase)
-      wordWrap(.breakWord)
-    }
-
-    @CSSBuilder
-    private func menuItemSearchQueryCSS() -> [CSSOM.CSSRule] {
-      fontFamily(typographyFontSans)
-      fontSize(fontSizeMedium16)
-      fontWeight(fontWeightNormal)
-      lineHeight(lineHeightSmall22)
-      color(colorBase)
-    }
-
-    @CSSBuilder
-    private func menuItemMatchCSS() -> [CSSOM.CSSRule] {
-      fontFamily(typographyFontSans)
-      fontSize(fontSizeMedium16)
-      fontWeight(fontWeightNormal)
-      lineHeight(lineHeightSmall22)
-      color(colorSubtle)
-    }
-
-    @CSSBuilder
-    private func menuItemSupportingTextCSS() -> [CSSOM.CSSRule] {
-      fontFamily(typographyFontSans)
-      fontSize(fontSizeMedium16)
-      fontWeight(fontWeightNormal)
-      lineHeight(lineHeightSmall22)
-      color(colorSubtle)
-    }
-
-    @CSSBuilder
-    private func menuItemDescriptionCSS(_ hideOverflow: Bool) -> [CSSOM.CSSRule] {
-      fontFamily(typographyFontSans)
-      fontSize(fontSizeSmall14)
-      lineHeight(lineHeightSmall22)
-      color(colorSubtle)
-
-      if hideOverflow {
-        overflow(.hidden)
-        textOverflow(.ellipsis)
-        whiteSpace(.nowrap)
-      } else {
-        wordWrap(.breakWord)
-      }
-    }
-
     public func build() -> DOM.Node {
       let hasCustomContent = !content.isEmpty
       let displayLabel = label.isEmpty ? value : label
@@ -319,47 +137,30 @@
       let hasThumbnail = showThumbnail
       let hasUrl = !url.isEmpty
 
-      // Highlight search query in label
       @HTMLBuilder
       func renderLabelWithHighlight() -> [DOM.Node] {
-        if hasSearchQuery && displayLabel.lowercased().contains(searchQuery.lowercased()) {
-          let lowerLabel = displayLabel.lowercased()
-          let lowerQuery = searchQuery.lowercased()
+        if hasSearchQuery && stringContainsCaseInsensitive(displayLabel, searchQuery) {
+          let lowerLabel = stringLowercased(displayLabel)
+          let lowerQuery = stringLowercased(searchQuery)
 
-          if let range = lowerLabel.range(of: lowerQuery) {
-            let startIndex = displayLabel.distance(
-              from: displayLabel.startIndex, to: range.lowerBound)
-            let endIndex = displayLabel.distance(
-              from: displayLabel.startIndex, to: range.upperBound)
+          if let idx = stringIndexOf(lowerLabel, lowerQuery) {
+            let startIndex = idx
+            let endIndex = idx + Array(lowerQuery.utf8).count
 
-            let beforeQuery = String(displayLabel.prefix(startIndex))
-            let queryText = String(
-              displayLabel[
-                displayLabel.index(
-                  displayLabel.startIndex, offsetBy: startIndex)..<displayLabel.index(
-                    displayLabel.startIndex, offsetBy: endIndex)])
-            let afterQuery = String(displayLabel.suffix(displayLabel.count - endIndex))
+            let beforeQuery = stringSubstring(displayLabel, from: 0, to: startIndex)
+            let queryText = stringSubstring(displayLabel, from: startIndex, to: endIndex)
+            let afterQuery = stringSubstring(displayLabel, from: endIndex)
 
             span { beforeQuery }
-              .style {
-                menuItemLabelCSS(boldLabel, hasSearchQuery)
-              }
+              .class("menu-item-label")
             span { queryText }
               .class("menu-item-search-query")
-              .style {
-                menuItemSearchQueryCSS()
-              }
             span { afterQuery }
-              .style {
-                menuItemLabelCSS(boldLabel, hasSearchQuery)
-              }
+              .class("menu-item-label")
           }
         } else {
           span { displayLabel }
             .class("menu-item-label")
-            .style {
-              menuItemLabelCSS(boldLabel, hasSearchQuery)
-            }
         }
       }
 
@@ -379,15 +180,9 @@
                 span { "✓" }
                   .class("menu-item-checkmark")
                   .ariaHidden(true)
-                  .style {
-                    menuItemCheckmarkCSS()
-                  }
               }
             }
             .class("menu-item-checkbox")
-            .style {
-              menuItemCheckboxCSS(selected)
-            }
           )
         }
 
@@ -400,14 +195,8 @@
                   .src(thumb.url)
                   .alt(thumb.alt)
                   .class("menu-item-thumbnail-image")
-                  .style {
-                    menuItemThumbnailImageCSS()
-                  }
               }
               .class("menu-item-thumbnail")
-              .style {
-                menuItemThumbnailCSS()
-              }
             )
           } else {
             items.append(
@@ -415,14 +204,8 @@
                 span { icon ?? "📷" }
                   .class("menu-item-thumbnail-placeholder")
                   .ariaHidden(true)
-                  .style {
-                    menuItemThumbnailPlaceholderCSS()
-                  }
               }
               .class("menu-item-thumbnail")
-              .style {
-                menuItemThumbnailCSS()
-              }
             )
           }
         }
@@ -433,9 +216,6 @@
             span { icon! }
               .class("menu-item-icon")
               .ariaHidden(true)
-              .style {
-                menuItemIconCSS()
-              }
           )
         }
 
@@ -449,37 +229,22 @@
               if hasMatch {
                 span { " (\(match))" }
                   .class("menu-item-match")
-                  .style {
-                    menuItemMatchCSS()
-                  }
               }
 
               if hasSupportingText {
                 span { " \(supportingText)" }
                   .class("menu-item-supporting-text")
-                  .style {
-                    menuItemSupportingTextCSS()
-                  }
               }
             }
             .class("menu-item-title")
-            .style {
-              menuItemTitleCSS()
-            }
 
             // Description
             if hasDescription {
               span { description! }
                 .class("menu-item-description")
-                .style {
-                  menuItemDescriptionCSS(hideDescriptionOverflow)
-                }
             }
           }
           .class("menu-item-text")
-          .style {
-            menuItemTextCSS()
-          }
         )
 
         return items
@@ -513,7 +278,157 @@
         return
           link
           .style {
-            menuItemViewCSS(disabled, selected, active, highlighted, itemColor)
+            selector("&") {
+              display(.flex)
+              alignItems(.center)
+              gap(spacing12)
+              padding(spacing12, spacing16)
+              minHeight(px(40))
+              width(perc(100))
+              fontFamily(typographyFontSans)
+              fontSize(fontSizeMedium16)
+              lineHeight(lineHeightSmall22)
+              color(disabled ? colorDisabled : (itemColor == .red ? colorRed : colorSubtle))
+              backgroundColor(backgroundColorTransparent)
+              border(borderWidthBase, .solid, disabled ? borderColorDisabled : borderColorSubtle)
+              borderRadius(borderRadiusBase)
+              cursor(disabled ? cursorNotAllowed : cursorBase)
+              userSelect(.none)
+              textDecoration(.none)
+              boxSizing(.borderBox)
+              transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+
+              if highlighted && !disabled {
+                color(colorBlue)
+                border(borderWidthBase, .solid, borderColorBlue)
+              }
+
+              if active && !disabled {
+                color(colorBlue)
+                border(borderWidthBase, .solid, borderColorBlue)
+              }
+
+              if !disabled {
+                pseudoClass(.hover) {
+                  color(colorBlue).important()
+                  border(borderWidthBase, .solid, borderColorBlue).important()
+                  cursor(cursorBaseHover).important()
+                }
+
+                pseudoClass(.active) {
+                  color(colorBlue).important()
+                  border(borderWidthBase, .solid, borderColorBlue).important()
+                  cursor(cursorBaseHover).important()
+                }
+
+                pseudoClass(.focus) {
+                  color(colorBlueFocus).important()
+                  outline(borderWidthBase, .solid, borderColorBlueFocus).important()
+                  outlineOffset(px(-1)).important()
+                }
+              }
+            }
+            descendant(".menu-item-checkbox") {
+              display(.inlineFlex)
+              alignItems(.center)
+              justifyContent(.center)
+              width(sizeIconMedium)
+              height(sizeIconMedium)
+              flexShrink(0)
+              border(borderWidthBase, .solid, borderColorInputBinary)
+              borderRadius(borderRadiusBase)
+              backgroundColor(selected ? backgroundColorInputBinaryChecked : backgroundColorBase)
+              transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+            }
+            descendant(".menu-item-checkmark") {
+              fontSize(fontSizeSmall14)
+              color(colorInvertedFixed)
+              lineHeight(1)
+            }
+            descendant(".menu-item-thumbnail") {
+              display(.inlineFlex)
+              alignItems(.center)
+              justifyContent(.center)
+              width(px(40))
+              height(px(40))
+              flexShrink(0)
+              borderRadius(borderRadiusBase)
+              overflow(.hidden)
+              backgroundColor(backgroundColorNeutralSubtle)
+            }
+            descendant(".menu-item-thumbnail-image") {
+              width(perc(100))
+              height(perc(100))
+              objectFit(.cover)
+            }
+            descendant(".menu-item-thumbnail-placeholder") {
+              fontSize(fontSizeLarge18)
+              color(colorPlaceholder)
+            }
+            descendant(".menu-item-icon") {
+              display(.inlineFlex)
+              alignItems(.center)
+              justifyContent(.center)
+              width(sizeIconMedium)
+              height(sizeIconMedium)
+              flexShrink(0)
+              color(colorSubtle)
+              fontSize(fontSizeLarge18)
+            }
+            descendant(".menu-item-text") {
+              display(.flex)
+              flexDirection(.column)
+              gap(spacing4)
+              flex(1)
+              minWidth(0)
+            }
+            descendant(".menu-item-title") {
+              display(.flex)
+              alignItems(.baseline)
+              gap(spacing4)
+              flexWrap(.wrap)
+            }
+            descendant(".menu-item-label") {
+              fontFamily(typographyFontSans)
+              fontSize(fontSizeMedium16)
+              fontWeight(boldLabel || hasSearchQuery ? fontWeightBold : fontWeightNormal)
+              lineHeight(lineHeightSmall22)
+              color(colorBase)
+              wordWrap(.breakWord)
+            }
+            descendant(".menu-item-search-query") {
+              fontFamily(typographyFontSans)
+              fontSize(fontSizeMedium16)
+              fontWeight(fontWeightNormal)
+              lineHeight(lineHeightSmall22)
+              color(colorBase)
+            }
+            descendant(".menu-item-match") {
+              fontFamily(typographyFontSans)
+              fontSize(fontSizeMedium16)
+              fontWeight(fontWeightNormal)
+              lineHeight(lineHeightSmall22)
+              color(colorSubtle)
+            }
+            descendant(".menu-item-supporting-text") {
+              fontFamily(typographyFontSans)
+              fontSize(fontSizeMedium16)
+              fontWeight(fontWeightNormal)
+              lineHeight(lineHeightSmall22)
+              color(colorSubtle)
+            }
+            descendant(".menu-item-description") {
+              fontFamily(typographyFontSans)
+              fontSize(fontSizeSmall14)
+              fontWeight(fontWeightNormal)
+              lineHeight(lineHeightSmall22)
+              color(colorSubtle)
+              if hideDescriptionOverflow {
+                overflow(.hidden)
+                textOverflow(.ellipsis)
+                whiteSpace(.nowrap)
+              }
+            }
           }
 
       } else {
@@ -538,7 +453,157 @@
         return
           listItem
           .style {
-            menuItemViewCSS(disabled, selected, active, highlighted, itemColor)
+            selector("&") {
+              display(.flex)
+              alignItems(.center)
+              gap(spacing12)
+              padding(spacing12, spacing16)
+              minHeight(px(40))
+              width(perc(100))
+              fontFamily(typographyFontSans)
+              fontSize(fontSizeMedium16)
+              lineHeight(lineHeightSmall22)
+              color(disabled ? colorDisabled : (itemColor == .red ? colorRed : colorSubtle))
+              backgroundColor(backgroundColorTransparent)
+              border(borderWidthBase, .solid, disabled ? borderColorDisabled : borderColorSubtle)
+              borderRadius(borderRadiusBase)
+              cursor(disabled ? cursorNotAllowed : cursorBase)
+              userSelect(.none)
+              textDecoration(.none)
+              boxSizing(.borderBox)
+              transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+
+              if highlighted && !disabled {
+                color(colorBlue)
+                border(borderWidthBase, .solid, borderColorBlue)
+              }
+
+              if active && !disabled {
+                color(colorBlue)
+                border(borderWidthBase, .solid, borderColorBlue)
+              }
+
+              if !disabled {
+                pseudoClass(.hover) {
+                  color(colorBlue).important()
+                  border(borderWidthBase, .solid, borderColorBlue).important()
+                  cursor(cursorBaseHover).important()
+                }
+
+                pseudoClass(.active) {
+                  color(colorBlue).important()
+                  border(borderWidthBase, .solid, borderColorBlue).important()
+                  cursor(cursorBaseHover).important()
+                }
+
+                pseudoClass(.focus) {
+                  color(colorBlueFocus).important()
+                  outline(borderWidthBase, .solid, borderColorBlueFocus).important()
+                  outlineOffset(px(-1)).important()
+                }
+              }
+            }
+            descendant(".menu-item-checkbox") {
+              display(.inlineFlex)
+              alignItems(.center)
+              justifyContent(.center)
+              width(sizeIconMedium)
+              height(sizeIconMedium)
+              flexShrink(0)
+              border(borderWidthBase, .solid, borderColorInputBinary)
+              borderRadius(borderRadiusBase)
+              backgroundColor(selected ? backgroundColorInputBinaryChecked : backgroundColorBase)
+              transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+            }
+            descendant(".menu-item-checkmark") {
+              fontSize(fontSizeSmall14)
+              color(colorInvertedFixed)
+              lineHeight(1)
+            }
+            descendant(".menu-item-thumbnail") {
+              display(.inlineFlex)
+              alignItems(.center)
+              justifyContent(.center)
+              width(px(40))
+              height(px(40))
+              flexShrink(0)
+              borderRadius(borderRadiusBase)
+              overflow(.hidden)
+              backgroundColor(backgroundColorNeutralSubtle)
+            }
+            descendant(".menu-item-thumbnail-image") {
+              width(perc(100))
+              height(perc(100))
+              objectFit(.cover)
+            }
+            descendant(".menu-item-thumbnail-placeholder") {
+              fontSize(fontSizeLarge18)
+              color(colorPlaceholder)
+            }
+            descendant(".menu-item-icon") {
+              display(.inlineFlex)
+              alignItems(.center)
+              justifyContent(.center)
+              width(sizeIconMedium)
+              height(sizeIconMedium)
+              flexShrink(0)
+              color(colorSubtle)
+              fontSize(fontSizeLarge18)
+            }
+            descendant(".menu-item-text") {
+              display(.flex)
+              flexDirection(.column)
+              gap(spacing4)
+              flex(1)
+              minWidth(0)
+            }
+            descendant(".menu-item-title") {
+              display(.flex)
+              alignItems(.baseline)
+              gap(spacing4)
+              flexWrap(.wrap)
+            }
+            descendant(".menu-item-label") {
+              fontFamily(typographyFontSans)
+              fontSize(fontSizeMedium16)
+              fontWeight(boldLabel || hasSearchQuery ? fontWeightBold : fontWeightNormal)
+              lineHeight(lineHeightSmall22)
+              color(colorBase)
+              wordWrap(.breakWord)
+            }
+            descendant(".menu-item-search-query") {
+              fontFamily(typographyFontSans)
+              fontSize(fontSizeMedium16)
+              fontWeight(fontWeightNormal)
+              lineHeight(lineHeightSmall22)
+              color(colorBase)
+            }
+            descendant(".menu-item-match") {
+              fontFamily(typographyFontSans)
+              fontSize(fontSizeMedium16)
+              fontWeight(fontWeightNormal)
+              lineHeight(lineHeightSmall22)
+              color(colorSubtle)
+            }
+            descendant(".menu-item-supporting-text") {
+              fontFamily(typographyFontSans)
+              fontSize(fontSizeMedium16)
+              fontWeight(fontWeightNormal)
+              lineHeight(lineHeightSmall22)
+              color(colorSubtle)
+            }
+            descendant(".menu-item-description") {
+              fontFamily(typographyFontSans)
+              fontSize(fontSizeSmall14)
+              fontWeight(fontWeightNormal)
+              lineHeight(lineHeightSmall22)
+              color(colorSubtle)
+              if hideDescriptionOverflow {
+                overflow(.hidden)
+                textOverflow(.ellipsis)
+                whiteSpace(.nowrap)
+              }
+            }
           }
 
       }

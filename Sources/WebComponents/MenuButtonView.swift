@@ -101,13 +101,11 @@
               .class(item.destructive ? "menu-item menu-item-destructive" : "menu-item")
               .data("value", item.value)
               .data("menu-item", true)
+              .data("destructive", item.destructive)
+              .data("disabled", item.disabled)
               .role(.menuitem)
               .tabindex(item.disabled ? -1 : 0)
               .ariaDisabled(item.disabled)
-              .style {
-                menuItemCSS(item)
-                textDecoration(.none)
-              }
             } else {
               div {
                 renderItemContent(item)
@@ -115,114 +113,87 @@
               .class(item.destructive ? "menu-item menu-item-destructive" : "menu-item")
               .data("value", item.value)
               .data("menu-item", true)
+              .data("destructive", item.destructive)
+              .data("disabled", item.disabled)
               .role(.menuitem)
               .tabindex(item.disabled ? -1 : 0)
               .ariaDisabled(item.disabled)
-              .style {
-                menuItemCSS(item)
-              }
             }
           }
         }
         .class("menu-button-menu")
         .data("menu-button-menu", true)
+        .data("open", false)
         .role(.menu)
         .style {
-          menuButtonMenuCSS()
+          selector("&") {
+            position(.absolute)
+            top(perc(100))
+            insetInlineStart(0)
+            marginBlockStart(spacing4)
+            minWidth(px(160))
+            maxWidth(px(320))
+            backgroundColor(backgroundColorBase)
+            border(borderWidthBase, .solid, borderColorBase)
+            borderRadius(borderRadiusBase)
+            boxShadow(boxShadowMedium)
+            zIndex(1000)
+            display(.none)
+            maxHeight(px(400))
+            overflowY(.auto)
+            boxSizing(.borderBox)
+          }
+          selector("&[data-open='true']") {
+            display(.block)
+          }
+          descendant(".menu-item") {
+            display(.flex)
+            alignItems(.center)
+            gap(spacing12)
+            padding(spacing8, spacing12)
+            fontSize(fontSizeSmall14)
+            lineHeight(1.5)
+            cursor(.pointer)
+            userSelect(.none)
+            boxSizing(.borderBox)
+            color(colorBase)
+            transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+            textDecoration(.none)
+          }
+          descendant(".menu-item[data-destructive='true']") {
+            color(colorRed)
+          }
+          descendant(".menu-item[data-disabled='true']") {
+            color(colorDisabled).important()
+            cursor(.default).important()
+            pointerEvents(.none).important()
+          }
+          descendant(".menu-item:hover:not(.disabled)") {
+            backgroundColor(backgroundColorInteractiveSubtle).important()
+            color(colorBlue).important()
+          }
+          descendant(".menu-item[data-destructive='true']:hover:not(.disabled)") {
+            backgroundColor(backgroundColorRedSubtle).important()
+            color(colorRed).important()
+          }
+          descendant(".menu-item:focus") {
+            backgroundColor(backgroundColorInteractiveSubtle).important()
+            outline(borderWidthThick, .solid, colorBlue).important()
+          }
+          descendant(".menu-item[data-destructive='true']:focus") {
+            backgroundColor(backgroundColorRedSubtle).important()
+            outline(borderWidthThick, .solid, colorRed).important()
+          }
         }
       }
       .class(`class`.isEmpty ? "menu-button-view" : "menu-button-view \(`class`)")
       .data("menu-button", true)
       .style {
-        menuButtonViewCSS()
-      }
-    }
-
-    @CSSBuilder
-    private func menuButtonViewCSS() -> [CSSOM.CSSRule] {
-      position(.relative)
-      display(.inlineBlock)
-    }
-
-    @CSSBuilder
-    private func menuButtonMenuCSS() -> [CSSOM.CSSRule] {
-      position(.absolute)
-      top(perc(100))
-      insetInlineStart(0)
-      marginBlockStart(spacing4)
-      minWidth(px(160))
-      maxWidth(px(320))
-      backgroundColor(backgroundColorBase)
-      border(borderWidthBase, .solid, borderColorBase)
-      borderRadius(borderRadiusBase)
-      boxShadow(boxShadowMedium)
-      zIndex(1000)
-      display(.none)
-      maxHeight(px(400))
-      overflowY(.auto)
-      boxSizing(.borderBox)
-    }
-
-    @CSSBuilder
-    private func menuItemCSS(_ item: MenuItem) -> [CSSOM.CSSRule] {
-      display(.flex)
-      alignItems(.center)
-      gap(spacing12)
-      padding(spacing8, spacing12)
-      fontSize(fontSizeSmall14)
-      lineHeight(1.5)
-      cursor(.pointer)
-      userSelect(.none)
-      boxSizing(.borderBox)
-
-      if item.destructive {
-        color(colorRed)
-      } else {
-        color(colorBase)
-      }
-
-      transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-
-      pseudoClass(.hover, .not(.disabled)) {
-        if item.destructive {
-          backgroundColor(backgroundColorRedSubtle).important()
-          color(colorRed).important()
-        } else {
-          backgroundColor(backgroundColorInteractiveSubtle).important()
-          color(colorBlue).important()
+        selector("&") {
+          position(.relative)
+          display(.inlineBlock)
         }
       }
-
-      pseudoClass(.focus) {
-        if item.destructive {
-          backgroundColor(backgroundColorRedSubtle).important()
-          outline(borderWidthThick, .solid, colorRed).important()
-        } else {
-          backgroundColor(backgroundColorInteractiveSubtle).important()
-          outline(borderWidthThick, .solid, colorBlue).important()
-        }
-      }
-
-      if item.disabled {
-        color(colorDisabled).important()
-        cursor(.default).important()
-        pointerEvents(.none).important()
-      }
-    }
-
-    @CSSBuilder
-    private func menuItemIconCSS() -> [CSSOM.CSSRule] {
-      display(.flex)
-      alignItems(.center)
-      justifyContent(.center)
-      width(sizeIconSmall)
-      height(sizeIconSmall)
-      flexShrink(0)
-    }
-
-    @CSSBuilder
-    private func menuItemTextCSS() -> [CSSOM.CSSRule] {
-      flex(1)
     }
 
     @HTMLBuilder
@@ -231,11 +202,24 @@
         span { icon }
           .class("menu-item-icon")
           .ariaHidden(true)
-          .style { menuItemIconCSS() }
+          .style {
+            selector("&") {
+              display(.flex)
+              alignItems(.center)
+              justifyContent(.center)
+              width(sizeIconSmall)
+              height(sizeIconSmall)
+              flexShrink(0)
+            }
+          }
       }
       span { item.label }
         .class("menu-item-text")
-        .style { menuItemTextCSS() }
+        .style {
+          selector("&") {
+            flex(1)
+          }
+        }
 
     }
   }
@@ -336,7 +320,7 @@
     }
 
     private func openMenu() {
-      menu?.style.display(.block)
+      menu?.dataset["open"] = "true"
       trigger?.setAttribute(.ariaExpanded, "true")
       isOpen = true
 
@@ -348,7 +332,7 @@
     }
 
     private func closeMenu() {
-      menu?.style.display(.none)
+      menu?.dataset["open"] = "false"
       trigger?.setAttribute(.ariaExpanded, "false")
       isOpen = false
       currentFocusIndex = -1

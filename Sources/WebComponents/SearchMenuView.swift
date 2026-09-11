@@ -150,9 +150,6 @@
         div {}
           .class("search-menu-backdrop")
           .data("search-menu-backdrop", "true")
-          .style {
-            searchMenuBackdropCSS()
-          }
 
         // Search menu container - full screen
         div {
@@ -182,11 +179,7 @@
                 class: "search-menu-typeahead"
               )
             }
-            .style {
-              display(.flex)
-              flexDirection(.row)
-              alignItems(.center)
-            }
+            .class("search-menu-input-row")
 
               // Footer with keyboard hints
               div {
@@ -195,52 +188,36 @@
                   div {
                     kbd { "↑" }
                       .class("keyboard-hint-key")
-                      .style { keyboardHintKeyCSS() }
                     kbd { "↓" }
                       .class("keyboard-hint-key")
-                      .style { keyboardHintKeyCSS() }
                     span { "to navigate" }
                       .class("keyboard-hint-label")
-                      .style { keyboardHintLabelCSS() }
                   }
                   .class("keyboard-hint-group")
-                  .style { keyboardHintGroupCSS() }
 
                   // Selection
                   div {
                     kbd { "↵" }
                       .class("keyboard-hint-key")
-                      .style { keyboardHintKeyCSS() }
                     span { "to select" }
                       .class("keyboard-hint-label")
-                      .style { keyboardHintLabelCSS() }
                   }
                   .class("keyboard-hint-group")
-                  .style { keyboardHintGroupCSS() }
 
                   // Close
                   div {
                     kbd { "esc" }
                       .class("keyboard-hint-key")
-                      .style { keyboardHintKeyCSS() }
                     span { "to close" }
                       .class("keyboard-hint-label")
-                      .style { keyboardHintLabelCSS() }
                   }
                   .class("keyboard-hint-group")
-                  .style { keyboardHintGroupCSS() }
                 }
                 .class("keyboard-hint-container")
-                .style { keyboardHintContainerCSS() }
               }
               .class("search-menu-footer")
-              .style { searchMenuFooterCSS() }
             }
-            .style {
-              display(.flex)
-              flexDirection(.column)
-              gap(spacing8)
-            }
+            .class("search-menu-content")
           }
         }
         .class("search-menu-container")
@@ -257,121 +234,198 @@
         .data("local-storage-key", localStorageKey)
         .data("has-tabs", tabs.isEmpty ? "false" : "true")
         .data("tab-configs", tabConfigsJSON())
-        .style {
-          searchMenuContainerCSS()
-        }
       }
       .class(`class`.isEmpty ? "search-menu-view" : "search-menu-view \(`class`)")
       .data("search-menu", "true")
+      .data("state", "closed")
       .style {
-        searchMenuViewCSS()
+        selector("&") {
+          display(.none)
+          position(.fixed)
+          top(px(96))
+          insetInlineStart(0)
+          width(perc(100))
+          height(calc(vh(100) - px(96)))
+          overflow(.hidden)
+          zIndex(zIndexOverlay)
+          pointerEvents(.none)
+        }
+        descendant(".search-menu-backdrop") {
+          position(.absolute)
+          top(0)
+          insetInlineStart(0)
+          width(perc(100))
+          height(perc(100))
+          backgroundColor(backgroundColorBackdropDark)
+          backdropFilter(blur(rem(1)))
+          webkitBackdropFilter(blur(rem(1)))
+          opacity(0)
+          transition(.opacity, transitionDurationMedium, transitionTimingFunctionSystem)
+          zIndex(0)
+        }
+        descendant(".search-menu-container") {
+          position(.relative)
+          width(perc(100))
+          backgroundColor(backgroundColorBase)
+          paddingBlockStart(spacing16)
+          paddingBlockEnd(spacing16)
+          borderBlockEnd(borderWidthBase, .solid, borderColorBase)
+          opacity(0)
+          transform(translateY(perc(-100)))
+          zIndex(1)
+          transition(
+            (.opacity, transitionDurationMedium, transitionTimingFunctionSystem),
+            (.transform, transitionDurationMedium, transitionTimingFunctionSystem)
+          )
+          media(minWidth(minWidthBreakpointTablet)) {
+            paddingBlockStart(spacing20)
+            paddingBlockEnd(spacing20)
+          }
+        }
+        descendant(".search-menu-input-row") {
+          display(.flex)
+          flexDirection(.row)
+          alignItems(.center)
+        }
+        descendant(".search-menu-typeahead") {
+          width(perc(100))
+        }
+        descendant(".search-menu-content") {
+          display(.flex)
+          flexDirection(.column)
+          gap(spacing8)
+        }
+        descendant(".search-menu-footer") {
+          display(.none)
+          alignItems(.center)
+          justifyContent(.flexStart)
+          padding(0)
+          media(minWidth(minWidthBreakpointTablet)) { display(.flex) }
+        }
+        descendant(".keyboard-hint-container") {
+          display(.flex)
+          gap(spacing16)
+          alignItems(.center)
+          flexWrap(.wrap)
+        }
+        descendant(".keyboard-hint-group") {
+          display(.flex)
+          alignItems(.center)
+          gap(spacing6)
+        }
+        descendant(".keyboard-hint-key") {
+          display(.inlineFlex)
+          alignItems(.center)
+          justifyContent(.center)
+          minWidth(px(20))
+          height(px(20))
+          padding(0, spacing8)
+          fontFamily(typographyFontMono)
+          fontSize(fontSizeXSmall12)
+          fontWeight(fontWeightSemiBold)
+          color(colorBase)
+          backgroundColor(backgroundColorNeutralSubtle)
+          border(borderWidthBase, .solid, borderColorSubtle)
+          borderRadius(borderRadiusMinimal)
+          boxShadow(px(0), px(1), px(1), px(0), rgba(0, 0, 0, 0.05))
+          lineHeight(1)
+        }
+        descendant(".keyboard-hint-label") {
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeXSmall12)
+          color(colorSubtle)
+        }
+        selector("&[data-state='opening']", "&[data-state='open']", "&[data-state='closing']") {
+          display(.flex)
+        }
+        selector("&[data-state='opening']", "&[data-state='open']") { pointerEvents(.auto) }
+        descendant("[data-search-menu-backdrop='true']") { pointerEvents(.none) }
+        descendant("[data-search-menu-container='true']") { pointerEvents(.none) }
+        descendant("[data-search-menu-container='true']") { transform(translateY(perc(-100))) }
+        descendant(".search-menu-footer") { display(.none) }
+        descendant(".search-menu-results") {
+          flexDirection(.column)
+          gap(spacing8)
+          maxHeight(calc(vh(100) - px(256)))
+          overflowY(.auto)
+        }
+        descendant(".search-menu-results[data-open='true']") { display(.flex) }
+        descendant(".search-menu-results[data-open='false']") { display(.none) }
+        descendant(".search-menu-result") {
+          display(.flex)
+          alignItems(.center)
+          gap(spacing12)
+          padding(spacing8, spacing12)
+          minHeight(spacing64)
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeMedium16)
+          lineHeight(lineHeightSmall22)
+          color(colorBase)
+          backgroundColor(backgroundColorTransparent)
+          border(borderWidthBase, .solid, borderColorSubtle)
+          borderRadius(borderRadiusBase)
+          cursor(cursorBase)
+          userSelect(.none)
+          textDecoration(textDecorationNone)
+          boxSizing(.borderBox)
+          transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionUser)
+        }
+        selector(".search-menu-result:hover", ".search-menu-result:active") {
+          color(colorBlue)
+          border(borderWidthBase, .solid, borderColorBlue)
+          outline(borderWidthBase, .solid, borderColorBlue)
+          outlineOffset(px(-2))
+          cursor(cursorBaseHover)
+        }
+        descendant(".search-menu-result:focus") {
+          color(colorBlueFocus)
+          outline(borderWidthBase, .solid, borderColorBlueFocus)
+          outlineOffset(px(-2))
+        }
+        descendant(".search-menu-result-text") {
+          display(.flex)
+          flexDirection(.column)
+          gap(spacing4)
+          minWidth(px(0))
+          flex(1)
+        }
+        descendant(".search-menu-result-title") { display(.flex)
+alignItems(.center)
+gap(spacing4) }
+        descendant(".search-menu-result-label") {
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeMedium16)
+          fontWeight(fontWeightNormal)
+          lineHeight(lineHeightSmall22)
+          opacity(1)
+        }
+        descendant(".search-menu-result[data-color='blue'] .search-menu-result-label") { color(colorBlue) }
+        descendant(".search-menu-result[data-color='green'] .search-menu-result-label") { color(colorGreen) }
+        descendant(".search-menu-result[data-color='red'] .search-menu-result-label") { color(colorRed) }
+        selector(".search-menu-result-pos", ".search-menu-result-description", ".search-menu-result-sup") {
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeSmall14)
+          fontWeight(fontWeightNormal)
+          lineHeight(lineHeightSmall22)
+          color(colorSubtle)
+        }
+        selector(".search-menu-result:hover .search-menu-result-label", ".search-menu-result:active .search-menu-result-label") { color(colorBlue) }
+        selector(".search-menu-result:hover .search-menu-result-pos", ".search-menu-result:hover .search-menu-result-description", ".search-menu-result:active .search-menu-result-pos", ".search-menu-result:active .search-menu-result-description") { color(colorBase) }
+        selector("&[data-state='open'] [data-search-menu-backdrop='true']") {
+          opacity(1)
+          pointerEvents(.auto)
+        }
+        selector("&[data-state='open'] [data-search-menu-container='true']") {
+          opacity(1)
+          transform(translateY(px(0)))
+        }
+        selector("&[data-state='open'] .search-menu-footer") { display(.flex) }
+      }
+      .style(prefix: false) {
+        selector("body[data-search-menu-open='true']") { overflow(.hidden) }
       }
     }
 
-    @CSSBuilder
-    private func searchMenuViewCSS() -> [CSSOM.CSSRule] {
-      display(.none)
-      position(.fixed)
-      top(0)
-      insetInlineStart(0)
-      width(perc(100))
-      zIndex(zIndexOverlay)
-      pointerEvents(.none)
-    }
-
-    @CSSBuilder
-    private func searchMenuBackdropCSS() -> [CSSOM.CSSRule] {
-      position(.fixed)
-      top(px(96))
-      insetInlineStart(0)
-      width(perc(100))
-      height(calc(vh(100) - px(96)))
-      backgroundColor(rgba(0, 0, 0, 0.4))
-      backdropFilter(blur(rem(1)))
-      webkitBackdropFilter(blur(rem(1)))
-      opacity(0)
-      transition(.opacity, transitionDurationMedium, transitionTimingFunctionSystem)
-      zIndex(-1)
-    }
-
-    @CSSBuilder
-    private func searchMenuContainerCSS() -> [CSSOM.CSSRule] {
-      position(.relative)
-      width(perc(100))
-      backgroundColor(backgroundColorBase)
-      paddingBlockStart(px(96 + 16))
-      paddingBlockEnd(spacing16)
-      borderBlockEnd(borderWidthBase, .solid, borderColorBase)
-
-      // Start hidden — translated fully above; slides down and wipes over the navbar
-      opacity(0)
-      transform(translateY(perc(-100)))
-      transition(
-        (.opacity, transitionDurationMedium, transitionTimingFunctionSystem),
-        (.transform, transitionDurationMedium, transitionTimingFunctionSystem)
-      )
-
-      // Desktop: more vertical padding
-      media(minWidth(minWidthBreakpointTablet)) {
-        paddingBlockStart(px(96 + 20))
-        paddingBlockEnd(spacing20)
-      }
-    }
-
-    @CSSBuilder
-    private func searchMenuFooterCSS() -> [CSSOM.CSSRule] {
-      // Hide keyboard hints on mobile
-      display(.none)
-      alignItems(.center)
-      justifyContent(.flexStart)
-      padding(0)
-
-      // Show only on desktop
-      media(minWidth(minWidthBreakpointTablet)) {
-        display(.flex)
-      }
-    }
-
-    @CSSBuilder
-    private func keyboardHintContainerCSS() -> [CSSOM.CSSRule] {
-      display(.flex)
-      gap(spacing16)
-      alignItems(.center)
-      flexWrap(.wrap)
-    }
-
-    @CSSBuilder
-    private func keyboardHintGroupCSS() -> [CSSOM.CSSRule] {
-      display(.flex)
-      alignItems(.center)
-      gap(spacing6)
-    }
-
-    @CSSBuilder
-    private func keyboardHintKeyCSS() -> [CSSOM.CSSRule] {
-      display(.inlineFlex)
-      alignItems(.center)
-      justifyContent(.center)
-      minWidth(px(20))
-      height(px(20))
-      padding(0, spacing8)
-      fontFamily(typographyFontMono)
-      fontSize(fontSizeXSmall12)
-      fontWeight(fontWeightSemiBold)
-      color(colorBase)
-      backgroundColor(backgroundColorNeutralSubtle)
-      border(borderWidthBase, .solid, borderColorSubtle)
-      borderRadius(borderRadiusMinimal)
-      boxShadow(px(0), px(1), px(1), px(0), rgba(0, 0, 0, 0.05))
-      lineHeight(1)
-    }
-
-    @CSSBuilder
-    private func keyboardHintLabelCSS() -> [CSSOM.CSSRule] {
-      fontFamily(typographyFontSans)
-      fontSize(fontSizeXSmall12)
-      color(colorSubtle)
-    }
   }
 #endif
 
@@ -406,6 +460,14 @@
     private var isMenuOpen: Bool = false
 
     public init() {}
+
+    private func setResultsMenuOpen(_ menu: DOM.Element, _ open: Bool) {
+      _ = menu.dataset["open"] = open ? "true" : "false"
+    }
+
+    private func setBodySearchMenuOpen(_ open: Bool) {
+      _ = document.body.dataset["searchMenuOpen"] = open ? "true" : "false"
+    }
 
     public func hydrate() {
       // Listen for search trigger clicks (navbar button)
@@ -468,9 +530,9 @@
             el = el?.parentElement
           }
           if !inside {
-            menu.style.display(.none)
+            self.setResultsMenuOpen(menu, false)
             if !self.isMenuOpen {
-              document.body.style.overflow(.auto)
+              self.setBodySearchMenuOpen(false)
             }
           }
         }
@@ -536,7 +598,7 @@
 
             if let menu = typeahead.querySelector(".typeahead-search-menu") {
               menu.innerHTML = ""
-              menu.style.display(.none)
+              self.setResultsMenuOpen(menu, false)
             }
             let query = input.value
             if !stringIsEmpty(query) {
@@ -576,12 +638,9 @@
 
       // Click on the form area re-shows the dropdown if it was dismissed
       if let form = typeahead.querySelector(".typeahead-search-form") {
-        _ = form.addEventListener(.click) { _ in
+        _ = form.addEventListener(.click) { [self] _ in
           if let menu = typeahead.querySelector(".typeahead-search-menu") {
-            let display = menu.style.getPropertyValue(.display)
-            if stringEquals(display, "none") {
-              menu.style.display(.flex)
-            }
+            self.setResultsMenuOpen(menu, true)
           }
         }
       }
@@ -603,7 +662,7 @@
         guard !query.isEmpty else {
           if let menu = typeahead.querySelector(".typeahead-search-menu") {
             menu.innerHTML = ""
-            menu.style.display(.none)
+            self.setResultsMenuOpen(menu, false)
           }
           return
         }
@@ -727,7 +786,7 @@
     private func updateTypeaheadMenu(typeahead: DOM.Element, results: [SearchResultItem]) {
       if results.isEmpty {
         if let existing = typeahead.querySelector(".typeahead-search-menu") {
-          existing.style.display(.none)
+          setResultsMenuOpen(existing, false)
         }
         return
       }
@@ -739,43 +798,30 @@
         menu = existing
       } else {
         menu = document.createElement(.div)
-        menu.className = "typeahead-search-menu"
+        menu.className = "typeahead-search-menu search-menu-results"
+        _ = menu.dataset["open"] = "false"
         typeahead.appendChild(menu)
       }
-      menu.style.display(.flex)
-      menu.style.flexDirection(.column)
-      menu.style.gap(spacing8)
-      menu.style.maxHeight(calc(vh(100) - px(256)))
-      menu.style.overflowY(.auto)
+      setResultsMenuOpen(menu, true)
 
       menu.innerHTML = ""
 
       // Create new menu items using DOM API
       for result in limitedResults {
         let item = document.createElement(.div)
-        item.className = "menu-item-view"
+        item.className = "menu-item-view search-menu-result"
         item.setAttribute(data("value"), result.text)
+        let resultColor: String
+        if stringEquals(result.color, "green") {
+          resultColor = "green"
+        } else if stringEquals(result.color, "red") {
+          resultColor = "red"
+        } else {
+          resultColor = "blue"
+        }
+        item.setAttribute(data("color"), resultColor)
         item.setAttribute(.role, .option)
         item.setAttribute(.tabindex, -1)
-
-        // Apply menu item styles
-        item.style.display(.flex)
-        item.style.alignItems(.center)
-        item.style.gap(spacing12)
-        item.style.padding(spacing8, spacing12)
-        item.style.minHeight(spacing64)
-        item.style.fontFamily(typographyFontSans)
-        item.style.fontSize(fontSizeMedium16)
-        item.style.lineHeight(lineHeightSmall22)
-        item.style.color(colorBase)
-        item.style.backgroundColor(backgroundColorTransparent)
-        item.style.border(borderWidthBase, .solid, borderColorSubtle)
-        item.style.borderRadius(borderRadiusBase)
-        item.style.cursor(cursorBase)
-        item.style.userSelect(.none)
-        item.style.textDecoration(textDecorationNone)
-        item.style.boxSizing(.borderBox)
-        item.style.transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionUser)
 
         // Construct URL for navigation
         let href: String
@@ -789,50 +835,30 @@
 
         // DOM.Text Content Wrapper
         let textContent = document.createElement(.span)
-        textContent.className = "menu-item-text"
-        textContent.style.display(.flex)
-        textContent.style.flexDirection(.column)
-        textContent.style.gap(spacing4)
-        textContent.style.minWidth(px(0))
-        textContent.style.flex(1)
+        textContent.className = "menu-item-text search-menu-result-text"
 
         // Title Wrapper
         let textWrapper = document.createElement(.span)
-        textWrapper.className = "menu-item-title"
-        textWrapper.style.display(.flex)
-        textWrapper.style.alignItems(.center)
-        textWrapper.style.gap(spacing4)
+        textWrapper.className = "menu-item-title search-menu-result-title"
 
         // Title label
         let label = document.createElement(.span)
-        label.className = "menu-item-label"
+        label.className = "menu-item-label search-menu-result-label"
         label.textContent = result.text
-        label.style.fontFamily(typographyFontSans)
-        label.style.fontSize(fontSizeMedium16)
-        label.style.fontWeight(fontWeightNormal)
-        label.style.lineHeight(lineHeightSmall22)
-        label.style.setProperty(.color, `var`("--color-\(result.color)"))
-        label.style.opacity(1)
 
         textWrapper.appendChild(label)
 
         // POS + homograph superscript after lemma
         if !stringIsEmpty(result.pos) {
           let posSpan = document.createElement(.span)
-          posSpan.className = "menu-item-pos"
+          posSpan.className = "menu-item-pos search-menu-result-pos"
           posSpan.textContent = result.pos
-          posSpan.style.fontFamily(typographyFontSans)
-          posSpan.style.fontSize(fontSizeSmall14)
-          posSpan.style.fontWeight(fontWeightNormal)
-          posSpan.style.lineHeight(lineHeightSmall22)
-          posSpan.style.color(colorSubtle)
           textWrapper.appendChild(posSpan)
 
           if result.homograph > 1 {
             let posSup = document.createElement(.sup)
+            posSup.className = "search-menu-result-sup"
             posSup.textContent = "\(result.homograph)"
-            posSup.style.fontSize(fontSizeSmall14)
-            posSup.style.color(colorSubtle)
             textWrapper.appendChild(posSup)
           }
         }
@@ -840,77 +866,11 @@
 
         // Description
         let description = document.createElement(.span)
-        description.className = "menu-item-description"
+        description.className = "menu-item-description search-menu-result-description"
         description.textContent = result.subtext
-        description.style.fontFamily(typographyFontSans)
-        description.style.fontSize(fontSizeSmall14)
-        description.style.fontWeight(fontWeightNormal)
-        description.style.lineHeight(lineHeightSmall22)
-        description.style.color(colorSubtle)
         textContent.appendChild(description)
 
         item.appendChild(textContent)
-
-        // Add hover/active/focus event listeners for progressive styling
-        _ = item.addEventListener(.mouseenter) { (event: Event) in
-          item.style.color(colorBlue)
-          item.style.border(borderWidthBase, .solid, borderColorBlue)
-          item.style.outline(borderWidthBase, .solid, borderColorBlue)
-          item.style.outlineOffset(px(-2))
-          item.style.cursor(cursorBaseHover)
-          if let label = item.querySelector(".menu-item-label") {
-            label.style.color(colorBlue)
-          }
-          if let pos = item.querySelector(".menu-item-pos") {
-            pos.style.color(colorBase)
-          }
-          if let desc = item.querySelector(".menu-item-description") {
-            desc.style.color(colorBase)
-          }
-        }
-
-        _ = item.addEventListener(.mouseleave) { (event: Event) in
-          item.style.color(colorSubtle)
-          item.style.border(borderWidthBase, .solid, borderColorSubtle)
-          item.style.outline(.none)
-          item.style.cursor(cursorBase)
-          if let label = item.querySelector(".menu-item-label") {
-            label.style.color(colorBase)
-          }
-          if let pos = item.querySelector(".menu-item-pos") {
-            pos.style.color(colorSubtle)
-          }
-          if let desc = item.querySelector(".menu-item-description") {
-            desc.style.color(colorSubtle)
-          }
-        }
-
-        _ = item.addEventListener(.mousedown) { (event: Event) in
-          item.style.color(colorBlue)
-          item.style.border(borderWidthBase, .solid, borderColorBlue)
-          item.style.outline(borderWidthBase, .solid, borderColorBlue)
-          item.style.outlineOffset(px(-2))
-          item.style.cursor(cursorBaseHover)
-        }
-
-        _ = item.addEventListener(.mouseup) { (event: Event) in
-          item.style.color(colorBlue)
-          item.style.border(borderWidthBase, .solid, borderColorBlue)
-          item.style.outline(borderWidthBase, .solid, borderColorBlue)
-          item.style.outlineOffset(px(-2))
-          item.style.cursor(cursorBaseHover)
-        }
-
-        _ = item.addEventListener(.focus) { (event: Event) in
-          item.style.color(colorBlueFocus)
-          item.style.outline(borderWidthBase, .solid, borderColorBlueFocus)
-          item.style.outlineOffset(px(-2))
-        }
-
-        _ = item.addEventListener(.blur) { (event: Event) in
-          item.style.color(colorSubtle)
-          item.style.outline(.none)
-        }
 
         _ = item.addEventListener(.click) { _ in
           if let url = item.getAttribute(data("url")), !stringIsEmpty(url) {
@@ -929,7 +889,7 @@
 
       // Lock body scroll when dropdown is shown
       if !results.isEmpty {
-        document.body.style.overflow(.hidden)
+        setBodySearchMenuOpen(true)
       }
     }
 
@@ -1072,38 +1032,26 @@
       // Signal ellipsis menu to close (NavbarHydration listens)
       document.dispatchEvent(CustomEvent(type: "search-menu-opened", detail: "{}"))
 
-      // First scroll to top so navbar is fully visible
-      window.scrollTo(0, 0, behavior: .smooth)
+      // Instant scroll so leftover page/menu scroll can’t peek under the panel.
+      window.scrollTo(0, 0, behavior: .auto)
 
       isMenuOpen = true
 
       if let menu = document.querySelector("[data-search-menu=\"true\"]") {
-        // Show menu
-        menu.style.display(.flex)
-        menu.style.pointerEvents(.auto)
+        menu.scrollTop = 0
+        if let container = menu.querySelector("[data-search-menu-container=\"true\"]") {
+          container.scrollTop = 0
+        }
+
+        _ = menu.dataset["state"] = "opening"
 
         // Use requestAnimationFrame to ensure initial state is rendered before animating
         window.requestAnimationFrame {
-          // Animate backdrop
-          if let backdrop = menu.querySelector("[data-search-menu-backdrop=\"true\"]") {
-            backdrop.style.opacity(1)
-            backdrop.style.pointerEvents(.auto)
-          }
-
-          // Animate container (slide down from beneath navbar)
-          if let container = menu.querySelector("[data-search-menu-container=\"true\"]") {
-            container.style.opacity(1)
-            container.style.transform(translateY(px(0)))
-          }
-
-          // Show keyboard hints footer on desktop
-          if let footer = menu.querySelector(".search-menu-footer") {
-            footer.style.display(.flex)
-          }
+          _ = menu.dataset["state"] = "open"
         }
 
         // Prevent body scroll
-        document.body.style.overflow(.hidden)
+        setBodySearchMenuOpen(true)
 
         // Focus the search input after animation starts
         window.setTimeout(100) {
@@ -1120,31 +1068,15 @@
       isMenuOpen = false
 
       if let menu = document.querySelector("[data-search-menu=\"true\"]") {
-        // Animate out backdrop
-        if let backdrop = menu.querySelector("[data-search-menu-backdrop=\"true\"]") {
-          backdrop.style.opacity(0)
-          backdrop.style.pointerEvents(.none)
-        }
-
-        // Hide keyboard hints footer
-        if let footer = menu.querySelector(".search-menu-footer") {
-          footer.style.display(.none)
-        }
-
-        // Animate out container (slide back up beneath navbar)
-        if let container = menu.querySelector("[data-search-menu-container=\"true\"]") {
-          container.style.opacity(0)
-          container.style.transform(translateY(perc(-100)))
-        }
+        _ = menu.dataset["state"] = "closing"
 
         // Hide menu after animation
         window.setTimeout(250) {
-          menu.style.display(.none)
-          menu.style.pointerEvents(.none)
+          _ = menu.dataset["state"] = "closed"
         }
 
         // Re-enable body scroll
-        document.body.style.overflow(.auto)
+        setBodySearchMenuOpen(false)
 
         // Clear search input
         if let input = menu.querySelector("input") {
@@ -1155,6 +1087,7 @@
         // Clear any search results
         if let resultsMenu = menu.querySelector(".typeahead-search-menu") {
           resultsMenu.innerHTML = ""
+          setResultsMenuOpen(resultsMenu, false)
         }
       }
     }

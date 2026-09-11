@@ -78,30 +78,6 @@ public struct IconView: HTMLContent {
     }
   }
 
-  @CSSBuilder
-  private func iconViewCSS(_ size: IconSize, _ iconColor: CSS.Color?) -> [CSSOM.CSSRule] {
-    display(.flex)
-    alignItems(.center)
-    justifyContent(.center)
-    flexShrink(0)
-
-    switch size {
-    case .medium:
-      width(sizeIconMedium)
-      height(sizeIconMedium)
-    case .small:
-      width(sizeIconSmall)
-      height(sizeIconSmall)
-    case .xSmall:
-      width(sizeIconXSmall)
-      height(sizeIconXSmall)
-    }
-
-    if let iconColor = iconColor {
-      color(iconColor)
-    }
-  }
-
   public func build() -> DOM.Node {
     // Embedded-safe: no String += concatenation or rawValue interpolation.
     let sizeClass: String
@@ -115,6 +91,7 @@ public struct IconView: HTMLContent {
       classParts.append(`class`)
     }
     let iconClasses = stringJoin(classParts, separator: " ")
+    let iconColorValue = iconColor?.value ?? ""
 
     let isHidden: Bool
     if let _ = iconLabel { isHidden = false } else { isHidden = true }
@@ -124,8 +101,30 @@ public struct IconView: HTMLContent {
     }
     .class(iconClasses)
     .ariaHidden(isHidden)
+    .data("size", size.rawValue)
+    .data("color", iconColorValue)
     .style {
-      iconViewCSS(size, iconColor)
+      selector("&") {
+        display(.flex)
+        alignItems(.center)
+        justifyContent(.center)
+        flexShrink(0)
+      }
+      selector("&[data-size='medium']") {
+        width(sizeIconMedium)
+        height(sizeIconMedium)
+      }
+      selector("&[data-size='small']") {
+        width(sizeIconSmall)
+        height(sizeIconSmall)
+      }
+      selector("&[data-size='x-small']") {
+        width(sizeIconXSmall)
+        height(sizeIconXSmall)
+      }
+      if let iconColor {
+        selector("&[data-color='\(iconColorValue)']") { color(iconColor) }
+      }
     }
 
     if let iconLabel = iconLabel {

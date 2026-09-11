@@ -20,14 +20,13 @@
     public func build() -> DOM.Node {
       ButtonView(
         icon: IconView {
-          CloseIconView()
+          CrossIconView()
         },
         weight: .plain,
         size: .large,
         ariaLabel: ariaLabel,
         class: "close-button-view \(`class`)"
-      )
-      .render()
+      ).build()
     }
   }
 #endif

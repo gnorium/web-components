@@ -58,76 +58,6 @@
       self.fullWidth = fullWidth
     }
 
-    @CSSBuilder
-    private func selectViewCSS() -> [CSSOM.CSSRule] {
-      position(.relative)
-      if fullWidth {
-        display(.block)
-        width(perc(100))
-      } else {
-        display(.inlineBlock)
-        minWidth(px(256))
-      }
-    }
-
-    @CSSBuilder
-    private func selectHandleCSS(_ disabled: Bool, _ status: ValidationStatus) -> [CSSOM.CSSRule] {
-      display(.flex)
-      alignItems(.center)
-      justifyContent(.spaceBetween)
-      gap(spacing8)
-      minHeight(minSizeInteractivePointer)
-      padding(spacing8, spacing12)
-      backgroundColor(disabled ? backgroundColorDisabled : backgroundColorBase)
-      border(
-        borderWidthBase, .solid,
-        status == .error
-          ? borderColorRed : (disabled ? borderColorDisabled : borderColorInputBinary))
-      borderRadius(borderRadiusBase)
-      color(disabled ? colorDisabled : colorBase)
-      fontFamily(typographyFontSans)
-      fontSize(fontSizeMedium16)
-      lineHeight(lineHeightSmall22)
-      cursor(disabled ? cursorNotAllowed : cursorBase)
-      transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-      userSelect(.none)
-
-      pseudoClass(.hover, .not(.disabled)) {
-        borderColor(borderColorInputBinaryHover).important()
-      }
-
-      pseudoClass(.focus) {
-        borderColor(borderColorBlueFocus).important()
-        boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
-        outline(px(1), .solid, .transparent).important()
-      }
-    }
-
-    @CSSBuilder
-    private func selectLabelCSS(_ hasSelection: Bool) -> [CSSOM.CSSRule] {
-      display(.flex)
-      alignItems(.center)
-      gap(spacing8)
-      flex(1)
-      overflow(.hidden)
-      textOverflow(.ellipsis)
-      whiteSpace(.nowrap)
-
-      if !hasSelection {
-        color(colorPlaceholder).important()
-      }
-    }
-
-    @CSSBuilder
-    private func selectIconCSS() -> [CSSOM.CSSRule] {
-      display(.inlineFlex)
-      alignItems(.center)
-      justifyContent(.center)
-      flexShrink(0)
-      width(sizeIconSmall)
-      height(sizeIconSmall)
-    }
-
     public func build() -> DOM.Node {
       let selectedItem =
         menuItems.first(where: { $0.value == selectedValue })
@@ -136,22 +66,20 @@
       let displayLabel = selectedItem?.label ?? selectedItem?.value ?? defaultLabel
       let displayIcon = selectedItem?.icon ?? defaultIcon
       let hasSelection = selectedValue != nil
+      let widthClass = fullWidth ? "select-full-width" : "select-compact"
+      let stateClass = "\(widthClass)\(disabled ? " select-disabled" : "")\(status == .error ? " select-error" : "")"
+      let selectClass = `class`.isEmpty ? "select-view \(stateClass)" : "select-view \(stateClass) \(`class`)"
 
       var selectHandle = div {
         if let icon = displayIcon {
           span { icon }
             .class("select-icon")
             .ariaHidden(true)
-            .style {
-              selectIconCSS()
-            }
         }
 
         span { displayLabel }
           .class("select-label")
-          .style {
-            selectLabelCSS(hasSelection)
-          }
+          .data("selected", hasSelection)
 
         AnimatedUpDownChevronView(
           id: "\(id)-chevron",
@@ -177,10 +105,6 @@
         selectHandle = selectHandle.data("value", value)
       }
 
-      selectHandle = selectHandle.style {
-        selectHandleCSS(disabled, status)
-      }
-
       var root = div {
         selectHandle
 
@@ -199,9 +123,75 @@
           .value(selectedValue ?? "")
           .class("select-hidden-input")
       }
-      .class(`class`.isEmpty ? "select-view" : "select-view \(`class`)")
+      .class(selectClass)
       .style {
-        selectViewCSS()
+        selector("&") {
+          position(.relative)
+        }
+        selector("&.select-full-width") {
+          display(.block)
+          width(perc(100))
+        }
+        selector("&.select-compact") {
+          display(.inlineBlock)
+          minWidth(px(256))
+        }
+        descendant(".select-handle") {
+          display(.flex)
+          alignItems(.center)
+          justifyContent(.spaceBetween)
+          gap(spacing8)
+          minHeight(minSizeInteractivePointer)
+          padding(spacing8, spacing12)
+          backgroundColor(backgroundColorBase)
+          border(borderWidthBase, .solid, borderColorInputBinary)
+          borderRadius(borderRadiusBase)
+          color(colorBase)
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeMedium16)
+          lineHeight(lineHeightSmall22)
+          cursor(cursorBase)
+          transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+          userSelect(.none)
+        }
+        selector("&.select-disabled .select-handle") {
+          backgroundColor(backgroundColorDisabled)
+          borderColor(borderColorDisabled)
+          color(colorDisabled)
+          cursor(cursorNotAllowed)
+        }
+        selector("&.select-error .select-handle") {
+          borderColor(borderColorRed)
+        }
+        selector("&:not(.select-disabled) .select-handle:hover") {
+          borderColor(borderColorInputBinaryHover).important()
+        }
+        descendant(".select-handle:focus") {
+          borderColor(borderColorBlueFocus).important()
+          boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
+          outline(px(1), .solid, .transparent).important()
+        }
+        descendant(".select-label") {
+          display(.flex)
+          alignItems(.center)
+          gap(spacing8)
+          flex(1)
+          overflow(.hidden)
+          textOverflow(.ellipsis)
+          whiteSpace(.nowrap)
+        }
+        descendant(".select-label[data-selected='false']") {
+          color(colorPlaceholder).important()
+        }
+        descendant(".select-icon") {
+          display(.inlineFlex)
+          alignItems(.center)
+          justifyContent(.center)
+          flexShrink(0)
+          width(sizeIconSmall)
+          height(sizeIconSmall)
+        }
+        descendant(".select-menu[data-expanded='true']") { display(.flex) }
       }
 
       if submitFormOnChange {
@@ -279,7 +269,6 @@
 
     private func openMenu() {
       menu?.dataset["expanded"] = "true"
-      menu?.style.display(.flex)
       handle?.setAttribute(.ariaExpanded, "true")
       chevron?.morph(toExpanded: true)
       isOpen = true
@@ -287,7 +276,6 @@
 
     private func closeMenu() {
       menu?.dataset["expanded"] = "false"
-      menu?.style.display(.none)
       handle?.setAttribute(.ariaExpanded, "false")
       chevron?.morph(toExpanded: false)
       isOpen = false

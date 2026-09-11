@@ -82,53 +82,6 @@
       self.helpTextContent = helpText()
     }
 
-    @CSSBuilder
-    private func fieldViewCSS() -> [CSSOM.CSSRule] {
-      display(.flex)
-      flexDirection(.column)
-      gap(spacing8)
-
-      if disabled {
-        opacity(opacityMedium)
-      }
-    }
-
-    @CSSBuilder
-    private func fieldInputWrapperCSS() -> [CSSOM.CSSRule] {
-      display(.block)
-    }
-
-    @CSSBuilder
-    private func fieldHelpTextCSS() -> [CSSOM.CSSRule] {
-      display(.block)
-      fontSize(fontSizeSmall14)
-      lineHeight(lineHeightSmall22)
-      color(disabled ? colorDisabled : colorSubtle)
-    }
-
-    @CSSBuilder
-    private func fieldValidationMessageCSS() -> [CSSOM.CSSRule] {
-      display(.flex)
-      alignItems(.flexStart)
-      gap(spacing4)
-      fontSize(fontSizeSmall14)
-      lineHeight(lineHeightSmall22)
-    }
-
-    @CSSBuilder
-    private func fieldValidationIconCSS() -> [CSSOM.CSSRule] {
-      display(.inlineFlex)
-      alignItems(.center)
-      justifyContent(.center)
-      flexShrink(0)
-      fontWeight(fontWeightBold)
-    }
-
-    @CSSBuilder
-    private func fieldValidationTextCSS() -> [CSSOM.CSSRule] {
-      flex(1)
-    }
-
     public func build() -> DOM.Node {
       let hasDescription = !descriptionContent.isEmpty
       let hasHelpText = !helpTextContent.isEmpty
@@ -159,17 +112,12 @@
             inputContent
           }
           .class("field-input-wrapper")
-          .style {
-            fieldInputWrapperCSS()
-          }
 
           if hasHelpText {
             div { helpTextContent }
               .class("field-help-text")
               .id(helpTextID ?? "")
-              .style {
-                fieldHelpTextCSS()
-              }
+              .data("disabled", disabled)
           }
 
           if status == .error, let errorMsg = messages.error {
@@ -177,21 +125,12 @@
               span { "⚠" }
                 .class("field-validation-icon")
                 .ariaHidden(true)
-                .style {
-                  fieldValidationIconCSS()
-                }
 
               span { errorMsg }
                 .class("field-validation-text")
-                .style {
-                  fieldValidationTextCSS()
-                }
             }
             .class("field-validation-message")
-            .style {
-              fieldValidationMessageCSS()
-              color(colorRed)
-            }
+            .data("status", "error")
           }
 
           if status == .warning, let warningMsg = messages.warning {
@@ -199,21 +138,12 @@
               span { "⚠" }
                 .class("field-validation-icon")
                 .ariaHidden(true)
-                .style {
-                  fieldValidationIconCSS()
-                }
 
               span { warningMsg }
                 .class("field-validation-text")
-                .style {
-                  fieldValidationTextCSS()
-                }
             }
             .class("field-validation-message")
-            .style {
-              fieldValidationMessageCSS()
-              color(colorOrange)
-            }
+            .data("status", "warning")
           }
 
           if status == .success, let successMsg = messages.success {
@@ -221,31 +151,54 @@
               span { "✓" }
                 .class("field-validation-icon")
                 .ariaHidden(true)
-                .style {
-                  fieldValidationIconCSS()
-                }
 
               span { successMsg }
                 .class("field-validation-text")
-                .style {
-                  fieldValidationTextCSS()
-                }
             }
             .class("field-validation-message")
-            .style {
-              fieldValidationMessageCSS()
-              color(colorGreen)
-            }
+            .data("status", "success")
           }
         }
         .class(`class`.isEmpty ? "field-view" : "field-view \(`class`)")
         .disabled(disabled)
+        .data("disabled", disabled)
         .style {
-          margin(0)
-          padding(0)
-          border(.none)
-          minWidth(0)
-          fieldViewCSS()
+          selector("&") {
+            display(.flex)
+            flexDirection(.column)
+            gap(spacing8)
+            margin(0)
+            padding(0)
+            border(.none)
+            minWidth(0)
+          }
+          selector("&[data-disabled='true']") { opacity(opacityMedium) }
+          descendant(".field-input-wrapper") { display(.block) }
+          descendant(".field-help-text") {
+            display(.block)
+            fontSize(fontSizeSmall14)
+            lineHeight(lineHeightSmall22)
+            color(colorSubtle)
+          }
+          selector("& .field-help-text[data-disabled='true']") { color(colorDisabled) }
+          descendant(".field-validation-message") {
+            display(.flex)
+            alignItems(.flexStart)
+            gap(spacing4)
+            fontSize(fontSizeSmall14)
+            lineHeight(lineHeightSmall22)
+          }
+          selector("& .field-validation-message[data-status='error']") { color(colorRed) }
+          selector("& .field-validation-message[data-status='warning']") { color(colorOrange) }
+          selector("& .field-validation-message[data-status='success']") { color(colorGreen) }
+          descendant(".field-validation-icon") {
+            display(.inlineFlex)
+            alignItems(.center)
+            justifyContent(.center)
+            flexShrink(0)
+            fontWeight(fontWeightBold)
+          }
+          descendant(".field-validation-text") { flex(1) }
         }
 
       } else {
@@ -272,17 +225,12 @@
             inputContent
           }
           .class("field-input-wrapper")
-          .style {
-            fieldInputWrapperCSS()
-          }
 
           if hasHelpText {
             div { helpTextContent }
               .class("field-help-text")
               .id(helpTextID ?? "")
-              .style {
-                fieldHelpTextCSS()
-              }
+              .data("disabled", disabled)
           }
 
           if status == .error, let errorMsg = messages.error {
@@ -290,21 +238,12 @@
               span { "⚠" }
                 .class("field-validation-icon")
                 .ariaHidden(true)
-                .style {
-                  fieldValidationIconCSS()
-                }
 
               span { errorMsg }
                 .class("field-validation-text")
-                .style {
-                  fieldValidationTextCSS()
-                }
             }
             .class("field-validation-message")
-            .style {
-              fieldValidationMessageCSS()
-              color(colorRed)
-            }
+            .data("status", "error")
           }
 
           if status == .warning, let warningMsg = messages.warning {
@@ -312,21 +251,12 @@
               span { "⚠" }
                 .class("field-validation-icon")
                 .ariaHidden(true)
-                .style {
-                  fieldValidationIconCSS()
-                }
 
               span { warningMsg }
                 .class("field-validation-text")
-                .style {
-                  fieldValidationTextCSS()
-                }
             }
             .class("field-validation-message")
-            .style {
-              fieldValidationMessageCSS()
-              color(colorOrange)
-            }
+            .data("status", "warning")
           }
 
           if status == .success, let successMsg = messages.success {
@@ -334,26 +264,49 @@
               span { "✓" }
                 .class("field-validation-icon")
                 .ariaHidden(true)
-                .style {
-                  fieldValidationIconCSS()
-                }
 
               span { successMsg }
                 .class("field-validation-text")
-                .style {
-                  fieldValidationTextCSS()
-                }
             }
             .class("field-validation-message")
-            .style {
-              fieldValidationMessageCSS()
-              color(colorGreen)
-            }
+            .data("status", "success")
           }
         }
         .class(`class`.isEmpty ? "field-view" : "field-view \(`class`)")
+        .data("disabled", disabled)
         .style {
-          fieldViewCSS()
+          selector("&") {
+            display(.flex)
+            flexDirection(.column)
+            gap(spacing8)
+          }
+          selector("&[data-disabled='true']") { opacity(opacityMedium) }
+          descendant(".field-input-wrapper") { display(.block) }
+          descendant(".field-help-text") {
+            display(.block)
+            fontSize(fontSizeSmall14)
+            lineHeight(lineHeightSmall22)
+            color(colorSubtle)
+          }
+          selector("& .field-help-text[data-disabled='true']") { color(colorDisabled) }
+          descendant(".field-validation-message") {
+            display(.flex)
+            alignItems(.flexStart)
+            gap(spacing4)
+            fontSize(fontSizeSmall14)
+            lineHeight(lineHeightSmall22)
+          }
+          selector("& .field-validation-message[data-status='error']") { color(colorRed) }
+          selector("& .field-validation-message[data-status='warning']") { color(colorOrange) }
+          selector("& .field-validation-message[data-status='success']") { color(colorGreen) }
+          descendant(".field-validation-icon") {
+            display(.inlineFlex)
+            alignItems(.center)
+            justifyContent(.center)
+            flexShrink(0)
+            fontWeight(fontWeightBold)
+          }
+          descendant(".field-validation-text") { flex(1) }
         }
 
       }

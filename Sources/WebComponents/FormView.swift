@@ -1,6 +1,5 @@
 #if SERVER
   import CSSBuilder
-  import CSSOMBuilder
   import DesignTokens
   import DOMBuilder
   import Foundation
@@ -89,13 +88,7 @@
       div {
         // Header
         h1 { title }
-          .style {
-            fontFamily(typographyFontSans)
-            fontSize(px(32))
-            fontWeight(.normal)
-            color(colorBase)
-            margin(0)
-          }
+          .class("form-view-title")
 
         // Form
         form {
@@ -107,66 +100,113 @@
           div {
             button { submitLabel }
               .type(.submit)
-              .style {
-                padding(spacing12, spacing24)
-                fontFamily(typographyFontSans)
-                fontSize(fontSizeMedium16)
-                fontWeight(500)
-                color(colorInverted)
-                backgroundColor(backgroundColorBlue)
-                border(.none)
-                borderRadius(borderRadiusBase)
-                cursor(.pointer)
-                transition(.backgroundColor, transitionDurationBase, transitionTimingFunctionSystem)
-
-                pseudoClass(.hover) {
-                  backgroundColor(backgroundColorBlueHover)
-                }
-              }
+              .class("form-view-submit")
 
             if let url = cancelUrl {
               a { cancelLabel }
                 .href(url)
-                .style {
-                  padding(spacing12, spacing24)
-                  fontFamily(typographyFontSans)
-                  fontSize(fontSizeMedium16)
-                  color(colorBase)
-                  backgroundColor(backgroundColorInteractive)
-                  border(borderWidthBase, borderStyleBase, borderColorBase)
-                  borderRadius(borderRadiusBase)
-                  textDecoration(.none)
-                  transition(
-                    .backgroundColor, transitionDurationBase, transitionTimingFunctionSystem)
-
-                  pseudoClass(.hover) {
-                    backgroundColor(backgroundColorInteractiveSubtleHover)
-                  }
-                }
+                .class("form-view-cancel")
             }
           }
           .class("form-actions")
-          .style {
-            display(.flex)
-            gap(spacing16)
-          }
         }
         .action(formAction)
         .method(.post)
-        .style {
+        .class("form-view-form")
+      }
+      .class("form-view")
+      .style {
+        selector("&") {
+          maxWidth(px(800))
+          margin(0, .auto)
+          padding(spacing48, spacing24)
+          display(.flex)
+          flexDirection(.column)
+          gap(spacing32)
+        }
+        descendant(".form-view-title") {
+          fontFamily(typographyFontSans)
+          fontSize(px(32))
+          fontWeight(.normal)
+          color(colorBase)
+          margin(0)
+        }
+        descendant(".form-view-form") {
           display(.flex)
           flexDirection(.column)
           gap(spacing24)
         }
-      }
-      .class("form-view")
-      .style {
-        maxWidth(px(800))
-        margin(0, .auto)
-        padding(spacing48, spacing24)
-        display(.flex)
-        flexDirection(.column)
-        gap(spacing32)
+        descendant(".form-actions") {
+          display(.flex)
+          gap(spacing16)
+        }
+        descendant(".form-view-submit") {
+          padding(spacing12, spacing24)
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeMedium16)
+          fontWeight(500)
+          color(colorInverted)
+          backgroundColor(backgroundColorBlue)
+          border(.none)
+          borderRadius(borderRadiusBase)
+          cursor(.pointer)
+          transition(.backgroundColor, transitionDurationBase, transitionTimingFunctionSystem)
+        }
+        descendant(".form-view-submit:hover") { backgroundColor(backgroundColorBlueHover) }
+        descendant(".form-view-cancel") {
+          padding(spacing12, spacing24)
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeMedium16)
+          color(colorBase)
+          backgroundColor(backgroundColorInteractive)
+          border(borderWidthBase, borderStyleBase, borderColorBase)
+          borderRadius(borderRadiusBase)
+          textDecoration(.none)
+          transition(.backgroundColor, transitionDurationBase, transitionTimingFunctionSystem)
+        }
+        descendant(".form-view-cancel:hover") { backgroundColor(backgroundColorInteractiveSubtleHover) }
+        descendant(".form-field") {
+          display(.flex)
+          flexDirection(.column)
+          gap(spacing8)
+        }
+        descendant(".form-view-checkbox-label") {
+          display(.flex)
+          alignItems(.center)
+          gap(spacing8)
+          fontSize(fontSizeMedium16)
+          color(colorBase)
+          cursor(.pointer)
+        }
+        descendant(".form-view-label") {
+          fontSize(fontSizeSmall14)
+          fontWeight(500)
+          color(colorBase)
+        }
+        descendant(".form-view-help-text") {
+          fontSize(fontSizeSmall14)
+          color(colorSubtle)
+        }
+        selector(".form-field input:not([type='checkbox'])", ".form-field textarea", ".form-field select") {
+          width(perc(100))
+          padding(spacing12, spacing16)
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeMedium16)
+          color(colorBase)
+          backgroundColor(backgroundColorBase)
+          border(borderWidthBase, borderStyleBase, borderColorBase)
+          borderRadius(borderRadiusBase)
+        }
+        selector(".form-field input:not([type='checkbox']):focus", ".form-field textarea:focus", ".form-field select:focus") {
+          borderColor(borderColorBlueFocus)
+          outline(.none)
+          boxShadow(.inset, 0, 0, 0, px(1), borderColorBlueFocus)
+        }
+        selector(".form-field input:not([type='checkbox']):disabled", ".form-field textarea:disabled", ".form-field select:disabled") {
+          backgroundColor(backgroundColorDisabledSubtle)
+          color(colorDisabled)
+          cursor(.notAllowed)
+        }
       }
     }
 
@@ -188,55 +228,28 @@
 
             span { field.label }
           }
-          .style {
-            display(.flex)
-            alignItems(.center)
-            gap(spacing8)
-            fontSize(fontSizeMedium16)
-            color(colorBase)
-            cursor(.pointer)
-          }
+          .class("form-view-checkbox-label")
 
           if let help = field.helpText {
             p { help }
-              .style {
-                fontSize(fontSizeSmall14)
-                color(colorSubtle)
-              }
+              .class("form-view-help-text")
           }
         }
         .class("form-field")
-        .style {
-          display(.flex)
-          flexDirection(.column)
-          gap(spacing8)
-        }
       } else {
         div {
           label { field.label + (field.required ? "" : " (optional)") }
             .for(field.name)
-            .style {
-              fontSize(fontSizeSmall14)
-              fontWeight(500)
-              color(colorBase)
-            }
+            .class("form-view-label")
 
           fieldInput(field)
 
           if let help = field.helpText {
             p { help }
-              .style {
-                fontSize(fontSizeSmall14)
-                color(colorSubtle)
-              }
+              .class("form-view-help-text")
           }
         }
         .class("form-field")
-        .style {
-          display(.flex)
-          flexDirection(.column)
-          gap(spacing8)
-        }
       }
     }
 
@@ -251,7 +264,6 @@
           .disabled(field.readOnly)
           .rows(field.rows)
           .placeholder(field.placeholder ?? "")
-          .style { inputStyle() }
 
       case .select:
         select {
@@ -265,7 +277,6 @@
         .id(field.name)
         .required(field.required)
         .disabled(field.readOnly)
-        .style { inputStyle() }
 
       case .email:
         input()
@@ -276,7 +287,6 @@
           .required(field.required)
           .disabled(field.readOnly)
           .placeholder(field.placeholder ?? "")
-          .style { inputStyle() }
 
       case .url:
         input()
@@ -287,7 +297,6 @@
           .required(field.required)
           .disabled(field.readOnly)
           .placeholder(field.placeholder ?? "")
-          .style { inputStyle() }
 
       case .password:
         input()
@@ -297,7 +306,6 @@
           .value(field.value)
           .required(field.required)
           .placeholder(field.placeholder ?? "")
-          .style { inputStyle() }
 
       case .number:
         input()
@@ -308,7 +316,6 @@
           .required(field.required)
           .disabled(field.readOnly)
           .placeholder(field.placeholder ?? "")
-          .style { inputStyle() }
 
       case .date:
         input()
@@ -318,7 +325,6 @@
           .value(field.value)
           .required(field.required)
           .disabled(field.readOnly)
-          .style { inputStyle() }
 
       case .datetime:
         input()
@@ -328,7 +334,6 @@
           .value(field.value)
           .required(field.required)
           .disabled(field.readOnly)
-          .style { inputStyle() }
 
       default:
         input()
@@ -339,31 +344,6 @@
           .required(field.required)
           .disabled(field.readOnly)
           .placeholder(field.placeholder ?? "")
-          .style { inputStyle() }
-      }
-    }
-
-    @CSSBuilder
-    private func inputStyle() -> [CSSOM.CSSRule] {
-      width(perc(100))
-      padding(spacing12, spacing16)
-      fontFamily(typographyFontSans)
-      fontSize(fontSizeMedium16)
-      color(colorBase)
-      backgroundColor(backgroundColorBase)
-      border(borderWidthBase, borderStyleBase, borderColorBase)
-      borderRadius(borderRadiusBase)
-
-      pseudoClass(.focus) {
-        borderColor(borderColorBlueFocus)
-        outline(.none)
-        boxShadow(.inset, 0, 0, 0, px(1), borderColorBlueFocus)
-      }
-
-      pseudoClass(.disabled) {
-        backgroundColor(backgroundColorDisabledSubtle)
-        color(colorDisabled)
-        cursor(.notAllowed)
       }
     }
   }

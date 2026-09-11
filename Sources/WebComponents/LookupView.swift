@@ -58,13 +58,6 @@
       self.`class` = `class`
     }
 
-    @CSSBuilder
-    private func lookupViewCSS() -> [CSSOM.CSSRule] {
-      position(.relative)
-      display(.inlineBlock)
-      minWidth(px(256))
-    }
-
     public func build() -> DOM.Node {
       return div {
         TextInputView(
@@ -93,7 +86,14 @@
       }
       .class(`class`.isEmpty ? "lookup-view" : "lookup-view \(`class`)")
       .style {
-        lookupViewCSS()
+        selector("&") {
+          position(.relative)
+          display(.inlineBlock)
+          minWidth(px(256))
+        }
+        descendant(".lookup-menu[data-expanded='true']") {
+          display(.block)
+        }
       }
     }
   }
@@ -175,12 +175,12 @@
     }
 
     private func openMenu() {
-      menu?.style.display(.block)
+      menu?.setAttribute(data("expanded"), true)
       isOpen = true
     }
 
     private func closeMenu() {
-      menu?.style.display(.none)
+      menu?.setAttribute(data("expanded"), false)
       isOpen = false
       currentFocusIndex = -1
     }

@@ -17,6 +17,17 @@ let package = Package(
     .package(url: "https://github.com/gnorium/embedded-swift-utilities", branch: "main"),
   ],
   targets: [
+    .executableTarget(
+      name: "StyleSheetEmitter",
+      dependencies: [
+        "WebComponents",
+        .product(name: "CSSBuilder", package: "web-builders"),
+      ],
+      path: "Sources/Executables/StyleSheetEmitter",
+      swiftSettings: [
+        .define("SERVER", .when(platforms: [.macOS, .linux, .windows]))
+      ]
+    ),
     .target(
       name: "WebComponents",
       dependencies: [

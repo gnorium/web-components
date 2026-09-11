@@ -105,153 +105,6 @@
       self.footerContent = footer()
     }
 
-    @CSSBuilder
-    private func popoverViewCSS(_ open: Bool) -> [CSSOM.CSSRule] {
-      position(.absolute)
-      backgroundColor(backgroundColorBase)
-      border(borderWidthBase, .solid, borderColorSubtle)
-      borderRadius(borderRadiusBase)
-      boxShadow(boxShadowOutsetMediumAround)
-      zIndex(zIndexPopover)
-      minWidth(px(256))
-      maxWidth(px(320))
-      padding(0)
-
-      if !open {
-        display(.none)
-      }
-    }
-
-    @CSSBuilder
-    private func popoverArrowCSS(_ placement: Placement) -> [CSSOM.CSSRule] {
-      position(.absolute)
-      width(px(12))
-      height(px(12))
-      backgroundColor(backgroundColorBase)
-      border(borderWidthBase, .solid, borderColorSubtle)
-      transform(rotate(deg(45)))
-
-      switch placement {
-      case .top, .topStart, .topEnd:
-        bottom(px(-7))
-        borderTop(.none)
-        borderLeft(.none)
-      case .bottom, .bottomStart, .bottomEnd:
-        top(px(-7))
-        borderBottom(.none)
-        borderRight(.none)
-      case .left, .leftStart, .leftEnd:
-        right(px(-7))
-        borderLeft(.none)
-        borderBottom(.none)
-      case .right, .rightStart, .rightEnd:
-        left(px(-7))
-        borderTop(.none)
-        borderRight(.none)
-      }
-
-      // Horizontal positioning for arrow
-      switch placement {
-      case .top, .bottom:
-        left(perc(50))
-        marginLeft(px(-6))
-      case .topStart, .bottomStart:
-        left(spacing16)
-      case .topEnd, .bottomEnd:
-        right(spacing16)
-      case .left, .right:
-        top(perc(50))
-        marginTop(px(-6))
-      case .leftStart, .rightStart:
-        top(spacing16)
-      case .leftEnd, .rightEnd:
-        bottom(spacing16)
-      }
-    }
-
-    @CSSBuilder
-    private func popoverHeaderCSS(_ hasCustomHeader: Bool) -> [CSSOM.CSSRule] {
-      display(.flex)
-      alignItems(.center)
-      gap(spacing8)
-      padding(spacing12)
-      borderBottom(borderWidthBase, .solid, borderColorSubtle)
-
-      if hasCustomHeader {
-        justifyContent(.spaceBetween)
-      }
-    }
-
-    @CSSBuilder
-    private func popoverHeaderContentCSS() -> [CSSOM.CSSRule] {
-      display(.flex)
-      alignItems(.center)
-      gap(spacing8)
-      flex(1)
-      minWidth(0)
-    }
-
-    @CSSBuilder
-    private func popoverIconCSS() -> [CSSOM.CSSRule] {
-      display(.inlineFlex)
-      alignItems(.center)
-      justifyContent(.center)
-      width(sizeIconMedium)
-      height(sizeIconMedium)
-      flexShrink(0)
-      color(colorSubtle)
-      fontSize(fontSizeLarge18)
-    }
-
-    @CSSBuilder
-    private func popoverTitleCSS() -> [CSSOM.CSSRule] {
-      fontFamily(typographyFontSans)
-      fontSize(fontSizeMedium16)
-      fontWeight(fontWeightBold)
-      lineHeight(lineHeightSmall22)
-      color(colorBase)
-      margin(0)
-      flex(1)
-      minWidth(0)
-    }
-
-    @CSSBuilder
-    private func popoverBodyCSS() -> [CSSOM.CSSRule] {
-      padding(spacing12)
-      fontFamily(typographyFontSans)
-      fontSize(fontSizeMedium16)
-      lineHeight(lineHeightMedium26)
-      color(colorBase)
-    }
-
-    @CSSBuilder
-    private func popoverFooterCSS(_ hasActions: Bool, _ stackedActions: Bool) -> [CSSOM.CSSRule] {
-      if hasActions {
-        display(.flex)
-        gap(spacing8)
-        padding(spacing12)
-        borderTop(borderWidthBase, .solid, borderColorSubtle)
-
-        if stackedActions {
-          flexDirection(.column)
-        } else {
-          flexDirection(.row)
-          justifyContent(.flexStart)
-        }
-      } else {
-        padding(spacing12)
-        borderTop(borderWidthBase, .solid, borderColorSubtle)
-      }
-    }
-
-    @CSSBuilder
-    private func popoverPrimaryButtonCSS(_ stackedActions: Bool) -> [CSSOM.CSSRule] {
-      if stackedActions {
-        // Primary button on top in stacked layout
-        order(-1)
-      }
-    }
-
     public func build() -> DOM.Node {
       let hasCustomHeader = !headerContent.isEmpty
       let hasIcon = icon != nil
@@ -263,9 +116,6 @@
         // Arrow
         div {}
           .class("popover-arrow")
-          .style {
-            popoverArrowCSS(placement)
-          }
 
         // Header
         if hasCustomHeader || hasIcon || hasTitle || useCloseButton {
@@ -278,23 +128,14 @@
                   span { iconValue }
                     .class("popover-icon")
                     .ariaHidden(true)
-                    .style {
-                      popoverIconCSS()
-                    }
                 }
 
                 if hasTitle {
                   h2 { title }
                     .class("popover-title")
-                    .style {
-                      popoverTitleCSS()
-                    }
                 }
               }
               .class("popover-header-content")
-              .style {
-                popoverHeaderContentCSS()
-              }
             }
 
             if useCloseButton {
@@ -308,9 +149,6 @@
             }
           }
           .class("popover-header")
-          .style {
-            popoverHeaderCSS(hasCustomHeader)
-          }
         }
 
         // Body
@@ -318,9 +156,6 @@
           bodyContent
         }
         .class("popover-body")
-        .style {
-          popoverBodyCSS()
-        }
 
         // Footer
         if hasActions || hasFooterContent {
@@ -352,9 +187,6 @@
             }
           }
           .class("popover-footer")
-          .style {
-            popoverFooterCSS(hasActions, stackedActions)
-          }
         }
       }
       .class(`class`.isEmpty ? "popover-view" : "popover-view \(`class`)")
@@ -365,7 +197,137 @@
       .role(.dialog)
       .ariaModal(false)
       .style {
-        popoverViewCSS(open)
+        selector("&") {
+          position(.absolute)
+          backgroundColor(backgroundColorBase)
+          border(borderWidthBase, .solid, borderColorSubtle)
+          borderRadius(borderRadiusBase)
+          boxShadow(boxShadowOutsetMediumAround)
+          zIndex(zIndexPopover)
+          minWidth(px(256))
+          maxWidth(px(320))
+          padding(0)
+
+          if !open {
+            display(.none)
+          }
+        }
+
+        descendant(".popover-arrow") {
+          position(.absolute)
+          width(px(12))
+          height(px(12))
+          backgroundColor(backgroundColorBase)
+          border(borderWidthBase, .solid, borderColorSubtle)
+          transform(rotate(deg(45)))
+
+          switch placement {
+          case .top, .topStart, .topEnd:
+            bottom(px(-7))
+            borderTop(.none)
+            borderLeft(.none)
+          case .bottom, .bottomStart, .bottomEnd:
+            top(px(-7))
+            borderBottom(.none)
+            borderRight(.none)
+          case .left, .leftStart, .leftEnd:
+            right(px(-7))
+            borderLeft(.none)
+            borderBottom(.none)
+          case .right, .rightStart, .rightEnd:
+            left(px(-7))
+            borderTop(.none)
+            borderRight(.none)
+          }
+
+          switch placement {
+          case .top, .bottom:
+            left(perc(50))
+            marginLeft(px(-6))
+          case .topStart, .bottomStart:
+            left(spacing16)
+          case .topEnd, .bottomEnd:
+            right(spacing16)
+          case .left, .right:
+            top(perc(50))
+            marginTop(px(-6))
+          case .leftStart, .rightStart:
+            top(spacing16)
+          case .leftEnd, .rightEnd:
+            bottom(spacing16)
+          }
+        }
+
+        descendant(".popover-header") {
+          display(.flex)
+          alignItems(.center)
+          gap(spacing8)
+          padding(spacing12)
+          borderBottom(borderWidthBase, .solid, borderColorSubtle)
+
+          if hasCustomHeader {
+            justifyContent(.spaceBetween)
+          }
+        }
+
+        descendant(".popover-header-content") {
+          display(.flex)
+          alignItems(.center)
+          gap(spacing8)
+          flex(1)
+          minWidth(0)
+        }
+
+        descendant(".popover-icon") {
+          display(.inlineFlex)
+          alignItems(.center)
+          justifyContent(.center)
+          width(sizeIconMedium)
+          height(sizeIconMedium)
+          flexShrink(0)
+          color(colorSubtle)
+          fontSize(fontSizeLarge18)
+        }
+
+        descendant(".popover-title") {
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeMedium16)
+          fontWeight(fontWeightBold)
+          lineHeight(lineHeightSmall22)
+          color(colorBase)
+          margin(0)
+          flex(1)
+          minWidth(0)
+        }
+
+        descendant(".popover-body") {
+          padding(spacing12)
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeMedium16)
+          lineHeight(lineHeightMedium26)
+          color(colorBase)
+        }
+
+        descendant(".popover-footer") {
+          if hasActions {
+            display(.flex)
+            gap(spacing8)
+            padding(spacing12)
+            borderTop(borderWidthBase, .solid, borderColorSubtle)
+
+            if stackedActions {
+              flexDirection(.column)
+            } else {
+              flexDirection(.row)
+              justifyContent(.flexStart)
+            }
+          } else {
+            padding(spacing12)
+            borderTop(borderWidthBase, .solid, borderColorSubtle)
+          }
+        }
+
+        selector("&[data-stacked-actions='true'] .popover-primary-button") { order(-1) }
       }
     }
   }
@@ -396,15 +358,6 @@
       // Get initial open state
       if let openAttr = popover.getAttribute("data-open") {
         isOpen = stringEquals(openAttr, "true")
-      }
-
-      // Apply stacked actions styling
-      if let stackedAttr = popover.getAttribute("data-stacked-actions"),
-        stringEquals(stackedAttr, "true")
-      {
-        if let primBtn = primaryButton {
-          primBtn.style.order(-1)
-        }
       }
 
       bindEvents()

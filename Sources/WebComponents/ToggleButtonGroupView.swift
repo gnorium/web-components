@@ -42,65 +42,60 @@
       self.`class` = `class`
     }
 
-    @CSSBuilder
-    private func toggleButtonGroupViewCSS() -> [CSSOM.CSSRule] {
-      display(.inlineFlex)
-      flexWrap(.wrap)
-      gap(0)
-
-      // Rounded corners for first/last buttons
-      selector(".toggle-button-view:first-child") {
-        borderStartStartRadius(borderRadiusBase).important()
-        borderEndStartRadius(borderRadiusBase).important()
-      }
-
-      selector(".toggle-button-view:last-child") {
-        borderStartEndRadius(borderRadiusBase).important()
-        borderEndEndRadius(borderRadiusBase).important()
-      }
-
-      // Collapse borders between buttons
-      selector(".toggle-button-view:not(:first-child)") {
-        marginInlineStart(calc(-borderWidthBase)).important()
-      }
-
-      // Bring focused/hovered button to front
-      selector(".toggle-button-view:hover") {
-        zIndex(1).important()
-      }
-
-      selector(".toggle-button-view:focus") {
-        zIndex(2).important()
-      }
-    }
-
     public func build() -> DOM.Node {
-      var container = div {
-        for buttonItem in buttons {
-          let isSelected = selectedValues.contains(buttonItem.value)
-          let isDisabled = disabled || buttonItem.disabled
-
-          ToggleButtonView(
-            label: buttonItem.label,
-            icon: buttonItem.icon.map { iconStr in span(content: { iconStr }) },
-            modelValue: isSelected,
-            weight: .subtle,
-            disabled: isDisabled,
-            iconOnly: false,
-            class: "toggle-button-group-item"
-          )
+      let container = div {
+        for button in buttons {
+          let isSelected = selectedValues.contains(button.value)
+          if let iconStr = button.icon {
+            div {
+              ToggleButtonView(
+                label: button.label,
+                icon: span { iconStr },
+                modelValue: isSelected,
+                disabled: disabled || button.disabled
+              )
+            }
+            .data("value", button.value)
+          } else {
+            div {
+              ToggleButtonView(
+                label: button.label,
+                icon: nil as HTML.HTMLSpanElement?,
+                modelValue: isSelected,
+                disabled: disabled || button.disabled
+              )
+            }
+            .data("value", button.value)
+          }
         }
       }
       .class(`class`.isEmpty ? "toggle-button-group-view" : "toggle-button-group-view \(`class`)")
-      .role(.group)
-      .ariaLabel("Toggle button group")
-
-      if isMultiSelect {
-        container = container.data("multi-select", "true")
-      }
+      .data("multi-select", isMultiSelect)
+      .data("disabled", disabled)
 
       return container.style {
-        toggleButtonGroupViewCSS()
+        selector("&") {
+          display(.inlineFlex)
+          flexWrap(.wrap)
+          gap(0)
+        }
+        descendant(".toggle-button-view:first-child") {
+          borderStartStartRadius(borderRadiusBase).important()
+          borderEndStartRadius(borderRadiusBase).important()
+        }
+        descendant(".toggle-button-view:last-child") {
+          borderStartEndRadius(borderRadiusBase).important()
+          borderEndEndRadius(borderRadiusBase).important()
+        }
+        descendant(".toggle-button-view:not(:first-child)") {
+          marginInlineStart(calc(-borderWidthBase)).important()
+        }
+        descendant(".toggle-button-view:hover") {
+          zIndex(1).important()
+        }
+        descendant(".toggle-button-view:focus") {
+          zIndex(2).important()
+        }
       }
     }
   }

@@ -33,7 +33,7 @@
       .ariaExpanded(false)
       .ariaControls("navbar-ellipsis-menu")
       .style {
-        position(.relative)
+        selector("&") { position(.relative) }
       }
     }
   }

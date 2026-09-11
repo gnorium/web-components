@@ -11,7 +11,6 @@
     let inSidebar: Bool
     let openDialog: Bool
     let `class`: String
-    let style: [CSSOM.CSSRule]
     let placeholder: String
     let ariaLabel: String
     let searchField: String
@@ -28,8 +27,7 @@
       searchField: String = "q",
       searchEndpoint: String = "/api/search",
       resultUrlBase: String = "/results",
-      value: String = "",
-      @CSSBuilder style: () -> [CSSOM.CSSRule] = { [] }
+      value: String = ""
     ) {
       self.inSidebar = inSidebar
       self.openDialog = openDialog
@@ -40,21 +38,34 @@
       self.searchEndpoint = searchEndpoint
       self.resultUrlBase = resultUrlBase
       self.value = value
-      self.style = style()
     }
 
-    public func style(@CSSBuilder _ content: () -> [CSSOM.CSSRule]) -> SearchBarView {
-      return SearchBarView(
-        inSidebar: self.inSidebar,
-        openDialog: self.openDialog,
-        class: self.class,
-        placeholder: self.placeholder,
-        ariaLabel: self.ariaLabel,
-        searchField: self.searchField,
-        searchEndpoint: self.searchEndpoint,
-        resultUrlBase: self.resultUrlBase,
-        value: self.value,
-        style: { self.style + content() }
+    /// Binary compatibility for already-compiled callers during incremental builds.
+    /// New callers use the initializer above; placement-specific rules belong to
+    /// explicit root classes such as `.home`, not an unscoped rule builder.
+    @available(*, deprecated, message: "Use an explicit SearchBarView root class instead.")
+    public init(
+      inSidebar: Bool = false,
+      openDialog: Bool = false,
+      class: String = "",
+      placeholder: String = "Search",
+      ariaLabel: String = "Search",
+      searchField: String = "q",
+      searchEndpoint: String = "/api/search",
+      resultUrlBase: String = "/results",
+      value: String = "",
+      @CSSBuilder style: () -> [CSSOM.CSSRule]
+    ) {
+      self.init(
+        inSidebar: inSidebar,
+        openDialog: openDialog,
+        class: `class`,
+        placeholder: placeholder,
+        ariaLabel: ariaLabel,
+        searchField: searchField,
+        searchEndpoint: searchEndpoint,
+        resultUrlBase: resultUrlBase,
+        value: value
       )
     }
 
@@ -76,22 +87,23 @@
           .data("result-url-base", resultUrlBase)
           .readonly(openDialog)
           .style {
-            border(px(1), .solid, borderColorBase)
-            color(colorBase)
-            fontFamily(typographyFontSans)
-            borderRadius(borderRadiusBase)
-            padding(px(0), calc(rem(1) + px(32)), px(0), rem(1))
-            width(perc(100))
-            maxWidth(perc(100))
-            height(px(48))
-            fontWeight(fontWeightNormal)
-            transition(.all, s(0.2), .easeInOut)
-            fontSize(fontSizeSmall14)
-            boxSizing(.borderBox)
-            backgroundColor(backgroundColorBase)
-
-            if openDialog {
-              cursor(.pointer)
+            selector("&") {
+              border(px(1), .solid, borderColorBase)
+              color(colorBase)
+              fontFamily(typographyFontSans)
+              borderRadius(borderRadiusBase)
+              padding(px(0), calc(spacing10 + px(32)), px(0), spacing10)
+              width(perc(100))
+              maxWidth(perc(100))
+              height(px(44))
+              fontWeight(fontWeightNormal)
+              transition(.all, s(0.2), .easeInOut)
+              fontSize(fontSizeSmall14)
+              boxSizing(.borderBox)
+              backgroundColor(backgroundColorBase)
+              if openDialog {
+                cursor(.pointer)
+              }
             }
 
             pseudoClass(.active) {
@@ -108,11 +120,6 @@
             pseudoElement(.placeholder) {
               color(colorBase).important()
             }
-
-            media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
-              width(px(32))
-              padding(0)
-            }
           }
 
         // Button
@@ -124,22 +131,24 @@
         .ariaLabel("Search")
         .data("search-button", true)
         .style {
-          position(.absolute)
-          insetInlineEnd(0)
-          top(perc(50))
-          transform(translateY(perc(-50)))
-          background(.transparent)
-          border(.none)
-          color(colorBase)
-          marginInlineEnd(rem(1))
-          paddingInlineStart(0)
-          display(.flex)
-          alignItems(.center)
-          justifyContent(.center)
-          width(px(24))
-          height(px(24))
-          cursor(.pointer)
-          transition(.all, s(0.2), .easeInOut)
+          selector("&") {
+            position(.absolute)
+            insetInlineEnd(0)
+            top(perc(50))
+            transform(translateY(perc(-50)))
+            background(.transparent)
+            border(.none)
+            color(colorBase)
+            marginInlineEnd(spacing10)
+            paddingInlineStart(0)
+            display(.flex)
+            alignItems(.center)
+            justifyContent(.center)
+            width(px(24))
+            height(px(24))
+            cursor(.pointer)
+            transition(.all, s(0.2), .easeInOut)
+          }
 
           pseudoClass(.hover) {
             transform(translateY(perc(-50)), scale(1.02))
@@ -173,26 +182,94 @@
           .class("search-bar-suggestions")
           .role(.listbox)
           .style {
-            listStyle(.none)
-            margin(0)
-            padding(spacing8, 0)
+            selector("&") {
+              listStyle(.none)
+              margin(0)
+              padding(spacing8, 0)
+            }
           }
         }
         .class("search-bar-dropdown")
         .data("search-dropdown", true)
+        .data("open", false)
       }
       .class(buildClass())
       .data("search-container", true)
       .style {
-        display(.flex)
-        alignItems(.center)
-        position(.relative)
-        width(perc(100))
-        height(px(48))
-        flex(1)
-        boxSizing(.borderBox)
-
-        style
+        selector("&") {
+          display(.flex)
+          alignItems(.center)
+          position(.relative)
+          width(perc(100))
+          maxWidth(perc(100))
+          height(px(44))
+          flex(1)
+          boxSizing(.borderBox)
+        }
+        selector("&.home") {
+          width(px(512))
+          maxWidth(perc(100))
+          borderRadius(0)
+        }
+        // Sidebar: base radius, same 14px type + spacing10 padding as main
+        selector("&.in-sidebar .search-bar-input") {
+          borderRadius(borderRadiusBase)
+          height(px(44))
+          fontSize(fontSizeSmall14)
+          padding(px(0), calc(spacing10 + px(28)), px(0), spacing10)
+        }
+        selector("&.in-sidebar .search-bar-button") {
+          marginInlineEnd(spacing10)
+        }
+        descendant(".search-bar-dropdown") {
+          display(.none)
+        }
+        descendant(".search-bar-dropdown[data-open='true']") {
+          display(.block)
+        }
+        descendant(".search-bar-suggestion-link") {
+          display(.flex)
+          alignItems(.center)
+          justifyContent(.spaceBetween)
+          gap(px(12))
+          textDecoration(.none)
+          color(.inherit)
+          width(perc(100))
+          transition(.backgroundColor, s(0.15), .easeInOut)
+          padding(px(4), px(0))
+        }
+        selector(".search-bar-suggestion-link:hover", ".search-bar-suggestion-link.active") {
+          backgroundColor(rgba(0, 0, 0, 0.04))
+        }
+        descendant(".search-bar-suggestion-link.active") {
+          backgroundColor(rgba(0, 0, 0, 0.08))
+        }
+        descendant(".search-bar-suggestion-text") {
+          flex(1)
+          fontSize(px(14))
+          fontWeight(500)
+          whiteSpace(.nowrap)
+          overflow(.hidden)
+          textOverflow(.ellipsis)
+        }
+        descendant(".search-bar-suggestion-language") {
+          display(.inlineBlock)
+          backgroundColor(rgba(0, 0, 0, 0.06))
+          color(rgba(0, 0, 0, 0.7))
+          padding(px(2), px(8))
+          borderRadius(px(12))
+          fontSize(px(12))
+          fontWeight(500)
+          whiteSpace(.nowrap)
+          flexShrink(0)
+        }
+        descendant(".search-bar-suggestion-item") {
+          listStyleType(.none)
+          padding(px(8), px(12))
+        }
+        descendant(".search-bar-suggestion-item[data-last='false']") {
+          borderBottom(px(1), .solid, rgba(0, 0, 0, 0.08))
+        }
       }
     }
 
@@ -221,6 +298,17 @@
       guard document.querySelector(".search-bar-view") != nil else { return }
       let containers = document.querySelectorAll("[data-search-container=\"true\"]")
       for container in containers {
+        // Local filter bars (e.g. Sessions list) skip remote typeahead.
+        var skipRemote = false
+        var ancestor: DOM.Element? = container
+        while let node = ancestor {
+          if stringEquals(node.getAttribute("data-local-filter") ?? "", "true") {
+            skipRemote = true
+            break
+          }
+          ancestor = node.parentElement
+        }
+        if skipRemote { continue }
         instance = SearchBarHydration(container: container)
       }
     }
@@ -421,11 +509,7 @@
       guard let dropdown else { return }
       guard let searchBarSuggestions = searchBarSuggestions else { return }
 
-      if isOpen {
-        dropdown.style.display(.block)
-      } else {
-        dropdown.style.display(.none)
-      }
+      dropdown.setAttribute(data("open"), isOpen)
       searchBarSuggestions.innerHTML = ""
 
       for (index, result) in results.enumerated() {
@@ -433,53 +517,18 @@
         let textSpan = document.createElement(.span)
         textSpan.className = "search-bar-suggestion-text"
         textSpan.innerHTML = result.text
-        textSpan.style.flex(1)
-        textSpan.style.fontSize(px(14))
-        textSpan.style.fontWeight(500)
-        textSpan.style.whiteSpace(.nowrap)
-        textSpan.style.overflow(.hidden)
-        textSpan.style.textOverflow(.ellipsis)
 
         // Create language badge span
         let langSpan = document.createElement(.span)
         langSpan.className = "search-bar-suggestion-language"
         langSpan.innerHTML = result.language
-        langSpan.style.display(.inlineBlock)
-        langSpan.style.backgroundColor(rgba(0, 0, 0, 0.06))
-        langSpan.style.color(rgba(0, 0, 0, 0.7))
-        langSpan.style.padding(px(2), px(8))
-        langSpan.style.borderRadius(px(12))
-        langSpan.style.fontSize(px(12))
-        langSpan.style.fontWeight(500)
-        langSpan.style.whiteSpace(.nowrap)
-        langSpan.style.flexShrink(0)
 
         // Create link with flex layout
         let a = document.createElement(.a)
         a.className = "search-bar-suggestion-link"
-        a.style.display(.flex)
-        a.style.alignItems(.center)
-        a.style.justifyContent(.spaceBetween)
-        a.style.gap(px(12))
-        a.style.textDecoration(.none)
-        a.style.color(.inherit)
-        a.style.width(perc(100))
-        a.style.transition(.backgroundColor, s(0.15), .easeInOut)
-        a.style.padding(px(4), px(0))
-
-        // Hover effect - dynamic
-        a.addEventListener(Event.mouseenter) { (event: Event) in
-          a.style.backgroundColor(rgba(0, 0, 0, 0.04))
-        }
-        a.addEventListener(Event.mouseleave) { (event: Event) in
-          if index != self.activeIndex {
-            a.style.backgroundColor(backgroundColorTransparent)
-          }
-        }
 
         if index == activeIndex {
           _ = a.classList.add("active")
-          a.style.backgroundColor(rgba(0, 0, 0, 0.08))
         }
 
         let href = "\(resultUrlBase)/\(result.languageCode)/\(result.text)/\(result.homograph)"
@@ -491,13 +540,7 @@
         // Create list item
         let li = document.createElement(.li)
         li.className = "search-bar-suggestion-item"
-        li.style.listStyleType(.none)
-        li.style.padding(px(8), px(12))
-
-        // Only add border if not the last item
-        if index < results.count - 1 {
-          li.style.borderBottom(px(1), .solid, rgba(0, 0, 0, 0.08))
-        }
+        li.setAttribute(data("last"), index == results.count - 1)
 
         li.appendChild(a)
 

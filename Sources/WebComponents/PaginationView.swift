@@ -6,14 +6,42 @@ import EmbeddedSwiftUtilities
 import HTMLBuilder
 import WebTypes
 #if SERVER
-import Foundation
+  import Foundation
 #endif
 
+/// Editable page control: previous / `[n]` of `M` / next.
+///
+/// - ``Size/normal`` — table / list footers (44px targets, spaced layout)
+/// - ``Size/mini`` — chrome pagers (session, artifact, attempt switcher)
+///
+/// URL mode (`previousUrl` / `nextUrl` / `pageNumbers`) is hydrated by
+/// ``PaginationHydration``. Query / custom mode sets `kind` and prev/next
+/// `data` attributes; the host page binds those (e.g. SessionHydration).
 public struct PaginationView: HTMLContent {
+  public enum Size: String, Sendable {
+    case normal
+    case mini
+  }
+
+  public let currentPage: Int
+  public let totalPages: Int
   public let previousUrl: String?
   public let nextUrl: String?
   public let pageNumbers: [PageNumber]?
-  public let totalPages: Int
+  public let size: Size
+  public let showControls: Bool
+  public let kind: String
+  public let inputID: String?
+  public let totalID: String?
+  public let totalDisplay: String?
+  public let ariaLabel: String
+  public let inputAriaLabel: String
+  public let previousAriaLabel: String
+  public let nextAriaLabel: String
+  public let previousDisabled: Bool
+  public let nextDisabled: Bool
+  public let previousData: [(String, String)]
+  public let nextData: [(String, String)]
   let `class`: String
 
   public struct PageNumber: Sendable {
@@ -29,180 +57,342 @@ public struct PaginationView: HTMLContent {
   }
 
   public init(
+    currentPage: Int? = nil,
+    totalPages: Int = 0,
     previousUrl: String? = nil,
     nextUrl: String? = nil,
     pageNumbers: [PageNumber]? = nil,
-    totalPages: Int = 0,
+    size: Size = .normal,
+    showControls: Bool = true,
+    kind: String = "",
+    inputID: String? = nil,
+    totalID: String? = nil,
+    totalDisplay: String? = nil,
+    ariaLabel: String = "Pagination",
+    inputAriaLabel: String = "Page number",
+    previousAriaLabel: String = "Previous page",
+    nextAriaLabel: String = "Next page",
+    previousDisabled: Bool? = nil,
+    nextDisabled: Bool? = nil,
+    previousData: [(String, String)] = [],
+    nextData: [(String, String)] = [],
     class: String = ""
   ) {
+    let resolvedTotal = totalPages > 0 ? totalPages : (pageNumbers?.count ?? 0)
+    let fromActive = pageNumbers?.first(where: { $0.isActive }).flatMap { Int($0.label) }
+    let resolvedCurrent = currentPage ?? fromActive ?? 1
+    self.totalPages = max(0, resolvedTotal)
+    self.currentPage = max(1, resolvedCurrent)
     self.previousUrl = previousUrl
     self.nextUrl = nextUrl
     self.pageNumbers = pageNumbers
-    self.totalPages = totalPages
+    self.size = size
+    self.showControls = showControls
+    self.kind = kind
+    self.inputID = inputID
+    self.totalID = totalID
+    self.totalDisplay = totalDisplay
+    self.ariaLabel = ariaLabel
+    self.inputAriaLabel = inputAriaLabel
+    self.previousAriaLabel = previousAriaLabel
+    self.nextAriaLabel = nextAriaLabel
+    self.previousDisabled = previousDisabled ?? stringEquals(previousUrl, nil)
+    self.nextDisabled = nextDisabled ?? stringEquals(nextUrl, nil)
+    self.previousData = previousData
+    self.nextData = nextData
     self.`class` = `class`
   }
 
   public func build() -> DOM.Node {
-    let activePage = pageNumbers?.first(where: { $0.isActive })
-    let currentPage = activePage.flatMap { Int($0.label) } ?? 1
-    let totalPages = totalPages > 0 ? totalPages : (pageNumbers?.count ?? 0)
+    let safeTotal = max(1, totalPages)
+    let safePage = min(currentPage, safeTotal)
+    let totalPagesStr = totalDisplay ?? (totalPages > 0 ? formatNumberWithCommas(totalPages) : "—")
+    let digitSource = totalDisplay ?? "\(max(1, totalPages))"
+    let digitCount = max(1, digitSource.utf8.count)
+    let inputWidth =
+      size == .mini
+      ? calc(ch(digitCount) + px(10))
+      : calc(ch(digitCount) + px(20))
+    let iconSize: CSS.Length = size == .mini ? px(12) : px(16)
+    let useButtons = stringEquals(previousUrl, nil) && stringEquals(nextUrl, nil) && showControls
 
-    // Calculate dynamic width based on total pages digit count
-    let totalPagesStr = "\(totalPages)"
-    let digitCount = totalPagesStr.utf8.count
-    let inputWidth = calc(ch(digitCount) + px(20))  // Buffer for padding and numeric controls
+    let sizeClass = "pagination-size-\(size.rawValue)"
+    let rootClass = stringIsEmpty(`class`)
+      ? stringJoin(["pagination-view", sizeClass], separator: " ")
+      : stringJoin(["pagination-view", sizeClass, `class`], separator: " ")
 
     return section {
-      // Previous link
-      div {
-        if let prevHref = previousUrl {
-          a {
-            PreviousIconView(width: px(16), height: px(16))
-          }
-          .class("pagination-prev")
-          .href(prevHref)
-          .ariaLabel("Previous page")
-          .style {
-            display(.flex)
-            alignItems(.center)
-            justifyContent(.center)
-            width(px(44))
-            height(px(44))
-            color(colorBase)
-            textDecoration(.none)
-            borderRadius(borderRadiusBase)
-            pseudoClass(.focus) {
-              outline(borderWidthBase, .solid, colorBlueFocus).important()
-              outlineOffset(px(2)).important()
+      if showControls {
+        div {
+          if let prevHref = previousUrl {
+            var link = a {
+              PreviousIconView(width: iconSize, height: iconSize)
             }
+            .class("pagination-prev")
+            .href(prevHref)
+            .ariaLabel(previousAriaLabel)
+            for (key, value) in previousData {
+              link = link.data(key, value)
+            }
+            link
+          } else if useButtons {
+            var btn = button {
+              PreviousIconView(width: iconSize, height: iconSize)
+            }
+            .type(.button)
+            .class(previousDisabled ? "pagination-prev pagination-disabled" : "pagination-prev")
+            .disabled(previousDisabled)
+            .ariaLabel(previousAriaLabel)
+            for (key, value) in previousData {
+              btn = btn.data(key, value)
+            }
+            btn
+          } else {
+            span {
+              PreviousIconView(width: iconSize, height: iconSize)
+            }
+            .class("pagination-prev pagination-disabled")
+            .ariaLabel(previousAriaLabel)
           }
         }
+        .class("pagination-previous-container")
       }
-      .style {
+
+      div {
+        if let inputID {
+          input()
+            .type(.number)
+            .id(inputID)
+            .value("\(safePage)")
+            .class("page-box")
+            .min(1)
+            .max(safeTotal)
+            .ariaLabel(inputAriaLabel)
+            .data("input-width", inputWidth.value)
+            .addingAttribute("size", "\(digitCount)")
+        } else {
+          input()
+            .type(.number)
+            .value("\(safePage)")
+            .class("page-box")
+            .min(1)
+            .max(safeTotal)
+            .ariaLabel(inputAriaLabel)
+            .data("input-width", inputWidth.value)
+            .addingAttribute("size", "\(digitCount)")
+        }
+
+        if size == .mini {
+          span { "of" }
+            .class("pagination-term")
+          if let totalID {
+            span { totalPagesStr }
+              .id(totalID)
+              .class("pagination-total")
+          } else {
+            span { totalPagesStr }
+              .class("pagination-total")
+          }
+        } else {
+          span { "of \(totalPagesStr)" }
+            .class("pagination-total")
+        }
+
+        if let pageNumbers, !pageNumbers.isEmpty {
+          div {
+            for pageNumber in pageNumbers {
+              a { pageNumber.label }
+                .href(pageNumber.url)
+                .data("page", pageNumber.label)
+            }
+          }
+          .class("pagination-page-map")
+        }
+      }
+      .class("pagination-indicator")
+
+      if showControls {
+        div {
+          if let nextHref = nextUrl {
+            var link = a {
+              NextIconView(width: iconSize, height: iconSize)
+            }
+            .class("pagination-next")
+            .href(nextHref)
+            .ariaLabel(nextAriaLabel)
+            for (key, value) in nextData {
+              link = link.data(key, value)
+            }
+            link
+          } else if useButtons {
+            var btn = button {
+              NextIconView(width: iconSize, height: iconSize)
+            }
+            .type(.button)
+            .class(nextDisabled ? "pagination-next pagination-disabled" : "pagination-next")
+            .disabled(nextDisabled)
+            .ariaLabel(nextAriaLabel)
+            for (key, value) in nextData {
+              btn = btn.data(key, value)
+            }
+            btn
+          } else {
+            span {
+              NextIconView(width: iconSize, height: iconSize)
+            }
+            .class("pagination-next pagination-disabled")
+            .ariaLabel(nextAriaLabel)
+          }
+        }
+        .class("pagination-next-container")
+      }
+    }
+    .class(rootClass)
+    .data("size", size.rawValue)
+    .data("index", "\(safePage)")
+    .data("count", "\(safeTotal)")
+    .data("pager-kind", kind)
+    .ariaLabel(ariaLabel)
+    .style {
+      selector("&") {
+        display(.flex)
+        flexDirection(.row)
+        justifyContent(.spaceBetween)
+        alignItems(.center)
+        maxWidth(px(600))
+        margin(0, .auto)
+        gap(spacing16)
+      }
+      selector("&.pagination-size-mini") {
+        justifyContent(.flexStart)
+        maxWidth(.none)
+        margin(0)
+        gap(spacing6)
+        flexShrink(0)
+        color(colorBase)
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeXSmall12)
+        lineHeight(1.4)
+      }
+      selector(".pagination-previous-container", ".pagination-next-container") {
         flex(1)
         display(.flex)
-        justifyContent(.flexStart)
       }
-
-      // Page Indicator (center)
-      div {
-        // Current Page Input (Editable)
-        input()
-          .type(.number)
-          .value("\(currentPage)")
-          .class("page-box")
-          .min(1)
-          .max(totalPages)
-          .style {
-            fontFamily(typographyFontSans)
-            fontSize(fontSizeMedium16)
-            color(colorBase)
-            fontWeight(fontWeightNormal)
-            padding(spacing0, spacing8)
-            border(borderWidthBase, .solid, borderColorSubtle)
-            borderRadius(borderRadiusBase)
-            backgroundColor(backgroundColorBase)
-            width(inputWidth)
-            height(px(44))
-            textAlign(.center)
-            display(.inlineBlock)
-            transition(.borderColor, s(0.2), .ease)
-            outline(.none)
-            boxSizing(.borderBox)
-
-            // Hide arrows/spinners across all browsers
-            webkitAppearance(.none)
-            mozAppearance(.textfield)
-            margin(0)
-
-            // Handle webkit spinners
-            pseudoElement(.webkitOuterSpinButton) {
-              webkitAppearance(.none)
-              margin(0)
-            }
-            pseudoElement(.webkitInnerSpinButton) {
-              webkitAppearance(.none)
-              margin(0)
-            }
-
-            pseudoClass(.focus) {
-              borderColor(colorBlue).important()
-              boxShadow(0, 0, 0, px(2), colorBlueFocus)
-            }
-
-            pseudoClass(.hover) {
-              borderColor(borderColorBase)
-            }
-          }
-
-        // "of [Total]"
-        span { "of \(formatNumberWithCommas(totalPages))" }
-          .style {
-            fontFamily(typographyFontSans)
-            fontSize(fontSizeMedium16)
-            color(colorSubtle)
-            fontWeight(fontWeightNormal)
-            whiteSpace(.nowrap)
-          }
-
-        // Hidden links for hydration mapping (crucial for non-standard paths)
-        div {
-          for pageNumber in pageNumbers ?? [] {
-            a { pageNumber.label }
-              .href(pageNumber.url)
-              .data("page", pageNumber.label)
-          }
-        }
-        .style { display(.none) }
+      descendant(".pagination-previous-container") { justifyContent(.flexStart) }
+      descendant(".pagination-next-container") { justifyContent(.flexEnd) }
+      selector("&.pagination-size-mini .pagination-previous-container", "&.pagination-size-mini .pagination-next-container") {
+        flex(0)
+        marginInline(px(-8))
       }
-      .style {
+      selector(".pagination-prev", ".pagination-next") {
+        display(.flex)
+        alignItems(.center)
+        justifyContent(.center)
+        width(px(44))
+        height(px(44))
+        padding(0)
+        margin(0)
+        color(colorBase)
+        textDecoration(.none)
+        borderRadius(borderRadiusBase)
+        border(.none)
+        backgroundColor(.transparent)
+        cursor(.pointer)
+        boxSizing(.borderBox)
+      }
+      selector("&.pagination-size-mini .pagination-prev", "&.pagination-size-mini .pagination-next") {
+        width(px(24))
+        height(px(24))
+        borderRadius(0)
+      }
+      selector(".pagination-prev.pagination-disabled", ".pagination-next.pagination-disabled") {
+        color(colorSubtle)
+        opacity(0.5)
+        pointerEvents(.none)
+        cursor(cursorNotAllowed)
+      }
+      selector("&.pagination-size-mini .pagination-prev.pagination-disabled", "&.pagination-size-mini .pagination-next.pagination-disabled") {
+        color(colorDisabled)
+        opacity(1)
+      }
+      selector(".pagination-prev:focus", ".pagination-next:focus") {
+        outline(borderWidthBase, .solid, colorBlueFocus).important()
+        outlineOffset(px(2)).important()
+      }
+      selector("&.pagination-size-mini .pagination-prev:focus", "&.pagination-size-mini .pagination-next:focus") {
+        outline(.none).important()
+      }
+      descendant(".pagination-indicator") {
         display(.flex)
         flexDirection(.row)
         alignItems(.center)
         justifyContent(.center)
         gap(spacing12)
       }
-
-      // Next link
-      div {
-        if let nextHref = nextUrl {
-          a {
-            NextIconView(width: px(16), height: px(16))
-          }
-          .class("pagination-next")
-          .href(nextHref)
-          .ariaLabel("Next page")
-          .style {
-            display(.flex)
-            alignItems(.center)
-            justifyContent(.center)
-            width(px(44))
-            height(px(44))
-            color(colorBase)
-            textDecoration(.none)
-            borderRadius(borderRadiusBase)
-            pseudoClass(.focus) {
-              outline(borderWidthBase, .solid, colorBlueFocus).important()
-              outlineOffset(px(2)).important()
-            }
-          }
-        }
+      selector("&.pagination-size-mini .pagination-indicator") {
+        gap(spacing6)
       }
-      .style {
-        flex(1)
-        display(.flex)
-        justifyContent(.flexEnd)
+      descendant(".page-box") {
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeMedium16)
+        color(colorBase)
+        fontWeight(fontWeightNormal)
+        padding(spacing0, spacing8)
+        border(borderWidthBase, .solid, borderColorSubtle)
+        borderRadius(borderRadiusBase)
+        backgroundColor(backgroundColorBase)
+        height(px(44))
+        textAlign(.center)
+        display(.inlineBlock)
+        transition(.borderColor, s(0.2), .ease)
+        outline(.none)
+        boxSizing(.borderBox)
+        mozAppearance(.textfield)
+        webkitAppearance(.none)
+        margin(0)
       }
-    }
-    .class(stringIsEmpty(`class`) ? "pagination-view" : "pagination-view \(`class`)")
-    .style {
-      display(.flex)
-      flexDirection(.row)
-      justifyContent(.spaceBetween)
-      alignItems(.center)
-      maxWidth(px(600))
-      margin(0, .auto)
-      gap(spacing16)
+      selector("&.pagination-size-mini .page-box") {
+        fontFamily(typographyFontMono)
+        fontSize(fontSizeXSmall12)
+        padding(0, spacing2)
+        borderColor(borderColorBase)
+        height(px(20))
+        transition(.none)
+      }
+      descendant(".page-box[data-input-width='\(inputWidth.value)']") { width(inputWidth) }
+      selector(
+        "input.page-box[type=number]::-webkit-outer-spin-button",
+        "input.page-box[type=number]::-webkit-inner-spin-button"
+      ) {
+        webkitAppearance(.none).important()
+        margin(0).important()
+        display(.none).important()
+      }
+      descendant(".page-box:focus") {
+        borderColor(colorBlue).important()
+        boxShadow(0, 0, 0, px(2), colorBlueFocus)
+      }
+      descendant(".page-box:hover") { borderColor(borderColorBase) }
+      descendant(".pagination-term") {
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeXSmall12)
+        color(colorBase)
+        fontWeight(fontWeightNormal)
+        whiteSpace(.nowrap)
+      }
+      descendant(".pagination-total") {
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeMedium16)
+        color(colorSubtle)
+        fontWeight(fontWeightNormal)
+        whiteSpace(.nowrap)
+      }
+      selector("&.pagination-size-mini .pagination-total") {
+        fontFamily(typographyFontMono)
+        fontSize(fontSizeXSmall12)
+        color(colorBase)
+      }
+      descendant(".pagination-page-map") { display(.none) }
     }
   }
 }
@@ -229,16 +419,42 @@ public struct PaginationView: HTMLContent {
     private func hydrate() {
       let paginationViews = document.querySelectorAll(".pagination-view")
       for view in paginationViews {
+        // Host-owned pagers (session / attempt) — skip URL navigation.
+        let kind = view.getAttribute("data-pager-kind") ?? ""
+        if !stringIsEmpty(kind) { continue }
+
         let inputEl = view.querySelector(".page-box")
-        // Change on Enter key
         _ = inputEl?.addEventListener(.keydown) { [self] (event: Event) in
           let key = event.key
-          let allowed = stringEquals(key, "Enter") || stringEquals(key, "Backspace")
+          if stringEquals(key, "ArrowUp") {
+            event.preventDefault()
+            guard let input = inputEl as? HTML.HTMLInputElement else { return }
+            let cur = parseInt(input.value) ?? 1
+            let maxAttr = input.getAttribute("max") ?? ""
+            let maxVal = stringIsEmpty(maxAttr) ? 999999 : (parseInt(maxAttr) ?? 999999)
+            let next = min(cur + 1, maxVal)
+            input.value = intToString(next)
+            return
+          }
+          if stringEquals(key, "ArrowDown") {
+            event.preventDefault()
+            guard let input = inputEl as? HTML.HTMLInputElement else { return }
+            let cur = parseInt(input.value) ?? 1
+            let minAttr = input.getAttribute("min") ?? ""
+            let minVal = stringIsEmpty(minAttr) ? 1 : (parseInt(minAttr) ?? 1)
+            let next = max(cur - 1, minVal)
+            input.value = intToString(next)
+            return
+          }
+          let allowed =
+            stringEquals(key, "Enter") || stringEquals(key, "Backspace")
             || stringEquals(key, "Delete") || stringEquals(key, "Tab")
             || stringEquals(key, "ArrowLeft") || stringEquals(key, "ArrowRight")
-            || stringEquals(key, "ArrowUp") || stringEquals(key, "ArrowDown")
             || (key.utf8.count == 1 && key.utf8.first.map { $0 >= 48 && $0 <= 57 } ?? false)
-          if !allowed { event.preventDefault(); return }
+          if !allowed {
+            event.preventDefault()
+            return
+          }
           if stringEquals(key, "Enter") {
             event.preventDefault()
             guard let input = (inputEl as? HTML.HTMLInputElement) else { return }
@@ -265,28 +481,25 @@ public struct PaginationView: HTMLContent {
     private func navigateToPage(_ page: String, in view: DOM.Element) {
       guard !stringIsEmpty(page) else { return }
 
-      // 1. Try to find a link with matching data-page (robust path-independent matching)
       let allLinks = view.querySelectorAll("a[data-page]")
       for link in allLinks {
-        if let dataPage = link.getAttribute("data-page") {
-          if stringEquals(dataPage, page) {
-            if let href = link.getAttribute("href") {
-              window.location.href = href
-              return
-            }
+        let dataPage = link.getAttribute("data-page") ?? ""
+        if stringEquals(dataPage, page) {
+          let href = link.getAttribute("href") ?? ""
+          if !stringIsEmpty(href) {
+            window.location.href = href
+            return
           }
         }
       }
 
       let currentUrl = window.location.href
 
-      // 2. If current URL already has page=, just replace it
       if stringContains(currentUrl, "page=") {
         window.location.href = self.replacePageNumber(in: currentUrl, with: page)
         return
       }
 
-      // 3. Try to find any other page link to copy the URL pattern (for tables)
       let patternLink = view.querySelector("a[href*='page=']")
       if let firstLink = patternLink {
         let pattern = firstLink.getAttribute("href") ?? ""
@@ -296,7 +509,6 @@ public struct PaginationView: HTMLContent {
         }
       }
 
-      // 4. Final Fallback: Append page= to current URL
       if stringContains(currentUrl, "?") {
         window.location.href = "\(currentUrl)&page=\(page)"
       } else {
@@ -313,7 +525,7 @@ public struct PaginationView: HTMLContent {
 
       let bytes = Array(suffix.utf8)
       var i = 0
-      while i < bytes.count && bytes[i] >= 48 && bytes[i] <= 57 {  // ASCII '0'-'9'
+      while i < bytes.count && bytes[i] >= 48 && bytes[i] <= 57 {
         i += 1
       }
       let remaining = stringSubstring(suffix, from: i)

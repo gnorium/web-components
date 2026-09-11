@@ -60,11 +60,7 @@
 
       for link in cachedLinks {
         let href = link.getAttribute(.href) ?? ""
-        if stringEquals(href, activeHref) {
-          link.style.fontWeight(fontWeightBold)
-        } else {
-          link.style.fontWeight(fontWeightNormal)
-        }
+        link.setAttribute(data("active"), stringEquals(href, activeHref))
       }
     }
   }

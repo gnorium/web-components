@@ -1,6 +1,5 @@
 #if SERVER
   import CSSBuilder
-  import CSSOMBuilder
   import DesignTokens
   import DOMBuilder
   import Foundation
@@ -71,9 +70,6 @@
                   span { item.label ?? DOM.Text(truncateText(item.text ?? "")) }
                     .title(item.text ?? "")
                     .class("breadcrumb-current")
-                    .style {
-                      breadcrumbCurrentCSS()
-                    }
                 }
 
                 div {
@@ -81,9 +77,6 @@
                 }
                 .class("breadcrumb-separator")
                 .ariaHidden(true)
-                .style {
-                  breadcrumbSeparatorCSS()
-                }
 
                 // Overflow menu
                 span {
@@ -98,9 +91,6 @@
                   )
                 }
                 .class("breadcrumb-overflow")
-                .style {
-                  breadcrumbOverflowCSS()
-                }
               } else {
                 // Regular item or current page
                 let isLast = index == visibleItems.count - 1
@@ -110,9 +100,6 @@
                     .title(item.text ?? "")
                     .class("breadcrumb-current")
                     .ariaCurrent(.page)
-                    .style {
-                      breadcrumbCurrentCSS()
-                    }
                 } else {
                   if let url = item.url {
                     LinkView(url: url, class: "breadcrumb-link", title: item.text) {
@@ -122,9 +109,6 @@
                     span { item.label ?? DOM.Text(truncateText(item.text ?? "")) }
                       .title(item.text ?? "")
                       .class("breadcrumb-current")
-                      .style {
-                        breadcrumbCurrentCSS()
-                      }
                   }
                 }
 
@@ -134,20 +118,28 @@
                   }
                   .class("breadcrumb-separator")
                   .ariaHidden(true)
-                  .style {
-                    breadcrumbSeparatorCSS()
-                  }
                 }
               }
             }
             .class("breadcrumb-item")
-            .style {
-              breadcrumbItemCSS()
-            }
           }
         }
         .class("breadcrumb-list")
-        .style {
+      }
+      .class(`class`.isEmpty ? "breadcrumb-view" : "breadcrumb-view \(`class`)")
+      .ariaLabel("Breadcrumb")
+      .style {
+        selector("&") {
+          display(.flex)
+          alignItems(.center)
+          flexWrap(.wrap)
+          gap(spacing4)
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeSmall14)
+          lineHeight(1.618)
+          color(colorSubtle)
+        }
+        descendant(".breadcrumb-list") {
           display(.flex)
           alignItems(.center)
           gap(spacing4)
@@ -155,59 +147,34 @@
           margin(0)
           padding(0)
         }
+        descendant(".breadcrumb-item") {
+          display(.flex)
+          alignItems(.center)
+          gap(spacing4)
+        }
+        descendant(".breadcrumb-current") {
+          color(colorBase)
+          fontWeight(fontWeightNormal)
+          maxWidth(px(350))
+          overflowX(.hidden)
+          textOverflow(.ellipsis)
+          whiteSpace(.nowrap)
+          transform(translateY(px(-1)))
+        }
+        descendant(".breadcrumb-separator") {
+          color(colorSubtle)
+          userSelect(.none)
+          display(.inlineFlex)
+          alignItems(.center)
+          justifyContent(.center)
+          lineHeight(1.618)
+        }
+        descendant(".breadcrumb-overflow") {
+          display(.inlineFlex)
+          alignItems(.center)
+          gap(spacing4)
+        }
       }
-      .class(`class`.isEmpty ? "breadcrumb-view" : "breadcrumb-view \(`class`)")
-      .ariaLabel("Breadcrumb")
-      .style {
-        breadcrumbViewCSS()
-      }
-    }
-
-    @CSSBuilder
-    private func breadcrumbViewCSS() -> [CSSOM.CSSRule] {
-      display(.flex)
-      alignItems(.center)
-      flexWrap(.wrap)
-      gap(spacing4)
-      fontFamily(typographyFontSans)
-      fontSize(fontSizeSmall14)
-      lineHeight(1.618)
-      color(colorSubtle)
-    }
-
-    @CSSBuilder
-    private func breadcrumbItemCSS() -> [CSSOM.CSSRule] {
-      display(.flex)
-      alignItems(.center)
-      gap(spacing4)
-    }
-
-    @CSSBuilder
-    private func breadcrumbCurrentCSS() -> [CSSOM.CSSRule] {
-      color(colorBase)
-      fontWeight(fontWeightNormal)
-      maxWidth(px(350))
-      overflowX(.hidden)
-      textOverflow(.ellipsis)
-      whiteSpace(.nowrap)
-      transform(translateY(px(-1)))
-    }
-
-    @CSSBuilder
-    private func breadcrumbSeparatorCSS() -> [CSSOM.CSSRule] {
-      color(colorSubtle)
-      userSelect(.none)
-      display(.inlineFlex)
-      alignItems(.center)
-      justifyContent(.center)
-      lineHeight(1.618) // Increased to 1.2 to prevent clipping
-    }
-
-    @CSSBuilder
-    private func breadcrumbOverflowCSS() -> [CSSOM.CSSRule] {
-      display(.inlineFlex)
-      alignItems(.center)
-      gap(spacing4)
     }
   }
 #endif

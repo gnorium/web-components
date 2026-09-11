@@ -46,188 +46,12 @@
       self.`class` = `class`
     }
 
-    @CSSBuilder
-    private func searchInputViewCSS(_ useButton: Bool) -> [CSSOM.CSSRule] {
-      display(.flex)
-      alignItems(.center)
-      position(.relative)
-      width(perc(100))
-      gap(spacing8)
-
-      if useButton {
-        flexGrow(1)
-      } else {
-        flex(1)
-      }
-    }
-
-    @CSSBuilder
-    private func searchInputWrapperCSS(_ useButton: Bool) -> [CSSOM.CSSRule] {
-      position(.relative)
-      display(.flex)
-      alignItems(.center)
-
-      if useButton {
-        flexGrow(1)
-      } else {
-        width(perc(100))
-      }
-    }
-
-    @CSSBuilder
-    private func searchInputCSS(_ clearable: Bool, _ status: ValidationStatus)
-      -> [CSSOM.CSSRule]
-    {
-      width(perc(100))
-      minHeight(minSizeInteractivePointer)
-      paddingBlock(spacing12)
-      paddingInlineStart(px(16))
-      paddingInlineEnd(px(132))
-      fontFamily(typographyFontSans)
-      fontSize(fontSizeMedium16)
-      lineHeight(lineHeightSmall22)
-      color(colorBase)
-      backgroundColor(backgroundColorBase)
-      border(borderWidthBase, .solid, borderColorSubtle)
-      borderRadius(borderRadiusBase)
-      transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-      boxSizing(.borderBox)
-
-      if status == .error {
-        borderColor(borderColorRed)
-      }
-
-      // Hide native WebKit search cancel button
-      pseudoElement(.webkitSearchCancelButton) {
-        display(.none).important()
-      }
-
-      pseudoElement(.placeholder) {
-        color(colorPlaceholder).important()
-        opacity(1).important()
-      }
-
-      pseudoClass(.hover) {
-        borderColor(borderColorInteractive).important()
-      }
-
-      pseudoClass(.focus) {
-        outline(borderWidthBase, .solid, borderColorBlue).important()
-        outlineOffset(px(-2)).important()
-        borderColor(borderColorBlue).important()
-      }
-
-      pseudoClass(.disabled) {
-        backgroundColor(backgroundColorDisabled).important()
-        color(colorDisabled).important()
-        borderColor(borderColorDisabled).important()
-        cursor(cursorNotAllowed).important()
-      }
-    }
-
-    @CSSBuilder
-    private func searchInputViewDetailsIconCSS() -> [CSSOM.CSSRule] {
-      position(.absolute)
-      right(px(52))
-      top(perc(50))
-      transform(translateY(perc(-50)))
-      padding(spacing4)
-      color(colorSubtle)
-      display(.flex)
-      alignItems(.center)
-    }
-
-    @CSSBuilder
-    private func searchInputClearButtonCSS() -> [CSSOM.CSSRule] {
-      position(.absolute)
-      insetInlineEnd(px(88))
-      top(perc(50))
-      transform(translateY(perc(-50)))
-      padding(spacing4)
-      backgroundColor(.transparent)
-      border(.none)
-      borderRadius(borderRadiusBase)
-      cursor(cursorBaseHover)
-      color(colorDisabled)
-      display(.flex)
-      alignItems(.center)
-      justifyContent(.center)
-      transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-
-      pseudoClass(.hover) {
-        color(colorBlue).important()
-        cursor(cursorBaseHover).important()
-
-        // Icon hover color when button is enabled
-        descendant(".icon-view") {
-          color(colorBlue).important()
-        }
-      }
-
-      pseudoClass(.active) {
-        color(colorBase).important()
-      }
-
-      pseudoClass(.focus) {
-        outline(borderWidthBase, .solid, outlineColorBlueFocus).important()
-        outlineOffset(px(4)).important()
-      }
-
-      pseudoClass(.disabled) {
-        opacity(opacityIconBaseDisabled).important()
-        color(colorDisabled).important()
-        cursor(.default).important()
-
-        // Icon hover color when button is disabled - more specific to override IconView default
-        descendant(".icon-view") {
-          color(colorDisabled).important()
-
-          pseudoClass(.hover) {
-            color(colorDisabled).important()
-          }
-        }
-      }
-    }
-
-    @CSSBuilder
-    private func searchInputButtonCSS(_ disabled: Bool) -> [CSSOM.CSSRule] {
-      minHeight(minSizeInteractivePointer)
-      padding(spacing12, spacing16)
-      fontFamily(typographyFontSans)
-      fontSize(fontSizeMedium16)
-      fontWeight(fontWeightBold)
-      lineHeight(lineHeightSmall22)
-      color(colorBlue)
-      backgroundColor(.transparent)
-      border(borderWidthBase, .solid, borderColorBlue)
-      borderRadius(borderRadiusBase)
-      cursor(disabled ? cursorNotAllowed : cursorBaseHover)
-      transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-      whiteSpace(.nowrap)
-
-      if disabled {
-        color(colorDisabled)
-        borderColor(borderColorDisabled)
-        cursor(cursorNotAllowed)
-      } else {
-        pseudoClass(.hover) {
-          backgroundColor(backgroundColorBlueSubtle).important()
-        }
-
-        pseudoClass(.active) {
-          backgroundColor(backgroundColorBlueActive).important()
-          color(colorInverted).important()
-          borderColor(borderColorBlueActive).important()
-        }
-
-        pseudoClass(.focus) {
-          outline(borderWidthThick, .solid, borderColorBlue).important()
-          outlineOffset(px(1)).important()
-        }
-      }
-    }
-
     public func build() -> DOM.Node {
+      let stateClass = "\(useButton ? "search-input-has-button " : "")\(status == .error ? "search-input-error" : "")"
+      let rootClass = `class`.isEmpty
+        ? "search-input-view \(stateClass)"
+        : "search-input-view \(stateClass) \(`class`)"
+
       return div {
         div {
 
@@ -238,9 +62,6 @@
             .placeholder(placeholder)
             .disabled(disabled)
             .ariaInvalid(status == .error)
-            .style {
-              searchInputCSS(clearable, status)
-            }
 
           if clearable {
             // Clear button
@@ -254,12 +75,6 @@
             .class("search-input-clear-button")
             .ariaLabel("Clear search")
             .disabled(modelValue.isEmpty)
-            .style {
-              searchInputClearButtonCSS()
-              if modelValue.isEmpty {
-                opacity(opacityIconBaseDisabled)
-              }
-            }
 
             // View details icon (positioned to the left of clear button)
             span {
@@ -270,9 +85,6 @@
             }
             .class("search-input-view-details-icon")
             .ariaHidden(true)
-            .style {
-              searchInputViewDetailsIconCSS()
-            }
           }
 
           if searchIcon {
@@ -282,51 +94,161 @@
             .type(.submit)
             .class("search-input-search-icon")
             .ariaLabel("Search")
-            .style {
-              position(.absolute)
-              insetInlineEnd(px(16))
-              top(perc(50))
-              transform(translateY(perc(-50)))
-              background(.transparent)
-              border(.none)
-              color(colorSubtle)
-              cursor(cursorBaseHover)
-              padding(spacing4)
-              display(.flex)
-              alignItems(.center)
-              justifyContent(.center)
-              zIndex(1)
-
-              pseudoClass(.hover) {
-                color(colorBlue)
-              }
-            }
           }
         }
         .class("search-input-wrapper")
-        .style {
-          searchInputWrapperCSS(useButton)
-        }
 
         if useButton {
           button { buttonLabel }
             .type(.submit)
             .class("search-input-button")
             .disabled(disabled)
-            .style {
-              searchInputButtonCSS(disabled)
-            }
         }
       }
-      .class(
-        `class`.isEmpty
-          ? (useButton ? "search-input-view search-input-has-button" : "search-input-view")
-          : (useButton
-            ? "search-input-view search-input-has-button \(`class`)"
-            : "search-input-view \(`class`)")
-      )
+      .class(rootClass)
       .style {
-        searchInputViewCSS(useButton)
+        selector("&") {
+          display(.flex)
+          alignItems(.center)
+          position(.relative)
+          width(perc(100))
+          gap(spacing8)
+        }
+        selector("&.search-input-has-button") { flexGrow(1) }
+        selector("&:not(.search-input-has-button)") { flex(1) }
+        descendant(".search-input-wrapper") {
+          position(.relative)
+          display(.flex)
+          alignItems(.center)
+        }
+        selector("&.search-input-has-button .search-input-wrapper") { flexGrow(1) }
+        selector("&:not(.search-input-has-button) .search-input-wrapper") { width(perc(100)) }
+        descendant(".search-input") {
+          width(perc(100))
+          minHeight(minSizeInteractivePointer)
+          paddingBlock(spacing12)
+          paddingInlineStart(px(16))
+          paddingInlineEnd(px(132))
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeMedium16)
+          lineHeight(lineHeightSmall22)
+          color(colorBase)
+          backgroundColor(backgroundColorBase)
+          border(borderWidthBase, .solid, borderColorSubtle)
+          borderRadius(borderRadiusBase)
+          transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+          boxSizing(.borderBox)
+        }
+        selector("&.search-input-error .search-input") { borderColor(borderColorRed) }
+        selector("& .search-input::-webkit-search-cancel-button") { display(.none).important() }
+        selector("& .search-input::placeholder") {
+          color(colorPlaceholder).important()
+          opacity(1).important()
+        }
+        descendant(".search-input:hover") { borderColor(borderColorInteractive).important() }
+        descendant(".search-input:focus") {
+          outline(borderWidthBase, .solid, borderColorBlue).important()
+          outlineOffset(px(-2)).important()
+          borderColor(borderColorBlue).important()
+        }
+        descendant(".search-input:disabled") {
+          backgroundColor(backgroundColorDisabled).important()
+          color(colorDisabled).important()
+          borderColor(borderColorDisabled).important()
+          cursor(cursorNotAllowed).important()
+        }
+        descendant(".search-input-view-details-icon") {
+          position(.absolute)
+          right(px(52))
+          top(perc(50))
+          transform(translateY(perc(-50)))
+          padding(spacing4)
+          color(colorSubtle)
+          display(.flex)
+          alignItems(.center)
+        }
+        descendant(".search-input-clear-button") {
+          position(.absolute)
+          insetInlineEnd(px(88))
+          top(perc(50))
+          transform(translateY(perc(-50)))
+          padding(spacing4)
+          backgroundColor(.transparent)
+          border(.none)
+          borderRadius(borderRadiusBase)
+          cursor(cursorBaseHover)
+          color(colorDisabled)
+          display(.flex)
+          alignItems(.center)
+          justifyContent(.center)
+          transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+        }
+        selector("& .search-input-clear-button:hover:not(:disabled)") {
+          color(colorBlue).important()
+          cursor(cursorBaseHover).important()
+        }
+        selector("& .search-input-clear-button:hover:not(:disabled) .icon-view") {
+          color(colorBlue).important()
+        }
+        selector("& .search-input-clear-button:active:not(:disabled)") { color(colorBase).important() }
+        descendant(".search-input-clear-button:focus") {
+          outline(borderWidthBase, .solid, outlineColorBlueFocus).important()
+          outlineOffset(px(4)).important()
+        }
+        descendant(".search-input-clear-button:disabled") {
+          opacity(opacityIconBaseDisabled).important()
+          color(colorDisabled).important()
+          cursor(.default).important()
+        }
+        selector("& .search-input-clear-button:disabled .icon-view", "& .search-input-clear-button:disabled .icon-view:hover") {
+          color(colorDisabled).important()
+        }
+        descendant(".search-input-search-icon") {
+          position(.absolute)
+          insetInlineEnd(px(16))
+          top(perc(50))
+          transform(translateY(perc(-50)))
+          background(.transparent)
+          border(.none)
+          color(colorSubtle)
+          cursor(cursorBaseHover)
+          padding(spacing4)
+          display(.flex)
+          alignItems(.center)
+          justifyContent(.center)
+          zIndex(1)
+        }
+        descendant(".search-input-search-icon:hover") { color(colorBlue) }
+        descendant(".search-input-button") {
+          minHeight(minSizeInteractivePointer)
+          padding(spacing12, spacing16)
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeMedium16)
+          fontWeight(fontWeightBold)
+          lineHeight(lineHeightSmall22)
+          color(colorBlue)
+          backgroundColor(.transparent)
+          border(borderWidthBase, .solid, borderColorBlue)
+          borderRadius(borderRadiusBase)
+          cursor(cursorBaseHover)
+          transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+          whiteSpace(.nowrap)
+        }
+        descendant(".search-input-button:disabled") {
+          color(colorDisabled)
+          borderColor(borderColorDisabled)
+          cursor(cursorNotAllowed)
+        }
+        selector("& .search-input-button:hover:not(:disabled)") { backgroundColor(backgroundColorBlueSubtle).important() }
+        selector("& .search-input-button:active:not(:disabled)") {
+          backgroundColor(backgroundColorBlueActive).important()
+          color(colorInverted).important()
+          borderColor(borderColorBlueActive).important()
+        }
+        selector("& .search-input-button:focus:not(:disabled)") {
+          outline(borderWidthThick, .solid, borderColorBlue).important()
+          outlineOffset(px(1)).important()
+        }
       }
     }
   }
@@ -393,12 +315,8 @@
       if let clear = clearButton {
         if value.isEmpty {
           (clear as? HTML.HTMLButtonElement)?.disabled = true
-          clear.style.opacity(opacityIconBaseDisabled)
-          clear.style.cursor(.notAllowed)
         } else {
           (clear as? HTML.HTMLButtonElement)?.disabled = false
-          clear.style.opacity(opacityIconBaseSelected)
-          clear.style.cursor(cursorBaseHover)
         }
       }
 

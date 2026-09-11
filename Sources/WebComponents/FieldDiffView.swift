@@ -34,29 +34,31 @@
           content
         }
         .class("diff-field-input")
-        .style {
-          borderRadius(borderRadiusBase)
-          transition(.border, transitionDurationMedium, .ease)
-        }
 
         span {}
           .class("diff-annotation")
           .data("diff-annotation", "true")
-          .style {
-            display(.none)
-            fontSize(fontSizeXSmall12)
-            fontFamily(typographyFontSans)
-            paddingInlineStart(spacing16)
-            marginBlockStart(spacing4)
-          }
       }
       .class("diff-field")
       .data("diff-field", key)
       .data("original-value", originalValue)
       .data("original-display", originalDisplay ?? "")
       .style {
-        display(.flex)
-        flexDirection(.column)
+        selector("&") {
+          display(.flex)
+          flexDirection(.column)
+        }
+        descendant(".diff-field-input") {
+          borderRadius(borderRadiusBase)
+          transition(.border, transitionDurationMedium, .ease)
+        }
+        descendant(".diff-annotation") {
+          display(.none)
+          fontSize(fontSizeXSmall12)
+          fontFamily(typographyFontSans)
+          paddingInlineStart(spacing16)
+          marginBlockStart(spacing4)
+        }
 
         selector("[data-diff-field].diff-changed .diff-annotation") {
           display(.block).important()

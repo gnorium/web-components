@@ -23,7 +23,8 @@
             size: .medium),
           weight: weight,
           size: .large,
-          ariaLabel: "Search"
+          ariaLabel: "Search",
+          class: "navbar-search-btn"
         )
       }
       .class(`class`.isEmpty ? "search-menu-button-view" : "search-menu-button-view \(`class`)")

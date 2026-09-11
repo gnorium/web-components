@@ -73,13 +73,11 @@ public struct LinkView: HTMLContent {
         span { "↗" }
           .class("link-external-icon")
           .ariaHidden(true)
-          .style {
-            linkExternalIconCSS()
-          }
       }
     }
     .href(url)
     .class(linkClasses)
+    .data("height", linkHeight?.value ?? "auto")
 
     if let title {
       link = link.title(title)
@@ -94,90 +92,50 @@ public struct LinkView: HTMLContent {
 
     return link
       .style {
-        if weight == .plain {
-          linkViewPlainCSS()
-        } else {
-          linkViewCSS(underlined, redLink)
+        selector("&:not(.link-plain)") {
+          cursor(cursorBaseHover)
+          color(colorLink)
+          textDecoration(.none)
+        }
+        selector("&.link-red:not(.link-plain)") { color(colorRed) }
+        selector("&.link-underlined:not(.link-plain)") { textDecoration(.underline) }
+        selector("&:not(.link-plain):hover") { color(colorLinkHover).important() }
+        selector("&:not(.link-plain):active") { color(colorLinkActive).important() }
+        selector("&.link-red:not(.link-plain):hover") { color(colorRedHover).important() }
+        selector("&.link-red:not(.link-plain):active") { color(colorRedActive).important() }
+        selector("&.link-red:not(.link-plain):visited") { color(colorRed).important() }
+        selector("&.link-plain") {
+          display(.flex)
+          alignItems(.center)
+          gap(spacing8)
+          height(.auto)
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeMedium16)
+          fontWeight(fontWeightNormal)
+          color(colorBase).important()
+          textDecoration(.none)
+          borderRadius(borderRadiusBase)
+          cursor(cursorBaseHover)
+        }
+        selector("&.link-plain:hover") { color(colorBlue).important() }
+        selector("&.link-plain:active") { color(colorBlue).important() }
+        selector("&.scroll-spy-view[data-active='true']") { fontWeight(fontWeightBold) }
+        if let linkHeight {
+          selector("&.link-plain[data-height='\(linkHeight.value)']") { height(linkHeight) }
+        }
+        selector("&:focus") {
+          outline(borderWidthThick, .solid, borderColorBlue).important()
+          outlineOffset(px(-2)).important()
+          borderRadius(borderRadiusBase).important()
+        }
+        descendant(".link-external-icon") {
+          display(.inlineBlock)
+          width(sizeIconXSmall)
+          height(sizeIconXSmall)
+          marginInlineStart(spacing4)
+          verticalAlign(.middle)
+          fontSize(sizeIconXSmall)
         }
       }
-  }
-
-  @CSSBuilder
-  private func linkViewCSS(_ underlined: Bool, _ redLink: Bool) -> [CSSOM.CSSRule] {
-    if redLink {
-      color(colorRed)
-    } else {
-      color(colorLink)
-    }
-
-    if underlined {
-      textDecoration(.underline)
-    } else {
-      textDecoration(.none)
-    }
-    cursor(cursorBaseHover)
-
-    pseudoClass(.hover) {
-      if redLink {
-        color(colorRedHover).important()
-      } else {
-        color(colorLinkHover).important()
-      }
-    }
-
-    pseudoClass(.active) {
-      if redLink {
-        color(colorRedActive).important()
-      } else {
-        color(colorLinkActive).important()
-      }
-    }
-
-    pseudoClass(.focus) {
-      outline(borderWidthThick, .solid, borderColorBlue).important()
-      outlineOffset(px(-2)).important()
-      borderRadius(borderRadiusBase).important()
-    }
-
-    if redLink {
-      pseudoClass(.visited) {
-        color(colorRed).important()
-      }
-    }
-  }
-
-  @CSSBuilder
-  private func linkViewPlainCSS() -> [CSSOM.CSSRule] {
-    display(.flex)
-    alignItems(.center)
-    gap(spacing8)
-    if let linkHeight = linkHeight {
-      height(linkHeight)
-    } else {
-      height(.auto)
-    }
-    fontFamily(typographyFontSans)
-    fontSize(fontSizeMedium16)
-    fontWeight(fontWeightNormal)
-    color(colorBase).important()
-    textDecoration(.none)
-    borderRadius(borderRadiusBase)
-    cursor(cursorBaseHover)
-
-    pseudoClass(.focus) {
-      outline(borderWidthThick, .solid, borderColorBlue).important()
-      outlineOffset(px(-2)).important()
-      borderRadius(borderRadiusBase).important()
-    }
-  }
-
-  @CSSBuilder
-  private func linkExternalIconCSS() -> [CSSOM.CSSRule] {
-    display(.inlineBlock)
-    width(sizeIconXSmall)
-    height(sizeIconXSmall)
-    marginInlineStart(spacing4)
-    verticalAlign(.middle)
-    fontSize(sizeIconXSmall)
   }
 }

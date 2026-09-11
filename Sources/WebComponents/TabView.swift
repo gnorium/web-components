@@ -33,76 +33,19 @@
       self.`class` = `class`
     }
 
-    @CSSBuilder
-    private func tabButtonCSS(_ isActive: Bool, _ disabled: Bool, _ framed: Bool) -> [CSSOM.CSSRule] {
-      display(.flex)
-      alignItems(.center)
-      justifyContent(.center)
-      minWidth(px(64))
-      padding(spacing12, spacing16)
-      fontSize(fontSizeMedium16)
-      fontWeight(fontWeightNormal)
-      lineHeight(lineHeightSmall22)
-      whiteSpace(.nowrap)
-      textAlign(.center)
-      backgroundColor(.transparent)
-      border(.none)
-      cursor(disabled ? cursorNotAllowed : cursorBaseHover)
-      transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-      position(.relative)
-
-      if isActive {
-        color(colorBlue)
-        fontWeight(fontWeightBold)
-
-        if !framed {
-          borderBlockEnd(borderWidthThick, .solid, borderColorBlue)
-        } else {
-          backgroundColor(backgroundColorBase)
-        }
-      } else {
-        color(colorBase)
-        borderBlockEnd(borderWidthThick, .solid, borderColorTransparent)
-      }
-
-      if disabled {
-        color(colorDisabled)
-        cursor(cursorNotAllowed)
-      }
-
-      if !disabled && !isActive {
-        pseudoClass(.hover) {
-          color(colorBlue).important()
-          backgroundColor(backgroundColorBlueSubtle).important()
-        }
-
-        pseudoClass(.active) {
-          backgroundColor(backgroundColorBlueSubtle).important()
-        }
-      }
-
-      pseudoClass(.focus) {
-        outline(borderWidthThick, .solid, borderColorBlue).important()
-        outlineOffset(px(-2)).important()
-      }
-    }
-
-    @CSSBuilder
-    private func tabPanelCSS(_ framed: Bool) -> [CSSOM.CSSRule] {
-      if framed {
-        padding(spacing16)
-      } else {
-        padding(spacing16, 0)
-      }
-    }
-
     /// Renders the tab button (called by TabsView)
     public func renderButton(isActive: Bool, tabindex: Int, framed: Bool) -> DOM.Node {
       let displayLabel = label.isEmpty ? name : label
+      let tabStateClass = isActive
+        ? (framed ? "tab-active tab-framed" : "tab-active")
+        : (framed ? "tab-framed" : "")
+      let tabClass = `class`.isEmpty
+        ? (tabStateClass.isEmpty ? "tab-view" : "tab-view \(tabStateClass)")
+        : (tabStateClass.isEmpty ? "tab-view \(`class`)" : "tab-view \(tabStateClass) \(`class`)")
 
       return button { displayLabel }
         .type(.button)
-        .class(`class`.isEmpty ? "tab-view" : "tab-view \(`class`)")
+        .class(tabClass)
         .role("tab")
         .ariaSelected(isActive)
         .ariaControls("panel-\(name)")
@@ -111,7 +54,50 @@
         .disabled(disabled)
         .tabindex(tabindex)
         .style {
-          tabButtonCSS(isActive, disabled, framed)
+          selector("&") {
+            display(.inlineFlex)
+            alignItems(.center)
+            justifyContent(.center)
+            minWidth(px(64))
+            padding(spacing12, spacing16)
+            fontSize(fontSizeMedium16)
+            fontWeight(fontWeightNormal)
+            lineHeight(lineHeightSmall22)
+            whiteSpace(.nowrap)
+            textAlign(.center)
+            backgroundColor(.transparent)
+            border(.none)
+            borderBlockEnd(borderWidthThick, .solid, borderColorTransparent)
+            color(colorBase)
+            cursor(cursorBaseHover)
+            transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+            position(.relative)
+          }
+          selector("&.tab-active") {
+            color(colorBlue)
+            fontWeight(fontWeightBold)
+          }
+          selector("&.tab-active:not(.tab-framed)") {
+            borderBlockEnd(borderWidthThick, .solid, borderColorBlue)
+          }
+          selector("&.tab-active.tab-framed") {
+            backgroundColor(backgroundColorBase)
+          }
+          selector("&:disabled") {
+            color(colorDisabled)
+            cursor(cursorNotAllowed)
+          }
+          selector("&:not(:disabled):not(.tab-active):hover") {
+            color(colorBlue).important()
+            backgroundColor(backgroundColorBlueSubtle).important()
+          }
+          selector("&:not(:disabled):not(.tab-active):active") {
+            backgroundColor(backgroundColorBlueSubtle).important()
+          }
+          selector("&:focus") {
+            outline(borderWidthThick, .solid, borderColorBlue).important()
+            outlineOffset(px(-2)).important()
+          }
         }
     }
 
@@ -120,14 +106,19 @@
       return section {
         content
       }
-      .class("tab-panel")
+      .class(framed ? "tab-panel tab-framed" : "tab-panel")
       .role("tabpanel")
       .id("panel-\(name)")
       .ariaLabelledby("tab-\(name)")
       .tabindex(0)
       .hidden(!isActive)
       .style {
-        tabPanelCSS(framed)
+        selector("&") {
+          padding(spacing16, 0)
+        }
+        selector("&.tab-framed") {
+          padding(spacing16)
+        }
       }
     }
 

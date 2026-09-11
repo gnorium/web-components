@@ -97,43 +97,32 @@ public struct AccordionView: HTMLContent {
 
   public func build() -> DOM.Node {
     let hasDescription = !descriptionContent.isEmpty
-    var hasAction = false
-    if let _ = actionIcon {
-      hasAction = true
-    }
-
     // Render heading with appropriate level
     let titleElement: DOM.Node
     switch headingLevel {
     case .h1:
       titleElement = h1 { titleContent }
         .class("accordion-title")
-        .style { accordionTitleCSS() }
 
     case .h2:
       titleElement = h2 { titleContent }
         .class("accordion-title")
-        .style { accordionTitleCSS() }
 
     case .h3:
       titleElement = h3 { titleContent }
         .class("accordion-title")
-        .style { accordionTitleCSS() }
 
     case .h4:
       titleElement = h4 { titleContent }
         .class("accordion-title")
-        .style { accordionTitleCSS() }
 
     case .h5:
       titleElement = h5 { titleContent }
         .class("accordion-title")
-        .style { accordionTitleCSS() }
 
     case .h6:
       titleElement = h6 { titleContent }
         .class("accordion-title")
-        .style { accordionTitleCSS() }
     }
 
     let detailsElement: HTML.HTMLDetailsElement = details {
@@ -144,14 +133,42 @@ public struct AccordionView: HTMLContent {
           if hasDescription {
             div { descriptionContent }
               .class("accordion-description")
-              .style {
-                accordionDescriptionCSS()
-              }
           }
         }
         .class("accordion-header-wrapper")
+        .data("header-direction", headerDirection == .row ? "row" : "column")
+        .data("title-font-size", titleFontSize.value)
+        .data("title-font-weight", titleFontWeight.value)
         .style {
-          accordionHeaderWrapperCSS()
+          selector("&") {
+            display(.flex)
+            flex(1)
+            minWidth(0)
+          }
+          selector("&[data-header-direction='row']") {
+            flexDirection(.row)
+            alignItems(.center)
+            gap(spacing8)
+          }
+          selector("&[data-header-direction='column']") {
+            flexDirection(.column)
+            gap(spacing4)
+          }
+          descendant(".accordion-title") {
+            fontFamily(typographyFontSans)
+            lineHeight(lineHeightSmall22)
+            color(colorBase)
+            margin(0)
+            wordWrap(.breakWord)
+          }
+          selector("&[data-title-font-size='\(titleFontSize.value)'] .accordion-title") { fontSize(titleFontSize) }
+          selector("&[data-title-font-weight='\(titleFontWeight.value)'] .accordion-title") { fontWeight(titleFontWeight) }
+          descendant(".accordion-description") {
+            fontSize(fontSizeSmall14)
+            lineHeight(lineHeightSmall22)
+            color(colorSubtle)
+            fontWeight(fontWeightNormal)
+          }
         }
 
         if let icon = actionIcon {
@@ -162,8 +179,35 @@ public struct AccordionView: HTMLContent {
           .type(.button)
           .class("accordion-action-button")
           .ariaLabel(actionButtonLabel)
+          .data("always-visible", actionAlwaysVisible)
+          .data("visible", actionAlwaysVisible || isOpen)
           .style {
-            accordionActionButtonCSS(actionAlwaysVisible)
+            selector("&") {
+              alignItems(.center)
+              justifyContent(.center)
+              flexShrink(0)
+              width(minSizeInteractivePointer)
+              height(minSizeInteractivePointer)
+              padding(0)
+              backgroundColor(.transparent)
+              border(.none)
+              borderRadius(borderRadiusBase)
+              color(colorSubtle)
+              cursor(cursorBase)
+              transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+            }
+            selector("&[data-always-visible='true']") { display(.inlineFlex) }
+            selector("&[data-always-visible='false'][data-visible='true']") { display(.inlineFlex) }
+            selector("&[data-always-visible='false'][data-visible='false']") { display(.none) }
+            pseudoClass(.hover) {
+              backgroundColor(backgroundColorInteractiveSubtleHover).important()
+              color(colorBase).important()
+            }
+            pseudoClass(.active) { backgroundColor(backgroundColorInteractiveSubtleActive).important() }
+            pseudoClass(.focus) {
+              outline(px(2), .solid, borderColorBlueFocus).important()
+              outlineOffset(px(-2)).important()
+            }
           }
         }
 
@@ -176,234 +220,141 @@ public struct AccordionView: HTMLContent {
         }
         .class("accordion-expand-icon")
         .style {
-          display(.inlineFlex)
-          alignItems(.center)
-          justifyContent(.center)
-          color(colorSubtle)
+          selector("&") {
+            display(.inlineFlex)
+            alignItems(.center)
+            justifyContent(.center)
+            color(colorSubtle)
+          }
         }
       }
       .class("accordion-summary")
+      .data("separation", separation.value)
       .style {
-        accordionSummaryCSS(separation, hasAction)
+        selector("&") {
+          display(.flex)
+          alignItems(.center)
+          gap(spacing8)
+          cursor(cursorBaseHover)
+          listStyle(.none)
+          userSelect(.none)
+          position(.relative)
+          zIndex(1)
+          outline(.none).important()
+          boxShadow(.none).important()
+        }
+        selector("&[data-separation='minimal']") {
+          minHeight(minSizeInteractivePointer)
+          padding(spacing4, spacing0)
+        }
+        selector("&:not([data-separation='minimal'])") { padding(spacing12, spacing16) }
+        selector("&[data-separation='outline']") { borderRadius(borderRadiusBase) }
+        pseudoElement(.marker) { display(.none).important() }
+        pseudoElement(.webkitDetailsMarker) { display(.none).important() }
+        pseudoClass(.focusVisible) {
+          outline(.none).important()
+          boxShadow(.none).important()
+        }
+        pseudoClass(.focus) {
+          outline(.none).important()
+          boxShadow(.none).important()
+        }
       }
 
-      // Clip wrapper sits BELOW the summary so the content's translateY slide is
-      // masked at the title's bottom edge (slides under the title, not over it).
+      // Height is animated with inline pixel rows (see AccordionInstance).
+      // 0fr ↔ 1fr is not interpolable in WebKit, so it jumps at both ends.
       div {
         div { contentSlot }
           .class("accordion-content")
+          .data("separation", separation.value)
           .style {
-            accordionContentCSS(separation)
+            selector("&") {
+              fontFamily(typographyFontSans)
+              fontSize(fontSizeMedium16)
+              lineHeight(lineHeightSmall22)
+              color(colorBase)
+              minHeight(0)
+              overflow(.hidden)
+              opacity(1)
+              // Fade leads the height so glyphs are gone before the last pixels clip.
+              transition(
+                "opacity \(transitionDurationBase.value) \(transitionTimingFunctionSystem.value)"
+              )
+            }
+            selector("&[data-separation='minimal']") { padding(spacing12, spacing0) }
+            selector("&:not([data-separation='minimal'])") { padding(spacing16) }
           }
       }
       .class("accordion-content-clip")
-      .style { overflow(.hidden) }
-    }
-    .open(isOpen)
-    .data("open-finished", isOpen ? "true" : "false")
-    .class("accordion-details")
-    .id(id)
-    .style {
-      attribute(data("open-finished"), "true") {
-        descendant(".accordion-content-clip") {
-          overflow(.visible).important()
+      .style {
+        selector("&") {
+          display(.grid)
+          gridTemplateRows(fr(0))
+          overflow(.hidden)
+          transition(
+            "grid-template-rows \(transitionDurationMedium.value) \(transitionTimingFunctionSystem.value)"
+          )
+        }
+        selector("& > *") {
+          minHeight(0)
+        }
+        selector(
+          ".accordion-details[data-expanded='true']:not([data-motion='enter-from']):not([data-motion='closing']) &"
+        ) {
+          gridTemplateRows(fr(1))
+        }
+        selector(".accordion-details[data-motion='enter-from'] &") {
+          transition(.none)
+          gridTemplateRows("0px")
+        }
+        selector(".accordion-details[data-motion='closing'] &") {
+          gridTemplateRows("0px")
         }
       }
     }
-
-    if separation == .divider {
-      return div {
-        detailsElement
-
+    .open(isOpen)
+    .data("expanded", isOpen ? "true" : "false")
+    .data("open-finished", isOpen ? "true" : "false")
+    .data("motion", "idle")
+    .class("accordion-details")
+    .id(id)
+    .style {
+      selector("&[data-motion='closing'] .accordion-content", "&[data-motion='enter-from'] .accordion-content") {
+        opacity(0)
+        pointerEvents(.none)
+      }
+    }
+    return div {
+      detailsElement
+      if separation == .divider {
         hr()
           .class("accordion-divider")
           .ariaHidden(true)
           .style {
-            accordionDividerCSS()
+            selector("&") {
+              height(borderWidthBase)
+              backgroundColor(borderColorBase)
+              margin(spacing0)
+              border(.none)
+            }
           }
       }
-      .class(stringIsEmpty(`class`) ? "accordion-view" : "accordion-view \(`class`)")
-      .data("separation", separation.value)
-      .style {
-        accordionViewCSS(separation)
+    }
+    .class(stringIsEmpty(`class`) ? "accordion-view" : "accordion-view \(`class`)")
+    .data("separation", separation.value)
+    .style {
+      selector("&") {
+        display(.block)
+        position(.relative)
       }
-
-    } else {
-      return div {
-        detailsElement
+      selector("&[data-separation='outline']") {
+        border(borderWidthBase, .solid, borderColorBase)
+        borderRadius(borderRadiusBase)
+        padding(spacing4)
       }
-      .class(stringIsEmpty(`class`) ? "accordion-view" : "accordion-view \(`class`)")
-      .data("separation", separation.value)
-      .style {
-        accordionViewCSS(separation)
-      }
-
+      pseudoClass(.hover) { zIndex(zIndexToolbar).important() }
+      pseudoClass(.focusWithin) { zIndex(zIndexToolbar).important() }
     }
-  }
-
-  @CSSBuilder
-  private func accordionViewCSS(_ separation: Separation) -> [CSSOM.CSSRule] {
-    display(.block)
-    position(.relative)
-
-    pseudoClass(.hover) {
-      zIndex(zIndexToolbar).important()
-    }
-
-    pseudoClass(.focusWithin) {
-      zIndex(zIndexToolbar).important()
-    }
-
-    if separation == .outline {
-      border(borderWidthBase, .solid, borderColorBase)
-      borderRadius(borderRadiusBase)
-      padding(spacing4)
-    }
-  }
-
-  @CSSBuilder
-  private func accordionSummaryCSS(_ separation: Separation, _ hasAction: Bool) -> [CSSOM.CSSRule] {
-    display(.flex)
-    alignItems(.center)
-    gap(spacing8)
-    cursor(cursorBaseHover)
-    listStyle(.none)
-    userSelect(.none)
-    position(.relative)
-    zIndex(1)
-
-    if separation == .minimal {
-      minHeight(minSizeInteractivePointer)
-      padding(spacing4, spacing0)
-    } else {
-      padding(spacing12, spacing16)
-    }
-
-    if separation == .outline {
-      borderRadius(borderRadiusBase)
-    }
-
-    pseudoElement(.marker) {
-      display(.none).important()
-    }
-
-    pseudoElement(.webkitDetailsMarker) {
-      display(.none).important()
-    }
-
-    pseudoClass(.focusVisible) {
-      outline(px(2), .solid, borderColorBlueFocus).important()
-      outlineOffset(px(1)).important()
-    }
-
-    pseudoClass(.focus) {
-      outline(.none).important()
-    }
-  }
-
-  @CSSBuilder
-  private func accordionExpandIconCSS() -> [CSSOM.CSSRule] {
-    display(.inlineFlex)
-    alignItems(.center)
-    justifyContent(.center)
-    flexShrink(0)
-    width(sizeIconMedium)
-    height(sizeIconMedium)
-    color(colorSubtle)
-    transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-  }
-
-  @CSSBuilder
-  private func accordionHeaderWrapperCSS() -> [CSSOM.CSSRule] {
-    display(.flex)
-    if headerDirection == .row {
-      flexDirection(.row)
-      alignItems(.center)
-      gap(spacing8)
-    } else {
-      flexDirection(.column)
-      gap(spacing4)
-    }
-    flex(1)
-    minWidth(0)
-  }
-
-  @CSSBuilder
-  private func accordionTitleCSS() -> [CSSOM.CSSRule] {
-    fontFamily(typographyFontSans)
-    fontSize(titleFontSize)
-    fontWeight(titleFontWeight)
-    lineHeight(lineHeightSmall22)
-    color(colorBase)
-    margin(0)
-    wordWrap(.breakWord)
-  }
-
-  @CSSBuilder
-  private func accordionDescriptionCSS() -> [CSSOM.CSSRule] {
-    fontSize(fontSizeSmall14)
-    lineHeight(lineHeightSmall22)
-    color(colorSubtle)
-    fontWeight(fontWeightNormal)
-  }
-
-  @CSSBuilder
-  private func accordionActionButtonCSS(_ actionAlwaysVisible: Bool) -> [CSSOM.CSSRule] {
-    if actionAlwaysVisible {
-      display(.inlineFlex)
-    } else {
-      display(.none)
-    }
-
-    alignItems(.center)
-    justifyContent(.center)
-    flexShrink(0)
-    width(minSizeInteractivePointer)
-    height(minSizeInteractivePointer)
-    padding(0)
-    backgroundColor(.transparent)
-    border(.none)
-    borderRadius(borderRadiusBase)
-    color(colorSubtle)
-    cursor(cursorBase)
-    transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-
-    pseudoClass(.hover) {
-      backgroundColor(backgroundColorInteractiveSubtleHover).important()
-      color(colorBase).important()
-    }
-
-    pseudoClass(.active) {
-      backgroundColor(backgroundColorInteractiveSubtleActive).important()
-    }
-
-    pseudoClass(.focus) {
-      outline(px(2), .solid, borderColorBlueFocus).important()
-      outlineOffset(px(-2)).important()
-    }
-  }
-
-  @CSSBuilder
-  private func accordionContentCSS(_ separation: Separation) -> [CSSOM.CSSRule] {
-    fontFamily(typographyFontSans)
-    fontSize(fontSizeMedium16)
-    lineHeight(lineHeightSmall22)
-    color(colorBase)
-    transition(transitionPropertyBase, transitionDurationMedium, transitionTimingFunctionSystem)
-
-    if separation == .minimal {
-      padding(spacing12, spacing0)
-    } else {
-      padding(spacing16)
-    }
-  }
-
-  @CSSBuilder
-  private func accordionDividerCSS() -> [CSSOM.CSSRule] {
-    height(borderWidthBase)
-    backgroundColor(borderColorBase)
-    margin(spacing0)
-    border(.none)
   }
 }
 
@@ -414,6 +365,7 @@ public struct AccordionView: HTMLContent {
     private var accordion: DOM.Element
     private var details: DOM.Element?
     private var summary: DOM.Element?
+    private var clip: DOM.Element?
     private var actionButton: DOM.Element?
     private var chevronEl: DOM.Element?
     private var isOpen: Bool
@@ -423,6 +375,7 @@ public struct AccordionView: HTMLContent {
 
       details = accordion.querySelector(".accordion-details")
       summary = accordion.querySelector(".accordion-summary")
+      clip = accordion.querySelector(".accordion-content-clip")
       actionButton = accordion.querySelector(".accordion-action-button")
       chevronEl = accordion.querySelector(".animated-right-down-chevron-view")
       if let d = details {
@@ -437,87 +390,22 @@ public struct AccordionView: HTMLContent {
     private func bindEvents() {
       guard let summary = summary, details != nil else { return }
 
-      // Handle click on summary — we track state ourselves
       _ = summary.addEventListener(.click) { [self] event in
         guard let details = self.details else { return }
+        // Keep <details> open for the whole motion; native toggle would
+        // display:none the panel before the height transition can run.
+        event.preventDefault()
+
+        let motion = details.dataset["motion"] ?? "idle"
+        if !stringEquals(motion, "idle") { return }
 
         if self.isOpen {
-          // --- CLOSING ---
-          // Prevent native close so we can animate first
-          event.preventDefault()
-          self.isOpen = false
-          details.setAttribute(data("open-finished"), "false")
-
-          chevronEl?.style.transform(rotate(deg(-90)))
-          chevronEl?.setAttribute(data("expanded"), "false")
-
-          // Animate content sliding up, then manually close
-          if let content = details.querySelector(".accordion-content") {
-            content.style.setProperty(.transition, (.transform, transitionDurationMedium, .ease))
-            content.style.setProperty(.transform, translateY(perc(-100)))
-          }
-          window.setTimeout(250) {
-            details.removeAttribute(.open)
-          }
-
-          // Hide action button
-          if let actionButton = self.actionButton {
-            let displayValue = actionButton.getAttribute(.style) ?? ""
-            let alwaysVisible = !stringContains(displayValue, "display: none")
-            if !alwaysVisible {
-              actionButton.style.display(.none)
-            }
-          }
-
-          // Dispatch custom event
-          let closeEvent = CustomEvent(type: "accordion-toggle", detail: "false")
-          self.accordion.dispatchEvent(closeEvent)
+          self.beginClose(details)
         } else {
-          // --- OPENING ---
-          // Let browser add [open] natively, then animate content in
-          self.isOpen = true
-
-          chevronEl?.style.transform(rotate(deg(0)))
-          chevronEl?.setAttribute(data("expanded"), "true")
-
-          // Wait for browser to add [open], then animate content slide-in
-          window.requestAnimationFrame {
-            if let content = details.querySelector(".accordion-content") {
-              content.style.setProperty(.transition, .none)
-              content.style.setProperty(.transform, translateY(perc(-100)))
-              window.requestAnimationFrame {
-                content.style.setProperty(.transition, (.transform, transitionDurationMedium, .ease))
-                content.style.setProperty(.transform, translateY(0))
-              }
-            }
-          }
-
-          // Show action button
-          if let actionButton = self.actionButton {
-            let displayValue = actionButton.getAttribute(.style) ?? ""
-            let alwaysVisible = !stringContains(displayValue, "display: none")
-            if !alwaysVisible {
-              actionButton.style.display(.inlineFlex)
-            }
-          }
-
-          // Dispatch custom event
-          let openEvent = CustomEvent(type: "accordion-toggle", detail: "true")
-          self.accordion.dispatchEvent(openEvent)
-
-          window.setTimeout(250) { [self] in
-            if self.isOpen {
-              details.setAttribute(data("open-finished"), "true")
-              if let content = details.querySelector(".accordion-content") {
-                content.style.removeProperty(.transform)
-                content.style.removeProperty(.transition)
-              }
-            }
-          }
+          self.beginOpen(details)
         }
       }
 
-      // Handle action button click
       if let actionButton = actionButton {
         _ = actionButton.addEventListener(.click) { [self] event in
           event.stopPropagation()
@@ -525,6 +413,106 @@ public struct AccordionView: HTMLContent {
           self.accordion.dispatchEvent(clickEvent)
         }
       }
+    }
+
+    private func pixelRows(_ height: Double) -> String {
+      stringJoin([intToString(Int(height.rounded())), "px"], separator: "")
+    }
+
+    private func lockClipRows(_ value: String, animate: Bool) {
+      guard let clip = clip else { return }
+      if !animate {
+        clip.style.setProperty("transition", "none")
+      } else {
+        _ = clip.style.removeProperty("transition")
+      }
+      clip.style.setProperty("grid-template-rows", value)
+      _ = clip.offsetHeight
+      if !animate {
+        _ = clip.style.removeProperty("transition")
+      }
+    }
+
+    private func clearClipRows() {
+      _ = clip?.style.removeProperty("grid-template-rows")
+      _ = clip?.style.removeProperty("transition")
+    }
+
+    private func beginClose(_ details: DOM.Element) {
+      self.isOpen = false
+      chevronEl?.setAttribute(data("expanded"), "false")
+      if let actionButton = self.actionButton {
+        actionButton.setAttribute(data("visible"), "false")
+      }
+
+      // Pin current pixel height *before* dropping expanded, or CSS 0px snaps.
+      let startHeight = clip?.getBoundingClientRect()?.height ?? 0
+      lockClipRows(pixelRows(startHeight), animate: false)
+      details.setAttribute(data("open-finished"), "false")
+      details.setAttribute(data("expanded"), "false")
+      details.setAttribute(data("motion"), "closing")
+      lockClipRows("0px", animate: true)
+
+      let closeEvent = CustomEvent(type: "accordion-toggle", detail: "false")
+      self.accordion.dispatchEvent(closeEvent)
+
+      if let clip = clip {
+        _ = clip.addEventListener(.transitionend) { [self] event in
+          guard let target = event.target, target.id == clip.id else { return }
+          self.completeClose(details)
+        }
+      }
+      window.setTimeout(400) { [self] in
+        self.completeClose(details)
+      }
+    }
+
+    private func completeClose(_ details: DOM.Element) {
+      let motion = details.dataset["motion"] ?? ""
+      guard stringEquals(motion, "closing") else { return }
+      clearClipRows()
+      details.removeAttribute(.open)
+      details.setAttribute(data("motion"), "idle")
+    }
+
+    private func beginOpen(_ details: DOM.Element) {
+      self.isOpen = true
+      details.setAttribute(.open, "open")
+      details.setAttribute(data("expanded"), "true")
+      details.setAttribute(data("open-finished"), "false")
+      chevronEl?.setAttribute(data("expanded"), "true")
+      if let actionButton = self.actionButton {
+        actionButton.setAttribute(data("visible"), "true")
+      }
+
+      let inner = clip?.querySelector(".accordion-content")
+      let endHeight = inner?.scrollHeight ?? clip?.scrollHeight ?? 0
+      details.setAttribute(data("motion"), "enter-from")
+      lockClipRows("0px", animate: false)
+      details.setAttribute(data("motion"), "enter-to")
+      lockClipRows(pixelRows(endHeight), animate: true)
+
+      let openEvent = CustomEvent(type: "accordion-toggle", detail: "true")
+      self.accordion.dispatchEvent(openEvent)
+
+      if let clip = clip {
+        _ = clip.addEventListener(.transitionend) { [self] event in
+          guard let target = event.target, target.id == clip.id else { return }
+          self.completeOpen(details)
+        }
+      }
+      window.setTimeout(400) { [self] in
+        self.completeOpen(details)
+      }
+    }
+
+    private func completeOpen(_ details: DOM.Element) {
+      guard self.isOpen else { return }
+      let motion = details.dataset["motion"] ?? ""
+      guard stringEquals(motion, "enter-to") else { return }
+      clearClipRows()
+      details.setAttribute(data("open-finished"), "true")
+      details.setAttribute(data("motion"), "idle")
     }
   }
 
@@ -594,7 +582,7 @@ public struct AccordionView: HTMLContent {
         description: description,
         content: { content() }
       )
-      wrapper.innerHTML = renderHTML { view.render() }
+      wrapper.innerHTML = view.render()
 
       return wrapper.firstElementChild ?? wrapper
     }

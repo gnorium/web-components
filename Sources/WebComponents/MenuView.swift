@@ -85,114 +85,6 @@
       self.noResultsContent = noResults()
     }
 
-    @CSSBuilder
-    private func menuViewCSS(_ expanded: Bool, _ hasVisibleLimit: Bool) -> [CSSOM.CSSRule] {
-      position(.absolute)
-      top(perc(100))
-      insetInlineStart(0)
-      insetInlineEnd(0)
-      marginBlockStart(spacing4)
-      backgroundColor(backgroundColorBase)
-      border(borderWidthBase, .solid, borderColorSubtle)
-      borderRadius(borderRadiusBase)
-      boxShadow(boxShadowMedium)
-      zIndex(100)
-      minWidth(minWidthMedium)
-      maxWidth(maxWidthBase)
-      boxSizing(.borderBox)
-
-      if !expanded {
-        display(.none).important()
-      }
-
-      if hasVisibleLimit {
-        overflowY(.auto)
-      }
-    }
-
-    @CSSBuilder
-    private func menuListCSS(_ hasVisibleLimit: Bool, _ visibleItemLimit: Int?) -> [CSSOM.CSSRule] {
-      listStyle(.none)
-      margin(0)
-      padding(0)
-
-      if let limit = visibleItemLimit, limit > 0 {
-        maxHeight(calc(limit * minSizeInteractivePointer))
-        overflowY(.auto)
-      }
-    }
-
-    @CSSBuilder
-    private func menuGroupCSS() -> [CSSOM.CSSRule] {
-      listStyle(.none)
-      margin(0)
-      padding(0)
-    }
-
-    @CSSBuilder
-    private func menuGroupHeaderCSS(_ hideTitle: Bool) -> [CSSOM.CSSRule] {
-      if !hideTitle {
-        display(.flex)
-        alignItems(.center)
-        gap(spacing8)
-        padding(spacing12, spacing12, spacing4, spacing12)
-      }
-    }
-
-    @CSSBuilder
-    private func menuGroupTitleCSS(_ hideTitle: Bool) -> [CSSOM.CSSRule] {
-      fontFamily(typographyFontSans)
-      fontSize(fontSizeSmall14)
-      fontWeight(fontWeightBold)
-      lineHeight(lineHeightSmall22)
-      color(colorSubtle)
-      margin(0)
-
-      if hideTitle {
-        position(.absolute)
-        width(px(1))
-        height(px(1))
-        margin(px(-1))
-        padding(0)
-        overflow(.hidden)
-        clip(rect(0, 0, 0, 0))
-        whiteSpace(.nowrap)
-        borderWidth(0)
-      }
-    }
-
-    @CSSBuilder
-    private func menuGroupDescriptionCSS() -> [CSSOM.CSSRule] {
-      fontFamily(typographyFontSans)
-      fontSize(fontSizeXSmall12)
-      lineHeight(lineHeightSmall22)
-      color(colorSubtle)
-      margin(0)
-    }
-
-    @CSSBuilder
-    private func menuGroupDividerCSS() -> [CSSOM.CSSRule] {
-      height(borderWidthBase)
-      backgroundColor(borderColorSubtle)
-      margin(spacing8, spacing0)
-      border(.none)
-    }
-
-    @CSSBuilder
-    private func menuPendingCSS() -> [CSSOM.CSSRule] {
-      padding(spacing12)
-    }
-
-    @CSSBuilder
-    private func menuNoResultsCSS() -> [CSSOM.CSSRule] {
-      padding(spacing12)
-      fontFamily(typographyFontSans)
-      fontSize(fontSizeMedium16)
-      lineHeight(lineHeightSmall22)
-      color(colorSubtle)
-      textAlign(.center)
-    }
-
     public func build() -> DOM.Node {
       let hasVisibleLimit = visibleItemLimit != nil && visibleItemLimit! > 0
       let allItems = menuItems + menuGroups.flatMap { $0.items }
@@ -200,6 +92,8 @@
       let shouldShowNoResults = showNoResultsSlot ?? !hasItems
       let hasGroups = !menuGroups.isEmpty
       let hasPendingContent = !pendingContent.isEmpty
+      let limitClass = hasVisibleLimit ? " menu-has-visible-limit menu-visible-limit-\(visibleItemLimit!)" : ""
+      let menuClass = `class`.isEmpty ? "menu-view\(limitClass)" : "menu-view\(limitClass) \(`class`)"
 
       // Render individual menu item using MenuItemView
       func renderMenuItem(_ item: MenuItemView.MenuItemData, itemIndex: Int, isFooter: Bool = false)
@@ -239,19 +133,9 @@
               if hasPendingContent && !hasItems {
                 div { pendingContent }
                   .class("menu-pending-content")
-                  .style {
-                    marginBlockStart(spacing8)
-                    fontFamily(typographyFontSans)
-                    fontSize(fontSizeMedium16)
-                    lineHeight(lineHeightSmall22)
-                    color(colorSubtle)
-                  }
               }
             }
             .class("menu-pending")
-            .style {
-              menuPendingCSS()
-            }
           }
 
           // No results message
@@ -260,9 +144,6 @@
               noResultsContent
             }
             .class("menu-no-results")
-            .style {
-              menuNoResultsCSS()
-            }
           }
 
           // Menu groups
@@ -274,31 +155,21 @@
                   hr()
                     .class("menu-group-divider")
                     .ariaHidden(true)
-                    .style {
-                      menuGroupDividerCSS()
-                    }
                 }
 
                 // Group header
                 div {
                   h3 { group.title }
                     .class("menu-group-title")
-                    .style {
-                      menuGroupTitleCSS(group.hideTitle)
-                    }
+                    .data("hidden", group.hideTitle)
 
                   if let desc = group.description {
                     p { desc }
                       .class("menu-group-description")
-                      .style {
-                        menuGroupDescriptionCSS()
-                      }
                   }
                 }
                 .class("menu-group-header")
-                .style {
-                  menuGroupHeaderCSS(group.hideTitle)
-                }
+                .data("title-hidden", group.hideTitle)
 
                 // Group items
                 ul {
@@ -310,14 +181,8 @@
                 .class("menu-group-list")
                 .role(.group)
                 .ariaLabelledby(group.title)
-                .style {
-                  menuGroupCSS()
-                }
               }
               .class("menu-group")
-              .style {
-                menuGroupCSS()
-              }
             }
           }
 
@@ -336,14 +201,97 @@
         .class("menu-list")
         .role(multiselect ? .listbox : .listbox)
         .ariaMultiselectable(multiselect)
-        .style {
-          menuListCSS(hasVisibleLimit, visibleItemLimit)
-        }
       }
-      .class(`class`.isEmpty ? "menu-view" : "menu-view \(`class`)")
+      .class(menuClass)
       .setAttribute(data("expanded"), expanded)
       .style {
-        menuViewCSS(expanded, hasVisibleLimit)
+        selector("&") {
+          position(.absolute)
+          top(perc(100))
+          insetInlineStart(0)
+          insetInlineEnd(0)
+          marginBlockStart(spacing4)
+          backgroundColor(backgroundColorBase)
+          border(borderWidthBase, .solid, borderColorSubtle)
+          borderRadius(borderRadiusBase)
+          boxShadow(boxShadowMedium)
+          zIndex(100)
+          minWidth(minWidthMedium)
+          maxWidth(maxWidthBase)
+          boxSizing(.borderBox)
+        }
+        selector("&.menu-has-visible-limit") { overflowY(.auto) }
+        descendant(".menu-list") {
+          listStyle(.none)
+          margin(0)
+          padding(0)
+        }
+        if hasVisibleLimit, let visibleItemLimit {
+          selector("&.menu-visible-limit-\(visibleItemLimit) .menu-list") {
+            maxHeight(calc(visibleItemLimit * minSizeInteractivePointer))
+            overflowY(.auto)
+          }
+        }
+        selector("& .menu-group", "& .menu-group-list") {
+          listStyle(.none)
+          margin(0)
+          padding(0)
+        }
+        selector("& .menu-group-header[data-title-hidden='false']") {
+          display(.flex)
+          alignItems(.center)
+          gap(spacing8)
+          padding(spacing12, spacing12, spacing4, spacing12)
+        }
+        descendant(".menu-group-title") {
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeSmall14)
+          fontWeight(fontWeightBold)
+          lineHeight(lineHeightSmall22)
+          color(colorSubtle)
+          margin(0)
+        }
+        descendant(".menu-group-title[data-hidden='true']") {
+          position(.absolute)
+          width(px(1))
+          height(px(1))
+          margin(px(-1))
+          padding(0)
+          overflow(.hidden)
+          clip(rect(0, 0, 0, 0))
+          whiteSpace(.nowrap)
+          borderWidth(0)
+        }
+        descendant(".menu-group-description") {
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeXSmall12)
+          lineHeight(lineHeightSmall22)
+          color(colorSubtle)
+          margin(0)
+        }
+        descendant(".menu-group-divider") {
+          height(borderWidthBase)
+          backgroundColor(borderColorSubtle)
+          margin(spacing8, spacing0)
+          border(.none)
+        }
+        descendant(".menu-pending") { padding(spacing12) }
+        descendant(".menu-pending-content") {
+          marginBlockStart(spacing8)
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeMedium16)
+          lineHeight(lineHeightSmall22)
+          color(colorSubtle)
+        }
+        descendant(".menu-no-results") {
+          padding(spacing12)
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeMedium16)
+          lineHeight(lineHeightSmall22)
+          color(colorSubtle)
+          textAlign(.center)
+        }
+        selector("&[data-expanded='false']") { display(.none).important() }
       }
     }
   }
@@ -404,7 +352,6 @@
 
             // Close menu
             self.menu.setAttribute(data("expanded"), false)
-            self.menu.style.display(.none)
           }
 
           // Dispatch selection event from menu
@@ -473,7 +420,6 @@
 
       case "Escape":
         menu.setAttribute(data("expanded"), false)
-        menu.style.display(.none)
         return true
 
       default:

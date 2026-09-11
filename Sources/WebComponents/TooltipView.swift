@@ -40,144 +40,6 @@ public struct TooltipView: HTMLContent {
     self.`class` = `class`
   }
 
-  @CSSBuilder
-  private func tooltipTriggerCSS() -> [CSSOM.CSSRule] {
-    position(.relative)
-    display(.inlineFlex)
-    alignItems(.center)
-    verticalAlign(.middle)
-    cursor(.help)
-    marginInlineStart(spacing4)
-
-    // CSS hover fallback — works without CLIENT hydration.
-    // NOTE: .tooltip-content carries an inline `opacity:0; visibility:hidden`,
-    // which outranks a plain stylesheet rule, so these MUST be !important to win.
-    pseudoClass(.hover) {
-      child(".tooltip-content") {
-        opacity(1).important()
-        visibility(.visible).important()
-        pointerEvents(.auto).important()
-      }
-    }
-
-    // Focus fallback for keyboard navigation
-    pseudoClass(.focusWithin) {
-      child(".tooltip-content") {
-        opacity(1).important()
-        visibility(.visible).important()
-        pointerEvents(.auto).important()
-      }
-    }
-  }
-
-  @CSSBuilder
-  private func tooltipContentCSS(_ placement: Placement) -> [CSSOM.CSSRule] {
-    position(.absolute)
-    padding(spacing8, spacing12)
-    minWidth(px(150))
-    maxWidth(px(320))
-    backgroundColor(backgroundColorInverted)
-    color(colorInverted)
-    fontFamily(typographyFontSans)
-    fontSize(fontSizeSmall14)
-    fontWeight(fontWeightNormal)
-    lineHeight(lineHeightSmall22)
-    borderRadius(borderRadiusBase)
-    whiteSpace(.normal)
-    opacity(0)
-    pointerEvents(.none)
-    visibility(.hidden)
-    transition(transitionPropertyFade, transitionDurationBase, transitionTimingFunctionSystem)
-    zIndex(zIndexTooltip)
-    boxShadow(boxShadowOutsetSmall)
-    textAlign(.start)
-    backfaceVisibility(.hidden)
-    willChange(.transform, .opacity)
-    // Force GPU acceleration to prevent horizontal subpixel rendering jitter on hover
-    // Position based on placement
-    switch placement {
-    case .bottom, .bottomStart, .bottomEnd:
-      top(perc(100))
-      marginTop(spacing8)
-    case .top, .topStart, .topEnd:
-      bottom(perc(100))
-      marginBottom(spacing8)
-    case .left, .leftStart, .leftEnd:
-      right(perc(100))
-      marginRight(spacing8)
-    case .right, .rightStart, .rightEnd:
-      left(perc(100))
-      marginLeft(spacing8)
-    }
-
-    switch placement {
-    case .bottom, .top:
-      left(perc(50))
-      transform(translate(perc(-50), perc(0)))
-    case .bottomStart, .topStart:
-      left(0)
-    case .bottomEnd, .topEnd:
-      right(0)
-    case .left, .right:
-      top(perc(50))
-      transform(translate(perc(0), perc(-50)))
-    case .leftStart, .rightStart:
-      top(0)
-    case .leftEnd, .rightEnd:
-      bottom(0)
-    }
-  }
-
-  @CSSBuilder
-  private func tooltipArrowCSS(_ placement: Placement) -> [CSSOM.CSSRule] {
-    content("\"\"")
-    position(.absolute)
-    width(0)
-    height(0)
-
-    // Arrow position and direction based on placement
-    switch placement {
-    case .bottom, .bottomStart, .bottomEnd:
-      bottom(perc(100))
-      borderLeft(px(6), .solid, backgroundColorTransparent)
-      borderRight(px(6), .solid, backgroundColorTransparent)
-      borderBottom(px(6), .solid, backgroundColorInverted)
-    case .top, .topStart, .topEnd:
-      top(perc(100))
-      borderLeft(px(6), .solid, backgroundColorTransparent)
-      borderRight(px(6), .solid, backgroundColorTransparent)
-      borderTop(px(6), .solid, backgroundColorInverted)
-    case .left, .leftStart, .leftEnd:
-      left(perc(100))
-      borderTop(px(6), .solid, backgroundColorTransparent)
-      borderBottom(px(6), .solid, backgroundColorTransparent)
-      borderLeft(px(6), .solid, backgroundColorInverted)
-    case .right, .rightStart, .rightEnd:
-      right(perc(100))
-      borderTop(px(6), .solid, backgroundColorTransparent)
-      borderBottom(px(6), .solid, backgroundColorTransparent)
-      borderRight(px(6), .solid, backgroundColorInverted)
-    }
-
-    // Arrow horizontal/vertical positioning
-    switch placement {
-    case .bottom, .top:
-      left(perc(50))
-      transform(translateX(perc(-50)))
-    case .bottomStart, .topStart:
-      left(spacing12)
-    case .bottomEnd, .topEnd:
-      right(spacing12)
-    case .left, .right:
-      top(perc(50))
-      transform(translateY(perc(-50)))
-    case .leftStart, .rightStart:
-      top(spacing12)
-    case .leftEnd, .rightEnd:
-      bottom(spacing12)
-    }
-  }
-
   public func build() -> DOM.Node {
     return span {
       span {
@@ -189,19 +51,134 @@ public struct TooltipView: HTMLContent {
         tooltipText
       }
       .class("tooltip-content")
-      .style {
-        tooltipContentCSS(placement)
-
-        pseudoElement(.after) {
-          tooltipArrowCSS(placement)
-        }
-      }
     }
     .class(stringIsEmpty(`class`) ? "tooltip-view tooltip-trigger" : "tooltip-view tooltip-trigger \(`class`)")
     .data("tooltip", "true")
     .data("placement", placement.rawValue)
+    .data("visible", false)
     .style {
-      tooltipTriggerCSS()
+      selector("&") {
+        position(.relative)
+        display(.inlineFlex)
+        alignItems(.center)
+        verticalAlign(.middle)
+        cursor(.help)
+        marginInlineStart(spacing4)
+      }
+      selector("& .tooltip-content") {
+        position(.absolute)
+        padding(spacing8, spacing12)
+        minWidth(px(150))
+        maxWidth(px(320))
+        backgroundColor(backgroundColorInverted)
+        color(colorInverted)
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeSmall14)
+        fontWeight(fontWeightNormal)
+        lineHeight(lineHeightSmall22)
+        borderRadius(borderRadiusBase)
+        whiteSpace(.normal)
+        opacity(0)
+        pointerEvents(.none)
+        visibility(.hidden)
+        transition(transitionPropertyFade, transitionDurationBase, transitionTimingFunctionSystem)
+        zIndex(zIndexTooltip)
+        boxShadow(boxShadowOutsetSmall)
+        textAlign(.start)
+        backfaceVisibility(.hidden)
+        willChange(.transform, .opacity)
+      }
+      selector("&:hover > .tooltip-content", "&:focus-within > .tooltip-content", "&[data-visible='true'] .tooltip-content") {
+        opacity(1)
+        visibility(.visible)
+        pointerEvents(.auto)
+      }
+      selector("&[data-placement='bottom'] .tooltip-content", "&[data-placement='bottom-start'] .tooltip-content", "&[data-placement='bottom-end'] .tooltip-content") {
+        top(perc(100))
+        marginTop(spacing8)
+      }
+      selector("&[data-placement='top'] .tooltip-content", "&[data-placement='top-start'] .tooltip-content", "&[data-placement='top-end'] .tooltip-content") {
+        bottom(perc(100))
+        marginBottom(spacing8)
+      }
+      selector("&[data-placement='left'] .tooltip-content", "&[data-placement='left-start'] .tooltip-content", "&[data-placement='left-end'] .tooltip-content") {
+        right(perc(100))
+        marginRight(spacing8)
+      }
+      selector("&[data-placement='right'] .tooltip-content", "&[data-placement='right-start'] .tooltip-content", "&[data-placement='right-end'] .tooltip-content") {
+        left(perc(100))
+        marginLeft(spacing8)
+      }
+      selector("&[data-placement='bottom'] .tooltip-content", "&[data-placement='top'] .tooltip-content") {
+        left(perc(50))
+        transform(translate(perc(-50), perc(0)))
+      }
+      selector("&[data-placement='bottom-start'] .tooltip-content", "&[data-placement='top-start'] .tooltip-content") {
+        left(0)
+      }
+      selector("&[data-placement='bottom-end'] .tooltip-content", "&[data-placement='top-end'] .tooltip-content") {
+        right(0)
+      }
+      selector("&[data-placement='left'] .tooltip-content", "&[data-placement='right'] .tooltip-content") {
+        top(perc(50))
+        transform(translate(perc(0), perc(-50)))
+      }
+      selector("&[data-placement='left-start'] .tooltip-content", "&[data-placement='right-start'] .tooltip-content") {
+        top(0)
+      }
+      selector("&[data-placement='left-end'] .tooltip-content", "&[data-placement='right-end'] .tooltip-content") {
+        bottom(0)
+      }
+      selector("& .tooltip-content::after") {
+        content("\"\"")
+        position(.absolute)
+        width(0)
+        height(0)
+      }
+      selector("&[data-placement='bottom'] .tooltip-content::after", "&[data-placement='bottom-start'] .tooltip-content::after", "&[data-placement='bottom-end'] .tooltip-content::after") {
+        bottom(perc(100))
+        borderLeft(px(6), .solid, backgroundColorTransparent)
+        borderRight(px(6), .solid, backgroundColorTransparent)
+        borderBottom(px(6), .solid, backgroundColorInverted)
+      }
+      selector("&[data-placement='top'] .tooltip-content::after", "&[data-placement='top-start'] .tooltip-content::after", "&[data-placement='top-end'] .tooltip-content::after") {
+        top(perc(100))
+        borderLeft(px(6), .solid, backgroundColorTransparent)
+        borderRight(px(6), .solid, backgroundColorTransparent)
+        borderTop(px(6), .solid, backgroundColorInverted)
+      }
+      selector("&[data-placement='left'] .tooltip-content::after", "&[data-placement='left-start'] .tooltip-content::after", "&[data-placement='left-end'] .tooltip-content::after") {
+        left(perc(100))
+        borderTop(px(6), .solid, backgroundColorTransparent)
+        borderBottom(px(6), .solid, backgroundColorTransparent)
+        borderLeft(px(6), .solid, backgroundColorInverted)
+      }
+      selector("&[data-placement='right'] .tooltip-content::after", "&[data-placement='right-start'] .tooltip-content::after", "&[data-placement='right-end'] .tooltip-content::after") {
+        right(perc(100))
+        borderTop(px(6), .solid, backgroundColorTransparent)
+        borderBottom(px(6), .solid, backgroundColorTransparent)
+        borderRight(px(6), .solid, backgroundColorInverted)
+      }
+      selector("&[data-placement='bottom'] .tooltip-content::after", "&[data-placement='top'] .tooltip-content::after") {
+        left(perc(50))
+        transform(translateX(perc(-50)))
+      }
+      selector("&[data-placement='bottom-start'] .tooltip-content::after", "&[data-placement='top-start'] .tooltip-content::after") {
+        left(spacing12)
+      }
+      selector("&[data-placement='bottom-end'] .tooltip-content::after", "&[data-placement='top-end'] .tooltip-content::after") {
+        right(spacing12)
+      }
+      selector("&[data-placement='left'] .tooltip-content::after", "&[data-placement='right'] .tooltip-content::after") {
+        top(perc(50))
+        transform(translateY(perc(-50)))
+      }
+      selector("&[data-placement='left-start'] .tooltip-content::after", "&[data-placement='right-start'] .tooltip-content::after") {
+        top(spacing12)
+      }
+      selector("&[data-placement='left-end'] .tooltip-content::after", "&[data-placement='right-end'] .tooltip-content::after") {
+        bottom(spacing12)
+      }
     }
   }
 }
@@ -276,7 +253,7 @@ public struct TooltipView: HTMLContent {
     }
 
     private func showTooltip() {
-      guard let content = content else { return }
+      guard content != nil else { return }
 
       // Cancel any pending hide
       if let timer = hideTimeout {
@@ -284,9 +261,7 @@ public struct TooltipView: HTMLContent {
         hideTimeout = nil
       }
 
-      content.style.opacity(1)
-      content.style.visibility(.visible)
-      content.style.pointerEvents(.auto)
+      trigger.setAttribute(data("visible"), true)
       isVisible = true
 
       // Dispatch show event
@@ -295,13 +270,11 @@ public struct TooltipView: HTMLContent {
     }
 
     private func hideTooltip() {
-      guard let content = content else { return }
+      guard content != nil else { return }
 
       // Small delay before hiding
       hideTimeout = setTimeout(100) { [self] in
-        content.style.opacity(0)
-        content.style.visibility(.hidden)
-        content.style.pointerEvents(.none)
+        self.trigger.setAttribute(data("visible"), false)
         self.isVisible = false
 
         // Dispatch hide event
@@ -344,7 +317,7 @@ public struct TooltipView: HTMLContent {
       let view = TooltipView(tooltip: text, placement: placement) {
         InfoIconView(width: px(20), height: px(20))
       }
-      wrapper.innerHTML = renderHTML { view.render() }
+      wrapper.innerHTML = view.render()
       let element = wrapper.firstElementChild ?? wrapper
       _ = TooltipInstance(tooltip: element)
       return element

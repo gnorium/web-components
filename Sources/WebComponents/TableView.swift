@@ -317,7 +317,8 @@ public struct TableView: HTMLContent {
     let hasCustomTfoot = !tfootContent.isEmpty
     let hasFooter = !footerContent.isEmpty
     let hasEmptyState = !emptyStateContent.isEmpty
-    let isEmpty = data.isEmpty && !pending
+    // Custom tbody supplies its own rows (data often stays []) — not an empty table.
+    let isEmpty = data.isEmpty && !pending && !hasCustomTbody
 
     let computedCurrentPage = currentPage ?? 1
     let computedTotalItems = totalItems ?? data.count
@@ -385,15 +386,9 @@ public struct TableView: HTMLContent {
           } else if !hideCaption {
             h2 { captionContent }
               .class("table-header-title")
-              .style {
-                tableHeaderTitleCSS()
-              }
           }
         }
         .class("table-header")
-        .style {
-          tableHeaderCSS()
-        }
       }
 
       // Pagination (top)
@@ -403,9 +398,6 @@ public struct TableView: HTMLContent {
             paginationInfo
           }
           .class("pagination-info")
-          .style {
-            paginationInfoCSS()
-          }
 
           let prevUrl: String?
           let nextUrl: String?
@@ -413,30 +405,46 @@ public struct TableView: HTMLContent {
             prevUrl = computedCurrentPage > 1 ? "\(baseUrl)\(computedCurrentPage - 1)" : nil
             nextUrl = computedCurrentPage < computedTotalPages ? "\(baseUrl)\(computedCurrentPage + 1)" : nil
           } else {
-            prevUrl = "#"
-            nextUrl = "#"
+            prevUrl = computedCurrentPage > 1 ? "#" : nil
+            nextUrl = computedCurrentPage < computedTotalPages ? "#" : nil
           }
 
           PaginationView(
+            totalPages: computedTotalPages,
             previousUrl: prevUrl,
             nextUrl: nextUrl,
             pageNumbers: pageNumbers,
-            totalPages: computedTotalPages,
+            size: .mini,
             class: "table-pagination-controls"
           )
         }
         .class("table-pagination table-pagination-top")
-        .style {
-          tablePaginationCSS()
-        }
       }      // Table wrapper
       div {
         table {
+          // Column geometry belongs to the table model. Runtime resizing updates
+          // these standard HTML width attributes rather than element styles.
+          colgroup {
+            if selectionMode != nil {
+              col()
+                .id("table-col-selection")
+                .setAttribute("width", "44")
+            }
+            for column in columns {
+              var columnElement = col().data("table-column-id", column.id)
+              if let width = column.width {
+                columnElement = columnElement.setAttribute("width", width.value)
+              }
+              columnElement
+            }
+            col()
+              .id("table-col-spacer")
+              .setAttribute("width", "16")
+          }
+
           caption { captionContent }
             .class("table-caption")
-            .style {
-              tableCaptionCSS(hideCaption)
-            }
+            .data("hidden", hideCaption)
 
           // thead
           if hasCustomThead {
@@ -461,36 +469,23 @@ public struct TableView: HTMLContent {
                         }
                       }
                       .class("table-selection-container")
-                      .style {
-                        display(.flex)
-                        alignItems(.center)
-                        justifyContent(.center)
-                        selector("input", "label", "button") {
-                          cursor(.pointer).important()
-                        }
-                      }
                     }
 
                     // Industry standard column resizer handle
                     div { "" }
                       .class("table-resizer")
-                      .style {
-                        tableResizerCSS()
-                      }
                   }
-                  .id("col-selection")
-                  .scope(.col)
+              .id("col-selection")
+              .scope(.col)
+                  .data("table-column-id", "selection")
+                  .data("align", "start")
+                  .class("table-selection-header")
                   .style {
-                    width(px(44))
-                    minWidth(px(44))
-                    position(.sticky)
-                    top(0)
-                    zIndex(zIndexSticky).important()
-                    backgroundColor(backgroundColorBase).important()
-                    tableThCSS(.start)
-                    let styles = thStyle(.start)
-                    if !styles.isEmpty {
-                      styles
+                    selector("&") {
+                      let styles = thStyle(.start)
+                      if !styles.isEmpty {
+                        styles
+                      }
                     }
                   }
                 }
@@ -501,14 +496,7 @@ public struct TableView: HTMLContent {
                     if column.sortable {
                       button {
                         span { column.label }
-                          .style {
-                            overflow(.hidden)
-                            textOverflow(.ellipsis)
-                            whiteSpace(.nowrap)
-                            minWidth(px(0))
-                            flexGrow(1)
-                            flexShrink(1)
-                          }
+                          .class("table-sort-label")
 
                         span {
                           AnimatedUpDownChevronView(
@@ -527,90 +515,54 @@ public struct TableView: HTMLContent {
                         }
                         .class("table-sort-icon")
                         .ariaHidden(true)
-                        .style {
-                          tableSortIconCSS()
-                          if let currentSort = sort, stringEquals(currentSort.columnID, column.id) {
-                            color(.currentColor)
-                          } else {
-                            display(.none)
-                          }
-                        }
+                        .data("active", sort.map { stringEquals($0.columnID, column.id) } ?? false)
                       }
                       .class("table-sort-button")
                       .type(.button)
                       .data("column-id", column.id)
-                      .style {
-                        tableSortButtonCSS()
-                        height(perc(100))
-                      }
                     } else {
                       div { column.label }
-                        .style {
-                          width(perc(100))
-                          overflow(.hidden)
-                          textOverflow(.ellipsis)
-                          whiteSpace(.nowrap)
-                          display(.block)
-                        }
+                        .class("table-header-label")
                     }
 
                     // Industry standard column resizer handle
                     div { "" }
                       .class("table-resizer")
-                      .style {
-                        tableResizerCSS()
-                      }
                   }
                   .id("col-\(column.id)")
                   .scope(.col)
+                  .data("table-column-id", column.id)
+                  .data("align", column.align.value)
                   .data("flex", column.width == nil ? "true" : "false")
                   .data("width", column.width != nil ? column.width!.value : "")
+                  .class("table-column-header")
                   .style {
-                    position(.sticky) // Essential for stickiness and resizer positioning
-                    top(0)
-                    zIndex(zIndexSticky).important()
-                    backgroundColor(backgroundColorBase).important()
-                    if let colWidth = column.width {
-                      width(colWidth)
-                    } else {
-                      width(.auto)
-                    }
-                    if let minW = column.minWidth {
-                      minWidth(minW)
-                    } else {
-                      minWidth(px(150))
-                    }
-                    
-                    tableThCSS(column.align)
-                    let styles = thStyle(column.align)
-                    if !styles.isEmpty {
-                      styles
+                    selector("&") {
+                      if let colWidth = column.width {
+                        width(colWidth)
+                      } else {
+                        width(.auto)
+                      }
+                      if let minW = column.minWidth {
+                        minWidth(minW)
+                      } else {
+                        minWidth(px(150))
+                      }
+                      let styles = thStyle(column.align)
+                      if !styles.isEmpty {
+                        styles
+                      }
                     }
                   }
                 }
 
                 th { "" }
                   .class("table-th-spacer")
-                  .style {
-                    position(.sticky)
-                    top(0)
-                    zIndex(zIndexSticky).important()
-                    backgroundColor(backgroundColorNeutralSubtle).important()
-                    tableThCSS(.start)
-                    borderRightWidth(px(0))
-                    padding(px(0))
-                  }
               }
             }
             .class("table-thead")
             .style {
-              backgroundColor(backgroundColorNeutralSubtle).important()
-              let styles = theadStyle()
-              if !styles.isEmpty {
-                styles
-              } else {
-                tableTheadCSS()
-              }
+              selector("&") { theadStyle() }
             }
           }
 
@@ -620,13 +572,6 @@ public struct TableView: HTMLContent {
               tbodyContent
             }
             .class("table-tbody")
-            .style {
-              if isEmpty {
-                display(.flex)
-                flexDirection(.column)
-                flex(1)
-              }
-            }
           } else {
             tbody {
               if isEmpty && hasEmptyState {
@@ -636,33 +581,11 @@ public struct TableView: HTMLContent {
                       emptyStateContent
                     }
                     .class("table-empty-state-content")
-                    .style {
-                      display(.flex)
-                      flexDirection(.column)
-                      gap(spacing8)
-                      alignItems(.center)
-                      justifyContent(.center)
-                      flex(1)
-                    }
                   }
                   .colspan(columns.count + (selectionMode != nil ? 1 : 0) + 1)
                   .class("table-empty-state")
-                  .style {
-                    tableEmptyStateCSS()
-                    display(.flex)
-                    flexDirection(.column)
-                    alignItems(.center)
-                    justifyContent(.center)
-                    flex(1)
-                  }
                 }
                 .class("table-empty-row")
-                .style {
-                  backgroundColor(backgroundColorBase).important()
-                  display(.flex)
-                  flexDirection(.column)
-                  flex(1)
-                }
               } else {
                 for (rowIndex, row) in data.enumerated() {
                   let rowID = row.id ?? intToString(rowIndex)
@@ -708,21 +631,13 @@ public struct TableView: HTMLContent {
                           }
                         }
                         .class("table-selection-container")
-                        .style {
-                          display(.flex)
-                          alignItems(.center)
-                          justifyContent(.center)
-                          selector("input", "label", "button") {
-                            cursor(.pointer).important()
-                          }
-                        }
                       }
                       .style {
-                        let styles = tdStyle()
-                        if !styles.isEmpty {
-                          styles
-                        } else {
-                          tableTdCSS(.start)
+                        selector("&") {
+                          let styles = tdStyle()
+                          if !styles.isEmpty {
+                            styles
+                          }
                         }
                       }
                     }
@@ -733,18 +648,10 @@ public struct TableView: HTMLContent {
                       let isFirstCell = cellIndex == 0
                       var unwrappedElement: HTML.HTMLElement? = nil
                       if let element = cellContent as? HTML.HTMLElement, (stringEquals(element.tag, "td") || stringEquals(element.tag, "th")) {
-                        if showVerticalBorders {
-                          _ = element.style {
-                            borderInlineStart(borderWidthBase, .solid, borderColorSubtle)
-                          }
-                        }
                         if isFirstCell && isGroupChild {
                           element.children.insert(
                             span { "" }
-                              .style {
-                                display(.inlineBlock)
-                                width(spacing24)
-                              }.build(), at: 0)
+                              .class("table-group-indent").build(), at: 0)
                         }
                         unwrappedElement = element
                       }
@@ -766,26 +673,18 @@ public struct TableView: HTMLContent {
                             // Child rows get indentation
                             if isGroupChild {
                               span { "" }
-                                .style {
-                                  display(.inlineBlock)
-                                  width(spacing24)
-                                }
+                                .class("table-group-indent")
                             }
                             cellContent
                           }
                           .scope(.row)
-                          .style {
-                            tableThCSS(column.align)
-                          }
+                          .data("align", column.align.value)
                         } else {
                           td {
                             // Child rows get indentation on first cell
                             if isGroupChild && isFirstCell {
                               span { "" }
-                                .style {
-                                  display(.inlineBlock)
-                                  width(spacing24)
-                                }
+                                .class("table-group-indent")
                             }
                             div {
                               if isFirstCell, let url = row.url {
@@ -796,19 +695,15 @@ public struct TableView: HTMLContent {
                                 cellContent
                               }
                             }
-                            .style {
-                              width(perc(100))
-                              overflow(.hidden)
-                              textOverflow(.ellipsis)
-                              whiteSpace(.nowrap).important()
-                              display(.block)
-                            }
+                            .class("table-cell-content")
                           }
+                          .data("align", column.align.value)
                           .style {
-                            tableTdCSS(column.align)
-                            let styles = tdStyle()
-                            if !styles.isEmpty {
-                              styles
+                            selector("&") {
+                              let styles = tdStyle()
+                              if !styles.isEmpty {
+                                styles
+                              }
                             }
                           }
                         }
@@ -818,11 +713,6 @@ public struct TableView: HTMLContent {
                     // Row cells spacer for beautiful edge-to-edge zebra stripe backgrounds
                     td { "" }
                       .class("table-td-spacer")
-                      .style {
-                        tableTdCSS(.start)
-                        borderRightWidth(px(0))
-                        padding(px(0))
-                      }
                   }
 
                   // Apply standard attributes
@@ -837,45 +727,12 @@ public struct TableView: HTMLContent {
                         isGroupHeader: row.isGroupHeader,
                         isGroupChild: isGroupChild,
                         hasUrl: hasUrl,
+                        isLast: rowIndex == data.count - 1,
+                        isEven: rowIndex % 2 == 1,
+                        isInitiallyCollapsed: isGroupChild || stringContains(row.customClass, "table-row-collapsed"),
                         customClass: row.customClass
                       )
                     )
-                    .style {
-                      if isGroupChild || stringContains(row.customClass, "table-row-collapsed") {
-                        display(.none)
-                      }
-                      if rowIndex % 2 == 1 {
-                        backgroundColor(backgroundColorNeutralSubtle).important()
-                      } else {
-                        backgroundColor(backgroundColorBase).important()
-                      }
-                      if rowIndex == data.count - 1 {
-                        borderBlockEnd(.none).important()
-                      } else {
-                        borderBlockEnd(borderWidthBase, .solid, borderColorSubtle).important()
-                      }
-                      
-                      if hasUrl {
-                        cursor(cursorBaseHover)
-                        transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionUser)
-                        pseudoClass(.hover) {
-                          backgroundColor(backgroundColorInteractiveSubtleHover).important()
-                        }
-                        pseudoClass(.active) {
-                          backgroundColor(backgroundColorInteractiveSubtleActive).important()
-                        }
-                      } else {
-                        cursor(.default)
-                      }
-                      
-                      // Suppression rules
-                      selector(":hover:has(.table-selection-container:hover)", ":active:has(.table-selection-container:active)") {
-                        backgroundColor(.transparent).important()
-                      }
-                      selector(":hover:has(.animated-chevron-container:hover)", ":hover:has(.animated-chevron:hover)") {
-                        backgroundColor(.transparent).important()
-                      }
-                    }
 
                   // Apply custom data attributes
                   for pair in row.dataAttributes {
@@ -885,53 +742,8 @@ public struct TableView: HTMLContent {
                   trNode
                 }
               }
-
-              // SSR dummy rows: pre-fill remaining page slots with alternating stripes so
-              // the initial render already looks like the post-WASM state for full pages.
-              // WASM's adjustDummyRows removes all .table-row-dummy and re-adds measured ones.
-              if paginate && !isEmpty {
-                let ssrDummyCount = max(0, paginationSizeDefault - data.count)
-                for dummyIndex in 0..<ssrDummyCount {
-                  let isEven = (data.count + dummyIndex) % 2 == 1
-                  tr {
-                    for _ in columns {
-                      td { " " }
-                        .style {
-                          padding(spacing8, spacing12)
-                          backgroundColor(.inherit)
-                          overflow(.hidden)
-                          textOverflow(.ellipsis)
-                          whiteSpace(.nowrap)
-                          verticalAlign(.middle)
-                        }
-                    }
-                    td { "" }
-                      .class("table-td-spacer")
-                      .style {
-                        padding(px(0))
-                        borderRightWidth(px(0))
-                        backgroundColor(.inherit)
-                      }
-                  }
-                  .class("table-row table-row-dummy")
-                  .style {
-                    height(px(39))
-                    pointerEvents(.none)
-                    userSelect(.none)
-                    backgroundColor(isEven ? backgroundColorNeutralSubtle : backgroundColorBase)
-                    borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
-                  }
-                }
-              }
             }
             .class("table-tbody")
-            .style {
-              if isEmpty {
-                display(.flex)
-                flexDirection(.column)
-                flex(1)
-              }
-            }
           }
 
           // tfoot
@@ -940,27 +752,13 @@ public struct TableView: HTMLContent {
               tfootContent
             }
             .class("table-tfoot")
-            .style {
-              tableTfootCSS()
-            }
           }
         }
         .class(
           showVerticalBorders ? "table-table table-table-borders-vertical" : "table-table"
         )
-        .style {
-          tableTableCSS(showVerticalBorders)
-          if isEmpty {
-            display(.flex)
-            flexDirection(.column)
-            flex(1)
-          }
-        }
       }
       .class("table-inner-wrapper")
-      .style {
-        tableInnerWrapperCSS()
-      }
 
       // Pagination (bottom)
       if paginate && (paginationPosition == .bottom || paginationPosition == .both) {
@@ -969,9 +767,6 @@ public struct TableView: HTMLContent {
             paginationInfo
           }
           .class("pagination-info")
-          .style {
-            paginationInfoCSS()
-          }
 
           let prevUrl: String?
           let nextUrl: String?
@@ -979,22 +774,20 @@ public struct TableView: HTMLContent {
             prevUrl = computedCurrentPage > 1 ? "\(baseUrl)\(computedCurrentPage - 1)" : nil
             nextUrl = computedCurrentPage < computedTotalPages ? "\(baseUrl)\(computedCurrentPage + 1)" : nil
           } else {
-            prevUrl = "#"
-            nextUrl = "#"
+            prevUrl = computedCurrentPage > 1 ? "#" : nil
+            nextUrl = computedCurrentPage < computedTotalPages ? "#" : nil
           }
 
           PaginationView(
+            totalPages: computedTotalPages,
             previousUrl: prevUrl,
             nextUrl: nextUrl,
             pageNumbers: pageNumbers,
-            totalPages: computedTotalPages,
+            size: .mini,
             class: "table-pagination-controls"
           )
         }
         .class("table-pagination table-pagination-bottom")
-        .style {
-          tablePaginationCSS()
-        }
       }
 
       // Footer
@@ -1003,12 +796,9 @@ public struct TableView: HTMLContent {
           footerContent
         }
         .class("table-footer")
-        .style {
-          tableFooterCSS()
-        }
       }
     }
-    .class(stringIsEmpty(`class`) ? "table-view\(isEmpty ? " table-view-empty" : "")" : "table-view\(isEmpty ? " table-view-empty" : "") \(`class`)")
+    .class(stringIsEmpty(`class`) ? "table-view\(isEmpty ? " table-view-empty" : "")\(pending ? " table-view-pending" : "")" : "table-view\(isEmpty ? " table-view-empty" : "")\(pending ? " table-view-pending" : "") \(`class`)")
     .data("selection-mode", selectionMode?.value ?? "")
     .data("paginate", paginate ? "true" : "false")
     .data("paginate-server", {
@@ -1022,7 +812,436 @@ public struct TableView: HTMLContent {
     .data("sort-column", sort?.columnID ?? "")
     .data("sort-order", sort?.direction.value ?? "")
     .style {
-      tableViewCSS()
+      selector("&") {
+        width(perc(100))
+        display(.flex)
+        flexDirection(.column)
+        gap(spacing16)
+        flex(1)
+        minHeight(0)
+      }
+      selector("&.table-view-empty tbody tr:hover", "&.table-view-pending tbody tr:hover") { backgroundColor(.transparent).important() }
+      selector("&.table-view-empty tbody tr:active", "&.table-view-pending tbody tr:active") { backgroundColor(.transparent).important() }
+      selector("&.table-view-empty .table-row-link", "&.table-view-pending .table-row-link", "&.table-view-empty tr[data-url]:not([data-url=''])", "&.table-view-pending tr[data-url]:not([data-url=''])") { cursor(.default).important() }
+      selector("&.table-view-empty .table-sort-button", "&.table-view-pending .table-sort-button") { cursor(.default).important() }
+      selector("&.table-view-empty .table-sort-button:hover", "&.table-view-pending .table-sort-button:hover", "&.table-view-empty .table-sort-button:active", "&.table-view-pending .table-sort-button:active") { color(.inherit).important() }
+      selector("&.table-view-empty .table-sort-button:hover .table-sort-icon", "&.table-view-pending .table-sort-button:hover .table-sort-icon") { color(.inherit).important() }
+      selector("&.table-view-empty .table-pagination", "&.table-view-pending .table-pagination") {
+        opacity(0.5)
+        pointerEvents(.none)
+      }
+      selector("& .table-group-header td", "& .table-row:not(.table-group-child):not(.table-sub-row):not(.lemma-history-sub-row) td", "& .table-row-view:not(.table-group-child):not(.table-sub-row):not(.lemma-history-sub-row) td", "& .table-tbody tr:not(.table-group-child):not(.table-sub-row):not(.lemma-history-sub-row) td") {
+        position(.relative)
+        zIndex(zIndexStacking3)
+        backgroundColor(.inherit)
+      }
+      selector("& .table-group-child", "& .batch-group-child") {
+        transition((.transform, .opacity), transitionDurationMedium, transitionTimingFunctionSystem)
+        willChange(.transform, .opacity)
+      }
+      selector("& .table-group-child td", "& .batch-group-child td") {
+        position(.relative)
+        zIndex(zIndexStacking2)
+        backgroundColor(.inherit)
+      }
+      selector("& .lemma-history-sub-row", "& .table-sub-row") {
+        transition((.transform, .opacity), transitionDurationMedium, transitionTimingFunctionSystem)
+        willChange(.transform, .opacity)
+      }
+      selector("& .lemma-history-sub-row td", "& .table-sub-row td") {
+        position(.relative)
+        zIndex(zIndexStacking1)
+        backgroundColor(.inherit)
+      }
+      descendant(".table-row-collapsed") {
+        pointerEvents(.none)
+        opacity(0)
+        transform(translateY(perc(-100)))
+      }
+      descendant(".table-row-hidden") { display(.none).important() }
+      descendant(".table-sort-icon[data-active='false']") { display(.none) }
+      descendant(".table-sort-icon[data-active='true']") {
+        display(.inlineFlex)
+        color(.currentColor)
+      }
+      selector("& .table-group-header .animated-right-down-chevron-view", "& .lemma-history-toggle", "& .table-subrow-toggle") { cursor(.pointer) }
+      selector("&.table-measure-root") {
+        position(.absolute).important()
+        visibility(.hidden).important()
+        top(px(-9999)).important()
+        left(px(-9999)).important()
+        width(.auto).important()
+        height(.auto).important()
+      }
+      descendant(".table-measure-table") {
+        tableLayout(.auto).important()
+        width(.auto).important()
+        display(.table).important()
+      }
+      descendant(".table-measure-cell") {
+        display(.tableCell).important()
+        width(.auto).important()
+        minWidth(.auto).important()
+        maxWidth(.none).important()
+        overflow(.visible).important()
+        textOverflow(.clip).important()
+        whiteSpace(.nowrap).important()
+      }
+      selector("& .table-measure-cell *") {
+        overflow(.visible).important()
+        textOverflow(.clip).important()
+        flexShrink(0).important()
+        whiteSpace(.nowrap).important()
+      }
+      descendant(".table-measure-sort-button") {
+        display(.inlineFlex).important()
+        alignItems(.center).important()
+        gap(px(4)).important()
+        width(.auto).important()
+        minWidth(.auto).important()
+        maxWidth(.none).important()
+      }
+      selector("& .table-measure-sort-button span:not(.table-sort-icon)") {
+        display(.inline).important()
+        width(.auto).important()
+        minWidth(.auto).important()
+        maxWidth(.none).important()
+        flexShrink(0).important()
+      }
+      selector("& .table-measure-sort-button .table-sort-icon", "& .table-measure-sort-button .table-sort-icon svg") {
+        display(.inlineFlex).important()
+        width(px(20)).important()
+        minWidth(px(20)).important()
+        maxWidth(px(20)).important()
+        height(px(20)).important()
+        flexShrink(0).important()
+      }
+      selector("& .table-measure-sort-button .table-sort-icon") {
+        alignItems(.center).important()
+        justifyContent(.center).important()
+        marginLeft(0).important()
+      }
+      descendant(".table-header") {
+        display(.flex)
+        alignItems(.center)
+        justifyContent(.spaceBetween)
+        gap(spacing12)
+        padding(spacing12)
+      }
+      descendant(".table-header-title") {
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeLarge18)
+        fontWeight(fontWeightBold)
+        color(colorBase)
+        margin(0)
+      }
+      descendant(".pagination-info") {
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeSmall14)
+        lineHeight(lineHeightSmall22)
+        color(colorSubtle)
+      }
+      descendant(".table-pagination") {
+        display(.flex)
+        alignItems(.center)
+        justifyContent(.spaceBetween)
+        gap(spacing12)
+        flexWrap(.wrap)
+        media(maxWidth(maxWidthBreakpointMobile)) {
+          justifyContent(.center).important()
+        }
+      }
+      descendant(".table-pagination-controls") {
+        flexShrink(0)
+        marginInlineStart(.auto)
+        media(maxWidth(maxWidthBreakpointMobile)) {
+          marginInlineStart(0)
+        }
+      }
+      descendant(".table-caption") {
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeMedium16)
+        fontWeight(fontWeightBold)
+        color(colorBase)
+        textAlign(.start)
+        padding(spacing12)
+      }
+      descendant(".table-caption[data-hidden='true']") {
+        position(.absolute)
+        width(px(1))
+        height(px(1))
+        margin(px(-1))
+        padding(0)
+        overflow(.hidden)
+        clip(rect(0, 0, 0, 0))
+        whiteSpace(.nowrap)
+        borderWidth(0)
+      }
+      descendant(".table-inner-wrapper") {
+        position(.relative)
+        transform(translateZ(0))
+        overflow(.overlay)
+        border(borderWidthBase, .solid, borderColorBase)
+        borderRadius(borderRadiusBase)
+        backgroundColor(backgroundColorBase)
+        width(perc(100))
+        display(.flex)
+        flex(1)
+        minHeight(0)
+      }
+      selector("&.table-view-empty .table-inner-wrapper") {
+        minHeight(px(160))
+        flexShrink(0)
+      }
+      selector("& .table-inner-wrapper::-webkit-scrollbar-track", "& .table-inner-wrapper::-webkit-scrollbar-track-piece", "& .table-inner-wrapper::-webkit-scrollbar-corner") {
+        backgroundColor(.transparent).important()
+      }
+      descendant(".table-table") {
+        tableLayout(.fixed)
+        borderCollapse(.separate)
+        borderSpacing(0)
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeMedium16)
+        color(colorBase)
+        width(perc(100))
+      }
+      selector("&.table-view-empty .table-table") {
+        display(.flex)
+        flexDirection(.column)
+        flex(1)
+      }
+      selector("& .table-row:nth-child(even)", "& .table-row-view:nth-child(even)", "& .table-tbody tr:nth-child(even)") { backgroundColor(backgroundColorNeutralSubtle) }
+      selector("& .table-row:nth-child(odd)", "& .table-row-view:nth-child(odd)", "& .table-tbody tr:nth-child(odd)") { backgroundColor(backgroundColorBase) }
+      descendant(".table-row-even") { backgroundColor(backgroundColorNeutralSubtle).important() }
+      descendant(".table-row-odd") { backgroundColor(backgroundColorBase).important() }
+      descendant(".table-row-last") { borderBlockEnd(.none).important() }
+      descendant(".table-td-spacer") {
+        backgroundColor(.inherit).important()
+        width(px(16)).important()
+        minWidth(px(16)).important()
+        borderRightWidth(0).important()
+        padding(0).important()
+      }
+      descendant(".table-tbody tr") { cursor(.default) }
+      selector("& .table-tbody tr[data-url]:not([data-url=''])", "& .table-tbody tr.table-row-link") {
+        cursor(cursorBaseHover)
+        transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionUser)
+      }
+      selector("& .table-tbody tr[data-url]:not([data-url='']):hover", "& .table-tbody tr.table-row-link:hover") { backgroundColor(backgroundColorInteractiveSubtleHover).important() }
+      selector("& .table-tbody tr[data-url]:not([data-url='']):active", "& .table-tbody tr.table-row-link:active") { backgroundColor(backgroundColorInteractiveSubtleActive).important() }
+      selector("& .table-tbody tr:hover:has(.table-selection-container:hover)", "& .table-tbody tr:active:has(.table-selection-container:active)", "& .table-tbody tr:hover:has(.animated-chevron-container:hover)", "& .table-tbody tr:hover:has(.animated-chevron:hover)") {
+        backgroundColor(.transparent).important()
+      }
+      selector("& .table-table-borders-vertical td:last-child", "& .table-table-borders-vertical th:last-child") { borderInlineEnd(.none) }
+      selector("& .table-table td > div:not(.table-resizer)", "& .table-table th > div:not(.table-resizer)", "& .table-table th > button", "& .table-table td > span", "& .table-table th > span") {
+        whiteSpace(.nowrap).important()
+        textOverflow(.ellipsis).important()
+        overflow(.hidden).important()
+        display(.block)
+        width(perc(100))
+      }
+      descendant(".table-thead") {
+        backgroundColor(backgroundColorNeutralSubtle)
+        borderBlockEnd(borderWidthBase, .solid, borderColorBase)
+        height(px(44))
+        minHeight(px(44))
+        maxHeight(px(44))
+      }
+      descendant(".table-tfoot") {
+        backgroundColor(backgroundColorNeutralSubtle)
+        borderBlockStart(borderWidthBase, .solid, borderColorBase)
+        fontWeight(fontWeightBold)
+      }
+      selector("& .table-thead th", "& .table-tbody th") {
+        backgroundColor(.inherit)
+        padding(spacing8, spacing12)
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeSmall14)
+        fontWeight(fontWeightBold)
+        lineHeight(lineHeightSmall22)
+        color(colorEmphasized)
+        height(px(44))
+        minHeight(px(44))
+        maxHeight(px(44))
+        boxSizing(.borderBox)
+        verticalAlign(.middle)
+        overflow(.visible)
+        textOverflow(.ellipsis)
+        whiteSpace(.nowrap)
+        minWidth(0)
+        textAlign(.start)
+      }
+      selector("& .table-tbody td", "& .table-tfoot td") {
+        backgroundColor(.inherit)
+        padding(spacing8, spacing12)
+        height(px(44))
+        minHeight(px(44))
+        maxHeight(px(44))
+        boxSizing(.borderBox)
+        verticalAlign(.middle)
+        overflow(.hidden)
+        textOverflow(.ellipsis)
+        whiteSpace(.nowrap)
+        minWidth(0)
+        textAlign(.start)
+      }
+      selector("& [data-align='center']") { textAlign(.center) }
+      selector("& [data-align='end']", "& [data-align='number']") { textAlign(.end) }
+      selector("& .table-table-borders-vertical th", "& .table-table-borders-vertical td") {
+        borderInlineStart(borderWidthBase, .solid, borderColorBase)
+      }
+      descendant(".table-selection-container") {
+        display(.flex)
+        alignItems(.center)
+        justifyContent(.center)
+      }
+      selector(".table-selection-container input", ".table-selection-container label", ".table-selection-container button") { cursor(.pointer).important() }
+      descendant(".table-resizer") {
+        position(.absolute)
+        top(spacing8)
+        right(px(-8))
+        bottom(spacing8)
+        width(px(1))
+        padding(0, spacing8)
+        boxSizing(.contentBox).important()
+        cursor(.colResize)
+        zIndex(10)
+        userSelect(.none)
+        backgroundColor(borderColorBase)
+        backgroundClip(.contentBox).important()
+        transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+        pseudoClass(.hover) {
+          backgroundColor(borderColorInteractiveHover)
+          opacity(1)
+        }
+        selector(".resizing") {
+          backgroundColor(borderColorInteractiveActive).important()
+          opacity(1).important()
+        }
+      }
+      descendant(".table-footer") {
+        padding(spacing12)
+        marginBlockStart(spacing8)
+      }
+      descendant(".table-sort-label") {
+        overflow(.hidden)
+        textOverflow(.ellipsis)
+        whiteSpace(.nowrap)
+        minWidth(px(0))
+        flexGrow(1)
+        flexShrink(1)
+      }
+      descendant(".table-sort-icon") {
+        display(.inlineFlex)
+        alignItems(.center)
+        justifyContent(.center)
+        width(sizeIconMedium)
+        height(sizeIconMedium)
+        fontSize(fontSizeXSmall12)
+        flexShrink(0)
+      }
+      descendant(".table-sort-button") {
+        display(.flex)
+        alignItems(.center)
+        flexShrink(1)
+        height(px(26))
+        gap(spacing4)
+        width(perc(100))
+        padding(0)
+        backgroundColor(backgroundColorTransparent)
+        border(.none)
+        fontFamily(.inherit)
+        fontSize(.inherit)
+        fontWeight(.inherit)
+        color(colorBase)
+        textAlign(.inherit)
+        textTransform(.inherit)
+        overflow(.hidden)
+        textOverflow(.ellipsis)
+        whiteSpace(.nowrap)
+        cursor(cursorBaseHover)
+        minWidth(0)
+        transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+        height(perc(100))
+      }
+      descendant(".table-header-label") {
+        width(perc(100))
+        overflow(.hidden)
+        textOverflow(.ellipsis)
+        whiteSpace(.nowrap)
+        display(.block)
+      }
+      descendant(".table-selection-header") {
+        width(px(44))
+        minWidth(px(44))
+        position(.sticky)
+        top(0)
+        zIndex(zIndexSticky).important()
+        backgroundColor(backgroundColorBase).important()
+        backgroundColor(backgroundColorNeutralSubtle).important()
+      }
+      descendant(".table-column-header") {
+        position(.sticky)
+        top(0)
+        zIndex(zIndexSticky).important()
+        backgroundColor(backgroundColorBase).important()
+        backgroundColor(backgroundColorNeutralSubtle).important()
+      }
+      descendant(".table-th-spacer") {
+        width(px(16))
+        minWidth(px(16))
+        position(.sticky)
+        top(0)
+        zIndex(zIndexSticky).important()
+        backgroundColor(backgroundColorNeutralSubtle).important()
+        borderRightWidth(px(0))
+        padding(px(0))
+      }
+      selector("&.table-view-empty .table-tbody") {
+        display(.flex)
+        flexDirection(.column)
+        flex(1)
+      }
+      descendant(".table-empty-state-content") {
+        display(.flex)
+        flexDirection(.column)
+        gap(spacing8)
+        alignItems(.center)
+        justifyContent(.center)
+        flex(1)
+      }
+      descendant(".table-empty-state") {
+        padding(spacing48)
+        textAlign(.center)
+        color(colorSubtle)
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeMedium16)
+        display(.flex)
+        flexDirection(.column)
+        alignItems(.center)
+        justifyContent(.center)
+        flex(1)
+      }
+      descendant(".table-empty-row") {
+        backgroundColor(backgroundColorBase).important()
+        display(.flex)
+        flexDirection(.column)
+        flex(1)
+      }
+      descendant(".table-group-indent") {
+        display(.inlineBlock)
+        width(spacing24)
+      }
+      descendant(".table-cell-content") {
+        width(perc(100))
+        overflow(.hidden)
+        textOverflow(.ellipsis)
+        whiteSpace(.nowrap).important()
+        display(.block)
+      }
+    }
+    .style(prefix: false) {
+      selector("body[data-table-resizing='true']") { cursor(.colResize) }
     }
   }
 
@@ -1031,6 +1250,9 @@ public struct TableView: HTMLContent {
     isGroupHeader: Bool,
     isGroupChild: Bool,
     hasUrl: Bool = false,
+    isLast: Bool,
+    isEven: Bool,
+    isInitiallyCollapsed: Bool,
     customClass: String = ""
   ) -> String {
     var classes = ["table-row"]
@@ -1038,369 +1260,13 @@ public struct TableView: HTMLContent {
     if isGroupHeader { classes.append("table-group-header") }
     if isGroupChild { classes.append("table-group-child table-row-animatable") }
     if hasUrl { classes.append("table-row-link") }
+    if isLast { classes.append("table-row-last") }
+    classes.append(isEven ? "table-row-even" : "table-row-odd")
+    if isInitiallyCollapsed { classes.append("table-row-collapsed") }
     if !stringIsEmpty(customClass) { classes.append(customClass) }
     return stringJoin(classes, separator: " ")
   }
 
-  @CSSBuilder
-  private func tableViewCSS() -> [CSSOM.CSSRule] {
-    width(perc(100))
-    display(.flex)
-    flexDirection(.column)
-    gap(spacing32)
-    flex(1)
-    minHeight(0)
-
-    // Disable interactions when empty or pending
-    selector(".table-view-empty tbody tr:hover", ".table-view-pending tbody tr:hover") {
-      backgroundColor(.transparent).important()
-    }
-
-    selector(".table-view-empty tbody tr:active", ".table-view-pending tbody tr:active") {
-      backgroundColor(.transparent).important()
-    }
-
-    selector(".table-view-empty .table-row-link", ".table-view-pending .table-row-link", ".table-view-empty tr[data-url]:not([data-url=''])", ".table-view-pending tr[data-url]:not([data-url=''])") {
-      cursor(.default).important()
-    }
-
-    selector(".table-view-empty .table-sort-button", ".table-view-pending .table-sort-button") {
-      cursor(.default).important()
-    }
-
-    selector(".table-view-empty .table-sort-button:hover", ".table-view-pending .table-sort-button:hover", ".table-view-empty .table-sort-button:active", ".table-view-pending .table-sort-button:active") {
-      color(.inherit).important()
-    }
-
-    selector(".table-view-empty .table-sort-button:hover .table-sort-icon", ".table-view-pending .table-sort-button:hover .table-sort-icon") {
-      color(.inherit).important()
-    }
-
-    selector(".table-view-empty .table-pagination", ".table-view-pending .table-pagination") {
-      opacity(0.5)
-      pointerEvents(.none)
-    }
-
-    // Level 1 Cell Stacking: Top level rows sit on top of everything
-    selector(
-      ".table-group-header td",
-      ".table-row:not(.table-group-child):not(.table-sub-row):not(.lemma-history-sub-row) td",
-      ".table-row-view:not(.table-group-child):not(.table-sub-row):not(.lemma-history-sub-row) td",
-      ".table-tbody tr:not(.table-group-child):not(.table-sub-row):not(.lemma-history-sub-row) td"
-    ) {
-      position(.relative)
-      zIndex(zIndexStacking3)
-      backgroundColor(.inherit)
-    }
-
-    // Level 2 Cell Stacking & Transition
-    selector(".table-group-child", ".batch-group-child") {
-      transition((.transform, .opacity), transitionDurationMedium, transitionTimingFunctionSystem)
-      willChange(.transform, .opacity)
-    }
-    selector(".table-group-child td", ".batch-group-child td") {
-      position(.relative)
-      zIndex(zIndexStacking2)
-      backgroundColor(.inherit)
-    }
-
-    // Level 3 Cell Stacking & Transition
-    selector(".lemma-history-sub-row", ".table-sub-row") {
-      transition((.transform, .opacity), transitionDurationMedium, transitionTimingFunctionSystem)
-      willChange(.transform, .opacity)
-    }
-    selector(".lemma-history-sub-row td", ".table-sub-row td") {
-      position(.relative)
-      zIndex(zIndexStacking1)
-      backgroundColor(.inherit)
-    }
-
-    selector(".table-row-collapsed") {
-      pointerEvents(.none)
-      opacity(0.0)
-      transform(translateY(perc(-100)))
-    }
-  }
-
-  @CSSBuilder
-  private func tableHeaderCSS() -> [CSSOM.CSSRule] {
-    display(.flex)
-    alignItems(.center)
-    justifyContent(.spaceBetween)
-    gap(spacing12)
-    padding(spacing12)
-  }
-
-  @CSSBuilder
-  private func tableHeaderTitleCSS() -> [CSSOM.CSSRule] {
-    fontFamily(typographyFontSans)
-    fontSize(fontSizeLarge18)
-    fontWeight(fontWeightBold)
-    color(colorBase)
-    margin(0)
-  }
-
-  @CSSBuilder
-  private func tableInnerWrapperCSS() -> [CSSOM.CSSRule] {
-    position(.relative)
-    transform(translateZ(0))
-    overflow(.auto)
-    border(borderWidthBase, .solid, borderColorSubtle)
-    borderRadius(borderRadiusBase)
-    backgroundColor(backgroundColorBase)
-    width(perc(100))
-    display(.flex)
-    flex(1)
-    minHeight(0)
-  }
-
-  @CSSBuilder
-  private func tableResizerCSS() -> [CSSOM.CSSRule] {
-    position(.absolute)
-    top(spacing8)
-    right(px(-8))
-    bottom(spacing8)
-    width(px(1))
-    padding(0, spacing8)
-    boxSizing(.contentBox).important()
-    cursor(.colResize)
-    zIndex(10)
-    userSelect(.none)
-    backgroundColor(borderColorSubtle)
-    backgroundClip(.contentBox).important()
-    transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-
-    pseudoClass(.hover) {
-      backgroundColor(borderColorInteractiveHover)
-      opacity(1)
-    }
-
-    selector(".resizing") {
-      backgroundColor(borderColorInteractiveActive).important()
-      opacity(1).important()
-    }
-  }
-
-  @CSSBuilder
-  private func tableTableCSS(_ showVerticalBorders: Bool) -> [CSSOM.CSSRule] {
-    tableLayout(.fixed)
-    borderCollapse(.separate)
-    borderSpacing(0)
-    fontFamily(typographyFontSans)
-    fontSize(fontSizeMedium16)
-    color(colorBase)
-    width(perc(100))
-    alignSelf(.flexStart)
-
-    selector(".table-row:nth-child(even)", ".table-row-view:nth-child(even)", ".table-tbody tr:nth-child(even)") {
-      backgroundColor(backgroundColorNeutralSubtle)
-    }
-
-    selector(".table-row:nth-child(odd)", ".table-row-view:nth-child(odd)", ".table-tbody tr:nth-child(odd)") {
-      backgroundColor(backgroundColorBase)
-    }
-
-    // Non-clickable rows default
-    selector(".table-tbody tr") {
-      cursor(.default)
-    }
-
-    // Centralized styling for clickable rows
-    selector(".table-tbody tr[data-url]:not([data-url=''])", ".table-tbody tr.table-row-link") {
-      cursor(cursorBaseHover)
-      transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionUser)
-    }
-
-    selector(".table-tbody tr[data-url]:not([data-url='']):hover", ".table-tbody tr.table-row-link:hover") {
-      backgroundColor(backgroundColorInteractiveSubtleHover).important()
-    }
-
-    selector(".table-tbody tr[data-url]:not([data-url='']):active", ".table-tbody tr.table-row-link:active") {
-      backgroundColor(backgroundColorInteractiveSubtleActive).important()
-    }
-
-    if showVerticalBorders {
-      selector("td:last-child", "th:last-child") {
-        borderInlineEnd(.none)
-      }
-    }
-
-    selector("td > div", "th > div", "th > button", "td > span", "th > span") {
-      whiteSpace(.nowrap).important()
-      textOverflow(.ellipsis).important()
-      overflow(.hidden).important()
-      display(.block)
-      width(perc(100))
-    }
-  }
-
-  @CSSBuilder
-  private func tableCaptionCSS(_ hideCaption: Bool) -> [CSSOM.CSSRule] {
-    fontFamily(typographyFontSans)
-    fontSize(fontSizeMedium16)
-    fontWeight(fontWeightBold)
-    color(colorBase)
-    textAlign(.start)
-    padding(spacing12)
-
-    if hideCaption {
-      position(.absolute)
-      width(px(1))
-      height(px(1))
-      margin(px(-1))
-      padding(0)
-      overflow(.hidden)
-      clip(rect(0, 0, 0, 0))
-      whiteSpace(.nowrap)
-      borderWidth(0)
-    }
-  }
-
-  @CSSBuilder
-  private func tableTheadCSS() -> [CSSOM.CSSRule] {
-    backgroundColor(backgroundColorNeutralSubtle)
-    borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
-  }
-
-  @CSSBuilder
-  private func tableThCSS(_ align: Column.Alignment) -> [CSSOM.CSSRule] {
-    backgroundColor(.inherit)
-    padding(spacing8, spacing12)
-    fontFamily(typographyFontSans)
-    fontSize(fontSizeSmall14)
-    fontWeight(fontWeightBold)
-    lineHeight(lineHeightSmall22)
-    color(colorEmphasized)
-
-    switch align {
-    case .start:
-      textAlign(.start)
-    case .center:
-      textAlign(.center)
-    case .end:
-      textAlign(.end)
-    case .number:
-      textAlign(.end)
-    }
-    verticalAlign(.middle)
-    overflow(.visible)
-    textOverflow(.ellipsis)
-    whiteSpace(.nowrap)
-    minWidth(0)
-    if showVerticalBorders {
-      borderInlineStart(borderWidthBase, .solid, borderColorSubtle)
-    }
-  }
-
-  @CSSBuilder
-  private func tableSortButtonCSS() -> [CSSOM.CSSRule] {
-    display(.flex)
-    alignItems(.center)
-    flexShrink(1)
-    height(px(26))
-    gap(spacing4)
-    width(perc(100))
-    padding(0)
-    backgroundColor(backgroundColorTransparent)
-    border(.none)
-    fontFamily(.inherit)
-    fontSize(.inherit)
-    fontWeight(.inherit)
-    color(colorBase)
-    textAlign(.inherit)
-    textTransform(.inherit)
-    overflow(.hidden)
-    textOverflow(.ellipsis)
-    whiteSpace(.nowrap)
-    cursor(cursorBaseHover)
-    minWidth(0) // Allow flex item to shrink
-    transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-  }
-
-  @CSSBuilder
-  private func tableSortIconCSS() -> [CSSOM.CSSRule] {
-    display(.inlineFlex)
-    alignItems(.center)
-    justifyContent(.center)
-    width(sizeIconMedium)
-    height(sizeIconMedium)
-    fontSize(fontSizeXSmall12)
-    flexShrink(0)
-  }
-
-  @CSSBuilder
-  private func tableTdCSS(_ align: Column.Alignment) -> [CSSOM.CSSRule] {
-    backgroundColor(.inherit)
-    padding(spacing8, spacing12)
-
-    switch align {
-    case .start:
-      textAlign(.start)
-    case .center:
-      textAlign(.center)
-    case .end:
-      textAlign(.end)
-    case .number:
-      textAlign(.end)
-    }
-    verticalAlign(.middle)
-    overflow(.hidden)
-    textOverflow(.ellipsis)
-    whiteSpace(.nowrap)
-    minWidth(0)
-    if showVerticalBorders {
-      borderInlineStart(borderWidthBase, .solid, borderColorSubtle)
-    }
-  }
-
-  @CSSBuilder
-  private func tableTfootCSS() -> [CSSOM.CSSRule] {
-    backgroundColor(backgroundColorNeutralSubtle)
-    borderBlockStart(borderWidthBase, .solid, borderColorSubtle)
-    fontWeight(fontWeightBold)
-  }
-
-  @CSSBuilder
-  private func tableEmptyStateCSS() -> [CSSOM.CSSRule] {
-    padding(spacing48)
-    textAlign(.center)
-    color(colorSubtle)
-    fontFamily(typographyFontSans)
-    fontSize(fontSizeMedium16)
-  }
-
-  @CSSBuilder
-  private func tableFooterCSS() -> [CSSOM.CSSRule] {
-    padding(spacing12)
-    marginBlockStart(spacing8)
-  }
-
-  @CSSBuilder
-  private func tablePaginationCSS() -> [CSSOM.CSSRule] {
-    display(.flex)
-    alignItems(.center)
-    justifyContent(.spaceBetween)
-    gap(spacing12)
-    flexWrap(.wrap)
-    media(maxWidth(maxWidthBreakpointMobile)) {
-      justifyContent(.center).important()
-    }
-  }
-
-  @CSSBuilder
-  private func paginationInfoCSS() -> [CSSOM.CSSRule] {
-    fontFamily(typographyFontSans)
-    fontSize(fontSizeSmall14)
-    lineHeight(lineHeightSmall22)
-    color(colorSubtle)
-  }
-
-  @CSSBuilder
-  private func paginationControlsCSS() -> [CSSOM.CSSRule] {
-    display(.flex)
-    alignItems(.center)
-    gap(spacing8)
-  }
 }
 
 #if CLIENT
@@ -1411,14 +1277,16 @@ public struct TableView: HTMLContent {
       let rows = table.querySelectorAll(".table-tbody tr")
       var visibleIndex = 0
       for row in rows {
-        let isCollapsed = stringEquals(row.style.getPropertyValue(.display), "none")
+        let isCollapsed = row.classList.contains("table-row-hidden")
         if isCollapsed {
           continue
         }
         if visibleIndex % 2 == 1 {
-          row.style.setProperty(.backgroundColor, backgroundColorNeutralSubtle.value, .important)
+          _ = row.classList.add("table-row-even")
+          _ = row.classList.remove("table-row-odd")
         } else {
-          row.style.setProperty(.backgroundColor, backgroundColorBase.value, .important)
+          _ = row.classList.add("table-row-odd")
+          _ = row.classList.remove("table-row-even")
         }
         visibleIndex += 1
       }
@@ -1474,43 +1342,22 @@ public struct TableView: HTMLContent {
       startWidths.append(WidthPair(key: key, value: value))
     }
 
+    private func setColumnWidth(for header: DOM.Element, width: Double) {
+      guard let columnID = header.getAttribute(data("table-column-id")) else { return }
+      guard let column = tableTable.querySelector("col[data-table-column-id='\(columnID)']") else { return }
+      column.setAttribute("width", intToString(Int(ceil(width))))
+    }
+
+    private func setTableWidth(_ width: Double) {
+      tableTable.setAttribute("width", intToString(Int(ceil(width))))
+    }
+
     private func measureCellContent(_ cell: DOM.Element) -> Double {
       let tag = cell.tagName
       let tempCell = document.createElement(tag)
-      tempCell.className = cell.className
-      
-      // Copy inline styles if any exist, but remove active width/min-width constraints
-      // to ensure a true, unconstrained, natural content measurement.
-      if let styleAttr = cell.getAttribute(.style) {
-        tempCell.setAttribute(.style, styleAttr)
-        tempCell.style.removeProperty(.width)
-        tempCell.style.removeProperty(.minWidth)
-        tempCell.style.removeProperty(.maxWidth)
-      }
-      
-      // Enforce unconstrained width, minWidth, and white-space on the cell itself.
-      // Critical: the source cell's inline styles include overflow:hidden and existing fixed widths/minWidths
-      // which block content shrinking during measurement. We must override them with !important.
-      tempCell.style.setProperty(.width, .auto, .important)
-      tempCell.style.setProperty(.minWidth, .auto, .important)
-      tempCell.style.setProperty(.maxWidth, .none, .important)
-      tempCell.style.setProperty(.overflow, .visible, .important)
-      tempCell.style.setProperty(.textOverflow, .clip, .important)
-      tempCell.style.setProperty(.whiteSpace, .nowrap, .important)
-      
+      tempCell.className = "\(cell.className) table-measure-cell"
       tempCell.innerHTML = cell.innerHTML
-      
-      // Force all descendant elements inside the measuring cell to size unconstrained,
-      // never wrap, and never shrink. This ensures flex layouts, gaps, text, and inline icons
-      // are measured natively at their exact, true, unconstrained sizes.
-      let descendants = tempCell.querySelectorAll("*")
-      for desc in descendants {
-        desc.style.setProperty(.overflow, .visible, .important)
-        desc.style.setProperty(.textOverflow, .clip, .important)
-        desc.style.setProperty(.flexShrink, 0, .important)
-        desc.style.setProperty(.whiteSpace, .nowrap, .important)
-      }
-      
+
       // Strip name and id attributes from any input elements inside the tempCell.
       // This is critical because radio buttons with the same name are mutually exclusive:
       // when a cloned radio cell is temporarily appended to the DOM for measurement,
@@ -1526,119 +1373,41 @@ public struct TableView: HTMLContent {
       // applied to `<button>` controls (especially when positioned inside off-screen table cells).
       if let sortButton = tempCell.querySelector(".table-sort-button") {
         let divReplacement = document.createElement(.div)
-        divReplacement.className = sortButton.className
-        if let styleAttr = sortButton.getAttribute(.style) {
-          divReplacement.setAttribute(.style, styleAttr)
-        }
+        divReplacement.className = "\(sortButton.className) table-measure-sort-button"
         divReplacement.innerHTML = sortButton.innerHTML
-        
+
         if let parent = sortButton.parentElement {
           parent.insertBefore(divReplacement, sortButton)
           sortButton.remove()
         }
-        
-        // Unconstrain our newly created divReplacement to behave as a standard inline flex container
-        divReplacement.style.setProperty(.display, .inlineFlex, .important)
-        divReplacement.style.setProperty(.alignItems, .center, .important)
-        divReplacement.style.setProperty(.gap, px(4), .important)
-        divReplacement.style.setProperty(.width, .auto, .important)
-        divReplacement.style.setProperty(.minWidth, .auto, .important)
-        divReplacement.style.setProperty(.maxWidth, .none, .important)
-        
-        // Unconstrain the inner text span inside the replacement div
-        if let textSpan = divReplacement.querySelector("span:not(.table-sort-icon)") {
-          textSpan.style.setProperty(.display, .inline, .important)
-          textSpan.style.setProperty(.width, .auto, .important)
-          textSpan.style.setProperty(.minWidth, .auto, .important)
-          textSpan.style.setProperty(.maxWidth, .none, .important)
-          textSpan.style.setProperty(.flexShrink, 0, .important)
-        }
-        
-        // Force the sort icon span inside the replacement div to have its full, unconstrained dimensions
-        if let sortIcon = divReplacement.querySelector(".table-sort-icon") {
-          sortIcon.style.setProperty(.display, .inlineFlex, .important)
-          sortIcon.style.setProperty(.alignItems, .center, .important)
-          sortIcon.style.setProperty(.justifyContent, .center, .important)
-          sortIcon.style.setProperty(.width, px(20), .important)
-          sortIcon.style.setProperty(.minWidth, px(20), .important)
-          sortIcon.style.setProperty(.maxWidth, px(20), .important)
-          sortIcon.style.setProperty(.height, px(20), .important)
-          sortIcon.style.setProperty(.flexShrink, 0, .important)
-          sortIcon.style.setProperty(.marginLeft, 0, .important)
-          
-          if let svgChild = sortIcon.querySelector("svg") {
-            svgChild.style.setProperty(.display, .inlineBlock, .important)
-            svgChild.style.setProperty(.width, px(20), .important)
-            svgChild.style.setProperty(.minWidth, px(20), .important)
-            svgChild.style.setProperty(.maxWidth, px(20), .important)
-            svgChild.style.setProperty(.height, px(20), .important)
-            svgChild.style.setProperty(.flexShrink, 0, .important)
-          }
-        }
       }
-      
+
       // Create a hidden measuring table hierarchy that matches the cascade classes
       // of the source table to inherit all typography and padding rules perfectly.
       let measureDiv = document.createElement(.div)
-      measureDiv.className = table.className
-      if let tableStyle = table.getAttribute(.style) {
-        measureDiv.setAttribute(.style, tableStyle)
-        measureDiv.style.removeProperty(.width)
-        measureDiv.style.removeProperty(.minWidth)
-        measureDiv.style.removeProperty(.maxWidth)
-      }
-      measureDiv.style.setProperty(.position, .absolute, .important)
-      measureDiv.style.setProperty(.visibility, .hidden, .important)
-      measureDiv.style.setProperty(.top, px(-9999), .important)
-      measureDiv.style.setProperty(.left, px(-9999), .important)
-      measureDiv.style.setProperty(.width, .auto, .important)
-      measureDiv.style.setProperty(.height, .auto, .important)
-      
+      measureDiv.className = "\(table.className) table-measure-root"
+
       let tempTable = document.createElement(.table)
-      tempTable.className = tableTable.className
-      if let tableTableStyle = tableTable.getAttribute(.style) {
-        tempTable.setAttribute(.style, tableTableStyle)
-        tempTable.style.removeProperty(.width)
-        tempTable.style.removeProperty(.minWidth)
-        tempTable.style.removeProperty(.maxWidth)
-      }
-      // Enforce auto layout for measuring table to prevent column compression
-      tempTable.style.setProperty(.tableLayout, .auto, .important)
-      tempTable.style.setProperty(.width, .auto, .important)
-      tempTable.style.setProperty(.display, .table, .important)
-      
+      tempTable.className = "\(tableTable.className) table-measure-table"
+
       let tempSection: DOM.Element
       if stringEquals(tag, "th") || stringEquals(tag, "TH") {
         tempSection = document.createElement("thead")
         if let liveThead = table.querySelector("thead") {
           tempSection.className = liveThead.className
-          if let liveTheadStyle = liveThead.getAttribute(.style) {
-            tempSection.setAttribute(.style, liveTheadStyle)
-          }
         }
-        tempSection.style.setProperty(.display, .tableHeaderGroup, .important)
       } else {
         tempSection = document.createElement(.tbody)
         if let liveTbody = table.querySelector(".table-tbody") {
           tempSection.className = liveTbody.className
-          if let liveTbodyStyle = liveTbody.getAttribute(.style) {
-            tempSection.setAttribute(.style, liveTbodyStyle)
-          }
         }
-        tempSection.style.setProperty(.display, .tableRowGroup, .important)
       }
-      
+
       let tempTr = document.createElement(.tr)
       if let liveTr = cell.parentElement {
         tempTr.className = liveTr.className
-        if let liveTrStyle = liveTr.getAttribute(.style) {
-          tempTr.setAttribute(.style, liveTrStyle)
-        }
       }
-      tempTr.style.setProperty(.display, .tableRow, .important)
-      
-      tempCell.style.setProperty(.display, .tableCell, .important)
-      
+
       tempTr.appendChild(tempCell)
       tempSection.appendChild(tempTr)
       tempTable.appendChild(tempSection)
@@ -1650,62 +1419,6 @@ public struct TableView: HTMLContent {
       measureDiv.remove()
       
       return width
-    }
-
-    private func autoSizeAllColumnsOnMount() {
-      let headers = Array(self.table.querySelectorAll("thead th")).filter { !$0.classList.contains("table-th-spacer") }
-      guard !headers.isEmpty else { return }
-      
-      let parentTr = headers[0].parentElement
-      let allHeaderCells = parentTr?.querySelectorAll("th") ?? Array<DOM.Element>()
-      
-      let wrapperWidth = Double(self.tableTable.parentElement?.getBoundingClientRect()?.width ?? 0)
-      
-      // Separate headers into flex (fluid) and fixed
-      let flexHeaders = headers.filter { stringEquals($0.getAttribute("data-flex") ?? "", "true") }
-      let fixedHeaders = headers.filter { !stringEquals($0.getAttribute("data-flex") ?? "", "true") }
-      
-      // Calculate fixed widths sum
-      var fixedWidthsSum: Double = 0
-      for th in fixedHeaders {
-        fixedWidthsSum += th.getBoundingClientRect()?.width ?? 50.0
-      }
-      
-      // Calculate balanced width for flex columns
-      let remainingWidth = max(0.0, wrapperWidth - fixedWidthsSum)
-      let balancedFlexWidth = flexHeaders.isEmpty ? 150.0 : max(100.0, remainingWidth / Double(flexHeaders.count))
-      
-      for th in headers {
-        let colIndex = allHeaderCells.firstIndex(where: { stringEquals($0.idString, th.idString) }) ?? -1
-        guard colIndex >= 0 else { continue }
-        
-        let isFlex = stringEquals(th.getAttribute("data-flex") ?? "", "true")
-        
-        if isFlex {
-          // Fluid flex columns share the remaining space perfectly equally
-          th.style.setProperty(.minWidth, px(balancedFlexWidth), .important)
-          th.style.setProperty(.width, .auto, .important)
-        } else {
-          // Fixed columns keep their specified width
-          var maxWidth: Double = 0
-          maxWidth = max(maxWidth, measureCellContent(th))
-          
-          let bodyRows = table.querySelectorAll(".table-tbody tr")
-          for row in bodyRows {
-            if row.querySelector("[colspan]") != nil { continue }
-            if let rect = row.getBoundingClientRect(), rect.height > 0 {
-              let rowCells = row.querySelectorAll(":scope > td, :scope > th")
-              if colIndex < rowCells.count {
-                let cell = rowCells[colIndex]
-                maxWidth = max(maxWidth, measureCellContent(cell))
-              }
-            }
-          }
-          let finalWidth = ceil(maxWidth)
-          th.style.setProperty(.minWidth, px(finalWidth), .important)
-          th.style.setProperty(.width, px(finalWidth), .important)
-        }
-      }
     }
 
     public init(table: DOM.Element) {
@@ -1758,7 +1471,6 @@ public struct TableView: HTMLContent {
 
       bindEvents()
       TableInstance.updateZebraStriping(for: table)
-      self.adjustDummyRows()
 
       let isServerPaginated = stringEquals(table.getAttribute(data("paginate-server")) ?? "false", "true")
       if !isServerPaginated {
@@ -1774,10 +1486,6 @@ public struct TableView: HTMLContent {
     }
 
     private func bindEvents() {
-      _ = window.addEventListener(.resize) { [self] _ in
-        self.adjustDummyRows()
-      }
-
       // Column resizing
       let resizers = table.querySelectorAll(".table-resizer")
       for resizer in resizers {
@@ -1807,7 +1515,6 @@ public struct TableView: HTMLContent {
       // Group header expand/collapse — ONLY chevron is clickable
       for header in groupHeaders {
         if let chevron = header.querySelector(".animated-right-down-chevron-view") {
-          chevron.style.cursor(.pointer)
           _ = chevron.addEventListener(.click) { [self] _ in
             self.toggleGroup(header)
           }
@@ -1818,7 +1525,6 @@ public struct TableView: HTMLContent {
       let subrowToggleRows = Array(table.querySelectorAll(".table-tbody tr:has(.lemma-history-toggle), .table-tbody tr:has(.table-subrow-toggle)"))
       for row in subrowToggleRows {
         if let toggle = row.querySelector(".lemma-history-toggle") ?? row.querySelector(".table-subrow-toggle") {
-          toggle.style.cursor(.pointer)
           _ = toggle.addEventListener(.click) { [self] _ in
             if let parentID = row.getAttribute("data-run-id") ?? row.getAttribute("data-subrow-id") {
               self.toggleSubrowGroup(row, parentID: parentID)
@@ -1861,6 +1567,24 @@ public struct TableView: HTMLContent {
             }
           }
           _ = pageInput.addEventListener(.keydown) { [self] (event: Event) in
+            if stringEquals(event.key, "ArrowUp") {
+              event.preventDefault()
+              guard let input = pageInput as? HTML.HTMLInputElement else { return }
+              let cur = parseInt(input.value) ?? 1
+              let maxVal = input.getAttribute("max").flatMap { parseInt($0) } ?? 999999
+              let next = min(cur + 1, maxVal)
+              input.value = intToString(next)
+              return
+            }
+            if stringEquals(event.key, "ArrowDown") {
+              event.preventDefault()
+              guard let input = pageInput as? HTML.HTMLInputElement else { return }
+              let cur = parseInt(input.value) ?? 1
+              let minVal = input.getAttribute("min").flatMap { parseInt($0) } ?? 1
+              let next = max(cur - 1, minVal)
+              input.value = intToString(next)
+              return
+            }
             if stringEquals(event.key, "Enter") {
               event.preventDefault()
               guard let input = pageInput as? HTML.HTMLInputElement else { return }
@@ -1943,7 +1667,7 @@ public struct TableView: HTMLContent {
       }
       
       resizer.classList.add("resizing")
-      document.body.style.cursor(.colResize)
+      document.body.setAttribute(data("table-resizing"), true)
       
       moveListenerID = window.addEventListener(.mousemove, onResize)
       upListenerID = window.addEventListener(.mouseup, stopResize)
@@ -1959,8 +1683,7 @@ public struct TableView: HTMLContent {
       hasDragged = true
       let newWidth = max(dragFloor, startWidth + delta)
       
-      th.style.setProperty(.width, px(newWidth), .important)
-      th.style.setProperty(.minWidth, px(newWidth), .important)
+      setColumnWidth(for: th, width: newWidth)
       
       // Update tableTable width to sum of all columns, pinning each column explicitly
       // to prevent table-layout: fixed from redistributing widths during resize.
@@ -1972,18 +1695,16 @@ public struct TableView: HTMLContent {
         var w: Double = 0
         if !stringIsEmpty(headerId) && stringEquals(headerId, activeId) {
           w = newWidth
-          header.style.setProperty(.width, px(w), .important)
-          header.style.setProperty(.minWidth, px(w), .important)
+          setColumnWidth(for: header, width: w)
           total += w
         } else {
           w = getStartWidth(for: headerId) ?? Double(header.getBoundingClientRect()?.width ?? 100)
-          header.style.setProperty(.width, px(w), .important)
-          header.style.setProperty(.minWidth, px(w), .important)
+          setColumnWidth(for: header, width: w)
           total += w
         }
       }
 
-      self.tableTable.style.minWidth(px(total))
+      setTableWidth(total)
     }
 
     private func snapResize(_ event: Event, resizer: DOM.Element) {
@@ -2013,12 +1734,9 @@ public struct TableView: HTMLContent {
         }
       }
       
-      // Set up the snapping finalWidth and min-width floors:
-      // For columns with max content width >= 150px, the minimum floor is 150px.
-      // For columns with max content width < 150px, there is no floor (it is tight to the natural max content width).
-      // We round up to the next integer pixel using ceil() to avoid fractional subpixel rounding truncation in Safari.
+      // Snap to the measured content width, rounded up to avoid fractional
+      // subpixel truncation in Safari. The colgroup owns the resulting width.
       let finalWidth = ceil(maxWidth)
-      let columnFloor = maxWidth >= 150.0 ? 150.0 : finalWidth
       
       let headers = Array(self.table.querySelectorAll("thead th")).filter { !$0.classList.contains("table-th-spacer") }
       
@@ -2027,23 +1745,21 @@ public struct TableView: HTMLContent {
       for header in headers {
         let headerId = header.getAttribute(.id) ?? ""
         if !stringIsEmpty(headerId) && stringEquals(headerId, activeId) {
-          header.style.setProperty(.width, px(min(finalWidth, 2000.0)), .important)
-          header.style.setProperty(.minWidth, px(min(columnFloor, 2000.0)), .important)
+          setColumnWidth(for: header, width: min(finalWidth, 2000.0))
           total += finalWidth
         } else {
           let w = getStartWidth(for: headerId) ?? Double(header.getBoundingClientRect()?.width ?? 150.0)
-          header.style.setProperty(.width, px(w), .important)
-          header.style.setProperty(.minWidth, px(w), .important)
+          setColumnWidth(for: header, width: w)
           total += w
         }
       }
       
-      self.tableTable.style.minWidth(px(total))
+      setTableWidth(total)
     }
 
     private func stopResize(_ event: Event) {
       activeResizer?.classList.remove("resizing")
-      document.body.style.cursor(.default)
+      document.body.setAttribute(data("table-resizing"), false)
       
       if moveListenerID >= 0 {
         window.removeEventListener(.mousemove, moveListenerID)
@@ -2080,18 +1796,15 @@ public struct TableView: HTMLContent {
       if isCollapsed {
         // Expand: show rows first, then let class removal animate slide-in
         for child in childRows {
-          child.style.display(.tableRow)
-          child.style.removeProperty(.transform)
-          child.style.removeProperty(.opacity)
+          child.classList.remove("table-row-hidden")
+          child.classList.add("table-row-collapsed")
           _ = child.getBoundingClientRect() // Force layout reflow
         }
         TableInstance.updateZebraStriping(for: self.table)
-        self.adjustDummyRows()
         window.setTimeout(20) {
           for child in childRows {
             child.classList.remove("table-row-collapsed")
           }
-          self.adjustDummyRows()
         }
       } else {
         // Collapse: add class to trigger hardware-accelerated fade & slide
@@ -2103,13 +1816,12 @@ public struct TableView: HTMLContent {
             let subRows = self.table.querySelectorAll("[data-parent-child-run-id='\(childRunID)'], [data-parent-row-id='\(childRunID)']")
             for subRow in subRows {
               subRow.classList.add("table-row-collapsed")
-              subRow.style.display(.none)
+              subRow.classList.add("table-row-hidden")
             }
             
             // Reset any rotated chevrons inside the child row
             let childChevrons = child.querySelectorAll("[data-expanded='true']")
             for chevron in childChevrons {
-              chevron.style.transform(rotate(deg(-90)))
               chevron.setAttribute(data("expanded"), "false")
             }
           }
@@ -2119,11 +1831,10 @@ public struct TableView: HTMLContent {
         window.setTimeout(250) { [self] in
           for child in childRows {
             if child.classList.contains("table-row-collapsed") {
-              child.style.display(.none)
+              child.classList.add("table-row-hidden")
             }
           }
           TableInstance.updateZebraStriping(for: self.table)
-          self.adjustDummyRows()
         }
       }
 
@@ -2132,10 +1843,8 @@ public struct TableView: HTMLContent {
         upDownChevron.morph(toExpanded: isCollapsed)
       } else if let rightDownChevron = header.querySelector("[data-expanded]") {
         if isCollapsed {
-          rightDownChevron.style.transform(rotate(deg(0)))
           rightDownChevron.setAttribute(data("expanded"), "true")
         } else {
-          rightDownChevron.style.transform(rotate(deg(-90)))
           rightDownChevron.setAttribute(data("expanded"), "false")
         }
       }
@@ -2167,23 +1876,19 @@ public struct TableView: HTMLContent {
         window.setTimeout(250) { [self] in
           for subRow in subRows {
             if subRow.classList.contains("table-row-collapsed") {
-              subRow.style.display(.none)
+              subRow.classList.add("table-row-hidden")
             }
           }
           TableInstance.updateZebraStriping(for: self.table)
-          self.adjustDummyRows()
         }
       } else {
         // Expanding → show first (starting from collapsed opacity/transform), then transition in
         for subRow in subRows {
-          subRow.style.display(.tableRow)
+          subRow.classList.remove("table-row-hidden")
           subRow.classList.add("table-row-collapsed")
-          subRow.style.removeProperty(.transform)
-          subRow.style.removeProperty(.opacity)
           _ = subRow.getBoundingClientRect() // Force layout reflow
         }
         TableInstance.updateZebraStriping(for: self.table)
-        self.adjustDummyRows()
         
         // Ensure first radio is checked on expand
         var radioToCheck: DOM.Element? = nil
@@ -2201,7 +1906,6 @@ public struct TableView: HTMLContent {
           for subRow in subRows {
             subRow.classList.remove("table-row-collapsed")
           }
-          self.adjustDummyRows()
         }
       }
 
@@ -2209,10 +1913,8 @@ public struct TableView: HTMLContent {
       let chevronSelector = "[id='lemma-history-\(parentID)-chevron'], [id='subrow-toggle-\(parentID)-chevron'], .lemma-history-toggle, .table-subrow-toggle"
       if let svg = parentRow.querySelector(chevronSelector) {
         if isExpanded {
-          svg.style.transform(rotate(deg(-90)))
           svg.setAttribute(data("expanded"), "false")
         } else {
-          svg.style.transform(rotate(deg(0)))
           svg.setAttribute(data("expanded"), "true")
         }
       }
@@ -2306,10 +2008,10 @@ public struct TableView: HTMLContent {
       }
       guard columnIndex >= 0 else { return }
 
-      // Get tbody and its rows — exclude dummy rows from sort entirely
+      // Get tbody and its rows.
       guard let tbodyEl = self.table.querySelector("tbody") else { return }
       let allRows = Array(tbodyEl.querySelectorAll("tr"))
-      let sortableRows = allRows.filter { !$0.classList.contains("table-row-dummy") }
+      let sortableRows = allRows
       guard sortableRows.count > 1 else { return }
 
       // Build row groups hierarchically:
@@ -2385,10 +2087,6 @@ public struct TableView: HTMLContent {
         }
       }
 
-      // Re-anchor dummy rows at the end (data rows were moved by appendChild, leaving dummies stranded at top)
-      let existingDummies = Array(tbodyEl.querySelectorAll(".table-row-dummy"))
-      for dummy in existingDummies { tbodyEl.appendChild(dummy) }
-
       // Animate sort indicator chevrons — show only on active column
       for btn in sortButtons {
         guard let btnColumnID = btn.getAttribute(data("column-id")) else { continue }
@@ -2399,14 +2097,13 @@ public struct TableView: HTMLContent {
 
         if isActive {
           // Show and animate the chevron morph for the active sort column
-          icon.style.display(.inlineFlex)
-          icon.style.color(.currentColor)
+          icon.setAttribute(data("active"), true)
           if let chevron = AnimatedUpDownChevronFactory.from(element: icon) {
             chevron.morph(toExpanded: !isAscending)
           }
         } else {
           // Hide inactive columns and reset to collapsed (down-pointing)
-          icon.style.display(.none)
+          icon.setAttribute(data("active"), false)
           if let chevron = AnimatedUpDownChevronFactory.from(element: icon) {
             chevron.setState(expanded: false, animated: false)
           }
@@ -2424,7 +2121,6 @@ public struct TableView: HTMLContent {
       let event = CustomEvent(type: "table-sort-change", detail: sortData)
       self.table.dispatchEvent(event)
       TableInstance.updateZebraStriping(for: self.table)
-      self.adjustDummyRows()
     }
 
     private func goToPage(_ page: Int) {
@@ -2435,7 +2131,6 @@ public struct TableView: HTMLContent {
       let rows = table.querySelectorAll(".table-tbody tr")
       let allDataRows = Array(rows).filter {
         !$0.classList.contains("table-empty-row")
-        && !$0.classList.contains("table-row-dummy")
         && !$0.classList.contains("table-sub-row")
         && !$0.classList.contains("lemma-history-sub-row")
       }
@@ -2473,13 +2168,13 @@ public struct TableView: HTMLContent {
               let groupID = row.getAttribute(data("group-id")) ?? ""
               let isCollapsed = collapsedGroups.contains(where: { stringEquals($0, groupID) })
               if !isCollapsed {
-                row.style.setProperty(.display, "table-row", .important)
+                row.classList.remove("table-row-hidden")
               }
             } else {
-              row.style.setProperty(.display, "table-row", .important)
+              row.classList.remove("table-row-hidden")
             }
           } else {
-            row.style.setProperty(.display, "none", .important)
+            row.classList.add("table-row-hidden")
           }
         }
 
@@ -2496,153 +2191,8 @@ public struct TableView: HTMLContent {
       let event = CustomEvent(type: "table-page-change", detail: intToString(page))
       self.table.dispatchEvent(event)
       TableInstance.updateZebraStriping(for: self.table)
-      self.adjustDummyRows()
     }
 
-    public func adjustDummyRows() {
-      guard let tbody = table.querySelector(".table-tbody") else { return }
-
-      if table.classList.contains("table-view-empty") {
-        let existingDummies = tbody.querySelectorAll(".table-row-dummy")
-        for dummy in existingDummies { dummy.remove() }
-        return
-      }
-
-      let sizeStr = table.getAttribute(data("pagination-size")) ?? "10"
-      let pageSize = parseInt(sizeStr) ?? 10
-
-      func parsePx(_ value: String, defaultVal: Int) -> CSS.Length {
-        if !stringIsEmpty(value) && stringEndsWith(value, "px") {
-          let count = Array(value.utf8).count
-          let valStr = stringSubstring(value, from: 0, to: count - 2)
-          if let val = parseInt(valStr) {
-            return px(val)
-          }
-        }
-        return px(defaultVal)
-      }
-
-      var rowHeight = 39.0
-      var topPadding = px(8)
-      var bottomPadding = px(8)
-      var leftPadding = px(12)
-      var rightPadding = px(12)
-      let allRows = Array(tbody.querySelectorAll("tr"))
-      let firstDataRow = allRows.first {
-        !$0.classList.contains("table-row-dummy") &&
-        !$0.classList.contains("table-empty-row") &&
-        !stringEquals($0.style.getPropertyValue(.display), "none")
-      }
-      if let firstRow = firstDataRow {
-        let h = Double(firstRow.getBoundingClientRect()?.height ?? 0.0)
-        if h > 0 { rowHeight = h }
-        if let firstTd = firstRow.querySelector("td:not(.table-td-spacer)") {
-          topPadding = parsePx(firstTd.style.getPropertyValue(.paddingTop), defaultVal: 8)
-          bottomPadding = parsePx(firstTd.style.getPropertyValue(.paddingBottom), defaultVal: 8)
-          leftPadding = parsePx(firstTd.style.getPropertyValue(.paddingLeft), defaultVal: 12)
-          rightPadding = parsePx(firstTd.style.getPropertyValue(.paddingRight), defaultVal: 12)
-        }
-      }
-
-      let visibleDataCount = allRows.filter {
-        !$0.classList.contains("table-row-dummy") &&
-        !$0.classList.contains("table-empty-row") &&
-        !stringEquals($0.style.getPropertyValue(.display), "none")
-      }.count
-
-      let neededRows = pageSize - visibleDataCount
-      let existingDummies = Array(tbody.querySelectorAll(".table-row-dummy"))
-      let currentDummyCount = existingDummies.count
-
-      // Remove excess dummies from the end without clearing all (avoids flash)
-      if currentDummyCount > max(neededRows, 0) {
-        for i in max(neededRows, 0)..<currentDummyCount {
-          existingDummies[i].remove()
-        }
-      }
-
-      if neededRows <= 0 { return }
-
-      guard let thead = table.querySelector("thead") else { return }
-      let headerCells = thead.querySelectorAll("tr:first-child > th")
-      let showVerticalBorders = tableTable.classList.contains("table-table-borders-vertical")
-
-      var currentVisibleIndex = visibleDataCount
-
-      // Update heights/colors on existing dummies in-place
-      let keepCount = min(currentDummyCount, neededRows)
-      for i in 0..<keepCount {
-        let dummyTr = existingDummies[i]
-        dummyTr.style.setProperty(.height, px(Int(rowHeight)), .important)
-        let isEven = currentVisibleIndex % 2 == 1
-        dummyTr.classList.remove("table-row-even")
-        dummyTr.classList.remove("table-row-odd")
-        if isEven {
-          dummyTr.classList.add("table-row-even")
-          dummyTr.style.setProperty(.backgroundColor, backgroundColorNeutralSubtle.value, .important)
-        } else {
-          dummyTr.classList.add("table-row-odd")
-          dummyTr.style.setProperty(.backgroundColor, backgroundColorBase.value, .important)
-        }
-        currentVisibleIndex += 1
-      }
-
-      // Append any new dummies needed beyond existing count
-      for _ in keepCount..<neededRows {
-        let dummyTr = document.createElement("tr")
-        dummyTr.classList.add("table-row")
-        dummyTr.classList.add("table-row-dummy")
-        dummyTr.style.pointerEvents(.none)
-        dummyTr.style.userSelect(.none)
-        dummyTr.style.setProperty(.height, px(Int(rowHeight)), .important)
-        dummyTr.style.setProperty(.borderBottom, "\(borderWidthBase.value) solid \(borderColorSubtle.value)", .important)
-
-        let isEven = currentVisibleIndex % 2 == 1
-        if isEven {
-          dummyTr.classList.add("table-row-even")
-          dummyTr.style.setProperty(.backgroundColor, backgroundColorNeutralSubtle.value, .important)
-        } else {
-          dummyTr.classList.add("table-row-odd")
-          dummyTr.style.setProperty(.backgroundColor, backgroundColorBase.value, .important)
-        }
-
-        for th in headerCells {
-          let dummyTd = document.createElement("td")
-          if th.classList.contains("table-th-spacer") {
-            dummyTd.classList.add("table-td-spacer")
-            dummyTd.style.setProperty(.borderRightWidth, px(0), .important)
-            dummyTd.style.setProperty(.padding, px(0), .important)
-            dummyTd.style.setProperty(.backgroundColor, .inherit, .important)
-          } else if stringEquals(th.getAttribute(.id) ?? "", "col-selection") {
-            dummyTd.innerHTML = ""
-          } else {
-            let div = document.createElement("div")
-            div.innerHTML = " "
-            div.style.setProperty(.width, perc(100), .important)
-            div.style.setProperty(.overflow, .hidden, .important)
-            div.style.setProperty(.textOverflow, .ellipsis, .important)
-            div.style.setProperty(.whiteSpace, .nowrap, .important)
-            div.style.setProperty(.display, .block, .important)
-            dummyTd.appendChild(div)
-            dummyTd.style.setProperty(.paddingTop, topPadding, .important)
-            dummyTd.style.setProperty(.paddingBottom, bottomPadding, .important)
-            dummyTd.style.setProperty(.paddingLeft, leftPadding, .important)
-            dummyTd.style.setProperty(.paddingRight, rightPadding, .important)
-            let align = th.style.getPropertyValue(.textAlign)
-            if !stringIsEmpty(align) {
-              dummyTd.style.setProperty(.textAlign, align, .normal)
-            }
-          }
-          if showVerticalBorders {
-            dummyTd.style.setProperty(.borderLeft, "\(borderWidthBase.value) solid \(borderColorSubtle.value)", .important)
-          }
-          dummyTr.appendChild(dummyTd)
-        }
-
-        tbody.appendChild(dummyTr)
-        currentVisibleIndex += 1
-      }
-    }
   }
 
   public enum TableFactory {

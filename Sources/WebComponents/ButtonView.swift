@@ -26,7 +26,7 @@ public struct ButtonView: HTMLContent {
   let contentJustifyContent: CSS.JustifyContent
   let style: @Sendable () -> [CSSOM.CSSRule]
   let buttonBorderRadius: CSS.Length
-  let data: [(String, String)]
+  var dataAttributes: [(String, String)]
 
   /// Button type attribute
   public enum ButtonType: String, Sendable {
@@ -36,12 +36,12 @@ public struct ButtonView: HTMLContent {
   }
 
   /// Button color — Apple HIG color for the button's action identity
-  public enum ButtonColor: String, Sendable {
+  public enum ButtonColor: String, Sendable, CaseIterable {
     case gray, red, orange, yellow, green, mint, teal, cyan, blue, indigo, purple, pink, brown
   }
 
   /// Button weight (visual prominence)
-  public enum ButtonWeight: String, Sendable {
+  public enum ButtonWeight: String, Sendable, CaseIterable {
     /// Solid buttons signal the main action — filled background, inverted text
     case solid
     /// Subtle buttons are the default — light background, colored text, border
@@ -56,6 +56,8 @@ public struct ButtonView: HTMLContent {
 
   /// Button sizes
   public enum ButtonSize: String, Sendable {
+    /// Mini: chrome strips (session legend Raw toggle); same height as PaginationView.mini (24).
+    case mini
     /// Small: Use only when space is tight (inline with text, compact layouts). Avoid on touchscreens.
     case small
     /// Medium: Standard button size (default)
@@ -65,7 +67,7 @@ public struct ButtonView: HTMLContent {
 
     var minSize: CSS.Length {
       switch self {
-      case .small: return px(24)
+      case .mini, .small: return px(24)
       case .medium: return px(32)
       case .large: return px(44)
       }
@@ -111,7 +113,7 @@ public struct ButtonView: HTMLContent {
     self.contentJustifyContent = contentJustifyContent
     self.style = style
     self.buttonBorderRadius = borderRadius
-    self.data = data
+    self.dataAttributes = data
   }
 
   public init<T: HTMLContent>(
@@ -152,7 +154,7 @@ public struct ButtonView: HTMLContent {
     self.contentJustifyContent = contentJustifyContent
     self.style = style
     self.buttonBorderRadius = borderRadius
-    self.data = data
+    self.dataAttributes = data
   }
 
   /// Create an icon-only button
@@ -194,7 +196,7 @@ public struct ButtonView: HTMLContent {
     self.contentJustifyContent = contentJustifyContent
     self.style = style
     self.buttonBorderRadius = borderRadius
-    self.data = data
+    self.dataAttributes = data
   }
 
   /// Create a button with custom content
@@ -236,11 +238,21 @@ public struct ButtonView: HTMLContent {
     self.contentJustifyContent = contentJustifyContent
     self.style = style
     self.buttonBorderRadius = borderRadius
-    self.data = data
+    self.dataAttributes = data
+  }
+
+  public func data(_ key: String, _ value: String) -> Self {
+    var copy = self
+    copy.dataAttributes.append((key, value))
+    return copy
+  }
+
+  public func data(_ key: String, _ value: Bool) -> Self {
+    data(key, value ? "true" : "false")
   }
 
   public func build() -> DOM.Node {
-    let baseClasses = "button-view button-color-\(buttonColor.rawValue) button-weight-\(weight.rawValue) button-size-\(size.rawValue)\(iconOnly ? " button-icon-only" : "")"
+    let baseClasses = "button-view button-color-\(buttonColor.rawValue) button-weight-\(weight.rawValue) button-size-\(size.rawValue) \(borderRadiusClass)\(iconOnly ? " button-icon-only" : "")"
     let fullClass = stringIsEmpty(`class`) ? baseClasses : "\(baseClasses) \(`class`)"
 
     @HTMLBuilder
@@ -250,9 +262,6 @@ public struct ButtonView: HTMLContent {
           span { icon }
             .class("button-icon")
             .ariaHidden(true)
-            .style {
-              buttonIconCSS()
-            }
         } else {
           // Either custom content or icon+label
           icon
@@ -262,12 +271,6 @@ public struct ButtonView: HTMLContent {
       if !stringIsEmpty(label) {
         span { label }
           .class("button-label")
-          .style {
-            padding(0)
-            overflow(.hidden)
-            whiteSpace(.nowrap)
-            borderWidth(0)
-          }
       }
     }
 
@@ -278,8 +281,805 @@ public struct ButtonView: HTMLContent {
         .data("color", buttonColor.rawValue)
         .data("weight", weight.rawValue)
         .data("size", size.rawValue)
+        .data("icon-only", iconOnly ? "true" : "false")
+        .data("full-width", fullWidth ? "true" : "false")
+        .data("justify-content", contentJustifyContent.rawValue)
+        .data("font-weight", fontWeightKey)
         .style {
-          buttonViewCSS()
+          selector("&") {
+            // Base — common props only — fontWeight/color via data-attributes below (cacheable)
+            alignItems(.center)
+            gap(spacingHorizontalButton)
+            fontFamily(labelFontFamily)
+            fontSize(fontSizeMedium16)
+            textDecoration(.none)
+            textAlign(.center)
+            verticalAlign(.middle)
+            whiteSpace(.nowrap)
+            userSelect(.none)
+            boxSizing(.borderBox)
+            borderWidth(borderWidthBase)
+            borderStyle(.solid)
+            borderRadius(borderRadiusPill)
+            cursor(.pointer)
+            transition(.all, s(0.1), .ease)
+
+            // Focus state
+            pseudoClass(.focus) {
+              outline(borderWidthBase, .solid, borderColorTransparent).important()
+            }
+
+            // Disabled state — static via data-attributes (cacheable)
+            pseudoClass(.disabled) {
+              color(colorDisabled).important()
+              cursor(cursorNotAllowed).important()
+            }
+
+            // Icon hover color when button is disabled
+            pseudoClass(.disabled) {
+              descendant(".icon-view") {
+                pseudoClass(.hover) {
+                  color(colorDisabled).important()
+                }
+              }
+            }
+
+            // Apply custom styles block
+            style()
+          }
+
+          selector("&[data-font-weight='bold']") {
+            fontWeight(fontWeightBold)
+          }
+          selector("&[data-font-weight='normal']") {
+            fontWeight(fontWeightNormal)
+          }
+          selector("&[data-font-weight='semibold']") {
+            fontWeight(fontWeightSemiBold)
+          }
+          if !stringEquals(buttonBorderRadius.value, borderRadiusPill.value) {
+            selector("&.\(borderRadiusClass)") { borderRadius(buttonBorderRadius) }
+          }
+          // Variant — static superset via data-attributes (one instance emits all)
+          selector("&[data-icon-only='true']") {
+            display(.flex)
+            justifyContent(.center)
+            alignSelf(.flexStart)
+            padding(0)
+          }
+          selector("&[data-justify-content='flex-start']") { justifyContent(.flexStart) }
+          selector("&[data-justify-content='center']") { justifyContent(.center) }
+          selector("&[data-justify-content='flex-end']") { justifyContent(.flexEnd) }
+          selector("&[data-justify-content='space-between']") { justifyContent(.spaceBetween) }
+          selector("&[data-justify-content='space-around']") { justifyContent(.spaceAround) }
+          selector("&[data-justify-content='space-evenly']") { justifyContent(.spaceEvenly) }
+          // iconOnly always center overrides justify
+          selector("&[data-icon-only='true']") { justifyContent(.center).important() }
+          selector("&[data-icon-only='false'][data-full-width='true']") {
+            display(.flex)
+            width(perc(100))
+            alignSelf(.flexStart)
+          }
+          selector("&[data-icon-only='false'][data-full-width='false']") {
+            display(.inlineFlex)
+            alignSelf(.flexStart)
+          }
+          selector("&[data-size='mini']") {
+            minHeight(ButtonSize.mini.minSize)
+            fontSize(fontSizeXSmall12)
+          }
+          selector("&[data-size='small']") { minHeight(ButtonSize.small.minSize) }
+          selector("&[data-size='medium']") { minHeight(ButtonSize.medium.minSize) }
+          selector("&[data-size='large']") { minHeight(ButtonSize.large.minSize) }
+          selector("&[data-full-width='false'][data-size='mini']") { minWidth(ButtonSize.mini.minSize) }
+          selector("&[data-full-width='false'][data-size='small']") { minWidth(ButtonSize.small.minSize) }
+          selector("&[data-full-width='false'][data-size='medium']") { minWidth(ButtonSize.medium.minSize) }
+          selector("&[data-full-width='false'][data-size='large']") { minWidth(ButtonSize.large.minSize) }
+          selector("&[data-full-width='true']") { width(perc(100)) }
+          selector("&[data-icon-only='true'][data-size='mini']") {
+            width(ButtonSize.mini.minSize)
+            height(ButtonSize.mini.minSize)
+          }
+          selector("&[data-icon-only='true'][data-size='small']") {
+            width(ButtonSize.small.minSize)
+            height(ButtonSize.small.minSize)
+          }
+          selector("&[data-icon-only='true'][data-size='medium']") {
+            width(ButtonSize.medium.minSize)
+            height(ButtonSize.medium.minSize)
+          }
+          selector("&[data-icon-only='true'][data-size='large']") {
+            width(ButtonSize.large.minSize)
+            height(ButtonSize.large.minSize)
+          }
+          selector("&[data-icon-only='false'][data-size='mini']") { padding(0, spacing8) }
+          selector("&[data-icon-only='false'][data-size='small']") { padding(0, spacingHorizontalButtonSmall) }
+          selector("&[data-icon-only='false'][data-size='medium']") { padding(0, spacingHorizontalButton) }
+          selector("&[data-icon-only='false'][data-size='large']") {
+            padding(0, spacingHorizontalButtonLarge)
+            media(maxWidth(maxWidthBreakpointMobile)) {
+              padding(0, spacingHorizontalButton).important()
+            }
+          }
+          selector("&.navbar-search-btn[data-size='large'], &.navbar-ellipsis-btn[data-size='large'], &.navbar-sidebar-btn[data-size='large']") {
+            media(maxWidth(maxWidthBreakpointMobile)) {
+              height(ButtonSize.medium.minSize).important()
+              minHeight(ButtonSize.medium.minSize).important()
+            }
+          }
+          selector("&.navbar-search-btn[data-size='large'][data-icon-only='true'], &.navbar-ellipsis-btn[data-size='large'][data-icon-only='true'], &.navbar-sidebar-btn[data-size='large'][data-icon-only='true']") {
+            media(maxWidth(maxWidthBreakpointMobile)) {
+              width(ButtonSize.medium.minSize).important()
+              minWidth(ButtonSize.medium.minSize).important()
+            }
+          }
+
+          // Quiet/Plain — opaque base bg + transparent border (not see-through on borders/surfaces)
+          selector("&[data-weight='quiet'], &[data-weight='plain']") {
+            backgroundColor(backgroundColorBase).important()
+            borderColor(.transparent).important()
+          }
+          selector("&[data-weight='quiet'][data-color='gray'], &[data-weight='plain'][data-color='gray']") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='quiet'][data-color='red'], &[data-weight='plain'][data-color='red']") { color(`var`("--color-red")).important() }
+          selector("&[data-weight='quiet'][data-color='orange'], &[data-weight='plain'][data-color='orange']") { color(`var`("--color-orange")).important() }
+          selector("&[data-weight='quiet'][data-color='yellow'], &[data-weight='plain'][data-color='yellow']") { color(`var`("--color-yellow")).important() }
+          selector("&[data-weight='quiet'][data-color='green'], &[data-weight='plain'][data-color='green']") { color(`var`("--color-green")).important() }
+          selector("&[data-weight='quiet'][data-color='mint'], &[data-weight='plain'][data-color='mint']") { color(`var`("--color-mint")).important() }
+          selector("&[data-weight='quiet'][data-color='teal'], &[data-weight='plain'][data-color='teal']") { color(`var`("--color-teal")).important() }
+          selector("&[data-weight='quiet'][data-color='cyan'], &[data-weight='plain'][data-color='cyan']") { color(`var`("--color-cyan")).important() }
+          selector("&[data-weight='quiet'][data-color='blue'], &[data-weight='plain'][data-color='blue']") { color(`var`("--color-blue")).important() }
+          selector("&[data-weight='quiet'][data-color='indigo'], &[data-weight='plain'][data-color='indigo']") { color(`var`("--color-indigo")).important() }
+          selector("&[data-weight='quiet'][data-color='purple'], &[data-weight='plain'][data-color='purple']") { color(`var`("--color-purple")).important() }
+          selector("&[data-weight='quiet'][data-color='pink'], &[data-weight='plain'][data-color='pink']") { color(`var`("--color-pink")).important() }
+          selector("&[data-weight='quiet'][data-color='brown'], &[data-weight='plain'][data-color='brown']") { color(`var`("--color-brown")).important() }
+          selector("&[data-weight='quiet']:disabled, &[data-weight='plain']:disabled") {
+            backgroundColor(backgroundColorBase).important()
+            borderColor(.transparent).important()
+          }
+          selector("&[data-weight='subtle']:disabled, &[data-weight='solid']:disabled, &[data-weight='static']:disabled") {
+            backgroundColor(backgroundColorDisabled).important()
+            borderColor(borderColorDisabled).important()
+          }
+          // Solid / Subtle / Static superset — cacheable overrides for per-instance base (fixes Mission Control blue vs white)
+          selector("&[data-weight='solid'][data-color='gray']") {
+            backgroundColor(backgroundColorInteractive)
+            color(colorBase)
+            borderColor(borderColorBase)
+          }
+          selector("&[data-weight='subtle'][data-color='gray']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(borderColorBase)
+          }
+          selector("&[data-weight='static'][data-color='gray']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(borderColorBase)
+          }
+          selector("&[data-weight='subtle'][data-color='red']") {
+            backgroundColor(`var`("--background-color-red-subtle"))
+            color(`var`("--color-red"))
+            borderColor(`var`("--border-color-red"))
+          }
+          selector("&[data-weight='solid'][data-color='red']") {
+            backgroundColor(`var`("--background-color-red"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-red"))
+          }
+          selector("&[data-weight='static'][data-color='red']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-red"))
+          }
+          selector("&[data-weight='subtle'][data-color='orange']") {
+            backgroundColor(`var`("--background-color-orange-subtle"))
+            color(`var`("--color-orange"))
+            borderColor(`var`("--border-color-orange"))
+          }
+          selector("&[data-weight='solid'][data-color='orange']") {
+            backgroundColor(`var`("--background-color-orange"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-orange"))
+          }
+          selector("&[data-weight='static'][data-color='orange']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-orange"))
+          }
+          selector("&[data-weight='subtle'][data-color='yellow']") {
+            backgroundColor(`var`("--background-color-yellow-subtle"))
+            color(`var`("--color-yellow"))
+            borderColor(`var`("--border-color-yellow"))
+          }
+          selector("&[data-weight='solid'][data-color='yellow']") {
+            backgroundColor(`var`("--background-color-yellow"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-yellow"))
+          }
+          selector("&[data-weight='static'][data-color='yellow']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-yellow"))
+          }
+          selector("&[data-weight='subtle'][data-color='green']") {
+            backgroundColor(`var`("--background-color-green-subtle"))
+            color(`var`("--color-green"))
+            borderColor(`var`("--border-color-green"))
+          }
+          selector("&[data-weight='solid'][data-color='green']") {
+            backgroundColor(`var`("--background-color-green"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-green"))
+          }
+          selector("&[data-weight='static'][data-color='green']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-green"))
+          }
+          selector("&[data-weight='subtle'][data-color='mint']") {
+            backgroundColor(`var`("--background-color-mint-subtle"))
+            color(`var`("--color-mint"))
+            borderColor(`var`("--border-color-mint"))
+          }
+          selector("&[data-weight='solid'][data-color='mint']") {
+            backgroundColor(`var`("--background-color-mint"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-mint"))
+          }
+          selector("&[data-weight='static'][data-color='mint']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-mint"))
+          }
+          selector("&[data-weight='subtle'][data-color='teal']") {
+            backgroundColor(`var`("--background-color-teal-subtle"))
+            color(`var`("--color-teal"))
+            borderColor(`var`("--border-color-teal"))
+          }
+          selector("&[data-weight='solid'][data-color='teal']") {
+            backgroundColor(`var`("--background-color-teal"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-teal"))
+          }
+          selector("&[data-weight='static'][data-color='teal']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-teal"))
+          }
+          selector("&[data-weight='subtle'][data-color='cyan']") {
+            backgroundColor(`var`("--background-color-cyan-subtle"))
+            color(`var`("--color-cyan"))
+            borderColor(`var`("--border-color-cyan"))
+          }
+          selector("&[data-weight='solid'][data-color='cyan']") {
+            backgroundColor(`var`("--background-color-cyan"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-cyan"))
+          }
+          selector("&[data-weight='static'][data-color='cyan']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-cyan"))
+          }
+          selector("&[data-weight='subtle'][data-color='blue']") {
+            backgroundColor(`var`("--background-color-blue-subtle"))
+            color(`var`("--color-blue"))
+            borderColor(`var`("--border-color-blue"))
+          }
+          selector("&[data-weight='solid'][data-color='blue']") {
+            backgroundColor(`var`("--background-color-blue"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-blue"))
+          }
+          selector("&[data-weight='static'][data-color='blue']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-blue"))
+          }
+          selector("&[data-weight='subtle'][data-color='indigo']") {
+            backgroundColor(`var`("--background-color-indigo-subtle"))
+            color(`var`("--color-indigo"))
+            borderColor(`var`("--border-color-indigo"))
+          }
+          selector("&[data-weight='solid'][data-color='indigo']") {
+            backgroundColor(`var`("--background-color-indigo"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-indigo"))
+          }
+          selector("&[data-weight='static'][data-color='indigo']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-indigo"))
+          }
+          selector("&[data-weight='subtle'][data-color='purple']") {
+            backgroundColor(`var`("--background-color-purple-subtle"))
+            color(`var`("--color-purple"))
+            borderColor(`var`("--border-color-purple"))
+          }
+          selector("&[data-weight='solid'][data-color='purple']") {
+            backgroundColor(`var`("--background-color-purple"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-purple"))
+          }
+          selector("&[data-weight='static'][data-color='purple']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-purple"))
+          }
+          selector("&[data-weight='subtle'][data-color='pink']") {
+            backgroundColor(`var`("--background-color-pink-subtle"))
+            color(`var`("--color-pink"))
+            borderColor(`var`("--border-color-pink"))
+          }
+          selector("&[data-weight='solid'][data-color='pink']") {
+            backgroundColor(`var`("--background-color-pink"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-pink"))
+          }
+          selector("&[data-weight='static'][data-color='pink']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-pink"))
+          }
+          selector("&[data-weight='subtle'][data-color='brown']") {
+            backgroundColor(`var`("--background-color-brown-subtle"))
+            color(`var`("--color-brown"))
+            borderColor(`var`("--border-color-brown"))
+          }
+          selector("&[data-weight='solid'][data-color='brown']") {
+            backgroundColor(`var`("--background-color-brown"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-brown"))
+          }
+          selector("&[data-weight='static'][data-color='brown']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-brown"))
+          }
+
+          // Hover / Active — cacheable via data-attributes (covers all solid/subtle/quiet/plain)
+          selector("&[data-weight='subtle'][data-color='gray']:hover:not(:disabled)") {
+            backgroundColor(backgroundColorInteractiveSubtleHover).important()
+          }
+          selector("&[data-weight='subtle'][data-color='gray']:active:not(:disabled)") {
+            backgroundColor(backgroundColorInteractiveSubtleActive).important()
+            color(colorEmphasized).important()
+            borderColor(borderColorBase).important()
+          }
+          selector("&[data-weight='solid'][data-color='gray']:hover:not(:disabled)") {
+            backgroundColor(backgroundColorInteractiveHover).important()
+          }
+          selector("&[data-weight='solid'][data-color='gray']:active:not(:disabled)") {
+            backgroundColor(backgroundColorInteractiveActive).important()
+            color(colorEmphasized).important()
+            borderColor(borderColorBase).important()
+          }
+          selector("&[data-weight='quiet'][data-color='gray']:hover:not(:disabled)") {
+            backgroundColor(backgroundColorBaseHover).important()
+            borderColor(.transparent).important()
+          }
+          selector("&[data-weight='quiet'][data-color='gray']:active:not(:disabled)") {
+            backgroundColor(backgroundColorBaseActive).important()
+            color(colorEmphasized).important()
+            borderColor(.transparent).important()
+          }
+          selector("&[data-weight='plain'][data-color='gray']:hover:not(:disabled)") {
+            color(colorBase).important()
+            borderColor(.transparent).important()
+          }
+          selector("&[data-weight='plain'][data-color='gray']:active:not(:disabled)") {
+            color(colorEmphasized).important()
+            borderColor(.transparent).important()
+          }
+
+          selector("&[data-weight='subtle'][data-color='red']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-red-subtle-hover")).important()
+            borderColor(`var`("--border-color-red-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='red']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-red-subtle-active")).important()
+            borderColor(`var`("--border-color-red-active")).important()
+            color(`var`("--color-red-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='red']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-red-hover")).important()
+            borderColor(`var`("--border-color-red-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='red']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-red-active")).important()
+            borderColor(`var`("--border-color-red-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='red']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-red-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='red']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-red-subtle-active")).important()
+            color(`var`("--color-red-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='red']:hover:not(:disabled)") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='plain'][data-color='red']:active:not(:disabled)") {
+            color(`var`("--color-red-active")).important()
+          }
+
+          selector("&[data-weight='subtle'][data-color='orange']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-orange-subtle-hover")).important()
+            borderColor(`var`("--border-color-orange-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='orange']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-orange-subtle-active")).important()
+            borderColor(`var`("--border-color-orange-active")).important()
+            color(`var`("--color-orange-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='orange']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-orange-hover")).important()
+            borderColor(`var`("--border-color-orange-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='orange']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-orange-active")).important()
+            borderColor(`var`("--border-color-orange-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='orange']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-orange-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='orange']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-orange-subtle-active")).important()
+            color(`var`("--color-orange-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='orange']:hover:not(:disabled)") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='plain'][data-color='orange']:active:not(:disabled)") {
+            color(`var`("--color-orange-active")).important()
+          }
+
+          selector("&[data-weight='subtle'][data-color='yellow']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-yellow-subtle-hover")).important()
+            borderColor(`var`("--border-color-yellow-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='yellow']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-yellow-subtle-active")).important()
+            borderColor(`var`("--border-color-yellow-active")).important()
+            color(`var`("--color-yellow-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='yellow']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-yellow-hover")).important()
+            borderColor(`var`("--border-color-yellow-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='yellow']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-yellow-active")).important()
+            borderColor(`var`("--border-color-yellow-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='yellow']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-yellow-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='yellow']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-yellow-subtle-active")).important()
+            color(`var`("--color-yellow-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='yellow']:hover:not(:disabled)") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='plain'][data-color='yellow']:active:not(:disabled)") {
+            color(`var`("--color-yellow-active")).important()
+          }
+
+          selector("&[data-weight='subtle'][data-color='green']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-green-subtle-hover")).important()
+            borderColor(`var`("--border-color-green-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='green']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-green-subtle-active")).important()
+            borderColor(`var`("--border-color-green-active")).important()
+            color(`var`("--color-green-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='green']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-green-hover")).important()
+            borderColor(`var`("--border-color-green-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='green']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-green-active")).important()
+            borderColor(`var`("--border-color-green-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='green']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-green-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='green']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-green-subtle-active")).important()
+            color(`var`("--color-green-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='green']:hover:not(:disabled)") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='plain'][data-color='green']:active:not(:disabled)") {
+            color(`var`("--color-green-active")).important()
+          }
+
+          selector("&[data-weight='subtle'][data-color='mint']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-mint-subtle-hover")).important()
+            borderColor(`var`("--border-color-mint-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='mint']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-mint-subtle-active")).important()
+            borderColor(`var`("--border-color-mint-active")).important()
+            color(`var`("--color-mint-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='mint']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-mint-hover")).important()
+            borderColor(`var`("--border-color-mint-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='mint']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-mint-active")).important()
+            borderColor(`var`("--border-color-mint-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='mint']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-mint-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='mint']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-mint-subtle-active")).important()
+            color(`var`("--color-mint-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='mint']:hover:not(:disabled)") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='plain'][data-color='mint']:active:not(:disabled)") {
+            color(`var`("--color-mint-active")).important()
+          }
+
+          selector("&[data-weight='subtle'][data-color='teal']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-teal-subtle-hover")).important()
+            borderColor(`var`("--border-color-teal-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='teal']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-teal-subtle-active")).important()
+            borderColor(`var`("--border-color-teal-active")).important()
+            color(`var`("--color-teal-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='teal']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-teal-hover")).important()
+            borderColor(`var`("--border-color-teal-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='teal']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-teal-active")).important()
+            borderColor(`var`("--border-color-teal-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='teal']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-teal-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='teal']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-teal-subtle-active")).important()
+            color(`var`("--color-teal-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='teal']:hover:not(:disabled)") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='plain'][data-color='teal']:active:not(:disabled)") {
+            color(`var`("--color-teal-active")).important()
+          }
+
+          selector("&[data-weight='subtle'][data-color='cyan']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-cyan-subtle-hover")).important()
+            borderColor(`var`("--border-color-cyan-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='cyan']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-cyan-subtle-active")).important()
+            borderColor(`var`("--border-color-cyan-active")).important()
+            color(`var`("--color-cyan-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='cyan']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-cyan-hover")).important()
+            borderColor(`var`("--border-color-cyan-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='cyan']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-cyan-active")).important()
+            borderColor(`var`("--border-color-cyan-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='cyan']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-cyan-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='cyan']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-cyan-subtle-active")).important()
+            color(`var`("--color-cyan-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='cyan']:hover:not(:disabled)") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='plain'][data-color='cyan']:active:not(:disabled)") {
+            color(`var`("--color-cyan-active")).important()
+          }
+
+          selector("&[data-weight='subtle'][data-color='blue']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-blue-subtle-hover")).important()
+            borderColor(`var`("--border-color-blue-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='blue']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-blue-subtle-active")).important()
+            borderColor(`var`("--border-color-blue-active")).important()
+            color(`var`("--color-blue-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='blue']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-blue-hover")).important()
+            borderColor(`var`("--border-color-blue-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='blue']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-blue-active")).important()
+            borderColor(`var`("--border-color-blue-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='blue']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-blue-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='blue']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-blue-subtle-active")).important()
+            color(`var`("--color-blue-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='blue']:hover:not(:disabled)") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='plain'][data-color='blue']:active:not(:disabled)") {
+            color(`var`("--color-blue-active")).important()
+          }
+
+          selector("&[data-weight='subtle'][data-color='indigo']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-indigo-subtle-hover")).important()
+            borderColor(`var`("--border-color-indigo-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='indigo']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-indigo-subtle-active")).important()
+            borderColor(`var`("--border-color-indigo-active")).important()
+            color(`var`("--color-indigo-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='indigo']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-indigo-hover")).important()
+            borderColor(`var`("--border-color-indigo-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='indigo']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-indigo-active")).important()
+            borderColor(`var`("--border-color-indigo-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='indigo']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-indigo-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='indigo']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-indigo-subtle-active")).important()
+            color(`var`("--color-indigo-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='indigo']:hover:not(:disabled)") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='plain'][data-color='indigo']:active:not(:disabled)") {
+            color(`var`("--color-indigo-active")).important()
+          }
+
+          selector("&[data-weight='subtle'][data-color='purple']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-purple-subtle-hover")).important()
+            borderColor(`var`("--border-color-purple-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='purple']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-purple-subtle-active")).important()
+            borderColor(`var`("--border-color-purple-active")).important()
+            color(`var`("--color-purple-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='purple']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-purple-hover")).important()
+            borderColor(`var`("--border-color-purple-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='purple']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-purple-active")).important()
+            borderColor(`var`("--border-color-purple-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='purple']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-purple-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='purple']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-purple-subtle-active")).important()
+            color(`var`("--color-purple-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='purple']:hover:not(:disabled)") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='plain'][data-color='purple']:active:not(:disabled)") {
+            color(`var`("--color-purple-active")).important()
+          }
+
+          selector("&[data-weight='subtle'][data-color='pink']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-pink-subtle-hover")).important()
+            borderColor(`var`("--border-color-pink-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='pink']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-pink-subtle-active")).important()
+            borderColor(`var`("--border-color-pink-active")).important()
+            color(`var`("--color-pink-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='pink']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-pink-hover")).important()
+            borderColor(`var`("--border-color-pink-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='pink']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-pink-active")).important()
+            borderColor(`var`("--border-color-pink-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='pink']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-pink-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='pink']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-pink-subtle-active")).important()
+            color(`var`("--color-pink-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='pink']:hover:not(:disabled)") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='plain'][data-color='pink']:active:not(:disabled)") {
+            color(`var`("--color-pink-active")).important()
+          }
+
+          selector("&[data-weight='subtle'][data-color='brown']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-brown-subtle-hover")).important()
+            borderColor(`var`("--border-color-brown-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='brown']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-brown-subtle-active")).important()
+            borderColor(`var`("--border-color-brown-active")).important()
+            color(`var`("--color-brown-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='brown']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-brown-hover")).important()
+            borderColor(`var`("--border-color-brown-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='brown']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-brown-active")).important()
+            borderColor(`var`("--border-color-brown-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='brown']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-brown-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='brown']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-brown-subtle-active")).important()
+            color(`var`("--color-brown-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='brown']:hover:not(:disabled)") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='plain'][data-color='brown']:active:not(:disabled)") {
+            color(`var`("--color-brown-active")).important()
+          }
+
+          selector("&[data-weight='quiet']:focus") {
+            borderColor(.transparent).important()
+            boxShadow(.none).important()
+          }
+          selector("&[data-weight='plain']:focus") {
+            borderColor(.transparent).important()
+            boxShadow(.none).important()
+          }
+
+
+          descendant(".button-label") {
+            padding(0)
+            overflow(.hidden)
+            whiteSpace(.nowrap)
+            borderWidth(0)
+          }
+
+          descendant(".button-icon") {
+            display(.flex)
+            alignItems(.center)
+            justifyContent(.center)
+          }
+          selector("&[data-size='mini'] .button-icon", "&[data-size='small'] .button-icon") {
+            width(sizeIconXSmall)
+            height(sizeIconXSmall)
+          }
+          selector("&[data-size='medium'] .button-icon") {
+            width(sizeIconSmall)
+            height(sizeIconSmall)
+          }
+          selector("&[data-size='large'] .button-icon") {
+            width(sizeIconMedium)
+            height(sizeIconMedium)
+          }
         }
 
       if disabled {
@@ -294,7 +1094,7 @@ public struct ButtonView: HTMLContent {
         aBtn = aBtn.onclick(click)
       }
 
-      for (key, value) in data {
+      for (key, value) in dataAttributes {
         aBtn = aBtn.data(key, value)
       }
 
@@ -306,9 +1106,806 @@ public struct ButtonView: HTMLContent {
         .data("color", buttonColor.rawValue)
         .data("weight", weight.rawValue)
         .data("size", size.rawValue)
+        .data("icon-only", iconOnly ? "true" : "false")
+        .data("full-width", fullWidth ? "true" : "false")
+        .data("justify-content", contentJustifyContent.rawValue)
+        .data("font-weight", fontWeightKey)
         .disabled(disabled)
         .style {
-          buttonViewCSS()
+          selector("&") {
+            // Base — common per-instance props (static superset via data-attributes below)
+            alignItems(.center)
+            gap(spacingHorizontalButton)
+            fontFamily(labelFontFamily)
+            fontSize(fontSizeMedium16)
+            textDecoration(.none)
+            textAlign(.center)
+            verticalAlign(.middle)
+            whiteSpace(.nowrap)
+            userSelect(.none)
+            boxSizing(.borderBox)
+            borderWidth(borderWidthBase)
+            borderStyle(.solid)
+            borderRadius(borderRadiusPill)
+            cursor(.pointer)
+            transition(.all, s(0.1), .ease)
+
+            // Focus state
+            pseudoClass(.focus) {
+              outline(borderWidthBase, .solid, borderColorTransparent).important()
+            }
+
+            // Disabled state — static via data-attributes (cacheable)
+            pseudoClass(.disabled) {
+              color(colorDisabled).important()
+              cursor(cursorNotAllowed).important()
+            }
+
+            // Icon hover color when button is disabled
+            pseudoClass(.disabled) {
+              descendant(".icon-view") {
+                pseudoClass(.hover) {
+                  color(colorDisabled).important()
+                }
+              }
+            }
+
+            // Apply custom styles block
+            style()
+          }
+
+          selector("&[data-font-weight='bold']") {
+            fontWeight(fontWeightBold)
+          }
+          selector("&[data-font-weight='normal']") {
+            fontWeight(fontWeightNormal)
+          }
+          selector("&[data-font-weight='semibold']") {
+            fontWeight(fontWeightSemiBold)
+          }
+          if !stringEquals(buttonBorderRadius.value, borderRadiusPill.value) {
+            selector("&.\(borderRadiusClass)") { borderRadius(buttonBorderRadius) }
+          }
+          // Variant — static superset via data-attributes (one instance emits all)
+          selector("&[data-icon-only='true']") {
+            display(.flex)
+            justifyContent(.center)
+            alignSelf(.flexStart)
+            padding(0)
+          }
+          selector("&[data-justify-content='flex-start']") { justifyContent(.flexStart) }
+          selector("&[data-justify-content='center']") { justifyContent(.center) }
+          selector("&[data-justify-content='flex-end']") { justifyContent(.flexEnd) }
+          selector("&[data-justify-content='space-between']") { justifyContent(.spaceBetween) }
+          selector("&[data-justify-content='space-around']") { justifyContent(.spaceAround) }
+          selector("&[data-justify-content='space-evenly']") { justifyContent(.spaceEvenly) }
+          // iconOnly always center overrides justify
+          selector("&[data-icon-only='true']") { justifyContent(.center).important() }
+          selector("&[data-icon-only='false'][data-full-width='true']") {
+            display(.flex)
+            width(perc(100))
+            alignSelf(.flexStart)
+          }
+          selector("&[data-icon-only='false'][data-full-width='false']") {
+            display(.inlineFlex)
+            alignSelf(.flexStart)
+          }
+          selector("&[data-size='mini']") {
+            minHeight(ButtonSize.mini.minSize)
+            fontSize(fontSizeXSmall12)
+          }
+          selector("&[data-size='small']") { minHeight(ButtonSize.small.minSize) }
+          selector("&[data-size='medium']") { minHeight(ButtonSize.medium.minSize) }
+          selector("&[data-size='large']") { minHeight(ButtonSize.large.minSize) }
+          selector("&[data-full-width='false'][data-size='mini']") { minWidth(ButtonSize.mini.minSize) }
+          selector("&[data-full-width='false'][data-size='small']") { minWidth(ButtonSize.small.minSize) }
+          selector("&[data-full-width='false'][data-size='medium']") { minWidth(ButtonSize.medium.minSize) }
+          selector("&[data-full-width='false'][data-size='large']") { minWidth(ButtonSize.large.minSize) }
+          selector("&[data-full-width='true']") { width(perc(100)) }
+          selector("&[data-icon-only='true'][data-size='mini']") {
+            width(ButtonSize.mini.minSize)
+            height(ButtonSize.mini.minSize)
+          }
+          selector("&[data-icon-only='true'][data-size='small']") {
+            width(ButtonSize.small.minSize)
+            height(ButtonSize.small.minSize)
+          }
+          selector("&[data-icon-only='true'][data-size='medium']") {
+            width(ButtonSize.medium.minSize)
+            height(ButtonSize.medium.minSize)
+          }
+          selector("&[data-icon-only='true'][data-size='large']") {
+            width(ButtonSize.large.minSize)
+            height(ButtonSize.large.minSize)
+          }
+          selector("&[data-icon-only='false'][data-size='mini']") { padding(0, spacing8) }
+          selector("&[data-icon-only='false'][data-size='small']") { padding(0, spacingHorizontalButtonSmall) }
+          selector("&[data-icon-only='false'][data-size='medium']") { padding(0, spacingHorizontalButton) }
+          selector("&[data-icon-only='false'][data-size='large']") {
+            padding(0, spacingHorizontalButtonLarge)
+            media(maxWidth(maxWidthBreakpointMobile)) {
+              padding(0, spacingHorizontalButton).important()
+            }
+          }
+          selector("&.navbar-search-btn[data-size='large'], &.navbar-ellipsis-btn[data-size='large'], &.navbar-sidebar-btn[data-size='large']") {
+            media(maxWidth(maxWidthBreakpointMobile)) {
+              height(ButtonSize.medium.minSize).important()
+              minHeight(ButtonSize.medium.minSize).important()
+            }
+          }
+          selector("&.navbar-search-btn[data-size='large'][data-icon-only='true'], &.navbar-ellipsis-btn[data-size='large'][data-icon-only='true'], &.navbar-sidebar-btn[data-size='large'][data-icon-only='true']") {
+            media(maxWidth(maxWidthBreakpointMobile)) {
+              width(ButtonSize.medium.minSize).important()
+              minWidth(ButtonSize.medium.minSize).important()
+            }
+          }
+
+          descendant(".button-label") {
+            padding(0)
+            overflow(.hidden)
+            whiteSpace(.nowrap)
+            borderWidth(0)
+          }
+
+          descendant(".button-icon") {
+            display(.flex)
+            alignItems(.center)
+            justifyContent(.center)
+          }
+          selector("&[data-size='mini'] .button-icon", "&[data-size='small'] .button-icon") {
+            width(sizeIconXSmall)
+            height(sizeIconXSmall)
+          }
+          selector("&[data-size='medium'] .button-icon") {
+            width(sizeIconSmall)
+            height(sizeIconSmall)
+          }
+          selector("&[data-size='large'] .button-icon") {
+            width(sizeIconMedium)
+            height(sizeIconMedium)
+          }
+
+          // Quiet/Plain — opaque base bg + transparent border (mirrors <a> branch)
+          selector("&[data-weight='quiet'], &[data-weight='plain']") {
+            backgroundColor(backgroundColorBase).important()
+            borderColor(.transparent).important()
+          }
+          selector("&[data-weight='quiet'][data-color='gray'], &[data-weight='plain'][data-color='gray']") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='quiet'][data-color='red'], &[data-weight='plain'][data-color='red']") { color(`var`("--color-red")).important() }
+          selector("&[data-weight='quiet'][data-color='orange'], &[data-weight='plain'][data-color='orange']") { color(`var`("--color-orange")).important() }
+          selector("&[data-weight='quiet'][data-color='yellow'], &[data-weight='plain'][data-color='yellow']") { color(`var`("--color-yellow")).important() }
+          selector("&[data-weight='quiet'][data-color='green'], &[data-weight='plain'][data-color='green']") { color(`var`("--color-green")).important() }
+          selector("&[data-weight='quiet'][data-color='mint'], &[data-weight='plain'][data-color='mint']") { color(`var`("--color-mint")).important() }
+          selector("&[data-weight='quiet'][data-color='teal'], &[data-weight='plain'][data-color='teal']") { color(`var`("--color-teal")).important() }
+          selector("&[data-weight='quiet'][data-color='cyan'], &[data-weight='plain'][data-color='cyan']") { color(`var`("--color-cyan")).important() }
+          selector("&[data-weight='quiet'][data-color='blue'], &[data-weight='plain'][data-color='blue']") { color(`var`("--color-blue")).important() }
+          selector("&[data-weight='quiet'][data-color='indigo'], &[data-weight='plain'][data-color='indigo']") { color(`var`("--color-indigo")).important() }
+          selector("&[data-weight='quiet'][data-color='purple'], &[data-weight='plain'][data-color='purple']") { color(`var`("--color-purple")).important() }
+          selector("&[data-weight='quiet'][data-color='pink'], &[data-weight='plain'][data-color='pink']") { color(`var`("--color-pink")).important() }
+          selector("&[data-weight='quiet'][data-color='brown'], &[data-weight='plain'][data-color='brown']") { color(`var`("--color-brown")).important() }
+          selector("&[data-weight='quiet']:disabled, &[data-weight='plain']:disabled") {
+            backgroundColor(backgroundColorBase).important()
+            borderColor(.transparent).important()
+          }
+          selector("&[data-weight='subtle']:disabled, &[data-weight='solid']:disabled, &[data-weight='static']:disabled") {
+            backgroundColor(backgroundColorDisabled).important()
+            borderColor(borderColorDisabled).important()
+          }
+          // Solid / Subtle / Static superset — mirrors aBtn branch (fixes solid blue)
+          selector("&[data-weight='solid'][data-color='gray']") {
+            backgroundColor(backgroundColorInteractive)
+            color(colorBase)
+            borderColor(borderColorBase)
+          }
+          selector("&[data-weight='subtle'][data-color='gray']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(borderColorBase)
+          }
+          selector("&[data-weight='static'][data-color='gray']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(borderColorBase)
+          }
+          selector("&[data-weight='subtle'][data-color='red']") {
+            backgroundColor(`var`("--background-color-red-subtle"))
+            color(`var`("--color-red"))
+            borderColor(`var`("--border-color-red"))
+          }
+          selector("&[data-weight='solid'][data-color='red']") {
+            backgroundColor(`var`("--background-color-red"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-red"))
+          }
+          selector("&[data-weight='static'][data-color='red']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-red"))
+          }
+          selector("&[data-weight='subtle'][data-color='orange']") {
+            backgroundColor(`var`("--background-color-orange-subtle"))
+            color(`var`("--color-orange"))
+            borderColor(`var`("--border-color-orange"))
+          }
+          selector("&[data-weight='solid'][data-color='orange']") {
+            backgroundColor(`var`("--background-color-orange"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-orange"))
+          }
+          selector("&[data-weight='static'][data-color='orange']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-orange"))
+          }
+          selector("&[data-weight='subtle'][data-color='yellow']") {
+            backgroundColor(`var`("--background-color-yellow-subtle"))
+            color(`var`("--color-yellow"))
+            borderColor(`var`("--border-color-yellow"))
+          }
+          selector("&[data-weight='solid'][data-color='yellow']") {
+            backgroundColor(`var`("--background-color-yellow"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-yellow"))
+          }
+          selector("&[data-weight='static'][data-color='yellow']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-yellow"))
+          }
+          selector("&[data-weight='subtle'][data-color='green']") {
+            backgroundColor(`var`("--background-color-green-subtle"))
+            color(`var`("--color-green"))
+            borderColor(`var`("--border-color-green"))
+          }
+          selector("&[data-weight='solid'][data-color='green']") {
+            backgroundColor(`var`("--background-color-green"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-green"))
+          }
+          selector("&[data-weight='static'][data-color='green']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-green"))
+          }
+          selector("&[data-weight='subtle'][data-color='mint']") {
+            backgroundColor(`var`("--background-color-mint-subtle"))
+            color(`var`("--color-mint"))
+            borderColor(`var`("--border-color-mint"))
+          }
+          selector("&[data-weight='solid'][data-color='mint']") {
+            backgroundColor(`var`("--background-color-mint"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-mint"))
+          }
+          selector("&[data-weight='static'][data-color='mint']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-mint"))
+          }
+          selector("&[data-weight='subtle'][data-color='teal']") {
+            backgroundColor(`var`("--background-color-teal-subtle"))
+            color(`var`("--color-teal"))
+            borderColor(`var`("--border-color-teal"))
+          }
+          selector("&[data-weight='solid'][data-color='teal']") {
+            backgroundColor(`var`("--background-color-teal"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-teal"))
+          }
+          selector("&[data-weight='static'][data-color='teal']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-teal"))
+          }
+          selector("&[data-weight='subtle'][data-color='cyan']") {
+            backgroundColor(`var`("--background-color-cyan-subtle"))
+            color(`var`("--color-cyan"))
+            borderColor(`var`("--border-color-cyan"))
+          }
+          selector("&[data-weight='solid'][data-color='cyan']") {
+            backgroundColor(`var`("--background-color-cyan"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-cyan"))
+          }
+          selector("&[data-weight='static'][data-color='cyan']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-cyan"))
+          }
+          selector("&[data-weight='subtle'][data-color='blue']") {
+            backgroundColor(`var`("--background-color-blue-subtle"))
+            color(`var`("--color-blue"))
+            borderColor(`var`("--border-color-blue"))
+          }
+          selector("&[data-weight='solid'][data-color='blue']") {
+            backgroundColor(`var`("--background-color-blue"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-blue"))
+          }
+          selector("&[data-weight='static'][data-color='blue']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-blue"))
+          }
+          selector("&[data-weight='subtle'][data-color='indigo']") {
+            backgroundColor(`var`("--background-color-indigo-subtle"))
+            color(`var`("--color-indigo"))
+            borderColor(`var`("--border-color-indigo"))
+          }
+          selector("&[data-weight='solid'][data-color='indigo']") {
+            backgroundColor(`var`("--background-color-indigo"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-indigo"))
+          }
+          selector("&[data-weight='static'][data-color='indigo']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-indigo"))
+          }
+          selector("&[data-weight='subtle'][data-color='purple']") {
+            backgroundColor(`var`("--background-color-purple-subtle"))
+            color(`var`("--color-purple"))
+            borderColor(`var`("--border-color-purple"))
+          }
+          selector("&[data-weight='solid'][data-color='purple']") {
+            backgroundColor(`var`("--background-color-purple"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-purple"))
+          }
+          selector("&[data-weight='static'][data-color='purple']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-purple"))
+          }
+          selector("&[data-weight='subtle'][data-color='pink']") {
+            backgroundColor(`var`("--background-color-pink-subtle"))
+            color(`var`("--color-pink"))
+            borderColor(`var`("--border-color-pink"))
+          }
+          selector("&[data-weight='solid'][data-color='pink']") {
+            backgroundColor(`var`("--background-color-pink"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-pink"))
+          }
+          selector("&[data-weight='static'][data-color='pink']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-pink"))
+          }
+          selector("&[data-weight='subtle'][data-color='brown']") {
+            backgroundColor(`var`("--background-color-brown-subtle"))
+            color(`var`("--color-brown"))
+            borderColor(`var`("--border-color-brown"))
+          }
+          selector("&[data-weight='solid'][data-color='brown']") {
+            backgroundColor(`var`("--background-color-brown"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-brown"))
+          }
+          selector("&[data-weight='static'][data-color='brown']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-brown"))
+          }
+
+          // Hover / Active — cacheable via data-attributes (covers all solid/subtle/quiet/plain)
+          selector("&[data-weight='subtle'][data-color='gray']:hover:not(:disabled)") {
+            backgroundColor(backgroundColorInteractiveSubtleHover).important()
+          }
+          selector("&[data-weight='subtle'][data-color='gray']:active:not(:disabled)") {
+            backgroundColor(backgroundColorInteractiveSubtleActive).important()
+            color(colorEmphasized).important()
+            borderColor(borderColorBase).important()
+          }
+          selector("&[data-weight='solid'][data-color='gray']:hover:not(:disabled)") {
+            backgroundColor(backgroundColorInteractiveHover).important()
+          }
+          selector("&[data-weight='solid'][data-color='gray']:active:not(:disabled)") {
+            backgroundColor(backgroundColorInteractiveActive).important()
+            color(colorEmphasized).important()
+            borderColor(borderColorBase).important()
+          }
+          selector("&[data-weight='quiet'][data-color='gray']:hover:not(:disabled)") {
+            backgroundColor(backgroundColorBaseHover).important()
+            borderColor(.transparent).important()
+          }
+          selector("&[data-weight='quiet'][data-color='gray']:active:not(:disabled)") {
+            backgroundColor(backgroundColorBaseActive).important()
+            color(colorEmphasized).important()
+            borderColor(.transparent).important()
+          }
+          selector("&[data-weight='plain'][data-color='gray']:hover:not(:disabled)") {
+            color(colorBase).important()
+            borderColor(.transparent).important()
+          }
+          selector("&[data-weight='plain'][data-color='gray']:active:not(:disabled)") {
+            color(colorEmphasized).important()
+            borderColor(.transparent).important()
+          }
+
+          selector("&[data-weight='subtle'][data-color='red']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-red-subtle-hover")).important()
+            borderColor(`var`("--border-color-red-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='red']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-red-subtle-active")).important()
+            borderColor(`var`("--border-color-red-active")).important()
+            color(`var`("--color-red-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='red']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-red-hover")).important()
+            borderColor(`var`("--border-color-red-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='red']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-red-active")).important()
+            borderColor(`var`("--border-color-red-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='red']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-red-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='red']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-red-subtle-active")).important()
+            color(`var`("--color-red-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='red']:hover:not(:disabled)") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='plain'][data-color='red']:active:not(:disabled)") {
+            color(`var`("--color-red-active")).important()
+          }
+
+          selector("&[data-weight='subtle'][data-color='orange']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-orange-subtle-hover")).important()
+            borderColor(`var`("--border-color-orange-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='orange']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-orange-subtle-active")).important()
+            borderColor(`var`("--border-color-orange-active")).important()
+            color(`var`("--color-orange-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='orange']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-orange-hover")).important()
+            borderColor(`var`("--border-color-orange-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='orange']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-orange-active")).important()
+            borderColor(`var`("--border-color-orange-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='orange']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-orange-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='orange']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-orange-subtle-active")).important()
+            color(`var`("--color-orange-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='orange']:hover:not(:disabled)") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='plain'][data-color='orange']:active:not(:disabled)") {
+            color(`var`("--color-orange-active")).important()
+          }
+
+          selector("&[data-weight='subtle'][data-color='yellow']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-yellow-subtle-hover")).important()
+            borderColor(`var`("--border-color-yellow-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='yellow']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-yellow-subtle-active")).important()
+            borderColor(`var`("--border-color-yellow-active")).important()
+            color(`var`("--color-yellow-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='yellow']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-yellow-hover")).important()
+            borderColor(`var`("--border-color-yellow-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='yellow']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-yellow-active")).important()
+            borderColor(`var`("--border-color-yellow-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='yellow']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-yellow-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='yellow']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-yellow-subtle-active")).important()
+            color(`var`("--color-yellow-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='yellow']:hover:not(:disabled)") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='plain'][data-color='yellow']:active:not(:disabled)") {
+            color(`var`("--color-yellow-active")).important()
+          }
+
+          selector("&[data-weight='subtle'][data-color='green']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-green-subtle-hover")).important()
+            borderColor(`var`("--border-color-green-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='green']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-green-subtle-active")).important()
+            borderColor(`var`("--border-color-green-active")).important()
+            color(`var`("--color-green-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='green']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-green-hover")).important()
+            borderColor(`var`("--border-color-green-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='green']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-green-active")).important()
+            borderColor(`var`("--border-color-green-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='green']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-green-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='green']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-green-subtle-active")).important()
+            color(`var`("--color-green-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='green']:hover:not(:disabled)") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='plain'][data-color='green']:active:not(:disabled)") {
+            color(`var`("--color-green-active")).important()
+          }
+
+          selector("&[data-weight='subtle'][data-color='mint']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-mint-subtle-hover")).important()
+            borderColor(`var`("--border-color-mint-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='mint']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-mint-subtle-active")).important()
+            borderColor(`var`("--border-color-mint-active")).important()
+            color(`var`("--color-mint-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='mint']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-mint-hover")).important()
+            borderColor(`var`("--border-color-mint-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='mint']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-mint-active")).important()
+            borderColor(`var`("--border-color-mint-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='mint']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-mint-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='mint']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-mint-subtle-active")).important()
+            color(`var`("--color-mint-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='mint']:hover:not(:disabled)") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='plain'][data-color='mint']:active:not(:disabled)") {
+            color(`var`("--color-mint-active")).important()
+          }
+
+          selector("&[data-weight='subtle'][data-color='teal']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-teal-subtle-hover")).important()
+            borderColor(`var`("--border-color-teal-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='teal']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-teal-subtle-active")).important()
+            borderColor(`var`("--border-color-teal-active")).important()
+            color(`var`("--color-teal-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='teal']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-teal-hover")).important()
+            borderColor(`var`("--border-color-teal-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='teal']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-teal-active")).important()
+            borderColor(`var`("--border-color-teal-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='teal']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-teal-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='teal']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-teal-subtle-active")).important()
+            color(`var`("--color-teal-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='teal']:hover:not(:disabled)") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='plain'][data-color='teal']:active:not(:disabled)") {
+            color(`var`("--color-teal-active")).important()
+          }
+
+          selector("&[data-weight='subtle'][data-color='cyan']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-cyan-subtle-hover")).important()
+            borderColor(`var`("--border-color-cyan-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='cyan']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-cyan-subtle-active")).important()
+            borderColor(`var`("--border-color-cyan-active")).important()
+            color(`var`("--color-cyan-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='cyan']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-cyan-hover")).important()
+            borderColor(`var`("--border-color-cyan-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='cyan']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-cyan-active")).important()
+            borderColor(`var`("--border-color-cyan-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='cyan']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-cyan-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='cyan']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-cyan-subtle-active")).important()
+            color(`var`("--color-cyan-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='cyan']:hover:not(:disabled)") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='plain'][data-color='cyan']:active:not(:disabled)") {
+            color(`var`("--color-cyan-active")).important()
+          }
+
+          selector("&[data-weight='subtle'][data-color='blue']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-blue-subtle-hover")).important()
+            borderColor(`var`("--border-color-blue-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='blue']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-blue-subtle-active")).important()
+            borderColor(`var`("--border-color-blue-active")).important()
+            color(`var`("--color-blue-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='blue']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-blue-hover")).important()
+            borderColor(`var`("--border-color-blue-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='blue']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-blue-active")).important()
+            borderColor(`var`("--border-color-blue-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='blue']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-blue-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='blue']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-blue-subtle-active")).important()
+            color(`var`("--color-blue-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='blue']:hover:not(:disabled)") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='plain'][data-color='blue']:active:not(:disabled)") {
+            color(`var`("--color-blue-active")).important()
+          }
+
+          selector("&[data-weight='subtle'][data-color='indigo']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-indigo-subtle-hover")).important()
+            borderColor(`var`("--border-color-indigo-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='indigo']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-indigo-subtle-active")).important()
+            borderColor(`var`("--border-color-indigo-active")).important()
+            color(`var`("--color-indigo-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='indigo']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-indigo-hover")).important()
+            borderColor(`var`("--border-color-indigo-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='indigo']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-indigo-active")).important()
+            borderColor(`var`("--border-color-indigo-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='indigo']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-indigo-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='indigo']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-indigo-subtle-active")).important()
+            color(`var`("--color-indigo-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='indigo']:hover:not(:disabled)") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='plain'][data-color='indigo']:active:not(:disabled)") {
+            color(`var`("--color-indigo-active")).important()
+          }
+
+          selector("&[data-weight='subtle'][data-color='purple']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-purple-subtle-hover")).important()
+            borderColor(`var`("--border-color-purple-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='purple']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-purple-subtle-active")).important()
+            borderColor(`var`("--border-color-purple-active")).important()
+            color(`var`("--color-purple-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='purple']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-purple-hover")).important()
+            borderColor(`var`("--border-color-purple-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='purple']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-purple-active")).important()
+            borderColor(`var`("--border-color-purple-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='purple']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-purple-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='purple']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-purple-subtle-active")).important()
+            color(`var`("--color-purple-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='purple']:hover:not(:disabled)") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='plain'][data-color='purple']:active:not(:disabled)") {
+            color(`var`("--color-purple-active")).important()
+          }
+
+          selector("&[data-weight='subtle'][data-color='pink']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-pink-subtle-hover")).important()
+            borderColor(`var`("--border-color-pink-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='pink']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-pink-subtle-active")).important()
+            borderColor(`var`("--border-color-pink-active")).important()
+            color(`var`("--color-pink-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='pink']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-pink-hover")).important()
+            borderColor(`var`("--border-color-pink-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='pink']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-pink-active")).important()
+            borderColor(`var`("--border-color-pink-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='pink']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-pink-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='pink']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-pink-subtle-active")).important()
+            color(`var`("--color-pink-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='pink']:hover:not(:disabled)") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='plain'][data-color='pink']:active:not(:disabled)") {
+            color(`var`("--color-pink-active")).important()
+          }
+
+          selector("&[data-weight='subtle'][data-color='brown']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-brown-subtle-hover")).important()
+            borderColor(`var`("--border-color-brown-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='brown']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-brown-subtle-active")).important()
+            borderColor(`var`("--border-color-brown-active")).important()
+            color(`var`("--color-brown-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='brown']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-brown-hover")).important()
+            borderColor(`var`("--border-color-brown-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='brown']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-brown-active")).important()
+            borderColor(`var`("--border-color-brown-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='brown']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-brown-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='brown']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-brown-subtle-active")).important()
+            color(`var`("--color-brown-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='brown']:hover:not(:disabled)") {
+            color(colorBase).important()
+          }
+          selector("&[data-weight='plain'][data-color='brown']:active:not(:disabled)") {
+            color(`var`("--color-brown-active")).important()
+          }
+
+          selector("&[data-weight='quiet']:focus") {
+            borderColor(.transparent).important()
+            boxShadow(.none).important()
+          }
+          selector("&[data-weight='plain']:focus") {
+            borderColor(.transparent).important()
+            boxShadow(.none).important()
+          }
+
         }
 
       if let ariaLbl = effectiveAriaLabel {
@@ -319,7 +1916,7 @@ public struct ButtonView: HTMLContent {
         bBtn = bBtn.onclick(click)
       }
 
-      for (key, value) in data {
+      for (key, value) in dataAttributes {
         bBtn = bBtn.data(key, value)
       }
 
@@ -327,136 +1924,22 @@ public struct ButtonView: HTMLContent {
     }
   }
 
-  @CSSBuilder
-  private func buttonViewCSS() -> [CSSOM.CSSRule] {
-    // Base button styles
-    if iconOnly {
-      display(.flex)
-      justifyContent(.center)
-      alignSelf(.flexStart)
-    } else {
-      if fullWidth {
-        display(.flex)
-      } else {
-        display(.inlineFlex)
-        alignSelf(.flexStart)
-      }
-    }
-    alignItems(.center)
-    justifyContent(contentJustifyContent)
-    gap(spacingHorizontalButton)
-    fontFamily(labelFontFamily)
-    fontSize(fontSizeMedium16)
-    fontWeight(labelFontWeight)
-    textDecoration(.none)
-    textAlign(.center)
-    verticalAlign(.middle)
-    whiteSpace(.nowrap)
-    userSelect(.none)
-    boxSizing(.borderBox)
-
-    // Size
-    if fullWidth {
-      width(perc(100))
-    } else {
-      minWidth(size.minSize)
-    }
-    minHeight(size.minSize)
-
-    if size == .large {
-      let isNavbarBtn = stringContains(self.class, "navbar-ellipsis-btn") || stringContains(self.class, "navbar-sidebar-btn") || stringContains(self.class, "navbar-search-btn")
-      if isNavbarBtn {
-        let ms = ButtonSize.medium.minSize
-        media(maxWidth(maxWidthBreakpointMobile)) {
-          height(ms).important()
-          minHeight(ms).important()
-          if iconOnly {
-            width(ms).important()
-            minWidth(ms).important()
-          }
-        }
-      }
-    }
-
-    // Border
-    borderWidth(borderWidthBase)
-    borderStyle(.solid)
-    borderRadius(buttonBorderRadius)
-
-    // Interaction
-    cursor(.pointer)
-    transition(.all, s(0.1), .ease)
-
-    // Padding based on size and icon-only state
-    if iconOnly {
-      padding(0)
-      width(size.minSize)
-      height(size.minSize)
-    } else {
-      switch size {
-      case .small:
-        padding(0, spacingHorizontalButtonSmall)
-      case .medium:
-        padding(0, spacingHorizontalButton)
-      case .large:
-        padding(0, spacingHorizontalButtonLarge)
-        media(maxWidth(maxWidthBreakpointMobile)) {
-          padding(0, spacingHorizontalButton).important()
-        }
-      }
-    }
-
-    // Color + Weight — base styles inline, interactive states via pseudo-class
-    applyColorBaseCSS()
-    if weight != .`static` { applyColorInteractiveCSS() }
-
-    // Focus state
-    pseudoClass(.focus) {
-      outline(borderWidthBase, .solid, borderColorTransparent).important()
-    }
-
-    // Disabled state
-    pseudoClass(.disabled) {
-      color(colorDisabled).important()
-      if weight == .quiet {
-        backgroundColor(.transparent).important()
-        borderColor(.transparent).important()
-      } else {
-        backgroundColor(backgroundColorDisabled).important()
-        borderColor(borderColorDisabled).important()
-      }
-      cursor(cursorNotAllowed).important()
-    }
-
-    // Icon hover color when button is disabled
-    pseudoClass(.disabled) {
-      descendant(".icon-view") {
-        pseudoClass(.hover) {
-          color(colorDisabled).important()
-        }
-      }
-    }
-
-    // Custom styles
-    style()
+  private var fontWeightKey: String {
+    if stringEquals(labelFontWeight.value, fontWeightBold.value) { return "bold" }
+    if stringEquals(labelFontWeight.value, fontWeightNormal.value) { return "normal" }
+    if stringEquals(labelFontWeight.value, fontWeightSemiBold.value) { return "semibold" }
+    return "bold"
   }
 
-  @CSSBuilder
-  private func buttonIconCSS() -> [CSSOM.CSSRule] {
-    display(.flex)
-    alignItems(.center)
-    justifyContent(.center)
-
-    if size == .small {
-      width(sizeIconXSmall)
-      height(sizeIconXSmall)
-    } else if size == .medium {
-      width(sizeIconSmall)
-      height(sizeIconSmall)
-    } else if size == .large {
-      width(sizeIconMedium)
-      height(sizeIconMedium)
+  /// A stable CSS-safe identity lets any `CSS.Length` become a scoped,
+  /// cacheable selector instead of overwriting the shared `.button-view` rule.
+  private var borderRadiusClass: String {
+    var hash: UInt32 = 2_166_136_261
+    for byte in buttonBorderRadius.value.utf8 {
+      hash ^= UInt32(byte)
+      hash &*= 16_777_619
     }
+    return "button-radius-\(int64ToString(Int64(hash), radix: 16))"
   }
 
   private var effectiveAriaLabel: String? {
@@ -469,107 +1952,6 @@ public struct ButtonView: HTMLContent {
     }
   }
 
-  @CSSBuilder
-  private func applyColorBaseCSS() -> [CSSOM.CSSRule] {
-    let c = stringLowercased(buttonColor.rawValue)
-
-    switch (buttonColor, weight) {
-    case (.gray, .subtle):
-      backgroundColor(backgroundColorBase)
-      color(colorBase)
-      borderColor(borderColorBase)
-    case (.gray, .solid):
-      backgroundColor(backgroundColorInteractive)
-      color(colorBase)
-      borderColor(borderColorBase)
-    case (.gray, .quiet):
-      backgroundColor(.transparent)
-      color(colorBase)
-      borderColor(.transparent)
-    case (.gray, .plain):
-      backgroundColor(.transparent)
-      color(colorBase)
-      borderColor(.transparent)
-    case (.gray, .`static`):
-      backgroundColor(backgroundColorBase)
-      color(colorBase)
-      borderColor(borderColorBase)
-    case (_, .subtle):
-      backgroundColor(`var`("--background-color-\(c)-subtle"))
-      color(`var`("--color-\(c)"))
-      borderColor(`var`("--border-color-\(c)"))
-    case (_, .solid):
-      backgroundColor(`var`("--background-color-\(c)"))
-      color(colorInvertedFixed)
-      borderColor(`var`("--background-color-\(c)"))
-    case (_, .quiet):
-      backgroundColor(.transparent)
-      color(`var`("--color-\(c)"))
-      borderColor(.transparent)
-    case (_, .plain):
-      backgroundColor(.transparent)
-      color(`var`("--color-\(c)"))
-      borderColor(.transparent)
-    case (_, .`static`):
-      backgroundColor(backgroundColorBase)
-      color(colorBase)
-      borderColor(`var`("--border-color-\(c)"))
-    }
-  }
-
-  @CSSBuilder
-  private func applyColorInteractiveCSS() -> [CSSOM.CSSRule] {
-    let c = stringLowercased(buttonColor.rawValue)
-
-    switch (buttonColor, weight) {
-    case (.gray, .subtle):
-      pseudoClass(.hover, .not(.disabled)) { backgroundColor(backgroundColorInteractiveSubtleHover).important() }
-      pseudoClass(.active, .not(.disabled)) { backgroundColor(backgroundColorInteractiveSubtleActive).important(); color(colorEmphasized).important(); borderColor(borderColorBase).important() }
-    case (.gray, .solid):
-      pseudoClass(.hover, .not(.disabled)) { backgroundColor(backgroundColorInteractiveHover).important() }
-      pseudoClass(.active, .not(.disabled)) { backgroundColor(backgroundColorInteractiveActive).important(); color(colorEmphasized).important(); borderColor(borderColorBase).important() }
-    case (.gray, .quiet):
-      pseudoClass(.hover, .not(.disabled)) { backgroundColor(backgroundColorBaseHover).important(); borderColor(.transparent).important() }
-      pseudoClass(.active, .not(.disabled)) { backgroundColor(backgroundColorBaseActive).important(); color(colorEmphasized).important(); borderColor(.transparent).important() }
-      pseudoClass(.focus) { borderColor(.transparent).important(); boxShadow(.none).important() }
-    case (.gray, .plain):
-      pseudoClass(.hover, .not(.disabled)) { backgroundColor(.transparent).important(); color(colorBase).important(); borderColor(.transparent).important() }
-      pseudoClass(.active, .not(.disabled)) { backgroundColor(.transparent).important(); color(colorEmphasized).important(); borderColor(.transparent).important() }
-      pseudoClass(.focus) { borderColor(.transparent).important(); boxShadow(.none).important() }
-    case (_, .subtle):
-      pseudoClass(.hover, .not(.disabled)) {
-        backgroundColor(`var`("--background-color-\(c)-subtle-hover")).important()
-        borderColor(`var`("--border-color-\(c)-hover")).important()
-      }
-      pseudoClass(.active, .not(.disabled)) {
-        backgroundColor(`var`("--background-color-\(c)-subtle-active")).important()
-        borderColor(`var`("--border-color-\(c)-active")).important()
-        color(`var`("--color-\(c)-active")).important()
-      }
-      pseudoClass(.focus) { borderColor(`var`("--border-color-\(c)-focus")).important() }
-    case (_, .solid):
-      pseudoClass(.hover, .not(.disabled)) {
-        backgroundColor(`var`("--background-color-\(c)-hover")).important()
-        borderColor(`var`("--border-color-\(c)-hover")).important()
-      }
-      pseudoClass(.active, .not(.disabled)) {
-        backgroundColor(`var`("--background-color-\(c)-active")).important()
-        borderColor(`var`("--border-color-\(c)-active")).important()
-      }
-      pseudoClass(.focus) { borderColor(`var`("--border-color-\(c)-focus")).important() }
-    case (_, .quiet):
-      pseudoClass(.hover, .not(.disabled)) { backgroundColor(`var`("--background-color-\(c)-subtle")).important() }
-      pseudoClass(.active, .not(.disabled)) { backgroundColor(`var`("--background-color-\(c)-subtle-active")).important(); color(`var`("--color-\(c)-active")).important() }
-      pseudoClass(.focus) { borderColor(.transparent).important(); boxShadow(.none).important() }
-    case (_, .plain):
-      pseudoClass(.hover, .not(.disabled)) { backgroundColor(.transparent).important(); color(colorBase).important() }
-      pseudoClass(.active, .not(.disabled)) { backgroundColor(.transparent).important(); color(`var`("--color-\(c)-active")).important() }
-      pseudoClass(.focus) { borderColor(.transparent).important(); boxShadow(.none).important() }
-    case (_, .static):
-      // Static weight is non-interactive — no hover/active/focus styling.
-      if false { color(colorBase) }
-    }
-  }
 }
 
 #if CLIENT
@@ -594,7 +1976,7 @@ public struct ButtonView: HTMLContent {
         class: `class`,
         labelFontWeight: fontWeightSemiBold
       )
-      wrapper.innerHTML = renderHTML { view.render() }
+      wrapper.innerHTML = view.render()
       return wrapper.firstElementChild ?? wrapper
     }
   }

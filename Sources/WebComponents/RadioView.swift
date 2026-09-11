@@ -60,125 +60,6 @@ public struct RadioView: HTMLContent {
     return copy
   }
 
-  @CSSBuilder
-  private func radioViewCSS(_ inline: Bool) -> [CSSOM.CSSRule] {
-    if inline {
-      display(.inlineFlex)
-    } else {
-      display(.flex)
-    }
-    alignItems(.center)
-    position(.relative)
-    if hideLabel {
-      width(minSizeInputBinary)
-      height(minSizeInputBinary)
-      justifyContent(.center)
-    } else {
-      minHeight(minSizeInteractivePointer)
-      gap(spacing8)
-    }
-  }
-
-  @CSSBuilder
-  private func radioInputCSS(_ disabled: Bool, _ status: ValidationStatus) -> [CSSOM.CSSRule] {
-    position(.absolute)
-    top(0)
-    left(0)
-    width(perc(100))
-    height(perc(100))
-    margin(0)
-    opacity(0)
-    zIndex(zIndexAboveContent)
-    cursor(disabled ? cursorNotAllowed : cursorBaseHover)
-
-    pseudoClass(.checked, .enabled) {
-      nextSibling(".radio-icon") {
-        backgroundColor(backgroundColorBase).important()
-        borderColor(borderColorInputBinaryChecked).important()
-        borderWidth(borderWidthInputRadioChecked).important()
-      }
-    }
-
-    pseudoClass(.focus) {
-      nextSibling(".radio-icon") {
-        borderColor(borderColorInputBinaryFocus).important()
-        boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
-      }
-    }
-
-    pseudoClass(.hover, .not(.checked), .enabled) {
-      nextSibling(".radio-icon") {
-        borderColor(borderColorInputBinaryHover).important()
-      }
-    }
-
-    pseudoClass(.hover, .checked, .enabled) {
-      nextSibling(".radio-icon") {
-        borderColor(borderColorInputBinaryCheckedHover).important()
-      }
-    }
-
-    pseudoClass(.active, .checked, .enabled) {
-      nextSibling(".radio-icon") {
-        borderColor(borderColorInputBinaryCheckedActive).important()
-      }
-    }
-  }
-
-  @CSSBuilder
-  private func radioIconCSS(_ disabled: Bool, _ status: ValidationStatus) -> [CSSOM.CSSRule] {
-    display(.inlineBlock)
-    position(.relative)
-    width(minSizeInputBinary)
-    height(minSizeInputBinary)
-    flexShrink(0)
-    backgroundColor(disabled ? backgroundColorDisabled : backgroundColorBase)
-    border(
-      borderWidthBase, .solid,
-      status == .error ? borderColorRed : (disabled ? borderColorDisabled : borderColorInputBinary))
-    borderRadius(borderRadiusCircle)
-    transition(.all, transitionDurationBase, transitionTimingFunctionSystem)
-    cursor(disabled ? cursorNotAllowed : cursorBaseHover)
-  }
-
-  @CSSBuilder
-  private func radioLabelWrapperCSS(_ disabled: Bool) -> [CSSOM.CSSRule] {
-    display(.flex)
-    flexDirection(.column)
-    gap(spacing4)
-    cursor(disabled ? cursorNotAllowed : cursorBaseHover)
-    userSelect(.none)
-  }
-
-  @CSSBuilder
-  private func radioLabelTextCSS(_ disabled: Bool) -> [CSSOM.CSSRule] {
-    fontFamily(typographyFontSans)
-    fontSize(fontSizeMedium16)
-    lineHeight(lineHeightSmall22)
-    fontWeight(fontWeightNormal)
-    color(disabled ? colorDisabled : colorBase)
-  }
-
-  @CSSBuilder
-  private func radioDescriptionCSS(_ disabled: Bool) -> [CSSOM.CSSRule] {
-    fontSize(fontSizeSmall14)
-    lineHeight(lineHeightSmall22)
-    color(disabled ? colorDisabled : colorSubtle)
-  }
-
-  @CSSBuilder
-  private func visuallyHiddenCSS() -> [CSSOM.CSSRule] {
-    position(.absolute)
-    width(px(1))
-    height(px(1))
-    margin(px(-1))
-    padding(0)
-    overflow(.hidden)
-    clip(rect(0, 0, 0, 0))
-    whiteSpace(.nowrap)
-    borderWidth(0)
-  }
-
   public func build() -> DOM.Node {
     let hasDescription = !descriptionContent.isEmpty
     let hasCustomInput = !customInputContent.isEmpty
@@ -197,38 +78,24 @@ public struct RadioView: HTMLContent {
           .disabled(disabled)
           .ariaDescribedby(descriptionID ?? "")
           .class("radio-input")
-          .style {
-            radioInputCSS(disabled, status)
-          }
       }
 
       span {}
         .class("radio-icon")
         .ariaHidden(true)
-        .style {
-          radioIconCSS(disabled, status)
-        }
+        .data("disabled", disabled)
+        .data("status", status.rawValue)
 
       div {
         label {
           span {
             for item in labelContent { item }
           }
-          .class("radio-label-text")
-          .style {
-            radioLabelTextCSS(disabled)
-            if hideLabel {
-              visuallyHiddenCSS()
-            }
-          }
+          .class(hideLabel ? "radio-label-text visually-hidden" : "radio-label-text")
+          .data("disabled", disabled)
         }
         .for(id)
-        .class("radio-label")
-        .style {
-          if hideLabel {
-            visuallyHiddenCSS()
-          }
-        }
+        .class(hideLabel ? "radio-label visually-hidden" : "radio-label")
 
         if hasDescription && !hideLabel {
           div {
@@ -236,20 +103,15 @@ public struct RadioView: HTMLContent {
           }
           .class("radio-description")
           .id(descriptionID ?? "")
-          .style {
-            radioDescriptionCSS(disabled)
-          }
+          .data("disabled", disabled)
         }
       }
-      .class("radio-label-wrapper")
-      .style {
-        radioLabelWrapperCSS(disabled)
-        if hideLabel {
-          visuallyHiddenCSS()
-        }
-      }
+      .class(hideLabel ? "radio-label-wrapper visually-hidden" : "radio-label-wrapper")
+      .data("disabled", disabled)
     }
     .class(stringIsEmpty(`class`) ? "radio-view" : "radio-view \(`class`)")
+    .data("inline", inline)
+    .data("hide-label", hideLabel)
 
     if status == .error {
       radioView = radioView.data("status", "error")
@@ -257,7 +119,124 @@ public struct RadioView: HTMLContent {
 
     return radioView
       .style {
-        radioViewCSS(inline)
+        selector("&") {
+          display(.flex)
+          alignItems(.center)
+          position(.relative)
+        }
+        selector("&[data-inline='true']") {
+          display(.inlineFlex)
+        }
+        selector("&[data-hide-label='true']") {
+          width(minSizeInputBinary)
+          height(minSizeInputBinary)
+          justifyContent(.center)
+        }
+        selector("&[data-hide-label='false']") {
+          minHeight(minSizeInteractivePointer)
+          gap(spacing8)
+        }
+        descendant(".radio-input") {
+          position(.absolute)
+          top(0)
+          left(0)
+          width(perc(100))
+          height(perc(100))
+          margin(0)
+          opacity(0)
+          zIndex(zIndexAboveContent)
+          cursor(cursorBaseHover)
+          pseudoClass(.disabled) {
+            cursor(cursorNotAllowed)
+          }
+          pseudoClass(.checked, .enabled) {
+            nextSibling(".radio-icon") {
+              backgroundColor(backgroundColorBase).important()
+              borderColor(borderColorInputBinaryChecked).important()
+              borderWidth(borderWidthInputRadioChecked).important()
+            }
+          }
+          pseudoClass(.focus) {
+            nextSibling(".radio-icon") {
+              borderColor(borderColorInputBinaryFocus).important()
+              boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
+            }
+          }
+          pseudoClass(.hover, .not(.checked), .enabled) {
+            nextSibling(".radio-icon") {
+              borderColor(borderColorInputBinaryHover).important()
+            }
+          }
+          pseudoClass(.hover, .checked, .enabled) {
+            nextSibling(".radio-icon") {
+              borderColor(borderColorInputBinaryCheckedHover).important()
+            }
+          }
+          pseudoClass(.active, .checked, .enabled) {
+            nextSibling(".radio-icon") {
+              borderColor(borderColorInputBinaryCheckedActive).important()
+            }
+          }
+        }
+        descendant(".radio-icon") {
+          display(.inlineBlock)
+          position(.relative)
+          width(minSizeInputBinary)
+          height(minSizeInputBinary)
+          flexShrink(0)
+          backgroundColor(backgroundColorBase)
+          border(borderWidthBase, .solid, borderColorInputBinary)
+          borderRadius(borderRadiusCircle)
+          transition(.all, transitionDurationBase, transitionTimingFunctionSystem)
+          cursor(cursorBaseHover)
+        }
+        selector("& .radio-icon[data-disabled='true']") {
+          backgroundColor(backgroundColorDisabled)
+          borderColor(borderColorDisabled)
+          cursor(cursorNotAllowed)
+        }
+        selector("& .radio-icon[data-disabled='false'][data-status='error']") {
+          borderColor(borderColorRed)
+        }
+        descendant(".radio-label-wrapper") {
+          display(.flex)
+          flexDirection(.column)
+          gap(spacing4)
+          cursor(cursorBaseHover)
+          userSelect(.none)
+        }
+        selector("& .radio-label-wrapper[data-disabled='true']") {
+          cursor(cursorNotAllowed)
+        }
+        descendant(".radio-label-text") {
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeMedium16)
+          lineHeight(lineHeightSmall22)
+          fontWeight(fontWeightNormal)
+          color(colorBase)
+        }
+        selector("& .radio-label-text[data-disabled='true']") {
+          color(colorDisabled)
+        }
+        descendant(".radio-description") {
+          fontSize(fontSizeSmall14)
+          lineHeight(lineHeightSmall22)
+          color(colorSubtle)
+        }
+        selector("& .radio-description[data-disabled='true']") {
+          color(colorDisabled)
+        }
+        descendant(".visually-hidden") {
+          position(.absolute)
+          width(px(1))
+          height(px(1))
+          margin(px(-1))
+          padding(0)
+          overflow(.hidden)
+          clip(rect(0, 0, 0, 0))
+          whiteSpace(.nowrap)
+          borderWidth(0)
+        }
       }
 
   }
@@ -294,7 +273,7 @@ public struct RadioView: HTMLContent {
         class: `class`,
         label: { title }
       )
-      wrapper.innerHTML = renderHTML { view.render() }
+      wrapper.innerHTML = view.render()
       return wrapper.firstElementChild ?? wrapper
     }
   }

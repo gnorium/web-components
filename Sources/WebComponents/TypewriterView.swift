@@ -59,54 +59,130 @@
           .data("typewriter", "true")
           .data("typewriter-persist-caret", persist)
           .data("typewriter-phrases", encoded)
-          .style { style; caretCSS(); display(.none) }
+          .data("typewriter-ready", false)
+          .style {
+            selector("&") {
+              style
+            }
+            selector("&[data-typewriter-ready='false']") {
+              visibility(.hidden)
+            }
+            child(".typewriter-caret") {
+              color(colorBlue)
+              fontWeight(fontWeightNormal)
+              animation(
+                duration: .time(s(0.7)),
+                easingFunction: .easeInOut,
+                iterationCount: .infinite,
+                direction: .alternate,
+                name: .name("typewriter-blink")
+              )
+            }
+          }
       case .h2:
         return h2 { firstPhrase }
           .class(classAttr)
           .data("typewriter", "true")
           .data("typewriter-persist-caret", persist)
           .data("typewriter-phrases", encoded)
-          .style { style; caretCSS(); display(.none) }
+          .data("typewriter-ready", false)
+          .style {
+            selector("&") {
+              style
+            }
+            selector("&[data-typewriter-ready='false']") {
+              visibility(.hidden)
+            }
+            child(".typewriter-caret") {
+              color(colorBlue)
+              fontWeight(fontWeightNormal)
+              animation(
+                duration: .time(s(0.7)),
+                easingFunction: .easeInOut,
+                iterationCount: .infinite,
+                direction: .alternate,
+                name: .name("typewriter-blink")
+              )
+            }
+          }
       case .h3:
         return h3 { firstPhrase }
           .class(classAttr)
           .data("typewriter", "true")
           .data("typewriter-persist-caret", persist)
           .data("typewriter-phrases", encoded)
-          .style { style; caretCSS(); display(.none) }
+          .data("typewriter-ready", false)
+          .style {
+            selector("&") {
+              style
+            }
+            selector("&[data-typewriter-ready='false']") {
+              visibility(.hidden)
+            }
+            child(".typewriter-caret") {
+              color(colorBlue)
+              fontWeight(fontWeightNormal)
+              animation(
+                duration: .time(s(0.7)),
+                easingFunction: .easeInOut,
+                iterationCount: .infinite,
+                direction: .alternate,
+                name: .name("typewriter-blink")
+              )
+            }
+          }
       case .p:
         return p { firstPhrase }
           .class(classAttr)
           .data("typewriter", "true")
           .data("typewriter-persist-caret", persist)
           .data("typewriter-phrases", encoded)
-          .style { style; caretCSS(); display(.none) }
+          .data("typewriter-ready", false)
+          .style {
+            selector("&") {
+              style
+            }
+            selector("&[data-typewriter-ready='false']") {
+              visibility(.hidden)
+            }
+            child(".typewriter-caret") {
+              color(colorBlue)
+              fontWeight(fontWeightNormal)
+              animation(
+                duration: .time(s(0.7)),
+                easingFunction: .easeInOut,
+                iterationCount: .infinite,
+                direction: .alternate,
+                name: .name("typewriter-blink")
+              )
+            }
+          }
       case .span:
         return span { firstPhrase }
           .class(classAttr)
           .data("typewriter", "true")
           .data("typewriter-persist-caret", persist)
           .data("typewriter-phrases", encoded)
-          .style { style; caretCSS(); display(.none) }
-      }
-    }
-
-    @CSSBuilder
-    private func caretCSS() -> [CSSOM.CSSRule] {
-      child(".typewriter-caret") {
-        color(colorBlue)
-        fontWeight(fontWeightNormal)
-        animation(
-          duration: .time(s(0.7)),
-          easingFunction: .easeInOut,
-          iterationCount: .infinite,
-          direction: .alternate,
-          name: .name("typewriter-blink")
-        )
-      }
-      keyframes("typewriter-blink") {
-        from { opacity(1) }
-        to { opacity(0) }
+          .data("typewriter-ready", false)
+          .style {
+            selector("&") {
+              style
+            }
+            selector("&[data-typewriter-ready='false']") {
+              visibility(.hidden)
+            }
+            child(".typewriter-caret") {
+              color(colorBlue)
+              fontWeight(fontWeightNormal)
+              animation(
+                duration: .time(s(0.7)),
+                easingFunction: .easeInOut,
+                iterationCount: .infinite,
+                direction: .alternate,
+                name: .name("typewriter-blink")
+              )
+            }
+          }
       }
     }
   }
@@ -179,7 +255,7 @@
       let persistRaw = element.getAttribute("data-typewriter-persist-caret") ?? ""
       let persistCaret = stringEquals(persistRaw, "true")
 
-      element.style.setProperty(.display, "revert")
+      element.setAttribute(data("typewriter-ready"), true)
       element.textContent = ""
 
       let typingSpan = document.createElement("span")

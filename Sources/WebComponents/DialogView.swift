@@ -98,183 +98,6 @@
       self.footerTextContent = footerText()
     }
 
-    @CSSBuilder
-    private func dialogBackdropCSS() -> [CSSOM.CSSRule] {
-      position(.fixed)
-      insetBlockStart(0)
-      insetInlineStart(0)
-      insetInlineEnd(0)
-      insetBlockEnd(0)
-      width(perc(100))
-      height(perc(100))
-      backgroundColor(backgroundColorBackdropDark)
-      zIndex(200)
-      display(.flex)
-      alignItems(.center)
-      justifyContent(.center)
-      padding(spacing16)
-    }
-
-    @CSSBuilder
-    private func dialogShellCSS() -> [CSSOM.CSSRule] {
-      position(.relative)
-      display(.flex)
-      flexDirection(.column)
-      width(min(calc(vw(100) - px(60)), px(900)))
-      backgroundColor(backgroundColorBase)
-      borderRadius(borderRadiusBase)
-      boxShadow(boxShadowOutsetMediumAround)
-      overflow(.hidden)
-    }
-
-    @CSSBuilder
-    private func dialogHeaderCSS(_ hasCustomHeader: Bool) -> [CSSOM.CSSRule] {
-      if !hasCustomHeader {
-        display(.flex)
-        flexDirection(.column)
-        gap(spacing4)
-        padding(spacing20, spacing24)
-        borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
-      }
-    }
-
-    @CSSBuilder
-    private func dialogHeaderTitleGroupCSS() -> [CSSOM.CSSRule] {
-      display(.flex)
-      alignItems(.flexStart)
-      gap(spacing16)
-      minWidth(0)
-    }
-
-    @CSSBuilder
-    private func dialogHeaderTextCSS() -> [CSSOM.CSSRule] {
-      display(.flex)
-      flexDirection(.column)
-      gap(spacing4)
-      flex(1)
-      minWidth(0)
-    }
-
-    @CSSBuilder
-    private func dialogHeaderTitleCSS(_ hideTitle: Bool) -> [CSSOM.CSSRule] {
-      fontFamily(typographyFontSans)
-      fontSize(fontSizeLarge18)
-      fontWeight(fontWeightBold)
-      lineHeight(lineHeightSmall22)
-      color(colorBase)
-      margin(0)
-      wordWrap(.breakWord)
-
-      if hideTitle {
-        position(.absolute)
-        width(px(1))
-        height(px(1))
-        margin(px(-1))
-        padding(0)
-        overflow(.hidden)
-        clip(rect(0, 0, 0, 0))
-        whiteSpace(.nowrap)
-        borderWidth(0)
-      }
-    }
-
-    @CSSBuilder
-    private func dialogHeaderSubtitleCSS() -> [CSSOM.CSSRule] {
-      fontFamily(typographyFontSans)
-      fontSize(fontSizeSmall14)
-      fontWeight(fontWeightNormal)
-      lineHeight(lineHeightSmall22)
-      color(colorSubtle)
-      margin(0)
-      wordWrap(.breakWord)
-    }
-
-    @CSSBuilder
-    private func dialogCloseButtonCSS() -> [CSSOM.CSSRule] {
-      display(.inlineFlex)
-      alignItems(.center)
-      justifyContent(.center)
-      minWidth(minSizeInteractivePointer)
-      minHeight(minSizeInteractivePointer)
-      padding(0)
-      backgroundColor(.transparent)
-      border(.none)
-      borderRadius(borderRadiusBase)
-      color(colorSubtle)
-      cursor(cursorBaseHover)
-      transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-
-      pseudoClass(.hover) {
-        backgroundColor(backgroundColorInteractiveSubtleHover).important()
-        color(colorBase).important()
-        cursor(cursorBaseHover).important()
-      }
-
-      pseudoClass(.active) {
-        backgroundColor(backgroundColorInteractiveSubtleActive).important()
-        color(colorBase).important()
-      }
-
-      pseudoClass(.focus) {
-        backgroundColor(backgroundColorInteractiveSubtleHover).important()
-        color(colorBase).important()
-        outline(px(2), .solid, borderColorBlueFocus).important()
-        outlineOffset(px(-2)).important()
-      }
-    }
-
-    @CSSBuilder
-    private func dialogBodyCSS() -> [CSSOM.CSSRule] {
-      fontFamily(typographyFontSans)
-      fontSize(fontSizeMedium16)
-      lineHeight(lineHeightMedium26)
-      color(colorBase)
-      padding(spacing8)
-      overflowY(.auto)
-      flex(1)
-    }
-
-    @CSSBuilder
-    private func dialogFooterCSS(_ hasCustomFooter: Bool, _ hasFooterText: Bool) -> [CSSOM.CSSRule] {
-      if !hasCustomFooter {
-        display(.flex)
-        flexDirection(.column)
-        gap(spacing12)
-        padding(spacing20, spacing24)
-        borderBlockStart(borderWidthBase, .solid, borderColorSubtle)
-
-        if !hasFooterText {
-          flexDirection(.row)
-          alignItems(.center)
-          justifyContent(.flexEnd)
-        }
-      }
-    }
-
-    @CSSBuilder
-    private func dialogFooterTextCSS() -> [CSSOM.CSSRule] {
-      fontFamily(typographyFontSans)
-      fontSize(fontSizeSmall14)
-      lineHeight(lineHeightSmall22)
-      color(colorSubtle)
-      margin(0)
-    }
-
-    @CSSBuilder
-    private func dialogFooterActionsCSS(_ stackedActions: Bool) -> [CSSOM.CSSRule] {
-      display(.flex)
-      gap(spacing12)
-
-      if stackedActions {
-        flexDirection(.columnReverse)
-        alignItems(.stretch)
-      } else {
-        flexDirection(.rowReverse)
-        alignItems(.center)
-        justifyContent(.flexStart)
-      }
-    }
-
     public func build() -> DOM.Node {
       let hasCustomHeader = !headerContent.isEmpty
       let hasCustomFooter = !footerContent.isEmpty
@@ -288,58 +111,32 @@
             h2 { title }
               .class("dialog-header-title")
               .id("dialog-title")
-              .style {
-                dialogHeaderTitleCSS(hideTitle)
-              }
+              .data("hidden", hideTitle)
 
             if let subtitleText = subtitle {
               p { subtitleText }
                 .class("dialog-header-subtitle")
-                .style {
-                  dialogHeaderSubtitleCSS()
-                }
             }
           }
           .class("dialog-header-text")
-          .style {
-            dialogHeaderTextCSS()
-          }
 
           if useCloseButton {
-            button {
-              span { "×" }
-                .ariaHidden(true)
-                .style {
-                  fontSize(fontSizeXXLarge24)
-                  lineHeight(1)
-                }
-            }
-            .type(.button)
-            .class("dialog-close-button")
-            .ariaLabel(closeButtonLabel)
-            .style {
-              dialogCloseButtonCSS()
-            }
+            CloseButtonView(
+              ariaLabel: closeButtonLabel,
+              class: "dialog-close-button"
+            )
           }
         }
         .class("dialog-header-title-group")
-        .style {
-          dialogHeaderTitleGroupCSS()
-        }
       }
       .class("dialog-header")
-      .style {
-        dialogHeaderCSS(hasCustomHeader)
-      }
+      .data("default", !hasCustomHeader)
 
       // Default footer (when no custom footer provided)
       let defaultFooter: DOM.Node = div {
         if hasFooterText {
           div { footerTextContent }
             .class("dialog-footer-text")
-            .style {
-              dialogFooterTextCSS()
-            }
         }
 
         if hasActions {
@@ -371,15 +168,12 @@
             }
           }
           .class("dialog-footer-actions")
-          .style {
-            dialogFooterActionsCSS(stackedActions)
-          }
+          .data("stacked", stackedActions)
         }
       }
       .class("dialog-footer")
-      .style {
-        dialogFooterCSS(hasCustomFooter, hasFooterText)
-      }
+      .data("default", !hasCustomFooter)
+      .data("has-footer-text", hasFooterText)
 
       return div {
         div {
@@ -395,9 +189,6 @@
           // Body
           div { bodyContent }
             .class("dialog-body")
-            .style {
-              dialogBodyCSS()
-            }
 
           // Footer
           if hasCustomFooter {
@@ -410,19 +201,137 @@
         .role(.dialog)
         .ariaModal(true)
         .ariaLabelledby("dialog-title")
-        .style {
-          dialogShellCSS()
-        }
       }
       .class(
         `class`.isEmpty ? "dialog-view dialog-backdrop" : "dialog-view dialog-backdrop \(`class`)"
       )
       .data("open", open ? "true" : "false")
       .style {
-        dialogBackdropCSS()
-
-        if !open {
+        selector("&") {
+          position(.fixed)
+          insetBlockStart(0)
+          insetInlineStart(0)
+          insetInlineEnd(0)
+          insetBlockEnd(0)
+          width(perc(100))
+          height(perc(100))
+          backgroundColor(backgroundColorBackdropDark)
+          backdropFilter(blur(px(16)))
+          webkitBackdropFilter(blur(px(16)))
+          zIndex(200)
+          display(.flex)
+          alignItems(.center)
+          justifyContent(.center)
+          padding(spacing16)
+        }
+        selector("&[data-open='false']") {
           display(.none).important()
+        }
+        selector("body[data-dialog-open='true']") {
+          overflow(.hidden)
+        }
+        descendant(".dialog-shell") {
+          position(.relative)
+          display(.flex)
+          flexDirection(.column)
+          width(min(calc(vw(100) - px(60)), px(900)))
+          backgroundColor(backgroundColorBase)
+          borderRadius(borderRadiusBase)
+          boxShadow(boxShadowOutsetMediumAround)
+          overflow(.hidden)
+        }
+        descendant(".dialog-header-title") {
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeLarge18)
+          fontWeight(fontWeightBold)
+          lineHeight(lineHeightSmall22)
+          color(colorBase)
+          margin(0)
+          wordWrap(.breakWord)
+        }
+        descendant(".dialog-header-title[data-hidden='true']") {
+          position(.absolute)
+          width(px(1))
+          height(px(1))
+          margin(px(-1))
+          padding(0)
+          overflow(.hidden)
+          clip(rect(0, 0, 0, 0))
+          whiteSpace(.nowrap)
+          borderWidth(0)
+        }
+        descendant(".dialog-header-subtitle") {
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeSmall14)
+          fontWeight(fontWeightNormal)
+          lineHeight(lineHeightSmall22)
+          color(colorSubtle)
+          margin(0)
+          wordWrap(.breakWord)
+        }
+        descendant(".dialog-header-text") {
+          display(.flex)
+          flexDirection(.column)
+          gap(spacing4)
+          flex(1)
+          minWidth(0)
+        }
+        descendant(".dialog-close-button") {
+          flexShrink(0)
+        }
+        descendant(".dialog-header-title-group") {
+          display(.flex)
+          alignItems(.center)
+          gap(spacing16)
+          minWidth(0)
+        }
+        descendant(".dialog-header[data-default='true']") {
+          display(.flex)
+          flexDirection(.column)
+          gap(spacing4)
+          padding(spacing16)
+          borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
+        }
+        descendant(".dialog-footer-text") {
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeSmall14)
+          lineHeight(lineHeightSmall22)
+          color(colorSubtle)
+          margin(0)
+        }
+        descendant(".dialog-footer-actions") {
+          display(.flex)
+          gap(spacing12)
+        }
+        descendant(".dialog-footer-actions[data-stacked='true']") {
+          flexDirection(.columnReverse)
+          alignItems(.stretch)
+        }
+        descendant(".dialog-footer-actions[data-stacked='false']") {
+          flexDirection(.rowReverse)
+          alignItems(.center)
+          justifyContent(.flexStart)
+        }
+        descendant(".dialog-footer[data-default='true']") {
+          display(.flex)
+          flexDirection(.column)
+          gap(spacing12)
+          padding(spacing20, spacing24)
+          borderBlockStart(borderWidthBase, .solid, borderColorSubtle)
+        }
+        descendant(".dialog-footer[data-default='true'][data-has-footer-text='false']") {
+          flexDirection(.row)
+          alignItems(.center)
+          justifyContent(.flexEnd)
+        }
+        descendant(".dialog-body") {
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeMedium16)
+          lineHeight(lineHeightMedium26)
+          color(colorBase)
+          padding(spacing8)
+          overflowY(.auto)
+          flex(1)
         }
       }
     }
@@ -557,10 +466,7 @@
 
     private func closeDialog() {
       dialog.dataset["open"] = "false"
-      dialog.style.display(.none)
-
-      // Restore body scroll
-      document.body.style.overflow(.auto)
+      document.body.dataset["dialogOpen"] = "false"
 
       // Dispatch close event
       let event = CustomEvent(type: "dialog-close", detail: "")
@@ -569,10 +475,7 @@
 
     public func openDialog() {
       dialog.dataset["open"] = "true"
-      dialog.style.display(.flex)
-
-      // Prevent body scroll
-      document.body.style.overflow(.hidden)
+      document.body.dataset["dialogOpen"] = "true"
 
       // Dispatch open event
       let event = CustomEvent(type: "dialog-open", detail: "")

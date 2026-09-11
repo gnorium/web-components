@@ -59,135 +59,6 @@
       self.`class` = `class`
     }
 
-    @CSSBuilder
-    private func chipInputViewCSS(_ disabled: Bool) -> [CSSOM.CSSRule] {
-      if disabled {
-        opacity(opacityMedium)
-        cursor(cursorNotAllowed)
-      }
-    }
-
-    @CSSBuilder
-    private func chipCSS() -> [CSSOM.CSSRule] {
-      display(.inlineFlex)
-      alignItems(.center)
-      maxWidth(perc(100))
-      padding(spacing4, spacing8)
-      backgroundColor(backgroundColorInteractiveSubtle)
-      border(borderWidthBase, .solid, borderColorSubtle)
-      borderRadius(borderRadiusBase)
-      fontSize(fontSizeSmall14)
-      fontWeight(fontWeightNormal)
-      color(colorBase)
-      cursor(cursorBase)
-
-      transition(.all, s(0.2), .easeInOut)
-      userSelect(.none)
-
-      pseudoClass(.hover) {
-        backgroundColor(backgroundColorInteractiveSubtleHover).important()
-        borderColor(borderColorSubtle).important()
-        transform(translateY(px(-1)))
-        boxShadow(px(0), px(2), px(4), boxShadowColorBase).important()
-      }
-
-      pseudoClass(.focus) {
-        borderColor(borderColorBlueFocus).important()
-        boxShadow(px(0), px(0), px(0), px(2), boxShadowColorBlueFocus).important()
-        outline(px(1), .solid, .transparent).important()
-      }
-    }
-
-    @CSSBuilder
-    private func chipIconCSS() -> [CSSOM.CSSRule] {
-      display(.inlineFlex)
-    }
-
-    @CSSBuilder
-    private func chipButtonCSS(_ disabled: Bool) -> [CSSOM.CSSRule] {
-      display(.inlineFlex)
-      alignItems(.center)
-      justifyContent(.center)
-      width(minSizeInteractivePointer)
-      height(minSizeInteractivePointer)
-      padding(0)
-      backgroundColor(.transparent)
-      border(.none)
-      color(colorSubtle)
-      cursor(disabled ? cursorNotAllowed : cursorBase)
-      borderRadius(borderRadiusCircle)
-
-      pseudoClass(.hover) {
-        backgroundColor(backgroundColorInteractiveSubtleHover).important()
-        color(colorBase).important()
-      }
-
-      pseudoClass(.active) {
-        backgroundColor(backgroundColorInteractiveSubtleActive).important()
-      }
-
-      pseudoClass(.focus) {
-        outline(px(2), .solid, borderColorBlueFocus).important()
-        outlineOffset(px(-2)).important()
-      }
-
-      if disabled {
-        opacity(opacityMedium)
-      }
-    }
-
-    @CSSBuilder
-    private func chipInputChipsCSS(_ status: ValidationStatus) -> [CSSOM.CSSRule] {
-      display(.flex)
-      flexWrap(.wrap)
-      gap(spacing8)
-      padding(spacing8)
-      backgroundColor(backgroundColorBase)
-      border(borderWidthBase, .solid, status == .error ? borderColorRed : borderColorInputBinary)
-      borderRadius(borderRadiusBase)
-    }
-
-    @CSSBuilder
-    private func chipInputInputWrapperCSS(_ status: ValidationStatus) -> [CSSOM.CSSRule] {
-      display(.flex)
-      padding(spacing8)
-      backgroundColor(backgroundColorBase)
-      border(borderWidthBase, .solid, status == .error ? borderColorRed : borderColorInputBinary)
-      borderRadius(borderRadiusBase)
-      transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-
-      pseudoClass(.focusWithin) {
-        borderColor(borderColorBlueFocus).important()
-        boxShadow(px(0), px(0), px(8), boxShadowColorBlueFocus).important()
-      }
-    }
-
-    @CSSBuilder
-    private func chipInputItemsCSS(_ status: ValidationStatus, _ disabled: Bool) -> [CSSOM.CSSRule] {
-      display(.flex)
-      flexWrap(.wrap)
-      alignItems(.center)
-      gap(spacing8)
-      padding(spacing8)
-      minHeight(minSizeInteractivePointer)
-      backgroundColor(disabled ? backgroundColorDisabled : backgroundColorBase)
-      border(
-        borderWidthBase, .solid,
-        disabled
-          ? borderColorDisabled : (status == .error ? borderColorRed : borderColorInputBinary))
-      borderRadius(borderRadiusBase)
-      transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-
-      pseudoClass(.focusWithin) {
-        borderColor(borderColorBlueFocus).important()
-        boxShadow(px(0), px(0), px(8), boxShadowColorBlueFocus).important()
-      }
-
-      if disabled {
-        color(colorDisabled)
-      }
-    }
-
     public func build() -> DOM.Node {
       let chipElements = chips.map { chip in
         div {
@@ -195,9 +66,6 @@
             span { icon }
               .class("chip-icon")
               .ariaHidden(true)
-              .style {
-                chipIconCSS()
-              }
           }
 
           span { chip.value }
@@ -211,16 +79,10 @@
           .class("chip-button")
           .ariaLabel("Remove \(chip.value)")
           .data("chip-id", chip.id)
-          .style {
-            chipButtonCSS(disabled)
-          }
         }
         .class("chip")
         .data("chip-id", chip.id)
         .tabindex(0)
-        .style {
-          chipCSS()
-        }
 
       }
 
@@ -231,9 +93,6 @@
           if !chips.isEmpty {
             div { chipElements }
               .class("chip-input-chips")
-              .style {
-                chipInputChipsCSS(status)
-              }
           }
 
           div {
@@ -248,9 +107,6 @@
             )
           }
           .class("chip-input-input-wrapper")
-          .style {
-            chipInputInputWrapperCSS(status)
-          }
         }
       } else {
         containerElement = div {
@@ -267,17 +123,115 @@
           )
         }
         .class("chip-input-items")
-        .style {
-          chipInputItemsCSS(status, disabled)
-        }
       }
 
       return div {
         containerElement
       }
       .class(`class`.isEmpty ? "chip-input-view" : "chip-input-view \(`class`)")
+      .data("disabled", disabled)
+      .data("status", status.rawValue)
       .style {
-        chipInputViewCSS(disabled)
+        selector("&[data-disabled='true']") {
+          opacity(opacityMedium)
+          cursor(cursorNotAllowed)
+        }
+        descendant(".chip") {
+          display(.inlineFlex)
+          alignItems(.center)
+          maxWidth(perc(100))
+          padding(spacing4, spacing8)
+          backgroundColor(backgroundColorInteractiveSubtle)
+          border(borderWidthBase, .solid, borderColorSubtle)
+          borderRadius(borderRadiusBase)
+          fontSize(fontSizeSmall14)
+          fontWeight(fontWeightNormal)
+          color(colorBase)
+          cursor(cursorBase)
+          transition(.all, s(0.2), .easeInOut)
+          userSelect(.none)
+          pseudoClass(.hover) {
+            backgroundColor(backgroundColorInteractiveSubtleHover).important()
+            borderColor(borderColorSubtle).important()
+            transform(translateY(px(-1)))
+            boxShadow(px(0), px(2), px(4), boxShadowColorBase).important()
+          }
+          pseudoClass(.focus) {
+            borderColor(borderColorBlueFocus).important()
+            boxShadow(px(0), px(0), px(0), px(2), boxShadowColorBlueFocus).important()
+            outline(px(1), .solid, .transparent).important()
+          }
+        }
+        descendant(".chip-icon") { display(.inlineFlex) }
+        descendant(".chip-button") {
+          display(.inlineFlex)
+          alignItems(.center)
+          justifyContent(.center)
+          width(minSizeInteractivePointer)
+          height(minSizeInteractivePointer)
+          padding(0)
+          backgroundColor(.transparent)
+          border(.none)
+          color(colorSubtle)
+          cursor(cursorBase)
+          borderRadius(borderRadiusCircle)
+          pseudoClass(.hover) {
+            backgroundColor(backgroundColorInteractiveSubtleHover).important()
+            color(colorBase).important()
+          }
+          pseudoClass(.active) { backgroundColor(backgroundColorInteractiveSubtleActive).important() }
+          pseudoClass(.focus) {
+            outline(px(2), .solid, borderColorBlueFocus).important()
+            outlineOffset(px(-2)).important()
+          }
+        }
+        selector("&[data-disabled='true']") {
+          descendant(".chip-button") {
+            cursor(cursorNotAllowed)
+            opacity(opacityMedium)
+          }
+          descendant(".chip-input-items") {
+            backgroundColor(backgroundColorDisabled)
+            borderColor(borderColorDisabled)
+            color(colorDisabled)
+          }
+        }
+        selector(".chip-input-chips", ".chip-input-input-wrapper", ".chip-input-items") {
+          padding(spacing8)
+          backgroundColor(backgroundColorBase)
+          border(borderWidthBase, .solid, borderColorInputBinary)
+          borderRadius(borderRadiusBase)
+        }
+        selector("&[data-status='error']") {
+          selector(".chip-input-chips", ".chip-input-input-wrapper", ".chip-input-items") {
+            borderColor(borderColorRed)
+          }
+        }
+        descendant(".chip-input-chips") {
+          display(.flex)
+          flexWrap(.wrap)
+          gap(spacing8)
+        }
+        descendant(".chip-input-input-wrapper") {
+          display(.flex)
+          transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+          pseudoClass(.focusWithin) {
+            borderColor(borderColorBlueFocus).important()
+            boxShadow(px(0), px(0), px(8), boxShadowColorBlueFocus).important()
+          }
+        }
+        descendant(".chip-input-items") {
+          display(.flex)
+          flexWrap(.wrap)
+          alignItems(.center)
+          gap(spacing8)
+          minHeight(minSizeInteractivePointer)
+          transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+          pseudoClass(.focusWithin) {
+            borderColor(borderColorBlueFocus).important()
+            boxShadow(px(0), px(0), px(8), boxShadowColorBlueFocus).important()
+          }
+        }
       }
     }
   }

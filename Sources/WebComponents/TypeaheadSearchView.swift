@@ -84,61 +84,6 @@
       self.`class` = `class`
     }
 
-    @CSSBuilder
-    private func typeaheadSearchViewCSS() -> [CSSOM.CSSRule] {
-      position(.relative)
-      width(perc(100))
-      fontFamily(typographyFontSans)
-      display(.flex)
-      flexDirection(.column)
-      gap(spacing8)
-    }
-
-    @CSSBuilder
-    private func typeaheadSearchFormCSS() -> [CSSOM.CSSRule] {
-      display(.flex)
-      flexDirection(.column)
-      gap(spacing8)
-      position(.relative)
-      width(perc(100))
-    }
-
-    @CSSBuilder
-    private func typeaheadSearchInputWrapperCSS(_ autoExpandWidth: Bool, _ showThumbnail: Bool)
-      -> [CSSOM.CSSRule]
-    {
-      position(.relative)
-      width(perc(100))
-
-      if autoExpandWidth && showThumbnail {
-        transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-      }
-    }
-
-    @CSSBuilder
-    private func typeaheadSearchMenuCSS() -> [CSSOM.CSSRule] {
-      display(.none)
-      flexDirection(.column)
-      gap(spacing8)
-      maxHeight(calc(vh(100) - px(213)))
-      overflowY(.auto)
-    }
-
-    @CSSBuilder
-    private func typeaheadSearchPendingCSS() -> [CSSOM.CSSRule] {
-      padding(spacing12, spacing16)
-      color(colorSubtle)
-      fontSize(fontSizeSmall14)
-    }
-
-    @CSSBuilder
-    private func typeaheadSearchNoResultsCSS() -> [CSSOM.CSSRule] {
-      padding(spacing12, spacing16)
-      color(colorSubtle)
-      fontSize(fontSizeSmall14)
-      textAlign(.center)
-    }
-
     public func build() -> DOM.Node {
       let showMenu = !searchResults.isEmpty || showEmptyQueryResults
       let visibleResults =
@@ -161,9 +106,6 @@
             )
           }
           .class("typeahead-search-input-wrapper")
-          .style {
-            typeaheadSearchInputWrapperCSS(autoExpandWidth, showThumbnail)
-          }
 
           if showMenu {
             div {
@@ -189,18 +131,13 @@
               )
             }
             .class("typeahead-search-menu")
-            .style {
-              typeaheadSearchMenuCSS()
-            }
+            .data("open", false)
           }
         }
         .id(id)
         .action(formAction)
         .method(.get)
         .class("typeahead-search-form")
-        .style {
-          typeaheadSearchFormCSS()
-        }
       }
       .class(
         `class`.isEmpty
@@ -217,7 +154,64 @@
       .setAttribute(data("show-empty-query"), showEmptyQueryResults)
       .setAttribute(data("highlight-query"), highlightQuery)
       .style {
-        typeaheadSearchViewCSS()
+        selector("&") {
+          position(.relative)
+          width(perc(100))
+          fontFamily(typographyFontSans)
+          display(.flex)
+          flexDirection(.column)
+          gap(spacing8)
+        }
+        descendant(".typeahead-search-form") {
+          display(.flex)
+          flexDirection(.column)
+          gap(spacing8)
+          position(.relative)
+          width(perc(100))
+        }
+        descendant(".typeahead-search-input-wrapper") {
+          position(.relative)
+          width(perc(100))
+          if autoExpandWidth && showThumbnail {
+            transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+          }
+        }
+        descendant(".typeahead-search-menu") {
+          display(.none)
+          flexDirection(.column)
+          gap(spacing8)
+          maxHeight(calc(vh(100) - px(213)))
+          overflowY(.auto)
+        }
+        descendant(".typeahead-search-menu[data-open='true']") {
+          display(.flex)
+        }
+        descendant(".typeahead-search-menu[data-open='false']") {
+          display(.none)
+        }
+        descendant(".typeahead-search-pending") {
+          padding(spacing12, spacing16)
+          color(colorSubtle)
+          fontSize(fontSizeSmall14)
+        }
+        descendant(".typeahead-search-no-results") {
+          padding(spacing12, spacing16)
+          color(colorSubtle)
+          fontSize(fontSizeSmall14)
+          textAlign(.center)
+        }
+        descendant(".menu-item-view[aria-selected='true']") {
+          backgroundColor(backgroundColorBlueSubtle)
+          border(borderWidthBase, .solid, borderColorBlue)
+          outline(borderWidthBase, .solid, borderColorBlue)
+          outlineOffset(px(-2))
+        }
+        descendant(".menu-item-view[aria-selected='true'] .menu-item-label") {
+          color(colorBlue)
+        }
+        selector(".menu-item-view[aria-selected='true'] .menu-item-pos", ".menu-item-view[aria-selected='true'] .menu-item-description") {
+          color(colorBase)
+        }
       }
     }
   }
@@ -422,39 +416,23 @@
     private func showMenu() {
       guard let menu = menuElement else { return }
       menu.removeAttribute("hidden")
-      menu.style.display(.flex)
+      menu.setAttribute(data("open"), true)
     }
 
     private func hideMenu() {
       guard let menu = menuElement else { return }
       menu.setAttribute(.hidden, "")
-      menu.style.display(.none)
+      menu.setAttribute(data("open"), false)
     }
 
     private func updateMenuItemStates() {
       for (index, item) in menuItems.enumerated() {
-        let label = item.querySelector(".menu-item-label")
-        let posE = item.querySelector(".menu-item-pos")
-        let desc = item.querySelector(".menu-item-description")
         if index == selectedIndex {
           _ = item.classList.add("menu-item-selected")
           item.setAttribute(.ariaSelected, true)
-          item.style.backgroundColor(backgroundColorBlueSubtle)
-          item.style.border(borderWidthBase, .solid, borderColorBlue)
-          item.style.outline(borderWidthBase, .solid, borderColorBlue)
-          item.style.outlineOffset(px(-2))
-          if let lbl = label { lbl.style.color(colorBlue) }
-          if let p = posE { p.style.color(colorBase) }
-          if let d = desc { d.style.color(colorBase) }
         } else {
           _ = item.classList.remove("menu-item-selected")
           item.setAttribute(.ariaSelected, false)
-          item.style.backgroundColor(backgroundColorTransparent)
-          item.style.border(borderWidthBase, .solid, borderColorSubtle)
-          item.style.outline(.none)
-          if let lbl = label { lbl.style.color(colorBase) }
-          if let p = posE { p.style.color(colorSubtle) }
-          if let d = desc { d.style.color(colorSubtle) }
         }
       }
     }

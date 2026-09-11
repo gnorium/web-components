@@ -6,8 +6,8 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-/// Overlapping-rectangles copy glyph. Available on SERVER + CLIENT for CopyIconFactory.
-public struct CopyIconView: HTMLContent {
+/// Filled circle leaf (●). Available on SERVER + CLIENT for DiscIconFactory.
+public struct DiscIconView: HTMLContent {
   let width: CSS.Length
   let height: CSS.Length
   let `class`: String
@@ -24,18 +24,13 @@ public struct CopyIconView: HTMLContent {
 
   public func build() -> DOM.Node {
     svg {
-      path()
-        .d(
-          M(3, 3), h(8), v(2), h(2), V(3), c(0, -1.1, -0.895, -2, -2, -2), H(3),
-          c(-1.1, 0, -2, 0.895, -2, 2), v(8), c(0, 1.1, 0.895, 2, 2, 2), h(2), v(-2), H(3), Z())
-      path()
-        .d(
-          M(9, 9), h(8), v(8), H(9), Z(), m(0, -2), c(-1.1, 0, -2, 0.895, -2, 2), v(8),
-          c(0, 1.1, 0.895, 2, 2, 2), h(8), c(1.1, 0, 2, -0.895, 2, -2), V(9),
-          c(0, -1.1, -0.895, -2, -2, -2), Z())
+      circle()
+        .cx(10)
+        .cy(10)
+        .r(10)
     }
     .class(
-      stringIsEmpty(`class`) ? "copy-icon-view" : "copy-icon-view \(`class`)"
+      stringIsEmpty(`class`) ? "disc-icon-view" : "disc-icon-view \(`class`)"
     )
     .width(width)
     .height(height)
@@ -48,14 +43,14 @@ public struct CopyIconView: HTMLContent {
 #if CLIENT
   import WebAPIs
 
-  public enum CopyIconFactory {
+  public enum DiscIconFactory {
     public static func createElement(
       width: CSS.Length = px(20),
       height: CSS.Length = px(20),
       class: String = ""
     ) -> DOM.Element {
       let wrapper = document.createElement(.span)
-      let view = CopyIconView(width: width, height: height, class: `class`)
+      let view = DiscIconView(width: width, height: height, class: `class`)
       wrapper.innerHTML = renderHTML { view.render() }
       if let svg = wrapper.firstElementChild {
         return svg

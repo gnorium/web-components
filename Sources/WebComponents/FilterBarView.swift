@@ -89,25 +89,31 @@
         .data("schema", schemaJSON)
         .data("action", action)
         .style {
-          display(.grid)
-          gridTemplateColumns(px(160), fr(1), px(44), .auto)
-          gap(spacing8)
-          alignItems(.center)
-          width(perc(100))
+          selector("&") {
+            display(.grid)
+            gridTemplateColumns(px(160), fr(1), px(44), .auto)
+            gap(spacing8)
+            alignItems(.center)
+            width(perc(100))
+          }
+          descendant(".filter-bar-row") { display(.contents) }
+          descendant(".filter-bar-row[data-first='false'] .filter-bar-remove-btn") { gridColumn("3 / span 2") }
         }
       }
       .action(action)
       .method(.get)
       .class("filter-bar-view \(`class`)")
       .style {
-        display(.flex)
-        flexDirection(.column)
-        gap(spacing12)
-        padding(spacing12, spacing16)
-        border(borderWidthBase, .solid, borderColorBase)
-        borderRadius(borderRadiusBase)
-        backgroundColor(backgroundColorNeutralSubtle)
-        width(perc(100))
+        selector("&") {
+          display(.flex)
+          flexDirection(.column)
+          gap(spacing12)
+          padding(spacing12, spacing16)
+          border(borderWidthBase, .solid, borderColorBase)
+          borderRadius(borderRadiusBase)
+          backgroundColor(backgroundColorNeutralSubtle)
+          width(perc(100))
+        }
       }
     }
 
@@ -135,22 +141,15 @@
             labelFontWeight: fontWeightSemiBold
           )
         } else {
-          div {
-            ButtonView(
-              label: "−",
-              buttonColor: .gray,
-              weight: .subtle,
-              size: .large,
-              type: .button,
-              class: "filter-bar-remove-btn",
-              labelFontWeight: fontWeightSemiBold
-            )
-          }
-          .style {
-            gridColumn("3 / span 2")
-            display(.flex)
-            alignItems(.center)
-          }
+          ButtonView(
+            label: "−",
+            buttonColor: .gray,
+            weight: .subtle,
+            size: .large,
+            type: .button,
+            class: "filter-bar-remove-btn",
+            labelFontWeight: fontWeightSemiBold
+          )
         }
 
         // Col 4: Apply (row 0 only — other rows have − spanning into this col)
@@ -168,7 +167,7 @@
       }
       .class("filter-bar-row")
       .data("row-index", "\(index)")
-      .style { display(.contents) }
+      .data("first", isFirst)
     }
 
     @HTMLBuilder
@@ -442,7 +441,7 @@
       let row = document.createElement("div")
       _ = row.classList.add("filter-bar-row")
       row.setAttribute(data("row-index"), "\(rowIndex)")
-      row.style.display("contents")
+      row.setAttribute(data("first"), false)
 
       // Col 1: field picker via DropdownFactory
       let picker = DropdownFactory.createElement(
@@ -493,7 +492,6 @@
         type: .button,
         class: "filter-bar-remove-btn"
       )
-      btn.style.gridColumn("3 / span 2")
       row.appendChild(btn)
 
       return row

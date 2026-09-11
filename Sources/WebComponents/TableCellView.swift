@@ -42,58 +42,20 @@ public struct TableCellView: HTMLContent {
     self.showVerticalBorders = showVerticalBorders
   }
 
-  @CSSBuilder
-  private func cellCSS() -> [CSSOM.CSSRule] {
-    padding(spacing8, spacing12)
-    verticalAlign(vAlign)
-
-    switch align {
-    case .start: textAlign(.left)
-    case .center: textAlign(.center)
-    case .end: textAlign(.right)
-    case .number:
-      textAlign(.right)
-      fontVariantNumeric(.tabularNums)
-    }
-
-    if useMonoFont {
-      fontFamily(typographyFontMono)
-    } else {
-      fontFamily(typographyFontSans)
-    }
-
-    fontSize(fontSizeSmall14)
-    color(colorBase)
-    overflow(.hidden)
-    textOverflow(.ellipsis)
-    whiteSpace(.nowrap)
-    if showVerticalBorders {
-      borderInlineEnd(borderWidthBase, .solid, borderColorSubtle)
-    }
-  }
-
-  @CSSBuilder
-  private func statusIconCSS(bgColor: CSS.Color) -> [CSSOM.CSSRule] {
-    display(.inlineFlex)
-    alignItems(.center)
-    justifyContent(.center)
-    width(px(22))
-    height(px(22))
-    borderRadius(borderRadiusCircle)
-    backgroundColor(bgColor)
-    color(colorInvertedFixed)
-    fontSize(fontSizeXSmall12)
-    fontWeight(fontWeightSemiBold)
-    lineHeight(1)
-  }
-
   public func build() -> DOM.Node {
+    let alignValue: String = switch align {
+    case .start: "start"
+    case .center: "center"
+    case .end: "end"
+    case .number: "number"
+    }
+
     td {
       switch type {
       case .text(let text):
         DOM.Text(text)
       case .mono(let text):
-        span { text }.style { fontFamily(typographyFontMono) }
+        span { text }.class("table-cell-mono")
       case .selection(let id, let name, let value, let checked):
         div {
           input()
@@ -102,16 +64,11 @@ public struct TableCellView: HTMLContent {
             .name(name)
             .value(value)
             .checked(checked)
-            .style { cursor(.pointer) }
+            .class("table-cell-selection-input")
         }
         .class("table-selection-container")
-        .style {
-          display(.flex)
-          alignItems(.center)
-          justifyContent(.center)
-        }
-      case .status(let icon, let bgColor):
-        span { icon }.style { statusIconCSS(bgColor: bgColor) }
+      case .status(let icon, _):
+        span { icon }.class("table-cell-status-icon")
       case .custom(let nodes):
         div {
           for node in nodes { node }
@@ -119,6 +76,50 @@ public struct TableCellView: HTMLContent {
       }
     }
     .class(stringIsEmpty(`class`) ? "table-cell-view" : "table-cell-view \(`class`)")
-    .style { cellCSS() }
+    .data("align", alignValue)
+    .data("vertical-align", vAlign.rawValue)
+    .data("mono", useMonoFont)
+    .data("vertical-borders", showVerticalBorders)
+    .style {
+      selector("&") {
+        padding(spacing8, spacing12)
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeSmall14)
+        color(colorBase)
+        overflow(.hidden)
+        textOverflow(.ellipsis)
+        whiteSpace(.nowrap)
+      }
+      selector("&[data-align='start']") { textAlign(.left) }
+      selector("&[data-align='center']") { textAlign(.center) }
+      selector("&[data-align='end']", "&[data-align='number']") { textAlign(.right) }
+      selector("&[data-align='number']") { fontVariantNumeric(.tabularNums) }
+      selector("&[data-vertical-align='top']") { verticalAlign(.top) }
+      selector("&[data-vertical-align='middle']") { verticalAlign(.middle) }
+      selector("&[data-vertical-align='bottom']") { verticalAlign(.bottom) }
+      selector("&[data-mono='true']", ".table-cell-mono") { fontFamily(typographyFontMono) }
+      selector("&[data-vertical-borders='true']") { borderInlineEnd(borderWidthBase, .solid, borderColorSubtle) }
+      selector(".table-cell-selection-input") { cursor(.pointer) }
+      selector(".table-selection-container") {
+        display(.flex)
+        alignItems(.center)
+        justifyContent(.center)
+      }
+      selector(".table-cell-status-icon") {
+        display(.inlineFlex)
+        alignItems(.center)
+        justifyContent(.center)
+        width(px(22))
+        height(px(22))
+        borderRadius(borderRadiusCircle)
+        color(colorInvertedFixed)
+        fontSize(fontSizeXSmall12)
+        fontWeight(fontWeightSemiBold)
+        lineHeight(1)
+      }
+      if case .status(_, let bgColor) = type {
+        selector(".table-cell-status-icon") { backgroundColor(bgColor) }
+      }
+    }
   }
 }

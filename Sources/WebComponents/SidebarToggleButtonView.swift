@@ -22,20 +22,21 @@
         `class`.isEmpty ? "sidebar-toggle-button-view" : "sidebar-toggle-button-view \(`class`)"
       )
       .ariaLabel("Toggle sidebar")
-      .data("navbar-sidebar-toggle", true)
+      .data("sidebar-menu", true)
       .style {
-        backgroundColor(.transparent)
-        border(.none)
-        cursor(.pointer)
-        padding(0)
-        display(.flex)
-        alignItems(.center)
-        justifyContent(.center)
-        width(px(32))
-        height(px(32))
-        color(colorBase)
-        transition(.all, s(0.2), .easeInOut)
-
+        selector("&") {
+          backgroundColor(.transparent)
+          border(.none)
+          cursor(.pointer)
+          padding(0)
+          display(.flex)
+          alignItems(.center)
+          justifyContent(.center)
+          width(px(32))
+          height(px(32))
+          color(colorBase)
+          transition(.all, s(0.2), .easeInOut)
+        }
         pseudoClass(.hover) {
           opacity(0.8)
         }

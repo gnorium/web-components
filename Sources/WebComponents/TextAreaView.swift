@@ -66,98 +66,6 @@ public struct TextAreaView: HTMLContent {
     self.`class` = `class`
   }
 
-  @CSSBuilder
-  private func textAreaViewCSS(_ hasStartIcon: Bool, _ hasEndIcon: Bool) -> [CSSOM.CSSRule] {
-    position(.relative)
-    display(.inlineBlock)
-    if fullWidth {
-      width(perc(100))
-    }
-
-    if hasStartIcon || hasEndIcon {
-      display(.flex)
-      alignItems(.flexStart)
-      gap(spacing8)
-    }
-  }
-
-  @CSSBuilder
-  private func textAreaInputCSS(
-    _ disabled: Bool, _ readonly: Bool, _ status: ValidationStatus, _ autosize: Bool,
-    _ hasStartIcon: Bool, _ hasEndIcon: Bool
-  ) -> [CSSOM.CSSRule] {
-    width(perc(100))
-    minHeight(px(rows * 22 + 18))
-    padding(spacing8, px(15))
-    fontFamily(typographyFontSans)
-    fontSize(fontSizeMedium16)
-    lineHeight(lineHeightSmall22)
-    color(disabled ? colorDisabled : colorBase)
-    backgroundColor(disabled ? backgroundColorDisabled : (readonly ? backgroundColorNeutralSubtle : backgroundColorBase))
-    border(borderWidthBase, .solid, status == .error ? borderColorRed : (disabled ? borderColorDisabled : borderColorBase))
-    borderRadius(borderRadiusBase)
-    transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-    outline(.none)
-    cursor(disabled ? cursorNotAllowed : cursorText)
-
-    if autosize {
-      resize(.none)
-      fieldSizing(.content)
-      minHeight(em(2.5))
-      if disabled {
-        overflowY(.hidden)
-      } else {
-        overflowY(.auto)
-        maxHeight(rem(18))
-      }
-    } else {
-      if disabled { resize(.none) } else { resize(.vertical) }
-      overflowY(.auto)
-    }
-
-    if hasStartIcon {
-      paddingInlineStart(calc(px(15) + sizeIconMedium + spacing8)).important()
-    }
-
-    if hasEndIcon {
-      paddingInlineEnd(calc(px(15) + sizeIconMedium + spacing8)).important()
-    }
-
-    pseudoElement(.placeholder) {
-      color(colorPlaceholder).important()
-      opacity(opacityIconPlaceholder).important()
-    }
-
-    pseudoClass(.focus, .not(.disabled), .not(.readOnly)) {
-      borderColor(borderColorBlueFocus).important()
-      outline(.none).important()
-      boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
-    }
-
-    pseudoClass(.hover, .focus, .not(.disabled), .not(.readOnly)) {
-      borderColor(borderColorBlue).important()
-    }
-  }
-
-  @CSSBuilder
-  private func textAreaIconCSS(_ isStartIcon: Bool) -> [CSSOM.CSSRule] {
-    position(.absolute)
-    top(spacing12)
-    display(.inlineFlex)
-    alignItems(.center)
-    justifyContent(.center)
-    width(sizeIconMedium)
-    height(sizeIconMedium)
-    color(colorSubtle)
-    pointerEvents(.none)
-
-    if isStartIcon {
-      left(px(15))
-    } else {
-      right(px(15))
-    }
-  }
-
   public func build() -> DOM.Node {
     var textAreaInput = textarea(value)
       .id(id)
@@ -177,37 +85,112 @@ public struct TextAreaView: HTMLContent {
     var hasEndIcon = false
     if let _ = startIcon { hasStartIcon = true }
     if let _ = endIcon { hasEndIcon = true }
-
-    textAreaInput = textAreaInput.style {
-      textAreaInputCSS(disabled, readonly, status, autosize, hasStartIcon, hasEndIcon)
-    }
+    let stateClass = "\(fullWidth ? "text-area-full-width " : "")\(disabled ? "text-area-disabled " : "")\(readonly ? "text-area-read-only " : "")\(status == .error ? "text-area-error " : "")\(autosize ? "text-area-autosize " : "")\(hasStartIcon ? "text-area-has-start-icon " : "")\(hasEndIcon ? "text-area-has-end-icon" : "")"
+    let textAreaClass = stringIsEmpty(`class`)
+      ? "text-area-view \(stateClass)"
+      : "text-area-view \(stateClass) \(`class`)"
 
     var container = div {
       if let icon = startIcon {
         span { icon }
           .class("text-area-start-icon")
           .ariaHidden(true)
-          .style { textAreaIconCSS(true) }
       }
       textAreaInput
       if let icon = endIcon {
         span { icon }
           .class("text-area-end-icon")
           .ariaHidden(true)
-          .style { textAreaIconCSS(false) }
       }
     }
-    .class(stringIsEmpty(`class`) ? "text-area-view" : stringJoin(["text-area-view", `class`], separator: " "))
+    .class(textAreaClass)
 
     if status == .error {
       container = container.data("status", "error")
     }
 
-    if stringIsEmpty(labelText) {
-      return container.style {
-        textAreaViewCSS(hasStartIcon, hasEndIcon)
+    let styledContainer = container.style {
+      selector("&") {
+        position(.relative)
+        display(.inlineBlock)
       }
+      selector("&.text-area-full-width") { width(perc(100)) }
+      selector("&.text-area-has-start-icon", "&.text-area-has-end-icon") {
+        display(.flex)
+        alignItems(.flexStart)
+        gap(spacing8)
+      }
+      descendant(".text-area-input") {
+        width(perc(100))
+        padding(spacing8, px(15))
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeMedium16)
+        lineHeight(lineHeightSmall22)
+        color(colorBase)
+        backgroundColor(backgroundColorBase)
+        border(borderWidthBase, .solid, borderColorBase)
+        borderRadius(borderRadiusBase)
+        transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+        outline(.none)
+        cursor(cursorText)
+        resize(.vertical)
+        overflowY(.auto)
+      }
+      selector("&.text-area-disabled .text-area-input") {
+        color(colorDisabled)
+        backgroundColor(backgroundColorDisabled)
+        borderColor(borderColorDisabled)
+        cursor(cursorNotAllowed)
+        resize(.none)
+      }
+      selector("&.text-area-read-only .text-area-input") {
+        backgroundColor(backgroundColorNeutralSubtle)
+      }
+      selector("&.text-area-error .text-area-input") { borderColor(borderColorRed) }
+      selector("&.text-area-autosize .text-area-input") {
+        resize(.none)
+        fieldSizing(.content)
+        minHeight(em(2.5))
+        maxHeight(rem(18))
+      }
+      selector("&.text-area-autosize.text-area-disabled .text-area-input") {
+        overflowY(.hidden)
+      }
+      selector("&.text-area-has-start-icon .text-area-input") {
+        paddingInlineStart(calc(px(15) + sizeIconMedium + spacing8)).important()
+      }
+      selector("&.text-area-has-end-icon .text-area-input") {
+        paddingInlineEnd(calc(px(15) + sizeIconMedium + spacing8)).important()
+      }
+      selector("& .text-area-input::placeholder") {
+        color(colorPlaceholder).important()
+        opacity(opacityIconPlaceholder).important()
+      }
+      selector("&:not(.text-area-disabled):not(.text-area-read-only) .text-area-input:focus") {
+        borderColor(borderColorBlueFocus).important()
+        outline(.none).important()
+        boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
+      }
+      selector("&:not(.text-area-disabled):not(.text-area-read-only) .text-area-input:hover", "&:not(.text-area-disabled):not(.text-area-read-only) .text-area-input:focus") {
+        borderColor(borderColorBlue).important()
+      }
+      selector("& .text-area-start-icon", "& .text-area-end-icon") {
+        position(.absolute)
+        top(spacing12)
+        display(.inlineFlex)
+        alignItems(.center)
+        justifyContent(.center)
+        width(sizeIconMedium)
+        height(sizeIconMedium)
+        color(colorSubtle)
+        pointerEvents(.none)
+      }
+      descendant(".text-area-start-icon") { left(px(15)) }
+      descendant(".text-area-end-icon") { right(px(15)) }
     }
+
+    if stringIsEmpty(labelText) { return styledContainer }
+
     return div {
       label {
         span { labelText }
@@ -217,19 +200,20 @@ public struct TextAreaView: HTMLContent {
           }
         }
       }
+      .class("text-area-label-row")
       .style {
-        display(.flex)
-        alignItems(.center)
-        gap(spacing4)
-        fontSize(fontSizeSmall14)
-        fontWeight(600)
-        color(colorBase)
-        marginBlockEnd(spacing4)
-        fontFamily(typographyFontSans)
+        selector("&") {
+          display(.flex)
+          alignItems(.center)
+          gap(spacing4)
+          fontSize(fontSizeSmall14)
+          fontWeight(600)
+          color(colorBase)
+          marginBlockEnd(spacing4)
+          fontFamily(typographyFontSans)
+        }
       }
-      container.style {
-        textAreaViewCSS(hasStartIcon, hasEndIcon)
-      }
+      styledContainer
     }
   }
 }
@@ -237,83 +221,14 @@ public struct TextAreaView: HTMLContent {
 #if CLIENT
   import WebAPIs
 
-  private class TextAreaInstance: @unchecked Sendable {
-    private var textArea: DOM.Element
-    private var input: DOM.Element?
-    private var autosize: Bool = false
-
-    init(textArea: DOM.Element) {
-      self.textArea = textArea
-
-      input = textArea.querySelector(".text-area-input")
-
-      // Check if autosize is enabled
-      if let autosizeAttr = textArea.querySelector(".text-area-input")?.getAttribute(
-        "data-autosize")
-      {
-        autosize = stringEquals(autosizeAttr, "true")
-      }
-
-      // For disabled textareas, CSS fieldSizing:content handles sizing without JS interference.
-      // Running resizeToFit() on a disabled element sets an inline height that overrides
-      // fieldSizing:content, causing placeholder misalignment until a browser reflow.
-      var isDisabled = false
-      if let _ = input?.getAttribute("disabled") { isDisabled = true }
-
-      if autosize && !isDisabled {
-        bindAutosizeEvents()
-        resizeToFit()
-      }
-    }
-
-    private func bindAutosizeEvents() {
-      guard let input else { return }
-
-      // Resize on input
-      _ = input.addEventListener(.input) { [self] _ in
-        self.resizeToFit()
-      }
-
-      // Resize on window resize (in case of layout changes)
-      window.addEventListener(.resize) { [self] _ in
-        self.resizeToFit()
-      }
-    }
-
-    private func resizeToFit() {
-      guard let input = input else { return }
-
-      // Reset to auto so offsetHeight reflects CSS minHeight as a floor
-      input.style.height(.auto)
-
-      // offsetHeight after auto respects CSS minHeight; scrollHeight does not
-      let scrollHeight = input.scrollHeight
-      let offsetHeight = input.offsetHeight
-      let height = scrollHeight > offsetHeight ? scrollHeight : offsetHeight
-      input.style.height(px(height))
-    }
-  }
-
   public class TextAreaHydration: @unchecked Sendable {
     public static nonisolated(unsafe) var instance: TextAreaHydration?
-    private var instances: [TextAreaInstance] = []
-
-    public init() {
-      hydrateAllTextAreas()
-    }
+    public init() {}
 
     public static func hydrateIfPresent() {
       guard document.querySelector(".text-area-view") != nil else { return }
       instance = TextAreaHydration()
     }
 
-    private func hydrateAllTextAreas() {
-      let allTextAreas = document.querySelectorAll(".text-area-view")
-
-      for textArea in allTextAreas {
-        let instance = TextAreaInstance(textArea: textArea)
-        instances.append(instance)
-      }
-    }
   }
 #endif
