@@ -558,6 +558,10 @@ public struct AccordionView: HTMLContent {
     ///   - open: Whether the accordion starts expanded
     ///   - separation: Visual separation style (.none, .minimal, .divider, .outline)
     ///   - title: DOM.Text content for the accordion title
+    ///   - titleFontSize: Title type scale. Defaults to the body size the
+    ///     server-rendered accordions use, so a client-built card is not quietly
+    ///     larger and heavier than the same card from SSR.
+    ///   - titleFontWeight: Title weight. Same reasoning as `titleFontSize`.
     ///   - headingLevel: Heading level (e.g. .h3, .h5). Default .h3
     ///   - content: Closure that returns the content element to place inside `.accordion-content`
     /// - Returns: The root `.accordion-view` div element (call AccordionHydration.hydrate to bind animations)
@@ -566,10 +570,50 @@ public struct AccordionView: HTMLContent {
       isOpen: Bool = false,
       separation: Separation = .outline,
       title: String,
+      titleFontSize: CSS.Length = fontSizeSmall14,
+      titleFontWeight: CSS.FontWeight = fontWeightNormal,
       headingLevel: HeadingLevel = .h3,
       headerDirection: HeaderDirection = .column,
       @HTMLBuilder description: () -> [DOM.Node] = { [] },
       content: () -> DOM.Element
+    ) -> DOM.Element {
+      createElement(
+        id: id,
+        isOpen: isOpen,
+        separation: separation,
+        headingLevel: headingLevel,
+        headerDirection: headerDirection,
+        titleFontSize: titleFontSize,
+        titleFontWeight: titleFontWeight,
+        title: { title },
+        description: description,
+        content: { content() }
+      )
+    }
+
+    /// The same card, with the title given as content rather than as text, and
+    /// with the root class the server's initialiser takes.
+    ///
+    /// A header that carries more than a word — an outcome mark beside a tool
+    /// name, a path, a line range — cannot be expressed as `title: String`, and
+    /// building it as `description` puts it in a second box with its own type
+    /// and colour. This mirrors `AccordionView.init`, so a client-built card is
+    /// the server-rendered card, node for node. Build the title and content with
+    /// the DSL: `render()` serialises `DOM.Element.children`, which only the
+    /// builder fills, so a node taken from the live document — a factory's
+    /// `firstElementChild`, say — serialises as an empty tag.
+    public static func createElement(
+      id: String,
+      isOpen: Bool = false,
+      separation: Separation = .outline,
+      headingLevel: HeadingLevel = .h3,
+      headerDirection: HeaderDirection = .column,
+      titleFontSize: CSS.Length = fontSizeSmall14,
+      titleFontWeight: CSS.FontWeight = fontWeightNormal,
+      class: String = "",
+      @HTMLBuilder title: () -> [DOM.Node],
+      @HTMLBuilder description: () -> [DOM.Node] = { [] },
+      @HTMLBuilder content: () -> [DOM.Node]
     ) -> DOM.Element {
       let wrapper = document.createElement(.div)
       let view = AccordionView(
@@ -578,9 +622,12 @@ public struct AccordionView: HTMLContent {
         separation: separation,
         headingLevel: headingLevel,
         headerDirection: headerDirection,
-        title: { title },
+        titleFontSize: titleFontSize,
+        titleFontWeight: titleFontWeight,
+        class: `class`,
+        title: title,
         description: description,
-        content: { content() }
+        content: content
       )
       wrapper.innerHTML = view.render()
 

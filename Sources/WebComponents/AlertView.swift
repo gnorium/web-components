@@ -23,6 +23,7 @@
     /// Apple HIG color for the alert
     public enum AlertColor: String, Sendable {
       case gray
+      case blue
       case orange
       case red
       case green
@@ -100,6 +101,10 @@
         switch alertColor {
         case .gray:
           return "ℹ"
+        case .blue:
+          // Informational, not a fault: a dropped stream or a stalled worker is
+          // recoverable, so it gets the info glyph rather than the cross.
+          return "ℹ"
         case .orange:
           return "⚠"
         case .red:
@@ -126,9 +131,13 @@
         case .disabled:
           return nil
         case .default:
-          return 10000
+          // Red and blue both persist: red because it needs a person, blue
+          // because the condition it reports — a dropped stream, a stalled
+          // worker — outlives any 10s timeout. Vanishing while the run is still
+          // stopped is worse than not appearing at all.
+          return alertColor == .red || alertColor == .blue ? nil : 10000
         case .custom(let ms):
-          return alertColor == .red ? nil : ms
+          return alertColor == .red || alertColor == .blue ? nil : ms
         }
       }()
 
@@ -230,6 +239,13 @@
           selector("&.alert-gray:not(.alert-inline)") {
             backgroundColor(backgroundColorGraySubtle)
             borderColor(borderColorGray)
+          }
+          // Informational rather than a failure: nothing is broken and nothing is
+          // asked of the reader. Used for recoverable conditions — a dropped
+          // stream, a stalled worker — so red keeps meaning "this needs a person".
+          selector("&.alert-blue:not(.alert-inline)") {
+            backgroundColor(backgroundColorBlueSubtle)
+            borderColor(borderColorBlue)
           }
           selector("&.alert-orange:not(.alert-inline)") {
             backgroundColor(backgroundColorOrangeSubtle)
@@ -377,6 +393,7 @@
     /// Alert color for dynamic alerts
     public enum AlertColor: Sendable {
       case gray
+      case blue
       case orange
       case red
       case green
@@ -428,6 +445,8 @@
         switch type {
         case .gray:
           return unicodeInfo
+        case .blue:
+          return unicodeInfo
         case .orange:
           return unicodeWarning
         case .red:
@@ -460,6 +479,8 @@
       switch type {
       case .gray:
         alertColorClass = "alert-gray"
+      case .blue:
+        alertColorClass = "alert-blue"
       case .orange:
         alertColorClass = "alert-orange"
       case .red:
@@ -483,6 +504,7 @@
         icon.setAttribute(.ariaHidden, true)
         switch type {
         case .gray: icon.setAttribute(data("color"), "gray")
+        case .blue: icon.setAttribute(data("color"), "blue")
         case .orange: icon.setAttribute(data("color"), "orange")
         case .red: icon.setAttribute(data("color"), "red")
         case .green: icon.setAttribute(data("color"), "green")

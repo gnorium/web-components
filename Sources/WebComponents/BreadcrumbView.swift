@@ -139,27 +139,27 @@
           lineHeight(1.618)
           color(colorSubtle)
         }
+        // Inline flow, not flex: the trail fills each line and wraps wherever
+        // it runs out — between crumbs or inside a long label — as running
+        // text does. As a row of shrinkable flex items, all the give landed on
+        // the one label with a space in it, folding "Mission Control" while
+        // the bar still had room; as wrapping flex items, a whole crumb jumped
+        // to the next line while the first could still hold half of it.
         descendant(".breadcrumb-list") {
-          display(.flex)
-          alignItems(.center)
-          gap(spacing4)
+          display(.block)
           listStyle(.none)
           margin(0)
           padding(0)
         }
         descendant(".breadcrumb-item") {
-          display(.flex)
-          alignItems(.center)
-          gap(spacing4)
+          display(.inline)
+        }
+        descendant(".breadcrumb-link") {
+          display(.inline).important()
         }
         descendant(".breadcrumb-current") {
           color(colorBase)
           fontWeight(fontWeightNormal)
-          maxWidth(px(350))
-          overflowX(.hidden)
-          textOverflow(.ellipsis)
-          whiteSpace(.nowrap)
-          transform(translateY(px(-1)))
         }
         descendant(".breadcrumb-separator") {
           color(colorSubtle)
@@ -167,6 +167,8 @@
           display(.inlineFlex)
           alignItems(.center)
           justifyContent(.center)
+          verticalAlign(.middle)
+          marginInline(spacing4)
           lineHeight(1.618)
         }
         descendant(".breadcrumb-overflow") {

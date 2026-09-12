@@ -65,7 +65,9 @@ public struct ButtonView: HTMLContent {
     /// Large: For accessibility on touchscreens (increases touch area)
     case large
 
-    var minSize: CSS.Length {
+    /// Public so chrome that sits beside a button — the session legend's
+    /// byline next to its Raw toggle — can align to the same height.
+    public var minSize: CSS.Length {
       switch self {
       case .mini, .small: return px(24)
       case .medium: return px(32)
