@@ -321,8 +321,14 @@ public struct TableView: HTMLContent {
     let isEmpty = data.isEmpty && !pending && !hasCustomTbody
 
     let computedCurrentPage = currentPage ?? 1
-    let computedTotalItems = totalItems ?? data.count
-    let computedTotalPages = totalPages ?? (data.isEmpty ? 1 : (data.count + paginationSizeDefault - 1) / paginationSizeDefault)
+    // A grouped table pages by what a reader counts — the parent rows. Counting
+    // every row made one specimen with 413 runs read as "1–25 of 414", and the
+    // first page was mostly that specimen's own children.
+    let topLevelCount = data.filter { $0.groupID == nil || $0.isGroupHeader }.count
+    let computedTotalItems = totalItems ?? topLevelCount
+    let computedTotalPages =
+      totalPages
+      ?? (topLevelCount == 0 ? 1 : (topLevelCount + paginationSizeDefault - 1) / paginationSizeDefault)
 
     let pageNumbers: [PaginationView.PageNumber]
     if computedTotalPages <= 10 {
@@ -939,7 +945,7 @@ public struct TableView: HTMLContent {
         fontFamily(typographyFontSans)
         fontSize(fontSizeSmall14)
         lineHeight(lineHeightSmall22)
-        color(colorSubtle)
+        color(colorBase)
       }
       descendant(".table-pagination") {
         display(.flex)
@@ -1202,16 +1208,27 @@ public struct TableView: HTMLContent {
         flexDirection(.column)
         flex(1)
       }
-      descendant(".table-empty-state-content") {
+      // `margin: auto` rather than `flex: 1`: the message should sit in the
+      // middle of the empty body, not stretch to fill it — stretched, the line
+      // collapsed to nothing between the cell's own padding.
+      selector("& .table-tbody td.table-empty-state > .table-empty-state-content") {
         display(.flex)
         flexDirection(.column)
         gap(spacing8)
         alignItems(.center)
         justifyContent(.center)
-        flex(1)
+        textAlign(.center)
+        width(perc(100))
+        margin(.auto)
       }
-      descendant(".table-empty-state") {
-        padding(spacing48)
+      // The cell is the whole empty body, so it stretches to the row it sits in
+      // and centres its line both ways. Without the stretch it kept its own 44px
+      // and the message sat in the top-left corner of a tall white box.
+      // Spelled through `.table-tbody td` so it outranks the cell rule that
+      // sets `text-align: start` for every td: same specificity loses to
+      // source order, and that rule comes later.
+      selector("& .table-tbody td.table-empty-state") {
+        padding(spacing24)
         textAlign(.center)
         color(colorSubtle)
         fontFamily(typographyFontSans)
@@ -1220,6 +1237,9 @@ public struct TableView: HTMLContent {
         flexDirection(.column)
         alignItems(.center)
         justifyContent(.center)
+        alignSelf(.stretch)
+        width(perc(100))
+        minHeight(px(120))
         flex(1)
       }
       descendant(".table-empty-row") {
@@ -1262,7 +1282,12 @@ public struct TableView: HTMLContent {
     if hasUrl { classes.append("table-row-link") }
     if isLast { classes.append("table-row-last") }
     classes.append(isEven ? "table-row-even" : "table-row-odd")
-    if isInitiallyCollapsed { classes.append("table-row-collapsed") }
+    // A row that renders collapsed is also taken out of the layout. The class
+    // above only fades and lifts it — it keeps its 44px — so a group rendered
+    // shut still pushed the table open by a row per child. With 413 runs under
+    // one specimen that was a thousand pixels of blank table. Expanding removes
+    // this class first, then animates.
+    if isInitiallyCollapsed { classes.append("table-row-collapsed table-row-hidden") }
     if !stringIsEmpty(customClass) { classes.append(customClass) }
     return stringJoin(classes, separator: " ")
   }
@@ -2158,21 +2183,37 @@ public struct TableView: HTMLContent {
 
       if isPaginated {
         let startIdx = (page - 1) * pageSize
-        let endIdx = min(startIdx + pageSize, displayTotal)
+        let endIdx = min(startIdx + pageSize, topLevelRows.count)
 
-        for (index, row) in allDataRows.enumerated() {
-          let isGroupChild = row.classList.contains("table-group-child") || row.classList.contains("batch-group-child")
-          if index >= startIdx && index < endIdx {
-            // Only show group children if their group is currently expanded
-            if isGroupChild {
-              let groupID = row.getAttribute(data("group-id")) ?? ""
-              let isCollapsed = collapsedGroups.contains(where: { stringEquals($0, groupID) })
-              if !isCollapsed {
-                row.classList.remove("table-row-hidden")
-              }
-            } else {
-              row.classList.remove("table-row-hidden")
-            }
+        // A page is a page of parent rows. Children come with their parent —
+        // shown when the parent is on this page and its group is open, hidden
+        // otherwise — rather than being counted into the page themselves.
+        var visibleGroupIDs: [String] = []
+        var topLevelIndex = 0
+        for row in allDataRows {
+          let isGroupChild =
+            row.classList.contains("table-group-child")
+            || row.classList.contains("batch-group-child")
+          if isGroupChild { continue }
+          if topLevelIndex >= startIdx && topLevelIndex < endIdx {
+            row.classList.remove("table-row-hidden")
+            let groupID = row.getAttribute(data("group-id")) ?? ""
+            if !stringIsEmpty(groupID) { visibleGroupIDs.append(groupID) }
+          } else {
+            row.classList.add("table-row-hidden")
+          }
+          topLevelIndex += 1
+        }
+        for row in allDataRows {
+          let isGroupChild =
+            row.classList.contains("table-group-child")
+            || row.classList.contains("batch-group-child")
+          guard isGroupChild else { continue }
+          let groupID = row.getAttribute(data("group-id")) ?? ""
+          let parentOnPage = visibleGroupIDs.contains(where: { stringEquals($0, groupID) })
+          let isCollapsed = collapsedGroups.contains(where: { stringEquals($0, groupID) })
+          if parentOnPage && !isCollapsed {
+            row.classList.remove("table-row-hidden")
           } else {
             row.classList.add("table-row-hidden")
           }
