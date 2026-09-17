@@ -23,11 +23,15 @@ public struct InfoIconView: HTMLContent {
 
   public func build() -> DOM.Node {
     svg {
+      // The glyph fills the box: outer ring radius 10 on a 20-unit box, inner
+      // radius 7.5, the stem and dot scaled with it (the earlier drawing sat
+      // on a 16-unit circle inside a 2-unit margin; every value here is that
+      // one mapped through x' = (x − 2) · 1.25).
       path()
         .d(
-          M(4, 10), a(6, 6, 0, true, false, 12, 0), a(6, 6, 0, false, false, -12, 0), m(6, -8),
-          a(8, 8, 0, true, true, 0, 16), a(8, 8, 0, false, true, 0, -16), m(1, 7), v(5), H(9),
-          V(9), Z(), m(0, -1), V(6), H(9), v(2), Z())
+          M(2.5, 10), a(7.5, 7.5, 0, true, false, 15, 0), a(7.5, 7.5, 0, false, false, -15, 0),
+          m(7.5, -10), a(10, 10, 0, true, true, 0, 20), a(10, 10, 0, false, true, 0, -20),
+          m(1.25, 8.75), v(6.25), H(8.75), V(8.75), Z(), m(0, -1.25), V(5), H(8.75), v(2.5), Z())
     }
     .class(stringIsEmpty(`class`) ? "info-icon-view" : "info-icon-view \(`class`)")
     .width(width)

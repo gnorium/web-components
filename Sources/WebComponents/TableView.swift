@@ -2242,9 +2242,7 @@ public struct TableView: HTMLContent {
         emptyState: emptyState
       )
 
-      wrapper.innerHTML = renderHTML {
-        view.render()
-      }
+      wrapper.innerHTML = view.render()
 
       return wrapper.firstElementChild ?? wrapper
     }

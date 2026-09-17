@@ -160,6 +160,9 @@ public struct AccordionView: HTMLContent {
             color(colorBase)
             margin(0)
             wordWrap(.breakWord)
+            // The header is a button, whose text browsers refuse to select;
+            // a title such as `read_file current_tei.xml L1–80` is worth copying.
+            userSelect(.text)
           }
           selector("&[data-title-font-size='\(titleFontSize.value)'] .accordion-title") { fontSize(titleFontSize) }
           selector("&[data-title-font-weight='\(titleFontWeight.value)'] .accordion-title") { fontWeight(titleFontWeight) }
@@ -247,8 +250,12 @@ public struct AccordionView: HTMLContent {
           minHeight(minSizeInteractivePointer)
           padding(spacing4, spacing0)
         }
-        selector("&:not([data-separation='minimal'])") { padding(spacing12, spacing16) }
-        selector("&[data-separation='outline']") { borderRadius(borderRadiusBase) }
+        selector("&:not([data-separation='minimal'])") { padding(spacing16) }
+        // Nested one border-width inside the card's radius, so the hover
+        // wash follows the corner exactly now that no inset separates them.
+        selector("&[data-separation='outline']") {
+          borderRadius(calc("\(borderRadiusBase.value) - \(borderWidthBase.value)"))
+        }
         pseudoElement(.marker) { display(.none).important() }
         pseudoElement(.webkitDetailsMarker) { display(.none).important() }
         pseudoClass(.focusVisible) {
@@ -282,7 +289,9 @@ public struct AccordionView: HTMLContent {
               )
             }
             selector("&[data-separation='minimal']") { padding(spacing12, spacing0) }
-            selector("&:not([data-separation='minimal'])") { padding(spacing16) }
+            // No top padding: the header's bottom padding already separates
+            // title from body, and doubling it read as a gap.
+            selector("&:not([data-separation='minimal'])") { padding(spacing0, spacing16, spacing16) }
           }
       }
       .class("accordion-content-clip")
@@ -347,10 +356,14 @@ public struct AccordionView: HTMLContent {
         display(.block)
         position(.relative)
       }
+      // No inset of its own: the header and the body carry the padding, so
+      // the header's hover wash and focus ring run edge to edge inside the
+      // border, as in any accordion — the header's own radius keeps that
+      // wash off the rounded corners.
       selector("&[data-separation='outline']") {
         border(borderWidthBase, .solid, borderColorBase)
         borderRadius(borderRadiusBase)
-        padding(spacing4)
+        padding(0)
       }
       pseudoClass(.hover) { zIndex(zIndexToolbar).important() }
       pseudoClass(.focusWithin) { zIndex(zIndexToolbar).important() }

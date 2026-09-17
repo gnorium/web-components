@@ -143,7 +143,7 @@ public struct RotatingSectorView: HTMLContent {
         ariaHidden: ariaHidden,
         class: `class`
       )
-      wrapper.innerHTML = renderHTML { view.render() }
+      wrapper.innerHTML = view.render()
       if let leaf = wrapper.firstElementChild {
         return leaf
       }

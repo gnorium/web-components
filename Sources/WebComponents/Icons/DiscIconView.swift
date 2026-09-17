@@ -51,7 +51,7 @@ public struct DiscIconView: HTMLContent {
     ) -> DOM.Element {
       let wrapper = document.createElement(.span)
       let view = DiscIconView(width: width, height: height, class: `class`)
-      wrapper.innerHTML = renderHTML { view.render() }
+      wrapper.innerHTML = view.render()
       if let svg = wrapper.firstElementChild {
         return svg
       }

@@ -175,7 +175,10 @@
               width(sizeIconMedium)
               height(sizeIconMedium)
             }
+            // Every case of AlertColor, or the missing one silently falls back
+            // to the body colour — as blue did, in the only place it was used.
             selector("&[data-color='gray']") { color(colorGray) }
+            selector("&[data-color='blue']") { color(colorBlue) }
             selector("&[data-color='orange']") { color(colorOrange) }
             selector("&[data-color='red']") { color(colorRed) }
             selector("&[data-color='green']") { color(colorGreen) }

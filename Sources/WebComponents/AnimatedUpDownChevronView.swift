@@ -207,7 +207,7 @@ public struct AnimatedUpDownChevronView: HTMLContent {
     public static func createElement(id: String, expanded: Bool = false) -> DOM.Element {
       let wrapper = document.createElement(.span)
       let view = AnimatedUpDownChevronView(id: id, expanded: expanded)
-      wrapper.innerHTML = renderHTML { view.render() }
+      wrapper.innerHTML = view.render()
       if let svg = wrapper.firstElementChild {
         return svg
       }

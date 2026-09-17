@@ -10,10 +10,18 @@ import WebTypes
 public struct TooltipView: HTMLContent {
   let tooltipText: String
   let placement: Placement
+  let font: Font
   let children: [DOM.Node]
   let `class`: String
 
-  public enum Placement: String, Sendable {
+  /// Typeface of the bubble's text: sans for prose, mono for identifiers,
+  /// stamps and other machine-shaped values.
+  public enum Font: String, Sendable {
+    case sans
+    case mono
+  }
+
+  public enum Placement: String, Sendable, CaseIterable {
     case top
     case topStart = "top-start"
     case topEnd = "top-end"
@@ -26,16 +34,62 @@ public struct TooltipView: HTMLContent {
     case right
     case rightStart = "right-start"
     case rightEnd = "right-end"
+
+    public enum Side: Sendable {
+      case top, bottom, left, right
+    }
+
+    public enum Alignment: Sendable {
+      case center, start, end
+    }
+
+    public var side: Side {
+      switch self {
+      case .top, .topStart, .topEnd: .top
+      case .bottom, .bottomStart, .bottomEnd: .bottom
+      case .left, .leftStart, .leftEnd: .left
+      case .right, .rightStart, .rightEnd: .right
+      }
+    }
+
+    public var alignment: Alignment {
+      switch self {
+      case .top, .bottom, .left, .right: .center
+      case .topStart, .bottomStart, .leftStart, .rightStart: .start
+      case .topEnd, .bottomEnd, .leftEnd, .rightEnd: .end
+      }
+    }
+
+    /// The same alignment on the opposite side — where the bubble goes when
+    /// its own side has no room.
+    public var opposite: Placement {
+      switch self {
+      case .top: .bottom
+      case .topStart: .bottomStart
+      case .topEnd: .bottomEnd
+      case .bottom: .top
+      case .bottomStart: .topStart
+      case .bottomEnd: .topEnd
+      case .left: .right
+      case .leftStart: .rightStart
+      case .leftEnd: .rightEnd
+      case .right: .left
+      case .rightStart: .leftStart
+      case .rightEnd: .leftEnd
+      }
+    }
   }
 
   public init(
     tooltip: String,
     placement: Placement = .bottom,
+    font: Font = .sans,
     class: String = "",
     @HTMLBuilder content: () -> [DOM.Node]
   ) {
     self.tooltipText = tooltip
     self.placement = placement
+    self.font = font
     self.children = content()
     self.`class` = `class`
   }
@@ -47,10 +101,14 @@ public struct TooltipView: HTMLContent {
       }
       .class("tooltip-trigger-content")
 
+      // The font rides on the bubble itself: once portaled to <body> it is no
+      // longer inside the trigger, so a page rule scoped to the trigger's
+      // ancestors could not reach it.
       span {
         tooltipText
       }
       .class("tooltip-content")
+      .data("font", font.rawValue)
     }
     .class(stringIsEmpty(`class`) ? "tooltip-view tooltip-trigger" : "tooltip-view tooltip-trigger \(`class`)")
     .data("tooltip", "true")
@@ -65,11 +123,29 @@ public struct TooltipView: HTMLContent {
         cursor(.help)
         marginInlineStart(spacing4)
       }
+      // Portal host: on hydration the bubble moves into one of these at the
+      // end of <body>, a fixed point set from the trigger's rect. Inside the
+      // trigger it inherited every ancestor's stacking context and transform
+      // — a legend on a fieldset border painted it under the cards below —
+      // and could not be pulled back inside the viewport at a screen edge.
+      selector("&[data-portal='true']") {
+        position(.fixed)
+        display(.block)
+        width(0)
+        height(0)
+        margin(0)
+        zIndex(zIndexTooltip)
+        pointerEvents(.none)
+      }
       selector("& .tooltip-content") {
         position(.absolute)
         padding(spacing8, spacing12)
-        minWidth(px(150))
-        maxWidth(px(320))
+        // Sized to its text, not to its containing block: an absolutely
+        // positioned box otherwise shrinks to the 20px trigger (or the 0px
+        // portal host) and a one-sentence byline wrapped to five lines.
+        width(.maxContent)
+        minWidth(px(256))
+        maxWidth(calc("min(256px, 100vw - \(spacing16.value))"))
         backgroundColor(backgroundColorInverted)
         color(colorInverted)
         fontFamily(typographyFontSans)
@@ -87,6 +163,9 @@ public struct TooltipView: HTMLContent {
         textAlign(.start)
         backfaceVisibility(.hidden)
         willChange(.transform, .opacity)
+      }
+      selector("& .tooltip-content[data-font='mono']") {
+        fontFamily(typographyFontMono)
       }
       selector("&:hover > .tooltip-content", "&:focus-within > .tooltip-content", "&[data-visible='true'] .tooltip-content") {
         opacity(1)
@@ -159,15 +238,16 @@ public struct TooltipView: HTMLContent {
         borderBottom(px(6), .solid, backgroundColorTransparent)
         borderRight(px(6), .solid, backgroundColorInverted)
       }
-      selector("&[data-placement='bottom'] .tooltip-content::after", "&[data-placement='top'] .tooltip-content::after") {
-        left(perc(50))
+      // Above or below, the arrow sits where the hydration puts it — over the
+      // trigger's centre, clear of the corner radius — and at the middle
+      // until then.
+      selector(
+        "&[data-placement='bottom'] .tooltip-content::after", "&[data-placement='top'] .tooltip-content::after",
+        "&[data-placement='bottom-start'] .tooltip-content::after", "&[data-placement='top-start'] .tooltip-content::after",
+        "&[data-placement='bottom-end'] .tooltip-content::after", "&[data-placement='top-end'] .tooltip-content::after"
+      ) {
+        CSS.Property("left", "var(--tooltip-arrow-x, 50%)")
         transform(translateX(perc(-50)))
-      }
-      selector("&[data-placement='bottom-start'] .tooltip-content::after", "&[data-placement='top-start'] .tooltip-content::after") {
-        left(spacing12)
-      }
-      selector("&[data-placement='bottom-end'] .tooltip-content::after", "&[data-placement='top-end'] .tooltip-content::after") {
-        right(spacing12)
       }
       selector("&[data-placement='left'] .tooltip-content::after", "&[data-placement='right'] .tooltip-content::after") {
         top(perc(50))
@@ -189,15 +269,165 @@ public struct TooltipView: HTMLContent {
   private class TooltipInstance: @unchecked Sendable {
     private var trigger: DOM.Element
     private var content: DOM.Element?
+    private var host: DOM.Element?
+    private let placement: TooltipView.Placement
     private var isVisible: Bool = false
     private var hideTimeout: Int32?
     private var touchTimer: Int32?
 
+    /// Distance the bubble keeps from the viewport's edges.
+    private static let edgeMargin = 8.0
+    /// Nearest the arrow may sit to the bubble's edge: the corner radius
+    /// (16px) plus half the arrow (6px), so the corner never cuts into it.
+    private static let arrowInset = 22.0
+
     init(tooltip: DOM.Element) {
       self.trigger = tooltip
       self.content = tooltip.querySelector(".tooltip-content")
+      // `TooltipView` always stamps the attribute; the fallback is its own
+      // default, so a hand-built trigger without one behaves like the view.
+      // Matched with `stringEquals`, not `init(rawValue:)`: the synthesized
+      // initializer compares with `==`, which is Unicode normalization the
+      // embedded client cannot link.
+      let raw = tooltip.dataset["placement"] ?? ""
+      self.placement =
+        TooltipView.Placement.allCases.first { stringEquals($0.rawValue, raw) } ?? .bottom
 
+      portal()
       bindEvents()
+    }
+
+    /// Move the bubble into a fixed host at the end of <body>. The host is a
+    /// point; the placement CSS grows the bubble from it exactly as it did
+    /// from the trigger, so only the point has to be placed.
+    private func portal() {
+      guard let content else { return }
+      let host = document.createElement(.span)
+      host.classList.add("tooltip-view")
+      _ = host.dataset["portal"] = "true"
+      _ = host.dataset["placement"] = placement.rawValue
+      _ = host.dataset["visible"] = "false"
+      host.appendChild(content)
+      document.body.appendChild(host)
+      self.host = host
+    }
+
+    /// Anchor the host at the trigger for the requested placement, then pull
+    /// the bubble back inside the viewport: flipped to the other side when
+    /// there is no room above or below, shifted along an edge it crosses.
+    private func place() {
+      guard let host, let content, let t = trigger.getBoundingClientRect() else { return }
+      let margin = Self.edgeMargin
+      var placement = self.placement
+      var (x, y) = Self.anchor(for: placement, trigger: t)
+      _ = host.dataset["placement"] = placement.rawValue
+      Self.position(host, x: x, y: y)
+      guard let c = content.getBoundingClientRect() else { return }
+
+      switch placement.side {
+      case .top, .bottom:
+        let overflows: Bool
+        let roomOpposite: Bool
+        if placement.side == .bottom {
+          overflows = c.bottom > window.innerHeight - margin
+          roomOpposite = t.top - c.height - margin > 0
+        } else {
+          overflows = c.top < margin
+          roomOpposite = t.bottom + c.height + margin < window.innerHeight
+        }
+        if overflows && roomOpposite {
+          placement = placement.opposite
+          (x, y) = Self.anchor(for: placement, trigger: t)
+          _ = host.dataset["placement"] = placement.rawValue
+          Self.position(host, x: x, y: y)
+        }
+      case .left, .right:
+        break
+      }
+
+      guard let placed = content.getBoundingClientRect() else { return }
+      var shiftX = 0.0
+      var shiftY = 0.0
+      if placed.left < margin {
+        shiftX = margin - placed.left
+      } else if placed.right > window.innerWidth - margin {
+        shiftX = window.innerWidth - margin - placed.right
+      }
+      switch placement.side {
+      case .left, .right:
+        if placed.top < margin {
+          shiftY = margin - placed.top
+        } else if placed.bottom > window.innerHeight - margin {
+          shiftY = window.innerHeight - margin - placed.bottom
+        }
+      case .top, .bottom:
+        break
+      }
+      var hostX = x + shiftX
+      let hostY = y + shiftY
+      if shiftX != 0 || shiftY != 0 {
+        Self.position(host, x: hostX, y: hostY)
+      }
+
+      // Point the arrow at the trigger's centre. If that centre lies inside
+      // the bubble's corner zone, slide the bubble — as far as the viewport
+      // allows — so the arrow sits just clear of the radius, over the trigger.
+      switch placement.side {
+      case .top, .bottom:
+        guard let bubble = content.getBoundingClientRect() else { return }
+        var arrowX = t.left + t.width / 2 - bubble.left
+        let inset = Self.arrowInset
+        if arrowX < inset {
+          let dx = min(inset - arrowX, max(0, bubble.left - margin))
+          hostX -= dx
+          arrowX += dx
+          Self.position(host, x: hostX, y: hostY)
+        } else if arrowX > bubble.width - inset {
+          let dx = min(arrowX - (bubble.width - inset), max(0, window.innerWidth - margin - bubble.right))
+          hostX += dx
+          arrowX -= dx
+          Self.position(host, x: hostX, y: hostY)
+        }
+        host.setStyleProperty("--tooltip-arrow-x", Self.px(arrowX))
+      case .left, .right:
+        break
+      }
+    }
+
+    private static func px(_ value: Double) -> String {
+      stringJoin([intToString(Int(value)), "px"], separator: "")
+    }
+
+    /// The point on the trigger's box that the placement CSS grows the
+    /// bubble away from.
+    private static func anchor(
+      for placement: TooltipView.Placement, trigger t: DOM.Rect
+    ) -> (Double, Double) {
+      switch placement.side {
+      case .left, .right:
+        let x = placement.side == .left ? t.left : t.right
+        let y: Double
+        switch placement.alignment {
+        case .start: y = t.top
+        case .end: y = t.bottom
+        case .center: y = t.top + t.height / 2
+        }
+        return (x, y)
+      case .top, .bottom:
+        let y = placement.side == .top ? t.top : t.bottom
+        let x: Double
+        switch placement.alignment {
+        case .start: x = t.left
+        case .end: x = t.right
+        case .center: x = t.left + t.width / 2
+        }
+        return (x, y)
+      }
+    }
+
+    private static func position(_ host: DOM.Element, x: Double, y: Double) {
+      host.setStyleProperty("left", px(x))
+      host.setStyleProperty("top", px(y))
     }
 
     private func bindEvents() {
@@ -250,6 +480,15 @@ public struct TooltipView: HTMLContent {
           self.hideTooltip()
         }
       }
+
+      // The host is fixed to the viewport, not to the page: once the trigger
+      // moves under it, the bubble would point at nothing.
+      _ = window.addEventListener(.scroll) { [self] _ in
+        if self.isVisible { self.hideTooltip() }
+      }
+      _ = window.addEventListener(.resize) { [self] _ in
+        if self.isVisible { self.hideTooltip() }
+      }
     }
 
     private func showTooltip() {
@@ -261,6 +500,8 @@ public struct TooltipView: HTMLContent {
         hideTimeout = nil
       }
 
+      place()
+      host?.setAttribute(data("visible"), true)
       trigger.setAttribute(data("visible"), true)
       isVisible = true
 
@@ -274,6 +515,7 @@ public struct TooltipView: HTMLContent {
 
       // Small delay before hiding
       hideTimeout = setTimeout(100) { [self] in
+        self.host?.setAttribute(data("visible"), false)
         self.trigger.setAttribute(data("visible"), false)
         self.isVisible = false
 
@@ -311,10 +553,11 @@ public struct TooltipView: HTMLContent {
     /// Creates a tooltip trigger element wrapping an info icon, matching TooltipView output.
     public static func createElement(
       text: String,
-      placement: TooltipView.Placement = .top
+      placement: TooltipView.Placement = .top,
+      font: TooltipView.Font = .sans
     ) -> DOM.Element {
       let wrapper = document.createElement(.span)
-      let view = TooltipView(tooltip: text, placement: placement) {
+      let view = TooltipView(tooltip: text, placement: placement, font: font) {
         InfoIconView(width: px(20), height: px(20))
       }
       wrapper.innerHTML = view.render()

@@ -15,6 +15,7 @@ let package = Package(
     .package(url: "https://github.com/gnorium/web-builders", branch: "main"),
     .package(url: "https://github.com/gnorium/web-types", branch: "main"),
     .package(url: "https://github.com/gnorium/embedded-swift-utilities", branch: "main"),
+    .package(url: "https://github.com/gnorium/markdown-utilities", branch: "main"),
   ],
   targets: [
     .executableTarget(
@@ -38,6 +39,9 @@ let package = Package(
         .product(name: "DOMBuilder", package: "web-builders"),
         .product(name: "EmbeddedSwiftUtilities", package: "embedded-swift-utilities"),
         .product(name: "HTMLBuilder", package: "web-builders"),
+        .product(
+          name: "MarkdownUtilities", package: "markdown-utilities",
+          condition: .when(platforms: [.macOS, .linux, .windows])),
         .product(name: "SVGBuilder", package: "web-builders"),
         .product(name: "WebAPIs", package: "web-apis"),
         .product(name: "WebTypes", package: "web-types"),

@@ -56,7 +56,7 @@ public struct CopyIconView: HTMLContent {
     ) -> DOM.Element {
       let wrapper = document.createElement(.span)
       let view = CopyIconView(width: width, height: height, class: `class`)
-      wrapper.innerHTML = renderHTML { view.render() }
+      wrapper.innerHTML = view.render()
       if let svg = wrapper.firstElementChild {
         return svg
       }
