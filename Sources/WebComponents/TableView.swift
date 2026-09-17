@@ -107,6 +107,19 @@ public struct TableView: HTMLContent {
     }
   }
 
+  /// The words a cell shows, however it is built — a bare string, a link, a
+  /// chip. Used for the cell's title, so an ellipsis never hides a value.
+  static func plainText(of node: DOM.Node) -> String {
+    if let text = node as? DOM.Text { return text.content }
+    guard let element = node as? DOM.Element else { return "" }
+    var parts: [String] = []
+    for child in element.children {
+      let text = plainText(of: child)
+      if !stringIsEmpty(text) { parts.append(text) }
+    }
+    return stringJoin(parts, separator: " ")
+  }
+
   public struct Row: Sendable {
     public let id: String?
     public let cells: [NodePair]
@@ -652,6 +665,12 @@ public struct TableView: HTMLContent {
                     for (cellIndex, column) in columns.enumerated() {
                       let cellContent: DOM.Node = row.cells.first(where: { stringEquals($0.key, column.id) })?.value ?? DOM.Text("")
                       let isFirstCell = cellIndex == 0
+                      // A cell is one line and clips with an ellipsis, so the
+                      // value it holds is also its title: hovering shows the
+                      // whole of it rather than leaving the reader to guess.
+                      // Links carry their own text down the tree, and a title
+                      // is most wanted precisely where a long one is clipped.
+                      let cellTitle = TableView.plainText(of: cellContent)
                       var unwrappedElement: HTML.HTMLElement? = nil
                       if let element = cellContent as? HTML.HTMLElement, (stringEquals(element.tag, "td") || stringEquals(element.tag, "th")) {
                         if isFirstCell && isGroupChild {
@@ -704,6 +723,7 @@ public struct TableView: HTMLContent {
                             .class("table-cell-content")
                           }
                           .data("align", column.align.value)
+                          .title(cellTitle)
                           .style {
                             selector("&") {
                               let styles = tdStyle()
@@ -1072,9 +1092,11 @@ public struct TableView: HTMLContent {
         boxSizing(.borderBox)
         verticalAlign(.middle)
         overflow(.visible)
-        textOverflow(.ellipsis)
         whiteSpace(.nowrap)
-        minWidth(0)
+        // A header is the column's name; a name shortened to "Atte…" is no
+        // name. `max-content` keeps the column at least as wide as its label,
+        // whatever width the caller asked for.
+        minWidth(.maxContent)
         textAlign(.start)
       }
       selector("& .table-tbody td", "& .table-tfoot td") {
