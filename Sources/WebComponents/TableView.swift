@@ -440,349 +440,356 @@ public struct TableView: HTMLContent {
         .class("table-pagination table-pagination-top")
       }      // Table wrapper
       div {
-        table {
-          // Column geometry belongs to the table model. Runtime resizing updates
-          // these standard HTML width attributes rather than element styles.
-          colgroup {
-            if selectionMode != nil {
+        // The box owns the border; this owns the scrolling. A scrollbar is
+        // drawn inside its own element's edge, so when the bordered box
+        // scrolled, the bar lay across the bottom border and cut through
+        // both rounded corners.
+        div {
+          table {
+            // Column geometry belongs to the table model. Runtime resizing updates
+            // these standard HTML width attributes rather than element styles.
+            colgroup {
+              if selectionMode != nil {
+                col()
+                  .id("table-col-selection")
+                  .setAttribute("width", "44")
+              }
+              for column in columns {
+                var columnElement = col().data("table-column-id", column.id)
+                if let width = column.width {
+                  columnElement = columnElement.setAttribute("width", width.value)
+                }
+                columnElement
+              }
               col()
-                .id("table-col-selection")
-                .setAttribute("width", "44")
+                .id("table-col-spacer")
+                .setAttribute("width", "16")
             }
-            for column in columns {
-              var columnElement = col().data("table-column-id", column.id)
-              if let width = column.width {
-                columnElement = columnElement.setAttribute("width", width.value)
-              }
-              columnElement
-            }
-            col()
-              .id("table-col-spacer")
-              .setAttribute("width", "16")
-          }
 
-          caption { captionContent }
-            .class("table-caption")
-            .data("hidden", hideCaption)
+            caption { captionContent }
+              .class("table-caption")
+              .data("hidden", hideCaption)
 
-          // thead
-          if hasCustomThead {
-            theadContent
-          } else {
-            thead {
-              tr {
-                // Select all checkbox (only for multiple selection mode)
-                if let mode = selectionMode {
-                  th {
-                    if mode == .multiple {
-                      div {
-                        CheckboxView(
-                          id: "select-all",
-                          name: "select-all",
-                          checked: !selectedRows.isEmpty && selectedRows.count == data.count,
-                          indeterminate: !selectedRows.isEmpty && selectedRows.count < data.count,
-                          inline: true,
-                          hideLabel: true
-                        ) {
-                          "Select all"
-                        }
-                      }
-                      .class("table-selection-container")
-                    }
-
-                    // Industry standard column resizer handle
-                    div { "" }
-                      .class("table-resizer")
-                  }
-              .id("col-selection")
-              .scope(.col)
-                  .data("table-column-id", "selection")
-                  .data("align", "start")
-                  .class("table-selection-header")
-                  .style {
-                    selector("&") {
-                      let styles = thStyle(.start)
-                      if !styles.isEmpty {
-                        styles
-                      }
-                    }
-                  }
-                }
-
-                // Column headers
-                for column in columns {
-                  th {
-                    if column.sortable {
-                      button {
-                        span { column.label }
-                          .class("table-sort-label")
-
-                        span {
-                          AnimatedUpDownChevronView(
-                            id: "table-sort-\(column.id)",
-                            expanded: {
-                              if let currentSort = sort,
-                                stringEquals(currentSort.columnID, column.id)
-                              {
-                                return currentSort.direction == .ascending
-                              }
-                              return false
-                            }(),
-                            width: px(20),
-                            height: px(20)
-                          )
-                        }
-                        .class("table-sort-icon")
-                        .ariaHidden(true)
-                        .data("active", sort.map { stringEquals($0.columnID, column.id) } ?? false)
-                      }
-                      .class("table-sort-button")
-                      .type(.button)
-                      .data("column-id", column.id)
-                    } else {
-                      div { column.label }
-                        .class("table-header-label")
-                    }
-
-                    // Industry standard column resizer handle
-                    div { "" }
-                      .class("table-resizer")
-                  }
-                  .id("col-\(column.id)")
-                  .scope(.col)
-                  .data("table-column-id", column.id)
-                  .data("align", column.align.value)
-                  .data("flex", column.width == nil ? "true" : "false")
-                  .data("width", column.width != nil ? column.width!.value : "")
-                  .class("table-column-header")
-                  .style {
-                    selector("&") {
-                      if let colWidth = column.width {
-                        width(colWidth)
-                      } else {
-                        width(.auto)
-                      }
-                      if let minW = column.minWidth {
-                        minWidth(minW)
-                      } else {
-                        minWidth(px(150))
-                      }
-                      let styles = thStyle(column.align)
-                      if !styles.isEmpty {
-                        styles
-                      }
-                    }
-                  }
-                }
-
-                th { "" }
-                  .class("table-th-spacer")
-              }
-            }
-            .class("table-thead")
-            .style {
-              selector("&") { theadStyle() }
-            }
-          }
-
-          // tbody
-          if hasCustomTbody {
-            tbody {
-              tbodyContent
-            }
-            .class("table-tbody")
-          } else {
-            tbody {
-              if isEmpty && hasEmptyState {
+            // thead
+            if hasCustomThead {
+              theadContent
+            } else {
+              thead {
                 tr {
-                  td {
-                    div {
-                      emptyStateContent
-                    }
-                    .class("table-empty-state-content")
-                  }
-                  .colspan(columns.count + (selectionMode != nil ? 1 : 0) + 1)
-                  .class("table-empty-state")
-                }
-                .class("table-empty-row")
-              } else {
-                for (rowIndex, row) in data.enumerated() {
-                  let rowID = row.id ?? intToString(rowIndex)
-                  let isSelected = selectedRows.contains(where: {
-                    stringEquals($0, rowID)
-                  })
-                  var isGroupChild = false
-                  if let _ = row.groupID {
-                    isGroupChild = !row.isGroupHeader
-                  }
-
-                  var hasUrl = false
-                  if let _ = row.url {
-                    hasUrl = true
-                  }
-
-                  var trNode = tr {
-                    // Row selection (checkbox for multiple, radio for single)
-                    if let mode = selectionMode {
-                      td {
+                  // Select all checkbox (only for multiple selection mode)
+                  if let mode = selectionMode {
+                    th {
+                      if mode == .multiple {
                         div {
-                          if mode == .multiple {
-                            CheckboxView(
-                              id: "row-\(rowID)",
-                              name: "row-selection",
-                              value: rowID,
-                              checked: isSelected,
-                              inline: true,
-                              hideLabel: true
-                            ) {
-                              "Select row"
-                            }
-                          } else {
-                            RadioView(
-                              id: "row-\(rowID)",
-                              name: "row-selection",
-                              value: rowID,
-                              checked: isSelected,
-                              hideLabel: true
-                            ) {
-                              "Select row"
-                            }
+                          CheckboxView(
+                            id: "select-all",
+                            name: "select-all",
+                            checked: !selectedRows.isEmpty && selectedRows.count == data.count,
+                            indeterminate: !selectedRows.isEmpty && selectedRows.count < data.count,
+                            inline: true,
+                            hideLabel: true
+                          ) {
+                            "Select all"
                           }
                         }
                         .class("table-selection-container")
                       }
-                      .style {
-                        selector("&") {
-                          let styles = tdStyle()
-                          if !styles.isEmpty {
-                            styles
-                          }
+
+                      // Industry standard column resizer handle
+                      div { "" }
+                        .class("table-resizer")
+                    }
+                .id("col-selection")
+                .scope(.col)
+                    .data("table-column-id", "selection")
+                    .data("align", "start")
+                    .class("table-selection-header")
+                    .style {
+                      selector("&") {
+                        let styles = thStyle(.start)
+                        if !styles.isEmpty {
+                          styles
                         }
                       }
                     }
+                  }
 
-                    // Row cells
-                    for (cellIndex, column) in columns.enumerated() {
-                      let cellContent: DOM.Node = row.cells.first(where: { stringEquals($0.key, column.id) })?.value ?? DOM.Text("")
-                      let isFirstCell = cellIndex == 0
-                      // A cell is one line and clips with an ellipsis, so the
-                      // value it holds is also its title: hovering shows the
-                      // whole of it rather than leaving the reader to guess.
-                      // Links carry their own text down the tree, and a title
-                      // is most wanted precisely where a long one is clipped.
-                      let cellTitle = TableView.plainText(of: cellContent)
-                      var unwrappedElement: HTML.HTMLElement? = nil
-                      if let element = cellContent as? HTML.HTMLElement, (stringEquals(element.tag, "td") || stringEquals(element.tag, "th")) {
-                        if isFirstCell && isGroupChild {
-                          element.children.insert(
-                            span { "" }
-                              .class("table-group-indent").build(), at: 0)
-                        }
-                        unwrappedElement = element
-                      }
+                  // Column headers
+                  for column in columns {
+                    th {
+                      if column.sortable {
+                        button {
+                          span { column.label }
+                            .class("table-sort-label")
 
-                      if let element = unwrappedElement {
-                        element
-                      } else {
-                        if useRowGroups && isFirstCell {
-                          th {
-                            // Group header gets animated triangle toggle
-                            if row.isGroupHeader, let gid = row.groupID {
-                              AnimatedRightDownChevronView(
-                                id: "table-group-\(gid)",
-                                expanded: false,
-                                width: px(20),
-                                height: px(20)
-                              )
-                            }
-                            // Child rows get indentation
-                            if isGroupChild {
-                              span { "" }
-                                .class("table-group-indent")
-                            }
-                            cellContent
-                          }
-                          .scope(.row)
-                          .data("align", column.align.value)
-                        } else {
-                          td {
-                            // Child rows get indentation on first cell
-                            if isGroupChild && isFirstCell {
-                              span { "" }
-                                .class("table-group-indent")
-                            }
-                            div {
-                              if isFirstCell, let url = row.url {
-                                LinkView(url: url) {
-                                  cellContent
+                          span {
+                            AnimatedUpDownChevronView(
+                              id: "table-sort-\(column.id)",
+                              expanded: {
+                                if let currentSort = sort,
+                                  stringEquals(currentSort.columnID, column.id)
+                                {
+                                  return currentSort.direction == .ascending
                                 }
-                              } else {
-                                cellContent
-                              }
-                            }
-                            .class("table-cell-content")
+                                return false
+                              }(),
+                              width: px(20),
+                              height: px(20)
+                            )
                           }
-                          .data("align", column.align.value)
-                          .title(cellTitle)
-                          .style {
-                            selector("&") {
-                              let styles = tdStyle()
-                              if !styles.isEmpty {
-                                styles
-                              }
-                            }
-                          }
+                          .class("table-sort-icon")
+                          .ariaHidden(true)
+                          .data("active", sort.map { stringEquals($0.columnID, column.id) } ?? false)
+                        }
+                        .class("table-sort-button")
+                        .type(.button)
+                        .data("column-id", column.id)
+                      } else {
+                        div { column.label }
+                          .class("table-header-label")
+                      }
+
+                      // Industry standard column resizer handle
+                      div { "" }
+                        .class("table-resizer")
+                    }
+                    .id("col-\(column.id)")
+                    .scope(.col)
+                    .data("table-column-id", column.id)
+                    .data("align", column.align.value)
+                    .data("flex", column.width == nil ? "true" : "false")
+                    .data("width", column.width != nil ? column.width!.value : "")
+                    .class("table-column-header")
+                    .style {
+                      selector("&") {
+                        if let colWidth = column.width {
+                          width(colWidth)
+                        } else {
+                          width(.auto)
+                        }
+                        if let minW = column.minWidth {
+                          minWidth(minW)
+                        } else {
+                          minWidth(px(150))
+                        }
+                        let styles = thStyle(column.align)
+                        if !styles.isEmpty {
+                          styles
                         }
                       }
                     }
-
-                    // Row cells spacer for beautiful edge-to-edge zebra stripe backgrounds
-                    td { "" }
-                      .class("table-td-spacer")
                   }
 
-                  // Apply standard attributes
-                  trNode = trNode
-                    .data("row-id", rowID)
-                    .data("group-id", row.groupID ?? "")
-                    .data("is-group-header", row.isGroupHeader ? "true" : "")
-                    .data("url", row.url ?? "")
-                    .class(
-                      buildRowClass(
-                        isSelected: isSelected,
-                        isGroupHeader: row.isGroupHeader,
-                        isGroupChild: isGroupChild,
-                        hasUrl: hasUrl,
-                        isLast: rowIndex == data.count - 1,
-                        isEven: rowIndex % 2 == 1,
-                        isInitiallyCollapsed: isGroupChild || stringContains(row.customClass, "table-row-collapsed"),
-                        customClass: row.customClass
-                      )
-                    )
-
-                  // Apply custom data attributes
-                  for pair in row.dataAttributes {
-                    trNode = trNode.data(pair.key, pair.value)
-                  }
-
-                  trNode
+                  th { "" }
+                    .class("table-th-spacer")
                 }
               }
+              .class("table-thead")
+              .style {
+                selector("&") { theadStyle() }
+              }
             }
-            .class("table-tbody")
-          }
 
-          // tfoot
-          if hasCustomTfoot {
-            tfoot {
-              tfootContent
+            // tbody
+            if hasCustomTbody {
+              tbody {
+                tbodyContent
+              }
+              .class("table-tbody")
+            } else {
+              tbody {
+                if isEmpty && hasEmptyState {
+                  tr {
+                    td {
+                      div {
+                        emptyStateContent
+                      }
+                      .class("table-empty-state-content")
+                    }
+                    .colspan(columns.count + (selectionMode != nil ? 1 : 0) + 1)
+                    .class("table-empty-state")
+                  }
+                  .class("table-empty-row")
+                } else {
+                  for (rowIndex, row) in data.enumerated() {
+                    let rowID = row.id ?? intToString(rowIndex)
+                    let isSelected = selectedRows.contains(where: {
+                      stringEquals($0, rowID)
+                    })
+                    var isGroupChild = false
+                    if let _ = row.groupID {
+                      isGroupChild = !row.isGroupHeader
+                    }
+
+                    var hasUrl = false
+                    if let _ = row.url {
+                      hasUrl = true
+                    }
+
+                    var trNode = tr {
+                      // Row selection (checkbox for multiple, radio for single)
+                      if let mode = selectionMode {
+                        td {
+                          div {
+                            if mode == .multiple {
+                              CheckboxView(
+                                id: "row-\(rowID)",
+                                name: "row-selection",
+                                value: rowID,
+                                checked: isSelected,
+                                inline: true,
+                                hideLabel: true
+                              ) {
+                                "Select row"
+                              }
+                            } else {
+                              RadioView(
+                                id: "row-\(rowID)",
+                                name: "row-selection",
+                                value: rowID,
+                                checked: isSelected,
+                                hideLabel: true
+                              ) {
+                                "Select row"
+                              }
+                            }
+                          }
+                          .class("table-selection-container")
+                        }
+                        .style {
+                          selector("&") {
+                            let styles = tdStyle()
+                            if !styles.isEmpty {
+                              styles
+                            }
+                          }
+                        }
+                      }
+
+                      // Row cells
+                      for (cellIndex, column) in columns.enumerated() {
+                        let cellContent: DOM.Node = row.cells.first(where: { stringEquals($0.key, column.id) })?.value ?? DOM.Text("")
+                        let isFirstCell = cellIndex == 0
+                        // A cell is one line and clips with an ellipsis, so the
+                        // value it holds is also its title: hovering shows the
+                        // whole of it rather than leaving the reader to guess.
+                        // Links carry their own text down the tree, and a title
+                        // is most wanted precisely where a long one is clipped.
+                        let cellTitle = TableView.plainText(of: cellContent)
+                        var unwrappedElement: HTML.HTMLElement? = nil
+                        if let element = cellContent as? HTML.HTMLElement, (stringEquals(element.tag, "td") || stringEquals(element.tag, "th")) {
+                          if isFirstCell && isGroupChild {
+                            element.children.insert(
+                              span { "" }
+                                .class("table-group-indent").build(), at: 0)
+                          }
+                          unwrappedElement = element
+                        }
+
+                        if let element = unwrappedElement {
+                          element
+                        } else {
+                          if useRowGroups && isFirstCell {
+                            th {
+                              // Group header gets animated triangle toggle
+                              if row.isGroupHeader, let gid = row.groupID {
+                                AnimatedRightDownChevronView(
+                                  id: "table-group-\(gid)",
+                                  expanded: false,
+                                  width: px(20),
+                                  height: px(20)
+                                )
+                              }
+                              // Child rows get indentation
+                              if isGroupChild {
+                                span { "" }
+                                  .class("table-group-indent")
+                              }
+                              cellContent
+                            }
+                            .scope(.row)
+                            .data("align", column.align.value)
+                          } else {
+                            td {
+                              // Child rows get indentation on first cell
+                              if isGroupChild && isFirstCell {
+                                span { "" }
+                                  .class("table-group-indent")
+                              }
+                              div {
+                                if isFirstCell, let url = row.url {
+                                  LinkView(url: url) {
+                                    cellContent
+                                  }
+                                } else {
+                                  cellContent
+                                }
+                              }
+                              .class("table-cell-content")
+                            }
+                            .data("align", column.align.value)
+                            .title(cellTitle)
+                            .style {
+                              selector("&") {
+                                let styles = tdStyle()
+                                if !styles.isEmpty {
+                                  styles
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+
+                      // Row cells spacer for beautiful edge-to-edge zebra stripe backgrounds
+                      td { "" }
+                        .class("table-td-spacer")
+                    }
+
+                    // Apply standard attributes
+                    trNode = trNode
+                      .data("row-id", rowID)
+                      .data("group-id", row.groupID ?? "")
+                      .data("is-group-header", row.isGroupHeader ? "true" : "")
+                      .data("url", row.url ?? "")
+                      .class(
+                        buildRowClass(
+                          isSelected: isSelected,
+                          isGroupHeader: row.isGroupHeader,
+                          isGroupChild: isGroupChild,
+                          hasUrl: hasUrl,
+                          isLast: rowIndex == data.count - 1,
+                          isEven: rowIndex % 2 == 1,
+                          isInitiallyCollapsed: isGroupChild || stringContains(row.customClass, "table-row-collapsed"),
+                          customClass: row.customClass
+                        )
+                      )
+
+                    // Apply custom data attributes
+                    for pair in row.dataAttributes {
+                      trNode = trNode.data(pair.key, pair.value)
+                    }
+
+                    trNode
+                  }
+                }
+              }
+              .class("table-tbody")
             }
-            .class("table-tfoot")
+
+            // tfoot
+            if hasCustomTfoot {
+              tfoot {
+                tfootContent
+              }
+              .class("table-tfoot")
+            }
           }
+          .class(
+            showVerticalBorders ? "table-table table-table-borders-vertical" : "table-table"
+          )
         }
-        .class(
-          showVerticalBorders ? "table-table table-table-borders-vertical" : "table-table"
-        )
+        .class("table-scroll")
       }
       .class("table-inner-wrapper")
 
@@ -1006,7 +1013,7 @@ public struct TableView: HTMLContent {
       descendant(".table-inner-wrapper") {
         position(.relative)
         transform(translateZ(0))
-        overflow(.overlay)
+        overflow(.hidden)
         border(borderWidthBase, .solid, borderColorBase)
         borderRadius(borderRadiusBase)
         backgroundColor(backgroundColorBase)
@@ -1015,11 +1022,22 @@ public struct TableView: HTMLContent {
         flex(1)
         minHeight(0)
       }
+      descendant(".table-scroll") {
+        overflow(.auto)
+        // The same curve as the box it sits in, so the bar's ends are clipped
+        // by the corners instead of squaring them off.
+        borderRadius(borderRadiusBase)
+        width(perc(100))
+        display(.flex)
+        flex(1)
+        minWidth(0)
+        minHeight(0)
+      }
       selector("&.table-view-empty .table-inner-wrapper") {
         minHeight(px(160))
         flexShrink(0)
       }
-      selector("& .table-inner-wrapper::-webkit-scrollbar-track", "& .table-inner-wrapper::-webkit-scrollbar-track-piece", "& .table-inner-wrapper::-webkit-scrollbar-corner") {
+      selector("& .table-scroll::-webkit-scrollbar-track", "& .table-scroll::-webkit-scrollbar-track-piece", "& .table-scroll::-webkit-scrollbar-corner") {
         backgroundColor(.transparent).important()
       }
       descendant(".table-table") {
