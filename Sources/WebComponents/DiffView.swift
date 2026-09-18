@@ -67,27 +67,9 @@
           .class("diff-stats")
         }
 
-        // Legend
-        div {
-          div {
-            span {}
-              .class("diff-legend-swatch-deleted")
-
-            span { "Removed" }
-              .class("diff-legend-label")
-          }
-          .class("diff-legend-item")
-
-          div {
-            span {}
-              .class("diff-legend-swatch-inserted")
-
-            span { "Added" }
-              .class("diff-legend-label")
-          }
-          .class("diff-legend-item")
-        }
-        .class("diff-legend")
+        // No legend. Red struck text and green added text need no key: the
+        // colours say what they are, the counts above say how much, and a row
+        // explaining them was a row of furniture on every diff.
 
         // Diff content
         if stats.hasChanges {
