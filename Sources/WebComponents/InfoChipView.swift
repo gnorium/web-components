@@ -16,6 +16,9 @@ public struct InfoChipView: HTMLContent {
   let weight: Weight
   let size: Size
   let icon: String?
+  /// A status is not always an announcement: a chip that states a fact
+  /// rather than raising an alarm reads better at normal weight.
+  let labelFontWeight: CSS.FontWeight
   let iconContent: [DOM.Node]
   let content: [DOM.Node]
   let `class`: String
@@ -52,6 +55,7 @@ public struct InfoChipView: HTMLContent {
     weight: Weight = .subtle,
     size: Size = .medium,
     icon: String? = nil,
+    labelFontWeight: CSS.FontWeight = fontWeightSemiBold,
     class: String = "",
     @HTMLBuilder iconContent: () -> [DOM.Node] = { [] },
     @HTMLBuilder content: () -> [DOM.Node]
@@ -60,6 +64,7 @@ public struct InfoChipView: HTMLContent {
     self.weight = weight
     self.size = size
     self.icon = icon
+    self.labelFontWeight = labelFontWeight
     self.iconContent = iconContent()
     self.content = content()
     self.`class` = `class`
@@ -79,6 +84,7 @@ public struct InfoChipView: HTMLContent {
     self.weight = weight
     self.size = size
     self.icon = icon
+    self.labelFontWeight = fontWeightSemiBold
     self.iconContent = iconContent()
     self.content = content()
     self.`class` = `class`
@@ -98,6 +104,7 @@ public struct InfoChipView: HTMLContent {
     self.weight = weight
     self.size = size
     self.icon = icon
+    self.labelFontWeight = fontWeightSemiBold
     self.iconContent = iconContent()
     self.content = content()
     self.`class` = `class`
@@ -156,7 +163,7 @@ public struct InfoChipView: HTMLContent {
         padding(spacing4, spacing8)
         fontFamily(typographyFontSans)
         fontSize(fontSizeXSmall12)
-        fontWeight(fontWeightSemiBold)
+        fontWeight(labelFontWeight)
         lineHeight(lineHeightXSmall20)
         borderRadius(borderRadiusPill)
         whiteSpace(.nowrap)
