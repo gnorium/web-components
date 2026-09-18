@@ -46,18 +46,17 @@
         }
         // One palette for code across the site: the same tokens the session
         // trace colours a tool call's markup with.
-        selector(".source-view .hljs-tag", ".source-view .hljs-name") {
-          color(syntaxKeywords).important()
-        }
-        selector(".source-view .hljs-attr", ".source-view .hljs-attribute") {
-          color(syntaxAttributes).important()
-        }
-        selector(".source-view .hljs-string") { color(syntaxStrings).important() }
-        selector(".source-view .hljs-comment") { color(syntaxComments).important() }
-        selector(".source-view .hljs-meta") { color(syntaxOtherDeclarations).important() }
-        selector(".source-view .hljs-symbol", ".source-view .hljs-punctuation") {
-          color(syntaxPlainText).important()
-        }
+        // `descendant(a, b)` nests one selector inside the other, so each of
+        // these is its own rule: they are alternatives, not a path.
+        descendant(".hljs-tag") { color(syntaxPlainText).important() }
+        descendant(".hljs-name") { color(syntaxKeywords).important() }
+        descendant(".hljs-attr") { color(syntaxAttributes).important() }
+        descendant(".hljs-attribute") { color(syntaxAttributes).important() }
+        descendant(".hljs-string") { color(syntaxStrings).important() }
+        descendant(".hljs-comment") { color(syntaxComments).important() }
+        descendant(".hljs-meta") { color(syntaxOtherDeclarations).important() }
+        descendant(".hljs-symbol") { color(syntaxPlainText).important() }
+        descendant(".hljs-punctuation") { color(syntaxPlainText).important() }
       }
       .build()
     }
