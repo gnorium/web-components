@@ -171,9 +171,10 @@ public struct TextAreaView: HTMLContent {
         outline(.none).important()
         boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
       }
-      selector("&:not(.text-area-disabled):not(.text-area-read-only) .text-area-input:hover", "&:not(.text-area-disabled):not(.text-area-read-only) .text-area-input:focus") {
-        borderColor(borderColorBlue).important()
-      }
+      // No hover state: a field's border says where the field is, and focus
+      // says where the keyboard is. A third state between them only makes the
+      // field under the pointer look like the field being typed in. The search
+      // bar has none either.
       selector("& .text-area-start-icon", "& .text-area-end-icon") {
         position(.absolute)
         top(spacing12)

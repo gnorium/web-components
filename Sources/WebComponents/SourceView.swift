@@ -148,9 +148,13 @@
 
     public static func highlightVisible() {
       for block in document.querySelectorAll(".source-view-code") {
-        guard !stringEquals(block.dataset["highlighted"] ?? "", "true") else { continue }
+        // highlight.js writes data-highlighted="yes" itself, which overwrote the
+        // "true" this used to look for — so every block was highlighted again on
+        // every click, and highlight.js warned each time that it had been handed
+        // markup it had written. Any value at all means done.
+        guard stringIsEmpty(block.dataset["highlighted"] ?? "") else { continue }
         guard let rect = block.getBoundingClientRect(), rect.height > 0 else { continue }
-        block.setAttribute(data("highlighted"), "true")
+        block.setAttribute(data("highlighted"), "yes")
         HighlightJS.highlightElement(elementID: block.id)
       }
     }

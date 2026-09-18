@@ -134,7 +134,9 @@
           lineHeight(lineHeightSmall22)
           color(colorBase)
           backgroundColor(backgroundColorBase)
-          border(borderWidthBase, .solid, borderColorSubtle)
+          // Base, not subtle: the field reads as a field at rest, which is
+          // what a hover border was being used to say late.
+          border(borderWidthBase, .solid, borderColorBase)
           borderRadius(borderRadiusBase)
           transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
           boxSizing(.borderBox)
@@ -145,7 +147,6 @@
           color(colorPlaceholder).important()
           opacity(1).important()
         }
-        descendant(".search-input:hover") { borderColor(borderColorInteractive).important() }
         descendant(".search-input:focus") {
           outline(borderWidthBase, .solid, borderColorBlue).important()
           outlineOffset(px(-2)).important()
@@ -218,7 +219,6 @@
           justifyContent(.center)
           zIndex(1)
         }
-        descendant(".search-input-search-icon:hover") { color(colorBlue) }
         descendant(".search-input-button") {
           minHeight(minSizeInteractivePointer)
           padding(spacing12, spacing16)

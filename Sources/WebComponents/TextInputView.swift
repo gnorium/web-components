@@ -216,7 +216,10 @@ public struct TextInputView: HTMLContent {
         outline(.none).important()
         boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
       }
-      selector("&:not(.text-input-disabled):not(.text-input-read-only) .text-input-input:hover", "&:not(.text-input-disabled):not(.text-input-read-only) .text-input-input:focus") {
+      // Focus only, like the search bar: a hover border on a field reads as a
+      // half-finished focus ring, and tells the reader nothing the cursor has
+      // not already told them.
+      selector("&:not(.text-input-disabled):not(.text-input-read-only) .text-input-input:focus") {
         borderColor(borderColorBlue).important()
       }
       selector("& .text-input-start-icon", "& .text-input-end-icon") {

@@ -337,6 +337,11 @@
         }
         selector("&[data-state='opening']", "&[data-state='open']", "&[data-state='closing']") {
           display(.flex)
+          // The panel is as tall as what it holds; the rest of the overlay is
+          // backdrop. Flex stretches its children by default, so the panel grew
+          // to the full height of the viewport and painted white over the blur
+          // — the search menu appeared to have no backdrop at all.
+          alignItems(.flexStart)
         }
         selector("&[data-state='opening']", "&[data-state='open']") { pointerEvents(.auto) }
         descendant("[data-search-menu-backdrop='true']") { pointerEvents(.none) }

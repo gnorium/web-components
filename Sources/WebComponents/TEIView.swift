@@ -28,13 +28,10 @@
 
     public var pages: [TEIPage] { TEIRenderer.pages(in: teiXml) }
 
-    /// The image service a facsimile URL is a request against: everything
-    /// before the IIIF Image API parameters. `…/iiif/2/<id>/full/1300,/0/default.jpg`
-    /// and `…/iiif/2/<id>/full/max/0/default.jpg` are two requests for one
-    /// image, and the manifest names the image.
+    /// The image service a rendition reads, which is what pairs it with a
+    /// canvas. `TEIRenderer` owns the rule; the view only passes it on.
     public static func serviceID(ofFacsimile url: String) -> String {
-      guard let cut = url.range(of: "/full/") else { return url }
-      return String(url[url.startIndex..<cut.lowerBound])
+      TEIRenderer.serviceID(ofFacsimile: url)
     }
 
     public func build() -> DOM.Node {
@@ -61,6 +58,9 @@
                   span { line.text }.class("tei-line tei-line-stage")
                 case .mark:
                   span { line.text }.class("tei-line tei-line-mark")
+                case .gap(let reason):
+                  span { "[\(reason.isEmpty ? "gap" : reason)]" }
+                    .class("tei-line tei-line-gap")
                 case .forme(let role):
                   span { line.text }
                     .class("tei-line tei-line-forme tei-line-forme-\(role.rawValue)")
@@ -154,6 +154,13 @@
         descendant(".tei-line-forme-signature") {
           textAlign(.start)
           marginBlockStart(spacing8)
+        }
+        // Not a word on the page: a statement that there is none.
+        descendant(".tei-line-gap") {
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeXSmall12)
+          fontStyle(.italic)
+          color(colorSubtle)
         }
         // A side of the leaf, inside an image that carries two of them.
         descendant(".tei-line-mark") {
