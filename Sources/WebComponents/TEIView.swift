@@ -177,6 +177,7 @@
         descendant(".tei-page-raw") {
           display(.none)
           margin(0)
+          minWidth(0)
         }
         // The work's own apparatus: a running head is on the page and not in
         // the play, so it is shown as what it is rather than as a line of it.

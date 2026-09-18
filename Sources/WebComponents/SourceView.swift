@@ -65,7 +65,10 @@
           color(syntaxPlainText)
           backgroundColor(backgroundColorBase)
           whiteSpace(.pre)
-          overflowX(.auto)
+          // The block does not scroll: its container does. A scroller here puts
+          // the bar directly under the code, floating in the middle of a tall
+          // pane; the pane's own bar sits at the bottom, where a reader looks.
+          overflowX(.visible)
           margin(0)
           padding(0)
         }
