@@ -20,25 +20,64 @@
       self.language = language
     }
 
+    /// "1\n2\n3…" — as many as the source has lines.
+    static func lineNumbers(of source: String) -> String {
+      var out = ""
+      var line = 1
+      let count = source.split(separator: "\n", omittingEmptySubsequences: false).count
+      while line <= count {
+        out += line == 1 ? "1" : "\n\(line)"
+        line += 1
+      }
+      return out
+    }
+
     public func build() -> DOM.Node {
       pre {
+        // The numbers are a column of their own rather than a counter on each
+        // line: a highlighter needs the code to be one run of text, and a
+        // wrapped line would put the gutter out of step with it anyway. So the
+        // lines do not wrap — they scroll, as they do in an editor — and the
+        // gutter stays put while they do.
+        span { Self.lineNumbers(of: source) }
+          .class("source-view-gutter")
+          .ariaHidden(true)
+
         code { source }
           .class("source-view-code language-\(language)")
       }
       .class("source-view")
       .style {
         selector("&") {
+          display(.flex)
+          flexDirection(.row)
+          alignItems(.flexStart)
+          gap(spacing12)
           fontFamily(typographyFontMono)
           fontSize(fontSizeXSmall12)
           lineHeight(lineHeightXSmall20)
           color(syntaxPlainText)
           backgroundColor(backgroundColorBase)
-          whiteSpace(.preWrap)
-          overflowWrap(.breakWord)
+          whiteSpace(.pre)
+          overflowX(.auto)
           margin(0)
           padding(0)
         }
+        descendant(".source-view-gutter") {
+          position(.sticky)
+          insetInlineStart(px(0))
+          flexGrow(0)
+          flexShrink(0)
+          textAlign(.end)
+          color(colorSubtle)
+          backgroundColor(backgroundColorBase)
+          userSelect(.none)
+          paddingInlineEnd(spacing8)
+          borderInlineEnd(borderWidthBase, .solid, borderColorSubtle)
+        }
         descendant(".source-view-code") {
+          flexGrow(0)
+          flexShrink(0)
           fontFamily(typographyFontMono)
           backgroundColor(.transparent)
           color(.inherit)
