@@ -61,8 +61,9 @@
                   span { line.text }.class("tei-line tei-line-stage")
                 case .mark:
                   span { line.text }.class("tei-line tei-line-mark")
-                case .forme:
-                  span { line.text }.class("tei-line tei-line-forme")
+                case .forme(let role):
+                  span { line.text }
+                    .class("tei-line tei-line-forme tei-line-forme-\(role.rawValue)")
                 case .text:
                   span { line.text }.class("tei-line")
                 }
@@ -72,7 +73,7 @@
             .data("reading-layer", "text")
 
             div {
-              SourceView(XMLFormatter.prettified(page.markup))
+              SourceView(XMLFormatter.prettified(page.markup), showLineNumbers: false)
             }
             .class("tei-page-raw")
             .data("reading-layer", "source")
@@ -129,13 +130,30 @@
           fontStyle(.italic)
           color(colorSubtle)
         }
-        // The work's own apparatus: a running head is on the page and not in
-        // the play, so it is shown as what it is rather than as a line of it.
+        // The work's own apparatus, set where the compositor set it: the head
+        // over the text, the catchword at the foot by the outer edge, the
+        // signature at the foot by the inner one. In the flow they read as
+        // lines of the play, which is what they are not.
         descendant(".tei-line-forme") {
           fontFamily(typographyFontSans)
           fontSize(fontSizeXSmall12)
           letterSpacing(px(0.3))
           color(colorSubtle)
+        }
+        descendant(".tei-line-forme-header") {
+          textAlign(.center)
+          marginBlockEnd(spacing8)
+        }
+        descendant(".tei-line-forme-pageNumber") {
+          textAlign(.center)
+        }
+        descendant(".tei-line-forme-catchword") {
+          textAlign(.end)
+          marginBlockStart(spacing8)
+        }
+        descendant(".tei-line-forme-signature") {
+          textAlign(.start)
+          marginBlockStart(spacing8)
         }
         // A side of the leaf, inside an image that carries two of them.
         descendant(".tei-line-mark") {

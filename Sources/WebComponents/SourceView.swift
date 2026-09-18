@@ -14,10 +14,14 @@
   public struct SourceView: HTMLContent {
     let source: String
     let language: String
+    /// Whether the block is numbered. A file is; a fragment lifted out of one
+    /// is not, because its line 1 is not the document's.
+    let showLineNumbers: Bool
 
-    public init(_ source: String, language: String = "xml") {
+    public init(_ source: String, language: String = "xml", showLineNumbers: Bool = true) {
       self.source = source
       self.language = language
+      self.showLineNumbers = showLineNumbers
     }
 
     /// "1\n2\n3…" — as many as the source has lines.
@@ -39,9 +43,11 @@
         // wrapped line would put the gutter out of step with it anyway. So the
         // lines do not wrap — they scroll, as they do in an editor — and the
         // gutter stays put while they do.
-        span { Self.lineNumbers(of: source) }
-          .class("source-view-gutter")
-          .ariaHidden(true)
+        if showLineNumbers {
+          span { Self.lineNumbers(of: source) }
+            .class("source-view-gutter")
+            .ariaHidden(true)
+        }
 
         code { source }
           .class("source-view-code language-\(language)")
