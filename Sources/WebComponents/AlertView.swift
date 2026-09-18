@@ -477,6 +477,9 @@
       }
 
       // Create alert element
+      // The page could not have linked these: an alert is raised because
+      // something happened, long after the render.
+      StyleSheetLoader.ensure("alert-view")
       let alertEl = document.createElement(.div)
       let alertColorClass: String
       switch type {
