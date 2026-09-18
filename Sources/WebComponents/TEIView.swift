@@ -71,9 +71,11 @@
             .class("tei-page-text")
             .data("reading-layer", "text")
 
-            pre(XMLFormatter.prettified(page.markup))
-              .class("tei-page-raw")
-              .data("reading-layer", "source")
+            div {
+              SourceView(XMLFormatter.prettified(page.markup))
+            }
+            .class("tei-page-raw")
+            .data("reading-layer", "source")
           }
           .class("tei-reading")
           .id("tei-reading-\(index)")
@@ -144,17 +146,60 @@
         }
         // The markup takes the reading's place rather than adding a block to
         // scroll past: the viewer's Raw switch swaps the two layers.
+        // The markup takes the reading's place rather than adding a block to
+        // scroll past: the viewer's Raw switch swaps the two layers, and the
+        // block itself is a SourceView like any other.
         descendant(".tei-page-raw") {
           display(.none)
-          padding(spacing12)
-          borderRadius(borderRadiusBase)
-          backgroundColor(backgroundColorNeutralSubtle)
+          margin(0)
+        }
+        // The work's own apparatus: a running head is on the page and not in
+        // the play, so it is shown as what it is rather than as a line of it.
+        descendant(".tei-line-forme") {
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeXSmall12)
+          letterSpacing(px(0.3))
+          color(colorSubtle)
+        }
+        // A side of the leaf, inside an image that carries two of them.
+        descendant(".tei-line-mark") {
           fontFamily(typographyFontMono)
           fontSize(fontSizeXSmall12)
           color(colorSubtle)
+          marginBlockStart(spacing8)
+        }
+        // The markup takes the reading's place rather than adding a block to
+        // scroll past: the viewer's Raw switch swaps the two layers.
+        descendant(".tei-page-raw") {
+          display(.none)
+          padding(0)
+          backgroundColor(backgroundColorBase)
+          fontFamily(typographyFontMono)
+          fontSize(fontSizeXSmall12)
+          color(syntaxPlainText)
           whiteSpace(.preWrap)
           overflowWrap(.breakWord)
           margin(0)
+        }
+        descendant(".tei-page-source") {
+          fontFamily(typographyFontMono)
+          backgroundColor(.transparent)
+          padding(0)
+        }
+        // The same token colours the session trace gives a tool call's markup:
+        // one palette for code across the site, from design tokens rather than
+        // from a highlight.js theme.
+        selector(".tei-page-raw .hljs-tag", ".tei-page-raw .hljs-name") {
+          color(syntaxKeywords).important()
+        }
+        selector(".tei-page-raw .hljs-attr", ".tei-page-raw .hljs-attribute") {
+          color(syntaxAttributes).important()
+        }
+        selector(".tei-page-raw .hljs-string") { color(syntaxStrings).important() }
+        selector(".tei-page-raw .hljs-comment") { color(syntaxComments).important() }
+        selector(".tei-page-raw .hljs-meta") { color(syntaxOtherDeclarations).important() }
+        selector(".tei-page-raw .hljs-symbol", ".tei-page-raw .hljs-punctuation") {
+          color(syntaxPlainText).important()
         }
         selector(".tei-view-empty") {
           fontFamily(typographyFontSans)
