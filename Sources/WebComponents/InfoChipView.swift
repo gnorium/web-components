@@ -154,6 +154,7 @@ public struct InfoChipView: HTMLContent {
         ? "info-chip-view info-chip-\(chipColor.rawValue) info-chip-\(weight.rawValue)\(sizeClass)"
         : "info-chip-view info-chip-\(chipColor.rawValue) info-chip-\(weight.rawValue)\(sizeClass) \(`class`)"
     )
+    .data("label-font-weight", labelFontWeight.value)
     .style {
       selector("&") {
         display(.inlineFlex)
@@ -173,6 +174,16 @@ public struct InfoChipView: HTMLContent {
         textOverflow(.ellipsis)
         overflow(.hidden)
         boxSizing(.borderBox)
+      }
+      // The component stylesheet is shared by every chip instance.  Put the
+      // requested label weight on the element, then select it here; baking the
+      // first instance's value into `.info-chip-view` made every later chip
+      // inherit whichever weight happened to render first.
+      selector("&[data-label-font-weight='\(fontWeightSemiBold.value)']") {
+        fontWeight(fontWeightSemiBold)
+      }
+      selector("&[data-label-font-weight='\(fontWeightBold.value)']") {
+        fontWeight(fontWeightBold)
       }
       selector("&.info-chip-large") {
         height(size44)
