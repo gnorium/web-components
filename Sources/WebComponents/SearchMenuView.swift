@@ -415,7 +415,7 @@
         }
         descendant(".search-menu-biblio-result .search-menu-result-language") {
           fontFamily(typographyFontSans)
-          fontSize(fontSizeSmall14)
+          fontSize(fontSizeXSmall12)
           fontWeight(fontWeightNormal)
           lineHeight(lineHeightSmall22)
           color(colorSubtle).important()
@@ -895,7 +895,7 @@ gap(spacing4) }
           // it robust under narrow widths and accessibility text scaling.
           let language = document.createElement(.span)
           language.className = "search-menu-result-language"
-          language.textContent = "\(result.subtext):"
+          language.textContent = result.subtext
           textContent.appendChild(language)
 
           let titleRow = document.createElement(.span)
