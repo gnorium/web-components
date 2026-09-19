@@ -382,10 +382,7 @@ public struct ButtonView: HTMLContent {
             fontSize(fontSizeSmall14)
           }
           selector("&[data-size='medium']") { minHeight(ButtonSize.medium.minSize) }
-          selector("&[data-size='large']") {
-            minHeight(ButtonSize.large.minSize)
-            fontSize(fontSizeLarge18)
-          }
+          selector("&[data-size='large']") { minHeight(ButtonSize.large.minSize) }
           selector("&[data-full-width='false'][data-size='mini']") { minWidth(ButtonSize.mini.minSize) }
           selector("&[data-full-width='false'][data-size='small']") { minWidth(ButtonSize.small.minSize) }
           selector("&[data-full-width='false'][data-size='medium']") { minWidth(ButtonSize.medium.minSize) }
@@ -1221,10 +1218,7 @@ public struct ButtonView: HTMLContent {
             fontSize(fontSizeSmall14)
           }
           selector("&[data-size='medium']") { minHeight(ButtonSize.medium.minSize) }
-          selector("&[data-size='large']") {
-            minHeight(ButtonSize.large.minSize)
-            fontSize(fontSizeLarge18)
-          }
+          selector("&[data-size='large']") { minHeight(ButtonSize.large.minSize) }
           selector("&[data-full-width='false'][data-size='mini']") { minWidth(ButtonSize.mini.minSize) }
           selector("&[data-full-width='false'][data-size='small']") { minWidth(ButtonSize.small.minSize) }
           selector("&[data-full-width='false'][data-size='medium']") { minWidth(ButtonSize.medium.minSize) }
