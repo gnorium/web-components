@@ -333,6 +333,16 @@ public struct TextInputView: HTMLContent {
         // Update clear button visibility based on initial value
         updateClearButtonVisibility()
       }
+
+      // A focused number input steps its value on a wheel event in Chromium,
+      // so a two-finger scroll past a year field rewrites the year — 1957
+      // became 1991 on a testament form without anyone typing. Drop focus on
+      // wheel: the page scrolls, the value stands.
+      if let input, stringEquals(input.getAttribute("type") ?? "", "number") {
+        _ = input.addEventListener(.wheel) { _ in
+          input.blur()
+        }
+      }
     }
 
     private func bindClearableEvents() {
