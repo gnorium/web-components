@@ -138,6 +138,7 @@ public struct TextAreaView: HTMLContent {
       }
       selector("&.text-area-disabled .text-area-input") {
         color(colorDisabled)
+        customProperty("-webkit-text-fill-color", colorDisabled)
         backgroundColor(backgroundColorDisabled)
         borderColor(borderColorDisabled)
         cursor(cursorNotAllowed)
@@ -162,9 +163,12 @@ public struct TextAreaView: HTMLContent {
       selector("&.text-area-has-end-icon .text-area-input") {
         paddingInlineEnd(calc(px(15) + sizeIconMedium + spacing8)).important()
       }
+      // The same rule as TextInputView's: colour only. An opacity on top of
+      // the colour made a textarea's placeholder read as a different grey
+      // from the input beside it, and WebKit ignored the colour altogether.
       selector("& .text-area-input::placeholder") {
         color(colorPlaceholder).important()
-        opacity(opacityIconPlaceholder).important()
+        customProperty("-webkit-text-fill-color", colorPlaceholder).important()
       }
       selector("&:not(.text-area-disabled):not(.text-area-read-only) .text-area-input:focus") {
         borderColor(borderColorBlueFocus).important()

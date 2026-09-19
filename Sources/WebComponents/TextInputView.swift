@@ -196,8 +196,12 @@ public struct TextInputView: HTMLContent {
         cursor(cursorText)
         boxSizing(.borderBox)
       }
+      // WebKit paints a disabled control's text with -webkit-text-fill-color,
+      // which its UA sheet sets for :disabled — so `color` alone left Safari
+      // painting system grey over ours, for the value and the placeholder both.
       selector("&.text-input-disabled .text-input-input") {
         color(colorDisabled)
+        customProperty("-webkit-text-fill-color", colorDisabled)
         backgroundColor(backgroundColorDisabled)
         borderColor(borderColorDisabled)
         cursor(cursorNotAllowed)
@@ -212,7 +216,10 @@ public struct TextInputView: HTMLContent {
       selector("&.text-input-has-end-icon .text-input-input", "&.text-input-clearable .text-input-input") {
         paddingInlineEnd(calc(px(15) + sizeIconMedium + spacing8)).important()
       }
-      selector("& .text-input-input::placeholder") { color(colorPlaceholder).important() }
+      selector("& .text-input-input::placeholder") {
+        color(colorPlaceholder).important()
+        customProperty("-webkit-text-fill-color", colorPlaceholder).important()
+      }
       selector("&:not(.text-input-disabled):not(.text-input-read-only) .text-input-input:focus") {
         borderColor(borderColorBlueFocus).important()
         outline(.none).important()
