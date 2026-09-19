@@ -207,8 +207,12 @@
           boxSizing(.borderBox)
         }
         selector("&.home") {
-          width(px(512))
-          maxWidth(perc(100))
+          // Fill the available column first, then cap it on wide screens.
+          // `width: 512px; max-width: 100%` still overflows a shrinking flex
+          // item at enlarged system text sizes.
+          width(perc(100))
+          minWidth(0)
+          maxWidth(px(512))
           borderRadius(0)
         }
         // Sidebar: base radius, same 14px type + spacing10 padding as main

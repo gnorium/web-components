@@ -180,7 +180,7 @@
           display(.none)
           flexDirection(.column)
           gap(spacing8)
-          maxHeight(calc(vh(100) - px(213)))
+          maxHeight(calc(dvh(100) - px(213)))
           overflowY(.auto)
         }
         descendant(".typeahead-search-menu[data-open='true']") {

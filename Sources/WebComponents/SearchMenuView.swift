@@ -245,7 +245,7 @@
           top(px(96))
           insetInlineStart(0)
           width(perc(100))
-          height(calc(vh(100) - px(96)))
+          height(calc(dvh(100) - px(96)))
           overflow(.hidden)
           zIndex(zIndexOverlay)
           pointerEvents(.none)
@@ -266,10 +266,13 @@
         descendant(".search-menu-container") {
           position(.relative)
           width(perc(100))
+          maxHeight(perc(100))
           backgroundColor(backgroundColorBase)
           paddingBlockStart(spacing16)
           paddingBlockEnd(spacing16)
           borderBlockEnd(borderWidthBase, .solid, borderColorBase)
+          boxSizing(.borderBox)
+          overflowY(.auto)
           opacity(0)
           transform(translateY(perc(-100)))
           zIndex(1)
@@ -344,14 +347,23 @@
           alignItems(.flexStart)
         }
         selector("&[data-state='opening']", "&[data-state='open']") { pointerEvents(.auto) }
-        descendant("[data-search-menu-backdrop='true']") { pointerEvents(.none) }
+        // Both visible layers must receive events: the backdrop closes the menu
+        // and the panel accepts focus and typing. The base state stays inert.
+        selector(
+          "&[data-state='opening'] [data-search-menu-backdrop='true']",
+          "&[data-state='open'] [data-search-menu-backdrop='true']"
+        ) { pointerEvents(.auto) }
         descendant("[data-search-menu-container='true']") { pointerEvents(.none) }
+        selector(
+          "&[data-state='opening'] [data-search-menu-container='true']",
+          "&[data-state='open'] [data-search-menu-container='true']"
+        ) { pointerEvents(.auto) }
         descendant("[data-search-menu-container='true']") { transform(translateY(perc(-100))) }
         descendant(".search-menu-footer") { display(.none) }
         descendant(".search-menu-results") {
           flexDirection(.column)
           gap(spacing8)
-          maxHeight(calc(vh(100) - px(256)))
+          maxHeight(calc(dvh(100) - px(256)))
           overflowY(.auto)
         }
         descendant(".search-menu-results[data-open='true']") { display(.flex) }
@@ -423,6 +435,10 @@ gap(spacing4) }
         selector("&[data-state='open'] [data-search-menu-container='true']") {
           opacity(1)
           transform(translateY(px(0)))
+          // The closed panel must not intercept the backdrop, but the open
+          // panel must receive input. Without this, clicks pass through the
+          // search field to the backdrop and immediately close the menu.
+          pointerEvents(.auto)
         }
         selector("&[data-state='open'] .search-menu-footer") { display(.flex) }
       }

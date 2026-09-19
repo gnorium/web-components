@@ -15,7 +15,7 @@
     let `class`: String
     let sidebarWidth: CSS.Length
     let collapsed: Bool
-    let content: DOM.Node
+    let sidebarBody: DOM.Node
 
     public init(
       class: String,
@@ -27,14 +27,14 @@
       self.sidebarWidth = width
       self.collapsed = collapsed
       let nodes = content()
-      self.content = nodes.count == 1 ? nodes[0] : DOM.DocumentFragment(nodes)
+      self.sidebarBody = nodes.count == 1 ? nodes[0] : DOM.DocumentFragment(nodes)
     }
 
     public func build() -> DOM.Node {
       let baseClass = `class`.isEmpty ? "sidebar-view" : "sidebar-view \(`class`)"
       return aside {
         div {
-          content
+          sidebarBody
         }
         .class("sidebar-content")
       }
@@ -54,8 +54,11 @@
             alignSelf(.flexStart)
             width(sidebarWidth)
             minWidth(sidebarWidth)
-            height(vh(100))
-            maxHeight(vh(100))
+            // Dynamic viewport units follow the usable browser viewport when
+            // macOS accessibility text and browser chrome change its height.
+            // The content remains the one scrollport for an enlarged sidebar.
+            height(dvh(100))
+            maxHeight(dvh(100))
             flexShrink(0)
             zIndex(zIndexSticky)
             backgroundColor(backgroundColorBase)
@@ -79,10 +82,21 @@
             overflowX(.hidden)
             overflowY(.auto)
             paddingBlockStart(spacing16)
-            paddingBlockEnd(spacing16)
+            // WebKit can exclude end padding from an overflowing flex
+            // scrollport's scrollable area. A real flex item below the final
+            // row keeps that breathing room reachable at large text sizes.
+            paddingBlockEnd(0)
             paddingInlineStart(spacing0)
             paddingInlineEnd(spacing16)
             boxSizing(.borderBox)
+
+            pseudoElement(.after) {
+              content("\"\"")
+              display(.block)
+              height(spacing16)
+              minHeight(spacing16)
+              flexShrink(0)
+            }
           }
         }
 

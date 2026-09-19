@@ -55,7 +55,7 @@
           top(px(navbarHeight))
           insetInlineStart(0)
           width(perc(100))
-          height(calc(vh(100) - px(navbarHeight)))
+          height(calc(dvh(100) - px(navbarHeight)))
           zIndex(zIndexOverlay)
           pointerEvents(.none)
         }
@@ -72,10 +72,13 @@
         descendant(".ellipsis-menu-container") {
           position(.relative)
           width(perc(100))
+          maxHeight(perc(100))
           backgroundColor(backgroundColorBase)
           paddingBlockStart(spacing16)
           paddingBlockEnd(spacing16)
           borderBlockEnd(borderWidthBase, .solid, borderColorBase)
+          boxSizing(.borderBox)
+          overflowY(.auto)
           opacity(0)
           transform(translateY(perc(-100)))
           transition(
