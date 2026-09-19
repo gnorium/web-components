@@ -44,7 +44,7 @@ public struct InfoChipView: HTMLContent {
 
   /// Physical size of the chip
   public enum Size: String, Sendable {
-    /// Compact chip (default)
+    /// Standard status chip: 40px control height.
     case medium
     /// Header / primary status — 44px tall, ``fontSizeXLarge20``
     case large
@@ -158,11 +158,14 @@ public struct InfoChipView: HTMLContent {
       selector("&") {
         display(.inlineFlex)
         alignItems(.center)
-        gap(spacing4)
-        maxHeight(maxHeightChip)
-        padding(spacing4, spacing8)
+        justifyContent(.center)
+        gap(spacing8)
+        height(size40)
+        maxHeight(size40)
+        minHeight(size40)
+        padding(0, spacing8)
         fontFamily(typographyFontSans)
-        fontSize(fontSizeXSmall12)
+        fontSize(fontSizeSmall14)
         fontWeight(labelFontWeight)
         lineHeight(lineHeightXSmall20)
         borderRadius(borderRadiusPill)
