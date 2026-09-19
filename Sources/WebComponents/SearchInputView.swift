@@ -125,8 +125,8 @@
         selector("&:not(.search-input-has-button) .search-input-wrapper") { width(perc(100)) }
         descendant(".search-input") {
           width(perc(100))
-          minHeight(minSizeInteractivePointer)
-          paddingBlock(spacing12)
+          height(minSizeInteractiveTouch)
+          paddingBlock(0)
           paddingInlineStart(px(16))
           paddingInlineEnd(px(132))
           fontFamily(typographyFontSans)
@@ -146,6 +146,10 @@
         selector("& .search-input::placeholder") {
           color(colorPlaceholder).important()
           opacity(1).important()
+        }
+        selector("& .search-input:disabled::placeholder") {
+          color(colorDisabled).important()
+          customProperty("-webkit-text-fill-color", colorDisabled).important()
         }
         descendant(".search-input:focus") {
           outline(borderWidthBase, .solid, borderColorBlue).important()
@@ -220,8 +224,9 @@
           zIndex(1)
         }
         descendant(".search-input-button") {
-          minHeight(minSizeInteractivePointer)
-          padding(spacing12, spacing16)
+          height(minSizeInteractiveTouch)
+          boxSizing(.borderBox)
+          padding(0, spacing16)
           fontFamily(typographyFontSans)
           fontSize(fontSizeMedium16)
           fontWeight(fontWeightBold)

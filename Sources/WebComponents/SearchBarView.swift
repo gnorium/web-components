@@ -95,7 +95,7 @@
               padding(px(0), calc(spacing10 + px(32)), px(0), spacing10)
               width(perc(100))
               maxWidth(perc(100))
-              height(px(44))
+              height(minSizeInteractiveTouch)
               fontWeight(fontWeightNormal)
               transition(.all, s(0.2), .easeInOut)
               fontSize(fontSizeSmall14)
@@ -202,7 +202,7 @@
           position(.relative)
           width(perc(100))
           maxWidth(perc(100))
-          height(px(44))
+          height(minSizeInteractiveTouch)
           flex(1)
           boxSizing(.borderBox)
         }
@@ -214,7 +214,7 @@
         // Sidebar: base radius, same 14px type + spacing10 padding as main
         selector("&.in-sidebar .search-bar-input") {
           borderRadius(borderRadiusBase)
-          height(px(44))
+          height(minSizeInteractiveTouch)
           fontSize(fontSizeSmall14)
           padding(px(0), calc(spacing10 + px(28)), px(0), spacing10)
         }

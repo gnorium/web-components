@@ -125,6 +125,8 @@
         guard let iso = element.getAttribute("datetime") else { continue }
         guard let localString = formatLocalDate(iso) else { continue }
         element.textContent = localString
+        element.setAttribute("title", localString)
+        element.closest("td")?.setAttribute("title", localString)
       }
       // A stamp inside a sentence: the two halves around it are given as
       // attributes, so the sentence is rebuilt rather than parsed. When the

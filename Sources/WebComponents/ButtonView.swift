@@ -60,32 +60,19 @@ public struct ButtonView: HTMLContent {
     case mini
     /// Small: Use only when space is tight (inline with text, compact layouts). Avoid on touchscreens.
     case small
-    /// Medium: the standard button, at the height of a text field or a
-    /// dropdown (which is 32 of minimum size plus their padding), so a form's
-    /// buttons sit level with its fields.
+    /// Medium: the standard button, sharing its minimum height with form fields.
     case medium
-    /// Large: the touch-target size. Nothing in a form needs it — a form's
-    /// buttons match its fields, which is medium — but it is the fourth rung
-    /// of the ladder below, kept for touch-first chrome.
+    /// Larger text at the standard control height.
     case large
 
-    /// Public so chrome that sits beside a button — the session legend's
-    /// byline next to its Raw toggle — can align to the same height.
-    /// One ladder, each rung a font-size token paired with the height that
-    /// is that font's line-height plus a padding step — and every height a
-    /// size the system already names:
-    ///
-    ///   mini    12 / 24      chrome strips
-    ///   small   14 / 32      min-size-interactive-pointer
-    ///   medium  16 / 40      the height a field renders at
-    ///   large   18 / 44      min-size-interactive-touch
-    ///
-    /// Small used to share mini's 24, which was the one rung out of step.
+    /// Public so adjacent controls can share the same minimum size.
+    /// Medium and large use the standard interactive height; large differs
+    /// through its 18px type, while medium uses 16px.
     public var minSize: CSS.Length {
       switch self {
       case .mini: return px(24)
       case .small: return minSizeInteractivePointer
-      case .medium: return px(40)
+      case .medium: return minSizeInteractiveTouch
       case .large: return minSizeInteractiveTouch
       }
     }

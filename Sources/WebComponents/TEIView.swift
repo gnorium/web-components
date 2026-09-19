@@ -34,8 +34,95 @@
       TEIRenderer.serviceID(ofFacsimile: url)
     }
 
+    private func inlineContent(_ line: TEILine) -> DOM.Node {
+      span {
+        for run in line.runs {
+          switch run.kind {
+          case .text:
+            span { run.text }.class("tei-run").data("rend", run.rend)
+          case .tex(let display):
+            span { TeXView(run.text, displayMode: display) }
+              .class("tei-run").data("rend", run.rend)
+          }
+        }
+      }.build()
+    }
+
+    private func readingLine(_ line: TEILine, facsimileURL: String, label: String) -> DOM.Node {
+      switch line.kind {
+      case .heading:
+        return h3 { inlineContent(line) }.class("tei-line tei-line-heading").data("rend", line.rend)
+          .build()
+      case .speaker:
+        return span { inlineContent(line) }.class("tei-line tei-line-speaker").data(
+          "rend", line.rend
+        ).build()
+      case .stage:
+        return span { inlineContent(line) }.class("tei-line tei-line-stage").data("rend", line.rend)
+          .build()
+      case .mark:
+        return span { line.text }.class("tei-line tei-line-mark").build()
+      case .gap(let reason):
+        return span { "[\(reason.isEmpty ? "gap" : reason)]" }.class("tei-line tei-line-gap")
+          .build()
+      case .documentBoundary:
+        return hr().class("tei-document-boundary").build()
+      case .forme(let role):
+        return span { inlineContent(line) }.class(
+          "tei-line tei-line-forme tei-line-forme-\(role.rawValue)"
+        ).build()
+      case .figure(let type, let bbox):
+        guard let region = TEIRenderer.regionURL(ofFacsimile: facsimileURL, bbox: bbox) else {
+          return DOM.Node.fragment([])
+        }
+        return figure {
+          img().src(region).alt(line.text.isEmpty ? "Figure on \(label)" : line.text)
+            .loading(.lazy).class("tei-figure-image")
+          if !line.text.isEmpty { figcaption { line.text }.class("tei-figure-caption") }
+        }.class("tei-line tei-figure").data("figure-type", type.isEmpty ? "figure" : type).build()
+      case .table(let source):
+        return div {
+          table {
+            if !source.caption.isEmpty {
+              caption {
+                for line in source.caption {
+                  readingLine(line, facsimileURL: facsimileURL, label: label)
+                }
+              }
+            }
+            tbody {
+              for row in source.rows {
+                tr {
+                  for cell in row.cells {
+                    if cell.isLabel {
+                      th {
+                        for line in cell.lines {
+                          readingLine(line, facsimileURL: facsimileURL, label: label)
+                        }
+                      }.rowspan(cell.rows).colspan(cell.columns)
+                    } else {
+                      td {
+                        for line in cell.lines {
+                          readingLine(line, facsimileURL: facsimileURL, label: label)
+                        }
+                      }.rowspan(cell.rows).colspan(cell.columns)
+                    }
+                  }
+                }
+              }
+            }
+          }.class("tei-table")
+        }.class("tei-table-scroll").build()
+      case .text:
+        return span { inlineContent(line) }.class("tei-line").data("rend", line.rend).build()
+      }
+    }
+
     public func build() -> DOM.Node {
       let pages = self.pages
+      // Record pages register an empty reader before fetching its contents.
+      // Include formula styles then, even when no formula is present yet.
+      _ = TeXView("").build()
 
       return div {
         if pages.isEmpty {
@@ -46,64 +133,7 @@
           div {
             div {
               for line in page.lines {
-                switch line.kind {
-                case .heading:
-                  h3 { line.text }
-                    .class("tei-line tei-line-heading")
-                    .data("rend", line.rend)
-                case .speaker:
-                  span { line.text }.class("tei-line tei-line-speaker")
-                case .stage:
-                  span { line.text }.class("tei-line tei-line-stage")
-                case .mark:
-                  span { line.text }.class("tei-line tei-line-mark")
-                case .gap(let reason):
-                  span { "[\(reason.isEmpty ? "gap" : reason)]" }
-                    .class("tei-line tei-line-gap")
-                case .forme(let role):
-                  span { line.text }
-                    .class("tei-line tei-line-forme tei-line-forme-\(role.rawValue)")
-                case .figure(let type, let bbox):
-                  // Drawn, not written: the region is cut from the facsimile by
-                  // its bbox, so the reader sees the thing itself with its
-                  // description under it as a caption.
-                  //
-                  // No bbox, no figure. A caption alone describes a picture
-                  // that is not there — and the surface it describes is already
-                  // on screen in the facsimile pane, so "gold-tooled dark
-                  // leather binding" beside a photograph of one says nothing.
-                  // The markup still carries it; the reading does not.
-                  if let region = TEIRenderer.regionURL(
-                    ofFacsimile: page.facsimileURL, bbox: bbox)
-                  {
-                    figure {
-                      img()
-                        .src(region)
-                        .alt(line.text.isEmpty ? "Figure on \(page.label)" : line.text)
-                        .loading(.lazy)
-                        .class("tei-figure-image")
-                      if !line.text.isEmpty {
-                        figcaption { line.text }
-                          .class("tei-figure-caption")
-                      }
-                    }
-                    .class("tei-line tei-figure")
-                    .data("figure-type", type.isEmpty ? "figure" : type)
-                  }
-                case .text:
-                  // The setting comes through as the transcription recorded it:
-                  // a reader comparing a reading against its facsimile is
-                  // comparing where the type sits as much as what it says.
-                  span {
-                    for run in line.runs {
-                      span { run.text }
-                        .class("tei-run")
-                        .data("rend", run.rend)
-                    }
-                  }
-                  .class("tei-line")
-                  .data("rend", line.rend)
-                }
+                readingLine(line, facsimileURL: page.facsimileURL, label: page.label)
               }
             }
             .class("tei-page-text")
@@ -171,23 +201,67 @@
         // `<hi rend="…">` on the run it applies to. Small caps mark an author
         // statement; italic marks a speaker prefix or an emphasis the
         // compositor set — both are on the page, so both are in the reading.
-        selector("& .tei-run[data-rend='smallcaps']", "& .tei-run[data-rend='small-caps']") {
+        selector("& .tei-run[data-rend~='smallcaps']", "& .tei-run[data-rend~='small-caps']") {
           // No typed helper for this one; the builder takes a raw property.
-          property("font-variant-caps", "small-caps")
+          CSS.Property("font-variant-caps", "small-caps")
         }
-        selector("& .tei-run[data-rend='italic']", "& .tei-run[data-rend='ital']") {
+        selector("& .tei-run[data-rend~='italic']", "& .tei-run[data-rend~='ital']") {
           fontStyle(.italic)
         }
-        selector("& .tei-run[data-rend='bold']") {
+        selector("& .tei-run[data-rend~='bold']") {
           fontWeight(fontWeightBold)
+        }
+        selector("& .tei-run[data-rend~='underline']", "& .tei-run[data-rend~='underlined']") {
+          textDecoration(.underline)
+        }
+        selector("& .tei-run[data-rend~='sub']", "& .tei-run[data-rend~='subscript']") {
+          verticalAlign(.sub)
+          fontSize(em(0.75))
+          lineHeight(0)
+        }
+        selector(
+          "& .tei-run[data-rend~='sup']", "& .tei-run[data-rend~='super']",
+          "& .tei-run[data-rend~='superscript']"
+        ) {
+          verticalAlign(.super)
+          fontSize(em(0.75))
+          lineHeight(0)
+        }
+        descendant(".tei-table-scroll") {
+          maxWidth(perc(100))
+          minWidth(0)
+          overflowX(.auto)
+          marginBlock(spacing8)
+        }
+        descendant(".tei-table") {
+          borderCollapse(.collapse)
+          fontFamily(typographyFontSerif)
+          fontSize(fontSizeSmall14)
+          color(colorBase)
+        }
+        selector("& .tei-table td", "& .tei-table th") {
+          border(borderWidthBase, .solid, borderColorSubtle)
+          padding(spacing4, spacing8)
+          verticalAlign(.middle)
+          textAlign(.start)
+        }
+        selector("& .tei-table td > .tei-line", "& .tei-table th > .tei-line") {
+          display(.block)
+          whiteSpace(.nowrap)
+        }
+        descendant(".tei-document-boundary") {
+          width(perc(100))
+          border(.none)
+          borderTop(borderWidthBase, .solid, borderColorSubtle)
+          marginBlock(spacing8)
         }
         // TEI's rend, honoured. `center` is the one that carries meaning on a
         // title page; the others are recorded and shown as they are written.
-        selector("& .tei-line[data-rend='center']") {
+        selector("& .tei-line[data-rend~='center']") {
           display(.block)
           textAlign(.center)
         }
-        selector("& .tei-line[data-rend='right']") {
+        selector("& .tei-line[data-rend~='right']") {
           display(.block)
           textAlign(.end)
         }

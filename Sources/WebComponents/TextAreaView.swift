@@ -170,6 +170,10 @@ public struct TextAreaView: HTMLContent {
         color(colorPlaceholder).important()
         customProperty("-webkit-text-fill-color", colorPlaceholder).important()
       }
+      selector("& .text-area-input:disabled::placeholder") {
+        color(colorDisabled).important()
+        customProperty("-webkit-text-fill-color", colorDisabled).important()
+      }
       selector("&:not(.text-area-disabled):not(.text-area-read-only) .text-area-input:focus") {
         borderColor(borderColorBlueFocus).important()
         outline(.none).important()

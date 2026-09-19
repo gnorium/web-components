@@ -17,6 +17,7 @@ let package = Package(
     .package(url: "https://github.com/gnorium/embedded-swift-utilities", branch: "main"),
     .package(url: "https://github.com/gnorium/markdown-utilities", branch: "main"),
     .package(url: "https://github.com/gnorium/xml-utilities", branch: "main"),
+    .package(path: "../tex-utilities"),
   ],
   targets: [
     .executableTarget(
@@ -46,6 +47,9 @@ let package = Package(
         .product(name: "SVGBuilder", package: "web-builders"),
         .product(
           name: "XMLUtilities", package: "xml-utilities",
+          condition: .when(platforms: [.macOS, .linux, .windows])),
+        .product(
+          name: "TeXUtilities", package: "tex-utilities",
           condition: .when(platforms: [.macOS, .linux, .windows])),
         .product(name: "WebAPIs", package: "web-apis"),
         .product(name: "WebTypes", package: "web-types"),

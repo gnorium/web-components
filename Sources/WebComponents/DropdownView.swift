@@ -274,7 +274,7 @@ public struct DropdownView: HTMLContent {
         whiteSpace(.nowrap)
       }
       descendant(".dropdown-selected-text[data-selected='true'][data-disabled='false']") { color(colorBase) }
-      descendant(".dropdown-selected-text[data-selected='true'][data-disabled='true']") { color(colorDisabled) }
+      descendant(".dropdown-selected-text[data-disabled='true']") { color(colorDisabled) }
       // Only when it is narrow. `stacked` describes the OPTIONS; a full-width
       // trigger has room for the whole title and was cutting it to "An
       // Anglo-Saxon Dic...".
@@ -312,7 +312,8 @@ public struct DropdownView: HTMLContent {
       }
       descendant(".dropdown-search-input") {
         width(perc(100))
-        padding(spacing8, spacing12)
+        height(minSizeInteractiveTouch)
+        padding(0, spacing12)
         fontSize(textFontSize)
         lineHeight(1.618)
         color(colorBase)

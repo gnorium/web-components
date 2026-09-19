@@ -311,25 +311,27 @@ public struct AccordionView: HTMLContent {
           minHeight(0)
         }
         selector(
-          ".accordion-details[data-expanded='true']:not([data-motion='enter-from']):not([data-motion='closing']) &"
+          ".accordion-details[data-expanded='true']:not([data-motion='enter-from']):not([data-motion='closing']) > &"
         ) {
           gridTemplateRows(fr(1))
         }
-        selector(".accordion-details[data-motion='enter-from'] &") {
+        selector(".accordion-details[data-motion='enter-from'] > &") {
           transition(.none)
           gridTemplateRows("0px")
         }
-        selector(".accordion-details[data-motion='closing'] &") {
+        selector(".accordion-details[data-motion='closing'] > &") {
           gridTemplateRows("0px")
         }
         // Clipping is for the height animation only. Once open and still, a
         // dropdown menu opened near the bottom of the content must be free to
         // hang past it — clipped, it was a list cut off at the accordion's
         // edge with a scrollbar where the rest should be.
-        selector(".accordion-details[data-open-finished='true'][data-motion='idle'] &") {
+        // Match this panel's own details element. An open ancestor must not
+        // release the clipping of a nested accordion that is still animating.
+        selector(".accordion-details[data-open-finished='true'][data-motion='idle'] > &") {
           overflow(.visible)
         }
-        selector(".accordion-details[data-open-finished='true'][data-motion='idle'] & > .accordion-content") {
+        selector(".accordion-details[data-open-finished='true'][data-motion='idle'] > & > .accordion-content") {
           overflow(.visible)
         }
       }
@@ -341,7 +343,7 @@ public struct AccordionView: HTMLContent {
     .class("accordion-details")
     .id(id)
     .style {
-      selector("&[data-motion='closing'] .accordion-content", "&[data-motion='enter-from'] .accordion-content") {
+      selector("&[data-motion='closing'] > .accordion-content-clip > .accordion-content", "&[data-motion='enter-from'] > .accordion-content-clip > .accordion-content") {
         opacity(0)
         pointerEvents(.none)
       }

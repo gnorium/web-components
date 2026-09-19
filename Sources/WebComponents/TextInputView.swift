@@ -181,9 +181,8 @@ public struct TextInputView: HTMLContent {
       descendant(".text-input-control") { position(.relative) }
       descendant(".text-input-input") {
         width(perc(100))
-        // 40, flat: the height a medium button is, so a form's fields and its
-        // buttons sit level. (32 plus this input's padding came to 39.5.)
-        minHeight(px(40))
+        // Fields and medium buttons share the standard control height.
+        minHeight(minSizeInteractiveTouch)
         padding(spacing8, px(15))
         fontFamily(typographyFontSans)
         fontSize(inputFontSize)
@@ -219,6 +218,10 @@ public struct TextInputView: HTMLContent {
       selector("& .text-input-input::placeholder") {
         color(colorPlaceholder).important()
         customProperty("-webkit-text-fill-color", colorPlaceholder).important()
+      }
+      selector("& .text-input-input:disabled::placeholder") {
+        color(colorDisabled).important()
+        customProperty("-webkit-text-fill-color", colorDisabled).important()
       }
       selector("&:not(.text-input-disabled):not(.text-input-read-only) .text-input-input:focus") {
         borderColor(borderColorBlueFocus).important()
