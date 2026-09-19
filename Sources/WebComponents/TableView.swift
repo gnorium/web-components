@@ -1285,8 +1285,9 @@ public struct TableView: HTMLContent {
         justifyContent(.center)
         alignSelf(.stretch)
         width(perc(100))
-        minHeight(px(120))
-        flex(1)
+        height(px(128))
+        minHeight(px(128))
+        flex("0 0 128px")
       }
       descendant(".table-empty-row") {
         backgroundColor(backgroundColorBase).important()
