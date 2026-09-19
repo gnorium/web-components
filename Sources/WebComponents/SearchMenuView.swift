@@ -406,12 +406,29 @@
           minWidth(px(0))
           flex(1)
         }
+        descendant(".search-menu-biblio-result") {
+          alignItems(.stretch)
+          minHeight(0)
+        }
+        descendant(".search-menu-result-language", ".search-menu-result-author") {
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeSmall14)
+          fontWeight(fontWeightNormal)
+          lineHeight(lineHeightSmall22)
+          color(colorSubtle)
+        }
+        descendant(".search-menu-biblio-title-row") {
+          display(.flex)
+          flexWrap(.wrap)
+          alignItems(.baseline)
+          gap(spacing8)
+        }
         descendant(".search-menu-result-title") { display(.flex)
 alignItems(.center)
 gap(spacing4) }
         descendant(".search-menu-result-label") {
           fontFamily(typographyFontSans)
-          fontSize(fontSizeMedium16)
+          fontSize(fontSizeSmall14)
           fontWeight(fontWeightNormal)
           lineHeight(lineHeightSmall22)
           opacity(1)
@@ -427,7 +444,6 @@ gap(spacing4) }
           color(colorSubtle)
         }
         selector(".search-menu-result:hover .search-menu-result-label", ".search-menu-result:active .search-menu-result-label") { color(colorBlue) }
-        selector(".search-menu-result:hover .search-menu-result-pos", ".search-menu-result:hover .search-menu-result-description", ".search-menu-result:active .search-menu-result-pos", ".search-menu-result:active .search-menu-result-description") { color(colorBase) }
         selector("&[data-state='open'] [data-search-menu-backdrop='true']") {
           opacity(1)
           pointerEvents(.auto)
@@ -830,7 +846,10 @@ gap(spacing4) }
       // Create new menu items using DOM API
       for result in limitedResults {
         let item = document.createElement(.div)
-        item.className = "menu-item-view search-menu-result"
+        let isBiblioResult = stringEquals(resultUrlBase, "/biblio-records")
+        item.className = isBiblioResult
+          ? "menu-item-view search-menu-result search-menu-biblio-result"
+          : "menu-item-view search-menu-result"
         item.setAttribute(data("value"), result.text)
         let resultColor: String
         if stringEquals(result.color, "green") {
@@ -858,38 +877,65 @@ gap(spacing4) }
         let textContent = document.createElement(.span)
         textContent.className = "menu-item-text search-menu-result-text"
 
-        // Title Wrapper
-        let textWrapper = document.createElement(.span)
-        textWrapper.className = "menu-item-title search-menu-result-title"
+        if isBiblioResult {
+          // A biblio result is a compact record card, not a lemma with a POS
+          // suffix. Keeping language, title, and author in reading order makes
+          // it robust under narrow widths and accessibility text scaling.
+          let language = document.createElement(.span)
+          language.className = "search-menu-result-language"
+          language.textContent = result.subtext
+          textContent.appendChild(language)
 
-        // Title label
-        let label = document.createElement(.span)
-        label.className = "menu-item-label search-menu-result-label"
-        label.textContent = result.text
+          let titleRow = document.createElement(.span)
+          titleRow.className = "search-menu-biblio-title-row"
 
-        textWrapper.appendChild(label)
+          let title = document.createElement(.span)
+          title.className = "menu-item-label search-menu-result-label"
+          title.textContent = result.text
+          titleRow.appendChild(title)
 
-        // POS + homograph superscript after lemma
-        if !stringIsEmpty(result.pos) {
-          let posSpan = document.createElement(.span)
-          posSpan.className = "menu-item-pos search-menu-result-pos"
-          posSpan.textContent = result.pos
-          textWrapper.appendChild(posSpan)
-
-          if result.homograph > 1 {
-            let posSup = document.createElement(.sup)
-            posSup.className = "search-menu-result-sup"
-            posSup.textContent = "\(result.homograph)"
-            textWrapper.appendChild(posSup)
+          if !stringIsEmpty(result.pos) {
+            let author = document.createElement(.span)
+            author.className = "search-menu-result-author"
+            author.textContent = result.pos
+            titleRow.appendChild(author)
           }
-        }
-        textContent.appendChild(textWrapper)
+          textContent.appendChild(titleRow)
+        } else {
+          // Lexico results follow the same reading order as biblio results:
+          // language first, then the identified lemma and its grammar.
+          let description = document.createElement(.span)
+          description.className = "menu-item-description search-menu-result-description"
+          description.textContent = result.subtext
+          textContent.appendChild(description)
 
-        // Description
-        let description = document.createElement(.span)
-        description.className = "menu-item-description search-menu-result-description"
-        description.textContent = result.subtext
-        textContent.appendChild(description)
+          // Title Wrapper
+          let textWrapper = document.createElement(.span)
+          textWrapper.className = "menu-item-title search-menu-result-title"
+
+          // Title label
+          let label = document.createElement(.span)
+          label.className = "menu-item-label search-menu-result-label"
+          label.textContent = result.text
+
+          textWrapper.appendChild(label)
+
+          // POS + homograph superscript after lemma
+          if !stringIsEmpty(result.pos) {
+            let posSpan = document.createElement(.span)
+            posSpan.className = "menu-item-pos search-menu-result-pos"
+            posSpan.textContent = result.pos
+            textWrapper.appendChild(posSpan)
+
+            if result.homograph > 1 {
+              let posSup = document.createElement(.sup)
+              posSup.className = "search-menu-result-sup"
+              posSup.textContent = "\(result.homograph)"
+              textWrapper.appendChild(posSup)
+            }
+          }
+          textContent.appendChild(textWrapper)
+        }
 
         item.appendChild(textContent)
 
