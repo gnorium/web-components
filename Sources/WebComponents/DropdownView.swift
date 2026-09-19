@@ -102,6 +102,7 @@ public struct DropdownView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
+    let requiredMessage = "\(labelText.isEmpty ? "A value" : labelText) is required."
     div {
       // Label
       if !stringIsEmpty(labelText) {
@@ -181,6 +182,14 @@ public struct DropdownView: HTMLContent {
         .class("dropdown-trigger-wrapper")
         .data("dropdown-trigger", true)
         .data("dropdown-id", id)
+
+        // Shown by the submit guard when this dropdown is required and empty:
+        // a red border alone said something was wrong without saying what.
+        if required {
+          span { requiredMessage }
+            .class("dropdown-required-message")
+            .role(.alert)
+        }
 
         // Dropdown menu
         div {
@@ -329,6 +338,15 @@ public struct DropdownView: HTMLContent {
       selector("&[data-invalid='true'] .dropdown-trigger") {
         borderColor(borderColorRed).important()
         borderWidth(borderWidthThick).important()
+      }
+      descendant(".dropdown-required-message") {
+        display(.none)
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeSmall14)
+        color(colorRed)
+      }
+      selector("&[data-invalid='true'] .dropdown-required-message") {
+        display(.block)
       }
       // Semi-bold, matching the field labels beside it. Bold made a dropdown
       // read as a heavier field than the text inputs it sits among.
@@ -518,6 +536,15 @@ public struct DropdownView: HTMLContent {
           let container = self.container
         else { return }
         let mark = container.closest(".dropdown-view") ?? container
+        // A dropdown the reader cannot see cannot be filled in: the
+        // translation chain's language sits required inside a hidden group
+        // on every non-translation, and blocked every submit with no
+        // visible reason. Hidden means not asked.
+        let hidden = mark.getBoundingClientRect().map { $0.height <= 0 } ?? true
+        if hidden {
+          mark.removeAttribute("data-invalid")
+          return
+        }
         if stringIsEmpty(field.value) {
           event.preventDefault()
           mark.setAttribute("data-invalid", "true")
