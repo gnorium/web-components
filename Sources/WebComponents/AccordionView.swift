@@ -319,6 +319,13 @@ public struct AccordionView: HTMLContent {
         selector(".accordion-details[data-motion='closing'] &") {
           gridTemplateRows("0px")
         }
+        // Clipping is for the height animation only. Once open and still, a
+        // dropdown menu opened near the bottom of the content must be free to
+        // hang past it — clipped, it was a list cut off at the accordion's
+        // edge with a scrollbar where the rest should be.
+        selector(".accordion-details[data-open-finished='true'][data-motion='idle'] &") {
+          overflow(.visible)
+        }
       }
     }
     .open(isOpen)
