@@ -76,7 +76,7 @@ public struct DropdownView: HTMLContent {
     fontSize: CSS.Length = fontSizeSmall14,
     contentJustifyContent: CSS.JustifyContent = .spaceBetween,
     optionLayout: OptionLayout = .inline,
-    buttonBorderRadius: CSS.Length = borderRadiusPill,
+    buttonBorderRadius: CSS.Length = borderRadiusBase,
     submitFormOnChange: Bool = false
   ) {
     self.id = id
