@@ -44,14 +44,13 @@
         }
         for (index, page) in pages.enumerated() {
           div {
-            span { page.label }
-              .class("tei-reading-label")
-
             div {
               for line in page.lines {
                 switch line.kind {
                 case .heading:
-                  h3 { line.text }.class("tei-line tei-line-heading")
+                  h3 { line.text }
+                    .class("tei-line tei-line-heading")
+                    .data("rend", line.rend)
                 case .speaker:
                   span { line.text }.class("tei-line tei-line-speaker")
                 case .stage:
@@ -64,8 +63,46 @@
                 case .forme(let role):
                   span { line.text }
                     .class("tei-line tei-line-forme tei-line-forme-\(role.rawValue)")
+                case .figure(let type, let bbox):
+                  // Drawn, not written: the region is cut from the facsimile by
+                  // its bbox, so the reader sees the thing itself with its
+                  // description under it as a caption.
+                  //
+                  // No bbox, no figure. A caption alone describes a picture
+                  // that is not there — and the surface it describes is already
+                  // on screen in the facsimile pane, so "gold-tooled dark
+                  // leather binding" beside a photograph of one says nothing.
+                  // The markup still carries it; the reading does not.
+                  if let region = TEIRenderer.regionURL(
+                    ofFacsimile: page.facsimileURL, bbox: bbox)
+                  {
+                    figure {
+                      img()
+                        .src(region)
+                        .alt(line.text.isEmpty ? "Figure on \(page.label)" : line.text)
+                        .loading(.lazy)
+                        .class("tei-figure-image")
+                      if !line.text.isEmpty {
+                        figcaption { line.text }
+                          .class("tei-figure-caption")
+                      }
+                    }
+                    .class("tei-line tei-figure")
+                    .data("figure-type", type.isEmpty ? "figure" : type)
+                  }
                 case .text:
-                  span { line.text }.class("tei-line")
+                  // The setting comes through as the transcription recorded it:
+                  // a reader comparing a reading against its facsimile is
+                  // comparing where the type sits as much as what it says.
+                  span {
+                    for run in line.runs {
+                      span { run.text }
+                        .class("tei-run")
+                        .data("rend", run.rend)
+                    }
+                  }
+                  .class("tei-line")
+                  .data("rend", line.rend)
                 }
               }
             }
@@ -98,10 +135,61 @@
           gap(spacing8)
           minWidth(0)
         }
-        descendant(".tei-reading-label") {
-          fontFamily(typographyFontMono)
+        // A figure is set apart from the reading around it: it is a
+        // photograph of part of the surface, not a sentence on it.
+        descendant(".tei-figure") {
+          display(.flex)
+          flexDirection(.column)
+          gap(spacing4)
+          alignItems(.flexStart)
+          margin(0)
+          marginBlock(spacing8)
+          minWidth(0)
+        }
+        descendant(".tei-figure-image") {
+          maxWidth(perc(100))
+          // However the region is shaped, it is an illustration inside a
+          // reading and cannot be taller than what it illustrates.
+          maxHeight(px(320))
+          width(.auto)
+          height(.auto)
+          objectFit(.contain)
+          borderRadius(borderRadiusBase)
+          border(borderWidthBase, .solid, borderColorSubtle)
+        }
+        // A decorated initial is one letter tall in the text; shown at the
+        // width of a plate it stops being an initial and becomes a poster.
+        selector("& .tei-figure[data-figure-type='initial'] .tei-figure-image") {
+          maxWidth(px(96))
+        }
+        descendant(".tei-figure-caption") {
+          fontFamily(typographyFontSans)
           fontSize(fontSizeXSmall12)
+          fontStyle(.italic)
           color(colorSubtle)
+        }
+        // `<hi rend="…">` on the run it applies to. Small caps mark an author
+        // statement; italic marks a speaker prefix or an emphasis the
+        // compositor set — both are on the page, so both are in the reading.
+        selector("& .tei-run[data-rend='smallcaps']", "& .tei-run[data-rend='small-caps']") {
+          // No typed helper for this one; the builder takes a raw property.
+          property("font-variant-caps", "small-caps")
+        }
+        selector("& .tei-run[data-rend='italic']", "& .tei-run[data-rend='ital']") {
+          fontStyle(.italic)
+        }
+        selector("& .tei-run[data-rend='bold']") {
+          fontWeight(fontWeightBold)
+        }
+        // TEI's rend, honoured. `center` is the one that carries meaning on a
+        // title page; the others are recorded and shown as they are written.
+        selector("& .tei-line[data-rend='center']") {
+          display(.block)
+          textAlign(.center)
+        }
+        selector("& .tei-line[data-rend='right']") {
+          display(.block)
+          textAlign(.end)
         }
         descendant(".tei-page-text") {
           display(.flex)

@@ -42,7 +42,7 @@
             .class("dismiss-verification-banner")
             .ariaLabel("Dismiss")
         }
-        .class("email-verification-banner-content")
+        .class("email-verification-banner-view")
       }
       .class(`class`.isEmpty ? "email-verification-banner" : "email-verification-banner \(`class`)")
       .data("hydrate", "email-verification-banner")
@@ -54,7 +54,7 @@
           padding(spacing12, spacing16)
         }
         selector("&[data-dismissed='true']") { display(.none) }
-        descendant(".email-verification-banner-content") {
+        descendant(".email-verification-banner-view") {
           display(.flex)
           alignItems(.center)
           gap(spacing12)

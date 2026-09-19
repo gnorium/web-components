@@ -16,6 +16,10 @@
     let `class`: String
     let fullWidth: Bool
     let localStorageKey: String?
+    /// Which query parameter carries this tab set's selection.
+    /// Two tab sets can share a page — Mission Control has one per hall —
+    /// and they cannot both be "tab".
+    let queryParam: String
 
     /// Visual style variant for tab buttons
     public enum Variant: String, Sendable {
@@ -32,7 +36,8 @@
       variant: Variant = .quiet,
       class: String = "",
       fullWidth: Bool = false,
-      localStorageKey: String? = nil
+      localStorageKey: String? = nil,
+      queryParam: String = "tab"
     ) {
       self.tabs = tabs
       self.activeTab = activeTab ?? tabs.first?.name
@@ -41,6 +46,7 @@
       self.`class` = `class`
       self.fullWidth = fullWidth
       self.localStorageKey = localStorageKey
+      self.queryParam = queryParam
     }
 
     public func build() -> DOM.Node {
@@ -124,6 +130,7 @@
       )
       .data("active-tab", active)
       .data("local-storage-key", localStorageKey ?? "")
+      .data("query-param", queryParam)
       // ZERO REPETITION — every selector and property is declared exactly once
       // in this single style block. The descendant/child/selector chains below
       // cover every visual state for the root, header, list, both tab button
@@ -306,39 +313,64 @@
       let lsKey = tabsElement.getAttribute(data("local-storage-key")) ?? ""
       guard !stringIsEmpty(lsKey) else { return }
 
-      let search = location.search
+      // Not a hardcoded "tab": Mission Control carries two tab sets, one per
+      // hall, and each names its own parameter.
+      var param = tabsElement.getAttribute(data("query-param")) ?? ""
+      if stringIsEmpty(param) { param = "tab" }
+
+      // Split on "&" rather than hunting a byte offset: that needs the key's
+      // length, and counting a String's characters is what drags Unicode
+      // normalisation into embedded WASM. It also anchors the match, so "tab="
+      // can no longer be found inside "&othertab=".
+      let key = "\(param)="
       var queryTab: String? = nil
-      if !stringIsEmpty(search) && stringContains(search, "tab=") {
-        if let idx = stringIndexOf(search, "tab=") {
-          let suffix = stringSubstring(search, from: idx + 4)
-          if let ampIdx = stringIndexOf(suffix, "&") {
-            queryTab = stringSubstring(suffix, from: 0, to: ampIdx)
-          } else {
-            queryTab = suffix
-          }
+      for pair in stringSplit(stringRemovePrefix(location.search, "?"), separator: "&") {
+        if stringStartsWith(pair, key) {
+          queryTab = stringRemovePrefix(pair, key)
         }
       }
 
       if let tab = queryTab, !stringIsEmpty(tab) {
         localStorage.setItem(lsKey, tab)
-      } else {
-        if let saved = localStorage.getItem(lsKey), !stringIsEmpty(saved) {
-          let hasTab = tabButtons.contains { button in
-            stringEquals(button.getAttribute(data("tab-name")) ?? "", saved)
-          }
-          if hasTab {
-            for button in tabButtons {
-              if stringEquals(button.getAttribute(data("tab-name")) ?? "", saved) {
-                if let url = button.getAttribute(.href), !stringIsEmpty(url) {
-                  location.href = url
-                  return
-                } else {
-                  selectTab(saved, setFocus: false)
-                }
-              }
-            }
+        return
+      }
+
+      guard let saved = localStorage.getItem(lsKey), !stringIsEmpty(saved) else { return }
+
+      // The guard that matters: the saved tab may already BE the rendered one.
+      // Without this, two tab sets on one page each navigate to restore
+      // themselves, undoing the other, and the page ping-pongs forever.
+      let active = tabsElement.getAttribute(data("active-tab")) ?? ""
+      if stringEquals(active, saved) { return }
+
+      for button in tabButtons {
+        guard stringEquals(button.getAttribute(data("tab-name")) ?? "", saved) else { continue }
+
+        // Panel tabs switch in place; only link tabs need a page.
+        guard let url = button.getAttribute(.href), !stringIsEmpty(url) else {
+          selectTab(saved, setFocus: false)
+          return
+        }
+
+        // Not that href: it was rendered with the SIBLING tab set's current
+        // value baked in, so following it writes that value back as the
+        // sibling's preference and quietly discards the one it had saved.
+        // Restoring touches this set's own parameter and nothing else.
+        var pairs: [String] = []
+        var replaced = false
+        for pair in stringSplit(stringRemovePrefix(location.search, "?"), separator: "&") {
+          if stringIsEmpty(pair) { continue }
+          if stringStartsWith(pair, key) {
+            pairs.append("\(key)\(saved)")
+            replaced = true
+          } else {
+            pairs.append(pair)
           }
         }
+        if !replaced { pairs.append("\(key)\(saved)") }
+
+        location.href = "\(location.pathname)?\(stringJoin(pairs, separator: "&"))"
+        return
       }
     }
 

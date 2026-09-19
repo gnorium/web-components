@@ -21,6 +21,9 @@ public struct TableView: HTMLContent {
   public let paginate: Bool
   public let paginationPosition: PaginationPosition
   public let paginationSizeDefault: Int
+  /// The size of the pagination control itself. Mini suits a dense table
+  /// tucked inside a page; a table that is the page wants the normal one.
+  public let paginationControlSize: PaginationView.Size
   public let totalItems: Int?
   public let totalPages: Int?
   public let currentPage: Int?
@@ -279,6 +282,7 @@ public struct TableView: HTMLContent {
     paginate: Bool = false,
     paginationPosition: PaginationPosition = .bottom,
     paginationSizeDefault: Int = 10,
+    paginationControlSize: PaginationView.Size = .mini,
     totalItems: Int? = nil,
     totalPages: Int? = nil,
     currentPage: Int? = nil,
@@ -307,6 +311,7 @@ public struct TableView: HTMLContent {
     self.paginate = paginate
     self.paginationPosition = paginationPosition
     self.paginationSizeDefault = paginationSizeDefault
+    self.paginationControlSize = paginationControlSize
     self.totalItems = totalItems
     self.totalPages = totalPages
     self.currentPage = currentPage
@@ -433,7 +438,7 @@ public struct TableView: HTMLContent {
             previousUrl: prevUrl,
             nextUrl: nextUrl,
             pageNumbers: pageNumbers,
-            size: .mini,
+            size: paginationControlSize,
             class: "table-pagination-controls"
           )
         }
@@ -816,7 +821,7 @@ public struct TableView: HTMLContent {
             previousUrl: prevUrl,
             nextUrl: nextUrl,
             pageNumbers: pageNumbers,
-            size: .mini,
+            size: paginationControlSize,
             class: "table-pagination-controls"
           )
         }
@@ -980,13 +985,14 @@ public struct TableView: HTMLContent {
         justifyContent(.spaceBetween)
         gap(spacing12)
         flexWrap(.wrap)
-        media(maxWidth(maxWidthBreakpointMobile)) {
-          justifyContent(.center).important()
-        }
       }
       descendant(".table-pagination-controls") {
         flexShrink(0)
+        // PaginationView centres itself with `margin: 0 auto`. Inside a table
+        // footer it is one end of a space-between row, so the end margin has
+        // to be taken back or the auto pair recentres it mid-row.
         marginInlineStart(.auto)
+        marginInlineEnd(0)
         media(maxWidth(maxWidthBreakpointMobile)) {
           marginInlineStart(0)
         }

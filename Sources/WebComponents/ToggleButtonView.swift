@@ -126,14 +126,19 @@
           display(.inlineFlex)
         }
 
-        // Off: colorBase (ColorScheme unselected / “Dark”).
-        selector("&[aria-pressed='false'] .button-view") {
+        // Off: colorBase (ColorScheme unselected / “Dark”). Gated the same
+        // way the ON rule below is — a caller that passes `indicateSelection:
+        // false` to keep its own coloured base (a permanently solid button
+        // that merely toggles WHAT it does, not how it looks) was having its
+        // white-on-blue label overridden back to colorBase regardless, which
+        // read as black text on a blue pill.
+        selector("&[data-indicate-selection='true'][aria-pressed='false'] .button-view") {
           color(colorBase).important()
         }
-        selector("&[aria-pressed='false'] .button-view .button-label") {
+        selector("&[data-indicate-selection='true'][aria-pressed='false'] .button-view .button-label") {
           color(colorBase).important()
         }
-        selector("&[aria-pressed='false'] .button-view .button-icon") {
+        selector("&[data-indicate-selection='true'][aria-pressed='false'] .button-view .button-icon") {
           color(colorBase).important()
         }
 

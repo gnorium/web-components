@@ -26,9 +26,14 @@ public struct DropdownView: HTMLContent {
     }
   }
 
+  /// How one option lays out. Named for the shape, not for the one page that
+  /// first wanted it: a form field needs the stacked form just as much as a
+  /// sidebar does.
   public enum OptionLayout: Sendable {
-    case standard
-    case sidebar
+    /// Display and alt on one line, alt pushed to the far end.
+    case inline
+    /// Display over alt, two rows — so neither has to be truncated.
+    case stacked
   }
 
   let id: String
@@ -70,7 +75,7 @@ public struct DropdownView: HTMLContent {
     menuWidth: CSS.Length? = nil,
     fontSize: CSS.Length = fontSizeSmall14,
     contentJustifyContent: CSS.JustifyContent = .spaceBetween,
-    optionLayout: OptionLayout = .standard,
+    optionLayout: OptionLayout = .inline,
     buttonBorderRadius: CSS.Length = borderRadiusPill,
     submitFormOnChange: Bool = false
   ) {
@@ -154,7 +159,7 @@ public struct DropdownView: HTMLContent {
               .data("placeholder", placeholder)
               .data("selected", selectedValue.map { value in options.contains { stringEquals($0.value, value) } } ?? false)
               .data("disabled", disabled)
-              .data("sidebar", optionLayout == .sidebar)
+              .data("stacked", optionLayout == .stacked)
               .title(options.first { stringEquals($0.value, selectedValue ?? "") }?.altDisplay ?? displayText)
 
             // Animated chevron icon (switch, not ==, since ButtonSize is String-raw)
@@ -196,12 +201,12 @@ public struct DropdownView: HTMLContent {
               return div {
                 span { option.display }
                   .class("dropdown-option-display-text")
-                  .data("sidebar", optionLayout == .sidebar)
+                  .data("stacked", optionLayout == .stacked)
                 
                 if let alt = option.altDisplay, !stringIsEmpty(alt) {
                   span { alt }
                     .class("dropdown-option-alt-text")
-                    .data("sidebar", optionLayout == .sidebar)
+                    .data("stacked", optionLayout == .stacked)
                 }
               }
               .class(isSelected ? "dropdown-option is-selected" : "dropdown-option")
@@ -211,7 +216,7 @@ public struct DropdownView: HTMLContent {
               .data("display-lower", option.displayLower ?? option.display)
               .data("alt-display", option.altDisplay ?? "")
               .data("selected", isSelected)
-              .data("sidebar", optionLayout == .sidebar)
+              .data("stacked", optionLayout == .stacked)
               .data("hidden", false)
             }
           }
@@ -228,6 +233,7 @@ public struct DropdownView: HTMLContent {
     }
     .class(stringIsEmpty(`class`) ? "dropdown-view" : "dropdown-view \(`class`)")
     .data("submitFormOnChange", submitFormOnChange ? "true" : "false")
+    .data("full-width", fullWidth ? "true" : "false")
     .style {
       selector("&") {
         display(.flex)
@@ -260,7 +266,10 @@ public struct DropdownView: HTMLContent {
       }
       descendant(".dropdown-selected-text[data-selected='true'][data-disabled='false']") { color(colorBase) }
       descendant(".dropdown-selected-text[data-selected='true'][data-disabled='true']") { color(colorDisabled) }
-      descendant(".dropdown-selected-text[data-sidebar='true']") {
+      // Only when it is narrow. `stacked` describes the OPTIONS; a full-width
+      // trigger has room for the whole title and was cutting it to "An
+      // Anglo-Saxon Dic...".
+      selector("&:not([data-full-width='true']) .dropdown-selected-text[data-stacked='true']") {
         overflow(.hidden)
         textOverflow(.ellipsis)
         maxWidth(px(160))
@@ -307,6 +316,21 @@ public struct DropdownView: HTMLContent {
           borderColor(borderColorBlue).important()
         }
       }
+      // Matches LabelView, which every FieldView label uses: a dropdown in a
+      // form is a form field and its label has to look like one.
+      // Set by the submit guard when a required dropdown has no value.
+      selector("&[data-invalid='true'] .dropdown-trigger") {
+        borderColor(borderColorRed).important()
+        borderWidth(borderWidthThick).important()
+      }
+      // Semi-bold, matching the field labels beside it. Bold made a dropdown
+      // read as a heavier field than the text inputs it sits among.
+      descendant(".dropdown-label-text") {
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeSmall14)
+        fontWeight(fontWeightSemiBold)
+        color(colorBase)
+      }
       descendant(".dropdown-search-input-wrapper") {
         padding(spacing8)
         borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
@@ -329,7 +353,7 @@ public struct DropdownView: HTMLContent {
           }
         }
       }
-      descendant(".dropdown-option[data-sidebar='true']") {
+      descendant(".dropdown-option[data-stacked='true']") {
         flexDirection(.column)
         alignItems(.flexStart)
         gap(spacing2)
@@ -350,7 +374,7 @@ public struct DropdownView: HTMLContent {
       selector(".dropdown-option[data-highlighted='true'] .dropdown-option-display-text", ".dropdown-option[data-highlighted='true'] .dropdown-option-alt-text") {
         color(colorInvertedFixed).important()
       }
-      descendant(".dropdown-option-display-text[data-sidebar='true']") {
+      descendant(".dropdown-option-display-text[data-stacked='true']") {
         fontWeight(fontWeightSemiBold)
         fontSize(fontSizeSmall14)
         color(colorBase)
@@ -359,7 +383,7 @@ public struct DropdownView: HTMLContent {
         textOverflow(.ellipsis)
         width(perc(100))
       }
-      descendant(".dropdown-option-alt-text[data-sidebar='true']") {
+      descendant(".dropdown-option-alt-text[data-stacked='true']") {
         fontSize(fontSizeXSmall12)
         color(colorSubtle)
         whiteSpace(.nowrap)
@@ -367,7 +391,7 @@ public struct DropdownView: HTMLContent {
         textOverflow(.ellipsis)
         width(perc(100))
       }
-      descendant(".dropdown-option-alt-text[data-sidebar='false']") {
+      descendant(".dropdown-option-alt-text[data-stacked='false']") {
         marginInlineStart(.auto)
       }
       descendant(".dropdown-options-list") {
@@ -471,14 +495,48 @@ public struct DropdownView: HTMLContent {
       bindEvents()
     }
 
+    /// Enforces `required` for this dropdown on its form's submit.
+    ///
+    /// Server-side guards stay — they are the real protection. This only makes
+    /// the failure visible where the reader can fix it.
+    private func bindRequiredValidation() {
+      guard let input = hiddenInput as? HTML.HTMLInputElement,
+        input.hasAttribute("required"),
+        let container,
+        let form = container.closest("form")
+      else { return }
+
+      _ = form.addEventListener(.submit) { [self] (event: Event) in
+        guard let field = self.hiddenInput as? HTML.HTMLInputElement,
+          let container = self.container
+        else { return }
+        let mark = container.closest(".dropdown-view") ?? container
+        if stringIsEmpty(field.value) {
+          event.preventDefault()
+          mark.setAttribute("data-invalid", "true")
+          mark.scrollIntoView()
+          self.trigger?.focus()
+        } else {
+          mark.removeAttribute("data-invalid")
+        }
+      }
+    }
+
     private func bindEvents() {
       guard let trigger, let searchInput else { return }
+
+      bindRequiredValidation()
 
       // Toggle dropdown on trigger click
       _ = trigger.addEventListener(.click) { [self] event in
         self.toggleDropdown()
       }
 
+      // `required` on the value input does NOTHING: it is type="hidden", and
+      // hidden inputs are barred from constraint validation. The browser
+      // submitted a dropdown with nothing chosen and the reader got the
+      // server's 400 page instead of an error on the field. So the form is
+      // checked here, on the one element that can actually be focused.
       // Search functionality
       _ = searchInput.addEventListener(.input) { [self] _ in
         self.filterOptions()
@@ -610,6 +668,10 @@ public struct DropdownView: HTMLContent {
 
       // Update hidden input
       (hiddenInput as? HTML.HTMLInputElement)?.value = value
+      // A choice clears the error the submit guard put there.
+      if let container {
+        (container.closest(".dropdown-view") ?? container).removeAttribute("data-invalid")
+      }
 
       // Get altDisplay for tooltip
       let altDisplay = option.getAttribute(data("alt-display")) ?? display

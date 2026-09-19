@@ -19,7 +19,7 @@
   ///     div {
   ///       MarkdownView(thinking)
   ///     }
-  ///     .class("session-output-thinking-rendered")
+  ///     .class("markdown-view")
   public struct MarkdownView: HTMLContent {
     let markdown: String
 

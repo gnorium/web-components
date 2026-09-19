@@ -304,9 +304,16 @@ public struct ButtonView: HTMLContent {
             borderStyle(.solid)
             borderRadius(borderRadiusPill)
             cursor(.pointer)
-            transition(.all, s(0.1), .ease)
+            // Named properties, not `all`. `all` included outline-color, so a
+            // mouse click painted the browser's own focus ring for a frame and
+            // then faded it out over 100ms — the black ring that flashed on
+            // every close button.
+            transition("background-color 0.1s ease, border-color 0.1s ease, color 0.1s ease")
 
-            // Focus state
+            // A mouse click focuses a button but should not ring it. Keyboard
+            // focus still does: `:focus-visible` is the browser's own judgement
+            // of when a ring is useful, and it is the only place the ring is
+            // suppressed from.
             pseudoClass(.focus) {
               outline(borderWidthBase, .solid, borderColorTransparent).important()
             }
@@ -370,9 +377,15 @@ public struct ButtonView: HTMLContent {
             minHeight(ButtonSize.mini.minSize)
             fontSize(fontSizeXSmall12)
           }
-          selector("&[data-size='small']") { minHeight(ButtonSize.small.minSize) }
+          selector("&[data-size='small']") {
+            minHeight(ButtonSize.small.minSize)
+            fontSize(fontSizeSmall14)
+          }
           selector("&[data-size='medium']") { minHeight(ButtonSize.medium.minSize) }
-          selector("&[data-size='large']") { minHeight(ButtonSize.large.minSize) }
+          selector("&[data-size='large']") {
+            minHeight(ButtonSize.large.minSize)
+            fontSize(fontSizeLarge18)
+          }
           selector("&[data-full-width='false'][data-size='mini']") { minWidth(ButtonSize.mini.minSize) }
           selector("&[data-full-width='false'][data-size='small']") { minWidth(ButtonSize.small.minSize) }
           selector("&[data-full-width='false'][data-size='medium']") { minWidth(ButtonSize.medium.minSize) }
@@ -1130,9 +1143,16 @@ public struct ButtonView: HTMLContent {
             borderStyle(.solid)
             borderRadius(borderRadiusPill)
             cursor(.pointer)
-            transition(.all, s(0.1), .ease)
+            // Named properties, not `all`. `all` included outline-color, so a
+            // mouse click painted the browser's own focus ring for a frame and
+            // then faded it out over 100ms — the black ring that flashed on
+            // every close button.
+            transition("background-color 0.1s ease, border-color 0.1s ease, color 0.1s ease")
 
-            // Focus state
+            // A mouse click focuses a button but should not ring it. Keyboard
+            // focus still does: `:focus-visible` is the browser's own judgement
+            // of when a ring is useful, and it is the only place the ring is
+            // suppressed from.
             pseudoClass(.focus) {
               outline(borderWidthBase, .solid, borderColorTransparent).important()
             }
@@ -1196,9 +1216,15 @@ public struct ButtonView: HTMLContent {
             minHeight(ButtonSize.mini.minSize)
             fontSize(fontSizeXSmall12)
           }
-          selector("&[data-size='small']") { minHeight(ButtonSize.small.minSize) }
+          selector("&[data-size='small']") {
+            minHeight(ButtonSize.small.minSize)
+            fontSize(fontSizeSmall14)
+          }
           selector("&[data-size='medium']") { minHeight(ButtonSize.medium.minSize) }
-          selector("&[data-size='large']") { minHeight(ButtonSize.large.minSize) }
+          selector("&[data-size='large']") {
+            minHeight(ButtonSize.large.minSize)
+            fontSize(fontSizeLarge18)
+          }
           selector("&[data-full-width='false'][data-size='mini']") { minWidth(ButtonSize.mini.minSize) }
           selector("&[data-full-width='false'][data-size='small']") { minWidth(ButtonSize.small.minSize) }
           selector("&[data-full-width='false'][data-size='medium']") { minWidth(ButtonSize.medium.minSize) }

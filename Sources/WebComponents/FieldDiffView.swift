@@ -39,8 +39,8 @@
           .class("diff-annotation")
           .data("diff-annotation", "true")
       }
-      .class("diff-field")
-      .data("diff-field", key)
+      .class("field-diff-view")
+      .data("field-diff-view", key)
       .data("original-value", originalValue)
       .data("original-display", originalDisplay ?? "")
       .style {

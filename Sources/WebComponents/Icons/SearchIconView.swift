@@ -26,7 +26,7 @@
         path()
           .d(m(21, 21), l(-4.35, -4.35))
       }
-      .class("search-bar-icon-view")
+      .class("search-icon-view")
       .width(width)
       .height(height)
       .xmlns("http://www.w3.org/2000/svg")

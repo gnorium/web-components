@@ -25,6 +25,11 @@
     let messages: ValidationMessages
     let `class`: String
     let labelFontWeight: CSS.FontWeight
+    /// Guidance that belongs to the field but not under it. Help text
+    /// pushes every later field down the page to say something a reader
+    /// needs once; a tooltip is there when it is wanted and gone when it
+    /// is not. Same affordance DropdownView already offers.
+    let tooltip: String?
     let labelFontSize: CSS.Length
 
     public enum ValidationStatus: String, Sendable {
@@ -58,6 +63,7 @@
       messages: ValidationMessages = ValidationMessages(),
       labelFontWeight: CSS.FontWeight = fontWeightBold,
       labelFontSize: CSS.Length = fontSizeMedium16,
+      tooltip: String? = nil,
       class: String = "",
       @HTMLBuilder label: () -> [DOM.Node],
       @HTMLBuilder description: () -> [DOM.Node] = { [] },
@@ -74,6 +80,7 @@
       self.status = status
       self.messages = messages
       self.labelFontWeight = labelFontWeight
+      self.tooltip = tooltip
       self.labelFontSize = labelFontSize
       self.`class` = `class`
       self.labelContent = label()
@@ -102,6 +109,14 @@
             labelFontSize: labelFontSize
           ) {
             labelContent
+
+            if let tooltipText = tooltip {
+              TooltipView(tooltip: tooltipText) {
+                IconView {
+                  InfoIconView()
+                }
+              }
+            }
           } description: {
             if hasDescription {
               descriptionContent
@@ -215,6 +230,14 @@
             labelFontSize: labelFontSize
           ) {
             labelContent
+
+            if let tooltipText = tooltip {
+              TooltipView(tooltip: tooltipText) {
+                IconView {
+                  InfoIconView()
+                }
+              }
+            }
           } description: {
             if hasDescription {
               descriptionContent

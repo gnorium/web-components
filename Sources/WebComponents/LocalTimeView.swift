@@ -9,20 +9,58 @@
   /// Renders a `<time>` element with an ISO 8601 `datetime` attribute and a UTC fallback display.
   /// WASM hydration converts the display to the user's local timezone.
   public struct LocalTimeView: HTMLContent {
+    /// The sizes a stamp comes in.
+    ///
+    /// A closed set, deliberately. The size used to be any `CSS.Length` the
+    /// caller liked, and the rule was written with that value inside its own
+    /// selector — so each distinct value needed a rule of its own, and only the
+    /// ones the stylesheet catalogue happened to build ever got one. Every
+    /// other stamp rendered with no size rule at all.
+    ///
+    /// Variants can be catalogued because there are finitely many of them.
+    /// Arbitrary values cannot. That is the whole difference, and it is why a
+    /// component's styling varies over named variants and never over values.
+    public enum Size: String, Sendable, CaseIterable {
+      case xSmall12 = "x-small-12"
+      case small14 = "small-14"
+      case medium16 = "medium-16"
+
+      var length: CSS.Length {
+        switch self {
+        case .xSmall12: return fontSizeXSmall12
+        case .small14: return fontSizeSmall14
+        case .medium16: return fontSizeMedium16
+        }
+      }
+    }
+
+    /// The colours a stamp comes in, for the same reason.
+    public enum Tone: String, Sendable, CaseIterable {
+      case base
+      case subtle
+
+      var color: CSS.Color {
+        switch self {
+        case .base: return colorBase
+        case .subtle: return colorSubtle
+        }
+      }
+    }
+
     let date: Date
-    let size: CSS.Length
-    let textColor: CSS.Color
+    let size: Size
+    let tone: Tone
     let fallbackSuffix: String
 
     public init(
       date: Date,
-      size: CSS.Length = fontSizeSmall14,
-      textColor: CSS.Color = colorBase,
+      size: Size = .xSmall12,
+      tone: Tone = .base,
       fallbackSuffix: String = "UTC"
     ) {
       self.date = date
       self.size = size
-      self.textColor = textColor
+      self.tone = tone
       self.fallbackSuffix = fallbackSuffix
     }
 
@@ -36,13 +74,19 @@
 
       return time { displayFormatter.string(from: date) + " " + fallbackSuffix }
         .datetime(isoFormatter.string(from: date))
-        .class("local-time")
-        .data("local-time-size", size.value)
-        .data("local-time-color", textColor.value)
+        .class("local-time-view local-time-\(size.rawValue) local-time-\(tone.rawValue)")
         .style {
-          selector("&[data-local-time-size='\(size.value)'][data-local-time-color='\(textColor.value)']") {
-            fontSize(size)
-            color(textColor)
+          // Every variant, every time. The set is small and closed, so the
+          // sheet holds all of it and one file serves every stamp on the site.
+          for variant in Size.allCases {
+            selector("&.local-time-\(variant.rawValue)") {
+              fontSize(variant.length)
+            }
+          }
+          for variant in Tone.allCases {
+            selector("&.local-time-\(variant.rawValue)") {
+              color(variant.color)
+            }
           }
         }
     }
@@ -56,7 +100,7 @@
   import WebAPIs
   import WebTypes
 
-  /// Hydrates all `<time class="local-time">` elements on the page,
+  /// Hydrates all `<time class="local-time-view">` elements on the page,
   /// converting their UTC fallback text to the user's local timezone — and,
   /// the same way, any element carrying `data-local-time-iso`, whose stamp is
   /// one part of a sentence rather than the whole of it.
@@ -69,14 +113,14 @@
 
     public static func hydrateIfPresent() {
       guard
-        document.querySelector(".local-time") != nil
+        document.querySelector(".local-time-view") != nil
           || document.querySelector("[data-local-time-iso]") != nil
       else { return }
       instance = LocalTimeHydration()
     }
 
     public func hydrate() {
-      let elements = document.querySelectorAll("time.local-time")
+      let elements = document.querySelectorAll("time.local-time-view")
       for element in elements {
         guard let iso = element.getAttribute("datetime") else { continue }
         guard let localString = formatLocalDate(iso) else { continue }
