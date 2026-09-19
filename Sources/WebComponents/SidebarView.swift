@@ -35,6 +35,11 @@
       return aside {
         div {
           sidebarBody
+          // A node, rather than end padding, because WebKit excludes flex
+          // scrollport padding from its reachable scroll range at large text.
+          // This keeps a deliberate gutter below the final sidebar item.
+          div {}
+            .class("sidebar-scroll-gutter")
         }
         .class("sidebar-content")
       }
@@ -82,21 +87,20 @@
             overflowX(.hidden)
             overflowY(.auto)
             paddingBlockStart(spacing16)
-            // WebKit can exclude end padding from an overflowing flex
-            // scrollport's scrollable area. A real flex item below the final
-            // row keeps that breathing room reachable at large text sizes.
             paddingBlockEnd(0)
             paddingInlineStart(spacing0)
             paddingInlineEnd(spacing16)
             boxSizing(.borderBox)
+          }
+        }
 
-            pseudoElement(.after) {
-              content("\"\"")
-              display(.block)
-              height(spacing16)
-              minHeight(spacing16)
-              flexShrink(0)
-            }
+        descendant(".sidebar-scroll-gutter") {
+          display(.none)
+          media(minWidth(minWidthBreakpointTablet)) {
+            display(.block)
+            height(spacing32)
+            minHeight(spacing32)
+            flexShrink(0)
           }
         }
 
