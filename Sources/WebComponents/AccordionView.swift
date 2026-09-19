@@ -171,6 +171,9 @@ public struct AccordionView: HTMLContent {
             lineHeight(lineHeightSmall22)
             color(colorSubtle)
             fontWeight(fontWeightNormal)
+            // The header refuses selection so a click toggles cleanly; the
+            // description is prose worth copying, like the title above it.
+            userSelect(.text)
           }
         }
 
