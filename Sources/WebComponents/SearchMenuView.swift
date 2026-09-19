@@ -410,18 +410,25 @@
           alignItems(.stretch)
           minHeight(0)
         }
-        descendant(".search-menu-result-language", ".search-menu-result-author") {
+        descendant(".search-menu-biblio-result .search-menu-result-language") {
           fontFamily(typographyFontSans)
           fontSize(fontSizeSmall14)
           fontWeight(fontWeightNormal)
           lineHeight(lineHeightSmall22)
-          color(colorSubtle)
+          color(colorSubtle).important()
         }
         descendant(".search-menu-biblio-title-row") {
-          display(.flex)
-          flexWrap(.wrap)
-          alignItems(.baseline)
-          gap(spacing8)
+          display(.block)
+        }
+        descendant(".search-menu-biblio-title-row .search-menu-result-label") {
+          wordWrap(.breakWord)
+        }
+        descendant(".search-menu-biblio-title-row .search-menu-result-author") {
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeSmall14)
+          fontWeight(fontWeightNormal)
+          lineHeight(lineHeightSmall22)
+          color(colorSubtle).important()
         }
         descendant(".search-menu-result-title") { display(.flex)
 alignItems(.center)
@@ -897,7 +904,7 @@ gap(spacing4) }
           if !stringIsEmpty(result.pos) {
             let author = document.createElement(.span)
             author.className = "search-menu-result-author"
-            author.textContent = result.pos
+            author.textContent = " \(result.pos)"
             titleRow.appendChild(author)
           }
           textContent.appendChild(titleRow)
