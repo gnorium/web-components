@@ -37,7 +37,7 @@
         url: String? = nil,
         buttonColor: ButtonView.ButtonColor = .gray,
         weight: ButtonView.ButtonWeight = .subtle,
-        size: ButtonView.ButtonSize = .large,
+        size: ButtonView.ButtonSize = .medium,
         type: ButtonView.ButtonType = .button,
         class: String = "",
         fullWidth: Bool = false,

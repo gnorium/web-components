@@ -181,7 +181,9 @@ public struct TextInputView: HTMLContent {
       descendant(".text-input-control") { position(.relative) }
       descendant(".text-input-input") {
         width(perc(100))
-        minHeight(minSizeInteractivePointer)
+        // 40, flat: the height a medium button is, so a form's fields and its
+        // buttons sit level. (32 plus this input's padding came to 39.5.)
+        minHeight(px(40))
         padding(spacing8, px(15))
         fontFamily(typographyFontSans)
         fontSize(inputFontSize)

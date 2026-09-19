@@ -23,7 +23,7 @@
           CrossIconView()
         },
         weight: .plain,
-        size: .large,
+        size: .medium,
         ariaLabel: ariaLabel,
         class: "close-button-view \(`class`)"
       ).build()

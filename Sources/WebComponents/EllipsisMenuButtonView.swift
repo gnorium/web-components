@@ -23,7 +23,7 @@
               EllipsisIconView(width: size, height: size)
             }, size: .medium),
           weight: weight,
-          size: .large,
+          size: .medium,
           ariaLabel: "Settings",
           class: "navbar-ellipsis-btn"
         )

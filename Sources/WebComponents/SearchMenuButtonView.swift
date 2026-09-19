@@ -22,7 +22,7 @@
             icon: { size in SearchIconView(width: size, height: size) },
             size: .medium),
           weight: weight,
-          size: .large,
+          size: .medium,
           ariaLabel: "Search",
           class: "navbar-search-btn"
         )

@@ -11,7 +11,7 @@
     let url: String
     let size: ButtonView.ButtonSize
 
-    public init(url: String = "/admin-console", size: ButtonView.ButtonSize = .large) {
+    public init(url: String = "/admin-console", size: ButtonView.ButtonSize = .medium) {
       self.url = url
       self.size = size
     }

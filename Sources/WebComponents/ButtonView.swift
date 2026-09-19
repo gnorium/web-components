@@ -60,18 +60,33 @@ public struct ButtonView: HTMLContent {
     case mini
     /// Small: Use only when space is tight (inline with text, compact layouts). Avoid on touchscreens.
     case small
-    /// Medium: Standard button size (default)
+    /// Medium: the standard button, at the height of a text field or a
+    /// dropdown (which is 32 of minimum size plus their padding), so a form's
+    /// buttons sit level with its fields.
     case medium
-    /// Large: For accessibility on touchscreens (increases touch area)
+    /// Large: the touch-target size. Nothing in a form needs it — a form's
+    /// buttons match its fields, which is medium — but it is the fourth rung
+    /// of the ladder below, kept for touch-first chrome.
     case large
 
     /// Public so chrome that sits beside a button — the session legend's
     /// byline next to its Raw toggle — can align to the same height.
+    /// One ladder, each rung a font-size token paired with the height that
+    /// is that font's line-height plus a padding step — and every height a
+    /// size the system already names:
+    ///
+    ///   mini    12 / 24      chrome strips
+    ///   small   14 / 32      min-size-interactive-pointer
+    ///   medium  16 / 40      the height a field renders at
+    ///   large   18 / 44      min-size-interactive-touch
+    ///
+    /// Small used to share mini's 24, which was the one rung out of step.
     public var minSize: CSS.Length {
       switch self {
-      case .mini, .small: return px(24)
-      case .medium: return px(32)
-      case .large: return px(44)
+      case .mini: return px(24)
+      case .small: return minSizeInteractivePointer
+      case .medium: return px(40)
+      case .large: return minSizeInteractiveTouch
       }
     }
   }
@@ -382,7 +397,10 @@ public struct ButtonView: HTMLContent {
             fontSize(fontSizeSmall14)
           }
           selector("&[data-size='medium']") { minHeight(ButtonSize.medium.minSize) }
-          selector("&[data-size='large']") { minHeight(ButtonSize.large.minSize) }
+          selector("&[data-size='large']") {
+            minHeight(ButtonSize.large.minSize)
+            fontSize(fontSizeLarge18)
+          }
           selector("&[data-full-width='false'][data-size='mini']") { minWidth(ButtonSize.mini.minSize) }
           selector("&[data-full-width='false'][data-size='small']") { minWidth(ButtonSize.small.minSize) }
           selector("&[data-full-width='false'][data-size='medium']") { minWidth(ButtonSize.medium.minSize) }
@@ -407,24 +425,7 @@ public struct ButtonView: HTMLContent {
           selector("&[data-icon-only='false'][data-size='mini']") { padding(0, spacing8) }
           selector("&[data-icon-only='false'][data-size='small']") { padding(0, spacingHorizontalButtonSmall) }
           selector("&[data-icon-only='false'][data-size='medium']") { padding(0, spacingHorizontalButton) }
-          selector("&[data-icon-only='false'][data-size='large']") {
-            padding(0, spacingHorizontalButtonLarge)
-            media(maxWidth(maxWidthBreakpointMobile)) {
-              padding(0, spacingHorizontalButton).important()
-            }
-          }
-          selector("&.navbar-search-btn[data-size='large'], &.navbar-ellipsis-btn[data-size='large'], &.navbar-sidebar-btn[data-size='large']") {
-            media(maxWidth(maxWidthBreakpointMobile)) {
-              height(ButtonSize.medium.minSize).important()
-              minHeight(ButtonSize.medium.minSize).important()
-            }
-          }
-          selector("&.navbar-search-btn[data-size='large'][data-icon-only='true'], &.navbar-ellipsis-btn[data-size='large'][data-icon-only='true'], &.navbar-sidebar-btn[data-size='large'][data-icon-only='true']") {
-            media(maxWidth(maxWidthBreakpointMobile)) {
-              width(ButtonSize.medium.minSize).important()
-              minWidth(ButtonSize.medium.minSize).important()
-            }
-          }
+          selector("&[data-icon-only='false'][data-size='large']") { padding(0, spacingHorizontalButtonLarge) }
 
           // Quiet/Plain — opaque base bg + transparent border (not see-through on borders/surfaces)
           selector("&[data-weight='quiet'], &[data-weight='plain']") {
@@ -1218,7 +1219,10 @@ public struct ButtonView: HTMLContent {
             fontSize(fontSizeSmall14)
           }
           selector("&[data-size='medium']") { minHeight(ButtonSize.medium.minSize) }
-          selector("&[data-size='large']") { minHeight(ButtonSize.large.minSize) }
+          selector("&[data-size='large']") {
+            minHeight(ButtonSize.large.minSize)
+            fontSize(fontSizeLarge18)
+          }
           selector("&[data-full-width='false'][data-size='mini']") { minWidth(ButtonSize.mini.minSize) }
           selector("&[data-full-width='false'][data-size='small']") { minWidth(ButtonSize.small.minSize) }
           selector("&[data-full-width='false'][data-size='medium']") { minWidth(ButtonSize.medium.minSize) }
@@ -1243,24 +1247,7 @@ public struct ButtonView: HTMLContent {
           selector("&[data-icon-only='false'][data-size='mini']") { padding(0, spacing8) }
           selector("&[data-icon-only='false'][data-size='small']") { padding(0, spacingHorizontalButtonSmall) }
           selector("&[data-icon-only='false'][data-size='medium']") { padding(0, spacingHorizontalButton) }
-          selector("&[data-icon-only='false'][data-size='large']") {
-            padding(0, spacingHorizontalButtonLarge)
-            media(maxWidth(maxWidthBreakpointMobile)) {
-              padding(0, spacingHorizontalButton).important()
-            }
-          }
-          selector("&.navbar-search-btn[data-size='large'], &.navbar-ellipsis-btn[data-size='large'], &.navbar-sidebar-btn[data-size='large']") {
-            media(maxWidth(maxWidthBreakpointMobile)) {
-              height(ButtonSize.medium.minSize).important()
-              minHeight(ButtonSize.medium.minSize).important()
-            }
-          }
-          selector("&.navbar-search-btn[data-size='large'][data-icon-only='true'], &.navbar-ellipsis-btn[data-size='large'][data-icon-only='true'], &.navbar-sidebar-btn[data-size='large'][data-icon-only='true']") {
-            media(maxWidth(maxWidthBreakpointMobile)) {
-              width(ButtonSize.medium.minSize).important()
-              minWidth(ButtonSize.medium.minSize).important()
-            }
-          }
+          selector("&[data-icon-only='false'][data-size='large']") { padding(0, spacingHorizontalButtonLarge) }
 
           descendant(".button-label") {
             padding(0)

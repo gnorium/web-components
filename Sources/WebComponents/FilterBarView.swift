@@ -134,7 +134,7 @@
             label: "+",
             buttonColor: .gray,
             weight: .subtle,
-            size: .large,
+            size: .medium,
             disabled: addExhausted,
             type: .button,
             class: "filter-bar-add-btn",
@@ -145,7 +145,7 @@
             label: "−",
             buttonColor: .gray,
             weight: .subtle,
-            size: .large,
+            size: .medium,
             type: .button,
             class: "filter-bar-remove-btn",
             labelFontWeight: fontWeightSemiBold
@@ -158,7 +158,7 @@
             label: "Apply",
             buttonColor: .blue,
             weight: .solid,
-            size: .large,
+            size: .medium,
             type: .submit,
             class: "filter-bar-apply",
             labelFontWeight: fontWeightSemiBold
@@ -180,7 +180,7 @@
         placeholder: "Field",
         selectedValue: activeField.name,
         class: "filter-bar-field-picker",
-        buttonSize: .large,
+        buttonSize: .medium,
         fullWidth: true
       )
     }
@@ -207,7 +207,7 @@
           placeholder: label,
           selectedValue: value.isEmpty ? nil : value,
           class: "filter-bar-value-select",
-          buttonSize: .large,
+          buttonSize: .medium,
           fullWidth: true
         )
       }
@@ -383,7 +383,7 @@
           placeholder: entry.label,
           selectedValue: value.isEmpty ? nil : value,
           class: "filter-bar-value-select",
-          buttonSize: .large,
+          buttonSize: .medium,
           fullWidth: true,
           hydrator: dropdownHydration
         )
@@ -451,7 +451,7 @@
         placeholder: "Field",
         selectedValue: field.name,
         class: "filter-bar-field-picker",
-        buttonSize: .large,
+        buttonSize: .medium,
         fullWidth: true,
         hydrator: dropdownHydration
       )
@@ -476,7 +476,7 @@
           options: options,
           placeholder: field.label,
           class: "filter-bar-value-select",
-          buttonSize: .large,
+          buttonSize: .medium,
           fullWidth: true,
           hydrator: dropdownHydration
         )
@@ -488,7 +488,7 @@
         label: "−",
         buttonColor: .gray,
         weight: .subtle,
-        size: .large,
+        size: .medium,
         type: .button,
         class: "filter-bar-remove-btn"
       )

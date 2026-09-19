@@ -19,7 +19,7 @@ struct StyleSheetEmitter {
     _ = ButtonView(label: "Solid", weight: .solid).build()
     _ = ButtonView(label: "Subtle", weight: .subtle).build()
     _ = ButtonView(icon: IconView { SearchIconView() }, size: .medium, ariaLabel: "search").build()
-    _ = ButtonView(icon: IconView { SearchIconView() }, size: .large, ariaLabel: "search", class: "navbar-search-btn").build()
+    _ = ButtonView(icon: IconView { SearchIconView() }, size: .medium, ariaLabel: "search", class: "navbar-search-btn").build()
     _ = SearchBarView(openDialog: true, class: "home", placeholder: "Search", ariaLabel: "Search", searchField: "q", searchEndpoint: "/search/suggest", resultUrlBase: "/search").build()
     _ = UnicodeGridView().build()
 

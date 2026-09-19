@@ -24,7 +24,7 @@
               MenuIconView(width: size, height: size)
             }, size: .medium),
           weight: .quiet,
-          size: .large,
+          size: .medium,
           ariaLabel: "Open menu",
           class: "navbar-sidebar-btn sidebar-menu-btn",
           data: [("sidebar-menu", "true")]
