@@ -422,16 +422,18 @@
         }
         descendant(".search-menu-biblio-title-row") {
           display(.inline)
+          marginInlineStart(spacing4)
         }
         descendant(".search-menu-biblio-title-row .search-menu-result-label") {
           wordWrap(.breakWord)
         }
         descendant(".search-menu-biblio-result .search-menu-result-author") {
           fontFamily(typographyFontSans)
-          fontSize(fontSizeSmall14)
+          fontSize(fontSizeXSmall12)
           fontWeight(fontWeightNormal)
           lineHeight(lineHeightSmall22)
           color(colorSubtle).important()
+          marginInlineStart(spacing4)
         }
         descendant(".search-menu-result-title") { display(.flex)
 alignItems(.center)
@@ -893,7 +895,7 @@ gap(spacing4) }
           // it robust under narrow widths and accessibility text scaling.
           let language = document.createElement(.span)
           language.className = "search-menu-result-language"
-          language.textContent = result.subtext
+          language.textContent = "\(result.subtext):"
           textContent.appendChild(language)
 
           let titleRow = document.createElement(.span)
@@ -901,14 +903,14 @@ gap(spacing4) }
 
           let title = document.createElement(.span)
           title.className = "menu-item-label search-menu-result-label"
-          title.textContent = " \(result.text)"
+          title.textContent = result.text
           titleRow.appendChild(title)
           textContent.appendChild(titleRow)
 
           if !stringIsEmpty(result.pos) {
             let author = document.createElement(.span)
             author.className = "search-menu-result-author"
-            author.textContent = " \(result.pos)"
+            author.textContent = result.pos
             textContent.appendChild(author)
           }
         } else {
