@@ -333,6 +333,18 @@ public struct TextInputView: HTMLContent {
         // Update clear button visibility based on initial value
         updateClearButtonVisibility()
       }
+
+      // A focused number input steps its value on a wheel event in Chromium.
+      // Swallow the wheel while the input is focused: the value stands and
+      // focus stays, at the cost of the page not scrolling under that one
+      // 40px field until the pointer leaves it.
+      if let input, stringEquals(input.getAttribute("type") ?? "", "number") {
+        _ = input.addEventListener(.wheel) { event in
+          if let active = document.activeElement, active.id == input.id {
+            event.preventDefault()
+          }
+        }
+      }
     }
 
     private func bindClearableEvents() {

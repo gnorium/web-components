@@ -329,6 +329,9 @@ public struct AccordionView: HTMLContent {
         selector(".accordion-details[data-open-finished='true'][data-motion='idle'] &") {
           overflow(.visible)
         }
+        selector(".accordion-details[data-open-finished='true'][data-motion='idle'] & > .accordion-content") {
+          overflow(.visible)
+        }
       }
     }
     .open(isOpen)
