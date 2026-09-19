@@ -334,6 +334,15 @@ public struct TextInputView: HTMLContent {
         updateClearButtonVisibility()
       }
 
+      // A right-click should land the paste that follows it. Chromium focuses
+      // on the click; Safari does not, and Paste from its menu then goes
+      // nowhere. Focus on the context menu opening, in every browser.
+      if let input {
+        _ = input.addEventListener(.contextmenu) { _ in
+          input.focus()
+        }
+      }
+
       // A focused number input steps its value on a wheel event in Chromium,
       // and the only way to stop that is to cancel the event — which also
       // cancels the scroll. So the scroll is done by hand: the value stands,

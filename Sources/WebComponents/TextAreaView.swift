@@ -224,7 +224,15 @@ public struct TextAreaView: HTMLContent {
 
   public class TextAreaHydration: @unchecked Sendable {
     public static nonisolated(unsafe) var instance: TextAreaHydration?
-    public init() {}
+    public init() {
+      // A right-click should land the paste that follows it; Safari does not
+      // focus on the click, so focus when the context menu opens.
+      for area in document.querySelectorAll(".text-area-input") {
+        _ = area.addEventListener(.contextmenu) { _ in
+          area.focus()
+        }
+      }
+    }
 
     public static func hydrateIfPresent() {
       guard document.querySelector(".text-area-view") != nil else { return }
