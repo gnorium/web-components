@@ -410,6 +410,9 @@
           alignItems(.stretch)
           minHeight(0)
         }
+        descendant(".search-menu-biblio-result .search-menu-result-text") {
+          display(.block)
+        }
         descendant(".search-menu-biblio-result .search-menu-result-language") {
           fontFamily(typographyFontSans)
           fontSize(fontSizeSmall14)
@@ -418,12 +421,12 @@
           color(colorSubtle).important()
         }
         descendant(".search-menu-biblio-title-row") {
-          display(.block)
+          display(.inline)
         }
         descendant(".search-menu-biblio-title-row .search-menu-result-label") {
           wordWrap(.breakWord)
         }
-        descendant(".search-menu-biblio-title-row .search-menu-result-author") {
+        descendant(".search-menu-biblio-result .search-menu-result-author") {
           fontFamily(typographyFontSans)
           fontSize(fontSizeSmall14)
           fontWeight(fontWeightNormal)
@@ -898,16 +901,16 @@ gap(spacing4) }
 
           let title = document.createElement(.span)
           title.className = "menu-item-label search-menu-result-label"
-          title.textContent = result.text
+          title.textContent = " \(result.text)"
           titleRow.appendChild(title)
+          textContent.appendChild(titleRow)
 
           if !stringIsEmpty(result.pos) {
             let author = document.createElement(.span)
             author.className = "search-menu-result-author"
             author.textContent = " \(result.pos)"
-            titleRow.appendChild(author)
+            textContent.appendChild(author)
           }
-          textContent.appendChild(titleRow)
         } else {
           // Lexico results follow the same reading order as biblio results:
           // language first, then the identified lemma and its grammar.
