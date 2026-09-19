@@ -334,13 +334,15 @@ public struct TextInputView: HTMLContent {
         updateClearButtonVisibility()
       }
 
-      // A focused number input steps its value on a wheel event in Chromium.
-      // A wheel means scrolling, so drop focus and let the page move: the
-      // value stands, and nothing is lost by unfocusing a field the reader
-      // is scrolling away from.
+      // A focused number input steps its value on a wheel event in Chromium,
+      // and the only way to stop that is to cancel the event — which also
+      // cancels the scroll. So the scroll is done by hand: the value stands,
+      // focus stays, the page moves, exactly as it does over a text field.
       if let input, stringEquals(input.getAttribute("type") ?? "", "number") {
-        _ = input.addEventListener(.wheel) { _ in
-          input.blur()
+        _ = input.addEventListener(.wheel) { event in
+          guard let active = document.activeElement, active.id == input.id else { return }
+          event.preventDefault()
+          window.scrollTo(window.scrollX, window.scrollY + event.deltaY)
         }
       }
     }
