@@ -855,7 +855,6 @@ public struct TableView: HTMLContent {
         display(.flex)
         flexDirection(.column)
         gap(spacing16)
-        flex(1)
         minHeight(0)
       }
       selector("&.table-view-empty tbody tr:hover", "&.table-view-pending tbody tr:hover") { backgroundColor(.transparent).important() }
@@ -1025,17 +1024,15 @@ public struct TableView: HTMLContent {
         backgroundColor(backgroundColorBase)
         width(perc(100))
         display(.flex)
-        flex(1)
         minHeight(0)
       }
       descendant(".table-scroll") {
-        overflow(.auto)
+        overflowX(.auto)
         // The same curve as the box it sits in, so the bar's ends are clipped
         // by the corners instead of squaring them off.
         borderRadius(borderRadiusBase)
         width(perc(100))
         display(.flex)
-        flex(1)
         minWidth(0)
         minHeight(0)
       }
