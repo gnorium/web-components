@@ -248,6 +248,11 @@
       let allButtons = document.querySelectorAll("[data-toggle-button=\"true\"]")
 
       for button in allButtons {
+        // Readers and other fragments can arrive after the document's first
+        // hydration pass. Mark each binding so a later pass wires only those
+        // new controls, rather than making every existing toggle fire twice.
+        guard !stringEquals(button.dataset["toggleHydrated"] ?? "false", "true") else { continue }
+        button.dataset["toggleHydrated"] = "true"
         let instance = ToggleButtonInstance(button: button)
         instances.append(instance)
       }
