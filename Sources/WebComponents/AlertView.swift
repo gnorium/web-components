@@ -262,19 +262,18 @@
             backgroundColor(backgroundColorGreenSubtle)
             borderColor(borderColorGreen)
           }
-          selector("&.alert-fade-in") { animation("alert-fade-in", transitionDurationBase, transitionTimingFunctionSystem) }
-          selector("&.alert-fade-out") { animation("alert-fade-out", s(0.3), .easeOut) }
-          selector("&.alert-dynamic") {
-            pointerEvents(.auto)
-            boxShadow((px(0), px(2), px(8), rgba(0, 0, 0, 0.1)))
-          }
-          // Dynamic alerts can appear in a flex stack with a gap. Expanding
-          // their box (and cancelling that gap at the first frame) makes the
-          // content below them move into place instead of jumping away.
-          selector("&.alert-dynamic.alert-fade-in") {
+          selector("&.alert-fade-in") {
             maxHeight(px(512))
             overflow(.hidden)
             animation("alert-expand-in", s(0.3), .easeOut)
+          }
+          selector("&.alert-fade-out") {
+            overflow(.hidden)
+            animation("alert-collapse-out", s(0.3), .easeOut)
+          }
+          selector("&.alert-dynamic") {
+            pointerEvents(.auto)
+            boxShadow((px(0), px(2), px(8), rgba(0, 0, 0, 0.1)))
           }
           selector("&.alert-dynamic .alert-dismiss") {
             display(.flex)
@@ -293,16 +292,6 @@
             transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
             flexShrink(0)
           }
-          keyframes("alert-fade-in") {
-            from {
-              opacity(0)
-              transform(translateX(perc(-100)))
-            }
-            to {
-              opacity(1)
-              transform(translateX(0))
-            }
-          }
           keyframes("alert-expand-in") {
             from {
               opacity(0)
@@ -319,14 +308,20 @@
               borderWidth(borderWidthBase)
             }
           }
-          keyframes("alert-fade-out") {
+          keyframes("alert-collapse-out") {
             from {
               opacity(1)
-              transform(translateX(0))
+              maxHeight(px(512))
+              marginBlockStart(0)
+              paddingBlock(spacing12)
+              borderWidth(borderWidthBase)
             }
             to {
               opacity(0)
-              transform(translateX(perc(-100)))
+              maxHeight(0)
+              marginBlockStart(calc(-spacing16))
+              paddingBlock(0)
+              borderWidth(0)
             }
           }
         }
