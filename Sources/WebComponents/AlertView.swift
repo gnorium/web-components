@@ -371,7 +371,6 @@
   /// Dynamic alert creation functions
   public enum AlertAPI {
     private static let motionDuration = 300
-    private static let stackGapCompensation = "-16px"
 
     private static func pixels(_ value: Double) -> String {
       stringJoin([intToString(Int(value.rounded())), "px"], separator: "")
@@ -384,22 +383,15 @@
     private static func expand(_ element: DOM.Element) {
       element.style.setProperty("transition", "none")
       element.style.setProperty("height", "0px")
-      element.style.setProperty("opacity", "0")
       element.style.setProperty("overflow", "hidden")
-      element.style.setProperty("margin-block-start", stackGapCompensation)
       let endHeight = element.scrollHeight
       _ = element.offsetHeight
-      element.style.setProperty(
-        "transition", "height 300ms ease-out, opacity 300ms ease-out, margin-block-start 300ms ease-out")
+      element.style.setProperty("transition", "height 300ms ease-out")
       element.style.setProperty("height", pixels(endHeight))
-      element.style.setProperty("opacity", "1")
-      element.style.setProperty("margin-block-start", "0px")
 
       _ = setTimeout(motionDuration + 50) {
         _ = element.style.removeProperty("height")
-        _ = element.style.removeProperty("opacity")
         _ = element.style.removeProperty("overflow")
-        _ = element.style.removeProperty("margin-block-start")
         _ = element.style.removeProperty("transition")
       }
     }
@@ -410,11 +402,8 @@
       element.style.setProperty("height", pixels(startHeight))
       element.style.setProperty("overflow", "hidden")
       _ = element.offsetHeight
-      element.style.setProperty(
-        "transition", "height 300ms ease-out, opacity 300ms ease-out, margin-block-start 300ms ease-out")
+      element.style.setProperty("transition", "height 300ms ease-out")
       element.style.setProperty("height", "0px")
-      element.style.setProperty("opacity", "0")
-      element.style.setProperty("margin-block-start", stackGapCompensation)
     }
 
     /// Alert color for dynamic alerts
