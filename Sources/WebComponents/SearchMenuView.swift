@@ -153,7 +153,7 @@
 
         // Search menu container - full screen
         div {
-          ContainerView(size: .xLarge) {
+          ContainerView(size: .full) {
         div {
           // Search category tabs
           if !tabs.isEmpty {

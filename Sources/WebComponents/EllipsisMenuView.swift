@@ -33,7 +33,7 @@
 
         // Menu container — slides down from navbar
         div {
-          ContainerView(size: .xLarge) {
+          ContainerView(size: .full) {
             div {
               content
             }

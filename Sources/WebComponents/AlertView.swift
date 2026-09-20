@@ -370,41 +370,7 @@
 
   /// Dynamic alert creation functions
   public enum AlertAPI {
-    private static let motionDuration = 300
-
-    private static func pixels(_ value: Double) -> String {
-      stringJoin([intToString(Int(value.rounded())), "px"], separator: "")
-    }
-
-    /// Uses the same measured-height transition as AccordionView. CSS cannot
-    /// interpolate from `height: 0` to an intrinsic height, so we measure the
-    /// rendered alert and transition to its exact pixel height before handing
-    /// layout back to the browser.
-    private static func expand(_ element: DOM.Element) {
-      element.style.setProperty("transition", "none")
-      element.style.setProperty("height", "0px")
-      element.style.setProperty("overflow", "hidden")
-      let endHeight = element.scrollHeight
-      _ = element.offsetHeight
-      element.style.setProperty("transition", "height 300ms ease-out")
-      element.style.setProperty("height", pixels(endHeight))
-
-      _ = setTimeout(motionDuration + 50) {
-        _ = element.style.removeProperty("height")
-        _ = element.style.removeProperty("overflow")
-        _ = element.style.removeProperty("transition")
-      }
-    }
-
-    private static func collapse(_ element: DOM.Element) {
-      let startHeight = element.getBoundingClientRect()?.height ?? 0
-      element.style.setProperty("transition", "none")
-      element.style.setProperty("height", pixels(startHeight))
-      element.style.setProperty("overflow", "hidden")
-      _ = element.offsetHeight
-      element.style.setProperty("transition", "height 300ms ease-out")
-      element.style.setProperty("height", "0px")
-    }
+    private static let motionDuration = 250
 
     /// Alert color for dynamic alerts
     public enum AlertColor: Sendable {
@@ -554,9 +520,21 @@
         alertEl.appendChild(dismissBtn)
       }
 
-      // Add to container
-      alertContainer.appendChild(alertEl)
-      expand(alertEl)
+      // The clip uses the same grid-row transition as AccordionView. It has
+      // an intrinsic endpoint, so alerts never overshoot then settle.
+      let motionClip = document.createElement(.div)
+      motionClip.className = "alert-motion-clip"
+      motionClip.style.setProperty("display", "grid")
+      motionClip.style.setProperty("grid-template-rows", "0fr")
+      motionClip.style.setProperty("overflow", "hidden")
+      motionClip.style.setProperty("transition", "grid-template-rows 250ms ease")
+      let motionContent = document.createElement(.div)
+      motionContent.style.setProperty("min-height", "0")
+      motionContent.appendChild(alertEl)
+      motionClip.appendChild(motionContent)
+      alertContainer.appendChild(motionClip)
+      _ = motionClip.offsetHeight
+      motionClip.style.setProperty("grid-template-rows", "1fr")
 
       // Auto-dismiss
       if autoDismiss && type != .red {
@@ -569,10 +547,11 @@
     private static func dismissAlert(
       _ element: DOM.Element, onDismiss: (@Sendable () -> Void)?, userInitiated: Bool
     ) {
-      collapse(element)
+      guard let motionClip = element.parentElement?.parentElement else { return }
+      motionClip.style.setProperty("grid-template-rows", "0fr")
 
       _ = setTimeout(motionDuration) {
-        element.remove()
+        motionClip.remove()
         onDismiss?()
 
         let eventType: String

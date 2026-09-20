@@ -207,12 +207,11 @@
           boxSizing(.borderBox)
         }
         selector("&.home") {
-          // Match the input in SearchMenuView's x-large container: 1280px
-          // outer width minus its 64px inline padding on either side.
-          // Keep filling the available column below that width.
+          // Match the full-width input in SearchMenuView while preserving the
+          // same responsive inline padding from ContainerView.
           width(perc(100))
           minWidth(0)
-          maxWidth(px(1152))
+          maxWidth(.none)
           borderRadius(0)
         }
         // Sidebar: base radius, same 14px type + spacing10 padding as main
