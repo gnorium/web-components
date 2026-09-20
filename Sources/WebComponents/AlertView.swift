@@ -262,15 +262,6 @@
             backgroundColor(backgroundColorGreenSubtle)
             borderColor(borderColorGreen)
           }
-          selector("&.alert-fade-in") {
-            maxHeight(px(512))
-            overflow(.hidden)
-            animation("alert-expand-in", s(0.3), .easeOut)
-          }
-          selector("&.alert-fade-out") {
-            overflow(.hidden)
-            animation("alert-collapse-out", s(0.3), .easeOut)
-          }
           selector("&.alert-dynamic") {
             pointerEvents(.auto)
             boxShadow((px(0), px(2), px(8), rgba(0, 0, 0, 0.1)))
@@ -291,38 +282,6 @@
             borderRadius(borderRadiusBase)
             transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
             flexShrink(0)
-          }
-          keyframes("alert-expand-in") {
-            from {
-              opacity(0)
-              maxHeight(0)
-              marginBlockStart(calc(-spacing16))
-              paddingBlock(0)
-              borderWidth(0)
-            }
-            to {
-              opacity(1)
-              maxHeight(px(512))
-              marginBlockStart(0)
-              paddingBlock(spacing12)
-              borderWidth(borderWidthBase)
-            }
-          }
-          keyframes("alert-collapse-out") {
-            from {
-              opacity(1)
-              maxHeight(px(512))
-              marginBlockStart(0)
-              paddingBlock(spacing12)
-              borderWidth(borderWidthBase)
-            }
-            to {
-              opacity(0)
-              maxHeight(0)
-              marginBlockStart(calc(-spacing16))
-              paddingBlock(0)
-              borderWidth(0)
-            }
           }
         }
 
@@ -411,6 +370,53 @@
 
   /// Dynamic alert creation functions
   public enum AlertAPI {
+    private static let motionDuration = 300
+    private static let stackGapCompensation = "-16px"
+
+    private static func pixels(_ value: Double) -> String {
+      stringJoin([intToString(Int(value.rounded())), "px"], separator: "")
+    }
+
+    /// Uses the same measured-height transition as AccordionView. CSS cannot
+    /// interpolate from `height: 0` to an intrinsic height, so we measure the
+    /// rendered alert and transition to its exact pixel height before handing
+    /// layout back to the browser.
+    private static func expand(_ element: DOM.Element) {
+      element.style.setProperty("transition", "none")
+      element.style.setProperty("height", "0px")
+      element.style.setProperty("opacity", "0")
+      element.style.setProperty("overflow", "hidden")
+      element.style.setProperty("margin-block-start", stackGapCompensation)
+      let endHeight = element.scrollHeight
+      _ = element.offsetHeight
+      element.style.setProperty(
+        "transition", "height 300ms ease-out, opacity 300ms ease-out, margin-block-start 300ms ease-out")
+      element.style.setProperty("height", pixels(endHeight))
+      element.style.setProperty("opacity", "1")
+      element.style.setProperty("margin-block-start", "0px")
+
+      _ = setTimeout(motionDuration + 50) {
+        _ = element.style.removeProperty("height")
+        _ = element.style.removeProperty("opacity")
+        _ = element.style.removeProperty("overflow")
+        _ = element.style.removeProperty("margin-block-start")
+        _ = element.style.removeProperty("transition")
+      }
+    }
+
+    private static func collapse(_ element: DOM.Element) {
+      let startHeight = element.getBoundingClientRect()?.height ?? 0
+      element.style.setProperty("transition", "none")
+      element.style.setProperty("height", pixels(startHeight))
+      element.style.setProperty("overflow", "hidden")
+      _ = element.offsetHeight
+      element.style.setProperty(
+        "transition", "height 300ms ease-out, opacity 300ms ease-out, margin-block-start 300ms ease-out")
+      element.style.setProperty("height", "0px")
+      element.style.setProperty("opacity", "0")
+      element.style.setProperty("margin-block-start", stackGapCompensation)
+    }
+
     /// Alert color for dynamic alerts
     public enum AlertColor: Sendable {
       case gray
@@ -561,6 +567,7 @@
 
       // Add to container
       alertContainer.appendChild(alertEl)
+      expand(alertEl)
 
       // Auto-dismiss
       if autoDismiss && type != .red {
@@ -573,10 +580,9 @@
     private static func dismissAlert(
       _ element: DOM.Element, onDismiss: (@Sendable () -> Void)?, userInitiated: Bool
     ) {
-      element.classList.remove("alert-fade-in")
-      element.classList.add("alert-fade-out")
+      collapse(element)
 
-      _ = setTimeout(300) {
+      _ = setTimeout(motionDuration) {
         element.remove()
         onDismiss?()
 
