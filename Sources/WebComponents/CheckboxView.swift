@@ -6,12 +6,20 @@ import EmbeddedSwiftUtilities
 import HTMLBuilder
 import WebTypes
 
+private extension HTML.HTMLInputElement {
+  func form(_ value: String?) -> Self {
+    guard let value else { return self }
+    return form(value)
+  }
+}
+
 /// A Checkbox is a binary input that can appear by itself or in a multiselect group.
 /// Checkboxes can be selected, unselected or in an indeterminate state.
 public struct CheckboxView: HTMLContent {
   let id: String
   let name: String
   let value: String
+  let form: String?
   let checked: Bool
   let disabled: Bool
   let indeterminate: Bool
@@ -34,6 +42,7 @@ public struct CheckboxView: HTMLContent {
     id: String,
     name: String,
     value: String = "1",
+    form: String? = nil,
     checked: Bool = false,
     disabled: Bool = false,
     indeterminate: Bool = false,
@@ -50,6 +59,7 @@ public struct CheckboxView: HTMLContent {
     self.id = id
     self.name = name
     self.value = value
+    self.form = form
     self.checked = checked
     self.disabled = disabled
     self.indeterminate = indeterminate
@@ -68,6 +78,7 @@ public struct CheckboxView: HTMLContent {
   id: String,
   name: String,
   value: Bool,
+  form: String? = nil,
   checked: Bool = false,
   disabled: Bool = false,
   indeterminate: Bool = false,
@@ -85,6 +96,7 @@ public struct CheckboxView: HTMLContent {
       id: id,
       name: name,
       value: value ? "true" : "false",
+      form: form,
       checked: checked,
       disabled: disabled,
       indeterminate: indeterminate,
@@ -112,6 +124,7 @@ public struct CheckboxView: HTMLContent {
           .id(id)
           .name(name)
           .value(value)
+          .form(form)
           .checked(checked)
           .disabled(disabled)
           .ariaDescribedby(descriptionID)
@@ -313,6 +326,7 @@ public struct CheckboxView: HTMLContent {
       id: String,
       name: String,
       value: String = "1",
+      form: String? = nil,
       checked: Bool = false,
       disabled: Bool = false,
       indeterminate: Bool = false,
@@ -329,6 +343,7 @@ public struct CheckboxView: HTMLContent {
         id: id,
         name: name,
         value: value,
+        form: form,
         checked: checked,
         disabled: disabled,
         indeterminate: indeterminate,
