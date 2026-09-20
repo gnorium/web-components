@@ -268,7 +268,14 @@
             pointerEvents(.auto)
             boxShadow((px(0), px(2), px(8), rgba(0, 0, 0, 0.1)))
           }
-          selector("&.alert-dynamic.alert-fade-in") { animation("alert-fade-in", s(0.3), .easeOut) }
+          // Dynamic alerts can appear in a flex stack with a gap. Expanding
+          // their box (and cancelling that gap at the first frame) makes the
+          // content below them move into place instead of jumping away.
+          selector("&.alert-dynamic.alert-fade-in") {
+            maxHeight(px(512))
+            overflow(.hidden)
+            animation("alert-expand-in", s(0.3), .easeOut)
+          }
           selector("&.alert-dynamic .alert-dismiss") {
             display(.flex)
             alignItems(.center)
@@ -294,6 +301,22 @@
             to {
               opacity(1)
               transform(translateX(0))
+            }
+          }
+          keyframes("alert-expand-in") {
+            from {
+              opacity(0)
+              maxHeight(0)
+              marginBlockStart(calc(-spacing16))
+              paddingBlock(0)
+              borderWidth(0)
+            }
+            to {
+              opacity(1)
+              maxHeight(px(512))
+              marginBlockStart(0)
+              paddingBlock(spacing12)
+              borderWidth(borderWidthBase)
             }
           }
           keyframes("alert-fade-out") {
