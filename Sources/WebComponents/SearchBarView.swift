@@ -207,12 +207,12 @@
           boxSizing(.borderBox)
         }
         selector("&.home") {
-          // Fill the available column first, then cap it on wide screens.
-          // `width: 512px; max-width: 100%` still overflows a shrinking flex
-          // item at enlarged system text sizes.
+          // Match the input in SearchMenuView's x-large container: 1280px
+          // outer width minus its 64px inline padding on either side.
+          // Keep filling the available column below that width.
           width(perc(100))
           minWidth(0)
-          maxWidth(px(512))
+          maxWidth(px(1152))
           borderRadius(0)
         }
         // Sidebar: base radius, same 14px type + spacing10 padding as main
