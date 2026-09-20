@@ -79,6 +79,18 @@ public struct TableView: HTMLContent {
       self.minWidth = minWidth
     }
 
+    /// A table's declared width is its preferred data width. A heading needs
+    /// its own floor: `Suggested At` must be able to name the column it heads.
+    /// The 8px glyph allowance is deliberately generous for the 14px bold
+    /// header type, and the 24px accounts for the cell's horizontal padding.
+    var fittedHeaderWidth: Int? {
+      guard let width, width.value.hasSuffix("px"),
+        let requested = Int(width.value.dropLast(2))
+      else { return nil }
+      let labelFloor = label.unicodeScalars.count * 8 + 24
+      return max(requested, labelFloor)
+    }
+
     public init(
       id: String,
       label: String,
@@ -461,7 +473,9 @@ public struct TableView: HTMLContent {
               }
               for column in columns {
                 var columnElement = col().data("table-column-id", column.id)
-                if let width = column.width {
+                if let fittedHeaderWidth = column.fittedHeaderWidth {
+                  columnElement = columnElement.setAttribute("width", "\(fittedHeaderWidth)")
+                } else if let width = column.width {
                   columnElement = columnElement.setAttribute("width", width.value)
                 }
                 columnElement
@@ -567,7 +581,9 @@ public struct TableView: HTMLContent {
                     .class("table-column-header")
                     .style {
                       selector("&") {
-                        if let colWidth = column.width {
+                        if let fittedHeaderWidth = column.fittedHeaderWidth {
+                          width(px(fittedHeaderWidth))
+                        } else if let colWidth = column.width {
                           width(colWidth)
                         } else {
                           width(.auto)
@@ -1028,6 +1044,10 @@ public struct TableView: HTMLContent {
       }
       descendant(".table-scroll") {
         overflowX(.auto)
+        // Horizontal scrolling makes the browser create a vertical scroll
+        // context too. Reserve that gutter so it cannot paint over the last
+        // header label.
+        CSS.Property("scrollbar-gutter", "stable")
         // The same curve as the box it sits in, so the bar's ends are clipped
         // by the corners instead of squaring them off.
         borderRadius(borderRadiusBase)
@@ -1086,6 +1106,15 @@ public struct TableView: HTMLContent {
         overflow(.hidden).important()
         display(.block)
         width(perc(100))
+      }
+      // A column width is a starting size for its values. Its heading is the
+      // only name a reader has for those values, so the heading may enlarge the
+      // column but must never be abbreviated.
+      selector("& .table-table th > div:not(.table-resizer)", "& .table-table th > button", "& .table-table th > span") {
+        width(.maxContent).important()
+        whiteSpace(.nowrap).important()
+        textOverflow(.clip).important()
+        overflow(.visible).important()
       }
       descendant(".table-thead") {
         backgroundColor(backgroundColorNeutralSubtle)
@@ -1173,9 +1202,10 @@ public struct TableView: HTMLContent {
         marginBlockStart(spacing8)
       }
       descendant(".table-sort-label") {
-        overflow(.hidden)
-        textOverflow(.ellipsis)
-        whiteSpace(.nowrap)
+        width(.maxContent).important()
+        overflow(.visible).important()
+        textOverflow(.clip).important()
+        whiteSpace(.nowrap).important()
         minWidth(px(0))
         flexGrow(1)
         flexShrink(1)
@@ -1205,8 +1235,9 @@ public struct TableView: HTMLContent {
         color(colorBase)
         textAlign(.inherit)
         textTransform(.inherit)
-        overflow(.hidden)
-        textOverflow(.ellipsis)
+        width(.maxContent).important()
+        overflow(.visible).important()
+        textOverflow(.clip).important()
         whiteSpace(.nowrap)
         cursor(cursorBaseHover)
         minWidth(0)
@@ -1214,10 +1245,10 @@ public struct TableView: HTMLContent {
         height(perc(100))
       }
       descendant(".table-header-label") {
-        width(perc(100))
-        overflow(.hidden)
-        textOverflow(.ellipsis)
-        whiteSpace(.nowrap)
+        width(.maxContent).important()
+        overflow(.visible).important()
+        textOverflow(.clip).important()
+        whiteSpace(.nowrap).important()
         display(.block)
       }
       descendant(".table-selection-header") {
@@ -1490,6 +1521,22 @@ public struct TableView: HTMLContent {
       return width
     }
 
+    /// Column widths begin with their server-provided values, but a heading is
+    /// never expendable metadata. Grow a column when its heading needs more
+    /// room; body values may still truncate inside that established geometry.
+    private func fitHeaderLabels() {
+      let headers = Array(self.table.querySelectorAll("thead th"))
+        .filter { !$0.classList.contains("table-th-spacer") }
+      var total: Double = 0
+      for header in headers {
+        let currentWidth = Double(header.getBoundingClientRect()?.width ?? 0)
+        let fittedWidth = max(currentWidth, measureCellContent(header))
+        setColumnWidth(for: header, width: fittedWidth)
+        total += fittedWidth
+      }
+      setTableWidth(total)
+    }
+
     public init(table: DOM.Element) {
       self.table = table
       self.wrapper = table.parentElement ?? table
@@ -1538,6 +1585,7 @@ public struct TableView: HTMLContent {
         currentSort = (sortColumn, sortOrder)
       }
 
+      fitHeaderLabels()
       bindEvents()
       TableInstance.updateZebraStriping(for: table)
 
