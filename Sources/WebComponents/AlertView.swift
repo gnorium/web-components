@@ -481,6 +481,26 @@
         alertEl.setAttribute(.role, .alert)
       }
 
+      // The alert itself is the stable frame: its padding, fill, and complete
+      // outline paint immediately. Only this inner panel opens and closes, so
+      // no intermediate frame can lose its bottom border.
+      let motionClip = document.createElement(.div)
+      motionClip.className = "alert-motion-clip"
+      motionClip.style.setProperty("display", "grid")
+      motionClip.style.setProperty("grid-template-rows", "0fr")
+      motionClip.style.setProperty("overflow", "hidden")
+      motionClip.style.setProperty("width", "100%")
+      motionClip.style.setProperty("transition", "grid-template-rows 400ms ease")
+      let motionContent = document.createElement(.div)
+      motionContent.className = "alert-motion-content"
+      motionContent.style.setProperty("display", "flex")
+      motionContent.style.setProperty("align-items", "center")
+      motionContent.style.setProperty("gap", "var(--spacing-8)")
+      motionContent.style.setProperty("min-width", "0")
+      motionContent.style.setProperty("min-height", "0")
+      motionContent.style.setProperty("opacity", "0")
+      motionContent.style.setProperty("transition", "opacity 400ms ease")
+
       // Icon
       if shouldShowIcon {
         let icon = document.createElement(.span)
@@ -494,14 +514,14 @@
         case .red: icon.setAttribute(data("color"), "red")
         case .green: icon.setAttribute(data("color"), "green")
         }
-        alertEl.appendChild(icon)
+        motionContent.appendChild(icon)
       }
 
       // Content
       let content = document.createElement(.div)
       content.className = "alert-content"
       content.innerHTML = text
-      alertEl.appendChild(content)
+      motionContent.appendChild(content)
 
       // Dismiss button
       if allowUserDismiss {
@@ -517,34 +537,22 @@
           dismissAlert(alertEl, onDismiss: onDismiss, userInitiated: true)
         }
 
-        alertEl.appendChild(dismissBtn)
+        motionContent.appendChild(dismissBtn)
       }
 
-      // The clip uses the same grid-row transition as AccordionView. It has
-      // an intrinsic endpoint, so alerts never overshoot then settle.
-      let motionClip = document.createElement(.div)
-      motionClip.className = "alert-motion-clip"
-      motionClip.style.setProperty("display", "grid")
-      motionClip.style.setProperty("grid-template-rows", "0fr")
-      motionClip.style.setProperty("overflow", "hidden")
-      motionClip.style.setProperty("transition", "grid-template-rows 400ms ease")
-      let motionContent = document.createElement(.div)
-      motionContent.style.setProperty("min-height", "0")
-      alertEl.style.setProperty("opacity", "0")
-      alertEl.style.setProperty("transition", "opacity 400ms ease")
-      motionContent.appendChild(alertEl)
       motionClip.appendChild(motionContent)
-      alertContainer.appendChild(motionClip)
+      alertEl.appendChild(motionClip)
+      alertContainer.appendChild(alertEl)
       // Let the closed, transparent state paint before changing either
       // property. A forced layout alone can still be coalesced into the
       // insertion frame, especially on WebKit.
       _ = window.requestAnimationFrame {
         motionClip.style.setProperty("grid-template-rows", "1fr")
-        alertEl.style.setProperty("opacity", "1")
+        motionContent.style.setProperty("opacity", "1")
 
         _ = setTimeout(motionDuration + 50) {
-          _ = alertEl.style.removeProperty("opacity")
-          _ = alertEl.style.removeProperty("transition")
+          _ = motionContent.style.removeProperty("opacity")
+          _ = motionContent.style.removeProperty("transition")
         }
       }
 
@@ -559,14 +567,16 @@
     private static func dismissAlert(
       _ element: DOM.Element, onDismiss: (@Sendable () -> Void)?, userInitiated: Bool
     ) {
-      guard let motionClip = element.parentElement?.parentElement else { return }
-      element.style.setProperty("transition", "opacity 400ms ease")
+      guard let motionClip = element.querySelector(".alert-motion-clip"),
+        let motionContent = element.querySelector(".alert-motion-content")
+      else { return }
+      motionContent.style.setProperty("transition", "opacity 400ms ease")
       _ = window.requestAnimationFrame {
         motionClip.style.setProperty("grid-template-rows", "0fr")
-        element.style.setProperty("opacity", "0")
+        motionContent.style.setProperty("opacity", "0")
 
         _ = setTimeout(motionDuration) {
-          motionClip.remove()
+          element.remove()
           onDismiss?()
 
           let eventType: String
