@@ -373,11 +373,9 @@
     private static let motionDuration = 400
     // Safari can paint a flex shell's first text line before resolving its
     // block padding. Keep the shell's padding at zero and animate spacing on
-    // its child instead, then reveal that child after the shell can contain a
-    // complete padded line.
-    private static let openingContentDelay = 200
+    // its child instead, so both the spacing and content can fade in from the
+    // first frame without a flex-shell relayout.
     private static let openingContentDuration = motionDuration
-    private static let openingCompletion = openingContentDelay + openingContentDuration
 
     /// Alert color for dynamic alerts
     public enum AlertColor: Sendable {
@@ -566,7 +564,7 @@
       motionContent.style.setProperty("opacity", "0")
       motionContent.style.setProperty(
         "transition",
-        "padding-block \(motionDuration)ms ease-in-out, opacity \(openingContentDuration)ms ease \(openingContentDelay)ms")
+        "padding-block \(motionDuration)ms ease-in-out, opacity \(openingContentDuration)ms ease")
       _ = alertEl.offsetHeight
       // Let the closed state paint before changing either
       // property. A forced layout alone can still be coalesced into the
@@ -579,7 +577,7 @@
           motionContent.style.setProperty("padding-block", finishedPadding)
           motionContent.style.setProperty("opacity", "1")
 
-          _ = setTimeout(openingCompletion + 50) {
+          _ = setTimeout(motionDuration + 50) {
             // Restore the final minimum before releasing the explicit height;
             // both are the same measured endpoint, so this is not a new frame.
             alertEl.style.setProperty("min-height", finishedMinHeight)
