@@ -530,11 +530,19 @@
       motionClip.style.setProperty("transition", "grid-template-rows 250ms ease")
       let motionContent = document.createElement(.div)
       motionContent.style.setProperty("min-height", "0")
+      alertEl.style.setProperty("opacity", "0")
+      alertEl.style.setProperty("transition", "opacity 250ms ease")
       motionContent.appendChild(alertEl)
       motionClip.appendChild(motionContent)
       alertContainer.appendChild(motionClip)
       _ = motionClip.offsetHeight
       motionClip.style.setProperty("grid-template-rows", "1fr")
+      alertEl.style.setProperty("opacity", "1")
+
+      _ = setTimeout(motionDuration + 50) {
+        _ = alertEl.style.removeProperty("opacity")
+        _ = alertEl.style.removeProperty("transition")
+      }
 
       // Auto-dismiss
       if autoDismiss && type != .red {
@@ -549,6 +557,8 @@
     ) {
       guard let motionClip = element.parentElement?.parentElement else { return }
       motionClip.style.setProperty("grid-template-rows", "0fr")
+      element.style.setProperty("transition", "opacity 250ms ease")
+      element.style.setProperty("opacity", "0")
 
       _ = setTimeout(motionDuration) {
         motionClip.remove()
