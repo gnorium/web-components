@@ -428,6 +428,18 @@ public struct AccordionView: HTMLContent {
         event.preventDefault()
 
         let motion = details.dataset["motion"] ?? "idle"
+        // A section can be asked to reverse while it is still travelling —
+        // notably when Verbose is pressed twice. Treat the current rendered
+        // height as the new starting point instead of dropping the second
+        // request. This keeps every nested accordion on the same final state.
+        if stringEquals(motion, "enter-to") {
+          self.beginClose(details)
+          return
+        }
+        if stringEquals(motion, "closing") {
+          self.beginOpen(details)
+          return
+        }
         if !stringEquals(motion, "idle") { return }
 
         if self.isOpen {
