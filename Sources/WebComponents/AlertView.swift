@@ -266,6 +266,15 @@
             pointerEvents(.auto)
             boxShadow((px(0), px(2), px(8), rgba(0, 0, 0, 0.1)))
           }
+          descendant(".alert-motion-content-entering") {
+            animation(
+              duration: .time(s(0.4)),
+              easingFunction: .ease,
+              iterationCount: 1,
+              fillMode: .both,
+              name: .name("alert-motion-content-enter")
+            )
+          }
           selector("&.alert-dynamic .alert-dismiss") {
             display(.flex)
             alignItems(.center)
@@ -282,6 +291,10 @@
             borderRadius(borderRadiusBase)
             transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
             flexShrink(0)
+          }
+          keyframes("alert-motion-content-enter") {
+            from { opacity(0) }
+            to { opacity(1) }
           }
         }
 
@@ -562,10 +575,9 @@
       alertEl.style.setProperty(
         "transition", "height \(motionDuration)ms ease-in-out")
       motionContent.style.setProperty("opacity", "0")
-      motionContent.style.setProperty("will-change", "opacity")
       motionContent.style.setProperty(
         "transition",
-        "padding-block \(motionDuration)ms ease-in-out, opacity \(openingContentDuration)ms ease")
+        "padding-block \(motionDuration)ms ease-in-out")
       _ = alertEl.offsetHeight
       _ = motionContent.offsetHeight
       // Let the closed state paint before changing either
@@ -577,11 +589,11 @@
         _ = window.requestAnimationFrame {
           alertEl.style.setProperty("height", "\(finishedHeight)px")
           motionContent.style.setProperty("padding-block", finishedPadding)
-          // WebKit can coalesce a child's opacity change with the first frame
-          // in which an overflow-clipped parent becomes visible. Commit the
-          // shell change first, then start the fade on the next display frame.
+          // A keyframe gives WebKit a concrete transparent first frame. Its
+          // transition path can otherwise coalesce with the parent becoming
+          // visible and paint this panel at full opacity.
           _ = window.requestAnimationFrame {
-            motionContent.style.setProperty("opacity", "1")
+            motionContent.classList.add("alert-motion-content-entering")
           }
 
           _ = setTimeout(motionDuration + 50) {
@@ -591,9 +603,9 @@
             _ = alertEl.style.removeProperty("height")
             _ = alertEl.style.removeProperty("overflow")
             _ = alertEl.style.removeProperty("transition")
-            _ = motionContent.style.removeProperty("opacity")
+            motionContent.style.setProperty("opacity", "1")
+            motionContent.classList.remove("alert-motion-content-entering")
             _ = motionContent.style.removeProperty("transition")
-            _ = motionContent.style.removeProperty("will-change")
           }
         }
       }
@@ -613,6 +625,8 @@
       else { return }
       let startHeight = element.offsetHeight
       let finishedPadding = element.getAttribute(data("motion-padding")) ?? "12px"
+      motionContent.style.setProperty("opacity", "1")
+      motionContent.classList.remove("alert-motion-content-entering")
       element.style.setProperty("height", "\(startHeight)px")
       element.style.setProperty("min-height", "0")
       element.style.setProperty("overflow", "hidden")
