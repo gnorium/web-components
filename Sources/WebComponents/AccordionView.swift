@@ -283,6 +283,7 @@ public struct AccordionView: HTMLContent {
               fontSize(fontSizeMedium16)
               lineHeight(lineHeightSmall22)
               color(colorBase)
+              minWidth(0)
               minHeight(0)
               overflow(.hidden)
               opacity(1)
@@ -301,6 +302,7 @@ public struct AccordionView: HTMLContent {
       .style {
         selector("&") {
           display(.grid)
+          minWidth(0)
           gridTemplateRows(fr(0))
           overflow(.hidden)
           transition(
@@ -308,6 +310,7 @@ public struct AccordionView: HTMLContent {
           )
         }
         selector("& > *") {
+          minWidth(0)
           minHeight(0)
         }
         selector(
