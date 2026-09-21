@@ -370,7 +370,7 @@
 
   /// Dynamic alert creation functions
   public enum AlertAPI {
-    private static let motionDuration = 250
+    private static let motionDuration = 400
 
     /// Alert color for dynamic alerts
     public enum AlertColor: Sendable {
@@ -527,15 +527,17 @@
       motionClip.style.setProperty("display", "grid")
       motionClip.style.setProperty("grid-template-rows", "0fr")
       motionClip.style.setProperty("overflow", "hidden")
-      motionClip.style.setProperty("transition", "grid-template-rows 250ms ease")
+      motionClip.style.setProperty("transition", "grid-template-rows 400ms ease")
       let motionContent = document.createElement(.div)
       motionContent.style.setProperty("min-height", "0")
       alertEl.style.setProperty("opacity", "0")
-      alertEl.style.setProperty("transition", "opacity 250ms ease")
+      alertEl.style.setProperty("transition", "opacity 400ms ease")
       motionContent.appendChild(alertEl)
       motionClip.appendChild(motionContent)
       alertContainer.appendChild(motionClip)
-      _ = motionClip.offsetHeight
+      // Force the closed, transparent frame to paint before changing either
+      // property; otherwise browsers coalesce it with the final frame.
+      _ = alertEl.offsetHeight
       motionClip.style.setProperty("grid-template-rows", "1fr")
       alertEl.style.setProperty("opacity", "1")
 
@@ -557,7 +559,7 @@
     ) {
       guard let motionClip = element.parentElement?.parentElement else { return }
       motionClip.style.setProperty("grid-template-rows", "0fr")
-      element.style.setProperty("transition", "opacity 250ms ease")
+      element.style.setProperty("transition", "opacity 400ms ease")
       element.style.setProperty("opacity", "0")
 
       _ = setTimeout(motionDuration) {
