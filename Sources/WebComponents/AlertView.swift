@@ -371,6 +371,12 @@
   /// Dynamic alert creation functions
   public enum AlertAPI {
     private static let motionDuration = 400
+    // Safari can paint the first text line before an expanding flex shell has
+    // reached its final block padding. Keep the shell's outline visible from
+    // the first frame, then reveal its contents during the latter part of the
+    // same opening timeline.
+    private static let openingContentDelay = 120
+    private static let openingContentDuration = motionDuration - openingContentDelay
 
     /// Alert color for dynamic alerts
     public enum AlertColor: Sendable {
@@ -551,9 +557,12 @@
       alertEl.style.setProperty("min-height", "0")
       alertEl.style.setProperty("padding-block", "0px")
       alertEl.style.setProperty("overflow", "hidden")
-      alertEl.style.setProperty("transition", "height 400ms ease, padding-block 400ms ease")
+      alertEl.style.setProperty(
+        "transition", "height \(motionDuration)ms ease-in-out, padding-block \(motionDuration)ms ease-in-out")
       motionContent.style.setProperty("opacity", "0")
-      motionContent.style.setProperty("transition", "opacity 400ms ease")
+      motionContent.style.setProperty(
+        "transition",
+        "opacity \(openingContentDuration)ms ease \(openingContentDelay)ms")
       _ = alertEl.offsetHeight
       // Let the closed state paint before changing either
       // property. A forced layout alone can still be coalesced into the
@@ -598,9 +607,10 @@
       element.style.setProperty("min-height", "0")
       element.style.setProperty("overflow", "hidden")
       _ = element.offsetHeight
-      element.style.setProperty("transition", "height 400ms ease, padding-block 400ms ease")
+      element.style.setProperty(
+        "transition", "height \(motionDuration)ms ease-in-out, padding-block \(motionDuration)ms ease-in-out")
       element.style.setProperty("padding-block", finishedPadding)
-      motionContent.style.setProperty("transition", "opacity 400ms ease")
+      motionContent.style.setProperty("transition", "opacity \(motionDuration)ms ease")
       _ = window.requestAnimationFrame {
         element.style.setProperty("height", "0px")
         element.style.setProperty("padding-block", "0px")
