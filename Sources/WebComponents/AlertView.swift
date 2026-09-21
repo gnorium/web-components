@@ -371,11 +371,11 @@
   /// Dynamic alert creation functions
   public enum AlertAPI {
     private static let motionDuration = 400
-    // Safari can paint the first text line before an expanding flex shell has
-    // reached its final block padding. Keep the shell's outline visible from
-    // the first frame, then reveal its contents during the latter part of the
-    // same opening timeline.
-    private static let openingContentDelay = 120
+    // Safari can paint a flex shell's first text line before resolving its
+    // block padding. Keep the shell's padding at zero and animate spacing on
+    // its child instead, then reveal that child after the shell can contain a
+    // complete padded line.
+    private static let openingContentDelay = 200
     private static let openingContentDuration = motionDuration - openingContentDelay
 
     /// Alert color for dynamic alerts
@@ -499,6 +499,7 @@
       motionContent.style.setProperty("width", "100%")
       motionContent.style.setProperty("min-width", "0")
       motionContent.style.setProperty("min-height", "0")
+      motionContent.style.setProperty("box-sizing", "border-box")
 
       // Icon
       if shouldShowIcon {
@@ -541,28 +542,30 @@
 
       alertEl.appendChild(motionContent)
       alertContainer.appendChild(alertEl)
-      // Use the logical block axis while resolving the token to pixels before
-      // the transition, so WebKit has two directly interpolable values.
       let finishedPadding = inline ? "8px" : "12px"
+      let finishedInlinePadding = inline ? "8px" : "16px"
       let finishedMinHeight = inline ? "0px" : "64px"
-      // alert-view.css is loaded on demand. Pin the final geometry before
-      // measuring so a late stylesheet cannot turn a 28px measurement into
-      // the component's actual 64px minimum after the animation completes.
+      // The stylesheet normally puts padding on .alert-view. Safari resolves
+      // that flex shell as a line-height box before it applies the padding, so
+      // dynamic alerts hold the shell's padding at zero and give it to the
+      // inner panel. This keeps one stable outer height timeline.
       alertEl.style.setProperty("box-sizing", "border-box")
       alertEl.style.setProperty("min-height", finishedMinHeight)
-      alertEl.style.setProperty("padding-block", finishedPadding)
+      alertEl.style.setProperty("padding", "0px")
+      motionContent.style.setProperty("padding-inline", finishedInlinePadding)
+      motionContent.style.setProperty("padding-block", finishedPadding)
       let finishedHeight = alertEl.offsetHeight
       alertEl.setAttribute(data("motion-padding"), finishedPadding)
       alertEl.style.setProperty("height", "0px")
       alertEl.style.setProperty("min-height", "0")
-      alertEl.style.setProperty("padding-block", "0px")
+      motionContent.style.setProperty("padding-block", "0px")
       alertEl.style.setProperty("overflow", "hidden")
       alertEl.style.setProperty(
-        "transition", "height \(motionDuration)ms ease-in-out, padding-block \(motionDuration)ms ease-in-out")
+        "transition", "height \(motionDuration)ms ease-in-out")
       motionContent.style.setProperty("opacity", "0")
       motionContent.style.setProperty(
         "transition",
-        "opacity \(openingContentDuration)ms ease \(openingContentDelay)ms")
+        "padding-block \(motionDuration)ms ease-in-out, opacity \(openingContentDuration)ms ease \(openingContentDelay)ms")
       _ = alertEl.offsetHeight
       // Let the closed state paint before changing either
       // property. A forced layout alone can still be coalesced into the
@@ -572,7 +575,7 @@
         // transition starts, rather than coalescing both states on insertion.
         _ = window.requestAnimationFrame {
           alertEl.style.setProperty("height", "\(finishedHeight)px")
-          alertEl.style.setProperty("padding-block", finishedPadding)
+          motionContent.style.setProperty("padding-block", finishedPadding)
           motionContent.style.setProperty("opacity", "1")
 
           _ = setTimeout(motionDuration + 50) {
@@ -608,12 +611,13 @@
       element.style.setProperty("overflow", "hidden")
       _ = element.offsetHeight
       element.style.setProperty(
-        "transition", "height \(motionDuration)ms ease-in-out, padding-block \(motionDuration)ms ease-in-out")
-      element.style.setProperty("padding-block", finishedPadding)
-      motionContent.style.setProperty("transition", "opacity \(motionDuration)ms ease")
+        "transition", "height \(motionDuration)ms ease-in-out")
+      motionContent.style.setProperty("padding-block", finishedPadding)
+      motionContent.style.setProperty(
+        "transition", "padding-block \(motionDuration)ms ease-in-out, opacity \(motionDuration)ms ease")
       _ = window.requestAnimationFrame {
         element.style.setProperty("height", "0px")
-        element.style.setProperty("padding-block", "0px")
+        motionContent.style.setProperty("padding-block", "0px")
         motionContent.style.setProperty("opacity", "0")
 
         _ = setTimeout(motionDuration) {
