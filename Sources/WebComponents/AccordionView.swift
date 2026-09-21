@@ -403,6 +403,10 @@ public struct AccordionView: HTMLContent {
 
     init(accordion: DOM.Element) {
       self.accordion = accordion
+      // Hydration can run again after a fragment or split view arrives. Mark
+      // the live accordion so a second controller cannot bind another click
+      // handler and race its chevron, content height, and details state.
+      accordion.setAttribute(data("accordion-hydrated"), "true")
 
       details = accordion.querySelector(".accordion-details")
       summary = accordion.querySelector(".accordion-summary")
@@ -579,6 +583,7 @@ public struct AccordionView: HTMLContent {
       let allAccordions = document.querySelectorAll(".accordion-view")
 
       for accordion in allAccordions {
+        guard !stringEquals(accordion.dataset["accordion-hydrated"] ?? "false", "true") else { continue }
         let instance = AccordionInstance(accordion: accordion)
         instances.append(instance)
       }
@@ -586,6 +591,7 @@ public struct AccordionView: HTMLContent {
 
     /// Hydrates a dynamically created accordion element (e.g. from AccordionFactory).
     public func hydrate(_ element: DOM.Element) {
+      guard !stringEquals(element.dataset["accordion-hydrated"] ?? "false", "true") else { return }
       let instance = AccordionInstance(accordion: element)
       instances.append(instance)
     }
