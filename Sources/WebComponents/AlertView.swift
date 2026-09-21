@@ -481,21 +481,15 @@
         alertEl.setAttribute(.role, .alert)
       }
 
-      // The alert itself is the stable frame: its padding, fill, and complete
-      // outline paint immediately. Only this inner panel opens and closes, so
-      // no intermediate frame can lose its bottom border.
-      let motionClip = document.createElement(.div)
-      motionClip.className = "alert-motion-clip"
-      motionClip.style.setProperty("display", "grid")
-      motionClip.style.setProperty("grid-template-rows", "0fr")
-      motionClip.style.setProperty("overflow", "hidden")
-      motionClip.style.setProperty("width", "100%")
-      motionClip.style.setProperty("transition", "grid-template-rows 400ms ease")
+      // The shell is the only element whose height changes. Keeping a second
+      // grid-based height animation inside it lets WebKit paint an empty,
+      // full-height shell before the content catches up.
       let motionContent = document.createElement(.div)
       motionContent.className = "alert-motion-content"
       motionContent.style.setProperty("display", "flex")
       motionContent.style.setProperty("align-items", "center")
       motionContent.style.setProperty("gap", "var(--spacing-8)")
+      motionContent.style.setProperty("width", "100%")
       motionContent.style.setProperty("min-width", "0")
       motionContent.style.setProperty("min-height", "0")
       motionContent.style.setProperty("opacity", "0")
@@ -540,8 +534,7 @@
         motionContent.appendChild(dismissBtn)
       }
 
-      motionClip.appendChild(motionContent)
-      alertEl.appendChild(motionClip)
+      alertEl.appendChild(motionContent)
       alertContainer.appendChild(alertEl)
       // Measure the finished shell before collapsing it. Shell and content
       // both fade from zero while their height grows, so the tiny bordered
@@ -559,21 +552,24 @@
       // property. A forced layout alone can still be coalesced into the
       // insertion frame, especially on WebKit.
       _ = window.requestAnimationFrame {
-        alertEl.style.setProperty("height", "\(finishedHeight)px")
-        alertEl.style.setProperty("padding-block", finishedPadding)
-        alertEl.style.setProperty("opacity", "1")
-        motionClip.style.setProperty("grid-template-rows", "1fr")
-        motionContent.style.setProperty("opacity", "1")
+        // A second frame gives Safari a committed collapsed frame before the
+        // transition starts, rather than coalescing both states on insertion.
+        _ = window.requestAnimationFrame {
+          alertEl.style.setProperty("height", "\(finishedHeight)px")
+          alertEl.style.setProperty("padding-block", finishedPadding)
+          alertEl.style.setProperty("opacity", "1")
+          motionContent.style.setProperty("opacity", "1")
 
-        _ = setTimeout(motionDuration + 50) {
-          _ = alertEl.style.removeProperty("height")
-          _ = alertEl.style.removeProperty("min-height")
-          _ = alertEl.style.removeProperty("padding-block")
-          _ = alertEl.style.removeProperty("overflow")
-          _ = alertEl.style.removeProperty("opacity")
-          _ = alertEl.style.removeProperty("transition")
-          _ = motionContent.style.removeProperty("opacity")
-          _ = motionContent.style.removeProperty("transition")
+          _ = setTimeout(motionDuration + 50) {
+            _ = alertEl.style.removeProperty("height")
+            _ = alertEl.style.removeProperty("min-height")
+            _ = alertEl.style.removeProperty("padding-block")
+            _ = alertEl.style.removeProperty("overflow")
+            _ = alertEl.style.removeProperty("opacity")
+            _ = alertEl.style.removeProperty("transition")
+            _ = motionContent.style.removeProperty("opacity")
+            _ = motionContent.style.removeProperty("transition")
+          }
         }
       }
 
@@ -588,8 +584,7 @@
     private static func dismissAlert(
       _ element: DOM.Element, onDismiss: (@Sendable () -> Void)?, userInitiated: Bool
     ) {
-      guard let motionClip = element.querySelector(".alert-motion-clip"),
-        let motionContent = element.querySelector(".alert-motion-content")
+      guard let motionContent = element.querySelector(".alert-motion-content")
       else { return }
       let startHeight = element.offsetHeight
       let closedPadding = "0px"
@@ -604,7 +599,6 @@
         element.style.setProperty("height", "0px")
         element.style.setProperty("padding-block", closedPadding)
         element.style.setProperty("opacity", "0")
-        motionClip.style.setProperty("grid-template-rows", "0fr")
         motionContent.style.setProperty("opacity", "0")
 
         _ = setTimeout(motionDuration) {
