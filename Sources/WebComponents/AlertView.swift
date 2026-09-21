@@ -562,10 +562,12 @@
       alertEl.style.setProperty(
         "transition", "height \(motionDuration)ms ease-in-out")
       motionContent.style.setProperty("opacity", "0")
+      motionContent.style.setProperty("will-change", "opacity")
       motionContent.style.setProperty(
         "transition",
         "padding-block \(motionDuration)ms ease-in-out, opacity \(openingContentDuration)ms ease")
       _ = alertEl.offsetHeight
+      _ = motionContent.offsetHeight
       // Let the closed state paint before changing either
       // property. A forced layout alone can still be coalesced into the
       // insertion frame, especially on WebKit.
@@ -575,7 +577,12 @@
         _ = window.requestAnimationFrame {
           alertEl.style.setProperty("height", "\(finishedHeight)px")
           motionContent.style.setProperty("padding-block", finishedPadding)
-          motionContent.style.setProperty("opacity", "1")
+          // WebKit can coalesce a child's opacity change with the first frame
+          // in which an overflow-clipped parent becomes visible. Commit the
+          // shell change first, then start the fade on the next display frame.
+          _ = window.requestAnimationFrame {
+            motionContent.style.setProperty("opacity", "1")
+          }
 
           _ = setTimeout(motionDuration + 50) {
             // Restore the final minimum before releasing the explicit height;
@@ -586,6 +593,7 @@
             _ = alertEl.style.removeProperty("transition")
             _ = motionContent.style.removeProperty("opacity")
             _ = motionContent.style.removeProperty("transition")
+            _ = motionContent.style.removeProperty("will-change")
           }
         }
       }
