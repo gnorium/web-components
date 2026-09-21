@@ -481,9 +481,10 @@
         alertEl.setAttribute(.role, .alert)
       }
 
-      // Keep the outline opaque while both the shell and its clipped inner
-      // panel grow. The panel alone fades, so there is never a full empty
-      // alert while Safari waits to composite a nested opacity layer.
+      // The shell owns geometry. Giving this inner panel a second height
+      // transition makes Safari sequence it after the shell's padding, which
+      // produces the visible late jump. It only fades while the shell reveals
+      // its natural height through overflow clipping.
       let motionContent = document.createElement(.div)
       motionContent.className = "alert-motion-content"
       motionContent.style.setProperty("display", "flex")
@@ -492,7 +493,6 @@
       motionContent.style.setProperty("width", "100%")
       motionContent.style.setProperty("min-width", "0")
       motionContent.style.setProperty("min-height", "0")
-      motionContent.style.setProperty("flex-shrink", "0")
 
       // Icon
       if shouldShowIcon {
@@ -535,10 +535,9 @@
 
       alertEl.appendChild(motionContent)
       alertContainer.appendChild(alertEl)
-      // Measure both finished boxes before collapsing them. Each transitions
-      // an explicit pixel height, avoiding grid sizing and its WebKit jumps.
+      // Measure the finished shell before collapsing it. The border remains
+      // opaque throughout; only the natural inner content fades.
       let finishedHeight = alertEl.offsetHeight
-      let finishedContentHeight = motionContent.offsetHeight
       // Use the logical block axis while resolving the token to pixels before
       // the transition, so WebKit has two directly interpolable values.
       let finishedPadding = inline ? "8px" : "12px"
@@ -548,10 +547,8 @@
       alertEl.style.setProperty("padding-block", "0px")
       alertEl.style.setProperty("overflow", "hidden")
       alertEl.style.setProperty("transition", "height 400ms ease, padding-block 400ms ease")
-      motionContent.style.setProperty("height", "0px")
-      motionContent.style.setProperty("overflow", "hidden")
       motionContent.style.setProperty("opacity", "0")
-      motionContent.style.setProperty("transition", "height 400ms ease, opacity 400ms ease")
+      motionContent.style.setProperty("transition", "opacity 400ms ease")
       _ = alertEl.offsetHeight
       // Let the closed state paint before changing either
       // property. A forced layout alone can still be coalesced into the
@@ -562,7 +559,6 @@
         _ = window.requestAnimationFrame {
           alertEl.style.setProperty("height", "\(finishedHeight)px")
           alertEl.style.setProperty("padding-block", finishedPadding)
-          motionContent.style.setProperty("height", "\(finishedContentHeight)px")
           motionContent.style.setProperty("opacity", "1")
 
           _ = setTimeout(motionDuration + 50) {
@@ -571,8 +567,6 @@
             _ = alertEl.style.removeProperty("padding-block")
             _ = alertEl.style.removeProperty("overflow")
             _ = alertEl.style.removeProperty("transition")
-            _ = motionContent.style.removeProperty("height")
-            _ = motionContent.style.removeProperty("overflow")
             _ = motionContent.style.removeProperty("opacity")
             _ = motionContent.style.removeProperty("transition")
           }
@@ -598,16 +592,12 @@
       element.style.setProperty("min-height", "0")
       element.style.setProperty("overflow", "hidden")
       _ = element.offsetHeight
-      let contentHeight = motionContent.offsetHeight
       element.style.setProperty("transition", "height 400ms ease, padding-block 400ms ease")
       element.style.setProperty("padding-block", finishedPadding)
-      motionContent.style.setProperty("height", "\(contentHeight)px")
-      motionContent.style.setProperty("overflow", "hidden")
-      motionContent.style.setProperty("transition", "height 400ms ease, opacity 400ms ease")
+      motionContent.style.setProperty("transition", "opacity 400ms ease")
       _ = window.requestAnimationFrame {
         element.style.setProperty("height", "0px")
         element.style.setProperty("padding-block", "0px")
-        motionContent.style.setProperty("height", "0px")
         motionContent.style.setProperty("opacity", "0")
 
         _ = setTimeout(motionDuration) {
