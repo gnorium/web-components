@@ -376,7 +376,8 @@
     // its child instead, then reveal that child after the shell can contain a
     // complete padded line.
     private static let openingContentDelay = 200
-    private static let openingContentDuration = motionDuration - openingContentDelay
+    private static let openingContentDuration = motionDuration
+    private static let openingCompletion = openingContentDelay + openingContentDuration
 
     /// Alert color for dynamic alerts
     public enum AlertColor: Sendable {
@@ -578,7 +579,7 @@
           motionContent.style.setProperty("padding-block", finishedPadding)
           motionContent.style.setProperty("opacity", "1")
 
-          _ = setTimeout(motionDuration + 50) {
+          _ = setTimeout(openingCompletion + 50) {
             // Restore the final minimum before releasing the explicit height;
             // both are the same measured endpoint, so this is not a new frame.
             alertEl.style.setProperty("min-height", finishedMinHeight)
