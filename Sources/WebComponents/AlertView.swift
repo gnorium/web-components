@@ -481,9 +481,9 @@
         alertEl.setAttribute(.role, .alert)
       }
 
-      // The shell is the only element whose height changes. Keeping a second
-      // grid-based height animation inside it lets WebKit paint an empty,
-      // full-height shell before the content catches up.
+      // Keep the outline opaque while both the shell and its clipped inner
+      // panel grow. The panel alone fades, so there is never a full empty
+      // alert while Safari waits to composite a nested opacity layer.
       let motionContent = document.createElement(.div)
       motionContent.className = "alert-motion-content"
       motionContent.style.setProperty("display", "flex")
@@ -492,8 +492,7 @@
       motionContent.style.setProperty("width", "100%")
       motionContent.style.setProperty("min-width", "0")
       motionContent.style.setProperty("min-height", "0")
-      motionContent.style.setProperty("opacity", "0")
-      motionContent.style.setProperty("transition", "opacity 400ms ease")
+      motionContent.style.setProperty("flex-shrink", "0")
 
       // Icon
       if shouldShowIcon {
@@ -536,19 +535,22 @@
 
       alertEl.appendChild(motionContent)
       alertContainer.appendChild(alertEl)
-      // Measure the finished shell before collapsing it. Shell and content
-      // both fade from zero while their height grows, so the tiny bordered
-      // starting frame never flashes before the actual alert arrives.
+      // Measure both finished boxes before collapsing them. Each transitions
+      // an explicit pixel height, avoiding grid sizing and its WebKit jumps.
       let finishedHeight = alertEl.offsetHeight
+      let finishedContentHeight = motionContent.offsetHeight
       let finishedPadding = inline ? "var(--spacing-8)" : "var(--spacing-12)"
       alertEl.style.setProperty("height", "0px")
       alertEl.style.setProperty("min-height", "0")
       alertEl.style.setProperty("padding-block", "0px")
       alertEl.style.setProperty("overflow", "hidden")
-      alertEl.style.setProperty("opacity", "0")
-      alertEl.style.setProperty("transition", "height 400ms ease, padding-block 400ms ease, opacity 400ms ease")
+      alertEl.style.setProperty("transition", "height 400ms ease, padding-block 400ms ease")
+      motionContent.style.setProperty("height", "0px")
+      motionContent.style.setProperty("overflow", "hidden")
+      motionContent.style.setProperty("opacity", "0")
+      motionContent.style.setProperty("transition", "height 400ms ease, opacity 400ms ease")
       _ = alertEl.offsetHeight
-      // Let the closed, transparent state paint before changing either
+      // Let the closed state paint before changing either
       // property. A forced layout alone can still be coalesced into the
       // insertion frame, especially on WebKit.
       _ = window.requestAnimationFrame {
@@ -557,7 +559,7 @@
         _ = window.requestAnimationFrame {
           alertEl.style.setProperty("height", "\(finishedHeight)px")
           alertEl.style.setProperty("padding-block", finishedPadding)
-          alertEl.style.setProperty("opacity", "1")
+          motionContent.style.setProperty("height", "\(finishedContentHeight)px")
           motionContent.style.setProperty("opacity", "1")
 
           _ = setTimeout(motionDuration + 50) {
@@ -565,8 +567,9 @@
             _ = alertEl.style.removeProperty("min-height")
             _ = alertEl.style.removeProperty("padding-block")
             _ = alertEl.style.removeProperty("overflow")
-            _ = alertEl.style.removeProperty("opacity")
             _ = alertEl.style.removeProperty("transition")
+            _ = motionContent.style.removeProperty("height")
+            _ = motionContent.style.removeProperty("overflow")
             _ = motionContent.style.removeProperty("opacity")
             _ = motionContent.style.removeProperty("transition")
           }
@@ -592,13 +595,15 @@
       element.style.setProperty("min-height", "0")
       element.style.setProperty("overflow", "hidden")
       _ = element.offsetHeight
-      element.style.setProperty("opacity", "1")
-      element.style.setProperty("transition", "height 400ms ease, padding-block 400ms ease, opacity 400ms ease")
-      motionContent.style.setProperty("transition", "opacity 400ms ease")
+      let contentHeight = motionContent.offsetHeight
+      element.style.setProperty("transition", "height 400ms ease, padding-block 400ms ease")
+      motionContent.style.setProperty("height", "\(contentHeight)px")
+      motionContent.style.setProperty("overflow", "hidden")
+      motionContent.style.setProperty("transition", "height 400ms ease, opacity 400ms ease")
       _ = window.requestAnimationFrame {
         element.style.setProperty("height", "0px")
         element.style.setProperty("padding-block", closedPadding)
-        element.style.setProperty("opacity", "0")
+        motionContent.style.setProperty("height", "0px")
         motionContent.style.setProperty("opacity", "0")
 
         _ = setTimeout(motionDuration) {

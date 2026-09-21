@@ -271,8 +271,8 @@ public struct AccordionView: HTMLContent {
         }
       }
 
-      // Height is animated with inline pixel rows (see AccordionInstance).
-      // 0fr ↔ 1fr is not interpolable in WebKit, so it jumps at both ends.
+      // The clip receives explicit pixel heights from AccordionInstance.
+      // Direct height interpolation is stable in Safari for nested content.
       div {
         div { contentSlot }
           .class("accordion-content")
@@ -301,29 +301,27 @@ public struct AccordionView: HTMLContent {
       .class("accordion-content-clip")
       .style {
         selector("&") {
-          display(.grid)
+          display(.block)
           minWidth(0)
-          gridTemplateRows(fr(0))
+          height(px(0))
           overflow(.hidden)
           transition(
-            "grid-template-rows \(transitionDurationMedium.value) \(transitionTimingFunctionSystem.value)"
+            "height \(transitionDurationMedium.value) \(transitionTimingFunctionSystem.value)"
           )
         }
         selector("& > *") {
           minWidth(0)
           minHeight(0)
         }
-        selector(
-          ".accordion-details[data-expanded='true']:not([data-motion='enter-from']):not([data-motion='closing']) > &"
-        ) {
-          gridTemplateRows(fr(1))
-        }
         selector(".accordion-details[data-motion='enter-from'] > &") {
           transition(.none)
-          gridTemplateRows("0px")
+          height(px(0))
         }
         selector(".accordion-details[data-motion='closing'] > &") {
-          gridTemplateRows("0px")
+          height(px(0))
+        }
+        selector(".accordion-details[data-open-finished='true'][data-motion='idle'] > &") {
+          height(.auto)
         }
         // Clipping is for the height animation only. Once open and still, a
         // dropdown menu opened near the bottom of the content must be free to
@@ -462,26 +460,26 @@ public struct AccordionView: HTMLContent {
       }
     }
 
-    private func pixelRows(_ height: Double) -> String {
+    private func pixelHeight(_ height: Double) -> String {
       stringJoin([intToString(Int(height.rounded())), "px"], separator: "")
     }
 
-    private func lockClipRows(_ value: String, animate: Bool) {
+    private func lockClipHeight(_ value: String, animate: Bool) {
       guard let clip = clip else { return }
       if !animate {
         clip.style.setProperty("transition", "none")
       } else {
         _ = clip.style.removeProperty("transition")
       }
-      clip.style.setProperty("grid-template-rows", value)
+      clip.style.setProperty("height", value)
       _ = clip.offsetHeight
       if !animate {
         _ = clip.style.removeProperty("transition")
       }
     }
 
-    private func clearClipRows() {
-      _ = clip?.style.removeProperty("grid-template-rows")
+    private func clearClipHeight() {
+      _ = clip?.style.removeProperty("height")
       _ = clip?.style.removeProperty("transition")
     }
 
@@ -494,21 +492,17 @@ public struct AccordionView: HTMLContent {
 
       // Pin current pixel height *before* dropping expanded, or CSS 0px snaps.
       let startHeight = clip?.getBoundingClientRect()?.height ?? 0
-      lockClipRows(pixelRows(startHeight), animate: false)
+      lockClipHeight(pixelHeight(startHeight), animate: false)
       details.setAttribute(data("open-finished"), "false")
       details.setAttribute(data("expanded"), "false")
       details.setAttribute(data("motion"), "closing")
-      lockClipRows("0px", animate: true)
+      lockClipHeight("0px", animate: true)
 
       let closeEvent = CustomEvent(type: "accordion-toggle", detail: "false")
       self.accordion.dispatchEvent(closeEvent)
 
-      if let clip = clip {
-        _ = clip.addEventListener(.transitionend) { [self] event in
-          guard let target = event.target, target.id == clip.id else { return }
-          self.completeClose(details)
-        }
-      }
+      // Do not complete from a bubbling transitionend: nested controls and
+      // the fading content emit those events before this clip reaches zero.
       window.setTimeout(400) { [self] in
         self.completeClose(details)
       }
@@ -517,7 +511,7 @@ public struct AccordionView: HTMLContent {
     private func completeClose(_ details: DOM.Element) {
       let motion = details.dataset["motion"] ?? ""
       guard stringEquals(motion, "closing") else { return }
-      clearClipRows()
+      clearClipHeight()
       details.removeAttribute(.open)
       details.setAttribute(data("motion"), "idle")
     }
@@ -535,19 +529,15 @@ public struct AccordionView: HTMLContent {
       let inner = clip?.querySelector(".accordion-content")
       let endHeight = inner?.scrollHeight ?? clip?.scrollHeight ?? 0
       details.setAttribute(data("motion"), "enter-from")
-      lockClipRows("0px", animate: false)
+      lockClipHeight("0px", animate: false)
       details.setAttribute(data("motion"), "enter-to")
-      lockClipRows(pixelRows(endHeight), animate: true)
+      lockClipHeight(pixelHeight(endHeight), animate: true)
 
       let openEvent = CustomEvent(type: "accordion-toggle", detail: "true")
       self.accordion.dispatchEvent(openEvent)
 
-      if let clip = clip {
-        _ = clip.addEventListener(.transitionend) { [self] event in
-          guard let target = event.target, target.id == clip.id else { return }
-          self.completeOpen(details)
-        }
-      }
+      // See beginClose: child opacity transitions must not finish this height
+      // motion early and release the clipping while it is still growing.
       window.setTimeout(400) { [self] in
         self.completeOpen(details)
       }
@@ -557,7 +547,7 @@ public struct AccordionView: HTMLContent {
       guard self.isOpen else { return }
       let motion = details.dataset["motion"] ?? ""
       guard stringEquals(motion, "enter-to") else { return }
-      clearClipRows()
+      clearClipHeight()
       details.setAttribute(data("open-finished"), "true")
       details.setAttribute(data("motion"), "idle")
     }
