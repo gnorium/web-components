@@ -539,7 +539,10 @@
       // an explicit pixel height, avoiding grid sizing and its WebKit jumps.
       let finishedHeight = alertEl.offsetHeight
       let finishedContentHeight = motionContent.offsetHeight
-      let finishedPadding = inline ? "var(--spacing-8)" : "var(--spacing-12)"
+      // Use the logical block axis while resolving the token to pixels before
+      // the transition, so WebKit has two directly interpolable values.
+      let finishedPadding = inline ? "8px" : "12px"
+      alertEl.setAttribute(data("motion-padding"), finishedPadding)
       alertEl.style.setProperty("height", "0px")
       alertEl.style.setProperty("min-height", "0")
       alertEl.style.setProperty("padding-block", "0px")
@@ -590,19 +593,20 @@
       guard let motionContent = element.querySelector(".alert-motion-content")
       else { return }
       let startHeight = element.offsetHeight
-      let closedPadding = "0px"
+      let finishedPadding = element.getAttribute(data("motion-padding")) ?? "12px"
       element.style.setProperty("height", "\(startHeight)px")
       element.style.setProperty("min-height", "0")
       element.style.setProperty("overflow", "hidden")
       _ = element.offsetHeight
       let contentHeight = motionContent.offsetHeight
       element.style.setProperty("transition", "height 400ms ease, padding-block 400ms ease")
+      element.style.setProperty("padding-block", finishedPadding)
       motionContent.style.setProperty("height", "\(contentHeight)px")
       motionContent.style.setProperty("overflow", "hidden")
       motionContent.style.setProperty("transition", "height 400ms ease, opacity 400ms ease")
       _ = window.requestAnimationFrame {
         element.style.setProperty("height", "0px")
-        element.style.setProperty("padding-block", closedPadding)
+        element.style.setProperty("padding-block", "0px")
         motionContent.style.setProperty("height", "0px")
         motionContent.style.setProperty("opacity", "0")
 
