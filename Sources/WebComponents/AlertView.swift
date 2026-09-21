@@ -535,15 +535,17 @@
       motionContent.appendChild(alertEl)
       motionClip.appendChild(motionContent)
       alertContainer.appendChild(motionClip)
-      // Force the closed, transparent frame to paint before changing either
-      // property; otherwise browsers coalesce it with the final frame.
-      _ = alertEl.offsetHeight
-      motionClip.style.setProperty("grid-template-rows", "1fr")
-      alertEl.style.setProperty("opacity", "1")
+      // Let the closed, transparent state paint before changing either
+      // property. A forced layout alone can still be coalesced into the
+      // insertion frame, especially on WebKit.
+      _ = window.requestAnimationFrame {
+        motionClip.style.setProperty("grid-template-rows", "1fr")
+        alertEl.style.setProperty("opacity", "1")
 
-      _ = setTimeout(motionDuration + 50) {
-        _ = alertEl.style.removeProperty("opacity")
-        _ = alertEl.style.removeProperty("transition")
+        _ = setTimeout(motionDuration + 50) {
+          _ = alertEl.style.removeProperty("opacity")
+          _ = alertEl.style.removeProperty("transition")
+        }
       }
 
       // Auto-dismiss
@@ -558,22 +560,24 @@
       _ element: DOM.Element, onDismiss: (@Sendable () -> Void)?, userInitiated: Bool
     ) {
       guard let motionClip = element.parentElement?.parentElement else { return }
-      motionClip.style.setProperty("grid-template-rows", "0fr")
       element.style.setProperty("transition", "opacity 400ms ease")
-      element.style.setProperty("opacity", "0")
+      _ = window.requestAnimationFrame {
+        motionClip.style.setProperty("grid-template-rows", "0fr")
+        element.style.setProperty("opacity", "0")
 
-      _ = setTimeout(motionDuration) {
-        motionClip.remove()
-        onDismiss?()
+        _ = setTimeout(motionDuration) {
+          motionClip.remove()
+          onDismiss?()
 
-        let eventType: String
-        if userInitiated {
-          eventType = "user_dismissed"
-        } else {
-          eventType = "auto_dismissed"
+          let eventType: String
+          if userInitiated {
+            eventType = "user_dismissed"
+          } else {
+            eventType = "auto_dismissed"
+          }
+          let event = CustomEvent(type: eventType, detail: "")
+          element.dispatchEvent(event)
         }
-        let event = CustomEvent(type: eventType, detail: "")
-        element.dispatchEvent(event)
       }
     }
 
