@@ -535,12 +535,17 @@
 
       alertEl.appendChild(motionContent)
       alertContainer.appendChild(alertEl)
-      // Measure the finished shell before collapsing it. The border remains
-      // opaque throughout; only the natural inner content fades.
-      let finishedHeight = alertEl.offsetHeight
       // Use the logical block axis while resolving the token to pixels before
       // the transition, so WebKit has two directly interpolable values.
       let finishedPadding = inline ? "8px" : "12px"
+      let finishedMinHeight = inline ? "0px" : "64px"
+      // alert-view.css is loaded on demand. Pin the final geometry before
+      // measuring so a late stylesheet cannot turn a 28px measurement into
+      // the component's actual 64px minimum after the animation completes.
+      alertEl.style.setProperty("box-sizing", "border-box")
+      alertEl.style.setProperty("min-height", finishedMinHeight)
+      alertEl.style.setProperty("padding-block", finishedPadding)
+      let finishedHeight = alertEl.offsetHeight
       alertEl.setAttribute(data("motion-padding"), finishedPadding)
       alertEl.style.setProperty("height", "0px")
       alertEl.style.setProperty("min-height", "0")
@@ -562,9 +567,10 @@
           motionContent.style.setProperty("opacity", "1")
 
           _ = setTimeout(motionDuration + 50) {
+            // Restore the final minimum before releasing the explicit height;
+            // both are the same measured endpoint, so this is not a new frame.
+            alertEl.style.setProperty("min-height", finishedMinHeight)
             _ = alertEl.style.removeProperty("height")
-            _ = alertEl.style.removeProperty("min-height")
-            _ = alertEl.style.removeProperty("padding-block")
             _ = alertEl.style.removeProperty("overflow")
             _ = alertEl.style.removeProperty("transition")
             _ = motionContent.style.removeProperty("opacity")
