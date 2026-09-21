@@ -543,16 +543,17 @@
       motionClip.appendChild(motionContent)
       alertEl.appendChild(motionClip)
       alertContainer.appendChild(alertEl)
-      // Measure the finished shell before collapsing it. The outline remains
-      // present at zero height, then its own border box grows with the inner
-      // panel instead of appearing at the end of the motion.
+      // Measure the finished shell before collapsing it. Shell and content
+      // both fade from zero while their height grows, so the tiny bordered
+      // starting frame never flashes before the actual alert arrives.
       let finishedHeight = alertEl.offsetHeight
       let finishedPadding = inline ? "var(--spacing-8)" : "var(--spacing-12)"
       alertEl.style.setProperty("height", "0px")
       alertEl.style.setProperty("min-height", "0")
       alertEl.style.setProperty("padding-block", "0px")
       alertEl.style.setProperty("overflow", "hidden")
-      alertEl.style.setProperty("transition", "height 400ms ease, padding-block 400ms ease")
+      alertEl.style.setProperty("opacity", "0")
+      alertEl.style.setProperty("transition", "height 400ms ease, padding-block 400ms ease, opacity 400ms ease")
       _ = alertEl.offsetHeight
       // Let the closed, transparent state paint before changing either
       // property. A forced layout alone can still be coalesced into the
@@ -560,6 +561,7 @@
       _ = window.requestAnimationFrame {
         alertEl.style.setProperty("height", "\(finishedHeight)px")
         alertEl.style.setProperty("padding-block", finishedPadding)
+        alertEl.style.setProperty("opacity", "1")
         motionClip.style.setProperty("grid-template-rows", "1fr")
         motionContent.style.setProperty("opacity", "1")
 
@@ -568,6 +570,7 @@
           _ = alertEl.style.removeProperty("min-height")
           _ = alertEl.style.removeProperty("padding-block")
           _ = alertEl.style.removeProperty("overflow")
+          _ = alertEl.style.removeProperty("opacity")
           _ = alertEl.style.removeProperty("transition")
           _ = motionContent.style.removeProperty("opacity")
           _ = motionContent.style.removeProperty("transition")
@@ -594,11 +597,13 @@
       element.style.setProperty("min-height", "0")
       element.style.setProperty("overflow", "hidden")
       _ = element.offsetHeight
-      element.style.setProperty("transition", "height 400ms ease, padding-block 400ms ease")
+      element.style.setProperty("opacity", "1")
+      element.style.setProperty("transition", "height 400ms ease, padding-block 400ms ease, opacity 400ms ease")
       motionContent.style.setProperty("transition", "opacity 400ms ease")
       _ = window.requestAnimationFrame {
         element.style.setProperty("height", "0px")
         element.style.setProperty("padding-block", closedPadding)
+        element.style.setProperty("opacity", "0")
         motionClip.style.setProperty("grid-template-rows", "0fr")
         motionContent.style.setProperty("opacity", "0")
 
