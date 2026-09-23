@@ -57,10 +57,17 @@
         }
         // A read-only field's box, to the pixel: the control height, its
         // padding, border, corner and ground.
+        // One line, like the input it looks like: a long id or byline scrolls
+        // sideways under a swipe rather than wrapping or ellipsing, with no
+        // scrollbar drawn inside the box.
         descendant(".datum-value") {
           display(.flex)
-          flexWrap(.wrap)
+          flexWrap(.nowrap)
           alignItems(.center)
+          whiteSpace(.nowrap)
+          overflowX(.auto)
+          overflowY(.hidden)
+          scrollbarWidth(.none)
           minHeight(minSizeInteractiveTouch)
           paddingBlock(spacing8)
           paddingInline(px(15))
@@ -71,7 +78,7 @@
           border(borderWidthBase, .solid, borderColorBase)
           borderRadius(borderRadiusBase)
           minWidth(0)
-          overflowWrap(.anywhere)
+          pseudoElement(.webkitScrollbar) { display(.none).important() }
         }
       }
       .build()
