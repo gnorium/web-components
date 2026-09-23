@@ -130,23 +130,28 @@
 
     public static func hydrateIfPresent() {
       guard document.querySelector(".source-view") != nil else { return }
-      let hydration = SourceHydration()
-      hydration.hydrate()
-      instance = hydration
+      hydrate(in: document.body)
     }
 
     public init() {}
 
-    public func hydrate() {
-      Self.highlightVisible()
-      _ = document.addEventListener(.click) { _ in
-        _ = window.requestAnimationFrame { Self.highlightVisible() }
+    /// The source blocks under `root`, which may be a fragment swapped in
+    /// after the page's own pass. The page-wide click is listened to once, by
+    /// whichever pass comes first; each viewer under `root` is listened to by
+    /// this one, because a viewer that arrives later is a new element.
+    public static func hydrate(in root: DOM.Element) {
+      if instance == nil {
+        _ = document.addEventListener(.click) { _ in
+          _ = window.requestAnimationFrame { Self.highlightVisible() }
+        }
+        instance = SourceHydration()
       }
-      if let viewer = document.querySelector(".artifact-view") {
+      for viewer in root.querySelectorAll(".artifact-view") {
         _ = viewer.addEventListener("artifact-canvas-change") { _ in
           Self.highlightVisible()
         }
       }
+      highlightVisible()
     }
 
     public static func highlightVisible() {

@@ -235,8 +235,8 @@
     public static nonisolated(unsafe) var instance: ToggleButtonHydration?
     private var instances: [ToggleButtonInstance] = []
 
-    public init() {
-      hydrateAllToggleButtons()
+    public init(in root: DOM.Element = document.body) {
+      hydrateAllToggleButtons(in: root)
     }
 
     public static func hydrateIfPresent() {
@@ -244,8 +244,18 @@
       instance = ToggleButtonHydration()
     }
 
-    private func hydrateAllToggleButtons() {
-      let allButtons = document.querySelectorAll("[data-toggle-button=\"true\"]")
+    /// The toggles under `root` — a fragment swapped in after the page's own
+    /// pass — join the page's.
+    public static func hydrate(in root: DOM.Element) {
+      if let instance {
+        instance.hydrateAllToggleButtons(in: root)
+      } else {
+        instance = ToggleButtonHydration(in: root)
+      }
+    }
+
+    private func hydrateAllToggleButtons(in root: DOM.Element) {
+      let allButtons = root.querySelectorAll("[data-toggle-button=\"true\"]")
 
       for button in allButtons {
         // Readers and other fragments can arrive after the document's first
