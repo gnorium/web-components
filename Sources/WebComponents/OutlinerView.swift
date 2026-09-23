@@ -113,7 +113,7 @@ public enum OutlineMoves {
   ///   editions, a sense grouping senses;
   /// - it may sit under an item of any higher rank, at any depth;
   /// - it may never sit under an item of a lower rank: an edition under a
-  ///   copy, a sense under a quotation.
+  ///   copy, a sense under an utterance.
   ///
   /// A refused move is refused where it is attempted, with an alert over the
   /// outline and the same words in the live region, naming the two levels in
