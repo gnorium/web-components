@@ -23,6 +23,8 @@ public struct TextAreaView: HTMLContent {
   let labelText: String
   let tooltip: String?
   let fullWidth: Bool
+  /// The id of the form this submits with, when it sits outside that form.
+  let form: String?
   let `class`: String
 
   public enum ValidationStatus: String, Sendable {
@@ -46,6 +48,7 @@ public struct TextAreaView: HTMLContent {
     label: String = "",
     tooltip: String? = nil,
     fullWidth: Bool = true,
+    form: String? = nil,
     class: String = ""
   ) {
     self.id = id
@@ -63,6 +66,7 @@ public struct TextAreaView: HTMLContent {
     self.labelText = label
     self.tooltip = tooltip
     self.fullWidth = fullWidth
+    self.form = form
     self.`class` = `class`
   }
 
@@ -79,6 +83,9 @@ public struct TextAreaView: HTMLContent {
 
     if autosize {
       textAreaInput = textAreaInput.data("autosize", "true")
+    }
+    if let form {
+      textAreaInput = textAreaInput.form(form)
     }
 
     var hasStartIcon = false
