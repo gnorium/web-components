@@ -7,8 +7,12 @@
 
   /// Wraps a form field with diff-tracking infrastructure for Disputorium change views.
   ///
-  /// WASM hydration listens to input/change events and adds `.diff-changed`, `.diff-added`,
-  /// or `.diff-deleted` classes, then populates the annotation span with "Previously: X".
+  /// The form's hydration finds the wrapper by `data-field-diff-view`, compares
+  /// the field with `data-original-value` on input/change, marks the field with
+  /// `data-diff-state` (unchanged, added, removed, changed) and fills the
+  /// annotation with "Previously: X", showing it with `data-visible`. The form
+  /// that holds the fields draws those states, so fields outside a wrapper —
+  /// a repeatable list's rows — are drawn the same way.
   public struct FieldDiffView: HTMLContent {
     let key: String
     let originalValue: String
@@ -58,23 +62,6 @@
           fontFamily(typographyFontSans)
           paddingInlineStart(spacing16)
           marginBlockStart(spacing4)
-        }
-
-        selector("[data-diff-field].diff-changed .diff-annotation") {
-          display(.block).important()
-          color(colorSubtle)
-        }
-        selector("[data-diff-field].diff-changed .text-input-input, [data-diff-field].diff-changed .text-input-input:focus, [data-diff-field].diff-changed .text-input-input:hover, [data-diff-field].diff-changed .text-input-input:focus:hover, [data-diff-field].diff-changed .dropdown-trigger, [data-diff-field].diff-changed .dropdown-trigger:focus, [data-diff-field].diff-changed .dropdown-trigger:hover, [data-diff-field].diff-changed .dropdown-trigger:focus:hover, [data-diff-field].diff-changed textarea, [data-diff-field].diff-changed textarea:focus, [data-diff-field].diff-changed textarea:hover, [data-diff-field].diff-changed textarea:focus:hover") {
-          borderColor(borderColorOrange).important()
-          boxShadow(px(0), px(0), px(0), px(1), borderColorOrange).important()
-        }
-        selector("[data-diff-field].diff-added .text-input-input, [data-diff-field].diff-added .text-input-input:focus, [data-diff-field].diff-added .text-input-input:hover, [data-diff-field].diff-added .text-input-input:focus:hover, [data-diff-field].diff-added .dropdown-trigger, [data-diff-field].diff-added .dropdown-trigger:focus, [data-diff-field].diff-added .dropdown-trigger:hover, [data-diff-field].diff-added .dropdown-trigger:focus:hover, [data-diff-field].diff-added textarea, [data-diff-field].diff-added textarea:focus, [data-diff-field].diff-added textarea:hover, [data-diff-field].diff-added textarea:focus:hover") {
-          borderColor(borderColorGreen).important()
-          boxShadow(px(0), px(0), px(0), px(1), borderColorGreen).important()
-        }
-        selector("[data-diff-field].diff-deleted .text-input-input, [data-diff-field].diff-deleted .text-input-input:focus, [data-diff-field].diff-deleted .text-input-input:hover, [data-diff-field].diff-deleted .text-input-input:focus:hover, [data-diff-field].diff-deleted .dropdown-trigger, [data-diff-field].diff-deleted .dropdown-trigger:focus, [data-diff-field].diff-deleted .dropdown-trigger:hover, [data-diff-field].diff-deleted .dropdown-trigger:focus:hover, [data-diff-field].diff-deleted textarea, [data-diff-field].diff-deleted textarea:focus, [data-diff-field].diff-deleted textarea:hover, [data-diff-field].diff-deleted textarea:focus:hover") {
-          borderColor(borderColorRed).important()
-          boxShadow(px(0), px(0), px(0), px(1), borderColorRed).important()
         }
       }
     }
