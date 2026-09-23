@@ -101,30 +101,62 @@ public enum OutlineMoves {
   import HTMLBuilder
   import WebTypes
 
-  /// A nested list its reader can rearrange: by dragging an item's handle, by
-  /// the move buttons beside it, or from the keyboard.
+  /// A nested list its reader can rearrange: by dragging an item's handle,
+  /// by picking it up and moving it with a toolbar, or from the keyboard.
   ///
   /// Each item carries content the caller builds, a label to announce it by,
   /// and a rank. Ranks order the levels an outline may nest — the smaller the
-  /// number, the higher the level — and an item may never sit under one of a
-  /// larger rank: that move is refused where it is attempted, with a message
-  /// on the page and in the live region. Items of equal rank may nest; there
-  /// is no depth limit.
+  /// number, the higher the level — and one rule holds for every outline,
+  /// whatever it outlines:
   ///
-  /// Keyboard: Space or Enter on an item's handle grabs it. While it is held,
-  /// ↑ and ↓ (or Cmd/Ctrl-Shift-↑/↓) move it among its siblings, Tab and → put
-  /// it under the item above, Shift-Tab and ← take it out to its parent's
-  /// level, Enter or Space drops it and Escape puts it back where it was. Tab
-  /// is only taken while an item is held; otherwise focus moves as it always
-  /// does. The move buttons are drawn when the item is hovered or has focus,
-  /// and always while it is held.
+  /// - an item may sit under an item of its own rank: an edition grouping
+  ///   editions, a sense grouping senses;
+  /// - it may sit under an item of any higher rank, at any depth;
+  /// - it may never sit under an item of a lower rank: an edition under a
+  ///   copy, a sense under a quotation.
+  ///
+  /// A refused move is refused where it is attempted, with an alert over the
+  /// outline and the same words in the live region, naming the two levels in
+  /// the caller's own words — "A copy can't go under a manifest." There is no depth limit, and no option to
+  /// loosen or tighten the rule: a bibliographic tree and a lexicographic one
+  /// nest the same way.
+  ///
+  /// The nesting is the items' own. Each item's content is handed the pieces
+  /// the outline puts in it — its handle, the line saying how its number
+  /// changed, and the list of the items under it — and places them in its own
+  /// layout: the handle in its header, the list inside its body. A child sits
+  /// inside its parent, is carried with it, and is hidden when its parent is
+  /// closed; the indent is whatever the parent's body gives it.
+  ///
+  /// The handle is the only control in a row. Pressing it — a click, a tap,
+  /// Space or Enter — picks the item up: it is marked as held, and a toolbar
+  /// appears at the foot of the screen with the four moves — up, down, out a
+  /// level, in a level — each unavailable where it cannot go, and Done. The
+  /// item stays held through as many moves as it takes, until Done, another
+  /// press on its handle, or Escape. From the keyboard, while it is held, ↑
+  /// and ↓ move it among its siblings, Tab and → put it under the item above,
+  /// Shift-Tab and ← take it out to its parent's level, and Enter, Space or
+  /// Escape put it down. Tab is only taken while an item is held. A handle
+  /// can also be dragged: with a mouse at once, on a touch screen after a
+  /// long press.
+  ///
+  /// Each item wears one state at a time, in `data-outline-state`, which is
+  /// all a caller styles: `refused` while a dragged item hovers it and may
+  /// not land there, `held` while it is picked up, `placeholder` for the
+  /// place a dragged item left, `moved` once it stands where it did not, and
+  /// `none`. They are in that order of precedence, so no two are ever drawn
+  /// together. A refusal is said once, in an alert, and leaves no mark.
   ///
   /// The arrangement is submitted as JSON in a hidden input: each item's id
   /// to its parent's and its position among its siblings,
   /// `{"a": {"parent": "root", "position": 0}}`, where the top level's parent
-  /// is `rootID`. An item whose place differs from the one it was rendered in
-  /// is marked `data-outliner-moved`, with its original number beside it; the
-  /// root dispatches `outliner-change` with the JSON after every move.
+  /// is `rootID`. An item that moved is marked `data-outliner-moved`: one whose
+  /// parent changed, or one outside the longest run of its siblings that kept
+  /// their order — so a move marks the item moved, not every neighbour it
+  /// renumbered. Every item whose number changed — moved, or only renumbered
+  /// by a move near it — says so as a changed field says it: "Changes: 1.3 →
+  /// 1.1". The root dispatches `outliner-change` with the JSON after every
+  /// move.
   public struct OutlinerView: HTMLContent {
     public struct Node: Sendable {
       public let id: String
@@ -134,7 +166,8 @@ public enum OutlineMoves {
       /// that is not where it is drawn: an outline brought back mid-edit
       /// still reports its moves against the arrangement it started from.
       public let origin: Origin?
-      public let content: [DOM.Node]
+      /// The item, given the pieces the outline puts in it.
+      public let content: @Sendable (Slots) -> [DOM.Node]
       public let children: [Node]
 
       public init(
@@ -143,15 +176,27 @@ public enum OutlineMoves {
         rank: Int,
         origin: Origin? = nil,
         children: [Node] = [],
-        @HTMLBuilder content: () -> [DOM.Node]
+        @HTMLBuilder content: @escaping @Sendable (Slots) -> [DOM.Node]
       ) {
         self.id = id
         self.label = label
         self.rank = rank
         self.origin = origin
         self.children = children
-        self.content = content()
+        self.content = content
       }
+    }
+
+    /// What the outline puts in an item, for the item to place: every piece
+    /// must be placed, the handle and the number's changes before the list.
+    public struct Slots: Sendable {
+      /// The grip that picks the item up, for the start of its header.
+      public let handle: DOM.Node
+      /// "Changes: 2.1 → 1.1", shown once the item's number has changed, for
+      /// under its title.
+      public let changes: DOM.Node
+      /// The items under this one, for inside its body.
+      public let children: DOM.Node
     }
 
     /// An item's place in the arrangement moves are counted from.
@@ -175,6 +220,7 @@ public enum OutlineMoves {
     let name: String
     let form: String?
     let numberSelector: String
+    let rankNames: [Int: String]
     let rankRefusal: String
     let touched: [String]
     let `class`: String
@@ -188,8 +234,11 @@ public enum OutlineMoves {
     ///   - numberSelector: Where in an item's content its number — 1, 2.1 —
     ///     is written, so a caller that shows numbers keeps them true as the
     ///     outline changes. Empty writes none.
-    ///   - rankRefusal: Why a rank-breaking move is refused, in the page's own
-    ///     words.
+    ///   - rankNames: What an item of each rank is called when a move is
+    ///     refused, with its article: "an edition", "a copy".
+    ///   - rankRefusal: The refusal, in the page's own words, with `{item}`
+    ///     and `{parent}` standing for the two ranks' names. Its first letter
+    ///     is set upper-case.
     ///   - touched: The items the reader has already moved, when the outline
     ///     is brought back mid-edit: where two readings of what moved are
     ///     equally short, theirs is the one reported.
@@ -202,7 +251,8 @@ public enum OutlineMoves {
       name: String,
       form: String? = nil,
       numberSelector: String = "",
-      rankRefusal: String = "An item cannot sit under one of a lower rank.",
+      rankNames: [Int: String] = [:],
+      rankRefusal: String = "{item} can't go under {parent}.",
       touched: [String] = [],
       class: String = ""
     ) {
@@ -214,6 +264,7 @@ public enum OutlineMoves {
       self.name = name
       self.form = form
       self.numberSelector = numberSelector
+      self.rankNames = rankNames
       self.rankRefusal = rankRefusal
       self.touched = touched
       self.`class` = `class`
@@ -280,71 +331,51 @@ public enum OutlineMoves {
         let number = prefix.isEmpty ? "\(position + 1)" : "\(prefix).\(position + 1)"
         let origin = node.origin ?? Origin(parent: parent, position: position, number: number)
         let isMoved = moved.contains(node.id)
+        // The grip: what is pressed to pick the item up, what is dragged, and
+        // what the keyboard grabs.
+        let handle = button {
+          DraggableIconView(width: size16, height: size16)
+        }
+        .type(.button)
+        .class("outliner-handle")
+        .draggable(true)
+        .ariaLabel("Move \(node.label)")
+        .ariaPressed(false)
+        .ariaDescribedby("\(id)-instructions")
+        .build()
+        // How its number changed, as a changed field says it — shown whenever
+        // its number is no longer what it was, and written again by the
+        // client as moves change it.
+        let changes = div { DiffView(.line(old: origin.number, new: number)) }
+          .class("outliner-changes")
+          .data("visible", !stringEquals(origin.number, number))
+          .build()
         return li {
           div {
-            div {
-              // The grip: what is dragged, and what the keyboard grabs.
-              button {
-                DraggableIconView(width: px(16), height: px(16))
-              }
-              .type(.button)
-              .class("outliner-handle")
-              .draggable(true)
-              .ariaLabel("Move \(node.label)")
-              .ariaPressed(false)
-              .ariaDescribedby("\(id)-instructions")
-
-              div {
-                ButtonView(
-                  icon: ArrowUpIconView(width: px(16), height: px(16)), weight: .quiet, size: .mini,
-                  ariaLabel: "Move \(node.label) up", borderRadius: borderRadiusBase,
-                  data: [("outliner-action", "up")])
-                ButtonView(
-                  icon: ArrowDownIconView(width: px(16), height: px(16)), weight: .quiet, size: .mini,
-                  ariaLabel: "Move \(node.label) down", borderRadius: borderRadiusBase,
-                  data: [("outliner-action", "down")])
-                ButtonView(
-                  icon: ArrowPreviousIconView(width: px(16), height: px(16)), weight: .quiet, size: .mini,
-                  ariaLabel: "Move \(node.label) out a level", borderRadius: borderRadiusBase,
-                  data: [("outliner-action", "outdent")])
-                ButtonView(
-                  icon: ArrowNextIconView(width: px(16), height: px(16)), weight: .quiet, size: .mini,
-                  ariaLabel: "Move \(node.label) in a level", borderRadius: borderRadiusBase,
-                  data: [("outliner-action", "indent")])
-              }
-              .class("outliner-actions")
-            }
-            .class("outliner-controls")
-
-            div { node.content }
-              .class("outliner-content")
+            node.content(
+              Slots(
+                handle: handle, changes: changes,
+                children: list(node.children, parent: node.id, prefix: number).build()))
           }
           .class("outliner-row")
-
-          // The moved item's diff line, as a changed field has its
-          // "Previously:" — written by the client when it applies.
-          p { "Moved from \(origin.number)" }
-            .class("outliner-moved-note")
-            .data("visible", isMoved)
-
-          list(node.children, parent: node.id, prefix: number)
         }
         .class("outliner-item")
         .data("outliner-id", node.id)
         .data("outliner-label", node.label)
         .data("outliner-rank", node.rank)
+        .data("outliner-rank-name", rankNames[node.rank] ?? node.label)
         .data("outliner-original-parent", origin.parent)
         .data("outliner-original-position", origin.position)
         .data("outliner-original-number", origin.number)
         .data("outliner-moved", isMoved)
-      .data("outliner-touched", touched.contains(node.id))
-        .data("outliner-grabbed", false)
+        .data("outliner-touched", touched.contains(node.id))
+        .data("outline-state", isMoved ? "moved" : "none")
         .build()
       }
 
       return div {
         p {
-          "Press Space or Enter on a handle to pick an item up. While it is held, the up and down arrows move it among its neighbours, Tab or the right arrow puts it under the item above, Shift-Tab or the left arrow takes it out a level, Enter or Space drops it and Escape puts it back."
+          "Press Space or Enter on a handle to pick an item up; a toolbar at the foot of the screen then moves it. While it is held, the up and down arrows move it among its neighbours, Tab or the right arrow puts it under the item above, Shift-Tab or the left arrow takes it out a level, and Enter, Space or Escape put it down."
         }
         .id("\(id)-instructions")
         .class("outliner-instructions")
@@ -355,6 +386,14 @@ public enum OutlineMoves {
 
         div()
           .class("outliner-feedback")
+        // The alert a refusal is said in, cloned into the slot above.
+        div {
+          AlertView(color: .red, inline: true, allowUserDismiss: true) {
+            span {}
+          }
+        }
+        .class("outliner-feedback-template")
+        .hidden()
 
         list(nodes, parent: rootID, prefix: "")
           .ariaLabel(label)
@@ -373,19 +412,53 @@ public enum OutlineMoves {
             .value(shapeJSON)
             .class("outliner-shape")
         }
+
+        // The moves for the item held, at the foot of the screen where a
+        // thumb reaches them, whatever the row's width.
+        div {
+          span {}
+            .class("outliner-toolbar-label")
+          // Large: a thumb's size, as the button sizes give it.
+          div {
+            ButtonView(
+              icon: ArrowUpIconView(width: size20, height: size20), weight: .quiet, size: .large,
+              ariaLabel: "Move up", data: [("outliner-action", "up")])
+            ButtonView(
+              icon: ArrowDownIconView(width: size20, height: size20), weight: .quiet, size: .large,
+              ariaLabel: "Move down", data: [("outliner-action", "down")])
+            ButtonView(
+              icon: ArrowPreviousIconView(width: size20, height: size20), weight: .quiet, size: .large,
+              ariaLabel: "Outdent", data: [("outliner-action", "outdent")])
+            ButtonView(
+              icon: ArrowNextIconView(width: size20, height: size20), weight: .quiet, size: .large,
+              ariaLabel: "Indent", data: [("outliner-action", "indent")])
+          }
+          .class("outliner-toolbar-moves")
+          ButtonView(
+            label: "Done", buttonColor: .blue, weight: .solid, size: .large,
+            data: [("outliner-action", "done")])
+        }
+        .class("outliner-toolbar")
+        .role("toolbar")
+        .ariaLabel("Move \(label.lowercased())")
+        .data("visible", false)
       }
       .id(id)
       .class(`class`.isEmpty ? "outliner-view" : "outliner-view \(`class`)")
       .data("outliner-root-id", rootID)
       .data("outliner-root-rank", rootRank)
+      .data("outliner-root-rank-name", rankNames[rootRank] ?? "the top")
       .data("outliner-number-selector", numberSelector)
       .data("outliner-rank-refusal", rankRefusal)
       .style {
+        // A little room at the edges, so a ring drawn outside a row or a
+        // control is not cut off by a container that clips.
         selector("&") {
           display(.flex)
           flexDirection(.column)
           gap(spacing8)
           minWidth(0)
+          padding(spacing4)
         }
         selector("& .outliner-instructions", "& .outliner-live") {
           position(.absolute)
@@ -401,6 +474,9 @@ public enum OutlineMoves {
         descendant(".outliner-feedback:empty") {
           display(.none)
         }
+        descendant(".outliner-feedback-template") {
+          display(.none)
+        }
         descendant(".outliner-list") {
           display(.flex)
           flexDirection(.column)
@@ -410,54 +486,37 @@ public enum OutlineMoves {
           padding(0)
           minWidth(0)
         }
-        // A level in: the children list under its item, indented by the
-        // width of the controls so a child's content starts under its
-        // parent's.
-        descendant(".outliner-item > .outliner-list") {
-          paddingInlineStart(spacing24)
-        }
-        descendant(".outliner-item > .outliner-list:empty") {
+        // An item with nothing under it has an empty list, kept so a move
+        // can put something there.
+        descendant(".outliner-list:empty") {
           display(.none)
         }
         descendant(".outliner-item") {
-          display(.flex)
-          flexDirection(.column)
-          gap(spacing8)
           minWidth(0)
         }
         descendant(".outliner-row") {
           position(.relative)
-          display(.flex)
-          alignItems(.flexStart)
-          gap(spacing4)
           minWidth(0)
           borderRadius(borderRadiusBase)
-        }
-        // The grip holds the row's place in the column; the four moves float
-        // over the row's top edge when they are wanted, so they never take
-        // width from the content — on a phone that width is the row.
-        descendant(".outliner-controls") {
-          display(.flex)
-          alignItems(.center)
-          flexShrink(0)
-          paddingBlockStart(spacing12)
-        }
-        descendant(".outliner-content") {
-          flex(1)
-          minWidth(0)
         }
         descendant(".outliner-handle") {
           display(.inlineFlex)
           alignItems(.center)
           justifyContent(.center)
-          width(px(24))
-          height(px(24))
+          flexShrink(0)
+          width(size24)
+          height(size24)
           padding(0)
           border(.none)
           borderRadius(borderRadiusBase)
           backgroundColor(.transparent)
           color(colorSubtle)
           cursor(.grab)
+          // A long press drags it; the screen neither scrolls nor offers to
+          // copy under the finger.
+          touchAction(.none)
+          userSelect(.none)
+          CSS.Property("-webkit-touch-callout", "none")
           transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
         }
         descendant(".outliner-handle:hover") {
@@ -465,78 +524,130 @@ public enum OutlineMoves {
           color(colorBase)
         }
         descendant(".outliner-handle:focus-visible") {
-          outline(px(2), .solid, borderColorBlueFocus)
-          outlineOffset(px(-2))
+          outline(borderWidthThick, .solid, borderColorBlueFocus)
+          outlineOffset(calc("-1 * \(borderWidthThick.value)"))
         }
-        descendant(".outliner-item[data-outliner-grabbed='true'] > .outliner-row .outliner-handle") {
+        // Held: the grip filled. How the rest of the item reads as held is
+        // its own layout's to say.
+        descendant(".outliner-handle[aria-pressed='true']") {
           backgroundColor(backgroundColorBlue)
           color(colorInvertedFixed)
           cursor(.grabbing)
         }
-        // The move buttons: out of the way until the item is hovered or has
-        // focus, and always while it is held.
-        // Transparent rather than hidden, so a button pressed from the
-        // keyboard can take focus back after its item has moved — moving a
-        // node drops focus, and a hidden button cannot be focused again.
-        descendant(".outliner-actions") {
+        // Nothing is selected by a drag that strays over text.
+        selector("&[data-outliner-dragging='true']") {
+          userSelect(.none)
+        }
+        // Where a drag would land: a straight bar, square-ended, centred in
+        // the gap above the row or below it — or, for into it, along its foot,
+        // indented — drawn apart from the row's border, so it never bends
+        // round a rounded corner.
+        selector(
+          "& .outliner-row[data-outliner-drop='before']::before",
+          "& .outliner-row[data-outliner-drop='after']::after",
+          "& .outliner-row[data-outliner-drop='inside']::after"
+        ) {
+          content("\"\"")
           position(.absolute)
           insetInlineStart(0)
-          insetBlockEnd(calc("100% - \(spacing4.value)"))
+          insetInlineEnd(0)
+          height(borderWidthThick)
+          backgroundColor(borderColorBlue)
+          borderRadius(borderRadiusSharp)
+          zIndex(zIndexToolbar)
+          pointerEvents(.none)
+        }
+        descendant(".outliner-row[data-outliner-drop='before']::before") {
+          top(calc("-1 * (\(spacing8.value) + \(borderWidthThick.value)) / 2"))
+        }
+        descendant(".outliner-row[data-outliner-drop='after']::after") {
+          bottom(calc("-1 * (\(spacing8.value) + \(borderWidthThick.value)) / 2"))
+        }
+        descendant(".outliner-row[data-outliner-drop='inside']::after") {
+          bottom(calc("-\(borderWidthThick.value) / 2"))
+          insetInlineStart(spacing32)
+        }
+        descendant(".outliner-item[data-outline-state='refused'] > .outliner-row") {
+          cursor(.notAllowed)
+        }
+        // Where the dragged item was: a quiet placeholder, its content faint
+        // inside a dashed outline. A drag is not a change; the item is marked
+        // moved only once it lands somewhere it did not stand.
+        descendant(".outliner-item[data-outline-state='placeholder'] > .outliner-row") {
+          outline(borderWidthBase, .dashed, borderColorSubtle)
+          outlineOffset(calc("-1 * \(borderWidthBase.value)"))
+        }
+        descendant(".outliner-item[data-outline-state='placeholder'] > .outliner-row > *") {
+          opacity(opacityLow)
+        }
+        // What follows the pointer: the item's header alone, opaque. Parked
+        // above the viewport for a mouse, whose drag image is taken from it;
+        // under a finger, a little above it, where the finger does not hide
+        // it. The pointer's coordinates are physical, so its sides are too.
+        descendant(".outliner-drag-preview") {
+          position(.fixed)
+          top(0)
+          left(0)
+          transform(translate(perc(0), perc(-200)))
           zIndex(zIndexToolbar)
           display(.flex)
-          gap(spacing2)
-          padding(spacing2)
+          alignItems(.center)
+          gap(spacing8)
+          padding(spacing8, spacing12)
           backgroundColor(backgroundColorBase)
           border(borderWidthBase, .solid, borderColorBase)
           borderRadius(borderRadiusBase)
-          boxShadow(boxShadowSmall)
-          opacity(0)
+          boxShadow(boxShadowMedium)
           pointerEvents(.none)
+          whiteSpace(.nowrap)
         }
-        selector(
-          "& .outliner-row:hover > .outliner-controls > .outliner-actions",
-          "& .outliner-row:focus-within > .outliner-controls > .outliner-actions",
-          "& .outliner-item[data-outliner-grabbed='true'] > .outliner-row > .outliner-controls > .outliner-actions"
-        ) {
-          opacity(1)
-          pointerEvents(.auto)
-        }
-        descendant(".outliner-actions [aria-disabled='true']") {
-          opacity(opacityLow)
-          cursor(.notAllowed)
-        }
-        // Where a drag would land.
-        descendant(".outliner-row[data-outliner-drop='before']") {
-          boxShadow(px(0), px(-2), px(0), px(0), borderColorBlue)
-        }
-        descendant(".outliner-row[data-outliner-drop='after']") {
-          boxShadow(px(0), px(2), px(0), px(0), borderColorBlue)
-        }
-        descendant(".outliner-row[data-outliner-drop='inside']") {
-          outline(px(2), .solid, borderColorBlue)
-          outlineOffset(px(2))
-        }
-        descendant(".outliner-row[data-outliner-drop='refused']") {
-          outline(px(2), .solid, borderColorRed)
-          outlineOffset(px(2))
-          cursor(.notAllowed)
-        }
-        descendant(".outliner-item[data-outliner-dragging='true'] > .outliner-row") {
-          opacity(opacityLow)
-        }
-        descendant(".outliner-item[data-outliner-refused='true'] > .outliner-row") {
-          outline(px(2), .solid, borderColorRed)
-          outlineOffset(px(2))
-        }
-        descendant(".outliner-moved-note") {
-          fontFamily(typographyFontSans)
-          fontSize(fontSizeXSmall12)
-          color(colorSubtle)
-          margin(0)
-          paddingInlineStart(spacing16)
-        }
-        descendant(".outliner-moved-note[data-visible='false']") {
+        descendant(".outliner-changes[data-visible='false']") {
           display(.none)
+        }
+        // At the foot of the screen, clear of a phone's home indicator.
+        descendant(".outliner-toolbar") {
+          position(.fixed)
+          insetInlineStart(perc(50))
+          insetBlockEnd(calc("\(spacing16.value) + env(safe-area-inset-bottom)"))
+          transform(translate(perc(-50), px(0)))
+          zIndex(zIndexToolbar)
+          display(.flex)
+          alignItems(.center)
+          gap(spacing8)
+          padding(spacing8)
+          maxWidth(calc("100vw - 2 * \(spacing16.value)"))
+          backgroundColor(backgroundColorBase)
+          border(borderWidthBase, .solid, borderColorSubtle)
+          borderRadius(borderRadiusPill)
+          boxShadow(boxShadowLarge)
+        }
+        descendant(".outliner-drag-preview[data-following='true']") {
+          CSS.Property(
+            "transform", "translate(calc(-1 * \(spacing16.value)), calc(-100% - \(spacing32.value)))")
+        }
+        descendant(".outliner-toolbar[data-visible='false']") {
+          display(.none)
+        }
+        descendant(".outliner-toolbar-label") {
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeSmall14)
+          color(colorSubtle)
+          whiteSpace(.nowrap)
+          overflow(.hidden)
+          minWidth(0)
+          paddingInline(spacing8)
+        }
+        descendant(".outliner-toolbar-moves") {
+          display(.flex)
+          gap(spacing4)
+          flexShrink(0)
+        }
+        // On a phone the row is named by the ring round it; the toolbar is
+        // its moves alone.
+        media(maxWidth(maxWidthBreakpointMobile)) {
+          descendant(".outliner-toolbar-label") {
+            display(.none).important()
+          }
         }
       }
       .build()
@@ -574,16 +685,27 @@ public enum OutlineMoves {
     private let rootID: String
     private let rootRank: Int
     private let numberSelector: String
+    private let rootRankName: String
     private let rankRefusal: String
 
-    /// The item held from the keyboard, and where it was picked up from.
+    /// The item picked up, which the toolbar and the keyboard move.
     private var held: DOM.Element?
-    private var heldList: DOM.Element?
-    private var heldBefore: DOM.Element?
     /// The item being dragged, and whether the drag ended on a drop.
     private var dragged: DOM.Element?
+    /// The item a dragged one hovers and may not land in.
+    private var refusedTarget: DOM.Element?
     private var droppedOnTarget = false
     private var lastRefusal = ""
+    /// A touch drag: the press waiting to become one, where it began, the row
+    /// under the finger and what a drop there would do.
+    private var pressTimer: Int32 = 0
+    private var pressX = 0.0
+    private var pressY = 0.0
+    private var touchRow: DOM.Element?
+    private var touchTarget: DOM.Element?
+    private var touchPosition = ""
+    /// A long press ends in a click the finger did not mean.
+    private var swallowClick = false
     /// The items the reader has moved, which a tie between two readings of
     /// what moved is settled in favour of.
     private var touched: [String] = []
@@ -593,11 +715,13 @@ public enum OutlineMoves {
       rootID = root.dataset["outliner-root-id"] ?? ""
       rootRank = parseInt(root.dataset["outliner-root-rank"] ?? "0") ?? 0
       numberSelector = root.dataset["outliner-number-selector"] ?? ""
+      rootRankName = root.dataset["outliner-root-rank-name"] ?? ""
       rankRefusal = root.dataset["outliner-rank-refusal"] ?? ""
       for item in root.querySelectorAll(".outliner-item") {
         bind(item)
         if stringEquals(item.dataset["outliner-touched"] ?? "false", "true") { touched.append(id(of: item)) }
       }
+      bindToolbar()
       refresh()
     }
 
@@ -607,14 +731,16 @@ public enum OutlineMoves {
       list.querySelectorAll(":scope > .outliner-item")
     }
 
+    /// The list of an item's children, wherever its content put it: the
+    /// first list inside the item, since its own comes before any nested one.
     private func childList(of item: DOM.Element) -> DOM.Element? {
-      item.querySelector(":scope > .outliner-list")
+      item.querySelector(".outliner-list")
     }
 
-    /// The item a list belongs to; nil for the top level.
+    /// The item a list belongs to — the nearest item it sits inside; nil for
+    /// the top level.
     private func owner(of list: DOM.Element) -> DOM.Element? {
-      guard let parent = list.parentElement, parent.classList.contains("outliner-item") else { return nil }
-      return parent
+      list.parentElement?.closest(".outliner-item")
     }
 
     private func parentItem(of item: DOM.Element) -> DOM.Element? {
@@ -640,8 +766,13 @@ public enum OutlineMoves {
       return -1
     }
 
+    /// An item's own handle: the first inside it, before its children's.
     private func handle(of item: DOM.Element) -> DOM.Element? {
-      item.querySelector(":scope > .outliner-row > .outliner-controls > .outliner-handle")
+      item.querySelector(".outliner-handle")
+    }
+
+    private func row(of item: DOM.Element) -> DOM.Element? {
+      item.querySelector(":scope > .outliner-row")
     }
 
     /// Whether `candidate` is `item` or sits anywhere under it.
@@ -654,31 +785,78 @@ public enum OutlineMoves {
       return false
     }
 
+    /// Whether an event happened on this item and not on one nested in it:
+    /// an item's row holds its children's rows, and their events rise
+    /// through it.
+    private func isOwn(_ event: Event, _ item: DOM.Element) -> Bool {
+      guard let target = event.target, let nearest = target.closest(".outliner-item") else { return false }
+      return nearest.id == item.id
+    }
+
     // MARK: - Binding
 
     private func bind(_ item: DOM.Element) {
       if let handle = handle(of: item) {
         _ = handle.addEventListener(.keydown) { [self] event in self.key(event, on: item) }
-        _ = handle.addEventListener(.click) { [self] _ in
+        // The handle sits in the item's header, which may open and close its
+        // body: a press on it picks the item up and does nothing else.
+        _ = handle.addEventListener(.click) { [self] event in
+          event.preventDefault()
+          event.stopPropagation()
+          if self.swallowClick {
+            self.swallowClick = false
+            return
+          }
           if self.isHeld(item) { self.drop() } else { self.grab(item) }
         }
         _ = handle.addEventListener(.dragstart) { [self] event in self.dragStart(event, item) }
         _ = handle.addEventListener(.dragend) { [self] _ in self.dragEnd() }
+        _ = handle.addEventListener(.touchstart) { [self] event in self.pressStart(event, item) }
+        _ = handle.addEventListener(.touchmove) { [self] event in self.pressMove(event, item) }
+        _ = handle.addEventListener(.touchend) { [self] _ in self.pressEnd(item) }
+        _ = handle.addEventListener(.touchcancel) { [self] _ in self.pressCancel(item) }
       }
-      for button in item.querySelectorAll(":scope > .outliner-row > .outliner-controls [data-outliner-action]") {
+      if let row = row(of: item) {
+        _ = row.addEventListener(.dragover) { [self] event in
+          guard self.isOwn(event, item) else { return }
+          self.dragOver(event, item, row)
+        }
+        _ = row.addEventListener(.dragleave) { [self] event in
+          guard self.isOwn(event, item) else { return }
+          row.removeAttribute(data("outliner-drop"))
+          if let target = self.refusedTarget, target.id == item.id { self.refuseDrop(on: nil) }
+        }
+        _ = row.addEventListener(.drop) { [self] event in
+          guard self.isOwn(event, item) else { return }
+          event.preventDefault()
+          row.removeAttribute(data("outliner-drop"))
+          self.dropDragged(on: item, at: self.dropPosition(event.clientY, row))
+        }
+      }
+    }
+
+    private var toolbar: DOM.Element? { root.querySelector(":scope > .outliner-toolbar") }
+
+    private func bindToolbar() {
+      guard let toolbar else { return }
+      for button in toolbar.querySelectorAll("[data-outliner-action]") {
         let action = button.dataset["outliner-action"] ?? ""
         _ = button.addEventListener(.click) { [self] event in
           event.preventDefault()
+          guard let item = self.held else { return }
+          if stringEquals(action, "done") {
+            self.drop()
+            self.handle(of: item)?.focus()
+            return
+          }
           self.act(action, item)
-          // The item moved in the document, which drops focus; the button
-          // pressed is still the one in hand.
-          button.focus()
         }
       }
-      if let row = item.querySelector(":scope > .outliner-row") {
-        _ = row.addEventListener(.dragover) { [self] event in self.dragOver(event, item, row) }
-        _ = row.addEventListener(.dragleave) { _ in row.removeAttribute(data("outliner-drop")) }
-        _ = row.addEventListener(.drop) { [self] event in self.dropOn(event, item, row) }
+      _ = toolbar.addEventListener(.keydown) { [self] event in
+        guard stringEquals(event.key, "Escape"), let item = self.held else { return }
+        event.preventDefault()
+        self.drop()
+        self.handle(of: item)?.focus()
       }
     }
 
@@ -694,7 +872,7 @@ public enum OutlineMoves {
       }
     }
 
-    // MARK: - Keyboard
+    // MARK: - Holding
 
     private func isHeld(_ item: DOM.Element) -> Bool {
       guard let held else { return false }
@@ -706,6 +884,7 @@ public enum OutlineMoves {
       guard isHeld(item) else {
         if stringEquals(key, " ") || stringEquals(key, "Enter") {
           event.preventDefault()
+          event.stopPropagation()
           grab(item)
         }
         return
@@ -725,11 +904,9 @@ public enum OutlineMoves {
       } else if stringEquals(key, "ArrowRight") {
         event.preventDefault()
         indent(item)
-      } else if stringEquals(key, "Escape") {
+      } else if stringEquals(key, "Escape") || stringEquals(key, " ") || stringEquals(key, "Enter") {
         event.preventDefault()
-        cancel()
-      } else if stringEquals(key, " ") || stringEquals(key, "Enter") {
-        event.preventDefault()
+        event.stopPropagation()
         drop()
       }
       handle(of: item)?.focus()
@@ -738,43 +915,47 @@ public enum OutlineMoves {
     private func grab(_ item: DOM.Element) {
       if held != nil { drop() }
       held = item
-      heldList = item.parentElement
-      heldBefore = nil
-      if let list = heldList {
-        let siblings = items(in: list)
-        let at = index(of: item, in: siblings)
-        if at >= 0 && at + 1 < siblings.count { heldBefore = siblings[at + 1] }
-      }
-      item.setAttribute(data("outliner-grabbed"), "true")
       handle(of: item)?.setAttribute("aria-pressed", "true")
+      paint(item)
+      toolbar?.setAttribute(data("visible"), "true")
+      updateToolbar()
       announce(stringJoin([label(of: item), ", picked up at ", number(of: item), "."], separator: ""))
     }
 
+    /// Puts the held item down where it now stands.
     private func drop() {
       guard let item = held else { return }
-      release(item)
+      handle(of: item)?.setAttribute("aria-pressed", "false")
+      toolbar?.setAttribute(data("visible"), "false")
+      held = nil
+      paint(item)
       announce(stringJoin([label(of: item), ", dropped at ", number(of: item), "."], separator: ""))
     }
 
-    /// Puts the held item back where it was picked up.
-    private func cancel() {
-      guard let item = held, let list = heldList else { return }
-      if let before = heldBefore {
-        list.insertBefore(item, before)
-      } else {
-        list.appendChild(item)
+    /// Which moves the held item can make, and whose they are.
+    private func updateToolbar() {
+      guard let toolbar, let item = held, let list = item.parentElement else { return }
+      let siblings = items(in: list)
+      let at = index(of: item, in: siblings)
+      let parent = parentItem(of: item)
+      // Whether it may sit under a parent, asked without a String compare: an
+      // optional String's `== nil` pulls Unicode tables into the client.
+      func allows(_ parent: DOM.Element?) -> Bool {
+        if let _ = refusal(item, under: parent) { return false }
+        return true
       }
-      release(item)
-      changed()
-      announce(stringJoin([label(of: item), ", back at ", number(of: item), "."], separator: ""))
-    }
-
-    private func release(_ item: DOM.Element) {
-      item.setAttribute(data("outliner-grabbed"), "false")
-      handle(of: item)?.setAttribute("aria-pressed", "false")
-      held = nil
-      heldList = nil
-      heldBefore = nil
+      let possible: [(String, Bool)] = [
+        ("up", at > 0),
+        ("down", at >= 0 && at + 1 < siblings.count),
+        ("outdent", parent != nil && allows(parent.flatMap { parentItem(of: $0) })),
+        ("indent", at > 0 && allows(siblings[at - 1])),
+      ]
+      for (action, allowed) in possible {
+        toolbar.querySelector(stringJoin(["[data-outliner-action='", action, "']"], separator: ""))?
+          .setDisabled(!allowed)
+      }
+      toolbar.querySelector(".outliner-toolbar-label")?.textContent =
+        stringJoin([number(of: item), " ", label(of: item)], separator: "")
     }
 
     // MARK: - Moves
@@ -849,25 +1030,60 @@ public enum OutlineMoves {
         return stringJoin([label(of: item), " cannot go inside itself."], separator: "")
       }
       guard rank(of: item) >= rank(of: parent) else {
-        let where_ = parent.map { label(of: $0) } ?? "the top"
-        return stringJoin([label(of: item), " cannot go under ", where_, ". ", rankRefusal], separator: "")
+        let under = parent.map { $0.dataset["outliner-rank-name"] ?? "" } ?? rootRankName
+        let sentence = stringReplace(
+          stringReplace(rankRefusal, "{item}", item.dataset["outliner-rank-name"] ?? ""), "{parent}", under)
+        // The sentence starts with a name set in lower case: "a copy …".
+        var bytes = Array(sentence.utf8)
+        if let first = bytes.first, first >= 0x61, first <= 0x7A { bytes[0] = first - 0x20 }
+        return String(decoding: bytes, as: UTF8.self)
       }
       return nil
     }
 
+    /// Says why a move was refused, in the page's alert and the live region.
+    /// Nothing on the outline stays marked by it.
     private func refuse(_ item: DOM.Element, _ reason: String) {
       announce(reason)
-      if let slot = root.querySelector(":scope > .outliner-feedback") {
-        slot.setInnerHTML("")
-        AlertAPI.show(reason, type: .red, inline: true, autoDismiss: true, autoDismissTime: 6000, container: slot)
+      guard let slot = root.querySelector(":scope > .outliner-feedback"),
+        let template = root.querySelector(":scope > .outliner-feedback-template > .alert-view")
+      else { return }
+      slot.setInnerHTML("")
+      let alert = template.cloneNode(deep: true)
+      alert.querySelector(".alert-content")?.textContent = reason
+      slot.appendChild(alert)
+      AlertHydration.hydrate(alert: alert)
+    }
+
+    /// An item's one state, by precedence: refused, held, placeholder, moved,
+    /// none.
+    private func paint(_ item: DOM.Element) {
+      let state: String
+      if let target = refusedTarget, target.id == item.id {
+        state = "refused"
+      } else if isHeld(item) {
+        state = "held"
+      } else if let moving = dragged, moving.id == item.id {
+        state = "placeholder"
+      } else if stringEquals(item.dataset["outliner-moved"] ?? "false", "true") {
+        state = "moved"
+      } else {
+        state = "none"
       }
-      item.setAttribute(data("outliner-refused"), "true")
-      _ = setTimeout(1200) {
-        item.removeAttribute(data("outliner-refused"))
-      }
+      item.setAttribute(data("outline-state"), state)
+    }
+
+    /// A different item, or none, is now the one refusing the dragged item.
+    private func refuseDrop(on target: DOM.Element?) {
+      let previous = refusedTarget
+      refusedTarget = target
+      if let previous { paint(previous) }
+      if let target { paint(target) }
     }
 
     private func moved(_ item: DOM.Element) {
+      // A move that went through leaves no refusal standing over it.
+      root.querySelector(":scope > .outliner-feedback")?.setInnerHTML("")
       let itemID = id(of: item)
       if !touched.contains(where: { stringEquals($0, itemID) }) { touched.append(itemID) }
       changed()
@@ -878,56 +1094,81 @@ public enum OutlineMoves {
     // MARK: - Drag and drop
 
     private func dragStart(_ event: Event, _ item: DOM.Element) {
-      dragged = item
-      droppedOnTarget = false
-      lastRefusal = ""
+      begin(item)
       let transfer = event.dataTransfer
       transfer.setData("text/plain", id(of: item))
       transfer.effectAllowed = "move"
-      if let row = item.querySelector(":scope > .outliner-row") {
-        transfer.setDragImage(row, x: 16, y: 16)
+      if let preview = root.querySelector(":scope > .outliner-drag-preview") {
+        transfer.setDragImage(preview, x: 16, y: 16)
       }
-      item.setAttribute(data("outliner-dragging"), "true")
+    }
+
+    /// A drag begins: the item is the one dragged, its place a placeholder,
+    /// and a preview of its header — the line with its handle — is made to
+    /// follow the pointer.
+    private func begin(_ item: DOM.Element) {
+      dragged = item
+      droppedOnTarget = false
+      lastRefusal = ""
+      paint(item)
+      root.setAttribute(data("outliner-dragging"), "true")
+      root.querySelector(":scope > .outliner-drag-preview").map { root.removeChild($0) }
+      guard let header = handle(of: item)?.parentElement else { return }
+      let preview = document.createElement(.div)
+      preview.setAttribute("class", "outliner-drag-preview")
+      preview.setAttribute("aria-hidden", "true")
+      preview.appendChild(header.cloneNode(deep: true))
+      root.appendChild(preview)
     }
 
     /// Where on a row the pointer is: its top quarter drops before it, its
     /// bottom quarter after it, anywhere between into it.
-    private func dropPosition(_ event: Event, _ row: DOM.Element) -> String {
+    private func dropPosition(_ y: Double, _ row: DOM.Element) -> String {
       guard let rect = row.getBoundingClientRect() else { return "inside" }
-      let y = event.clientY - rect.top
-      if y < rect.height / 4 { return "before" }
-      if y > rect.height * 3 / 4 { return "after" }
+      let offset = y - rect.top
+      if offset < rect.height / 4 { return "before" }
+      if offset > rect.height * 3 / 4 { return "after" }
       return "inside"
     }
 
-    private func dragOver(_ event: Event, _ target: DOM.Element, _ row: DOM.Element) {
-      guard let item = dragged else { return }
-      let position = dropPosition(event, row)
+    /// Marks the row a dragged item is over with what a drop there would do,
+    /// and says whether it may land there.
+    private func hover(_ target: DOM.Element, _ row: DOM.Element, at position: String) -> Bool {
+      guard let item = dragged else { return false }
       let parent = stringEquals(position, "inside") ? target : parentItem(of: target)
+      // Over its own place, or anywhere it carries: nowhere to go, and
+      // nothing to say about it.
       if isWithin(target, item) {
-        row.setAttribute(data("outliner-drop"), "refused")
-        lastRefusal = stringJoin([label(of: item), " cannot go inside itself."], separator: "")
-        return
+        row.removeAttribute(data("outliner-drop"))
+        refuseDrop(on: nil)
+        lastRefusal = ""
+        return false
       }
       if let reason = refusal(item, under: parent) {
-        row.setAttribute(data("outliner-drop"), "refused")
+        row.removeAttribute(data("outliner-drop"))
+        refuseDrop(on: target)
         lastRefusal = reason
-        let transfer = event.dataTransfer
+        return false
+      }
+      refuseDrop(on: nil)
+      lastRefusal = ""
+      row.setAttribute(data("outliner-drop"), position)
+      return true
+    }
+
+    private func dragOver(_ event: Event, _ target: DOM.Element, _ row: DOM.Element) {
+      let transfer = event.dataTransfer
+      guard hover(target, row, at: dropPosition(event.clientY, row)) else {
         transfer.dropEffect = "none"
         return
       }
-      lastRefusal = ""
       event.preventDefault()
-      let transfer = event.dataTransfer
       transfer.dropEffect = "move"
-      row.setAttribute(data("outliner-drop"), position)
     }
 
-    private func dropOn(_ event: Event, _ target: DOM.Element, _ row: DOM.Element) {
-      event.preventDefault()
-      row.removeAttribute(data("outliner-drop"))
+    /// Puts the dragged item where a drop on `target` at `position` says.
+    private func dropDragged(on target: DOM.Element, at position: String) {
       guard let item = dragged, !isWithin(target, item) else { return }
-      let position = dropPosition(event, row)
       if stringEquals(position, "inside") {
         guard place(item, under: target), let list = childList(of: target) else { return }
         list.appendChild(item)
@@ -953,13 +1194,96 @@ public enum OutlineMoves {
       for row in root.querySelectorAll("[data-outliner-drop]") {
         row.removeAttribute(data("outliner-drop"))
       }
-      if let item = dragged {
-        item.removeAttribute(data("outliner-dragging"))
+      refuseDrop(on: nil)
+      let item = dragged
+      dragged = nil
+      root.removeAttribute(data("outliner-dragging"))
+      root.querySelector(":scope > .outliner-drag-preview").map { root.removeChild($0) }
+      if let item {
+        paint(item)
         // Let go over a place it could not go: say why, where it was tried.
         if !droppedOnTarget && !stringIsEmpty(lastRefusal) { refuse(item, lastRefusal) }
       }
-      dragged = nil
       lastRefusal = ""
+    }
+
+    // MARK: - Touch: a long press, then a drag
+
+    private func pressStart(_ event: Event, _ item: DOM.Element) {
+      pressX = event.clientX
+      pressY = event.clientY
+      if pressTimer != 0 { clearTimeout(pressTimer) }
+      pressTimer = setTimeout(450) { [self] in
+        self.pressTimer = 0
+        guard self.dragged == nil else { return }
+        self.begin(item)
+        self.swallowClick = true
+        self.follow(self.pressX, self.pressY)
+        self.announce(stringJoin([self.label(of: item), ", picked up to drag."], separator: ""))
+      }
+    }
+
+    private func pressMove(_ event: Event, _ item: DOM.Element) {
+      guard let dragging = dragged, dragging.id == item.id else {
+        // A finger that moves before the press is long is not a drag.
+        let dx = event.clientX - pressX
+        let dy = event.clientY - pressY
+        if pressTimer != 0 && dx * dx + dy * dy > 64 {
+          clearTimeout(pressTimer)
+          pressTimer = 0
+        }
+        return
+      }
+      follow(event.clientX, event.clientY)
+      touchRow?.removeAttribute(data("outliner-drop"))
+      refuseDrop(on: nil)
+      touchRow = nil
+      touchTarget = nil
+      guard let under = document.elementFromPoint(event.clientX, event.clientY),
+        let row = under.closest(".outliner-row"),
+        let target = row.parentElement, target.classList.contains("outliner-item"),
+        root.contains(target)
+      else { return }
+      let position = dropPosition(event.clientY, row)
+      touchRow = row
+      guard hover(target, row, at: position) else { return }
+      touchTarget = target
+      touchPosition = position
+    }
+
+    /// The preview under the finger: placed at it, and lifted clear of it by
+    /// its own stylesheet.
+    private func follow(_ x: Double, _ y: Double) {
+      guard let preview = root.querySelector(":scope > .outliner-drag-preview") else { return }
+      preview.setAttribute(data("following"), "true")
+      preview.setStyleProperty("top", stringJoin([intToString(Int(y)), "px"], separator: ""))
+      preview.setStyleProperty("left", stringJoin([intToString(Int(x)), "px"], separator: ""))
+    }
+
+    private func pressEnd(_ item: DOM.Element) {
+      if pressTimer != 0 {
+        clearTimeout(pressTimer)
+        pressTimer = 0
+      }
+      guard let dragging = dragged, dragging.id == item.id else { return }
+      touchRow?.removeAttribute(data("outliner-drop"))
+      if let target = touchTarget { dropDragged(on: target, at: touchPosition) }
+      touchRow = nil
+      touchTarget = nil
+      dragEnd()
+    }
+
+    private func pressCancel(_ item: DOM.Element) {
+      if pressTimer != 0 {
+        clearTimeout(pressTimer)
+        pressTimer = 0
+      }
+      guard let dragging = dragged, dragging.id == item.id else { return }
+      touchRow?.removeAttribute(data("outliner-drop"))
+      touchRow = nil
+      touchTarget = nil
+      droppedOnTarget = true
+      dragEnd()
     }
 
     // MARK: - After a move
@@ -979,8 +1303,8 @@ public enum OutlineMoves {
       root.dispatchEvent(CustomEvent(type: "outliner-change", detail: shapeJSON()))
     }
 
-    /// Numbers, moved marks, which buttons can act, and the submitted JSON —
-    /// all read off the outline as it now stands.
+    /// Numbers, moved marks, the toolbar and the submitted JSON — all read
+    /// off the outline as it now stands.
     private func refresh() {
       guard let top = root.querySelector(":scope > .outliner-list") else { return }
       var entries: [OutlineMoves.Entry] = []
@@ -991,15 +1315,19 @@ public enum OutlineMoves {
       for (offset, item) in walked.enumerated() {
         let moved = moves[offset]
         item.setAttribute(data("outliner-moved"), moved ? "true" : "false")
-        if let note = item.querySelector(":scope > .outliner-moved-note") {
-          note.setAttribute(data("visible"), moved ? "true" : "false")
+        paint(item)
+        // The item's own number and its changes: the first inside it.
+        let original = item.dataset["outliner-original-number"] ?? ""
+        let renumbered = !stringEquals(numbers[offset], original)
+        if let changes = item.querySelector(".outliner-changes") {
+          changes.setAttribute(data("visible"), renumbered ? "true" : "false")
+          if renumbered { changes.setInnerHTML(DiffView(.line(old: original, new: numbers[offset])).render()) }
         }
-        if !stringIsEmpty(numberSelector),
-          let slot = item.querySelector(":scope > .outliner-row > .outliner-content")?.querySelector(numberSelector)
-        {
+        if !stringIsEmpty(numberSelector), let slot = item.querySelector(numberSelector) {
           slot.textContent = numbers[offset]
         }
       }
+      updateToolbar()
       if let input = root.querySelector(":scope > .outliner-shape") {
         input.setAttribute("value", shapeJSON())
         (input as? HTML.HTMLInputElement)?.value = shapeJSON()
@@ -1010,8 +1338,7 @@ public enum OutlineMoves {
       _ list: DOM.Element, parent: String, prefix: String,
       entries: inout [OutlineMoves.Entry], walked: inout [DOM.Element], numbers: inout [String]
     ) {
-      let siblings = items(in: list)
-      for (position, item) in siblings.enumerated() {
+      for (position, item) in items(in: list).enumerated() {
         let number = stringIsEmpty(prefix)
           ? intToString(position + 1) : stringJoin([prefix, intToString(position + 1)], separator: ".")
         entries.append(
@@ -1023,15 +1350,6 @@ public enum OutlineMoves {
             newPosition: position))
         walked.append(item)
         numbers.append(number)
-        for button in item.querySelectorAll(":scope > .outliner-row > .outliner-controls [data-outliner-action]") {
-          let action = button.dataset["outliner-action"] ?? ""
-          let disabled: Bool = {
-            if stringEquals(action, "up") || stringEquals(action, "indent") { return position == 0 }
-            if stringEquals(action, "down") { return position + 1 == siblings.count }
-            return stringIsEmpty(prefix)
-          }()
-          button.setAttribute("aria-disabled", disabled ? "true" : "false")
-        }
         if let children = childList(of: item) {
           walk(children, parent: id(of: item), prefix: number, entries: &entries, walked: &walked, numbers: &numbers)
         }

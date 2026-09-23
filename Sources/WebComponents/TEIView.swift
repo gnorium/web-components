@@ -1,6 +1,7 @@
 #if SERVER
   import CSSBuilder
   import DesignTokens
+  import DiffEngine
   import DOMBuilder
   import Foundation
   import HTMLBuilder
@@ -21,9 +22,15 @@
   /// directions.
   public struct TEIView: HTMLContent {
     let teiXml: String
+    /// Whether each page's source can be edited. The source is edited as it
+    /// is, not as the Raw view prettifies it: prettifying drops the spaces
+    /// between tags, and a correction must not quietly make others. The
+    /// reading stays a reading — nothing in it can be typed into.
+    let editable: Bool
 
-    public init(teiXml: String) {
+    public init(teiXml: String, editable: Bool = false) {
       self.teiXml = teiXml
+      self.editable = editable
     }
 
     public var pages: [TEIPage] { TEIRenderer.pages(in: teiXml) }
@@ -32,6 +39,110 @@
     /// canvas. `TEIRenderer` owns the rule; the view only passes it on.
     public static func serviceID(ofFacsimile url: String) -> String {
       TEIRenderer.serviceID(ofFacsimile: url)
+    }
+
+    /// A page's reading as the lines a diff compares: each line's runs with
+    /// their setting, a formula whole, a figure by its caption and region, a
+    /// page turn inside the image as a line of its own. White space that only
+    /// lays the source out — a line end and its indent — reads as the one
+    /// space a reading shows; spaces the transcription set are kept.
+    public static func renderedLines(of lines: [TEILine]) -> [DiffEngine.RenderedLine] {
+      func style(_ rend: String) -> [String] {
+        Set(rend.split(whereSeparator: \.isWhitespace).map { name -> String in
+          switch name.lowercased() {
+          case "ital", "italic", "italics": return "italic"
+          case "sub", "subscript": return "sub"
+          case "sup", "super", "superscript": return "sup"
+          case "smallcaps", "small-caps", "sc": return "smallcaps"
+          case "underline", "underlined", "ul": return "underline"
+          case "bold", "b": return "bold"
+          default: return String(name)
+          }
+        }).sorted()
+      }
+      func spaced(_ text: String) -> String {
+        var out = ""
+        var pending = ""
+        for character in text {
+          if character.isNewline || (character.isWhitespace && pending.contains(where: \.isNewline)) {
+            pending.append(character)
+            continue
+          }
+          if !pending.isEmpty {
+            out += pending.contains(where: \.isNewline) ? " " : pending
+            pending = ""
+          }
+          if character.isWhitespace {
+            pending.append(character)
+          } else {
+            out.append(character)
+          }
+        }
+        return out + (pending.contains(where: \.isNewline) ? " " : pending)
+      }
+      func role(_ kind: TEILine.Kind) -> String {
+        switch kind {
+        case .text: return ""
+        case .heading: return "heading"
+        case .speaker: return "speaker"
+        case .stage: return "stage"
+        case .mark: return "page"
+        case .forme(let role): return "forme-\(role.rawValue)"
+        case .gap: return "gap"
+        case .figure: return "figure"
+        case .table: return "table"
+        case .documentBoundary: return "boundary"
+        }
+      }
+      func runs(_ line: TEILine) -> [DiffEngine.Token] {
+        var tokens: [DiffEngine.Token] = []
+        for (index, run) in line.runs.enumerated() {
+          switch run.kind {
+          case .tex:
+            tokens.append(.init(kind: .formula, text: run.text, style: style(run.rend)))
+          case .text:
+            var text = spaced(run.text)
+            if index == 0 { text = String(text.drop(while: \.isWhitespace)) }
+            if index == line.runs.count - 1 {
+              while text.last?.isWhitespace == true { text.removeLast() }
+            }
+            if !text.isEmpty { tokens.append(.init(text: text, style: style(run.rend))) }
+          }
+        }
+        return tokens
+      }
+
+      var out: [DiffEngine.RenderedLine] = []
+      for line in lines {
+        switch line.kind {
+        case .figure(_, let bbox):
+          out.append(
+            .init(
+              tokens: [.init(kind: .figure, text: line.text, style: bbox.isEmpty ? [] : ["region \(bbox)"])],
+              opensBlock: true, role: role(line.kind)))
+        case .gap(let reason):
+          out.append(.init(tokens: [.init(text: "[\(reason.isEmpty ? "gap" : reason)]")], role: role(line.kind)))
+        case .mark, .documentBoundary:
+          out.append(.init(tokens: [.init(text: line.text)], role: role(line.kind)))
+        case .table(let table):
+          // A table reads as its caption, then row by row, a cell's lines run
+          // together.
+          for caption in table.caption {
+            out.append(.init(tokens: runs(caption), role: "table"))
+          }
+          for row in table.rows {
+            var tokens: [DiffEngine.Token] = []
+            for (index, cell) in row.cells.enumerated() {
+              if index > 0 { tokens.append(.init(text: " | ")) }
+              for cellLine in cell.lines { tokens += runs(cellLine) }
+            }
+            out.append(.init(tokens: tokens, role: "table"))
+          }
+        default:
+          out.append(.init(tokens: runs(line), opensBlock: line.opensBlock, role: role(line.kind)))
+        }
+      }
+      return out
     }
 
     private func inlineContent(_ line: TEILine) -> DOM.Node {
@@ -140,7 +251,25 @@
             .data("reading-layer", "text")
 
             div {
-              SourceView(XMLFormatter.prettified(page.markup), showLineNumbers: false)
+              if editable {
+                // A form of its own, so the page can be sent to be read back
+                // as it is being edited — its rendition and its source.
+                form {
+                  input()
+                    .type(.hidden)
+                    .name("rendition")
+                    .value(Self.serviceID(ofFacsimile: page.facsimileURL))
+                  SourceEditorView(
+                    id: "tei-page-source-\(index)",
+                    name: "markup",
+                    value: page.markup,
+                    ariaLabel: page.label.isEmpty ? "Source of this page" : "Source of \(page.label)"
+                  )
+                }
+                .class("tei-page-edit")
+              } else {
+                SourceView(XMLFormatter.prettified(page.markup), showLineNumbers: false)
+              }
             }
             .class("tei-page-raw")
             .data("reading-layer", "source")
@@ -153,6 +282,7 @@
         }
       }
       .class("tei-view")
+      .data("editable", editable)
       .style {
         selector("&") {
           display(.flex)
@@ -270,6 +400,17 @@
           flexDirection(.column)
           gap(spacing2)
           minWidth(0)
+        }
+        // Editable only in Raw: the reading is for reading, and nothing in it
+        // looks as if it could be typed into.
+        selector("&[data-editable='true'] .tei-page-text") {
+          cursor(.default)
+        }
+        descendant(".tei-page-edit") {
+          display(.flex)
+          flexDirection(.column)
+          minWidth(0)
+          margin(0)
         }
         descendant(".tei-line") {
           fontFamily(typographyFontSerif)

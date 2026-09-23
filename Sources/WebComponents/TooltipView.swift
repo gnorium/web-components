@@ -531,7 +531,7 @@ public struct TooltipView: HTMLContent {
     private var instances: [TooltipInstance] = []
 
     public init() {
-      hydrateAllTooltips()
+      bind(in: document.body)
     }
 
     public static func hydrateIfPresent() {
@@ -539,12 +539,21 @@ public struct TooltipView: HTMLContent {
       instance = TooltipHydration()
     }
 
-    private func hydrateAllTooltips() {
-      let allTooltips = document.querySelectorAll("[data-tooltip=\"true\"]")
+    /// The tooltips under `root` — a fragment fetched into the page after its
+    /// own pass. One already bound is left alone.
+    public static func hydrate(in root: DOM.Element) {
+      guard let instance else {
+        instance = TooltipHydration()
+        return
+      }
+      instance.bind(in: root)
+    }
 
-      for tooltip in allTooltips {
-        let instance = TooltipInstance(tooltip: tooltip)
-        instances.append(instance)
+    private func bind(in root: DOM.Element) {
+      for tooltip in root.querySelectorAll("[data-tooltip=\"true\"]") {
+        if tooltip.hasAttribute("data-tooltip-hydrated") { continue }
+        tooltip.setAttribute(data("tooltip-hydrated"), "true")
+        instances.append(TooltipInstance(tooltip: tooltip))
       }
     }
   }

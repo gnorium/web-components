@@ -760,6 +760,16 @@
       instance = AlertHydration()
     }
 
+    /// An alert put on the page after its own pass — one cloned from a
+    /// rendered `AlertView` to say something that has just happened.
+    public static func hydrate(alert: DOM.Element) {
+      guard let instance else {
+        instance = AlertHydration()
+        return
+      }
+      instance.instances.append(AlertInstance(alert: alert))
+    }
+
     private func hydrateAllAlerts() {
       let allAlerts = document.querySelectorAll(".alert-view")
 

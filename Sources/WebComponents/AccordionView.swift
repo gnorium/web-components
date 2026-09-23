@@ -16,6 +16,14 @@ public enum Separation: Sendable {
   case minimal
   case divider
   case outline
+  /// Accordions set one after another as one group: one frame round them
+  /// all, a divider where two meet, the base radius on the group's outer
+  /// corners only — the first's top ones, the last's bottom ones, all four
+  /// for one alone. The accordions must be siblings in their container, with
+  /// no gap between them. A grouped accordion has no coloured states of its
+  /// own; its header's keyboard focus is ringed on its border line, rounded at
+  /// all four corners wherever it sits, and raised over its neighbours.
+  case grouped
 
   public var value: String {
     switch self {
@@ -23,6 +31,7 @@ public enum Separation: Sendable {
     case .minimal: return "minimal"
     case .divider: return "divider"
     case .outline: return "outline"
+    case .grouped: return "grouped"
     }
   }
 }
@@ -381,6 +390,45 @@ public struct AccordionView: HTMLContent {
         borderRadius(borderRadiusBase)
         padding(0)
       }
+      // Grouped: one frame round the siblings, square where they meet, the
+      // line between two drawn once, by the one below.
+      selector("&[data-separation='grouped']") {
+        border(borderWidthBase, .solid, borderColorBase)
+        borderRadius(0)
+        padding(0)
+      }
+      selector("&[data-separation='grouped']:not(:first-child)") {
+        borderBlockStart(.none)
+      }
+      selector("&[data-separation='grouped']:first-child") {
+        borderStartStartRadius(borderRadiusBase)
+        borderStartEndRadius(borderRadiusBase)
+      }
+      selector("&[data-separation='grouped']:last-child") {
+        borderEndStartRadius(borderRadiusBase)
+        borderEndEndRadius(borderRadiusBase)
+      }
+      // The header's hover wash follows the corners it sits in.
+      selector("&[data-separation='grouped']:first-child > .accordion-details > .accordion-summary") {
+        borderStartStartRadius(calc("\(borderRadiusBase.value) - \(borderWidthBase.value)"))
+        borderStartEndRadius(calc("\(borderRadiusBase.value) - \(borderWidthBase.value)"))
+      }
+      selector("&[data-separation='grouped']:last-child > .accordion-details:not([open]) > .accordion-summary") {
+        borderEndStartRadius(calc("\(borderRadiusBase.value) - \(borderWidthBase.value)"))
+        borderEndEndRadius(calc("\(borderRadiusBase.value) - \(borderWidthBase.value)"))
+      }
+      // Keyboard focus, on the border line: the focus ring every field
+      // wears, rounded at all four corners whatever the item's place in the
+      // group, and drawn over its neighbours — focus already raises it.
+      selector("&[data-separation='grouped']:has(> .accordion-details > .accordion-summary:focus-visible)::after") {
+        content("\"\"")
+        position(.absolute)
+        inset(calc("-1 * \(borderWidthBase.value)"))
+        border(borderWidthBase, .solid, borderColorBlueFocus)
+        borderRadius(borderRadiusBase)
+        boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus)
+        pointerEvents(.none)
+      }
       pseudoClass(.hover) { zIndex(zIndexToolbar).important() }
       pseudoClass(.focusWithin) { zIndex(zIndexToolbar).important() }
     }
@@ -595,7 +643,7 @@ public struct AccordionView: HTMLContent {
     /// - Parameters:
     ///   - id: Unique ID for the accordion (used on the `<details>` element)
     ///   - open: Whether the accordion starts expanded
-    ///   - separation: Visual separation style (.none, .minimal, .divider, .outline)
+    ///   - separation: Visual separation style (.none, .minimal, .divider, .outline, .grouped)
     ///   - title: DOM.Text content for the accordion title
     ///   - titleFontSize: Title type scale. Defaults to the body size the
     ///     server-rendered accordions use, so a client-built card is not quietly

@@ -1,194 +1,485 @@
+import CSSBuilder
+import CSSOMBuilder
+import DesignTokens
+import DiffEngine
+import DOMBuilder
+import EmbeddedSwiftUtilities
+import HTMLBuilder
+import WebTypes
+
 #if SERVER
-  import CSSBuilder
-  import CSSOMBuilder
-  import DesignTokens
-  import DiffEngine
-  import DOMBuilder
-  import HTMLBuilder
-  import WebTypes
+  import Foundation
+#endif
 
-  /// Inline diff view with two levels of highlighting:
-  /// - Line-level: subtle red/green background on entire changed lines
-  /// - Word-level: strong red/green highlight on specific changed words
-  public struct DiffView: HTMLContent {
-    let segments: [DiffSegment]
-    let stats: DiffStats
-    let `class`: String
+/// What changed, under the thing that changed: a field's old value against
+/// its new one, a text's or a page's old lines against its new ones.
+///
+/// The thing edited shows its new value, clean, framed in orange. This says
+/// how it changed, under the label "Changes:", in the subtle text colour with
+/// the characters that changed coloured — red where they were, green where
+/// they are — and nothing given a background. No mark is drawn on the text:
+/// real text is itself underlined and struck through, so a mark of that kind
+/// could not be told from the text.
+///
+/// Two shapes, by how much there is to show:
+///
+/// - **A line** — `line`, `choice` — sits where a field's changes line has
+///   always sat, under the field: "Changes: old → new". A text is compared
+///   character by character; a choice — a dropdown's, a date's, a checkbox's
+///   — is old and new whole. A value put where there was none is the new one
+///   alone, green; one cleared is the old one alone, red.
+/// - **A box** — `passage`, `code`, `rendered` — holds the changed lines with a
+///   little context, marked by their gutter as a unified diff marks them — "−"
+///   for a line taken out, "+" for one put in — in a field's own frame,
+///   scrolled once it is taller than a reader's pane. A long line wraps under
+///   its own text, the gutter beside it. The gutter and the pairing of the
+///   lines carry the meaning, and the colour only says exactly where.
+///
+/// `line`, `choice` and `passage` are built in the browser too, as a field is
+/// edited; `code` and `rendered` are drawn by the server.
+public struct DiffView: HTMLContent {
+  public enum Mode: Sendable {
+    /// A one-line text's old value against its new one, character by
+    /// character.
+    case line(old: String, new: String)
+    /// A choice's old value against its new one, whole: a dropdown's, a
+    /// date's, a checkbox's — a character diff of two option names says
+    /// nothing their names do not.
+    case choice(old: String, new: String)
+    /// A multi-line text's old value against its new one, line by line.
+    case passage(old: String, new: String)
+    #if SERVER
+      /// Source text, monospaced and uncoloured: it is the past, and syntax
+      /// colour would compete with the live source above it.
+      case code(old: String, new: String)
+      /// Rendered text as it reads, each line drawn with its formatting, so a
+      /// line that changed only how it is set shows the difference itself.
+      /// `new` is nil when the new text cannot be rendered — its markup broken
+      /// mid-edit.
+      case rendered(old: [DiffEngine.RenderedLine], new: [DiffEngine.RenderedLine]?)
+    #endif
+  }
 
-    public struct DiffStats: Sendable {
-      public let inserted: Int
-      public let deleted: Int
-      public let unchanged: Int
+  let mode: Mode
+  /// What stands before it: "Changes:" unless a page says otherwise. Empty
+  /// draws none.
+  let label: String
+  let `class`: String
 
-      public var hasChanges: Bool { inserted > 0 || deleted > 0 }
-    }
+  /// The one label every change is given, a line's and a box's alike.
+  public static let changes = "Changes:"
 
-    public init(old: String, new: String, class: String = "") {
-      self.segments = DiffEngine.diff(old: old, new: new)
-      self.`class` = `class`
+  public init(_ mode: Mode, label: String = DiffView.changes, class: String = "") {
+    self.mode = mode
+    self.label = label
+    self.`class` = `class`
+  }
 
-      var inserted = 0
-      var deleted = 0
-      var unchanged = 0
-      for segment in segments {
+  /// A page that builds one in the browser links its sheet here, while the
+  /// server renders it.
+  public static func preloadStyleSheet() {
+    _ = DiffView(.line(old: "", new: "")).build()
+  }
+
+  public func build() -> DOM.Node {
+    // A line's text as the pair it belongs to split it: the changed stretches
+    // coloured by the row they sit in, white space among them made visible.
+    func segmentNodes(_ segments: [DiffSegment]) -> [DOM.Node] {
+      segments.map { segment -> DOM.Node in
         switch segment {
-        case .inserted(let t): inserted += t.count
-        case .deleted(let t): deleted += t.count
-        case .unchanged(let t), .deletedContext(let t), .insertedContext(let t):
-          unchanged += t.count
+        case .unchanged(let text):
+          return DOM.Text(text)
+        case .changed(let text):
+          return span { Self.visible(text) }
+            .class("diff-view-changed")
+            .build()
         }
       }
-      self.stats = DiffStats(inserted: inserted, deleted: deleted, unchanged: unchanged)
     }
 
-    public func build() -> DOM.Node {
-      let rootClass =
-        `class`.isEmpty
-        ? "diff-view"
-        : "diff-view \(`class`)"
-
-      return div {
-        // Stats bar
-        if stats.hasChanges {
-          div {
-            if stats.deleted > 0 {
-              span { "\u{2212}\(stats.deleted)" }
-                .class("diff-stat-deleted")
-            }
-
-            if stats.inserted > 0 {
-              span { "+\(stats.inserted)" }
-                .class("diff-stat-inserted")
-            }
-
-            span { "\(stats.deleted + stats.inserted) chars changed" }
-              .class("diff-stat-summary")
-          }
-          .class("diff-stats")
+    // A diff's lines, context and changes, in runs with a gap between.
+    func rows<C: Sendable>(
+      _ hunks: [[DiffEngine.Line<C>]],
+      @HTMLBuilder content: (DiffEngine.Line<C>) -> [DOM.Node]
+    ) -> DOM.Node {
+      div {
+        if hunks.isEmpty {
+          p { "No changes." }
+            .class("diff-view-note")
         }
+        for (index, hunk) in hunks.enumerated() {
+          if index > 0 {
+            div { "⋯" }
+              .class("diff-view-gap")
+              .ariaHidden(true)
+          }
+          for line in hunk {
+            div {
+              span {
+                switch line.kind {
+                case .unchanged: " "
+                case .removed: "−"
+                case .inserted: "+"
+                }
+              }
+              .class("diff-view-sign")
+              .ariaHidden(true)
+              span { content(line) }
+                .class("diff-view-content")
+                .dir("auto")
+            }
+            .class("diff-view-row")
+            .data(
+              "diff-line",
+              {
+                switch line.kind {
+                case .unchanged: return "unchanged"
+                case .removed: return "removed"
+                case .inserted: return "inserted"
+                }
+              }())
+          }
+        }
+      }
+      .class("diff-view-lines")
+      .build()
+    }
 
-        // No legend. Red struck text and green added text need no key: the
-        // colours say what they are, the counts above say how much, and a row
-        // explaining them was a row of furniture on every diff.
-
-        // Diff content
-        if stats.hasChanges {
-          code {
-            for segment in segments {
+    let isLine: Bool
+    let modeName: String
+    let body: DOM.Node
+    switch mode {
+    case .line(let old, let new):
+      isLine = true
+      modeName = "line"
+      let pair = DiffEngine.refine(old: old, new: new)
+      body = span {
+        if !stringIsEmpty(old) {
+          span { segmentNodes(stringIsEmpty(new) ? [.changed(old)] : pair.old) }
+            .class("diff-view-old")
+            .dir("auto")
+        }
+        if !stringIsEmpty(old) && !stringIsEmpty(new) {
+          span { "→" }
+            .class("diff-view-arrow")
+            .ariaHidden(true)
+        }
+        if !stringIsEmpty(new) {
+          span { segmentNodes(stringIsEmpty(old) ? [.changed(new)] : pair.new) }
+            .class("diff-view-new")
+            .dir("auto")
+        }
+      }
+      .class("diff-view-content")
+      .build()
+    case .choice(let old, let new):
+      isLine = true
+      modeName = "choice"
+      body = span {
+        if !stringIsEmpty(old) {
+          span { span { old }.class("diff-view-changed") }
+            .class("diff-view-old")
+            .dir("auto")
+        }
+        if !stringIsEmpty(old) && !stringIsEmpty(new) {
+          span { "→" }
+            .class("diff-view-arrow")
+            .ariaHidden(true)
+        }
+        if !stringIsEmpty(new) {
+          span { span { new }.class("diff-view-changed") }
+            .class("diff-view-new")
+            .dir("auto")
+        }
+      }
+      .class("diff-view-content")
+      .build()
+    case .passage(let old, let new):
+      isLine = false
+      modeName = "passage"
+      body = rows(DiffEngine.hunks(DiffEngine.lines(old: old, new: new), context: 2)) { line in
+        segmentNodes(line.segments)
+      }
+    #if SERVER
+      case .code(let old, let new):
+        isLine = false
+        modeName = "code"
+        body = rows(DiffEngine.hunks(DiffEngine.lines(old: old, new: new), context: 3)) { line in
+          segmentNodes(line.segments)
+        }
+      case .rendered(let old, let new):
+        isLine = false
+        modeName = "rendered"
+        if let new {
+          body = rows(DiffEngine.hunks(DiffEngine.lines(old: old, new: new), context: 2)) { line in
+            // Which characters of the line changed, one flag a character, so
+            // each run can be split where the change starts and ends and keep
+            // its own setting either side.
+            let flags: [Bool] = line.segments.flatMap { segment -> [Bool] in
               switch segment {
-              case .unchanged(let text):
-                text
-              case .deleted(let text):
-                del(text)
-                  .class("diff-deleted")
-              case .inserted(let text):
-                ins(text)
-                  .class("diff-inserted")
-              case .deletedContext(let text):
-                span { text }
-                  .class("diff-deleted-context")
-              case .insertedContext(let text):
-                span { text }
-                  .class("diff-inserted-context")
+              case .unchanged(let text): return [Bool](repeating: false, count: text.unicodeScalars.count)
+              case .changed(let text): return [Bool](repeating: true, count: text.unicodeScalars.count)
               }
             }
+            let starts = line.content.tokens.reduce(into: [0]) { $0.append($0.last! + $1.text.unicodeScalars.count) }
+            let regionChanged: Bool = {
+              if case .region? = line.note { return true }
+              return false
+            }()
+            // One parted from its pair by the kind of break before it shows
+            // the break; a look-alike says which characters on hover.
+            if case .breakKind? = line.note {
+              span { line.content.opensBlock ? "¶ " : "↵ " }
+                .class("diff-view-break")
+                .title(line.content.opensBlock ? "Paragraph break" : "Line break")
+            }
+            span {
+              for (index, token) in line.content.tokens.enumerated() {
+                let own = Array(flags[min(starts[index], flags.count)..<min(starts[index + 1], flags.count)])
+                switch token.kind {
+                case .text:
+                  for run in Self.runs(token.text, own) {
+                    if run.changed {
+                      span { Self.visible(run.text) }
+                        .class("diff-view-changed")
+                        .data("style", token.style.joined(separator: " "))
+                        .title(Self.title(of: line, run.text))
+                    } else {
+                      span { run.text }
+                        .data("style", token.style.joined(separator: " "))
+                    }
+                  }
+                case .formula:
+                  // A formula is compared whole, and coloured whole.
+                  if own.contains(true) {
+                    span { TeXView(token.text) }
+                      .class("diff-view-changed")
+                  } else {
+                    TeXView(token.text)
+                  }
+                case .figure:
+                  span {
+                    if regionChanged {
+                      "[Figure: \(token.text) — region changed]"
+                    } else {
+                      token.text.isEmpty ? "[Figure]" : "[Figure: \(token.text)]"
+                    }
+                  }
+                  .class(own.contains(true) || regionChanged ? "diff-view-figure diff-view-changed" : "diff-view-figure")
+                }
+              }
+            }
+            .data("role", line.content.role)
           }
-          .class("diff-content")
         } else {
-          div {
-            p { "No changes between these versions." }
-              .class("diff-empty")
-          }
-          .class("diff-empty-box")
+          body = p { "Fix the markup to see the rendered diff." }
+            .class("diff-view-note")
+            .build()
         }
+    #endif
+    }
+
+    let rootClass = stringIsEmpty(`class`) ? "diff-view" : stringJoin(["diff-view", `class`], separator: " ")
+    return div {
+      if !stringIsEmpty(label) {
+        span { label }
+          .class("diff-view-label")
       }
-      .class(rootClass)
-      .style {
-        selector("&") {
-          display(.flex)
-          flexDirection(.column)
-          gap(spacing16)
+      if isLine {
+        body
+      } else {
+        div { body }
+          .class("diff-view-box")
+      }
+    }
+    .class(rootClass)
+    .data("shape", isLine ? "line" : "box")
+    .data("diff-mode", modeName)
+    .style {
+      selector("&") {
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeXSmall12)
+        lineHeight(lineHeightXSmall20)
+        color(colorSubtle)
+        minWidth(0)
+      }
+      // Where a field's changes line has always been: under the field,
+      // indented to its text.
+      selector("&[data-shape='line']") {
+        display(.block)
+        paddingInlineStart(spacing16)
+        marginBlockStart(spacing4)
+        overflowWrap(.anywhere)
+      }
+      selector("&[data-shape='line'] .diff-view-label") {
+        marginInlineEnd(spacing4)
+      }
+      selector("&[data-shape='box']") {
+        display(.flex)
+        flexDirection(.column)
+        alignItems(.stretch)
+        gap(spacing4)
+        marginBlockStart(spacing4)
+      }
+      // A field's own frame, as tall as a reader's pane at most, then
+      // scrolled.
+      descendant(".diff-view-box") {
+        border(borderWidthBase, .solid, borderColorBase)
+        borderRadius(borderRadiusBase)
+        padding(spacing8, spacing12)
+        maxHeight(size256)
+        overflow(.auto)
+        minWidth(0)
+      }
+      descendant(".diff-view-lines") {
+        display(.flex)
+        flexDirection(.column)
+        minWidth(0)
+      }
+      descendant(".diff-view-row") {
+        display(.flex)
+        alignItems(.baseline)
+        gap(spacing8)
+        minHeight(lineHeightXSmall20)
+      }
+      descendant(".diff-view-sign") {
+        flexShrink(0)
+        width(ch(1))
+        whiteSpace(.pre)
+        userSelect(.none)
+      }
+      descendant(".diff-view-content") {
+        minWidth(0)
+        whiteSpace(.preWrap)
+        overflowWrap(.anywhere)
+      }
+      descendant(".diff-view-gap") {
+        paddingInlineStart(calc(ch(1) + spacing8))
+        userSelect(.none)
+      }
+      descendant(".diff-view-note") {
+        fontStyle(.italic)
+        margin(0)
+      }
+      // The characters that changed: red where they were, green where they
+      // are. Colour only; the gutter, or the arrow, says which is which.
+      selector("& .diff-view-row[data-diff-line='removed'] .diff-view-changed", "& .diff-view-old .diff-view-changed") {
+        color(colorRed)
+      }
+      selector("& .diff-view-row[data-diff-line='inserted'] .diff-view-changed", "& .diff-view-new .diff-view-changed") {
+        color(colorGreen)
+      }
+      // From the old to the new, in the direction the line reads.
+      descendant(".diff-view-arrow") {
+        display(.inlineBlock)
+        marginInline(spacing4)
+      }
+      descendant(".diff-view-arrow:dir(rtl)") {
+        transform(scaleX(-1))
+      }
+
+      // Code: as it is written, monospaced, its indentation kept.
+      selector("&[data-diff-mode='code'] .diff-view-box") {
+        fontFamily(typographyFontMono)
+      }
+
+      // Rendered: the reading's own type, each line set as it reads.
+      selector("&[data-diff-mode='rendered'] .diff-view-box") {
+        fontFamily(typographyFontSerif)
+        fontSize(fontSizeSmall14)
+        lineHeight(lineHeightMedium26)
+      }
+      selector("&[data-diff-mode='rendered'] .diff-view-row") {
+        minHeight(lineHeightMedium26)
+      }
+      selector("&[data-diff-mode='rendered'] .diff-view-content") {
+        whiteSpace(.normal)
+      }
+      selector("& [data-role='heading']", "& [data-role='speaker']") {
+        fontWeight(fontWeightSemiBold)
+      }
+      descendant("[data-role='stage']") {
+        fontStyle(.italic)
+      }
+      selector("& [data-role^='forme']", "& [data-role='page']", "& .diff-view-figure", "& .diff-view-break") {
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeXSmall12)
+      }
+      descendant(".diff-view-figure") {
+        fontStyle(.italic)
+      }
+      descendant("[data-style~='italic']") { fontStyle(.italic) }
+      descendant("[data-style~='bold']") { fontWeight(fontWeightBold) }
+      descendant("[data-style~='underline']") { textDecoration(.underline) }
+      descendant("[data-style~='smallcaps']") { CSS.Property("font-variant-caps", "small-caps") }
+      descendant("[data-style~='sub']") {
+        verticalAlign(.sub)
+        fontSize(em(0.75))
+        lineHeight(0)
+      }
+      descendant("[data-style~='sup']") {
+        verticalAlign(.super)
+        fontSize(em(0.75))
+        lineHeight(0)
+      }
+    }
+    .build()
+  }
+}
+
+extension DiffView {
+  /// White space that changed, made visible: a space is drawn as a middle
+  /// dot, since a changed space is otherwise a change nobody can see.
+  static func visible(_ text: String) -> String {
+    guard DiffEngine.isSpace(text) else { return text }
+    var bytes: [UInt8] = []
+    for byte in text.utf8 {
+      if byte == 0x20 {
+        bytes.append(0xC2)
+        bytes.append(0xB7)
+      } else {
+        bytes.append(byte)
+      }
+    }
+    return String(decoding: bytes, as: UTF8.self)
+  }
+}
+
+#if SERVER
+  extension DiffView {
+    /// A run of a token's text and whether it changed.
+    struct Run {
+      let text: String
+      let changed: Bool
+    }
+
+    /// A token's text split where its characters' flags change.
+    static func runs(_ text: String, _ flags: [Bool]) -> [Run] {
+      var out: [Run] = []
+      var current = ""
+      var state = flags.first ?? false
+      for (index, scalar) in text.unicodeScalars.enumerated() {
+        let flag = index < flags.count ? flags[index] : false
+        if flag != state && !current.isEmpty {
+          out.append(Run(text: current, changed: state))
+          current = ""
         }
-        selector(".diff-stats") {
-          display(.flex)
-          alignItems(.center)
-          gap(spacing12)
-          fontFamily(typographyFontMono)
-          fontSize(fontSizeSmall14)
-        }
-        selector(".diff-stat-deleted") {
-          color(colorRed)
-          fontWeight(fontWeightBold)
-        }
-        selector(".diff-stat-inserted") {
-          color(colorGreen)
-          fontWeight(fontWeightBold)
-        }
-        selector(".diff-stat-summary") {
-          color(colorSubtle)
-          fontWeight(fontWeightNormal)
-        }
-        selector(".diff-legend") {
-          display(.flex)
-          alignItems(.center)
-          gap(spacing16)
-        }
-        selector(".diff-legend-item") {
-          display(.flex)
-          alignItems(.center)
-          gap(spacing4)
-        }
-        selector(".diff-legend-swatch-deleted", ".diff-legend-swatch-inserted") {
-          display(.inlineBlock)
-          width(px(14))
-          height(px(14))
-          borderRadius(borderRadiusMinimal)
-        }
-        selector(".diff-legend-swatch-deleted") { backgroundColor(colorRed) }
-        selector(".diff-legend-swatch-inserted") { backgroundColor(colorGreen) }
-        selector(".diff-legend-label") {
-          fontFamily(typographyFontSans)
-          fontSize(fontSizeXSmall12)
-          color(colorSubtle)
-        }
-        selector(".diff-content") {
-          display(.block)
-          fontFamily(typographyFontMono)
-          fontSize(fontSizeSmall14)
-          lineHeight(1.618)
-          color(colorBase)
-          backgroundColor(backgroundColorNeutralSubtle)
-          border(borderWidthBase, .solid, borderColorSubtle)
-          borderRadius(borderRadiusBase)
-          padding(spacing16)
-          margin(0)
-          whiteSpace(.preWrap)
-          wordBreak(.breakWord)
-          overflow(.auto)
-        }
-        selector(".diff-deleted", ".diff-inserted") {
-          color(colorInvertedFixed)
-          textDecoration(.none)
-          borderRadius(borderRadiusMinimal)
-          padding(0, spacing4)
-        }
-        selector(".diff-deleted") { backgroundColor(backgroundColorRed) }
-        selector(".diff-inserted") { backgroundColor(backgroundColorGreen) }
-        selector(".diff-deleted-context") { backgroundColor(backgroundColorRedSubtle) }
-        selector(".diff-inserted-context") { backgroundColor(backgroundColorGreenSubtle) }
-        selector(".diff-empty-box") {
-          backgroundColor(backgroundColorNeutralSubtle)
-          border(borderWidthBase, .solid, borderColorSubtle)
-          borderRadius(borderRadiusBase)
-        }
-        selector(".diff-empty") {
-          fontFamily(typographyFontSans)
-          fontSize(fontSizeMedium16)
-          color(colorSubtle)
-          textAlign(.center)
-          padding(spacing32)
-          margin(0)
-        }
+        state = flag
+        current.unicodeScalars.append(scalar)
+      }
+      if !current.isEmpty { out.append(Run(text: current, changed: state)) }
+      return out
+    }
+
+    /// What a changed run says on hover: which characters a look-alike is,
+    /// that only the spacing changed.
+    static func title(of line: DiffEngine.Line<DiffEngine.RenderedLine>, _ text: String) -> String {
+      switch line.note {
+      case .lookalike?:
+        return "Look-alike characters: "
+          + text.unicodeScalars.map { String(format: "U+%04X", $0.value) }.joined(separator: " ")
+      case .spacing?: return "Spacing changed"
+      default: return ""
       }
     }
   }

@@ -29,6 +29,7 @@ public struct ButtonView: HTMLContent {
   var dataAttributes: [(String, String)]
   /// The id of the form this submits with, when it sits outside that form.
   var formID: String? = nil
+  var popoverTargetID: String? = nil
 
   /// Button type attribute
   public enum ButtonType: String, Sendable {
@@ -265,6 +266,14 @@ public struct ButtonView: HTMLContent {
     return copy
   }
 
+  /// The standard `popovertarget` attribute: the popover this button opens
+  /// and closes, with no script — and which the popover is then anchored to.
+  public func popoverTarget(_ id: String) -> Self {
+    var copy = self
+    copy.popoverTargetID = id
+    return copy
+  }
+
   public func build() -> DOM.Node {
     let baseClasses = "button-view button-color-\(buttonColor.rawValue) button-weight-\(weight.rawValue) button-size-\(size.rawValue) \(borderRadiusClass)\(iconOnly ? " button-icon-only" : "")"
     let fullClass = stringIsEmpty(`class`) ? baseClasses : "\(baseClasses) \(`class`)"
@@ -323,11 +332,16 @@ public struct ButtonView: HTMLContent {
             transition("background-color 0.1s ease, border-color 0.1s ease, color 0.1s ease")
 
             // A mouse click focuses a button but should not ring it. Keyboard
-            // focus still does: `:focus-visible` is the browser's own judgement
-            // of when a ring is useful, and it is the only place the ring is
-            // suppressed from.
+            // focus does: `:focus-visible` is the browser's own judgement of
+            // when a ring is useful, and it gets the focus ring every control
+            // wears — the browser's own was left to show through, in whatever
+            // accent the system happened to have.
             pseudoClass(.focus) {
               outline(borderWidthBase, .solid, borderColorTransparent).important()
+            }
+            pseudoClass(.focusVisible) {
+              outline(borderWidthThick, .solid, borderColorBlueFocus).important()
+              outlineOffset(borderWidthBase).important()
             }
 
             // Disabled state — static via data-attributes (cacheable)
@@ -1145,11 +1159,16 @@ public struct ButtonView: HTMLContent {
             transition("background-color 0.1s ease, border-color 0.1s ease, color 0.1s ease")
 
             // A mouse click focuses a button but should not ring it. Keyboard
-            // focus still does: `:focus-visible` is the browser's own judgement
-            // of when a ring is useful, and it is the only place the ring is
-            // suppressed from.
+            // focus does: `:focus-visible` is the browser's own judgement of
+            // when a ring is useful, and it gets the focus ring every control
+            // wears — the browser's own was left to show through, in whatever
+            // accent the system happened to have.
             pseudoClass(.focus) {
               outline(borderWidthBase, .solid, borderColorTransparent).important()
+            }
+            pseudoClass(.focusVisible) {
+              outline(borderWidthThick, .solid, borderColorBlueFocus).important()
+              outlineOffset(borderWidthBase).important()
             }
 
             // Disabled state — static via data-attributes (cacheable)
@@ -1928,6 +1947,10 @@ public struct ButtonView: HTMLContent {
 
       if let formID {
         bBtn = bBtn.form(formID)
+      }
+
+      if let popoverTargetID {
+        bBtn = bBtn.addingAttribute("popovertarget", popoverTargetID)
       }
 
       return bBtn
