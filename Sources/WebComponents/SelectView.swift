@@ -195,7 +195,7 @@
       }
 
       if submitFormOnChange {
-        root = root.data("submitFormOnChange", "true")
+        root = root.data("submit-form-on-change", "true")
       }
 
       return root
@@ -316,7 +316,7 @@
       closeMenu()
 
       // Submit closest form if requested
-      if stringEquals(select.dataset["submitFormOnChange"], "true") {
+      if stringEquals(select.getAttribute(data("submit-form-on-change")) ?? "", "true") {
         if let form = select.closest("form") as? HTML.HTMLFormElement {
           form.submit()
         }

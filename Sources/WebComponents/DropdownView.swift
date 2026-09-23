@@ -253,7 +253,7 @@ public struct DropdownView: HTMLContent {
       .data("dropdown-disabled", disabled)
     }
     .class(stringIsEmpty(`class`) ? "dropdown-view" : "dropdown-view \(`class`)")
-    .data("submitFormOnChange", submitFormOnChange ? "true" : "false")
+    .data("submit-form-on-change", submitFormOnChange ? "true" : "false")
     .data("full-width", fullWidth ? "true" : "false")
     .style {
       selector("&") {
@@ -280,10 +280,21 @@ public struct DropdownView: HTMLContent {
         color(colorBase)
         fontFamily(typographyFontSans)
       }
+      // One line, cut at the trigger's edge: a title longer than the field
+      // was drawn straight through the border. The whole of it is in the
+      // trigger's title tooltip.
       descendant(".dropdown-selected-text") {
         textAlign(.start)
         color(colorPlaceholder)
         whiteSpace(.nowrap)
+        overflow(.hidden)
+        textOverflow(.ellipsis)
+        minWidth(0)
+      }
+      // The text gives way, not the chevron: beside a cut title it was
+      // squeezed to a sliver.
+      descendant(".dropdown-chevron") {
+        flexShrink(0)
       }
       descendant(".dropdown-selected-text[data-selected='true'][data-disabled='false']") { color(colorBase) }
       descendant(".dropdown-selected-text[data-disabled='true']") { color(colorDisabled) }
@@ -291,8 +302,6 @@ public struct DropdownView: HTMLContent {
       // trigger has room for the whole title and was cutting it to "An
       // Anglo-Saxon Dic...".
       selector("&:not([data-full-width='true']) .dropdown-selected-text[data-stacked='true']") {
-        overflow(.hidden)
-        textOverflow(.ellipsis)
         maxWidth(px(160))
       }
       descendant(".dropdown-trigger-wrapper") {
@@ -412,21 +421,19 @@ public struct DropdownView: HTMLContent {
       selector(".dropdown-option[data-highlighted='true'] .dropdown-option-display-text", ".dropdown-option[data-highlighted='true'] .dropdown-option-alt-text") {
         color(colorInvertedFixed).important()
       }
+      // Wrapped, not cut: the menu is the one place a long title is read
+      // whole — the trigger above it is the one that ellipses.
       descendant(".dropdown-option-display-text[data-stacked='true']") {
         fontWeight(fontWeightSemiBold)
         fontSize(fontSizeSmall14)
         color(colorBase)
-        whiteSpace(.nowrap)
-        overflow(.hidden)
-        textOverflow(.ellipsis)
+        overflowWrap(.breakWord)
         width(perc(100))
       }
       descendant(".dropdown-option-alt-text[data-stacked='true']") {
         fontSize(fontSizeXSmall12)
         color(colorSubtle)
-        whiteSpace(.nowrap)
-        overflow(.hidden)
-        textOverflow(.ellipsis)
+        overflowWrap(.breakWord)
         width(perc(100))
       }
       descendant(".dropdown-option-alt-text[data-stacked='false']") {
@@ -743,8 +750,12 @@ public struct DropdownView: HTMLContent {
 
       closeDropdown()
 
-      // Submit the closest form if the dropdown was configured to do so
-      if let container, stringEquals(container.dataset["submitFormOnChange"], "true") {
+      // Submit the closest form if the dropdown was configured to do so. The
+      // flag is on the view's root, above the container this instance holds.
+      if let container,
+        stringEquals(
+          container.closest(".dropdown-view")?.getAttribute(data("submit-form-on-change")) ?? "", "true")
+      {
         if let form = container.closest("form") as? HTML.HTMLFormElement {
           form.submit()
         }
@@ -800,7 +811,11 @@ public struct DropdownView: HTMLContent {
 
       closeDropdown()
 
-      if let container, stringEquals(container.dataset["submitFormOnChange"], "true") {
+      // The flag is on the view's root, above the container this instance holds.
+      if let container,
+        stringEquals(
+          container.closest(".dropdown-view")?.getAttribute(data("submit-form-on-change")) ?? "", "true")
+      {
         if let form = container.closest("form") as? HTML.HTMLFormElement {
           form.submit()
         }
