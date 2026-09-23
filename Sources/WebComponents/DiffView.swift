@@ -23,10 +23,12 @@ import WebTypes
 ///
 /// Two shapes, by how much there is to show:
 ///
-/// - **A line** — `line`, `choice` — sits where a field's changes line has
-///   always sat, under the field: "Changes: old → new". A text is compared
-///   character by character; a choice — a dropdown's, a date's, a checkbox's
-///   — is old and new whole. A value put where there was none is the new one
+/// - **A line** — `text`, `outline`, `choice` — sits where a field's changes
+///   line has always sat, under the field: "Changes: old → new". Each kind of
+///   value is compared by its own unit, which the caller names: a text word
+///   by word, then letter by letter inside a changed word; an outline number
+///   level by level, by position; a choice — a dropdown's, a date part's, a
+///   checkbox's — whole. A value put where there was none is the new one
 ///   alone, green; one cleared is the old one alone, red.
 /// - **A box** — `passage`, `code`, `rendered` — holds the changed lines with a
 ///   little context, marked by their gutter as a unified diff marks them — "−"
@@ -35,13 +37,16 @@ import WebTypes
 ///   its own text, the gutter beside it. The gutter and the pairing of the
 ///   lines carry the meaning, and the colour only says exactly where.
 ///
-/// `line`, `choice` and `passage` are built in the browser too, as a field is
-/// edited; `code` and `rendered` are drawn by the server.
+/// `text`, `outline`, `choice` and `passage` are built in the browser too, as
+/// a field is edited; `code` and `rendered` are drawn by the server.
 public struct DiffView: HTMLContent {
   public enum Mode: Sendable {
-    /// A one-line text's old value against its new one, character by
-    /// character.
-    case line(old: String, new: String)
+    /// A one-line text's old value against its new one: word by word, then
+    /// letter by letter inside a word that changed.
+    case text(old: String, new: String)
+    /// An outline number's old value against its new one — 1.2 → 2.3 —
+    /// level by level, by position: a level is kept or changed whole.
+    case outline(old: String, new: String)
     /// A choice's old value against its new one, whole: a dropdown's, a
     /// date's, a checkbox's — a character diff of two option names says
     /// nothing their names do not.
@@ -78,7 +83,7 @@ public struct DiffView: HTMLContent {
   /// A page that builds one in the browser links its sheet here, while the
   /// server renders it.
   public static func preloadStyleSheet() {
-    _ = DiffView(.line(old: "", new: "")).build()
+    _ = DiffView(.text(old: "", new: "")).build()
   }
 
   public func build() -> DOM.Node {
@@ -149,10 +154,16 @@ public struct DiffView: HTMLContent {
     let modeName: String
     let body: DOM.Node
     switch mode {
-    case .line(let old, let new):
+    case .text(let old, let new), .outline(let old, let new):
       isLine = true
-      modeName = "line"
-      let pair = DiffEngine.refine(old: old, new: new)
+      let pair: (old: [DiffSegment], new: [DiffSegment])
+      if case .outline = mode {
+        modeName = "outline"
+        pair = DiffEngine.outline(old: old, new: new)
+      } else {
+        modeName = "text"
+        pair = DiffEngine.refine(old: old, new: new)
+      }
       body = span {
         if !stringIsEmpty(old) {
           span { segmentNodes(stringIsEmpty(new) ? [.changed(old)] : pair.old) }

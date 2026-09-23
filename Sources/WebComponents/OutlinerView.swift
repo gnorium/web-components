@@ -347,7 +347,7 @@ public enum OutlineMoves {
         // How its number changed, as a changed field says it — shown whenever
         // its number is no longer what it was, and written again by the
         // client as moves change it.
-        let changes = div { DiffView(.line(old: origin.number, new: number)) }
+        let changes = div { DiffView(.outline(old: origin.number, new: number)) }
           .class("outliner-changes")
           .data("visible", !stringEquals(origin.number, number))
           .build()
@@ -1336,7 +1336,7 @@ public enum OutlineMoves {
         let renumbered = !stringEquals(numbers[offset], original)
         if let changes = item.querySelector(".outliner-changes") {
           changes.setAttribute(data("visible"), renumbered ? "true" : "false")
-          if renumbered { changes.setInnerHTML(DiffView(.line(old: original, new: numbers[offset])).render()) }
+          if renumbered { changes.setInnerHTML(DiffView(.outline(old: original, new: numbers[offset])).render()) }
         }
         if !stringIsEmpty(numberSelector), let slot = item.querySelector(numberSelector) {
           slot.textContent = numbers[offset]
