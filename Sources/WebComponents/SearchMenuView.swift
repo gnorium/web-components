@@ -409,7 +409,7 @@
           alignItems(.stretch)
           minHeight(0)
         }
-        descendant(".search-menu-biblio-result .search-menu-result-label") {
+        descendant(".search-menu-result-label") {
           wordWrap(.breakWord)
         }
         descendant(".search-menu-result-meta") {
@@ -419,9 +419,6 @@
           lineHeight(lineHeightSmall22)
           color(colorSubtle).important()
         }
-        descendant(".search-menu-result-title") { display(.flex)
-alignItems(.center)
-gap(spacing4) }
         descendant(".search-menu-result-label") {
           fontFamily(typographyFontSans)
           fontSize(fontSizeSmall14)
@@ -432,12 +429,9 @@ gap(spacing4) }
         descendant(".search-menu-result[data-color='blue'] .search-menu-result-label") { color(colorBlue) }
         descendant(".search-menu-result[data-color='green'] .search-menu-result-label") { color(colorGreen) }
         descendant(".search-menu-result[data-color='red'] .search-menu-result-label") { color(colorRed) }
-        selector(".search-menu-result-pos", ".search-menu-result-sup") {
-          fontFamily(typographyFontSans)
-          fontSize(fontSizeSmall14)
-          fontWeight(fontWeightNormal)
-          lineHeight(lineHeightSmall22)
-          color(colorSubtle)
+        // Inside the detail line: its size and colour, raised.
+        descendant(".search-menu-result-sup") {
+          fontSize(perc(75))
         }
         selector(".search-menu-result:hover .search-menu-result-label", ".search-menu-result:active .search-menu-result-label") { color(colorBlue) }
         selector("&[data-state='open'] [data-search-menu-backdrop='true']") {
@@ -873,46 +867,31 @@ gap(spacing4) }
         let textContent = document.createElement(.span)
         textContent.className = "menu-item-text search-menu-result-text"
 
-        // Two lines, the same for both kinds: what the result IS on the
-        // first (title, or lemma with its grammar), and the facts that tell
-        // two alike apart on the second (author(s) · language, or language).
-        if isBiblioResult {
-          let title = document.createElement(.span)
-          title.className = "menu-item-label search-menu-result-label"
-          title.textContent = result.text
-          textContent.appendChild(title)
-        } else {
-          let textWrapper = document.createElement(.span)
-          textWrapper.className = "menu-item-title search-menu-result-title"
+        // Three lines, the same for both kinds: the language; what the
+        // result IS (title or lemma); and what tells two alike apart
+        // (author(s), or part of speech with its homograph number).
+        let language = document.createElement(.span)
+        language.className = "search-menu-result-meta search-menu-result-language"
+        language.textContent = result.subtext
+        textContent.appendChild(language)
 
-          let label = document.createElement(.span)
-          label.className = "menu-item-label search-menu-result-label"
-          label.textContent = result.text
-          textWrapper.appendChild(label)
+        let label = document.createElement(.span)
+        label.className = "menu-item-label search-menu-result-label"
+        label.textContent = result.text
+        textContent.appendChild(label)
 
-          // POS + homograph superscript after lemma
-          if !stringIsEmpty(result.pos) {
-            let posSpan = document.createElement(.span)
-            posSpan.className = "menu-item-pos search-menu-result-pos"
-            posSpan.textContent = result.pos
-            textWrapper.appendChild(posSpan)
-
-            if result.homograph > 1 {
-              let posSup = document.createElement(.sup)
-              posSup.className = "search-menu-result-sup"
-              posSup.textContent = "\(result.homograph)"
-              textWrapper.appendChild(posSup)
-            }
+        if !stringIsEmpty(result.pos) {
+          let detail = document.createElement(.span)
+          detail.className = "search-menu-result-meta search-menu-result-detail"
+          detail.textContent = result.pos
+          if !isBiblioResult && result.homograph > 1 {
+            let sup = document.createElement(.sup)
+            sup.className = "search-menu-result-sup"
+            sup.textContent = "\(result.homograph)"
+            detail.appendChild(sup)
           }
-          textContent.appendChild(textWrapper)
+          textContent.appendChild(detail)
         }
-
-        let meta = document.createElement(.span)
-        meta.className = "menu-item-description search-menu-result-meta"
-        meta.textContent =
-          isBiblioResult && !stringIsEmpty(result.pos)
-          ? "\(result.pos) · \(result.subtext)" : result.subtext
-        textContent.appendChild(meta)
 
         item.appendChild(textContent)
 
