@@ -8,21 +8,35 @@
 
   // MARK: - Schema
   /// Declares the available filterable fields for a page.
+  ///
+  /// A `repeatable` select may fill several rows. Each row submits its own
+  /// `name=value`, so the query repeats the parameter; a page reads repeated
+  /// values of one field as alternatives (OR) and different fields as
+  /// conditions that all hold (AND).
   public enum FilterField: Sendable {
     case text(name: String, label: String, placeholder: String)
-    case select(name: String, label: String, options: [(value: String, label: String)])
+    case select(
+      name: String, label: String, options: [(value: String, label: String)],
+      repeatable: Bool = false)
 
     public var name: String {
       switch self {
       case .text(let name, _, _): return name
-      case .select(let name, _, _): return name
+      case .select(let name, _, _, _): return name
       }
     }
 
     public var label: String {
       switch self {
       case .text(_, let label, _): return label
-      case .select(_, let label, _): return label
+      case .select(_, let label, _, _): return label
+      }
+    }
+
+    public var repeatable: Bool {
+      switch self {
+      case .text: return false
+      case .select(_, _, _, let repeatable): return repeatable
       }
     }
   }
@@ -36,14 +50,16 @@
   public struct FilterBarView: HTMLContent {
     let action: String
     let schema: [FilterField]
-    let activeFilters: [String: String]
+    /// The filters in force, one per row, in row order. A repeatable field
+    /// may appear more than once.
+    let activeFilters: [(name: String, value: String)]
     let hiddenFields: [(name: String, value: String)]
     let `class`: String
 
     public init(
       action: String,
       schema: [FilterField],
-      activeFilters: [String: String] = [:],
+      activeFilters: [(name: String, value: String)] = [],
       hiddenFields: [(name: String, value: String)] = [],
       class: String = ""
     ) {
@@ -56,9 +72,9 @@
 
     private var activeRows: [(field: FilterField, value: String)] {
       var rows: [(FilterField, String)] = []
-      for field in schema {
-        if let val = activeFilters[field.name] {
-          rows.append((field, val))
+      for filter in activeFilters {
+        if let field = schema.first(where: { $0.name == filter.name }) {
+          rows.append((field, filter.value))
         }
       }
       if rows.isEmpty, let first = schema.first {
@@ -69,7 +85,9 @@
 
     public func build() -> DOM.Node {
       let rows = activeRows
-      let addExhausted = rows.count >= schema.count
+      // Another row can always hold a repeatable field; otherwise one row
+      // per field.
+      let addExhausted = rows.count >= schema.count && !schema.contains(where: \.repeatable)
       let schemaJSON = buildSchemaJSON()
 
       return form {
@@ -198,7 +216,7 @@
           class: "filter-bar-value-input"
         )
 
-      case .select(let name, let label, let options):
+      case .select(let name, let label, let options, _):
         DropdownView(
           id: "filter-\(name)-\(rowIndex)",
           name: name,
@@ -221,10 +239,10 @@
           parts.append(
             "{\"name\":\"\(name)\",\"label\":\"\(label)\",\"type\":\"text\",\"placeholder\":\"\(placeholder)\"}"
           )
-        case .select(let name, let label, let options):
+        case .select(let name, let label, let options, let repeatable):
           let opts = options.map { "{\"\($0.value)\":\"\($0.label)\"}" }.joined(separator: ",")
           parts.append(
-            "{\"name\":\"\(name)\",\"label\":\"\(label)\",\"type\":\"select\",\"options\":[\(opts)]}"
+            "{\"name\":\"\(name)\",\"label\":\"\(label)\",\"type\":\"select\",\"repeatable\":\"\(repeatable)\",\"options\":[\(opts)]}"
           )
         }
       }
@@ -271,6 +289,7 @@
     let label: String
     let isText: Bool
     let placeholder: String
+    let repeatable: Bool
   }
 
   private class FilterBarInstance: @unchecked Sendable {
@@ -300,8 +319,11 @@
         let label = extractJSONString(obj, key: "label") ?? name
         let placeholder = extractJSONString(obj, key: "placeholder") ?? ""
         let isText = stringEquals(typeStr, "text")
+        let repeatable = extractJSONString(obj, key: "repeatable").map { stringEquals($0, "true") } ?? false
         schema.append(
-          SchemaEntry(name: name, label: label, isText: isText, placeholder: placeholder))
+          SchemaEntry(
+            name: name, label: label, isText: isText, placeholder: placeholder,
+            repeatable: repeatable))
       }
     }
 
@@ -321,7 +343,7 @@
 
     private func updateAddButton() {
       guard let btn = grid.querySelector(".filter-bar-add-btn") else { return }
-      let exhausted = usedFieldNames().count >= schema.count
+      let exhausted = nextField() == nil
       if exhausted {
         btn.setAttribute("disabled", "true")
       } else {
@@ -413,12 +435,7 @@
     // MARK: - Add / Remove
 
     private func addRow() {
-      let usedNames = usedFieldNames()
-      guard
-        let nextField = schema.first(where: { entry in
-          !usedNames.contains(where: { stringEquals($0, entry.name) })
-        })
-      else { return }
+      guard let nextField = nextField() else { return }
 
       let row = buildNewRow(field: nextField, rowIndex: nextRowIndex())
       grid.appendChild(row)
@@ -498,6 +515,18 @@
     }
 
     // MARK: - Helpers
+
+    /// The field a new row starts on: the first not yet in use, else the first
+    /// that may repeat. Nil when neither is left.
+    private func nextField() -> SchemaEntry? {
+      let usedNames = usedFieldNames()
+      if let unused = schema.first(where: { entry in
+        !usedNames.contains(where: { stringEquals($0, entry.name) })
+      }) {
+        return unused
+      }
+      return schema.first(where: { $0.repeatable })
+    }
 
     private func usedFieldNames() -> [String] {
       var names: [String] = []
