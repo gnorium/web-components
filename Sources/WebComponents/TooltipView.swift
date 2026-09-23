@@ -145,7 +145,7 @@ public struct TooltipView: HTMLContent {
         // portal host) and a one-sentence byline wrapped to five lines.
         width(.maxContent)
         minWidth(px(256))
-        maxWidth(calc("min(256px, 100vw - \(spacing16.value))"))
+        maxWidth(min(px(256), vw(100) - spacing16))
         backgroundColor(backgroundColorInverted)
         color(colorInverted)
         fontFamily(typographyFontSans)

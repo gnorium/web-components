@@ -525,7 +525,7 @@ public enum OutlineMoves {
         }
         descendant(".outliner-handle:focus-visible") {
           outline(borderWidthThick, .solid, borderColorBlueFocus)
-          outlineOffset(calc("-1 * \(borderWidthThick.value)"))
+          outlineOffset(-borderWidthThick)
         }
         // Held: the grip filled. How the rest of the item reads as held is
         // its own layout's to say.
@@ -558,13 +558,13 @@ public enum OutlineMoves {
           pointerEvents(.none)
         }
         descendant(".outliner-row[data-outliner-drop='before']::before") {
-          top(calc("-1 * (\(spacing8.value) + \(borderWidthThick.value)) / 2"))
+          top(-(spacing8 + borderWidthThick) / 2)
         }
         descendant(".outliner-row[data-outliner-drop='after']::after") {
-          bottom(calc("-1 * (\(spacing8.value) + \(borderWidthThick.value)) / 2"))
+          bottom(-(spacing8 + borderWidthThick) / 2)
         }
         descendant(".outliner-row[data-outliner-drop='inside']::after") {
-          bottom(calc("-\(borderWidthThick.value) / 2"))
+          bottom(-borderWidthThick / 2)
           insetInlineStart(spacing32)
         }
         descendant(".outliner-item[data-outline-state='refused'] > .outliner-row") {
@@ -575,7 +575,7 @@ public enum OutlineMoves {
         // moved only once it lands somewhere it did not stand.
         descendant(".outliner-item[data-outline-state='placeholder'] > .outliner-row") {
           outline(borderWidthBase, .dashed, borderColorSubtle)
-          outlineOffset(calc("-1 * \(borderWidthBase.value)"))
+          outlineOffset(-borderWidthBase)
         }
         descendant(".outliner-item[data-outline-state='placeholder'] > .outliner-row > *") {
           opacity(opacityLow)
@@ -615,7 +615,7 @@ public enum OutlineMoves {
           alignItems(.center)
           gap(spacing8)
           padding(spacing8)
-          maxWidth(calc("100vw - 2 * \(spacing16.value)"))
+          maxWidth(vw(100) - spacing16 * 2)
           backgroundColor(backgroundColorBase)
           border(borderWidthBase, .solid, borderColorSubtle)
           borderRadius(borderRadiusPill)

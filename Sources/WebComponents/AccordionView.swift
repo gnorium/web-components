@@ -266,7 +266,7 @@ public struct AccordionView: HTMLContent {
         // Nested one border-width inside the card's radius, so the hover
         // wash follows the corner exactly now that no inset separates them.
         selector("&[data-separation='outline']") {
-          borderRadius(calc("\(borderRadiusBase.value) - \(borderWidthBase.value)"))
+          borderRadius(borderRadiusBase - borderWidthBase)
         }
         pseudoElement(.marker) { display(.none).important() }
         pseudoElement(.webkitDetailsMarker) { display(.none).important() }
@@ -410,12 +410,12 @@ public struct AccordionView: HTMLContent {
       }
       // The header's hover wash follows the corners it sits in.
       selector("&[data-separation='grouped']:first-child > .accordion-details > .accordion-summary") {
-        borderStartStartRadius(calc("\(borderRadiusBase.value) - \(borderWidthBase.value)"))
-        borderStartEndRadius(calc("\(borderRadiusBase.value) - \(borderWidthBase.value)"))
+        borderStartStartRadius(borderRadiusBase - borderWidthBase)
+        borderStartEndRadius(borderRadiusBase - borderWidthBase)
       }
       selector("&[data-separation='grouped']:last-child > .accordion-details:not([open]) > .accordion-summary") {
-        borderEndStartRadius(calc("\(borderRadiusBase.value) - \(borderWidthBase.value)"))
-        borderEndEndRadius(calc("\(borderRadiusBase.value) - \(borderWidthBase.value)"))
+        borderEndStartRadius(borderRadiusBase - borderWidthBase)
+        borderEndEndRadius(borderRadiusBase - borderWidthBase)
       }
       // Keyboard focus, on the border line: the focus ring every field
       // wears, rounded at all four corners whatever the item's place in the
@@ -423,7 +423,7 @@ public struct AccordionView: HTMLContent {
       selector("&[data-separation='grouped']:has(> .accordion-details > .accordion-summary:focus-visible)::after") {
         content("\"\"")
         position(.absolute)
-        inset(calc("-1 * \(borderWidthBase.value)"))
+        inset(-borderWidthBase)
         border(borderWidthBase, .solid, borderColorBlueFocus)
         borderRadius(borderRadiusBase)
         boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus)
