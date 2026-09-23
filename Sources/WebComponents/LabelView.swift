@@ -129,8 +129,15 @@ public struct LabelView: HTMLContent {
       }
     }
 
+    // Each configuration its own selector: the stylesheet keeps one rule per
+    // selector, so rules that differed by parameter under one shared
+    // selector let whichever label was built last set every label's size,
+    // weight and colour.
     return root
       .class(rootClass)
+      .data("label-size", labelFontSize.value)
+      .data("label-weight", labelFontWeight.value)
+      .data("disabled", disabled)
       .style {
         selector("&") {
           display(.flex)
@@ -153,10 +160,15 @@ public struct LabelView: HTMLContent {
           alignItems(.center)
           gap(spacing4)
           fontFamily(typographyFontSans)
-          fontSize(labelFontSize)
-          fontWeight(labelFontWeight)
           lineHeight(lineHeightMedium26)
-          color(disabled ? colorDisabled : colorBase)
+          color(colorBase)
+        }
+        // Its own text only, not a label nested inside it.
+        selector("&[data-label-size='\(labelFontSize.value)'] > .label-text") {
+          fontSize(labelFontSize)
+        }
+        selector("&[data-label-weight='\(labelFontWeight.value)'] > .label-text") {
+          fontWeight(labelFontWeight)
         }
         descendant(".label-icon") {
           display(.inlineFlex)
@@ -164,19 +176,27 @@ public struct LabelView: HTMLContent {
           justifyContent(.center)
           width(minSizeIconMedium)
           height(minSizeIconMedium)
-          color(disabled ? colorDisabled : colorSubtle)
+          color(colorSubtle)
           flexShrink(0)
         }
         descendant(".label-optional-flag") {
-          color(disabled ? colorDisabled : colorSubtle)
+          color(colorSubtle)
           fontWeight(fontWeightNormal)
         }
         descendant(".label-description") {
           display(.block)
           fontSize(fontSizeSmall14)
           lineHeight(lineHeightSmall22)
-          color(disabled ? colorDisabled : colorSubtle)
+          color(colorSubtle)
           fontWeight(fontWeightNormal)
+        }
+        selector(
+          "&[data-disabled='true'] > .label-text",
+          "&[data-disabled='true'] > .label-text > .label-icon",
+          "&[data-disabled='true'] > .label-text > .label-optional-flag",
+          "&[data-disabled='true'] > .label-description"
+        ) {
+          color(colorDisabled)
         }
       }
   }

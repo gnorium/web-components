@@ -580,19 +580,22 @@ public struct TableView: HTMLContent {
                     .data("width", column.width != nil ? column.width!.value : "")
                     .class("table-column-header")
                     .style {
-                      selector("&") {
-                        if let fittedHeaderWidth = column.fittedHeaderWidth {
-                          width(px(fittedHeaderWidth))
-                        } else if let colWidth = column.width {
-                          width(colWidth)
-                        } else {
-                          width(.auto)
-                        }
-                        if let minW = column.minWidth {
-                          minWidth(minW)
-                        } else {
-                          minWidth(px(150))
-                        }
+                      // A column's width is its own, so it is written on the
+                      // column. Under the one selector every column header
+                      // shares, the last column built set every table's.
+                      if let fittedHeaderWidth = column.fittedHeaderWidth {
+                        width(px(fittedHeaderWidth))
+                      } else if let colWidth = column.width {
+                        width(colWidth)
+                      } else {
+                        width(.auto)
+                      }
+                      if let minW = column.minWidth {
+                        minWidth(minW)
+                      } else {
+                        minWidth(px(150))
+                      }
+                      selector("&[data-align='\(column.align.value)']") {
                         let styles = thStyle(column.align)
                         if !styles.isEmpty {
                           styles
