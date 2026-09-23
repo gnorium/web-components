@@ -27,6 +27,8 @@ public struct ButtonView: HTMLContent {
   let style: @Sendable () -> [CSSOM.CSSRule]
   let buttonBorderRadius: CSS.Length
   var dataAttributes: [(String, String)]
+  /// The id of the form this submits with, when it sits outside that form.
+  var formID: String? = nil
 
   /// Button type attribute
   public enum ButtonType: String, Sendable {
@@ -253,6 +255,14 @@ public struct ButtonView: HTMLContent {
 
   public func data(_ key: String, _ value: Bool) -> Self {
     data(key, value ? "true" : "false")
+  }
+
+  /// The standard `form` attribute: the form this button submits, when the
+  /// button is not inside it. A link-button has no form to name.
+  public func form(_ id: String) -> Self {
+    var copy = self
+    copy.formID = id
+    return copy
   }
 
   public func build() -> DOM.Node {
@@ -1914,6 +1924,10 @@ public struct ButtonView: HTMLContent {
 
       for (key, value) in dataAttributes {
         bBtn = bBtn.data(key, value)
+      }
+
+      if let formID {
+        bBtn = bBtn.form(formID)
       }
 
       return bBtn
