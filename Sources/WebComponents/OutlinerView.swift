@@ -113,13 +113,16 @@ public enum OutlineMoves {
   ///   editions, a sense grouping senses;
   /// - it may sit under an item of any higher rank, at any depth;
   /// - it may never sit under an item of a lower rank: an edition under a
-  ///   copy, a sense under an utterance.
+  ///   copy;
+  /// - nothing may sit under an item of the leaf rank, the most concrete,
+  ///   whose items are attested directly: a manifest by its images, a leaf
+  ///   sense by its utterances.
   ///
   /// A refused move is refused where it is attempted, with an alert over the
-  /// outline and the same words in the live region, naming the two levels in
-  /// the caller's own words — "A copy can't go under a manifest." There is no depth limit, and no option to
-  /// loosen or tighten the rule: a bibliographic tree and a lexicographic one
-  /// nest the same way.
+  /// outline and the same words in the live region: the caller's one
+  /// sentence, "A more abstract testament can't go under a more concrete
+  /// one." There is no depth limit, and no option to loosen or tighten the
+  /// rule: a bibliographic tree and a lexicographic one nest the same way.
   ///
   /// The nesting is the items' own. Each item's content is handed the pieces
   /// the outline puts in it — its handle, the line saying how its number
@@ -216,11 +219,11 @@ public enum OutlineMoves {
     let label: String
     let rootID: String
     let rootRank: Int
+    let leafRank: Int?
     let nodes: [Node]
     let name: String
     let form: String?
     let numberSelector: String
-    let rankNames: [Int: String]
     let rankRefusal: String
     let touched: [String]
     let `class`: String
@@ -229,16 +232,14 @@ public enum OutlineMoves {
     ///   - label: What the outline is, for the list's accessible name.
     ///   - rootID: The parent the top level names in the JSON.
     ///   - rootRank: The rank of that root; nothing may rise above it.
+    ///   - leafRank: The most concrete rank, which nothing may sit under.
     ///   - name: The hidden input's name, and `form` the form it submits
     ///     with when the outline is not inside it.
     ///   - numberSelector: Where in an item's content its number — 1, 2.1 —
     ///     is written, so a caller that shows numbers keeps them true as the
     ///     outline changes. Empty writes none.
-    ///   - rankNames: What an item of each rank is called when a move is
-    ///     refused, with its article: "an edition", "a copy".
-    ///   - rankRefusal: The refusal, in the page's own words, with `{item}`
-    ///     and `{parent}` standing for the two ranks' names. Its first letter
-    ///     is set upper-case.
+    ///   - rankRefusal: What a move the ranks refuse is told, in the page's
+    ///     own words for what it outlines.
     ///   - touched: The items the reader has already moved, when the outline
     ///     is brought back mid-edit: where two readings of what moved are
     ///     equally short, theirs is the one reported.
@@ -247,12 +248,12 @@ public enum OutlineMoves {
       label: String,
       rootID: String,
       rootRank: Int = 0,
+      leafRank: Int? = nil,
       nodes: [Node],
       name: String,
       form: String? = nil,
       numberSelector: String = "",
-      rankNames: [Int: String] = [:],
-      rankRefusal: String = "{item} can't go under {parent}.",
+      rankRefusal: String = "A more abstract item can't go under a more concrete one.",
       touched: [String] = [],
       class: String = ""
     ) {
@@ -260,11 +261,11 @@ public enum OutlineMoves {
       self.label = label
       self.rootID = rootID
       self.rootRank = rootRank
+      self.leafRank = leafRank
       self.nodes = nodes
       self.name = name
       self.form = form
       self.numberSelector = numberSelector
-      self.rankNames = rankNames
       self.rankRefusal = rankRefusal
       self.touched = touched
       self.`class` = `class`
@@ -363,7 +364,6 @@ public enum OutlineMoves {
         .data("outliner-id", node.id)
         .data("outliner-label", node.label)
         .data("outliner-rank", node.rank)
-        .data("outliner-rank-name", rankNames[node.rank] ?? node.label)
         .data("outliner-original-parent", origin.parent)
         .data("outliner-original-position", origin.position)
         .data("outliner-original-number", origin.number)
@@ -447,7 +447,7 @@ public enum OutlineMoves {
       .class(`class`.isEmpty ? "outliner-view" : "outliner-view \(`class`)")
       .data("outliner-root-id", rootID)
       .data("outliner-root-rank", rootRank)
-      .data("outliner-root-rank-name", rankNames[rootRank] ?? "the top")
+      .data("outliner-leaf-rank", leafRank.map(String.init) ?? "")
       .data("outliner-number-selector", numberSelector)
       .data("outliner-rank-refusal", rankRefusal)
       .style {
@@ -684,8 +684,9 @@ public enum OutlineMoves {
     private let root: DOM.Element
     private let rootID: String
     private let rootRank: Int
+    /// The rank nothing may sit under; -1 when every rank takes children.
+    private let leafRank: Int
     private let numberSelector: String
-    private let rootRankName: String
     private let rankRefusal: String
 
     /// The item picked up, which the toolbar and the keyboard move.
@@ -714,8 +715,8 @@ public enum OutlineMoves {
       self.root = root
       rootID = root.dataset["outliner-root-id"] ?? ""
       rootRank = parseInt(root.dataset["outliner-root-rank"] ?? "0") ?? 0
+      leafRank = parseInt(root.dataset["outliner-leaf-rank"] ?? "") ?? -1
       numberSelector = root.dataset["outliner-number-selector"] ?? ""
-      rootRankName = root.dataset["outliner-root-rank-name"] ?? ""
       rankRefusal = root.dataset["outliner-rank-refusal"] ?? ""
       for item in root.querySelectorAll(".outliner-item") {
         bind(item)
@@ -1029,15 +1030,10 @@ public enum OutlineMoves {
       if let parent, isWithin(parent, item) {
         return stringJoin([label(of: item), " cannot go inside itself."], separator: "")
       }
-      guard rank(of: item) >= rank(of: parent) else {
-        let under = parent.map { $0.dataset["outliner-rank-name"] ?? "" } ?? rootRankName
-        let sentence = stringReplace(
-          stringReplace(rankRefusal, "{item}", item.dataset["outliner-rank-name"] ?? ""), "{parent}", under)
-        // The sentence starts with a name set in lower case: "a copy …".
-        var bytes = Array(sentence.utf8)
-        if let first = bytes.first, first >= 0x61, first <= 0x7A { bytes[0] = first - 0x20 }
-        return String(decoding: bytes, as: UTF8.self)
-      }
+      // Under a lower rank, or under the leaf rank, which takes nothing.
+      let parentRank = rank(of: parent)
+      if let _ = parent, parentRank == leafRank { return rankRefusal }
+      guard rank(of: item) >= parentRank else { return rankRefusal }
       return nil
     }
 
