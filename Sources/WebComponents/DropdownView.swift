@@ -280,16 +280,20 @@ public struct DropdownView: HTMLContent {
         color(colorBase)
         fontFamily(typographyFontSans)
       }
-      // One line, cut at the trigger's edge: a title longer than the field
-      // was drawn straight through the border. The whole of it is in the
-      // trigger's title tooltip.
+      // One line, held inside the trigger: a title longer than the field was
+      // drawn straight through the border. It scrolls sideways, as a text
+      // input does — a swipe or a trackpad reads the rest — with no scrollbar
+      // drawn inside the trigger. No ellipsis: it stayed painted over the
+      // text while the text scrolled.
       descendant(".dropdown-selected-text") {
         textAlign(.start)
         color(colorPlaceholder)
         whiteSpace(.nowrap)
-        overflow(.hidden)
-        textOverflow(.ellipsis)
+        overflowX(.auto)
+        overflowY(.hidden)
+        scrollbarWidth(.none)
         minWidth(0)
+        pseudoElement(.webkitScrollbar) { display(.none).important() }
       }
       // The text gives way, not the chevron: beside a cut title it was
       // squeezed to a sliver.
@@ -734,6 +738,8 @@ public struct DropdownView: HTMLContent {
       selectedText?.innerHTML = display
       selectedText?.setAttribute(.title, altDisplay)
       selectedText?.setAttribute(data("selected"), true)
+      // A new title starts at its beginning, wherever the last was scrolled to.
+      selectedText?.scrollLeft = 0
 
       // Update selected state in menu
       for opt in allOptions {
@@ -799,6 +805,7 @@ public struct DropdownView: HTMLContent {
       selectedText?.innerHTML = placeholder
       selectedText?.removeAttribute(.title)
       selectedText?.setAttribute(data("selected"), false)
+      selectedText?.scrollLeft = 0
 
       for opt in allOptions {
         _ = opt.classList.remove("is-selected")
