@@ -1,4 +1,5 @@
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
 import DOMBuilder
 import HTMLBuilder
@@ -32,6 +33,13 @@ public struct PreviousIconView: HTMLContent {
     .viewBox(0, 0, 20, 20)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.currentColor)
+    // Next and previous are directions along the line, not left and right:
+    // in a right-to-left page the line's end is on the left.
+    .style {
+      selector("&") {
+        pseudoClass(.dir("rtl")) { scale(-1, 1) }
+      }
+    }
 
   }
 }
