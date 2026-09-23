@@ -15,13 +15,20 @@ public struct DropdownView: HTMLContent {
     public let value: String
     public let display: String
     public let altDisplay: String?
+    /// A line above the display, in the alt's small grey — what a search
+    /// result puts first (a record's language). Stacked layout only.
+    public let leadDisplay: String?
     /// Lowercase form of display, for mid-sentence use (e.g. tooltip text). Pre-computed server-side to avoid WASI string ops.
     public let displayLower: String?
 
-    public init(value: String, display: String, altDisplay: String? = nil, displayLower: String? = nil) {
+    public init(
+      value: String, display: String, altDisplay: String? = nil, leadDisplay: String? = nil,
+      displayLower: String? = nil
+    ) {
       self.value = value
       self.display = display
       self.altDisplay = altDisplay
+      self.leadDisplay = leadDisplay
       self.displayLower = displayLower
     }
   }
@@ -208,6 +215,11 @@ public struct DropdownView: HTMLContent {
             options.map { option in
               let isSelected = stringEquals(option.value, selectedValue ?? "")
               return div {
+                if optionLayout == .stacked, let lead = option.leadDisplay, !stringIsEmpty(lead) {
+                  span { lead }
+                    .class("dropdown-option-alt-text dropdown-option-lead-text")
+                    .data("stacked", true)
+                }
                 span { option.display }
                   .class("dropdown-option-display-text")
                   .data("stacked", optionLayout == .stacked)
