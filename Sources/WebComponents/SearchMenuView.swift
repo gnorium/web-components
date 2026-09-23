@@ -402,7 +402,6 @@
         descendant(".search-menu-result-text") {
           display(.flex)
           flexDirection(.column)
-          gap(spacing4)
           minWidth(px(0))
           flex(1)
         }
@@ -410,30 +409,15 @@
           alignItems(.stretch)
           minHeight(0)
         }
-        descendant(".search-menu-biblio-result .search-menu-result-text") {
-          display(.block)
-        }
-        descendant(".search-menu-biblio-result .search-menu-result-language") {
-          fontFamily(typographyFontSans)
-          fontSize(fontSizeXSmall12)
-          fontWeight(fontWeightNormal)
-          lineHeight(lineHeightSmall22)
-          color(colorSubtle).important()
-        }
-        descendant(".search-menu-biblio-title-row") {
-          display(.inline)
-          marginInlineStart(spacing4)
-        }
-        descendant(".search-menu-biblio-title-row .search-menu-result-label") {
+        descendant(".search-menu-biblio-result .search-menu-result-label") {
           wordWrap(.breakWord)
         }
-        descendant(".search-menu-biblio-result .search-menu-result-author") {
+        descendant(".search-menu-result-meta") {
           fontFamily(typographyFontSans)
           fontSize(fontSizeXSmall12)
           fontWeight(fontWeightNormal)
           lineHeight(lineHeightSmall22)
           color(colorSubtle).important()
-          marginInlineStart(spacing4)
         }
         descendant(".search-menu-result-title") { display(.flex)
 alignItems(.center)
@@ -448,7 +432,7 @@ gap(spacing4) }
         descendant(".search-menu-result[data-color='blue'] .search-menu-result-label") { color(colorBlue) }
         descendant(".search-menu-result[data-color='green'] .search-menu-result-label") { color(colorGreen) }
         descendant(".search-menu-result[data-color='red'] .search-menu-result-label") { color(colorRed) }
-        selector(".search-menu-result-pos", ".search-menu-result-description", ".search-menu-result-sup") {
+        selector(".search-menu-result-pos", ".search-menu-result-sup") {
           fontFamily(typographyFontSans)
           fontSize(fontSizeSmall14)
           fontWeight(fontWeightNormal)
@@ -889,47 +873,21 @@ gap(spacing4) }
         let textContent = document.createElement(.span)
         textContent.className = "menu-item-text search-menu-result-text"
 
+        // Two lines, the same for both kinds: what the result IS on the
+        // first (title, or lemma with its grammar), and the facts that tell
+        // two alike apart on the second (author(s) · language, or language).
         if isBiblioResult {
-          // A biblio result is a compact record card, not a lemma with a POS
-          // suffix. Keeping language, title, and author in reading order makes
-          // it robust under narrow widths and accessibility text scaling.
-          let language = document.createElement(.span)
-          language.className = "search-menu-result-language"
-          language.textContent = result.subtext
-          textContent.appendChild(language)
-
-          let titleRow = document.createElement(.span)
-          titleRow.className = "search-menu-biblio-title-row"
-
           let title = document.createElement(.span)
           title.className = "menu-item-label search-menu-result-label"
           title.textContent = result.text
-          titleRow.appendChild(title)
-          textContent.appendChild(titleRow)
-
-          if !stringIsEmpty(result.pos) {
-            let author = document.createElement(.span)
-            author.className = "search-menu-result-author"
-            author.textContent = result.pos
-            textContent.appendChild(author)
-          }
+          textContent.appendChild(title)
         } else {
-          // Lexico results follow the same reading order as biblio results:
-          // language first, then the identified lemma and its grammar.
-          let description = document.createElement(.span)
-          description.className = "menu-item-description search-menu-result-description"
-          description.textContent = result.subtext
-          textContent.appendChild(description)
-
-          // Title Wrapper
           let textWrapper = document.createElement(.span)
           textWrapper.className = "menu-item-title search-menu-result-title"
 
-          // Title label
           let label = document.createElement(.span)
           label.className = "menu-item-label search-menu-result-label"
           label.textContent = result.text
-
           textWrapper.appendChild(label)
 
           // POS + homograph superscript after lemma
@@ -948,6 +906,13 @@ gap(spacing4) }
           }
           textContent.appendChild(textWrapper)
         }
+
+        let meta = document.createElement(.span)
+        meta.className = "menu-item-description search-menu-result-meta"
+        meta.textContent =
+          isBiblioResult && !stringIsEmpty(result.pos)
+          ? "\(result.pos) · \(result.subtext)" : result.subtext
+        textContent.appendChild(meta)
 
         item.appendChild(textContent)
 
