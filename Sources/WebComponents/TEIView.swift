@@ -35,7 +35,7 @@
 
     public var pages: [TEIPage] { TEIRenderer.pages(in: teiXml) }
 
-    /// The image service a rendition reads, which is what pairs it with a
+    /// The image service a semblance reads, which is what pairs it with a
     /// canvas. `TEIRenderer` owns the rule; the view only passes it on.
     public static func serviceID(ofFacsimile url: String) -> String {
       TEIRenderer.serviceID(ofFacsimile: url)
@@ -253,11 +253,11 @@
             div {
               if editable {
                 // A form of its own, so the page can be sent to be read back
-                // as it is being edited — its rendition and its source.
+                // as it is being edited — its semblance and its source.
                 form {
                   input()
                     .type(.hidden)
-                    .name("rendition")
+                    .name("semblance")
                     .value(Self.serviceID(ofFacsimile: page.facsimileURL))
                   SourceEditorView(
                     id: "tei-page-source-\(index)",
