@@ -582,12 +582,13 @@ public enum OutlineMoves {
         }
         // What follows the pointer: the item's header alone, opaque. Parked
         // above the viewport for a mouse, whose drag image is taken from it;
-        // under a finger, a little above it, where the finger does not hide
-        // it. The pointer's coordinates are physical, so its sides are too.
+        // under a finger, a little above it and back from it toward its
+        // start, where the finger does not hide it. Its start is the line's:
+        // the client measures the finger from that side.
         descendant(".outliner-drag-preview") {
           position(.fixed)
-          top(0)
-          left(0)
+          insetBlockStart(0)
+          insetInlineStart(0)
           transform(translate(perc(0), perc(-200)))
           zIndex(zIndexToolbar)
           display(.flex)
@@ -604,12 +605,15 @@ public enum OutlineMoves {
         descendant(".outliner-changes[data-visible='false']") {
           display(.none)
         }
-        // At the foot of the screen, clear of a phone's home indicator.
+        // At the foot of the screen, clear of a phone's home indicator, and
+        // centred between both sides whichever way the line runs.
         descendant(".outliner-toolbar") {
           position(.fixed)
-          insetInlineStart(perc(50))
-          insetBlockEnd(calc("\(spacing16.value) + env(safe-area-inset-bottom)"))
-          transform(translate(perc(-50), px(0)))
+          insetInlineStart(0)
+          insetInlineEnd(0)
+          insetBlockEnd(spacing16 + CSS.Length.environment("safe-area-inset-bottom"))
+          width(.fitContent)
+          marginInline(.auto)
           zIndex(zIndexToolbar)
           display(.flex)
           alignItems(.center)
@@ -622,8 +626,11 @@ public enum OutlineMoves {
           boxShadow(boxShadowLarge)
         }
         descendant(".outliner-drag-preview[data-following='true']") {
-          CSS.Property(
-            "transform", "translate(calc(-1 * \(spacing16.value)), calc(-100% - \(spacing32.value)))")
+          transform(translate(-spacing16, perc(-100) - spacing32))
+        }
+        // Back toward the start is rightward where the line runs right to left.
+        descendant(".outliner-drag-preview[data-following='true']:dir(rtl)") {
+          transform(translate(spacing16, perc(-100) - spacing32))
         }
         descendant(".outliner-toolbar[data-visible='false']") {
           display(.none)
@@ -1094,8 +1101,11 @@ public enum OutlineMoves {
       let transfer = event.dataTransfer
       transfer.setData("text/plain", id(of: item))
       transfer.effectAllowed = "move"
+      // The pointer holds the image by its grip, which is at the image's
+      // start: its left, or its right where the line runs right to left.
       if let preview = root.querySelector(":scope > .outliner-drag-preview") {
-        transfer.setDragImage(preview, x: 16, y: 16)
+        let width = preview.getBoundingClientRect()?.width ?? 0
+        transfer.setDragImage(preview, x: isRightToLeft ? Int(width) - 16 : 16, y: 16)
       }
     }
 
@@ -1248,12 +1258,21 @@ public enum OutlineMoves {
     }
 
     /// The preview under the finger: placed at it, and lifted clear of it by
-    /// its own stylesheet.
+    /// its own stylesheet. The finger is measured from the left; the preview
+    /// is placed from its start, which is the right where the line runs right
+    /// to left.
     private func follow(_ x: Double, _ y: Double) {
       guard let preview = root.querySelector(":scope > .outliner-drag-preview") else { return }
       preview.setAttribute(data("following"), "true")
-      preview.setStyleProperty("top", stringJoin([intToString(Int(y)), "px"], separator: ""))
-      preview.setStyleProperty("left", stringJoin([intToString(Int(x)), "px"], separator: ""))
+      let start = isRightToLeft ? window.innerWidth - x : x
+      preview.setStyleProperty("inset-block-start", stringJoin([intToString(Int(y)), "px"], separator: ""))
+      preview.setStyleProperty("inset-inline-start", stringJoin([intToString(Int(start)), "px"], separator: ""))
+    }
+
+    /// Whether the outline's lines run right to left: the nearest `dir` says.
+    private var isRightToLeft: Bool {
+      guard let scope = root.closest("[dir]") else { return false }
+      return stringEquals(scope.getAttribute("dir") ?? "", "rtl")
     }
 
     private func pressEnd(_ item: DOM.Element) {
