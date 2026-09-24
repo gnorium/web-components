@@ -340,7 +340,7 @@ public struct DropdownView: HTMLContent {
         height(minSizeInteractiveTouch)
         padding(0, spacing12)
         fontSize(textFontSize)
-        lineHeight(1.618)
+        lineHeight(lineHeightContent)
         color(colorBase)
         backgroundColor(backgroundColorBase)
         border(borderWidthBase, .solid, borderColorBase)

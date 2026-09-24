@@ -136,7 +136,7 @@
           gap(spacing4)
           fontFamily(typographyFontSans)
           fontSize(fontSizeSmall14)
-          lineHeight(1.618)
+          lineHeight(lineHeightContent)
           color(colorSubtle)
         }
         // Inline flow, not flex: the trail fills each line and wraps wherever
@@ -169,7 +169,7 @@
           justifyContent(.center)
           verticalAlign(.middle)
           marginInline(spacing4)
-          lineHeight(1.618)
+          lineHeight(lineHeightContent)
         }
         descendant(".breadcrumb-overflow") {
           display(.inlineFlex)
