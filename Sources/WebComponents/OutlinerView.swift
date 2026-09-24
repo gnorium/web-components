@@ -571,10 +571,10 @@ public enum OutlineMoves {
           cursor(.notAllowed)
         }
         // Where the dragged item was: a quiet placeholder, its content faint
-        // inside a dashed outline. A drag is not a change; the item is marked
+        // inside a solid outline. A drag is not a change; the item is marked
         // moved only once it lands somewhere it did not stand.
         descendant(".outliner-item[data-outline-state='placeholder'] > .outliner-row") {
-          outline(borderWidthBase, .dashed, borderColorSubtle)
+          outline(borderWidthBase, .solid, borderColorBase)
           outlineOffset(-borderWidthBase)
         }
         descendant(".outliner-item[data-outline-state='placeholder'] > .outliner-row > *") {
