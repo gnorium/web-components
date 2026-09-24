@@ -27,6 +27,9 @@
       public let fullWidth: Bool
       public let labelFontWeight: CSS.FontWeight
       public let contentJustifyContent: CSS.JustifyContent
+      /// The id of the form a submit button submits with, when the group
+      /// sits outside that form (`ButtonView.form(_:)`).
+      public let form: String?
 
       public init(
         value: String,
@@ -42,7 +45,8 @@
         class: String = "",
         fullWidth: Bool = false,
         labelFontWeight: CSS.FontWeight = fontWeightBold,
-        contentJustifyContent: CSS.JustifyContent = .center
+        contentJustifyContent: CSS.JustifyContent = .center,
+        form: String? = nil
       ) {
         self.value = value
         self.label = label
@@ -58,6 +62,12 @@
         self.fullWidth = fullWidth
         self.labelFontWeight = labelFontWeight
         self.contentJustifyContent = contentJustifyContent
+        self.form = form
+      }
+
+      /// Its button, submitting with its form when it names one.
+      fileprivate func formed(_ button: ButtonView) -> ButtonView {
+        form.map { button.form($0) } ?? button
       }
     }
 
@@ -109,7 +119,7 @@
             let itemClass = item.class.isEmpty ? "button-group-button" : "button-group-button \(item.class)"
 
             if let icon = item.icon {
-              ButtonView(
+              item.formed(ButtonView(
                 label: item.label,
                 icon: icon,
                 buttonColor: item.buttonColor,
@@ -124,9 +134,9 @@
                 labelFontWeight: item.labelFontWeight,
                 contentJustifyContent: item.contentJustifyContent,
                 data: itemData
-              )
+              ))
             } else {
-              ButtonView(
+              item.formed(ButtonView(
                 label: item.label,
                 buttonColor: item.buttonColor,
                 weight: item.weight,
@@ -140,7 +150,7 @@
                 labelFontWeight: item.labelFontWeight,
                 contentJustifyContent: item.contentJustifyContent,
                 data: itemData
-              )
+              ))
             }
           }
         }
