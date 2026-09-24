@@ -27,6 +27,8 @@ public struct TextInputView: HTMLContent {
   let `class`: String
   let min: Int?
   let max: Int?
+  /// The id of the form it submits with, when it sits outside that form.
+  let form: String?
 
   public enum InputType: String, Sendable {
     case text
@@ -67,7 +69,8 @@ public struct TextInputView: HTMLContent {
     fullWidth: Bool = true,
     class: String = "",
     min: Int? = nil,
-    max: Int? = nil
+    max: Int? = nil,
+    form: String? = nil
   ) {
     self.id = id
     self.name = name
@@ -88,6 +91,7 @@ public struct TextInputView: HTMLContent {
     self.`class` = `class`
     self.min = min
     self.max = max
+    self.form = form
   }
 
   public func build() -> DOM.Node {
@@ -116,6 +120,9 @@ public struct TextInputView: HTMLContent {
     }
     if let maxValue = max {
       inputEl = inputEl.max(maxValue)
+    }
+    if let form {
+      inputEl = inputEl.form(form)
     }
 
     var container = div {
