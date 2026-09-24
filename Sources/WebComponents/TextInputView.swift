@@ -435,6 +435,7 @@ public struct TextInputView: HTMLContent {
       name: String,
       placeholder: String = "",
       value: String = "",
+      type: TextInputView.InputType = .text,
       fullWidth: Bool = true,
       class: String = "",
       hydrator: TextInputHydration? = nil
@@ -445,6 +446,7 @@ public struct TextInputView: HTMLContent {
         name: name,
         placeholder: placeholder,
         value: value,
+        type: type,
         fullWidth: fullWidth,
         class: `class`
       )

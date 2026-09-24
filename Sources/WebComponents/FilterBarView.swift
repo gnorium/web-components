@@ -13,16 +13,33 @@
   /// `name=value`, so the query repeats the parameter; a page reads repeated
   /// values of one field as alternatives (OR) and different fields as
   /// conditions that all hold (AND).
+  ///
+  /// Two fields may submit one parameter — a select of set spans and a date,
+  /// both `since` — and a value in force goes to the first that can hold it.
   public enum FilterField: Sendable {
     case text(name: String, label: String, placeholder: String)
     case select(
       name: String, label: String, options: [(value: String, label: String)],
       repeatable: Bool = false)
+    /// A day, as `yyyy-mm-dd`, picked with the browser's date input.
+    case date(name: String, label: String)
 
+    /// The parameter the field submits.
     public var name: String {
       switch self {
       case .text(let name, _, _): return name
       case .select(let name, _, _, _): return name
+      case .date(let name, _): return name
+      }
+    }
+
+    /// What the field picker names the field by: its parameter, or for a
+    /// date its parameter marked as one, so two fields of one parameter are
+    /// two choices.
+    public var key: String {
+      switch self {
+      case .date(let name, _): return "\(name):date"
+      default: return name
       }
     }
 
@@ -30,13 +47,26 @@
       switch self {
       case .text(_, let label, _): return label
       case .select(_, let label, _, _): return label
+      case .date(_, let label): return label
       }
     }
 
     public var repeatable: Bool {
       switch self {
-      case .text: return false
+      case .text, .date: return false
       case .select(_, _, _, let repeatable): return repeatable
+      }
+    }
+
+    /// Whether a value in force can show in this field: a select holds its
+    /// options, a date a day, a text anything.
+    public func holds(_ value: String) -> Bool {
+      switch self {
+      case .text: return true
+      case .select(_, _, let options, _): return options.contains { $0.value == value }
+      case .date:
+        let parts = value.split(separator: "-")
+        return parts.count == 3 && parts.allSatisfy { Int($0) != nil }
       }
     }
   }
@@ -73,7 +103,8 @@
     private var activeRows: [(field: FilterField, value: String)] {
       var rows: [(FilterField, String)] = []
       for filter in activeFilters {
-        if let field = schema.first(where: { $0.name == filter.name }) {
+        let fields = schema.filter { $0.name == filter.name }
+        if let field = fields.first(where: { $0.holds(filter.value) }) ?? fields.first {
           rows.append((field, filter.value))
         }
       }
@@ -194,9 +225,9 @@
         id: "filter-field-picker-\(rowIndex)",
         name: "__field_\(rowIndex)",
         label: "",
-        options: schema.map { DropdownView.DropdownOption(value: $0.name, display: $0.label) },
+        options: schema.map { DropdownView.DropdownOption(value: $0.key, display: $0.label) },
         placeholder: "Field",
-        selectedValue: activeField.name,
+        selectedValue: activeField.key,
         class: "filter-bar-field-picker",
         buttonSize: .medium,
         fullWidth: true
@@ -228,6 +259,16 @@
           buttonSize: .medium,
           fullWidth: true
         )
+
+      case .date(let name, _):
+        TextInputView(
+          id: "filter-\(name)-\(rowIndex)",
+          name: name,
+          value: value,
+          type: .date,
+          fullWidth: true,
+          class: "filter-bar-value-input"
+        )
       }
     }
 
@@ -237,12 +278,16 @@
         switch field {
         case .text(let name, let label, let placeholder):
           parts.append(
-            "{\"name\":\"\(name)\",\"label\":\"\(label)\",\"type\":\"text\",\"placeholder\":\"\(placeholder)\"}"
+            "{\"key\":\"\(field.key)\",\"name\":\"\(name)\",\"label\":\"\(label)\",\"type\":\"text\",\"placeholder\":\"\(placeholder)\"}"
           )
         case .select(let name, let label, let options, let repeatable):
           let opts = options.map { "{\"\($0.value)\":\"\($0.label)\"}" }.joined(separator: ",")
           parts.append(
-            "{\"name\":\"\(name)\",\"label\":\"\(label)\",\"type\":\"select\",\"repeatable\":\"\(repeatable)\",\"options\":[\(opts)]}"
+            "{\"key\":\"\(field.key)\",\"name\":\"\(name)\",\"label\":\"\(label)\",\"type\":\"select\",\"repeatable\":\"\(repeatable)\",\"options\":[\(opts)]}"
+          )
+        case .date(let name, let label):
+          parts.append(
+            "{\"key\":\"\(field.key)\",\"name\":\"\(name)\",\"label\":\"\(label)\",\"type\":\"date\"}"
           )
         }
       }
@@ -285,9 +330,12 @@
 
   // WASM-safe schema entry — struct avoids [String:String] dict subscript (String.hashValue culprit)
   private struct SchemaEntry: @unchecked Sendable {
+    /// What the field picker names it by; `name` is the parameter it submits.
+    let key: String
     let name: String
     let label: String
     let isText: Bool
+    let isDate: Bool
     let placeholder: String
     let repeatable: Bool
   }
@@ -313,17 +361,19 @@
       guard let raw = grid.getAttribute(data("schema")), !stringIsEmpty(raw) else { return }
       let objects = splitJSONObjects(raw)
       for obj in objects {
-        guard let name = extractJSONString(obj, key: "name"),
+        guard let key = extractJSONString(obj, key: "key"),
+          let name = extractJSONString(obj, key: "name"),
           let typeStr = extractJSONString(obj, key: "type")
         else { continue }
         let label = extractJSONString(obj, key: "label") ?? name
         let placeholder = extractJSONString(obj, key: "placeholder") ?? ""
         let isText = stringEquals(typeStr, "text")
+        let isDate = stringEquals(typeStr, "date")
         let repeatable = extractJSONString(obj, key: "repeatable").map { stringEquals($0, "true") } ?? false
         schema.append(
           SchemaEntry(
-            name: name, label: label, isText: isText, placeholder: placeholder,
-            repeatable: repeatable))
+            key: key, name: name, label: label, isText: isText, isDate: isDate,
+            placeholder: placeholder, repeatable: repeatable))
       }
     }
 
@@ -358,12 +408,12 @@
         let hiddenInput = container.querySelector(#"input[type="hidden"]"#) as? HTML.HTMLInputElement
       else { return }
       _ = hiddenInput.addEventListener(.change) { [self] _ in
-        self.onFieldChange(fieldName: hiddenInput.value, row: row)
+        self.onFieldChange(fieldKey: hiddenInput.value, row: row)
       }
     }
 
-    private func onFieldChange(fieldName: String, row: DOM.Element) {
-      guard let entry = schema.first(where: { stringEquals($0.name, fieldName) }) else { return }
+    private func onFieldChange(fieldKey: String, row: DOM.Element) {
+      guard let entry = schema.first(where: { stringEquals($0.key, fieldKey) }) else { return }
       replaceValueInput(in: row, with: entry, value: "")
     }
 
@@ -385,19 +435,20 @@
       let addOrRemoveBtn =
         row.querySelector(".filter-bar-add-btn") ?? row.querySelector(".filter-bar-remove-btn")
 
-      if entry.isText {
+      if entry.isText || entry.isDate {
         let input = TextInputFactory.createElement(
           id: "filter-\(fieldName)-swap",
           name: fieldName,
           placeholder: placeholder,
           value: value,
+          type: entry.isDate ? .date : .text,
           fullWidth: true,
           class: "filter-bar-value-input",
           hydrator: textInputHydration
         )
         row.insertBefore(input, addOrRemoveBtn)
       } else {
-        let options = optionsForField(fieldName)
+        let options = optionsForField(entry.key)
         let dropdown = DropdownFactory.createElement(
           id: "filter-\(fieldName)-swap",
           name: fieldName,
@@ -413,9 +464,9 @@
       }
     }
 
-    private func optionsForField(_ fieldName: String) -> [DropdownView.DropdownOption] {
+    private func optionsForField(_ fieldKey: String) -> [DropdownView.DropdownOption] {
       guard let rawSchema = grid.getAttribute(data("schema")) else { return [] }
-      guard let fromField = findAndSkip("\"name\":\"\(fieldName)\"", in: rawSchema) else { return [] }
+      guard let fromField = findAndSkip("\"key\":\"\(fieldKey)\"", in: rawSchema) else { return [] }
       guard let afterOptions = findAndSkip("\"options\":[", in: fromField) else { return [] }
       guard let optionsStr = findUntil("]", in: afterOptions) else { return [] }
       let objects = splitJSONObjects(optionsStr)
@@ -464,9 +515,9 @@
       let picker = DropdownFactory.createElement(
         id: "filter-field-picker-\(rowIndex)",
         name: "__field_\(rowIndex)",
-        options: schema.map { DropdownView.DropdownOption(value: $0.name, display: $0.label) },
+        options: schema.map { DropdownView.DropdownOption(value: $0.key, display: $0.label) },
         placeholder: "Field",
-        selectedValue: field.name,
+        selectedValue: field.key,
         class: "filter-bar-field-picker",
         buttonSize: .medium,
         fullWidth: true,
@@ -475,18 +526,19 @@
       row.appendChild(picker)
 
       // Col 2: value input
-      if field.isText {
+      if field.isText || field.isDate {
         let input = TextInputFactory.createElement(
           id: "filter-\(field.name)-\(rowIndex)",
           name: field.name,
           placeholder: field.placeholder,
+          type: field.isDate ? .date : .text,
           fullWidth: true,
           class: "filter-bar-value-input",
           hydrator: textInputHydration
         )
         row.appendChild(input)
       } else {
-        let options = optionsForField(field.name)
+        let options = optionsForField(field.key)
         let valueDropdown = DropdownFactory.createElement(
           id: "filter-\(field.name)-\(rowIndex)",
           name: field.name,
@@ -519,16 +571,16 @@
     /// The field a new row starts on: the first not yet in use, else the first
     /// that may repeat. Nil when neither is left.
     private func nextField() -> SchemaEntry? {
-      let usedNames = usedFieldNames()
+      let usedKeys = usedFieldKeys()
       if let unused = schema.first(where: { entry in
-        !usedNames.contains(where: { stringEquals($0, entry.name) })
+        !usedKeys.contains(where: { stringEquals($0, entry.key) })
       }) {
         return unused
       }
       return schema.first(where: { $0.repeatable })
     }
 
-    private func usedFieldNames() -> [String] {
+    private func usedFieldKeys() -> [String] {
       var names: [String] = []
       let pickers = grid.querySelectorAll(".filter-bar-field-picker")
       for picker in pickers {
