@@ -58,6 +58,15 @@
       }
     }
 
+    /// Whether its value is typed or picked in an input rather than chosen
+    /// from a list.
+    public var takesInput: Bool {
+      switch self {
+      case .text, .date: return true
+      case .select: return false
+      }
+    }
+
     /// Whether a value in force can show in this field: a select holds its
     /// options, a date a day, a text anything.
     public func holds(_ value: String) -> Bool {
@@ -116,6 +125,12 @@
     }
 
     public func build() -> DOM.Node {
+      // A text or date field's input is built by the client when the field is
+      // picked; the page links only the sheets touched while rendering, so
+      // build one here, discarded, or the input arrives unstyled.
+      if schema.contains(where: \.takesInput) {
+        _ = TextInputView(id: "filter-bar-preload", name: "", value: "", type: .date, fullWidth: true).build()
+      }
       let rows = activeRows
       // Another row can always hold a repeatable field; otherwise one row
       // per field.
