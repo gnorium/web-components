@@ -15,7 +15,7 @@ public struct InfoChipView: HTMLContent {
   let chipColor: InfoChipColor
   let weight: Weight
   let size: Size
-  let icon: String?
+  let icon: Icon
   /// A status is not always an announcement: a chip that states a fact
   /// rather than raising an alarm reads better at normal weight.
   let labelFontWeight: CSS.FontWeight
@@ -42,6 +42,20 @@ public struct InfoChipView: HTMLContent {
     case solid
   }
 
+  /// The chip's icon. `automatic` picks it by colour: green a check, red a
+  /// cross, orange a warning, gray none, any other colour a disc. `hidden`
+  /// draws none, not even `iconContent`.
+  public enum Icon: Sendable {
+    case automatic
+    case hidden
+    case ring
+    case disc
+    case check
+    case cross
+    case warning
+    case info
+  }
+
   /// Physical size of the chip
   public enum Size: String, Sendable {
     /// Standard status chip: 40px control height.
@@ -54,7 +68,7 @@ public struct InfoChipView: HTMLContent {
     chipColor: InfoChipColor = .gray,
     weight: Weight = .subtle,
     size: Size = .medium,
-    icon: String? = nil,
+    icon: Icon = .automatic,
     labelFontWeight: CSS.FontWeight = fontWeightSemiBold,
     class: String = "",
     @HTMLBuilder iconContent: () -> [DOM.Node] = { [] },
@@ -75,7 +89,7 @@ public struct InfoChipView: HTMLContent {
     color: InfoChipColor,
     weight: Weight = .subtle,
     size: Size = .medium,
-    icon: String? = nil,
+    icon: Icon = .automatic,
     class: String = "",
     @HTMLBuilder iconContent: () -> [DOM.Node] = { [] },
     @HTMLBuilder content: () -> [DOM.Node]
@@ -95,7 +109,7 @@ public struct InfoChipView: HTMLContent {
     status: InfoChipColor,
     weight: Weight = .subtle,
     size: Size = .medium,
-    icon: String? = nil,
+    icon: Icon = .automatic,
     class: String = "",
     @HTMLBuilder iconContent: () -> [DOM.Node] = { [] },
     @HTMLBuilder content: () -> [DOM.Node]
@@ -114,13 +128,22 @@ public struct InfoChipView: HTMLContent {
     let iconLength: CSS.Length = size == .large ? sizeIconMedium : sizeIconSmall
 
     let hasIconContent = !iconContent.isEmpty
-    let suppressIcon = icon.map { stringIsEmpty($0) } ?? false
+    let resolvedIcon: Icon = {
+      guard case .automatic = icon else { return icon }
+      switch chipColor {
+      case .green: return .check
+      case .red: return .cross
+      case .orange: return .warning
+      case .gray: return .hidden
+      case .mint, .yellow, .teal, .cyan, .blue, .indigo, .purple, .pink, .brown: return .disc
+      }
+    }()
 
     let shouldShowIcon: Bool = {
-      if suppressIcon { return false }
+      if case .hidden = icon { return false }
       if hasIconContent { return true }
-      if let icon = icon { return !stringIsEmpty(icon) }
-      return chipColor != .gray
+      if case .hidden = resolvedIcon { return false }
+      return true
     }()
 
     let sizeClass = size == .medium ? "" : " info-chip-\(size.rawValue)"
@@ -131,11 +154,22 @@ public struct InfoChipView: HTMLContent {
           if hasIconContent {
             iconContent
           } else {
-            #if SERVER
-              resolvedIconNodes(iconLength: iconLength)
-            #else
-              icon ?? fallbackIconGlyph()
-            #endif
+            switch resolvedIcon {
+            case .ring:
+              RingIconView(width: iconLength, height: iconLength)
+            case .disc:
+              DiscIconView(width: iconLength, height: iconLength)
+            case .check:
+              CheckIconView(width: iconLength, height: iconLength)
+            case .cross:
+              CrossIconView(width: iconLength, height: iconLength)
+            case .warning:
+              AlertIconView(width: iconLength, height: iconLength)
+            case .info:
+              InfoIconView(width: iconLength, height: iconLength)
+            case .automatic, .hidden:
+              [DOM.Node]()
+            }
           }
         }
         .class("info-chip-icon")
@@ -273,8 +307,6 @@ public struct InfoChipView: HTMLContent {
         width(sizeIconSmall)
         height(sizeIconSmall)
         flexShrink(0)
-        fontSize(fontSizeSmall14)
-        lineHeight(1)
       }
       descendant(".info-chip-icon > svg") {
         width(perc(100))
@@ -288,7 +320,6 @@ public struct InfoChipView: HTMLContent {
       selector("&.info-chip-large .info-chip-icon") {
         width(sizeIconMedium)
         height(sizeIconMedium)
-        fontSize(fontSizeXLarge20)
       }
       // Shrinks for the ellipsis, never grows: a chip wider than its content
       // (stretched by its container) keeps its icon and label centred.
@@ -301,48 +332,4 @@ public struct InfoChipView: HTMLContent {
       }
     }
   }
-
-  private func fallbackIconGlyph() -> String {
-    switch chipColor {
-    case .gray: return "ℹ"
-    case .orange: return "⚠"
-    case .red: return "✗"
-    case .mint: return "●"
-    case .green: return "✓"
-    case .yellow, .teal, .cyan, .blue, .indigo, .purple, .pink, .brown: return "●"
-    }
-  }
-
-  #if SERVER
-    @HTMLBuilder
-    private func resolvedIconNodes(iconLength: CSS.Length) -> [DOM.Node] {
-      if let icon = icon {
-        switch icon {
-        case "○":
-          RingIconView(width: iconLength, height: iconLength)
-        case "●":
-          DiscIconView(width: iconLength, height: iconLength)
-        case "✓":
-          CheckIconView(width: iconLength, height: iconLength)
-        case "✗":
-          CrossIconView(width: iconLength, height: iconLength)
-        default:
-          span { icon }
-        }
-      } else {
-        switch chipColor {
-        case .green:
-          CheckIconView(width: iconLength, height: iconLength)
-        case .red:
-          CrossIconView(width: iconLength, height: iconLength)
-        case .orange:
-          span { "⚠" }
-        case .gray:
-          InfoIconView(width: iconLength, height: iconLength)
-        case .mint, .yellow, .teal, .cyan, .blue, .indigo, .purple, .pink, .brown:
-          DiscIconView(width: iconLength, height: iconLength)
-        }
-      }
-    }
-  #endif
 }

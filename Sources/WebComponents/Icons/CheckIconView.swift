@@ -25,9 +25,7 @@ public struct CheckIconView: HTMLContent {
   public func build() -> DOM.Node {
     svg {
       path()
-        .d(
-          M(6.3481, 14.4141), L(1.6041, 9.6701), L(0, 11.2742), L(6.3481, 17.6337), L(20, 3.9818),
-          L(18.3959, 2.3663), Z())
+        .d(M(7, 14.17), L(2.83, 10), l(-1.41, 1.41), L(7, 17), L(19, 5), l(-1.41, -1.42), Z())
     }
     .class(
       stringIsEmpty(`class`) ? "check-icon-view" : "check-icon-view \(`class`)"

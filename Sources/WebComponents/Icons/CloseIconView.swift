@@ -6,7 +6,9 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-public struct InfoFilledIconView: HTMLContent {
+/// Codex `close` icon: the ✕ of a close or dismiss button. Available on
+/// SERVER + CLIENT (client code renders it: `StatusIconView` shows how).
+public struct CloseIconView: HTMLContent {
   let width: CSS.Length
   let height: CSS.Length
   let `class`: String
@@ -24,11 +26,12 @@ public struct InfoFilledIconView: HTMLContent {
   public func build() -> DOM.Node {
     svg {
       path()
-        .d(
-          M(10, 0), C(4.477, 0, 0, 4.477, 0, 10), s(4.477, 10, 10, 10), s(10, -4.477, 10, -10),
-          S(15.523, 0, 10, 0), M(9, 5), h(2), v(2), H(9), Z(), m(0, 4), h(2), v(6), H(9), Z())
+        .d(M(4.34, 2.93), l(12.73, 12.73), l(-1.41, 1.41), L(2.93, 4.35), Z())
+
+      path()
+        .d(M(17.07, 4.34), L(4.34, 17.07), l(-1.41, -1.41), L(15.66, 2.93), Z())
     }
-    .class(stringIsEmpty(`class`) ? "info-filled-icon-view" : "info-filled-icon-view \(`class`)")
+    .class(stringIsEmpty(`class`) ? "close-icon-view" : "close-icon-view \(`class`)")
     .width(width)
     .height(height)
     .viewBox(0, 0, 20, 20)

@@ -20,7 +20,7 @@
     public func build() -> DOM.Node {
       ButtonView(
         icon: IconView {
-          CrossIconView()
+          CloseIconView()
         },
         weight: .plain,
         size: .medium,

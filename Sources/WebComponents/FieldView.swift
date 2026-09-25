@@ -137,7 +137,7 @@
 
           if status == .error, let errorMsg = messages.error {
             div {
-              span { "⚠" }
+              span { IconView(icon: { s in StatusIconView(.error, width: s, height: s) }, size: .small) }
                 .class("field-validation-icon")
                 .ariaHidden(true)
 
@@ -150,7 +150,7 @@
 
           if status == .warning, let warningMsg = messages.warning {
             div {
-              span { "⚠" }
+              span { IconView(icon: { s in StatusIconView(.warning, width: s, height: s) }, size: .small) }
                 .class("field-validation-icon")
                 .ariaHidden(true)
 
@@ -163,7 +163,7 @@
 
           if status == .success, let successMsg = messages.success {
             div {
-              span { "✓" }
+              span { IconView(icon: { s in StatusIconView(.success, width: s, height: s) }, size: .small) }
                 .class("field-validation-icon")
                 .ariaHidden(true)
 
@@ -206,12 +206,13 @@
           selector("& .field-validation-message[data-status='error']") { color(colorRed) }
           selector("& .field-validation-message[data-status='warning']") { color(colorOrange) }
           selector("& .field-validation-message[data-status='success']") { color(colorGreen) }
+          // As tall as the message's first line, so the icon centres on it.
           descendant(".field-validation-icon") {
             display(.inlineFlex)
             alignItems(.center)
             justifyContent(.center)
             flexShrink(0)
-            fontWeight(fontWeightBold)
+            height(lineHeightSmall22)
           }
           descendant(".field-validation-text") { flex(1) }
         }
@@ -258,7 +259,7 @@
 
           if status == .error, let errorMsg = messages.error {
             div {
-              span { "⚠" }
+              span { IconView(icon: { s in StatusIconView(.error, width: s, height: s) }, size: .small) }
                 .class("field-validation-icon")
                 .ariaHidden(true)
 
@@ -271,7 +272,7 @@
 
           if status == .warning, let warningMsg = messages.warning {
             div {
-              span { "⚠" }
+              span { IconView(icon: { s in StatusIconView(.warning, width: s, height: s) }, size: .small) }
                 .class("field-validation-icon")
                 .ariaHidden(true)
 
@@ -284,7 +285,7 @@
 
           if status == .success, let successMsg = messages.success {
             div {
-              span { "✓" }
+              span { IconView(icon: { s in StatusIconView(.success, width: s, height: s) }, size: .small) }
                 .class("field-validation-icon")
                 .ariaHidden(true)
 
@@ -322,12 +323,13 @@
           selector("& .field-validation-message[data-status='error']") { color(colorRed) }
           selector("& .field-validation-message[data-status='warning']") { color(colorOrange) }
           selector("& .field-validation-message[data-status='success']") { color(colorGreen) }
+          // As tall as the message's first line, so the icon centres on it.
           descendant(".field-validation-icon") {
             display(.inlineFlex)
             alignItems(.center)
             justifyContent(.center)
             flexShrink(0)
-            fontWeight(fontWeightBold)
+            height(lineHeightSmall22)
           }
           descendant(".field-validation-text") { flex(1) }
         }

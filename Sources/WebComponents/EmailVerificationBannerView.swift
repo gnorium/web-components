@@ -19,8 +19,9 @@
       div {
         div {
           // Icon
-          span { "⚠️" }
+          span { StatusIconView(.warning) }
             .class("email-verification-banner-icon")
+            .ariaHidden(true)
 
           // Alert
           span {
@@ -61,7 +62,11 @@
           maxWidth(px(1200))
           margin(0, .auto)
         }
-        descendant(".email-verification-banner-icon") { fontSize(fontSizeMedium16) }
+        descendant(".email-verification-banner-icon") {
+          display(.flex)
+          flexShrink(0)
+          color(colorOrange)
+        }
         descendant(".email-verification-banner-message") {
           fontSize(fontSizeSmall14)
           color(colorBase)

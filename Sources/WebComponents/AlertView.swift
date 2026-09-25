@@ -11,7 +11,7 @@
   public struct AlertView: HTMLContent {
     let alertColor: AlertColor
     let inline: Bool
-    let customIcon: String?
+    let icon: StatusIconView.Status?
     let fadeIn: Bool
     let allowUserDismiss: Bool
     let dismissButtonLabel: String
@@ -45,7 +45,7 @@
     public init(
       type: AlertColor,
       inline: Bool = false,
-      customIcon: String? = nil,
+      icon: StatusIconView.Status? = nil,
       fadeIn: Bool = false,
       allowUserDismiss: Bool = false,
       dismissButtonLabel: String = "Close",
@@ -56,7 +56,7 @@
     ) {
       self.alertColor = type
       self.inline = inline
-      self.customIcon = customIcon
+      self.icon = icon
       self.fadeIn = fadeIn
       self.allowUserDismiss = allowUserDismiss
       self.dismissButtonLabel = dismissButtonLabel
@@ -69,7 +69,7 @@
     public init(
       color: AlertColor = .gray,
       inline: Bool = false,
-      customIcon: String? = nil,
+      icon: StatusIconView.Status? = nil,
       fadeIn: Bool = false,
       allowUserDismiss: Bool = false,
       dismissButtonLabel: String = "Close",
@@ -80,7 +80,7 @@
     ) {
       self.alertColor = color
       self.inline = inline
-      self.customIcon = customIcon
+      self.icon = icon
       self.fadeIn = fadeIn
       self.allowUserDismiss = allowUserDismiss
       self.dismissButtonLabel = dismissButtonLabel
@@ -93,29 +93,25 @@
     /// Registers the component stylesheet when client code may create alerts on
     /// a page that has no server-rendered `AlertView` instance.
     public static func preloadStyleSheet() {
-      _ = AlertView(color: .gray, inline: true, customIcon: "") { [] }.build()
+      _ = AlertView(color: .gray, inline: true) { [] }.build()
     }
 
     public func build() -> DOM.Node {
-      let defaultIcon: String = {
+      // The colour gives the icon; `icon` overrides it (a blue alert that
+      // reports a recoverable failure draws the error icon).
+      let displayIcon: StatusIconView.Status = {
+        if let icon { return icon }
         switch alertColor {
-        case .gray:
-          return "ℹ"
-        case .blue:
-          // Informational, not a fault: a dropped stream or a stalled worker is
-          // recoverable, so it gets the info glyph rather than the cross.
-          return "ℹ"
+        case .gray, .blue:
+          return .info
         case .orange:
-          return "⚠"
+          return .warning
         case .red:
-          return "✗"
+          return .error
         case .green:
-          return "✓"
+          return .success
         }
       }()
-
-      let displayIcon = customIcon ?? defaultIcon
-      let shouldShowIcon = alertColor != .gray || customIcon != nil
 
       let ariaLive: String = {
         switch alertColor {
@@ -150,39 +146,35 @@
       }()
 
       var alert = div {
-        if shouldShowIcon {
-          span {
-            displayIcon
+        span {
+          StatusIconView(displayIcon)
+        }
+        .class("alert-icon")
+        .ariaHidden(true)
+        .data("color", alertColor.rawValue)
+        .style {
+          selector("&") {
+            display(.flex)
+            alignItems(.center)
+            justifyContent(.center)
+            minWidth(sizeIconMedium)
+            width(sizeIconMedium)
+            height(sizeIconMedium)
+            flexShrink(0)
           }
-          .class("alert-icon")
-          .ariaHidden(true)
-          .data("color", alertColor.rawValue)
-          .style {
-            selector("&") {
-              display(.flex)
-              alignItems(.center)
-              justifyContent(.center)
-              minWidth(sizeIconMedium)
-              width(sizeIconMedium)
-              height(sizeIconMedium)
-              flexShrink(0)
-              fontSize(sizeIconMedium)
-              lineHeight(1)
-            }
-            selector("& svg") {
-              display(.block)
-              flexShrink(0)
-              width(sizeIconMedium)
-              height(sizeIconMedium)
-            }
-            // Every case of AlertColor, or the missing one silently falls back
-            // to the body colour — as blue did, in the only place it was used.
-            selector("&[data-color='gray']") { color(colorGray) }
-            selector("&[data-color='blue']") { color(colorBlue) }
-            selector("&[data-color='orange']") { color(colorOrange) }
-            selector("&[data-color='red']") { color(colorRed) }
-            selector("&[data-color='green']") { color(colorGreen) }
+          selector("& svg") {
+            display(.block)
+            flexShrink(0)
+            width(sizeIconMedium)
+            height(sizeIconMedium)
           }
+          // Every case of AlertColor, or the missing one silently falls back
+          // to the body colour — as blue did, in the only place it was used.
+          selector("&[data-color='gray']") { color(colorGray) }
+          selector("&[data-color='blue']") { color(colorBlue) }
+          selector("&[data-color='orange']") { color(colorOrange) }
+          selector("&[data-color='red']") { color(colorRed) }
+          selector("&[data-color='green']") { color(colorGreen) }
         }
 
         div {
@@ -275,22 +267,64 @@
               name: .name("alert-motion-content-enter")
             )
           }
-          selector("&.alert-dynamic .alert-dismiss") {
-            display(.flex)
-            alignItems(.center)
-            justifyContent(.center)
-            minWidth(sizeIconMedium)
-            width(sizeIconMedium)
-            height(sizeIconMedium)
-            marginLeft(spacing8)
-            padding(0)
-            border(borderTransparent)
-            backgroundColor(backgroundColorTransparent)
-            color(colorSubtle)
-            cursor(cursorBaseHover)
-            borderRadius(borderRadiusBase)
-            transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+          // The dismiss button, server-rendered or built by AlertAPI: no fill
+          // of its own on the alert's background, the ✕ in the alert's text
+          // colour at the status icon's size, a 40px target, and a tint of
+          // the alert's own colour on hover and focus. `.important()` beats
+          // ButtonView's plain-weight fill, and `button.` outranks its
+          // `.button-view[data-weight]`, which loads later.
+          selector("& button.alert-dismiss") {
+            display(.flex).important()
+            alignItems(.center).important()
+            justifyContent(.center).important()
             flexShrink(0)
+            alignSelf(.center)
+            minWidth(minSizeInteractiveTouch).important()
+            minHeight(minSizeInteractiveTouch).important()
+            width(minSizeInteractiveTouch).important()
+            height(minSizeInteractiveTouch).important()
+            padding(0).important()
+            border(borderTransparent).important()
+            borderRadius(borderRadiusCircle).important()
+            backgroundColor(backgroundColorTransparent).important()
+            color(colorBase).important()
+            cursor(cursorBaseHover)
+            transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+          }
+          selector("& .alert-dismiss svg") {
+            display(.block)
+            width(sizeIconMedium).important()
+            height(sizeIconMedium).important()
+          }
+          selector("&.alert-gray .alert-dismiss:hover", "&.alert-gray .alert-dismiss:focus-visible") {
+            backgroundColor(backgroundColorGraySubtleHover).important()
+          }
+          selector("&.alert-gray .alert-dismiss:active") {
+            backgroundColor(backgroundColorGraySubtleActive).important()
+          }
+          selector("&.alert-blue .alert-dismiss:hover", "&.alert-blue .alert-dismiss:focus-visible") {
+            backgroundColor(backgroundColorBlueSubtleHover).important()
+          }
+          selector("&.alert-blue .alert-dismiss:active") {
+            backgroundColor(backgroundColorBlueSubtleActive).important()
+          }
+          selector("&.alert-orange .alert-dismiss:hover", "&.alert-orange .alert-dismiss:focus-visible") {
+            backgroundColor(backgroundColorOrangeSubtleHover).important()
+          }
+          selector("&.alert-orange .alert-dismiss:active") {
+            backgroundColor(backgroundColorOrangeSubtleActive).important()
+          }
+          selector("&.alert-red .alert-dismiss:hover", "&.alert-red .alert-dismiss:focus-visible") {
+            backgroundColor(backgroundColorRedSubtleHover).important()
+          }
+          selector("&.alert-red .alert-dismiss:active") {
+            backgroundColor(backgroundColorRedSubtleActive).important()
+          }
+          selector("&.alert-green .alert-dismiss:hover", "&.alert-green .alert-dismiss:focus-visible") {
+            backgroundColor(backgroundColorGreenSubtleHover).important()
+          }
+          selector("&.alert-green .alert-dismiss:active") {
+            backgroundColor(backgroundColorGreenSubtleActive).important()
           }
           keyframes("alert-motion-content-enter") {
             from { opacity(0) }
@@ -410,7 +444,7 @@
       _ text: String,
       type: AlertColor = .gray,
       inline: Bool = false,
-      customIcon: String? = nil,
+      icon: StatusIconView.Status? = nil,
       allowUserDismiss: Bool = true,
       autoDismiss: Bool = false,
       autoDismissTime: Int = 10000,
@@ -436,33 +470,18 @@
         alertContainer = c
       }
 
-      let unicodeInfo = "i"
-      let unicodeWarning = "⚠"
-      let unicodeCross = "✗"
-      let unicodeCheckmark = "✓"
-
-      let defaultIcon: String = {
-        switch type {
-        case .gray:
-          return unicodeInfo
-        case .blue:
-          return unicodeInfo
-        case .orange:
-          return unicodeWarning
-        case .red:
-          return unicodeCross
-        case .green:
-          return unicodeCheckmark
-        }
-      }()
-
-      let displayIcon: String
-      var shouldShowIcon = type != .gray
-      if let custom = customIcon {
-        displayIcon = custom
-        shouldShowIcon = true
+      // The same icons as the server's AlertView: the colour gives the icon,
+      // `icon` overrides it.
+      let displayIcon: StatusIconView.Status
+      if let icon {
+        displayIcon = icon
       } else {
-        displayIcon = defaultIcon
+        switch type {
+        case .gray, .blue: displayIcon = .info
+        case .orange: displayIcon = .warning
+        case .red: displayIcon = .error
+        case .green: displayIcon = .success
+        }
       }
 
       let ariaLive: ARIA.Live
@@ -514,20 +533,18 @@
       motionContent.style.setProperty("box-sizing", "border-box")
 
       // Icon
-      if shouldShowIcon {
-        let icon = document.createElement(.span)
-        icon.className = "alert-icon"
-        icon.innerHTML = displayIcon
-        icon.setAttribute(.ariaHidden, true)
-        switch type {
-        case .gray: icon.setAttribute(data("color"), "gray")
-        case .blue: icon.setAttribute(data("color"), "blue")
-        case .orange: icon.setAttribute(data("color"), "orange")
-        case .red: icon.setAttribute(data("color"), "red")
-        case .green: icon.setAttribute(data("color"), "green")
-        }
-        motionContent.appendChild(icon)
+      let iconElement = document.createElement(.span)
+      iconElement.className = "alert-icon"
+      iconElement.innerHTML = StatusIconView(displayIcon).render()
+      iconElement.setAttribute(.ariaHidden, true)
+      switch type {
+      case .gray: iconElement.setAttribute(data("color"), "gray")
+      case .blue: iconElement.setAttribute(data("color"), "blue")
+      case .orange: iconElement.setAttribute(data("color"), "orange")
+      case .red: iconElement.setAttribute(data("color"), "red")
+      case .green: iconElement.setAttribute(data("color"), "green")
       }
+      motionContent.appendChild(iconElement)
 
       // Content
       let content = document.createElement(.div)
@@ -539,8 +556,7 @@
       if allowUserDismiss {
         let dismissBtn = document.createElement(.button)
         dismissBtn.className = "alert-dismiss"
-        dismissBtn.innerHTML =
-          "<svg width=\"20\" height=\"20\" viewBox=\"0 0 20 20\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\"><path d=\"M4.34 2.93l12.73 12.73-1.41 1.41L2.93 4.35Z\"/><path d=\"M17.07 4.34L4.34 17.07l-1.41-1.41L15.66 2.93Z\"/></svg>"
+        dismissBtn.innerHTML = CloseIconView().render()
         let buttonType: HTML.Button.`Type` = .button
         dismissBtn.setAttribute(.type, buttonType)
         dismissBtn.setAttribute(.ariaLabel, "Close")

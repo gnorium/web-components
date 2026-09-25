@@ -1,40 +1,38 @@
-#if SERVER
-  import CSSBuilder
-  import DesignTokens
-  import DOMBuilder
-  import HTMLBuilder
-  import SVGBuilder
-  import WebTypes
+import CSSBuilder
+import DesignTokens
+import DOMBuilder
+import EmbeddedSwiftUtilities
+import HTMLBuilder
+import SVGBuilder
+import WebTypes
 
-  public struct ErrorIconView: HTMLContent {
-    let width: CSS.Length
-    let height: CSS.Length
-    let `class`: String
+public struct ErrorIconView: HTMLContent {
+  let width: CSS.Length
+  let height: CSS.Length
+  let `class`: String
 
-    public init(
-      width: CSS.Length = px(20),
-      height: CSS.Length = px(20),
-      class: String = ""
-    ) {
-      self.width = width
-      self.height = height
-      self.class = `class`
-    }
-
-    public func build() -> DOM.Node {
-      svg {
-        path()
-          .d(
-            M(13.728, 1), H(6.272), L(1, 6.272), v(7.456), L(6.272, 19), h(7.456), L(19, 13.728),
-            V(6.272), Z(), M(11, 15), H(9), v(-2), h(2), Z(), m(0, -4), H(9), V(5), h(2), Z())
-      }
-      .class(`class`.isEmpty ? "error-icon-view" : "error-icon-view \(`class`)")
-      .width(width)
-      .height(height)
-      .viewBox(0, 0, 20, 20)
-      .xmlns("http://www.w3.org/2000/svg")
-      .fill(.currentColor)
-
-    }
+  public init(
+    width: CSS.Length = px(20),
+    height: CSS.Length = px(20),
+    class: String = ""
+  ) {
+    self.width = width
+    self.height = height
+    self.class = `class`
   }
-#endif
+
+  public func build() -> DOM.Node {
+    svg {
+      path()
+        .d(
+          M(13.728, 1), H(6.272), L(1, 6.272), v(7.456), L(6.272, 19), h(7.456), L(19, 13.728),
+          V(6.272), Z(), M(11, 15), H(9), v(-2), h(2), Z(), m(0, -4), H(9), V(5), h(2), Z())
+    }
+    .class(stringIsEmpty(`class`) ? "error-icon-view" : "error-icon-view \(`class`)")
+    .width(width)
+    .height(height)
+    .viewBox(0, 0, 20, 20)
+    .xmlns("http://www.w3.org/2000/svg")
+    .fill(.currentColor)
+  }
+}

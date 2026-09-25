@@ -177,7 +177,7 @@
           items.append(
             span {
               if selected {
-                span { "✓" }
+                span { CheckIconView() }
                   .class("menu-item-checkmark")
                   .ariaHidden(true)
               }
@@ -341,9 +341,14 @@
               transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
             }
             descendant(".menu-item-checkmark") {
-              fontSize(fontSizeSmall14)
+              display(.flex)
+              width(sizeIconXSmall)
+              height(sizeIconXSmall)
               color(colorInvertedFixed)
-              lineHeight(1)
+            }
+            selector("& .menu-item-checkmark svg") {
+              width(perc(100))
+              height(perc(100))
             }
             descendant(".menu-item-thumbnail") {
               display(.inlineFlex)
@@ -516,9 +521,14 @@
               transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
             }
             descendant(".menu-item-checkmark") {
-              fontSize(fontSizeSmall14)
+              display(.flex)
+              width(sizeIconXSmall)
+              height(sizeIconXSmall)
               color(colorInvertedFixed)
-              lineHeight(1)
+            }
+            selector("& .menu-item-checkmark svg") {
+              width(perc(100))
+              height(perc(100))
             }
             descendant(".menu-item-thumbnail") {
               display(.inlineFlex)
