@@ -27,10 +27,42 @@
     /// between tags, and a correction must not quietly make others. The
     /// reading stays a reading — nothing in it can be typed into.
     let editable: Bool
+    /// The transcript's translation, when it has one: a third layer of each
+    /// page's reading, which the viewer's Translated switch shows in the
+    /// reading's place.
+    let translation: Translation?
 
-    public init(teiXml: String, editable: Bool = false) {
+    /// A translation of the transcript, page by page, in its own language:
+    /// the translation's own TEI, read by the same reader as the transcript,
+    /// so the two are set alike line for line.
+    public struct Translation: Sendable {
+      /// One page's translation, read, and a note on it — that its text has
+      /// changed since, say.
+      public struct Page: Sendable {
+        public let page: TEIPage
+        public let note: String?
+
+        public init(page: TEIPage, note: String? = nil) {
+          self.page = page
+          self.note = note
+        }
+      }
+
+      /// The translation's language, as a BCP 47 tag names it.
+      public let language: String
+      /// Each page's, by the image service it reads.
+      public let pages: [String: Page]
+
+      public init(language: String, pages: [String: Page]) {
+        self.language = language
+        self.pages = pages
+      }
+    }
+
+    public init(teiXml: String, editable: Bool = false, translation: Translation? = nil) {
       self.teiXml = teiXml
       self.editable = editable
+      self.translation = translation
     }
 
     public var pages: [TEIPage] { TEIRenderer.pages(in: teiXml) }
@@ -273,6 +305,33 @@
             }
             .class("tei-page-raw")
             .data("reading-layer", "source")
+
+            // The translation, set by the very reader that sets the
+            // transcript above: the same lines, the same classes.
+            if let translation {
+              let translated = translation.pages[Self.serviceID(ofFacsimile: page.facsimileURL)]
+              div {
+                if let note = translated?.note {
+                  p { note }
+                    .class("tei-page-translation-note")
+                }
+                div {
+                  if let translated {
+                    for line in translated.page.lines {
+                      readingLine(line, facsimileURL: translated.page.facsimileURL, label: translated.page.label)
+                    }
+                  } else {
+                    span { "—" }
+                      .class("tei-line")
+                  }
+                }
+                .class("tei-page-text")
+              }
+              .class("tei-page-translation")
+              .data("reading-layer", "translation")
+              .lang(translation.language)
+              .dir("auto")
+            }
           }
           .class("tei-reading")
           .id("tei-reading-\(index)")
@@ -481,6 +540,20 @@
           display(.none)
           margin(0)
           minWidth(0)
+        }
+        // The translation takes the reading's place too, under the language
+        // switch on the page's record rule.
+        descendant(".tei-page-translation") {
+          display(.none)
+          flexDirection(.column)
+          gap(spacing12)
+          minWidth(0)
+        }
+        descendant(".tei-page-translation-note") {
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeSmall14)
+          color(colorOrange)
+          margin(0)
         }
         // The work's own apparatus: a running head is on the page and not in
         // the play, so it is shown as what it is rather than as a line of it.
