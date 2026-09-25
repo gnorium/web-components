@@ -52,8 +52,8 @@ public struct DiffView: HTMLContent {
     /// date's — a character diff of two option names says nothing their
     /// names do not.
     case choice(old: String, new: String)
-    /// A checkbox's change: one tick, green where the box was ticked, red
-    /// where it was unticked. "Checked → Not checked" says in four words
+    /// A checkbox's change: one ticked box, ☑︎, green where the box was
+    /// ticked, red where it was unticked. "Checked → Not checked" says in four words
     /// what the colour of one mark says.
     case check(ticked: Bool)
     /// A multi-line text's old value against its new one, line by line.
@@ -215,7 +215,9 @@ public struct DiffView: HTMLContent {
       modeName = "check"
       body = span {
         span {
-          span { "✓" }
+          // The ballot box with check, held to its text form by U+FE0E: a
+          // colour emoji would ignore the green and the red.
+          span { "\u{2611}\u{FE0E}" }
             .class("diff-view-changed")
             .ariaHidden(true)
           span { ticked ? "Ticked" : "Unticked" }
