@@ -7,10 +7,24 @@ import HTMLBuilder
 import WebTypes
 
 /// A brief message that shows up when a user hovers over a specific part of the UI.
+///
+/// On a touch screen, which has no hover, a long press (half a second) opens
+/// it and keeps it open until the next tap, and the click that the press
+/// would otherwise end in is not sent: a long press on a button reads it and
+/// doesn't press it.
+///
+/// With `opensOnClick` it is also a toggletip: a click or tap on the trigger
+/// opens it and keeps it open until the next click or tap, anywhere, or
+/// Escape. Use it where the words matter on a touch screen; the trigger
+/// should then be a button, so it is focusable too.
+///
+/// The bubble is a line of text, `tooltip`, or `bubble` markup: several
+/// lines, a `LocalTimeView` the client puts in the reader's clock.
 public struct TooltipView: HTMLContent {
-  let tooltipText: String
+  let bubble: [DOM.Node]
   let placement: Placement
   let font: Font
+  let opensOnClick: Bool
   let children: [DOM.Node]
   let `class`: String
 
@@ -84,12 +98,30 @@ public struct TooltipView: HTMLContent {
     tooltip: String,
     placement: Placement = .bottom,
     font: Font = .sans,
+    opensOnClick: Bool = false,
     class: String = "",
     @HTMLBuilder content: () -> [DOM.Node]
   ) {
-    self.tooltipText = tooltip
+    self.bubble = [DOM.Text(tooltip)]
     self.placement = placement
     self.font = font
+    self.opensOnClick = opensOnClick
+    self.children = content()
+    self.`class` = `class`
+  }
+
+  public init(
+    placement: Placement = .bottom,
+    font: Font = .sans,
+    opensOnClick: Bool = false,
+    class: String = "",
+    @HTMLBuilder bubble: () -> [DOM.Node],
+    @HTMLBuilder content: () -> [DOM.Node]
+  ) {
+    self.bubble = bubble()
+    self.placement = placement
+    self.font = font
+    self.opensOnClick = opensOnClick
     self.children = content()
     self.`class` = `class`
   }
@@ -105,7 +137,7 @@ public struct TooltipView: HTMLContent {
       // longer inside the trigger, so a page rule scoped to the trigger's
       // ancestors could not reach it.
       span {
-        tooltipText
+        bubble
       }
       .class("tooltip-content")
       .data("font", font.rawValue)
@@ -114,6 +146,7 @@ public struct TooltipView: HTMLContent {
     .data("tooltip", "true")
     .data("placement", placement.rawValue)
     .data("visible", false)
+    .data("opens-on-click", opensOnClick)
     .style {
       selector("&") {
         position(.relative)
@@ -163,6 +196,11 @@ public struct TooltipView: HTMLContent {
         textAlign(.start)
         backfaceVisibility(.hidden)
         willChange(.transform, .opacity)
+      }
+      // A stamp in the bubble (`LocalTimeView`) reads as the bubble's text.
+      selector("& .tooltip-content time") {
+        color(colorInverted).important()
+        fontSize(fontSizeSmall14).important()
       }
       selector("& .tooltip-content[data-font='mono']") {
         fontFamily(typographyFontMono)
@@ -274,6 +312,11 @@ public struct TooltipView: HTMLContent {
     private var isVisible: Bool = false
     private var hideTimeout: Int32?
     private var touchTimer: Int32?
+    /// Opened by a click or tap (`opensOnClick`) or a long press: leaving
+    /// the trigger or its focus doesn't close it; the next click or tap does.
+    private var pinned: Bool = false
+    /// The touch that just ended was a long press, whose click is dropped.
+    private var longPressed: Bool = false
 
     /// Distance the bubble keeps from the viewport's edges.
     private static let edgeMargin = 8.0
@@ -439,56 +482,111 @@ public struct TooltipView: HTMLContent {
       }
 
       _ = trigger.addEventListener(.mouseleave) { [self] _ in
-        self.hideTooltip()
+        if !self.pinned { self.hideTooltip() }
       }
 
-      // Focus for keyboard navigation
-      _ = trigger.addEventListener(.focus) { [self] _ in
+      // Focus for keyboard navigation: focusin and focusout bubble up from
+      // the control inside the trigger, which is what takes the focus.
+      _ = trigger.addEventListener(.focusin) { [self] _ in
         self.showTooltip()
       }
 
-      _ = trigger.addEventListener(.blur) { [self] _ in
-        self.hideTooltip()
+      _ = trigger.addEventListener(.focusout) { [self] _ in
+        if !self.pinned { self.hideTooltip() }
       }
 
-      // Long press for touch devices
-      _ = trigger.addEventListener(.touchstart) { [self] _ in
-        self.touchTimer = setTimeout(500) {
-          self.showTooltip()
+      if let opensOnClick = trigger.dataset["opens-on-click"], stringEquals(opensOnClick, "true") {
+        // A click or tap opens it and pins it; the next one closes it. A
+        // tap's emulated mouseenter and focus have already shown it by the
+        // time its click arrives, so the click only pins.
+        _ = trigger.addEventListener(.click) { [self] _ in
+          if self.pinned {
+            self.dismiss()
+          } else {
+            self.pinned = true
+            self.showTooltip()
+          }
+        }
+      } else {
+        // A long press opens it and pins it, and the click the press ends
+        // in is not sent: reading a button's tooltip doesn't press it.
+        _ = trigger.addEventListener(.touchstart) { [self] _ in
+          self.longPressed = false
+          self.touchTimer = setTimeout(500) {
+            self.touchTimer = nil
+            self.longPressed = true
+            self.pinned = true
+            self.showTooltip()
+          }
+        }
+
+        _ = trigger.addEventListener(.touchend) { [self] (event: Event) in
+          if let timer = self.touchTimer {
+            clearTimeout(timer)
+            self.touchTimer = nil
+          }
+          if self.longPressed {
+            // No click after it; and should a browser send one anyway, the
+            // click listener below drops it.
+            event.preventDefault()
+          } else if !self.pinned {
+            self.hideTooltip()
+          }
+        }
+
+        _ = trigger.addEventListener(.touchmove) { [self] _ in
+          if let timer = self.touchTimer {
+            clearTimeout(timer)
+            self.touchTimer = nil
+          }
+        }
+
+        _ = trigger.addEventListener(.click) { [self] (event: Event) in
+          if self.longPressed {
+            self.longPressed = false
+            event.preventDefault()
+          }
         }
       }
 
-      _ = trigger.addEventListener(.touchend) { [self] _ in
-        if let timer = self.touchTimer {
-          clearTimeout(timer)
-          self.touchTimer = nil
-        }
-        self.hideTooltip()
+      // A pinned one closes on a click or tap anywhere else. iOS sends no
+      // click to the document for a tap on something that isn't clickable,
+      // hence the touchstart too.
+      _ = document.addEventListener(.click) { [self] event in
+        self.dismissUnlessInside(event)
       }
-
-      _ = trigger.addEventListener(.touchmove) { [self] _ in
-        if let timer = self.touchTimer {
-          clearTimeout(timer)
-          self.touchTimer = nil
-        }
+      _ = document.addEventListener(.touchstart) { [self] event in
+        self.dismissUnlessInside(event)
       }
 
       // Keyboard: Escape to dismiss
       _ = document.addEventListener(.keydown) { [self] (event: Event) in
         let key = event.key
         if stringEquals(key, "Escape") && self.isVisible {
-          self.hideTooltip()
+          self.dismiss()
         }
       }
 
       // The host is fixed to the viewport, not to the page: once the trigger
       // moves under it, the bubble would point at nothing.
       _ = window.addEventListener(.scroll) { [self] _ in
-        if self.isVisible { self.hideTooltip() }
+        if self.isVisible { self.dismiss() }
       }
       _ = window.addEventListener(.resize) { [self] _ in
-        if self.isVisible { self.hideTooltip() }
+        if self.isVisible { self.dismiss() }
       }
+    }
+
+    /// Closes it, pinned or not.
+    private func dismiss() {
+      pinned = false
+      hideTooltip()
+    }
+
+    /// Closes a pinned one when `event` happened outside its trigger.
+    private func dismissUnlessInside(_ event: Event) {
+      guard pinned, let target = event.target else { return }
+      if !trigger.contains(target) { dismiss() }
     }
 
     private func showTooltip() {
