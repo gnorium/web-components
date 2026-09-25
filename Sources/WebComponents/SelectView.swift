@@ -359,6 +359,15 @@
       instance = SelectHydration()
     }
 
+    /// The selects a fragment brought in after the page was hydrated, and
+    /// only those: every select inside `root`, which must be new to the page.
+    public static func hydrate(in root: DOM.Element) {
+      for select in root.querySelectorAll(".select-view") {
+        fragments.append(SelectInstance(select: select))
+      }
+    }
+    private static nonisolated(unsafe) var fragments: [SelectInstance] = []
+
     private func hydrateAllSelects() {
       let allSelects = document.querySelectorAll(".select-view")
 

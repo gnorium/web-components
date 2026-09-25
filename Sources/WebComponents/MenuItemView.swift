@@ -694,6 +694,16 @@
       instance = MenuItemHydration()
     }
 
+    /// The items a fragment brought in after the page was hydrated, and
+    /// only those: every item inside `root`, which must be new to the page.
+    /// Before their menu's, which listens for what they dispatch.
+    public static func hydrate(in root: DOM.Element) {
+      for item in root.querySelectorAll(".menu-item-view") {
+        fragments.append(MenuItemInstance(menuItem: item))
+      }
+    }
+    private static nonisolated(unsafe) var fragments: [MenuItemInstance] = []
+
     private func hydrateAllMenuItems() {
       let allMenuItems = document.querySelectorAll(".menu-item-view")
 

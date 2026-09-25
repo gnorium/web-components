@@ -169,6 +169,10 @@ public enum OutlineMoves {
       /// that is not where it is drawn: an outline brought back mid-edit
       /// still reports its moves against the arrangement it started from.
       public let origin: Origin?
+      /// Whether the reader may move it. An item that may not keeps its
+      /// place: its handle is drawn disabled and nothing picks it up, though
+      /// a movable item may still be moved past it, into it or out of it.
+      public let movable: Bool
       /// The item, given the pieces the outline puts in it.
       public let content: @Sendable (Slots) -> [DOM.Node]
       public let children: [Node]
@@ -178,6 +182,7 @@ public enum OutlineMoves {
         label: String,
         rank: Int,
         origin: Origin? = nil,
+        movable: Bool = true,
         children: [Node] = [],
         @HTMLBuilder content: @escaping @Sendable (Slots) -> [DOM.Node]
       ) {
@@ -185,6 +190,7 @@ public enum OutlineMoves {
         self.label = label
         self.rank = rank
         self.origin = origin
+        self.movable = movable
         self.children = children
         self.content = content
       }
@@ -339,8 +345,9 @@ public enum OutlineMoves {
         }
         .type(.button)
         .class("outliner-handle")
-        .draggable(true)
-        .ariaLabel("Move \(node.label)")
+        .draggable(node.movable)
+        .disabled(!node.movable)
+        .ariaLabel(node.movable ? "Move \(node.label)" : "\(node.label) stays where it is")
         .ariaPressed(false)
         .ariaDescribedby("\(id)-instructions")
         .build()
@@ -519,7 +526,12 @@ public enum OutlineMoves {
           CSS.Property("-webkit-touch-callout", "none")
           transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
         }
-        descendant(".outliner-handle:hover") {
+        // An item that keeps its place: its grip greyed, and nothing to grab.
+        descendant(".outliner-handle:disabled") {
+          color(colorDisabled)
+          cursor(cursorBase)
+        }
+        descendant(".outliner-handle:not(:disabled):hover") {
           backgroundColor(backgroundColorInteractiveSubtleHover)
           color(colorBase)
         }
@@ -804,7 +816,8 @@ public enum OutlineMoves {
     // MARK: - Binding
 
     private func bind(_ item: DOM.Element) {
-      if let handle = handle(of: item) {
+      // A handle drawn disabled belongs to an item that keeps its place.
+      if let handle = handle(of: item), !handle.hasAttribute("disabled") {
         _ = handle.addEventListener(.keydown) { [self] event in self.key(event, on: item) }
         // The handle sits in the item's header, which may open and close its
         // body: a press on it picks the item up and does nothing else.
