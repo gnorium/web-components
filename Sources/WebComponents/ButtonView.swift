@@ -30,6 +30,8 @@ public struct ButtonView: HTMLContent {
   /// The id of the form this submits with, when it sits outside that form.
   var formID: String? = nil
   var popoverTargetID: String? = nil
+  var expanded: Bool? = nil
+  var controlsID: String? = nil
 
   /// Button type attribute
   public enum ButtonType: String, Sendable {
@@ -271,6 +273,22 @@ public struct ButtonView: HTMLContent {
   public func popoverTarget(_ id: String) -> Self {
     var copy = self
     copy.popoverTargetID = id
+    return copy
+  }
+
+  /// The standard `aria-expanded` attribute: whether the region this button
+  /// shows and hides is open.
+  public func ariaExpanded(_ value: Bool) -> Self {
+    var copy = self
+    copy.expanded = value
+    return copy
+  }
+
+  /// The standard `aria-controls` attribute: the element this button shows
+  /// and hides.
+  public func ariaControls(_ id: String) -> Self {
+    var copy = self
+    copy.controlsID = id
     return copy
   }
 
@@ -1951,6 +1969,14 @@ public struct ButtonView: HTMLContent {
 
       if let popoverTargetID {
         bBtn = bBtn.addingAttribute("popovertarget", popoverTargetID)
+      }
+
+      if let expanded {
+        bBtn = bBtn.ariaExpanded(expanded)
+      }
+
+      if let controlsID {
+        bBtn = bBtn.ariaControls(controlsID)
       }
 
       return bBtn
