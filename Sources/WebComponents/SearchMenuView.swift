@@ -18,7 +18,7 @@
     let resultTextKey: String
     let resultSubtextKey: String
     let resultUrlKey: String
-    let resultPosKey: String
+    let resultQualifierKey: String
     let resultHomographKey: String
     let resultColorKey: String
     let tabs: [SearchMenuTab]
@@ -33,7 +33,7 @@
       let resultTextKey: String
       let resultSubtextKey: String
       let resultUrlKey: String
-      let resultPosKey: String
+      let resultQualifierKey: String
       let resultHomographKey: String
       let resultColorKey: String
 
@@ -42,7 +42,7 @@
         searchEndpoint: String, searchField: String,
         resultUrlBase: String,
         resultTextKey: String, resultSubtextKey: String, resultUrlKey: String,
-        resultPosKey: String = "partsOfSpeech",
+        resultQualifierKey: String = "qualifier",
         resultHomographKey: String = "homograph",
         resultColorKey: String = "color"
       ) {
@@ -54,7 +54,7 @@
         self.resultTextKey = resultTextKey
         self.resultSubtextKey = resultSubtextKey
         self.resultUrlKey = resultUrlKey
-        self.resultPosKey = resultPosKey
+        self.resultQualifierKey = resultQualifierKey
         self.resultHomographKey = resultHomographKey
         self.resultColorKey = resultColorKey
       }
@@ -97,7 +97,7 @@
       resultTextKey: String = "title",
       resultSubtextKey: String = "subtitle",
       resultUrlKey: String = "url",
-      resultPosKey: String = "partsOfSpeech",
+      resultQualifierKey: String = "qualifier",
       resultHomographKey: String = "homograph",
       resultColorKey: String = "color",
       tabs: [SearchMenuTab] = [],
@@ -113,7 +113,7 @@
       self.resultTextKey = resultTextKey
       self.resultSubtextKey = resultSubtextKey
       self.resultUrlKey = resultUrlKey
-      self.resultPosKey = resultPosKey
+      self.resultQualifierKey = resultQualifierKey
       self.resultHomographKey = resultHomographKey
       self.resultColorKey = resultColorKey
       self.tabs = tabs
@@ -135,7 +135,7 @@
           + ",\"resultTextKey\":\"\(esc(tab.resultTextKey))\""
           + ",\"resultSubtextKey\":\"\(esc(tab.resultSubtextKey))\""
           + ",\"resultUrlKey\":\"\(esc(tab.resultUrlKey))\""
-          + ",\"resultPosKey\":\"\(esc(tab.resultPosKey))\""
+          + ",\"resultQualifierKey\":\"\(esc(tab.resultQualifierKey))\""
           + ",\"resultHomographKey\":\"\(esc(tab.resultHomographKey))\""
           + ",\"resultColorKey\":\"\(esc(tab.resultColorKey))\""          + "}"
         )
@@ -228,7 +228,7 @@
         .data("result-text-key", resultTextKey)
         .data("result-subtext-key", resultSubtextKey)
         .data("result-url-key", resultUrlKey)
-        .data("result-pos-key", resultPosKey)
+        .data("result-qualifier-key", resultQualifierKey)
         .data("result-homograph-key", resultHomographKey)
         .data("result-color-key", resultColorKey)
         .data("local-storage-key", localStorageKey)
@@ -480,7 +480,7 @@
     private var resultTextKey: String = "title"
     private var resultSubtextKey: String = "subtitle"
     private var resultUrlKey: String = "url"
-    private var resultPosKey: String = "partsOfSpeech"
+    private var resultQualifierKey: String = "qualifier"
     private var resultHomographKey: String = "homograph"
     private var resultColorKey: String = "color"
     private var localStorageKey: String = "search-tab"
@@ -598,7 +598,7 @@
           resultTextKey = extractJSONValue(rawTabConfigs, tabName, "resultTextKey") ?? "text"
           resultSubtextKey = extractJSONValue(rawTabConfigs, tabName, "resultSubtextKey") ?? "language"
           resultUrlKey = extractJSONValue(rawTabConfigs, tabName, "resultUrlKey") ?? "id"
-          resultPosKey = extractJSONValue(rawTabConfigs, tabName, "resultPosKey") ?? "partsOfSpeech"
+          resultQualifierKey = extractJSONValue(rawTabConfigs, tabName, "resultQualifierKey") ?? "qualifier"
           resultHomographKey = extractJSONValue(rawTabConfigs, tabName, "resultHomographKey") ?? "homograph"
           resultColorKey = extractJSONValue(rawTabConfigs, tabName, "resultColorKey") ?? "color"
 
@@ -609,7 +609,7 @@
           _ = container.dataset["resultTextKey"] = resultTextKey
           _ = container.dataset["resultSubtextKey"] = resultSubtextKey
           _ = container.dataset["resultUrlKey"] = resultUrlKey
-          _ = container.dataset["resultPosKey"] = resultPosKey
+          _ = container.dataset["resultQualifierKey"] = resultQualifierKey
           _ = container.dataset["resultHomographKey"] = resultHomographKey
           _ = container.dataset["resultColorKey"] = resultColorKey
 
@@ -654,7 +654,7 @@
       resultTextKey = container.dataset["resultTextKey"] ?? "title"
       resultSubtextKey = container.dataset["resultSubtextKey"] ?? "subtitle"
       resultUrlKey = container.dataset["resultUrlKey"] ?? "url"
-      resultPosKey = container.dataset["resultPosKey"] ?? "partsOfSpeech"
+      resultQualifierKey = container.dataset["resultQualifierKey"] ?? "qualifier"
       resultHomographKey = container.dataset["resultHomographKey"] ?? "homograph"
       resultColorKey = container.dataset["resultColorKey"] ?? "color"
 
@@ -1016,7 +1016,7 @@
         let textValue = extractValue(from: str, key: resultTextKey)
         let subtextValue = extractValue(from: str, key: resultSubtextKey)
         let urlSegment = extractValue(from: str, key: resultUrlKey)
-        let posValue = extractValue(from: str, key: resultPosKey)
+        let qualifierValue = extractValue(from: str, key: resultQualifierKey)
         
         let homographStr = extractValue(from: str, key: resultHomographKey)
         let homograph = parseInt(homographStr) ?? 1
@@ -1032,7 +1032,7 @@
               id: id,
               text: textValue,
               subtext: subtextValue,
-              pos: posValue,
+              pos: qualifierValue,
               urlSegment: urlSegment,
               homograph: homograph,
               color: color
