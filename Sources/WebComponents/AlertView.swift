@@ -12,7 +12,7 @@
     let alertColor: AlertColor
     let inline: Bool
     let icon: StatusIconView.Status?
-    let fadeIn: Bool
+    let animatesIn: Bool
     let allowUserDismiss: Bool
     let dismissButtonLabel: String
     let autoDismiss: AutoDismiss
@@ -46,7 +46,7 @@
       type: AlertColor,
       inline: Bool = false,
       icon: StatusIconView.Status? = nil,
-      fadeIn: Bool = false,
+      animatesIn: Bool = false,
       allowUserDismiss: Bool = false,
       dismissButtonLabel: String = "Close",
       autoDismiss: AutoDismiss = .disabled,
@@ -57,7 +57,7 @@
       self.alertColor = type
       self.inline = inline
       self.icon = icon
-      self.fadeIn = fadeIn
+      self.animatesIn = animatesIn
       self.allowUserDismiss = allowUserDismiss
       self.dismissButtonLabel = dismissButtonLabel
       self.autoDismiss = autoDismiss
@@ -70,7 +70,7 @@
       color: AlertColor = .gray,
       inline: Bool = false,
       icon: StatusIconView.Status? = nil,
-      fadeIn: Bool = false,
+      animatesIn: Bool = false,
       allowUserDismiss: Bool = false,
       dismissButtonLabel: String = "Close",
       autoDismiss: AutoDismiss = .disabled,
@@ -81,7 +81,7 @@
       self.alertColor = color
       self.inline = inline
       self.icon = icon
-      self.fadeIn = fadeIn
+      self.animatesIn = animatesIn
       self.allowUserDismiss = allowUserDismiss
       self.dismissButtonLabel = dismissButtonLabel
       self.autoDismiss = autoDismiss
@@ -140,64 +140,71 @@
       let alertClasses: String = {
         let base = "alert-view alert-\(alertColor.rawValue)"
         let inlinePart = inline ? " alert-inline" : ""
-        let fadePart = fadeIn ? " alert-fade-in" : ""
+        // Opens as an AlertAPI alert does, once hydrated (AlertAPI.open);
+        // until then it waits closed, but only where script runs.
+        let motionPart = animatesIn ? " alert-motion alert-motion-pending" : ""
         let classPart = stringIsEmpty(`class`) ? "" : " \(`class`)"
-        return "\(base)\(inlinePart)\(fadePart)\(classPart)"
+        return "\(base)\(inlinePart)\(motionPart)\(classPart)"
       }()
 
       var alert = div {
-        span {
-          StatusIconView(displayIcon)
-        }
-        .class("alert-icon")
-        .ariaHidden(true)
-        .data("color", alertColor.rawValue)
-        .style {
-          selector("&") {
-            display(.flex)
-            alignItems(.center)
-            justifyContent(.center)
-            minWidth(sizeIconMedium)
-            width(sizeIconMedium)
-            height(sizeIconMedium)
-            flexShrink(0)
-          }
-          selector("& svg") {
-            display(.block)
-            flexShrink(0)
-            width(sizeIconMedium)
-            height(sizeIconMedium)
-          }
-          // Every case of AlertColor, or the missing one silently falls back
-          // to the body colour — as blue did, in the only place it was used.
-          selector("&[data-color='gray']") { color(colorGray) }
-          selector("&[data-color='blue']") { color(colorBlue) }
-          selector("&[data-color='orange']") { color(colorOrange) }
-          selector("&[data-color='red']") { color(colorRed) }
-          selector("&[data-color='green']") { color(colorGreen) }
-        }
-
+        // The panel AlertAPI opens and closes. A static alert lays it out as
+        // if it weren't there (`display: contents`).
         div {
-          content
-        }
-        .class("alert-content")
-        .style {
-          selector("&") {
-            display(.flex)
-            flexDirection(.column)
-            flexGrow(1)
-            fontFamily(typographyFontSans)
-            fontSize(fontSizeMedium16)
-            fontWeight(fontWeightNormal)
-            lineHeight(lineHeightSmall22)
-            color(colorBase)
-            justifyContent(.center)
+          span {
+            StatusIconView(displayIcon)
+          }
+          .class("alert-icon")
+          .ariaHidden(true)
+          .data("color", alertColor.rawValue)
+          .style {
+            selector("&") {
+              display(.flex)
+              alignItems(.center)
+              justifyContent(.center)
+              minWidth(sizeIconMedium)
+              width(sizeIconMedium)
+              height(sizeIconMedium)
+              flexShrink(0)
+            }
+            selector("& svg") {
+              display(.block)
+              flexShrink(0)
+              width(sizeIconMedium)
+              height(sizeIconMedium)
+            }
+            // Every case of AlertColor, or the missing one silently falls back
+            // to the body colour — as blue did, in the only place it was used.
+            selector("&[data-color='gray']") { color(colorGray) }
+            selector("&[data-color='blue']") { color(colorBlue) }
+            selector("&[data-color='orange']") { color(colorOrange) }
+            selector("&[data-color='red']") { color(colorRed) }
+            selector("&[data-color='green']") { color(colorGreen) }
+          }
+
+          div {
+            content
+          }
+          .class("alert-content")
+          .style {
+            selector("&") {
+              display(.flex)
+              flexDirection(.column)
+              flexGrow(1)
+              fontFamily(typographyFontSans)
+              fontSize(fontSizeMedium16)
+              fontWeight(fontWeightNormal)
+              lineHeight(lineHeightSmall22)
+              color(colorBase)
+              justifyContent(.center)
+            }
+          }
+
+          if allowUserDismiss {
+            CloseButtonView(ariaLabel: dismissButtonLabel, class: "alert-dismiss")
           }
         }
-
-        if allowUserDismiss {
-          CloseButtonView(ariaLabel: dismissButtonLabel, class: "alert-dismiss")
-        }
+        .class("alert-motion-content")
       }
       .class(alertClasses)
       .ariaLive(ariaLive)
@@ -231,6 +238,43 @@
             borderRadius(borderRadiusBase)
           }
           selector("&.alert-inline") { padding(spacing8) }
+          // A moving alert's padding is its panel's, so the shell can close to
+          // nothing while the panel's spacing closes with it.
+          selector("&.alert-motion") { padding(0) }
+          selector("& .alert-motion-content") { display(.contents) }
+          selector("&.alert-motion .alert-motion-content") {
+            display(.flex)
+            alignItems(.center)
+            gap(spacing8)
+            width(perc(100))
+            minWidth(0)
+            boxSizing(.borderBox)
+            paddingBlock(spacing12)
+            paddingInline(spacing16)
+          }
+          selector("&.alert-motion.alert-inline .alert-motion-content") { padding(spacing8) }
+          // A server-rendered moving alert waits closed until it hydrates, so
+          // it never shows open and then snaps shut to open again. Only where
+          // script runs (the layout marks <html data-js>); should hydration
+          // never come, it shows anyway after 3s.
+          selector("[data-js] &.alert-motion-pending") {
+            height(0)
+            minHeight(0)
+            overflow(.hidden)
+            animation("alert-motion-unblock 0s linear 3s 1 forwards")
+          }
+          selector("[data-js] &.alert-motion-pending .alert-motion-content") {
+            opacity(0)
+            paddingBlock(0)
+            animation("alert-motion-unblock 0s linear 3s 1 forwards")
+          }
+          keyframes("alert-motion-unblock") {
+            to {
+              height(.auto)
+              overflow(.visible)
+              opacity(1)
+            }
+          }
           selector("&.alert-gray:not(.alert-inline)") {
             backgroundColor(backgroundColorGraySubtle)
             borderColor(borderColorGray)
@@ -511,8 +555,8 @@
         alertColorClass = "alert-green"
       }
       alertEl.className = inline
-        ? "alert-view \(alertColorClass) alert-inline alert-dynamic alert-fade-in"
-        : "alert-view \(alertColorClass) alert-dynamic alert-fade-in"
+        ? "alert-view \(alertColorClass) alert-inline alert-dynamic alert-motion"
+        : "alert-view \(alertColorClass) alert-dynamic alert-motion"
       alertEl.setAttribute(.ariaLive, ariaLive)
       if type == .red {
         alertEl.setAttribute(.role, .alert)
@@ -557,6 +601,13 @@
         let dismissBtn = document.createElement(.button)
         dismissBtn.className = "alert-dismiss"
         dismissBtn.innerHTML = CloseIconView().render()
+        // Sized inline as well: the opening measures the alert's height at
+        // once, before a just-requested alert-view.css may have arrived, and
+        // a button measured at its unstyled size makes the alert jump 2px
+        // taller when the motion ends.
+        dismissBtn.style.setProperty("width", "var(--min-size-interactive-touch)")
+        dismissBtn.style.setProperty("height", "var(--min-size-interactive-touch)")
+        dismissBtn.style.setProperty("flex-shrink", "0")
         let buttonType: HTML.Button.`Type` = .button
         dismissBtn.setAttribute(.type, buttonType)
         dismissBtn.setAttribute(.ariaLabel, "Close")
@@ -570,6 +621,22 @@
 
       alertEl.appendChild(motionContent)
       alertContainer.appendChild(alertEl)
+      open(alertEl)
+
+      // Auto-dismiss
+      if autoDismiss && type != .red {
+        _ = setTimeout(autoDismissTime) {
+          dismissAlert(alertEl, onDismiss: onDismiss, userInitiated: false)
+        }
+      }
+    }
+
+    /// The one motion every alert opens with: AlertAPI's own, and a
+    /// server-rendered one (`AlertView(animatesIn: true)`) when it hydrates.
+    /// The alert is in the page, its panel `.alert-motion-content`.
+    static func open(_ alertEl: DOM.Element) {
+      guard let motionContent = alertEl.querySelector(".alert-motion-content") else { return }
+      let inline = alertEl.classList.contains("alert-inline")
       let finishedPadding = inline ? "8px" : "12px"
       let finishedInlinePadding = inline ? "8px" : "16px"
       let finishedMinHeight = inline ? "0px" : "64px"
@@ -582,8 +649,12 @@
       alertEl.style.setProperty("padding", "0px")
       motionContent.style.setProperty("padding-inline", finishedInlinePadding)
       motionContent.style.setProperty("padding-block", finishedPadding)
+      // A server-rendered alert waits closed (`alert-motion-pending`) until
+      // now; measured open in the same task, it never paints open first.
+      alertEl.classList.remove("alert-motion-pending")
       let finishedHeight = alertEl.offsetHeight
       alertEl.setAttribute(data("motion-padding"), finishedPadding)
+      if window.matchMedia("(prefers-reduced-motion: reduce)") { return }
       alertEl.style.setProperty("height", "0px")
       alertEl.style.setProperty("min-height", "0")
       motionContent.style.setProperty("padding-block", "0px")
@@ -625,20 +696,30 @@
           }
         }
       }
-
-      // Auto-dismiss
-      if autoDismiss && type != .red {
-        _ = setTimeout(autoDismissTime) {
-          dismissAlert(alertEl, onDismiss: onDismiss, userInitiated: false)
-        }
-      }
     }
 
-    private static func dismissAlert(
+    /// The one motion every alert closes with, then its removal and a
+    /// `user_dismissed` or `auto_dismissed` event.
+    static func dismissAlert(
       _ element: DOM.Element, onDismiss: (@Sendable () -> Void)?, userInitiated: Bool
     ) {
-      guard let motionContent = element.querySelector(".alert-motion-content")
-      else { return }
+      let eventType: String
+      if userInitiated {
+        eventType = "user_dismissed"
+      } else {
+        eventType = "auto_dismissed"
+      }
+      guard let motionContent = element.querySelector(".alert-motion-content"),
+        !window.matchMedia("(prefers-reduced-motion: reduce)")
+      else {
+        element.remove()
+        onDismiss?()
+        element.dispatchEvent(CustomEvent(type: eventType, detail: ""))
+        return
+      }
+      // A static server alert's panel is `display: contents` and its padding
+      // the shell's; moving makes the panel the padded box, at the same size.
+      element.classList.add("alert-motion")
       let startHeight = element.offsetHeight
       let finishedPadding = element.getAttribute(data("motion-padding")) ?? "12px"
       motionContent.style.setProperty("opacity", "1")
@@ -660,15 +741,7 @@
         _ = setTimeout(motionDuration) {
           element.remove()
           onDismiss?()
-
-          let eventType: String
-          if userInitiated {
-            eventType = "user_dismissed"
-          } else {
-            eventType = "auto_dismissed"
-          }
-          let event = CustomEvent(type: eventType, detail: "")
-          element.dispatchEvent(event)
+          element.dispatchEvent(CustomEvent(type: eventType, detail: ""))
         }
       }
     }
@@ -710,6 +783,9 @@
 
       bindEvents()
       setupAutoDismiss()
+      if alert.classList.contains("alert-motion-pending") {
+        AlertAPI.open(alert)
+      }
     }
 
     private func bindEvents() {
@@ -744,21 +820,7 @@
         window.replaceURL("\(pathname)\(cleaned)")
       }
 
-      alertElement.classList.remove("alert-fade-in")
-      alertElement.classList.add("alert-fade-out")
-
-      _ = setTimeout(300) { [self] in
-        self.alertElement.remove()
-
-        let eventType: String
-        if userInitiated {
-          eventType = "user_dismissed"
-        } else {
-          eventType = "auto_dismissed"
-        }
-        let event = CustomEvent(type: eventType, detail: "")
-        self.alertElement.dispatchEvent(event)
-      }
+      AlertAPI.dismissAlert(alertElement, onDismiss: nil, userInitiated: userInitiated)
     }
   }
 
