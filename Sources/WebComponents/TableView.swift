@@ -1059,10 +1059,10 @@ public struct TableView: HTMLContent {
       }
       descendant(".table-scroll") {
         overflowX(.auto)
-        // Horizontal scrolling makes the browser create a vertical scroll
-        // context too. Reserve that gutter so it cannot paint over the last
-        // header label.
-        CSS.Property("scrollbar-gutter", "stable")
+        // No reserved scrollbar gutter: the header and the stripes span the
+        // box's whole inner width. The last column's 16px spacer (header and
+        // cells) keeps its label clear of an overlay scrollbar; a classic one
+        // takes its own width from the box when it appears.
         // The same curve as the box it sits in, so the bar's ends are clipped
         // by the corners instead of squaring them off.
         borderRadius(borderRadiusBase)
@@ -1284,6 +1284,11 @@ public struct TableView: HTMLContent {
         zIndex(zIndexSticky).important()
         backgroundColor(backgroundColorBase).important()
         backgroundColor(backgroundColorNeutralSubtle).important()
+      }
+      // The last column's resize handle is its right edge, the box's own:
+      // drawn, it would be a divider with nothing after it.
+      descendant(".table-column-header:nth-last-child(2) .table-resizer") {
+        display(.none)
       }
       descendant(".table-th-spacer") {
         width(px(16))
