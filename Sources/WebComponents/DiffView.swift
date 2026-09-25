@@ -315,22 +315,27 @@ public struct DiffView: HTMLContent {
         minWidth(0)
       }
       // Where a field's diff line has always been: under the field,
-      // indented to its text.
+      // indented to its text. Spaced by gaps alone: the label from its
+      // values here, the line from what stands above it by the column that
+      // holds it.
       selector("&[data-shape='line']") {
-        display(.block)
+        display(.flex)
+        flexWrap(.wrap)
+        alignItems(.baseline)
+        columnGap(spacing4)
         paddingInlineStart(spacing16)
-        marginBlockStart(spacing4)
         overflowWrap(.anywhere)
       }
-      selector("&[data-shape='line'] .diff-view-label") {
-        marginInlineEnd(spacing4)
+      // The values beside the label, old → new flowing as a line of text
+      // does, a long one wrapping under its own start.
+      selector("&[data-shape='line'] > .diff-view-content") {
+        flex(1, 1, px(0))
       }
       selector("&[data-shape='box']") {
         display(.flex)
         flexDirection(.column)
         alignItems(.stretch)
         gap(spacing4)
-        marginBlockStart(spacing4)
       }
       // A field's own frame, as tall as a reader's pane at most, then
       // scrolled.
@@ -380,10 +385,12 @@ public struct DiffView: HTMLContent {
       selector("& .diff-view-row[data-diff-line='inserted'] .diff-view-changed", "& .diff-view-new .diff-view-changed") {
         color(colorGreen)
       }
-      // From the old to the new, in the direction the line reads.
+      // From the old to the new, in the direction the line reads: the
+      // arrow's own box holds the space either side of it, so it wraps
+      // with the text it sits in.
       descendant(".diff-view-arrow") {
         display(.inlineBlock)
-        marginInline(spacing4)
+        paddingInline(spacing4)
       }
       descendant(".diff-view-arrow:dir(rtl)") {
         transform(scaleX(-1))
