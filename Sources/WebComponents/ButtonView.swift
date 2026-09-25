@@ -476,6 +476,21 @@ public struct ButtonView: HTMLContent {
           selector("&[data-weight='quiet'][data-color='purple'], &[data-weight='plain'][data-color='purple']") { color(`var`("--color-purple")).important() }
           selector("&[data-weight='quiet'][data-color='pink'], &[data-weight='plain'][data-color='pink']") { color(`var`("--color-pink")).important() }
           selector("&[data-weight='quiet'][data-color='brown'], &[data-weight='plain'][data-color='brown']") { color(`var`("--color-brown")).important() }
+          // A link can't be `disabled`; a disabled link-button is marked
+          // `aria-disabled` and looks as a disabled button does. It still
+          // follows its link, for a page that explains why it can't be used.
+          selector("&[aria-disabled='true']") {
+            color(colorDisabled).important()
+            cursor(cursorNotAllowed).important()
+          }
+          selector("&[data-weight='quiet'][aria-disabled='true'], &[data-weight='plain'][aria-disabled='true']") {
+            backgroundColor(backgroundColorBase).important()
+            borderColor(.transparent).important()
+          }
+          selector("&[data-weight='subtle'][aria-disabled='true'], &[data-weight='solid'][aria-disabled='true'], &[data-weight='static'][aria-disabled='true']") {
+            backgroundColor(backgroundColorDisabled).important()
+            borderColor(borderColorDisabled).important()
+          }
           selector("&[data-weight='quiet']:disabled, &[data-weight='plain']:disabled") {
             backgroundColor(backgroundColorBase).important()
             borderColor(.transparent).important()
@@ -1124,8 +1139,10 @@ public struct ButtonView: HTMLContent {
           }
         }
 
+      // `aria-disabled`, not a class: `.class` would replace the button's
+      // own classes, and a disabled link lost all its styles with them.
       if disabled {
-        aBtn = aBtn.ariaDisabled(true).class("disabled")
+        aBtn = aBtn.ariaDisabled(true)
       }
 
       if let ariaLbl = effectiveAriaLabel {
@@ -1950,6 +1967,10 @@ public struct ButtonView: HTMLContent {
           }
 
         }
+
+      if disabled {
+        bBtn = bBtn.ariaDisabled(true)
+      }
 
       if let ariaLbl = effectiveAriaLabel {
         bBtn = bBtn.ariaLabel(ariaLbl)

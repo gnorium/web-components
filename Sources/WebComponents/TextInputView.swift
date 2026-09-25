@@ -32,6 +32,9 @@ public struct TextInputView: HTMLContent {
   /// The virtual keyboard it asks for; `.none` for a field filled through a
   /// control of the page's own.
   let inputMode: HTML.InputMode?
+  /// The standard `autocomplete` token: what a password manager or the
+  /// browser may fill (`.currentPassword`, `.newPassword`, `.email`).
+  let autocomplete: HTML.Input.Autocomplete?
 
   public enum InputType: String, Sendable {
     case text
@@ -74,7 +77,8 @@ public struct TextInputView: HTMLContent {
     min: Int? = nil,
     max: Int? = nil,
     form: String? = nil,
-    inputMode: HTML.InputMode? = nil
+    inputMode: HTML.InputMode? = nil,
+    autocomplete: HTML.Input.Autocomplete? = nil
   ) {
     self.id = id
     self.name = name
@@ -97,6 +101,7 @@ public struct TextInputView: HTMLContent {
     self.max = max
     self.form = form
     self.inputMode = inputMode
+    self.autocomplete = autocomplete
   }
 
   public func build() -> DOM.Node {
@@ -128,6 +133,9 @@ public struct TextInputView: HTMLContent {
     }
     if let form {
       inputEl = inputEl.form(form)
+    }
+    if let autocomplete {
+      inputEl = inputEl.autocomplete(autocomplete)
     }
     if let inputMode {
       inputEl = inputEl.inputmode(inputMode)
