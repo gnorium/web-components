@@ -41,7 +41,7 @@
           opacity(0.8)
         }
 
-        media(minWidth(minWidthBreakpointTablet)) {
+        media(minWidth(minWidthBreakpointDesktop)) {
           display(.none).important()
         }
       }

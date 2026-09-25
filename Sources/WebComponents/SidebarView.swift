@@ -47,7 +47,7 @@
           // Desktop: stick to the viewport (ChatGPT-style). One scrollport on
           // `.sidebar-content` covers Mission Control → Sessions; nested lists
           // (e.g. sessions) expand fully inside it.
-          media(minWidth(minWidthBreakpointTablet)) {
+          media(minWidth(minWidthBreakpointDesktop)) {
             display(.block)
             position(.sticky)
             top(0)
@@ -69,7 +69,7 @@
         }
 
         descendant(".sidebar-content") {
-          media(minWidth(minWidthBreakpointTablet)) {
+          media(minWidth(minWidthBreakpointDesktop)) {
             position(.absolute)
             top(0)
             right(0)
@@ -90,7 +90,7 @@
         }
 
         selector("&.sidebar-collapsed") {
-          media(minWidth(minWidthBreakpointTablet)) {
+          media(minWidth(minWidthBreakpointDesktop)) {
             width(0).important()
             minWidth(0).important()
             overflow(.hidden).important()
@@ -108,7 +108,7 @@
         }
 
         descendant("li:first-child .sidebar-title") {
-          media(minWidth(minWidthBreakpointTablet)) {
+          media(minWidth(minWidthBreakpointDesktop)) {
             paddingBlockStart(0).important()
           }
         }

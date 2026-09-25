@@ -67,7 +67,9 @@
 
       _ = button.addEventListener(.click) { [self] (event: Event) in
         event.preventDefault()
-        if window.matchMedia("(min-width: 768px)") {
+        // `minWidthBreakpointDesktop`, the width SidebarView shows from.
+        // matchMedia takes a StaticString, so the token's value is spelled out.
+        if window.matchMedia("(min-width: 1025px)") {
           toggleDesktopSidebar()
         } else {
           toggleSlideMenu()
