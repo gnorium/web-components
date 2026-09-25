@@ -162,7 +162,7 @@
           fontWeight(fontWeightNormal)
         }
         descendant(".breadcrumb-separator") {
-          color(colorSubtle)
+          color(colorBase)
           userSelect(.none)
           display(.inlineFlex)
           alignItems(.center)
