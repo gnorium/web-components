@@ -206,6 +206,11 @@ public struct FieldDiffView: HTMLContent {
         selector("& > .field-diff-view-diff[data-visible='false']") {
           display(.none)
         }
+        // A checkbox's diff line starts under its label's text, not under
+        // the box: the box's width and the gap the checkbox sets after it.
+        selector("&:has(> .diff-field-input > .checkbox-view) > .field-diff-view-diff") {
+          paddingInlineStart(calc("\(minSizeInputBinary.value) + \(spacing8.value)"))
+        }
         descendant(".diff-field-input") {
           borderRadius(borderRadiusBase)
           transition(.border, transitionDurationMedium, .ease)
