@@ -397,8 +397,10 @@
         selector("& .tei-run[data-rend~='italic']", "& .tei-run[data-rend~='ital']") {
           fontStyle(.italic)
         }
+        // The source's own bold, transcribed: content, not the site's
+        // chrome, so it stays bold (the semibold rule is for our UI).
         selector("& .tei-run[data-rend~='bold']") {
-          fontWeight(fontWeightSemiBold)
+          fontWeight(fontWeightBold)
         }
         selector("& .tei-run[data-rend~='underline']", "& .tei-run[data-rend~='underlined']") {
           textDecoration(.underline)

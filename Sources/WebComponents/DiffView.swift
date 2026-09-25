@@ -459,7 +459,8 @@ public struct DiffView: HTMLContent {
         fontStyle(.italic)
       }
       descendant("[data-style~='italic']") { fontStyle(.italic) }
-      descendant("[data-style~='bold']") { fontWeight(fontWeightSemiBold) }
+      // A source's bold run, as transcribed: content, so it stays bold.
+      descendant("[data-style~='bold']") { fontWeight(fontWeightBold) }
       descendant("[data-style~='underline']") { textDecoration(.underline) }
       descendant("[data-style~='smallcaps']") { CSS.Property("font-variant-caps", "small-caps") }
       descendant("[data-style~='sub']") {
