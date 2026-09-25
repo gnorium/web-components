@@ -290,8 +290,10 @@ public struct InfoChipView: HTMLContent {
         height(sizeIconMedium)
         fontSize(fontSizeXLarge20)
       }
+      // Shrinks for the ellipsis, never grows: a chip wider than its content
+      // (stretched by its container) keeps its icon and label centred.
       descendant(".info-chip-text") {
-        flex(1)
+        flex("0 1 auto")
         minWidth(0)
         textOverflow(.ellipsis)
         overflow(.hidden)
