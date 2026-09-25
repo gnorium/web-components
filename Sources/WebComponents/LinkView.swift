@@ -119,7 +119,7 @@ public struct LinkView: HTMLContent {
         }
         selector("&.link-plain:hover") { color(colorBlue).important() }
         selector("&.link-plain:active") { color(colorBlue).important() }
-        selector("&.scroll-spy-view[data-active='true']") { fontWeight(fontWeightBold) }
+        selector("&.scroll-spy-view[data-active='true']") { fontWeight(fontWeightSemiBold) }
         if let linkHeight {
           selector("&.link-plain[data-height='\(linkHeight.value)']") { height(linkHeight) }
         }

@@ -56,7 +56,7 @@
       ariaLabel: String? = nil,
       size: ButtonView.ButtonSize = .medium,
       class: String = "",
-      labelFontWeight: CSS.FontWeight = fontWeightBold,
+      labelFontWeight: CSS.FontWeight = fontWeightSemiBold,
       indicateSelection: Bool = false
     ) {
       self.buttonLabel = buttonLabel

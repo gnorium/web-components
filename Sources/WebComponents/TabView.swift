@@ -75,7 +75,7 @@
           }
           selector("&.tab-active") {
             color(colorBlue)
-            fontWeight(fontWeightBold)
+            fontWeight(fontWeightSemiBold)
           }
           selector("&.tab-active:not(.tab-framed)") {
             borderBlockEnd(borderWidthThick, .solid, borderColorBlue)

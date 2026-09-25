@@ -321,7 +321,7 @@ public struct PopoverView: HTMLContent {
       descendant(".popover-title") {
         fontFamily(typographyFontSans)
         fontSize(fontSizeMedium16)
-        fontWeight(fontWeightBold)
+        fontWeight(fontWeightSemiBold)
         lineHeight(lineHeightSmall22)
         color(colorBase)
         margin(0)

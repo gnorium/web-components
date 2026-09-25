@@ -97,7 +97,7 @@ public struct ButtonView: HTMLContent {
     onClick: String? = nil,
     fullWidth: Bool = false,
     class: String = "",
-    labelFontWeight: CSS.FontWeight = fontWeightBold,
+    labelFontWeight: CSS.FontWeight = fontWeightSemiBold,
     labelFontFamily: CSS.FontFamily = typographyFontSans,
     contentJustifyContent: CSS.JustifyContent = .center,
     borderRadius: CSS.Length = borderRadiusPill,
@@ -138,7 +138,7 @@ public struct ButtonView: HTMLContent {
     onClick: String? = nil,
     fullWidth: Bool = false,
     class: String = "",
-    labelFontWeight: CSS.FontWeight = fontWeightBold,
+    labelFontWeight: CSS.FontWeight = fontWeightSemiBold,
     labelFontFamily: CSS.FontFamily = typographyFontSans,
     contentJustifyContent: CSS.JustifyContent = .center,
     borderRadius: CSS.Length = borderRadiusPill,
@@ -180,7 +180,7 @@ public struct ButtonView: HTMLContent {
     onClick: String? = nil,
     fullWidth: Bool = false,
     class: String = "",
-    labelFontWeight: CSS.FontWeight = fontWeightBold,
+    labelFontWeight: CSS.FontWeight = fontWeightSemiBold,
     labelFontFamily: CSS.FontFamily = typographyFontSans,
     contentJustifyContent: CSS.JustifyContent = .center,
     borderRadius: CSS.Length = borderRadiusPill,
@@ -221,7 +221,7 @@ public struct ButtonView: HTMLContent {
     onClick: String? = nil,
     fullWidth: Bool = false,
     class: String = "",
-    labelFontWeight: CSS.FontWeight = fontWeightBold,
+    labelFontWeight: CSS.FontWeight = fontWeightSemiBold,
     labelFontFamily: CSS.FontFamily = typographyFontSans,
     contentJustifyContent: CSS.JustifyContent = .center,
     borderRadius: CSS.Length = borderRadiusPill,
@@ -381,9 +381,6 @@ public struct ButtonView: HTMLContent {
             style()
           }
 
-          selector("&[data-font-weight='bold']") {
-            fontWeight(fontWeightBold)
-          }
           selector("&[data-font-weight='normal']") {
             fontWeight(fontWeightNormal)
           }
@@ -1225,9 +1222,6 @@ public struct ButtonView: HTMLContent {
             style()
           }
 
-          selector("&[data-font-weight='bold']") {
-            fontWeight(fontWeightBold)
-          }
           selector("&[data-font-weight='normal']") {
             fontWeight(fontWeightNormal)
           }
@@ -2005,10 +1999,8 @@ public struct ButtonView: HTMLContent {
   }
 
   private var fontWeightKey: String {
-    if stringEquals(labelFontWeight.value, fontWeightBold.value) { return "bold" }
     if stringEquals(labelFontWeight.value, fontWeightNormal.value) { return "normal" }
-    if stringEquals(labelFontWeight.value, fontWeightSemiBold.value) { return "semibold" }
-    return "bold"
+    return "semibold"
   }
 
   /// A stable CSS-safe identity lets any `CSS.Length` become a scoped,

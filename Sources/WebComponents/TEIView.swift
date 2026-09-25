@@ -398,7 +398,7 @@
           fontStyle(.italic)
         }
         selector("& .tei-run[data-rend~='bold']") {
-          fontWeight(fontWeightBold)
+          fontWeight(fontWeightSemiBold)
         }
         selector("& .tei-run[data-rend~='underline']", "& .tei-run[data-rend~='underlined']") {
           textDecoration(.underline)

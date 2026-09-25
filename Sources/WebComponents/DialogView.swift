@@ -243,7 +243,7 @@
         descendant(".dialog-header-title") {
           fontFamily(typographyFontSans)
           fontSize(fontSizeLarge18)
-          fontWeight(fontWeightBold)
+          fontWeight(fontWeightSemiBold)
           lineHeight(lineHeightSmall22)
           color(colorBase)
           margin(0)

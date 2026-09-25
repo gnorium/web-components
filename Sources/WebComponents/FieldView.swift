@@ -61,7 +61,7 @@
       disabled: Bool = false,
       status: ValidationStatus = .default,
       messages: ValidationMessages = ValidationMessages(),
-      labelFontWeight: CSS.FontWeight = fontWeightBold,
+      labelFontWeight: CSS.FontWeight = fontWeightSemiBold,
       labelFontSize: CSS.Length = fontSizeMedium16,
       tooltip: String? = nil,
       class: String = "",

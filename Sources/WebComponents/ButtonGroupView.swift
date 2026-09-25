@@ -44,7 +44,7 @@
         type: ButtonView.ButtonType = .button,
         class: String = "",
         fullWidth: Bool = false,
-        labelFontWeight: CSS.FontWeight = fontWeightBold,
+        labelFontWeight: CSS.FontWeight = fontWeightSemiBold,
         contentJustifyContent: CSS.JustifyContent = .center,
         form: String? = nil
       ) {

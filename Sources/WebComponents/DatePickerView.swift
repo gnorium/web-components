@@ -270,7 +270,7 @@ public struct DatePickerView: HTMLContent {
         flex(1)
         margin(0)
         fontSize(fontSizeMedium16)
-        fontWeight(fontWeightBold)
+        fontWeight(fontWeightSemiBold)
         lineHeight(lineHeightSmall22)
         textAlign(.center)
         color(colorBase)

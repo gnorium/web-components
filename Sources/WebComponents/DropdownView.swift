@@ -18,17 +18,21 @@ public struct DropdownView: HTMLContent {
     /// A line above the display, in the alt's small grey — what a search
     /// result puts first (a record's language). Stacked layout only.
     public let leadDisplay: String?
+    /// A line below the alt, in the same small grey — what a record puts
+    /// last (its path). Stacked layout only.
+    public let detailDisplay: String?
     /// Lowercase form of display, for mid-sentence use (e.g. tooltip text). Pre-computed server-side to avoid WASI string ops.
     public let displayLower: String?
 
     public init(
       value: String, display: String, altDisplay: String? = nil, leadDisplay: String? = nil,
-      displayLower: String? = nil
+      detailDisplay: String? = nil, displayLower: String? = nil
     ) {
       self.value = value
       self.display = display
       self.altDisplay = altDisplay
       self.leadDisplay = leadDisplay
+      self.detailDisplay = detailDisplay
       self.displayLower = displayLower
     }
   }
@@ -66,6 +70,11 @@ public struct DropdownView: HTMLContent {
   /// The id of the form its value submits with, when it sits outside that
   /// form.
   let form: String?
+  /// Where its search asks for options, when the server holds too many to
+  /// send: typing asks `searchURL?q=…` (debounced, a late answer to an
+  /// earlier query dropped) and shows the options of the dropdown the
+  /// answer holds in place of its own; an empty query shows its own again.
+  let searchURL: String?
 
   public init(
     id: String,
@@ -88,7 +97,8 @@ public struct DropdownView: HTMLContent {
     optionLayout: OptionLayout = .inline,
     buttonBorderRadius: CSS.Length = borderRadiusBase,
     submitFormOnChange: Bool = false,
-    form: String? = nil
+    form: String? = nil,
+    searchURL: String? = nil
   ) {
     self.id = id
     self.name = name
@@ -111,6 +121,7 @@ public struct DropdownView: HTMLContent {
     self.buttonBorderRadius = buttonBorderRadius
     self.submitFormOnChange = submitFormOnChange
     self.form = form
+    self.searchURL = searchURL
   }
 
   public func build() -> DOM.Node {
@@ -235,6 +246,11 @@ public struct DropdownView: HTMLContent {
                     .class("dropdown-option-alt-text")
                     .data("stacked", optionLayout == .stacked)
                 }
+                if optionLayout == .stacked, let detail = option.detailDisplay, !stringIsEmpty(detail) {
+                  span { detail }
+                    .class("dropdown-option-alt-text dropdown-option-detail-text")
+                    .data("stacked", true)
+                }
               }
               .class(isSelected ? "dropdown-option is-selected" : "dropdown-option")
               .data("dropdown-option", true)
@@ -261,6 +277,7 @@ public struct DropdownView: HTMLContent {
     .class(stringIsEmpty(`class`) ? "dropdown-view" : "dropdown-view \(`class`)")
     .data("submit-form-on-change", submitFormOnChange ? "true" : "false")
     .data("full-width", fullWidth ? "true" : "false")
+    .data("search-url", searchURL ?? "")
     .style {
       selector("&") {
         display(.flex)
@@ -511,7 +528,18 @@ public struct DropdownView: HTMLContent {
     private var hiddenInput: DOM.Element?
     private var chevronInstance: AnimatedUpDownChevronInstance?
     private var isOpen: Bool = false
+    /// The options the list shows now: its own, or a search's.
     private var allOptions: [DOM.Element] = []
+    /// Its own options, as the page drew them.
+    private var ownOptions: [DOM.Element] = []
+    /// A remote search's answer, shown in place of its own list.
+    private var resultsList: DOM.Element?
+    private var resultOptions: [DOM.Element] = []
+    private var searchURL: String = ""
+    private var searchTimer: Int32 = 0
+    /// Which query is the latest: an answer overtaken by a later one is
+    /// dropped.
+    private var searchSequence = 0
     private var placeholder: String = "Select an option"
 
     private var highlightIndex: Int = -1
@@ -546,6 +574,8 @@ public struct DropdownView: HTMLContent {
       if let optionsList {
         allOptions = Array(optionsList.querySelectorAll("[data-dropdown-option=\"true\"]"))
       }
+      ownOptions = allOptions
+      searchURL = container.closest(".dropdown-view")?.getAttribute(data("search-url")) ?? ""
 
       bindEvents()
     }
@@ -606,30 +636,11 @@ public struct DropdownView: HTMLContent {
         self.filterOptions()
       }
 
-      // Option click + hover handlers
-      for (i, option) in allOptions.enumerated() {
-        _ = option.addEventListener(.click) { [self] _ in
-          self.selectOption(option)
-        }
-        _ = option.addEventListener(.mousemove) { [self] _ in
-          if self.highlightIndex != i {
-            if self.highlightIndex >= 0, self.highlightIndex < self.allOptions.count {
-              self.allOptions[self.highlightIndex].setAttribute(data("highlighted"), false)
-            }
-            self.highlightIndex = i
-            option.setAttribute(data("highlighted"), true)
-          }
-        }
-      }
+      bindOptions(allOptions)
 
       // Clear hover highlight when mouse leaves the options list
       if let list = optionsList {
-        _ = list.addEventListener(.mouseleave) { [self] _ in
-          if self.highlightIndex >= 0, self.highlightIndex < self.allOptions.count {
-            self.allOptions[self.highlightIndex].setAttribute(data("highlighted"), false)
-          }
-          self.highlightIndex = -1
-        }
+        bindLeave(list)
       }
 
       // Click outside handler
@@ -660,6 +671,34 @@ public struct DropdownView: HTMLContent {
           event.preventDefault()
           self.selectHighlighted()
         }
+      }
+    }
+
+    /// Click and hover on each option; `i` is its place in the list that
+    /// shows it.
+    private func bindOptions(_ options: [DOM.Element]) {
+      for (i, option) in options.enumerated() {
+        _ = option.addEventListener(.click) { [self] _ in
+          self.selectOption(option)
+        }
+        _ = option.addEventListener(.mousemove) { [self] _ in
+          if self.highlightIndex != i {
+            if self.highlightIndex >= 0, self.highlightIndex < self.allOptions.count {
+              self.allOptions[self.highlightIndex].setAttribute(data("highlighted"), false)
+            }
+            self.highlightIndex = i
+            option.setAttribute(data("highlighted"), true)
+          }
+        }
+      }
+    }
+
+    private func bindLeave(_ list: DOM.Element) {
+      _ = list.addEventListener(.mouseleave) { [self] _ in
+        if self.highlightIndex >= 0, self.highlightIndex < self.allOptions.count {
+          self.allOptions[self.highlightIndex].setAttribute(data("highlighted"), false)
+        }
+        self.highlightIndex = -1
       }
     }
 
@@ -696,6 +735,10 @@ public struct DropdownView: HTMLContent {
       guard let searchInput else { return }
 
       let searchValue = (searchInput as? HTML.HTMLInputElement)?.value ?? ""
+      if !stringIsEmpty(searchURL) {
+        searchRemotely(stringTrim(searchValue))
+        return
+      }
 
       for option in allOptions {
         guard let displayValue = option.getAttribute(data("display")) else {
@@ -715,6 +758,74 @@ public struct DropdownView: HTMLContent {
         }
       }
       highlightIndex = -1
+    }
+
+    /// Asks the server for the options matching `query`, shortly: each key
+    /// typed restarts the wait, and only the latest query's answer is shown.
+    private func searchRemotely(_ query: String) {
+      if searchTimer != 0 {
+        clearTimeout(searchTimer)
+        searchTimer = 0
+      }
+      searchSequence += 1
+      highlightIndex = -1
+      if stringIsEmpty(query) {
+        showOwnOptions()
+        return
+      }
+      let asked = searchSequence
+      let url = stringJoin(
+        [searchURL, stringContains(searchURL, "?") ? "&q=" : "?q=", encodeURIComponent(query)], separator: "")
+      searchTimer = setTimeout(250) { [self] in
+        self.searchTimer = 0
+        // The answer is a dropdown: loaded aside, its options taken.
+        let answer = document.createElement(.div)
+        answer.loadFragment(url) { [self] ok in
+          guard ok, asked == self.searchSequence else { return }
+          self.showResults(from: answer)
+        }
+      }
+    }
+
+    private func showResults(from answer: DOM.Element) {
+      let results: DOM.Element
+      if let resultsList {
+        results = resultsList
+      } else {
+        results = document.createElement(.div)
+        _ = results.classList.add("dropdown-options-list")
+        results.setAttribute(data("dropdown-results"), true)
+        menu?.appendChild(results)
+        bindLeave(results)
+        resultsList = results
+      }
+      for old in resultOptions { results.removeChild(old) }
+      let value = (hiddenInput as? HTML.HTMLInputElement)?.value ?? ""
+      var options: [DOM.Element] = []
+      for option in answer.querySelectorAll("[data-dropdown-option=\"true\"]") {
+        let selected = !stringIsEmpty(value) && stringEquals(option.getAttribute(data("value")) ?? "", value)
+        if selected {
+          _ = option.classList.add("is-selected")
+        } else {
+          _ = option.classList.remove("is-selected")
+        }
+        option.setAttribute(data("selected"), selected)
+        option.setAttribute(data("hidden"), false)
+        results.appendChild(option)
+        options.append(option)
+      }
+      resultOptions = options
+      bindOptions(options)
+      optionsList?.setAttribute(.hidden, "")
+      results.removeAttribute(.hidden)
+      allOptions = options
+      highlightIndex = -1
+    }
+
+    private func showOwnOptions() {
+      resultsList?.setAttribute(.hidden, "")
+      optionsList?.removeAttribute(.hidden)
+      allOptions = ownOptions
     }
 
     private func selectOption(_ option: DOM.Element) {
@@ -748,7 +859,7 @@ public struct DropdownView: HTMLContent {
       selectedText?.scrollLeft = 0
 
       // Update selected state in menu
-      for opt in allOptions {
+      for opt in ownOptions + resultOptions {
         _ = opt.classList.remove("is-selected")
         opt.setAttribute(data("selected"), false)
       }
@@ -788,7 +899,7 @@ public struct DropdownView: HTMLContent {
         }
       }
       allOptions[highlightIndex].setAttribute(data("highlighted"), true)
-      if let list = optionsList {
+      if let list = allOptions[highlightIndex].parentElement {
         let optionTop = allOptions[highlightIndex].offsetTop - list.offsetTop
         let optionBottom = optionTop + allOptions[highlightIndex].offsetHeight
         let listScrollTop = list.scrollTop
@@ -813,7 +924,7 @@ public struct DropdownView: HTMLContent {
       selectedText?.setAttribute(data("selected"), false)
       selectedText?.scrollLeft = 0
 
-      for opt in allOptions {
+      for opt in ownOptions + resultOptions {
         _ = opt.classList.remove("is-selected")
         opt.setAttribute(data("selected"), false)
       }
@@ -848,6 +959,20 @@ public struct DropdownView: HTMLContent {
       guard document.querySelector(".dropdown-view") != nil else { return }
       instance = DropdownHydration()
     }
+
+    /// The dropdowns a fragment brought in after the page was hydrated, and
+    /// only those: every dropdown inside `root`, which must be new to the
+    /// page.
+    public static func hydrate(in root: DOM.Element) {
+      for container in root.querySelectorAll("[data-dropdown-container=\"true\"]") {
+        guard let trigger = container.querySelector("[data-dropdown-trigger=\"true\"]"),
+          let dropdownID = trigger.getAttribute("data-dropdown-id")
+        else { continue }
+        fragments.append(DropdownInstance(container: container, dropdownID: dropdownID))
+        container.setAttribute(data("dropdown-hydrated"), true)
+      }
+    }
+    private static nonisolated(unsafe) var fragments: [DropdownInstance] = []
 
     private func hydrateAllDropdowns() {
       let allContainers = document.querySelectorAll("[data-dropdown-container=\"true\"]")

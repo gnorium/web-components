@@ -81,7 +81,7 @@ public struct TableView: HTMLContent {
 
     /// A table's declared width is its preferred data width. A heading needs
     /// its own floor: `Suggested At` must be able to name the column it heads.
-    /// The 8px glyph allowance is deliberately generous for the 14px bold
+    /// The 8px glyph allowance is deliberately generous for the 14px semibold
     /// header type, and the 24px accounts for the cell's horizontal padding.
     var fittedHeaderWidth: Int? {
       guard let width, width.value.hasSuffix("px"),
@@ -988,7 +988,7 @@ public struct TableView: HTMLContent {
       descendant(".table-header-title") {
         fontFamily(typographyFontSans)
         fontSize(fontSizeLarge18)
-        fontWeight(fontWeightBold)
+        fontWeight(fontWeightSemiBold)
         color(colorBase)
         margin(0)
       }
@@ -1030,7 +1030,7 @@ public struct TableView: HTMLContent {
       descendant(".table-caption") {
         fontFamily(typographyFontSans)
         fontSize(fontSizeMedium16)
-        fontWeight(fontWeightBold)
+        fontWeight(fontWeightSemiBold)
         color(colorBase)
         textAlign(.start)
         padding(spacing12)
@@ -1141,14 +1141,14 @@ public struct TableView: HTMLContent {
       descendant(".table-tfoot") {
         backgroundColor(backgroundColorNeutralSubtle)
         borderBlockStart(borderWidthBase, .solid, borderColorBase)
-        fontWeight(fontWeightBold)
+        fontWeight(fontWeightSemiBold)
       }
       selector("& .table-thead th", "& .table-tbody th") {
         backgroundColor(.inherit)
         padding(spacing8, spacing12)
         fontFamily(typographyFontSans)
         fontSize(fontSizeSmall14)
-        fontWeight(fontWeightBold)
+        fontWeight(fontWeightSemiBold)
         lineHeight(lineHeightSmall22)
         color(colorEmphasized)
         height(px(44))

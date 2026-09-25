@@ -229,7 +229,7 @@
           padding(0, spacing16)
           fontFamily(typographyFontSans)
           fontSize(fontSizeMedium16)
-          fontWeight(fontWeightBold)
+          fontWeight(fontWeightSemiBold)
           lineHeight(lineHeightSmall22)
           color(colorBlue)
           backgroundColor(.transparent)

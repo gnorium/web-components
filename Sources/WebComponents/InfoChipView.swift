@@ -216,9 +216,6 @@ public struct InfoChipView: HTMLContent {
       selector("&[data-label-font-weight='\(fontWeightSemiBold.value)']") {
         fontWeight(fontWeightSemiBold)
       }
-      selector("&[data-label-font-weight='\(fontWeightBold.value)']") {
-        fontWeight(fontWeightBold)
-      }
       selector("&.info-chip-large") {
         height(size44)
         maxHeight(size44)

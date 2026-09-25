@@ -111,7 +111,7 @@ public struct DatePickerMonthView: HTMLContent {
       descendant(".date-picker-month-weekday") {
         blockSize(minSizeInteractivePointer)
         padding(0)
-        fontWeight(fontWeightBold)
+        fontWeight(fontWeightSemiBold)
         fontSize(fontSizeXSmall12)
         color(colorSubtle)
         textAlign(.center)
@@ -145,7 +145,7 @@ public struct DatePickerMonthView: HTMLContent {
       }
       descendant(".date-picker-month-day[data-today='true'] .date-picker-month-day-label") {
         color(colorBlue)
-        fontWeight(fontWeightBold)
+        fontWeight(fontWeightSemiBold)
         borderColor(borderColorBlue)
       }
       descendant(".date-picker-month-day:hover:not([aria-disabled='true']) .date-picker-month-day-label") {
@@ -154,7 +154,7 @@ public struct DatePickerMonthView: HTMLContent {
       descendant(".date-picker-month-day[aria-selected='true'] .date-picker-month-day-label") {
         backgroundColor(backgroundColorBlue).important()
         color(colorInvertedFixed).important()
-        fontWeight(fontWeightBold)
+        fontWeight(fontWeightSemiBold)
         borderColor(borderColorTransparent)
       }
       descendant(".date-picker-month-day[aria-disabled='true']") {

@@ -78,7 +78,7 @@
           border(borderWidthBase, .solid, borderColorBlue)
           borderRadius(borderRadiusBase)
           fontSize(fontSizeSmall14)
-          fontWeight(fontWeightBold)
+          fontWeight(fontWeightSemiBold)
           fontFamily(fontFamilyBase)
           cursor(cursorBaseHover)
           transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)

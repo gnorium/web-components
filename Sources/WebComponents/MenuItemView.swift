@@ -26,7 +26,7 @@
     let thumbnail: Thumbnail?
     let description: String?
     let searchQuery: String
-    let boldLabel: Bool
+    let semiboldLabel: Bool
     let hideDescriptionOverflow: Bool
     let itemColor: MenuItemColor
     let multiselect: Bool
@@ -95,7 +95,7 @@
       thumbnail: Thumbnail? = nil,
       description: String? = nil,
       searchQuery: String = "",
-      boldLabel: Bool = false,
+      semiboldLabel: Bool = false,
       hideDescriptionOverflow: Bool = false,
       action: MenuItemColor = .default,
       multiselect: Bool = false,
@@ -118,7 +118,7 @@
       self.thumbnail = thumbnail
       self.description = description
       self.searchQuery = searchQuery
-      self.boldLabel = boldLabel
+      self.semiboldLabel = semiboldLabel
       self.hideDescriptionOverflow = hideDescriptionOverflow
       self.itemColor = action
       self.multiselect = multiselect
@@ -396,7 +396,7 @@
             descendant(".menu-item-label") {
               fontFamily(typographyFontSans)
               fontSize(fontSizeMedium16)
-              fontWeight(boldLabel || hasSearchQuery ? fontWeightBold : fontWeightNormal)
+              fontWeight(semiboldLabel || hasSearchQuery ? fontWeightSemiBold : fontWeightNormal)
               lineHeight(lineHeightSmall22)
               color(colorBase)
               wordWrap(.breakWord)
@@ -576,7 +576,7 @@
             descendant(".menu-item-label") {
               fontFamily(typographyFontSans)
               fontSize(fontSizeMedium16)
-              fontWeight(boldLabel || hasSearchQuery ? fontWeightBold : fontWeightNormal)
+              fontWeight(semiboldLabel || hasSearchQuery ? fontWeightSemiBold : fontWeightNormal)
               lineHeight(lineHeightSmall22)
               color(colorBase)
               wordWrap(.breakWord)

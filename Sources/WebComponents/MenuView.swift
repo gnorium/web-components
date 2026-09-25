@@ -17,7 +17,7 @@
     let showPending: Bool
     let visibleItemLimit: Int?
     let showThumbnail: Bool
-    let boldLabel: Bool
+    let semiboldLabel: Bool
     let hideDescriptionOverflow: Bool
     let searchQuery: String
     let multiselect: Bool
@@ -58,7 +58,7 @@
       showPending: Bool = false,
       visibleItemLimit: Int? = nil,
       showThumbnail: Bool = false,
-      boldLabel: Bool = false,
+      semiboldLabel: Bool = false,
       hideDescriptionOverflow: Bool = false,
       searchQuery: String = "",
       multiselect: Bool = false,
@@ -75,7 +75,7 @@
       self.showPending = showPending
       self.visibleItemLimit = visibleItemLimit
       self.showThumbnail = showThumbnail
-      self.boldLabel = boldLabel
+      self.semiboldLabel = semiboldLabel
       self.hideDescriptionOverflow = hideDescriptionOverflow
       self.searchQuery = searchQuery
       self.multiselect = multiselect
@@ -114,7 +114,7 @@
           thumbnail: thumbnail,
           description: item.description,
           searchQuery: searchQuery,
-          boldLabel: boldLabel,
+          semiboldLabel: semiboldLabel,
           hideDescriptionOverflow: hideDescriptionOverflow,
           multiselect: multiselect,
           class: isFooter ? "menu-footer-item" : ""
@@ -246,7 +246,7 @@
         descendant(".menu-group-title") {
           fontFamily(typographyFontSans)
           fontSize(fontSizeSmall14)
-          fontWeight(fontWeightBold)
+          fontWeight(fontWeightSemiBold)
           lineHeight(lineHeightSmall22)
           color(colorSubtle)
           margin(0)

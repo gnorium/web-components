@@ -216,7 +216,7 @@
           cursor(.default)
           color(colorInvertedFixed)
           backgroundColor(colorBlue)
-          fontWeight(fontWeightBold)
+          fontWeight(fontWeightSemiBold)
         }
         selector("&.tabs-quiet [role='tab'][aria-selected='false']") { color(colorSubtle) }
         selector("&.tabs-solid [role='tab'][aria-selected='false']") { color(colorBlue) }
