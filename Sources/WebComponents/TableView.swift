@@ -1180,6 +1180,9 @@ public struct TableView: HTMLContent {
       }
       selector("& [data-align='center']") { textAlign(.center) }
       selector("& [data-align='end']", "& [data-align='number']") { textAlign(.end) }
+      // Every digit one width, so dates, times and counts line up down a
+      // column without padding the text: "2:48 PM" under "10:53 PM".
+      selector("& th", "& td") { fontVariantNumeric(.tabularNums) }
       selector("& .table-table-borders-vertical th", "& .table-table-borders-vertical td") {
         borderInlineStart(borderWidthBase, .solid, borderColorBase)
       }
