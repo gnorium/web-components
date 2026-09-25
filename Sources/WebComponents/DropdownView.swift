@@ -63,6 +63,9 @@ public struct DropdownView: HTMLContent {
   let optionLayout: OptionLayout
   let buttonBorderRadius: CSS.Length
   let submitFormOnChange: Bool
+  /// The id of the form its value submits with, when it sits outside that
+  /// form.
+  let form: String?
 
   public init(
     id: String,
@@ -84,7 +87,8 @@ public struct DropdownView: HTMLContent {
     contentJustifyContent: CSS.JustifyContent = .spaceBetween,
     optionLayout: OptionLayout = .inline,
     buttonBorderRadius: CSS.Length = borderRadiusBase,
-    submitFormOnChange: Bool = false
+    submitFormOnChange: Bool = false,
+    form: String? = nil
   ) {
     self.id = id
     self.name = name
@@ -106,6 +110,7 @@ public struct DropdownView: HTMLContent {
     self.optionLayout = optionLayout
     self.buttonBorderRadius = buttonBorderRadius
     self.submitFormOnChange = submitFormOnChange
+    self.form = form
   }
 
   public func build() -> DOM.Node {
@@ -131,13 +136,14 @@ public struct DropdownView: HTMLContent {
       // Dropdown container
       div {
         // Hidden input to store the selected value
-        input()
+        let hidden = input()
           .type(.hidden)
           .id(id)
           .name(name)
           .value(selectedValue ?? "")
           .required(required)
           .disabled(disabled)
+        if let form { hidden.form(form) } else { hidden }
 
         // Determine display text - use selected option's display or placeholder
         let displayText: String = {
