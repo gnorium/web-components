@@ -35,7 +35,6 @@
           button { "Resend Email" }
             .type(.button)
             .class("resend-verification-email")
-            .data("email", email)
 
           // Dismiss button
           button { "✕" }
@@ -143,14 +142,14 @@
 
     nonisolated private func handleResendEmail() {
       guard let button = resendButton else { return }
-      guard let email = button.getAttribute("data-email") else { return }
 
       // Disable button
       (button as? HTML.HTMLButtonElement)?.disabled = true
       button.textContent = "Sending..."
 
-      // Send request to resend verification email
-      window.fetch("/auth/resend-verification", method: "POST", body: "email=\(email)") {
+      // The server sends the link to the signed-in account's own address:
+      // the request names no address.
+      window.fetch("/auth/resend-verification", method: "POST", body: "") {
         [self] response in
         let jsonString = response.text()
 
