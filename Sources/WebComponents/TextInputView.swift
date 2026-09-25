@@ -29,6 +29,9 @@ public struct TextInputView: HTMLContent {
   let max: Int?
   /// The id of the form it submits with, when it sits outside that form.
   let form: String?
+  /// The virtual keyboard it asks for; `.none` for a field filled through a
+  /// control of the page's own.
+  let inputMode: HTML.InputMode?
 
   public enum InputType: String, Sendable {
     case text
@@ -70,7 +73,8 @@ public struct TextInputView: HTMLContent {
     class: String = "",
     min: Int? = nil,
     max: Int? = nil,
-    form: String? = nil
+    form: String? = nil,
+    inputMode: HTML.InputMode? = nil
   ) {
     self.id = id
     self.name = name
@@ -92,6 +96,7 @@ public struct TextInputView: HTMLContent {
     self.min = min
     self.max = max
     self.form = form
+    self.inputMode = inputMode
   }
 
   public func build() -> DOM.Node {
@@ -123,6 +128,9 @@ public struct TextInputView: HTMLContent {
     }
     if let form {
       inputEl = inputEl.form(form)
+    }
+    if let inputMode {
+      inputEl = inputEl.inputmode(inputMode)
     }
 
     var container = div {

@@ -21,7 +21,7 @@
     case select(
       name: String, label: String, options: [(value: String, label: String)],
       repeatable: Bool = false)
-    /// A day, as `yyyy-mm-dd`, picked with the browser's date input.
+    /// A day, as `yyyy-mm-dd`, picked with the date picker.
     case date(name: String, label: String)
 
     /// The parameter the field submits.
@@ -129,7 +129,10 @@
       // picked; the page links only the sheets touched while rendering, so
       // build one here, discarded, or the input arrives unstyled.
       if schema.contains(where: \.takesInput) {
-        _ = TextInputView(id: "filter-bar-preload", name: "", value: "", type: .date, fullWidth: true).build()
+        _ = TextInputView(id: "filter-bar-preload", name: "", value: "", fullWidth: true).build()
+      }
+      if schema.contains(where: { if case .date = $0 { return true } else { return false } }) {
+        _ = DatePickerView(id: "filter-bar-date-preload", name: "", fullWidth: true).build()
       }
       let rows = activeRows
       // Another row can always hold a repeatable field; otherwise one row
@@ -291,11 +294,10 @@
         )
 
       case .date(let name, _):
-        TextInputView(
+        DatePickerView(
           id: "filter-\(name)-\(rowIndex)",
           name: name,
           value: value,
-          type: .date,
           fullWidth: true,
           class: "filter-bar-value-input"
         )
@@ -340,6 +342,7 @@
     public static nonisolated(unsafe) var instance: FilterBarHydration?
     private let dropdownHydration = DropdownHydration()
     private let textInputHydration = TextInputHydration()
+    private let datePickerHydration = DatePickerHydration()
 
     public static func hydrateIfPresent() {
       guard document.querySelector(".filter-bar-view") != nil else { return }
@@ -352,7 +355,8 @@
         _ = FilterBarInstance(
           grid: grid,
           dropdownHydration: dropdownHydration,
-          textInputHydration: textInputHydration
+          textInputHydration: textInputHydration,
+          datePickerHydration: datePickerHydration
         )
       }
     }
@@ -374,12 +378,17 @@
     private let grid: DOM.Element
     private let dropdownHydration: DropdownHydration
     private let textInputHydration: TextInputHydration
+    private let datePickerHydration: DatePickerHydration
     private var schema: [SchemaEntry] = []
 
-    init(grid: DOM.Element, dropdownHydration: DropdownHydration, textInputHydration: TextInputHydration) {
+    init(
+      grid: DOM.Element, dropdownHydration: DropdownHydration, textInputHydration: TextInputHydration,
+      datePickerHydration: DatePickerHydration
+    ) {
       self.grid = grid
       self.dropdownHydration = dropdownHydration
       self.textInputHydration = textInputHydration
+      self.datePickerHydration = datePickerHydration
       parseSchema()
       wireRows()
       wireAddButton()
@@ -465,13 +474,22 @@
       let addOrRemoveBtn =
         row.querySelector(".filter-bar-add-btn") ?? row.querySelector(".filter-bar-remove-btn")
 
-      if entry.isText || entry.isDate {
+      if entry.isDate {
+        let picker = DatePickerFactory.createElement(
+          id: "filter-\(fieldName)-swap",
+          name: fieldName,
+          value: value,
+          fullWidth: true,
+          class: "filter-bar-value-input",
+          hydrator: datePickerHydration
+        )
+        row.insertBefore(picker, addOrRemoveBtn)
+      } else if entry.isText {
         let input = TextInputFactory.createElement(
           id: "filter-\(fieldName)-swap",
           name: fieldName,
           placeholder: placeholder,
           value: value,
-          type: entry.isDate ? .date : .text,
           fullWidth: true,
           class: "filter-bar-value-input",
           hydrator: textInputHydration
@@ -556,12 +574,20 @@
       row.appendChild(picker)
 
       // Col 2: value input
-      if field.isText || field.isDate {
+      if field.isDate {
+        let picker = DatePickerFactory.createElement(
+          id: "filter-\(field.name)-\(rowIndex)",
+          name: field.name,
+          fullWidth: true,
+          class: "filter-bar-value-input",
+          hydrator: datePickerHydration
+        )
+        row.appendChild(picker)
+      } else if field.isText {
         let input = TextInputFactory.createElement(
           id: "filter-\(field.name)-\(rowIndex)",
           name: field.name,
           placeholder: field.placeholder,
-          type: field.isDate ? .date : .text,
           fullWidth: true,
           class: "filter-bar-value-input",
           hydrator: textInputHydration
