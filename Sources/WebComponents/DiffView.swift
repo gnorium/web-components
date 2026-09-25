@@ -15,7 +15,7 @@ import WebTypes
 /// its new one, a text's or a page's old lines against its new ones.
 ///
 /// The thing edited shows its new value, clean, framed in orange. This says
-/// how it changed, under the label "Changes:", in the subtle text colour with
+/// how it changed, under the label "Diff:", in the subtle text colour with
 /// the characters that changed coloured — red where they were, green where
 /// they are — and nothing given a background. No mark is drawn on the text:
 /// real text is itself underlined and struck through, so a mark of that kind
@@ -23,8 +23,8 @@ import WebTypes
 ///
 /// Two shapes, by how much there is to show:
 ///
-/// - **A line** — `text`, `outline`, `choice` — sits where a field's changes
-///   line has always sat, under the field: "Changes: old → new". Each kind of
+/// - **A line** — `text`, `outline`, `choice` — sits where a field's diff
+///   line has always sat, under the field: "Diff: old → new". Each kind of
 ///   value is compared by its own unit, which the caller names: a text word
 ///   by word, then letter by letter inside a changed word; an outline number
 ///   level by level, by position; a choice — a dropdown's, a date part's, a
@@ -66,15 +66,15 @@ public struct DiffView: HTMLContent {
   }
 
   let mode: Mode
-  /// What stands before it: "Changes:" unless a page says otherwise. Empty
+  /// What stands before it: "Diff:" unless a page says otherwise. Empty
   /// draws none.
   let label: String
   let `class`: String
 
-  /// The one label every change is given, a line's and a box's alike.
-  public static let changes = "Changes:"
+  /// The one label every diff is given, a line's and a box's alike.
+  public static let defaultLabel = "Diff:"
 
-  public init(_ mode: Mode, label: String = DiffView.changes, class: String = "") {
+  public init(_ mode: Mode, label: String = DiffView.defaultLabel, class: String = "") {
     self.mode = mode
     self.label = label
     self.`class` = `class`
@@ -109,7 +109,7 @@ public struct DiffView: HTMLContent {
     ) -> DOM.Node {
       div {
         if hunks.isEmpty {
-          p { "No changes." }
+          p { "No diff." }
             .class("diff-view-note")
         }
         for (index, hunk) in hunks.enumerated() {
@@ -314,7 +314,7 @@ public struct DiffView: HTMLContent {
         color(colorSubtle)
         minWidth(0)
       }
-      // Where a field's changes line has always been: under the field,
+      // Where a field's diff line has always been: under the field,
       // indented to its text.
       selector("&[data-shape='line']") {
         display(.block)

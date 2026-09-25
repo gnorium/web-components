@@ -11,7 +11,7 @@
   /// The form's hydration finds the wrapper by `data-field-diff-view`, compares
   /// the field with `data-original-value` on input and change, marks the
   /// control that carries the border with `data-diff-state` — `unchanged`,
-  /// `added`, `removed`, `changed` — and draws its changes, a `DiffView`, into
+  /// `added`, `removed`, `changed` — and draws its diff, a `DiffView`, into
   /// the slot under it, shown with `data-visible`. The form that holds the
   /// fields draws those states through `stateCSS()`, so fields outside a
   /// wrapper — a repeatable list's rows, a date's parts — are drawn the same
@@ -38,7 +38,7 @@
     /// How a field says what an edit did to it, for every form that edits and
     /// every page that shows an edit: green added, red removed, orange changed
     /// — the control's own border, and a ring of the same colour — and its
-    /// changes under it shown only once there are some.
+    /// diff under it shown only once there is one.
     ///
     /// The live diff marks the control with `data-diff-state`; a diff the
     /// server draws wraps it in `.diff-wrap-added`, `-removed` or `-changed`.
@@ -88,7 +88,7 @@
         .class("diff-field-input")
 
         div {}
-          .class("field-diff-view-changes")
+          .class("field-diff-view-diff")
           .data("diff-annotation", "true")
           .data("visible", false)
       }

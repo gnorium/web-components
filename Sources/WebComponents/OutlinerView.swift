@@ -157,7 +157,7 @@ public enum OutlineMoves {
   /// parent changed, or one outside the longest run of its siblings that kept
   /// their order — so a move marks the item moved, not every neighbour it
   /// renumbered. Every item whose number changed — moved, or only renumbered
-  /// by a move near it — says so as a changed field says it: "Changes: 1.3 →
+  /// by a move near it — says so as a changed field says it: "Diff: 1.3 →
   /// 1.1". The root dispatches `outliner-change` with the JSON after every
   /// move.
   public struct OutlinerView: HTMLContent {
@@ -191,13 +191,13 @@ public enum OutlineMoves {
     }
 
     /// What the outline puts in an item, for the item to place: every piece
-    /// must be placed, the handle and the number's changes before the list.
+    /// must be placed, the handle and the number's diff before the list.
     public struct Slots: Sendable {
       /// The grip that picks the item up, for the start of its header.
       public let handle: DOM.Node
-      /// "Changes: 2.1 → 1.1", shown once the item's number has changed, for
+      /// "Diff: 2.1 → 1.1", shown once the item's number has changed, for
       /// under its title.
-      public let changes: DOM.Node
+      public let diff: DOM.Node
       /// The items under this one, for inside its body.
       public let children: DOM.Node
     }
@@ -347,15 +347,15 @@ public enum OutlineMoves {
         // How its number changed, as a changed field says it — shown whenever
         // its number is no longer what it was, and written again by the
         // client as moves change it.
-        let changes = div { DiffView(.outline(old: origin.number, new: number)) }
-          .class("outliner-changes")
+        let diff = div { DiffView(.outline(old: origin.number, new: number)) }
+          .class("outliner-diff")
           .data("visible", !stringEquals(origin.number, number))
           .build()
         return li {
           div {
             node.content(
               Slots(
-                handle: handle, changes: changes,
+                handle: handle, diff: diff,
                 children: list(node.children, parent: node.id, prefix: number).build()))
           }
           .class("outliner-row")
@@ -602,7 +602,7 @@ public enum OutlineMoves {
           pointerEvents(.none)
           whiteSpace(.nowrap)
         }
-        descendant(".outliner-changes[data-visible='false']") {
+        descendant(".outliner-diff[data-visible='false']") {
           display(.none)
         }
         // At the foot of the screen, clear of a phone's home indicator, and
@@ -1331,12 +1331,12 @@ public enum OutlineMoves {
         let moved = moves[offset]
         item.setAttribute(data("outliner-moved"), moved ? "true" : "false")
         paint(item)
-        // The item's own number and its changes: the first inside it.
+        // The item's own number and its diff: the first inside it.
         let original = item.dataset["outliner-original-number"] ?? ""
         let renumbered = !stringEquals(numbers[offset], original)
-        if let changes = item.querySelector(".outliner-changes") {
-          changes.setAttribute(data("visible"), renumbered ? "true" : "false")
-          if renumbered { changes.setInnerHTML(DiffView(.outline(old: original, new: numbers[offset])).render()) }
+        if let diff = item.querySelector(".outliner-diff") {
+          diff.setAttribute(data("visible"), renumbered ? "true" : "false")
+          if renumbered { diff.setInnerHTML(DiffView(.outline(old: original, new: numbers[offset])).render()) }
         }
         if !stringIsEmpty(numberSelector), let slot = item.querySelector(numberSelector) {
           slot.textContent = numbers[offset]
