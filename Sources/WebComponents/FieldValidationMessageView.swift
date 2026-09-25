@@ -161,12 +161,9 @@ public struct ConstraintMessages: Sendable {
         { event in
           guard let form = event.target, let _ = form.getAttribute("novalidate") else { return }
           guard let firstInvalid = FieldValidationHydration.check(form: form) else { return }
-          // Cancelled before focus moves: focusing fires focusout/focusin
-          // callbacks of their own, and the bridge must still be holding
-          // this submit when it is cancelled.
+          firstInvalid.focus()
           event.preventDefault()
           event.stopPropagation()
-          firstInvalid.focus()
         },
         capture: true)
 
