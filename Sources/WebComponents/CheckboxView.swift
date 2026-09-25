@@ -26,6 +26,9 @@ public struct CheckboxView: HTMLContent {
   let inline: Bool
   let hideLabel: Bool
   let status: ValidationStatus
+  let required: Bool
+  /// What the form's own validation says when a required box is unticked.
+  let messages: ConstraintMessages
   let labelContent: [DOM.Node]
   let descriptionContent: [DOM.Node]
   let afterLabelContent: [DOM.Node]
@@ -49,6 +52,8 @@ public struct CheckboxView: HTMLContent {
     inline: Bool = false,
     hideLabel: Bool = false,
     status: ValidationStatus = .default,
+    required: Bool = false,
+    messages: ConstraintMessages = ConstraintMessages(),
     class: String = "",
     labelFontWeight: CSS.FontWeight = fontWeightNormal,
     labelFontSize: CSS.Length = fontSizeSmall14,
@@ -66,6 +71,8 @@ public struct CheckboxView: HTMLContent {
     self.inline = inline
     self.hideLabel = hideLabel
     self.status = status
+    self.required = required
+    self.messages = messages
     self.`class` = `class`
     self.labelFontWeight = labelFontWeight
     self.labelFontSize = labelFontSize
@@ -85,6 +92,8 @@ public struct CheckboxView: HTMLContent {
   inline: Bool = false,
   hideLabel: Bool = false,
   status: ValidationStatus = .default,
+  required: Bool = false,
+  messages: ConstraintMessages = ConstraintMessages(),
   class: String = "",
   labelFontWeight: CSS.FontWeight = fontWeightNormal,
   labelFontSize: CSS.Length = fontSizeSmall14,
@@ -103,6 +112,8 @@ public struct CheckboxView: HTMLContent {
       inline: inline,
       hideLabel: hideLabel,
       status: status,
+      required: required,
+      messages: messages,
       class: `class`,
       labelFontWeight: labelFontWeight,
       labelFontSize: labelFontSize,
@@ -117,18 +128,24 @@ public struct CheckboxView: HTMLContent {
     let hasAfterLabel = !afterLabelContent.isEmpty
     let descriptionID = hasDescription ? "\(id)-description" : nil
 
+    var checkboxInput = input()
+      .type(.checkbox)
+      .id(id)
+      .name(name)
+      .value(value)
+      .form(form)
+      .checked(checked)
+      .disabled(disabled)
+      .required(required)
+      .ariaDescribedby(descriptionID)
+      .class("checkbox-input")
+    for (name, message) in messages.dataAttributes {
+      checkboxInput = checkboxInput.data(name, message)
+    }
+
     return div {
       span {
-        input()
-          .type(.checkbox)
-          .id(id)
-          .name(name)
-          .value(value)
-          .form(form)
-          .checked(checked)
-          .disabled(disabled)
-          .ariaDescribedby(descriptionID)
-          .class("checkbox-input")
+        checkboxInput
           .style {
             selector("&") {
               position(.absolute)

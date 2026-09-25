@@ -35,6 +35,17 @@ public struct TextInputView: HTMLContent {
   /// The standard `autocomplete` token: what a password manager or the
   /// browser may fill (`.currentPassword`, `.newPassword`, `.email`).
   let autocomplete: HTML.Input.Autocomplete?
+  /// `minlength` and `maxlength`, counted as the browser counts them.
+  let minLength: Int?
+  let maxLength: Int?
+  /// A regular expression the whole value must match.
+  let pattern: String?
+  /// The id of the control this one repeats (a confirmation): the form's
+  /// own validation says `messages.mismatch` when the two differ.
+  let matches: String?
+  /// What the form's own validation says for each failed constraint
+  /// (`FieldValidationHydration`, on a form with `novalidate`).
+  let messages: ConstraintMessages
 
   public enum InputType: String, Sendable {
     case text
@@ -78,7 +89,12 @@ public struct TextInputView: HTMLContent {
     max: Int? = nil,
     form: String? = nil,
     inputMode: HTML.InputMode? = nil,
-    autocomplete: HTML.Input.Autocomplete? = nil
+    autocomplete: HTML.Input.Autocomplete? = nil,
+    minLength: Int? = nil,
+    maxLength: Int? = nil,
+    pattern: String? = nil,
+    matches: String? = nil,
+    messages: ConstraintMessages = ConstraintMessages()
   ) {
     self.id = id
     self.name = name
@@ -102,6 +118,11 @@ public struct TextInputView: HTMLContent {
     self.form = form
     self.inputMode = inputMode
     self.autocomplete = autocomplete
+    self.minLength = minLength
+    self.maxLength = maxLength
+    self.pattern = pattern
+    self.matches = matches
+    self.messages = messages
   }
 
   public func build() -> DOM.Node {
@@ -139,6 +160,21 @@ public struct TextInputView: HTMLContent {
     }
     if let inputMode {
       inputEl = inputEl.inputmode(inputMode)
+    }
+    if let minLength {
+      inputEl = inputEl.minlength(minLength)
+    }
+    if let maxLength {
+      inputEl = inputEl.maxlength(maxLength)
+    }
+    if let pattern {
+      inputEl = inputEl.pattern(pattern)
+    }
+    if let matches {
+      inputEl = inputEl.data("matches", matches)
+    }
+    for (name, message) in messages.dataAttributes {
+      inputEl = inputEl.data(name, message)
     }
 
     var container = div {
