@@ -168,7 +168,6 @@ public struct TooltipView: HTMLContent {
         alignItems(.center)
         verticalAlign(.middle)
         cursor(.help)
-        marginInlineStart(spacing4)
       }
       // Portal host: on hydration the bubble moves into one of these at the
       // end of <body>, a fixed point set from the trigger's rect. Inside the

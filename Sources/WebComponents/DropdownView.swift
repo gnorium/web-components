@@ -142,6 +142,7 @@ public struct DropdownView: HTMLContent {
           }
         }
         .for(id)
+        .class("dropdown-label")
       }
 
       // Dropdown container
@@ -399,6 +400,12 @@ public struct DropdownView: HTMLContent {
       }
       // Semi-bold, matching the field labels beside it. Bold made a dropdown
       // read as a heavier field than the text inputs it sits among.
+      // The label and its tooltip in a row, 4px apart, as every field's.
+      descendant(".dropdown-label") {
+        display(.flex)
+        alignItems(.center)
+        gap(spacing4)
+      }
       descendant(".dropdown-label-text") {
         fontFamily(typographyFontSans)
         fontSize(fontSizeSmall14)

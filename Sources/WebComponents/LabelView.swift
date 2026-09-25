@@ -22,6 +22,7 @@ public struct LabelView: HTMLContent {
   let `class`: String
   let labelFontWeight: CSS.FontWeight
   let labelFontSize: CSS.Length
+  let tooltip: String?
 
   public init(
     icon: String? = nil,
@@ -34,6 +35,7 @@ public struct LabelView: HTMLContent {
     disabled: Bool = false,
     labelFontWeight: CSS.FontWeight = fontWeightSemiBold,
     labelFontSize: CSS.Length = fontSizeMedium16,
+    tooltip: String? = nil,
     class: String = "",
     @HTMLBuilder label: () -> [DOM.Node],
     @HTMLBuilder description: () -> [DOM.Node] = { [] }
@@ -48,6 +50,7 @@ public struct LabelView: HTMLContent {
     self.disabled = disabled
     self.labelFontWeight = labelFontWeight
     self.labelFontSize = labelFontSize
+    self.tooltip = tooltip
     self.`class` = `class`
     self.labelContent = label()
     self.descriptionContent = description()
@@ -75,6 +78,11 @@ public struct LabelView: HTMLContent {
             span { " \(optionalFlag)" }
               .class("label-optional-flag")
           }
+
+          // After "(optional)", as every other field draws it.
+          if let tooltip {
+            TooltipView(tooltip: tooltip) { IconView { InfoIconView() } }
+          }
         }
         .class("label-text")
 
@@ -100,6 +108,10 @@ public struct LabelView: HTMLContent {
               span { " \(optionalFlag)" }
                 .class("label-optional-flag")
             }
+
+            if let tooltip {
+              TooltipView(tooltip: tooltip) { IconView { InfoIconView() } }
+            }
           }
           .for(forID)
           .class("label-text")
@@ -116,6 +128,10 @@ public struct LabelView: HTMLContent {
             if optional {
               span { " \(optionalFlag)" }
                 .class("label-optional-flag")
+            }
+
+            if let tooltip {
+              TooltipView(tooltip: tooltip) { IconView { InfoIconView() } }
             }
           }
           .class("label-text")

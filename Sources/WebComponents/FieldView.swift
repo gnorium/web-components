@@ -108,17 +108,10 @@
             descriptionID: descriptionID,
             disabled: disabled,
             labelFontWeight: labelFontWeight,
-            labelFontSize: labelFontSize
+            labelFontSize: labelFontSize,
+            tooltip: tooltip
           ) {
             labelContent
-
-            if let tooltipText = tooltip {
-              TooltipView(tooltip: tooltipText) {
-                IconView {
-                  InfoIconView()
-                }
-              }
-            }
           } description: {
             if hasDescription {
               descriptionContent
@@ -184,17 +177,10 @@
             descriptionID: descriptionID,
             disabled: disabled,
             labelFontWeight: labelFontWeight,
-            labelFontSize: labelFontSize
+            labelFontSize: labelFontSize,
+            tooltip: tooltip
           ) {
             labelContent
-
-            if let tooltipText = tooltip {
-              TooltipView(tooltip: tooltipText) {
-                IconView {
-                  InfoIconView()
-                }
-              }
-            }
           } description: {
             if hasDescription {
               descriptionContent
