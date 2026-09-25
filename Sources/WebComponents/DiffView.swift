@@ -23,13 +23,14 @@ import WebTypes
 ///
 /// Two shapes, by how much there is to show:
 ///
-/// - **A line** — `text`, `outline`, `choice` — sits where a field's diff
+/// - **A line** — `text`, `outline`, `choice`, `check` — sits where a field's diff
 ///   line has always sat, under the field: "Diff: old → new". Each kind of
 ///   value is compared by its own unit, which the caller names: a text word
 ///   by word, then letter by letter inside a changed word; an outline number
-///   level by level, by position; a choice — a dropdown's, a date part's, a
-///   checkbox's — whole. A value put where there was none is the new one
-///   alone, green; one cleared is the old one alone, red.
+///   level by level, by position; a choice — a dropdown's, a date part's —
+///   whole; a checkbox's as one tick, green ticked, red unticked. A value
+///   put where there was none is the new one alone, green; one cleared is
+///   the old one alone, red.
 /// - **A box** — `passage`, `code`, `rendered` — holds the changed lines with a
 ///   little context, marked by their gutter as a unified diff marks them — "−"
 ///   for a line taken out, "+" for one put in — in a field's own frame,
@@ -48,9 +49,13 @@ public struct DiffView: HTMLContent {
     /// level by level, by position: a level is kept or changed whole.
     case outline(old: String, new: String)
     /// A choice's old value against its new one, whole: a dropdown's, a
-    /// date's, a checkbox's — a character diff of two option names says
-    /// nothing their names do not.
+    /// date's — a character diff of two option names says nothing their
+    /// names do not.
     case choice(old: String, new: String)
+    /// A checkbox's change: one tick, green where the box was ticked, red
+    /// where it was unticked. "Checked → Not checked" says in four words
+    /// what the colour of one mark says.
+    case check(ticked: Bool)
     /// A multi-line text's old value against its new one, line by line.
     case passage(old: String, new: String)
     #if SERVER
@@ -202,6 +207,22 @@ public struct DiffView: HTMLContent {
             .class("diff-view-new")
             .dir("auto")
         }
+      }
+      .class("diff-view-content")
+      .build()
+    case .check(let ticked):
+      isLine = true
+      modeName = "check"
+      body = span {
+        span {
+          span { "✓" }
+            .class("diff-view-changed")
+            .ariaHidden(true)
+          span { ticked ? "Ticked" : "Unticked" }
+            .class("diff-view-visually-hidden")
+        }
+        .class(ticked ? "diff-view-new" : "diff-view-old")
+        .title(ticked ? "Ticked" : "Unticked")
       }
       .class("diff-view-content")
       .build()
@@ -372,6 +393,15 @@ public struct DiffView: HTMLContent {
       descendant(".diff-view-gap") {
         paddingInlineStart(calc(ch(1) + spacing8))
         userSelect(.none)
+      }
+      // What the tick says, for a reader who does not see its colour.
+      descendant(".diff-view-visually-hidden") {
+        position(.absolute)
+        width(px(1))
+        height(px(1))
+        overflow(.hidden)
+        clip(rect(px(0), px(0), px(0), px(0)))
+        whiteSpace(.nowrap)
       }
       descendant(".diff-view-note") {
         fontStyle(.italic)

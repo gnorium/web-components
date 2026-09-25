@@ -37,6 +37,9 @@ public struct FieldDiffView: HTMLContent {
     case choice
     /// A multi-line text, line by line.
     case passage
+    /// A checkbox, its values "true" and "false": one tick, green ticked
+    /// (added), red unticked (removed).
+    case check
   }
 
   enum Source {
@@ -148,17 +151,25 @@ public struct FieldDiffView: HTMLContent {
       state = nil
     case .saved(let value, let display, let comparison):
       guard let old = originalValue, !stringEquals(old, value) else { return content }
-      state = stringIsEmpty(old) ? "added" : (stringIsEmpty(value) ? "removed" : "changed")
+      let emptied = stringIsEmpty(old) ? "added" : (stringIsEmpty(value) ? "removed" : "changed")
       switch comparison {
+      case .check:
+        // A box ticked is a value added; one unticked, a value removed.
+        let ticked = stringEquals(value, "true")
+        diff = DiffView(.check(ticked: ticked))
+        state = ticked ? "added" : "removed"
       case .text:
         diff = DiffView(.text(old: old, new: value))
+        state = emptied
       case .passage:
         diff = DiffView(.passage(old: old, new: value))
+        state = emptied
       case .choice:
         diff = DiffView(
           .choice(
             old: stringIsEmpty(old) ? "" : originalDisplay ?? old,
             new: stringIsEmpty(value) ? "" : display ?? value))
+        state = emptied
       }
     }
 
