@@ -294,7 +294,7 @@ public struct TableView: HTMLContent {
     paginate: Bool = false,
     paginationPosition: PaginationPosition = .bottom,
     paginationSizeDefault: Int = 10,
-    paginationControlSize: PaginationView.Size = .mini,
+    paginationControlSize: PaginationView.Size = .normal,
     totalItems: Int? = nil,
     totalPages: Int? = nil,
     currentPage: Int? = nil,
@@ -635,6 +635,7 @@ public struct TableView: HTMLContent {
                   }
                   .class("table-empty-row")
                 } else {
+                  let stripes = visibleStripes()
                   for (rowIndex, row) in data.enumerated() {
                     let rowID = row.id ?? intToString(rowIndex)
                     let isSelected = selectedRows.contains(where: {
@@ -783,7 +784,7 @@ public struct TableView: HTMLContent {
                           isGroupChild: isGroupChild,
                           hasUrl: hasUrl,
                           isLast: rowIndex == data.count - 1,
-                          isEven: rowIndex % 2 == 1,
+                          isEven: stripes[rowIndex],
                           isInitiallyCollapsed: isGroupChild || stringContains(row.customClass, "table-row-collapsed"),
                           customClass: row.customClass
                         )
@@ -1011,8 +1012,19 @@ public struct TableView: HTMLContent {
         // to be taken back or the auto pair recentres it mid-row.
         marginInlineStart(.auto)
         marginInlineEnd(0)
-        media(maxWidth(maxWidthBreakpointMobile)) {
-          marginInlineStart(0)
+      }
+      // On a narrow phone the row would wrap unevenly: two lines instead,
+      // the count over the pager, both centred. Wider, one row fits.
+      media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
+        descendant(".table-pagination") {
+          flexDirection(.column).important()
+          justifyContent(.center).important()
+        }
+        descendant(".pagination-info") {
+          textAlign(.center).important()
+        }
+        descendant(".table-pagination-controls") {
+          marginInline(.auto).important()
         }
       }
       descendant(".table-caption") {
@@ -1341,6 +1353,25 @@ public struct TableView: HTMLContent {
     .style(prefix: false) {
       selector("body[data-table-resizing='true']") { cursor(.colResize) }
     }
+  }
+
+  /// Each row's stripe, counted over the rows that render open, as the
+  /// client counts them: a row a collapsed group hides takes no turn, so the
+  /// stripes are right before the client runs.
+  private func visibleStripes() -> [Bool] {
+    var stripes: [Bool] = []
+    var visibleIndex = 0
+    for row in data {
+      // `if let`, not `!= nil`: an optional String compared with nil pulls
+      // in Unicode normalisation on the client.
+      var isGroupChild = false
+      if let _ = row.groupID { isGroupChild = !row.isGroupHeader }
+      stripes.append(visibleIndex % 2 == 1)
+      if !(isGroupChild || stringContains(row.customClass, "table-row-collapsed")) {
+        visibleIndex += 1
+      }
+    }
+    return stripes
   }
 
   private func buildRowClass(
