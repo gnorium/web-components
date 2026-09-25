@@ -179,10 +179,12 @@ public struct CheckboxView: HTMLContent {
                 pseudoElement(.before) { backgroundColor(backgroundColorDisabledSubtle).important() }
               }
             }
-            pseudoClass(.focus) {
+            // A crisp ring for the keyboard only, as a text field has: no glow,
+            // and nothing left behind on a box that was clicked.
+            pseudoClass(.focusVisible) {
               nextSibling(".checkbox-icon") {
                 borderColor(borderColorInputBinaryFocus).important()
-                boxShadow(px(0), px(0), px(8), boxShadowColorBlueFocus).important()
+                boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
               }
             }
             pseudoClass(.enabled, .hover) {

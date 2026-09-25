@@ -217,7 +217,7 @@
           transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
           pseudoClass(.focusWithin) {
             borderColor(borderColorBlueFocus).important()
-            boxShadow(px(0), px(0), px(8), boxShadowColorBlueFocus).important()
+            boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
           }
         }
         descendant(".chip-input-items") {
@@ -229,7 +229,7 @@
           transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
           pseudoClass(.focusWithin) {
             borderColor(borderColorBlueFocus).important()
-            boxShadow(px(0), px(0), px(8), boxShadowColorBlueFocus).important()
+            boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
           }
         }
       }
