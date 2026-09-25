@@ -25,6 +25,7 @@ public struct TooltipView: HTMLContent {
   let placement: Placement
   let font: Font
   let opensOnClick: Bool
+  let bubbleWidth: Width
   let children: [DOM.Node]
   let `class`: String
 
@@ -94,15 +95,25 @@ public struct TooltipView: HTMLContent {
     }
   }
 
+  /// How wide the bubble may grow. A sentence reads best at the standard
+  /// 256px; a list of lines ("By … on … at …") reads best a line each, as
+  /// wide as the screen allows.
+  public enum Width: String, Sendable {
+    case standard
+    case wide
+  }
+
   public init(
     tooltip: String,
     placement: Placement = .bottom,
     font: Font = .sans,
     opensOnClick: Bool = false,
+    width: Width = .standard,
     class: String = "",
     @HTMLBuilder content: () -> [DOM.Node]
   ) {
     self.bubble = [DOM.Text(tooltip)]
+    self.bubbleWidth = width
     self.placement = placement
     self.font = font
     self.opensOnClick = opensOnClick
@@ -114,11 +125,13 @@ public struct TooltipView: HTMLContent {
     placement: Placement = .bottom,
     font: Font = .sans,
     opensOnClick: Bool = false,
+    width: Width = .standard,
     class: String = "",
     @HTMLBuilder bubble: () -> [DOM.Node],
     @HTMLBuilder content: () -> [DOM.Node]
   ) {
     self.bubble = bubble()
+    self.bubbleWidth = width
     self.placement = placement
     self.font = font
     self.opensOnClick = opensOnClick
@@ -141,6 +154,7 @@ public struct TooltipView: HTMLContent {
       }
       .class("tooltip-content")
       .data("font", font.rawValue)
+      .data("width", bubbleWidth.rawValue)
     }
     .class(stringIsEmpty(`class`) ? "tooltip-view tooltip-trigger" : "tooltip-view tooltip-trigger \(`class`)")
     .data("tooltip", "true")
@@ -201,6 +215,10 @@ public struct TooltipView: HTMLContent {
       selector("& .tooltip-content time") {
         color(colorInverted).important()
         fontSize(fontSizeSmall14).important()
+      }
+      selector("& .tooltip-content[data-width='wide']") {
+        maxWidth(calc("100vw - \(spacing16.value)"))
+        overflowWrap(.anywhere)
       }
       selector("& .tooltip-content[data-font='mono']") {
         fontFamily(typographyFontMono)
