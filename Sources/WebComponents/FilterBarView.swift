@@ -77,6 +77,7 @@
   ///
   /// Layout (CSS grid, display:contents on rows):
   ///   Col 1: field picker  Col 2: value  Col 3: +/–  Col 4: Apply (row 1) or placeholder
+  /// On a phone it stacks into one column, Apply last.
   public struct FilterBarView: HTMLContent {
     let action: String
     let schema: [FilterField]
@@ -140,13 +141,27 @@
         .style {
           selector("&") {
             display(.grid)
-            gridTemplateColumns(px(160), fr(1), px(44), .auto)
+            gridTemplateColumns("160px minmax(0, 1fr) 44px auto")
             gap(spacing8)
             alignItems(.center)
             width(perc(100))
           }
           descendant(".filter-bar-row") { display(.contents) }
           descendant(".filter-bar-row[data-first='false'] .filter-bar-remove-btn") { gridColumn("3 / span 2") }
+          // On a phone the bar stacks: each part on its own line at full
+          // width — field, value, the + or − — and Apply last, under every
+          // filter.
+          media(maxWidth(maxWidthBreakpointMobile)) {
+            selector("&") {
+              gridTemplateColumns("minmax(0, 1fr)").important()
+            }
+            descendant(".filter-bar-row[data-first='false'] .filter-bar-remove-btn") {
+              gridColumn("auto").important()
+            }
+            descendant(".filter-bar-apply") {
+              order(1).important()
+            }
+          }
         }
       }
       .action(action)
