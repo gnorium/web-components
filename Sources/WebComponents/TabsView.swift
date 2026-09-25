@@ -17,7 +17,7 @@
     let fullWidth: Bool
     let localStorageKey: String?
     /// Which query parameter carries this tab set's selection.
-    /// Two tab sets can share a page — Mission Control has one per hall —
+    /// Two tab sets can share a page — Mission Control has one per room —
     /// and they cannot both be "tab".
     let queryParam: String
 
@@ -314,7 +314,7 @@
       guard !stringIsEmpty(lsKey) else { return }
 
       // Not a hardcoded "tab": Mission Control carries two tab sets, one per
-      // hall, and each names its own parameter.
+      // room, and each names its own parameter.
       var param = tabsElement.getAttribute(data("query-param")) ?? ""
       if stringIsEmpty(param) { param = "tab" }
 

@@ -352,8 +352,8 @@ public struct TableView: HTMLContent {
 
     let computedCurrentPage = currentPage ?? 1
     // A grouped table pages by what a reader counts — the parent rows. Counting
-    // every row made one specimen with 413 runs read as "1–25 of 414", and the
-    // first page was mostly that specimen's own children.
+    // every row made one antiphon with 413 runs read as "1–25 of 414", and the
+    // first page was mostly that antiphon's own children.
     let topLevelCount = data.filter { $0.groupID == nil || $0.isGroupHeader }.count
     let computedTotalItems = totalItems ?? topLevelCount
     let computedTotalPages =
@@ -1363,7 +1363,7 @@ public struct TableView: HTMLContent {
     // A row that renders collapsed is also taken out of the layout. The class
     // above only fades and lifts it — it keeps its 44px — so a group rendered
     // shut still pushed the table open by a row per child. With 413 runs under
-    // one specimen that was a thousand pixels of blank table. Expanding removes
+    // one antiphon that was a thousand pixels of blank table. Expanding removes
     // this class first, then animates.
     if isInitiallyCollapsed { classes.append("table-row-collapsed table-row-hidden") }
     if !stringIsEmpty(customClass) { classes.append(customClass) }

@@ -189,7 +189,7 @@ public struct InfoChipView: HTMLContent {
         height(size44)
         maxHeight(size44)
         minHeight(size44)
-        // Match evidence/specimen header mark: 44×44 optical block, pill ends.
+        // Match the evidence/hallmark header mark: 44×44 optical block, pill ends.
         padding(0, spacing12)
         gap(spacing8)
         fontSize(fontSizeXLarge20)
