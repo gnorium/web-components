@@ -5,16 +5,16 @@
   import HTMLBuilder
   import WebTypes
 
-  /// Source text, edited where it is read.
+  /// Raw text, edited where it is read.
   ///
-  /// A `SourceView` of the text, coloured as every source block on the site
+  /// A `CodeView` of the text, coloured as every code block on the site
   /// is, with a textarea laid exactly over it. The textarea's own glyphs are
   /// transparent, so the colours underneath show through, while its caret and
   /// selection stay on top; as the text changes the client copies it into the
   /// block and colours it again. The two share one font, one line height and
   /// no padding, so each character of the one sits on its twin in the other,
-  /// and neither wraps: the container scrolls, as a source block's does.
-  public struct SourceEditorView: HTMLContent {
+  /// and neither wraps: the container scrolls, as a code block's does.
+  public struct CodeEditorView: HTMLContent {
     let id: String
     let name: String
     let value: String
@@ -31,7 +31,7 @@
 
     public func build() -> DOM.Node {
       div {
-        SourceView(value, language: language, showLineNumbers: false)
+        CodeView(value, language: language, showLineNumbers: false)
         textarea(value)
           .id(id)
           .name(name)
@@ -40,9 +40,9 @@
           .addingAttribute("autocapitalize", "off")
           .autocomplete("off")
           .ariaLabel(ariaLabel)
-          .class("source-editor-input")
+          .class("code-editor-input")
       }
-      .class("source-editor-view")
+      .class("code-editor-view")
       .style {
         selector("&") {
           display(.grid)
@@ -50,10 +50,10 @@
         }
         // One cell, both layers in it: the block sizes the cell to the text,
         // and the textarea stretches over exactly that.
-        selector("& > .source-view", "& > .source-editor-input") {
+        selector("& > .code-view", "& > .code-editor-input") {
           gridArea("1 / 1")
         }
-        descendant(".source-editor-input") {
+        descendant(".code-editor-input") {
           fontFamily(typographyFontMono)
           fontSize(fontSizeXSmall12)
           lineHeight(lineHeightXSmall20)
@@ -69,7 +69,7 @@
           caretColor(colorBase)
           minWidth(0)
         }
-        descendant(".source-editor-input::selection") {
+        descendant(".code-editor-input::selection") {
           backgroundColor(backgroundColorBlueSubtle)
           color(.transparent)
         }
@@ -89,14 +89,14 @@
   /// Keeps each editor's coloured block in step with its textarea: the text
   /// copied across at once, so the block keeps the size the textarea needs,
   /// and coloured again a moment after typing stops.
-  public enum SourceEditorHydration {
+  public enum CodeEditorHydration {
     /// The editors under `root` that nothing is keeping in step yet.
     public static func hydrate(in root: DOM.Element) {
-      for view in root.querySelectorAll(".source-editor-view") {
-        if view.hasAttribute("data-source-editor-hydrated") { continue }
-        view.setAttribute(data("source-editor-hydrated"), "true")
-        guard let input = view.querySelector(".source-editor-input") as? HTML.HTMLTextAreaElement,
-          let code = view.querySelector(".source-view-code")
+      for view in root.querySelectorAll(".code-editor-view") {
+        if view.hasAttribute("data-code-editor-hydrated") { continue }
+        view.setAttribute(data("code-editor-hydrated"), "true")
+        guard let input = view.querySelector(".code-editor-input") as? HTML.HTMLTextAreaElement,
+          let code = view.querySelector(".code-view-code")
         else { continue }
         let pending = Pending()
         _ = input.addEventListener(.input) { _ in

@@ -5,30 +5,30 @@
   import HTMLBuilder
   import WebTypes
 
-  /// Source text, shown as source: monospaced, on the page's own ground, and
+  /// Raw text, shown as code: monospaced, on the page's own ground, and
   /// coloured by the site's syntax tokens rather than by a highlight.js theme.
   ///
   /// The colouring itself happens on the client, and only for a block someone
-  /// can actually see — see `SourceHydration`. A document of a few hundred
+  /// can actually see — see `CodeHydration`. A document of a few hundred
   /// thousand characters is not worth colouring until it is open.
-  public struct SourceView: HTMLContent {
-    let source: String
+  public struct CodeView: HTMLContent {
+    let text: String
     let language: String
     /// Whether the block is numbered. A file is; a fragment lifted out of one
     /// is not, because its line 1 is not the document's.
     let showLineNumbers: Bool
 
-    public init(_ source: String, language: String = "xml", showLineNumbers: Bool = true) {
-      self.source = source
+    public init(_ text: String, language: String = "xml", showLineNumbers: Bool = true) {
+      self.text = text
       self.language = language
       self.showLineNumbers = showLineNumbers
     }
 
-    /// "1\n2\n3…" — as many as the source has lines.
-    static func lineNumbers(of source: String) -> String {
+    /// "1\n2\n3…" — as many as the text has lines.
+    static func lineNumbers(of text: String) -> String {
       var out = ""
       var line = 1
-      let count = source.split(separator: "\n", omittingEmptySubsequences: false).count
+      let count = text.split(separator: "\n", omittingEmptySubsequences: false).count
       while line <= count {
         out += line == 1 ? "1" : "\n\(line)"
         line += 1
@@ -44,15 +44,15 @@
         // lines do not wrap — they scroll, as they do in an editor — and the
         // gutter stays put while they do.
         if showLineNumbers {
-          span { Self.lineNumbers(of: source) }
-            .class("source-view-gutter")
+          span { Self.lineNumbers(of: text) }
+            .class("code-view-gutter")
             .ariaHidden(true)
         }
 
-        code { source }
-          .class("source-view-code language-\(language)")
+        code { text }
+          .class("code-view-code language-\(language)")
       }
-      .class("source-view")
+      .class("code-view")
       .style {
         selector("&") {
           display(.flex)
@@ -72,7 +72,7 @@
           margin(0)
           padding(0)
         }
-        descendant(".source-view-gutter") {
+        descendant(".code-view-gutter") {
           position(.sticky)
           insetInlineStart(px(0))
           flexGrow(0)
@@ -84,7 +84,7 @@
           paddingInlineEnd(spacing8)
           borderInlineEnd(borderWidthBase, .solid, borderColorSubtle)
         }
-        descendant(".source-view-code") {
+        descendant(".code-view-code") {
           flexGrow(0)
           flexShrink(0)
           fontFamily(typographyFontMono)
@@ -117,7 +117,7 @@
   import WebAPIs
   import WebTypes
 
-  /// Colours the source blocks someone can see, when they can see them.
+  /// Colours the code blocks someone can see, when they can see them.
   ///
   /// A page may hold a thousand blocks — one per page of a transcription —
   /// behind switches, accordions and a viewer's pager. Colouring them all at
@@ -125,17 +125,17 @@
   /// for, so nothing happens until a block has a box on screen: at load, after
   /// any click that may have opened one, and whenever an object viewer turns to
   /// another canvas. A block already coloured is left alone.
-  public final class SourceHydration: @unchecked Sendable {
-    public static nonisolated(unsafe) var instance: SourceHydration?
+  public final class CodeHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: CodeHydration?
 
     public static func hydrateIfPresent() {
-      guard document.querySelector(".source-view") != nil else { return }
+      guard document.querySelector(".code-view") != nil else { return }
       hydrate(in: document.body)
     }
 
     public init() {}
 
-    /// The source blocks under `root`, which may be a fragment swapped in
+    /// The code blocks under `root`, which may be a fragment swapped in
     /// after the page's own pass. The page-wide click is listened to once, by
     /// whichever pass comes first; each viewer under `root` is listened to by
     /// this one, because a viewer that arrives later is a new element.
@@ -144,7 +144,7 @@
         _ = document.addEventListener(.click) { _ in
           _ = window.requestAnimationFrame { Self.highlightVisible() }
         }
-        instance = SourceHydration()
+        instance = CodeHydration()
       }
       for viewer in root.querySelectorAll(".artifact-view") {
         _ = viewer.addEventListener("artifact-canvas-change") { _ in
@@ -155,7 +155,7 @@
     }
 
     public static func highlightVisible() {
-      for block in document.querySelectorAll(".source-view-code") {
+      for block in document.querySelectorAll(".code-view-code") {
         // highlight.js writes data-highlighted="yes" itself, which overwrote the
         // "true" this used to look for — so every block was highlighted again on
         // every click, and highlight.js warned each time that it had been handed

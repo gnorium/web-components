@@ -22,7 +22,7 @@
   /// directions.
   public struct TEIView: HTMLContent {
     let teiXml: String
-    /// Whether each page's source can be edited. The source is edited as it
+    /// Whether each page's code can be edited. The code is edited as it
     /// is, not as the Raw view prettifies it: prettifying drops the spaces
     /// between tags, and a correction must not quietly make others. The
     /// reading stays a reading — nothing in it can be typed into.
@@ -76,7 +76,7 @@
     /// A page's reading as the lines a diff compares: each line's runs with
     /// their setting, a formula whole, a figure by its caption and region, a
     /// page turn inside the image as a line of its own. White space that only
-    /// lays the source out — a line end and its indent — reads as the one
+    /// lays the code out — a line end and its indent — reads as the one
     /// space a reading shows; spaces the transcription set are kept.
     public static func renderedLines(of lines: [TEILine]) -> [DiffEngine.RenderedLine] {
       func style(_ rend: String) -> [String] {
@@ -285,26 +285,26 @@
             div {
               if editable {
                 // A form of its own, so the page can be sent to be read back
-                // as it is being edited — its semblance and its source.
+                // as it is being edited — its semblance and its code.
                 form {
                   input()
                     .type(.hidden)
                     .name("semblance")
                     .value(Self.serviceID(ofFacsimile: page.facsimileURL))
-                  SourceEditorView(
-                    id: "tei-page-source-\(index)",
+                  CodeEditorView(
+                    id: "tei-page-code-\(index)",
                     name: "markup",
                     value: page.markup,
-                    ariaLabel: page.label.isEmpty ? "Source of this page" : "Source of \(page.label)"
+                    ariaLabel: page.label.isEmpty ? "Code of this page" : "Code of \(page.label)"
                   )
                 }
                 .class("tei-page-edit")
               } else {
-                SourceView(XMLFormatter.prettified(page.markup), showLineNumbers: false)
+                CodeView(XMLFormatter.prettified(page.markup), showLineNumbers: false)
               }
             }
             .class("tei-page-raw")
-            .data("reading-layer", "source")
+            .data("reading-layer", "code")
 
             // The translation, set by the very reader that sets the
             // transcript above: the same lines, the same classes.
@@ -537,7 +537,7 @@
         // scroll past: the viewer's Raw switch swaps the two layers.
         // The markup takes the reading's place rather than adding a block to
         // scroll past: the viewer's Raw switch swaps the two layers, and the
-        // block itself is a SourceView like any other.
+        // block itself is a CodeView like any other.
         descendant(".tei-page-raw") {
           display(.none)
           margin(0)
@@ -585,7 +585,7 @@
           overflowWrap(.breakWord)
           margin(0)
         }
-        descendant(".tei-page-source") {
+        descendant(".tei-page-code") {
           fontFamily(typographyFontMono)
           backgroundColor(.transparent)
           padding(0)
