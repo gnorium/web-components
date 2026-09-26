@@ -175,8 +175,8 @@
             // Results dynamically inserted by client (WASM hydration)
             // li.search-bar-suggestion-item
             //   a.search-bar-suggestion-link
-            //     span.search-bar-suggestion-text (lemma)
-            //     span.search-bar-suggestion-language (language badge)
+            //     span.search-bar-suggestion-text (title or lemma)
+            //     span.search-bar-suggestion-detail (language · progenitors · category)
             // Styles applied directly via WebAPIs DSL in render() below
           }
           .class("search-bar-suggestions")
@@ -230,11 +230,13 @@
         descendant(".search-bar-dropdown[data-open='true']") {
           display(.block)
         }
+        // Two rows, as every record is offered: its title or lemma, then
+        // its language, progenitors and category.
         descendant(".search-bar-suggestion-link") {
           display(.flex)
-          alignItems(.center)
-          justifyContent(.spaceBetween)
-          gap(px(12))
+          flexDirection(.column)
+          alignItems(.flexStart)
+          gap(spacing2)
           textDecoration(.none)
           color(.inherit)
           width(perc(100))
@@ -248,23 +250,17 @@
           backgroundColor(rgba(0, 0, 0, 0.08))
         }
         descendant(".search-bar-suggestion-text") {
-          flex(1)
-          fontSize(px(14))
-          fontWeight(500)
-          whiteSpace(.nowrap)
-          overflow(.hidden)
-          textOverflow(.ellipsis)
+          width(perc(100))
+          fontSize(fontSizeSmall14)
+          fontWeight(fontWeightSemiBold)
+          overflowWrap(.breakWord)
         }
-        descendant(".search-bar-suggestion-language") {
-          display(.inlineBlock)
-          backgroundColor(rgba(0, 0, 0, 0.06))
-          color(rgba(0, 0, 0, 0.7))
-          padding(px(2), px(8))
-          borderRadius(px(12))
-          fontSize(px(12))
-          fontWeight(500)
-          whiteSpace(.nowrap)
-          flexShrink(0)
+        descendant(".search-bar-suggestion-detail") {
+          width(perc(100))
+          fontSize(fontSizeXSmall12)
+          fontWeight(fontWeightNormal)
+          color(colorSubtle)
+          overflowWrap(.breakWord)
         }
         descendant(".search-bar-suggestion-item") {
           listStyleType(.none)
@@ -521,10 +517,15 @@
         textSpan.className = "search-bar-suggestion-text"
         textSpan.innerHTML = result.text
 
-        // Create language badge span
-        let langSpan = document.createElement(.span)
-        langSpan.className = "search-bar-suggestion-language"
-        langSpan.innerHTML = result.language
+        // Its language, progenitors and category, "—" each when unknown.
+        let detailSpan = document.createElement(.span)
+        detailSpan.className = "search-bar-suggestion-detail"
+        detailSpan.textContent = stringJoin(
+          [
+            stringIsEmpty(result.language) ? "—" : result.language,
+            stringIsEmpty(result.progenitors) ? "—" : result.progenitors,
+            stringIsEmpty(result.category) ? "—" : result.category,
+          ], separator: " · ")
 
         // Create link with flex layout
         let a = document.createElement(.a)
@@ -538,7 +539,7 @@
         a.href = href
 
         a.appendChild(textSpan)
-        a.appendChild(langSpan)
+        a.appendChild(detailSpan)
 
         // Create list item
         let li = document.createElement(.li)
@@ -562,6 +563,10 @@
     let text: String
     let language: String
     let languageCode: String
+    /// Its progenitors as text: authors and translators, or etymons.
+    let progenitors: String
+    /// Its category or part of speech; "" when it has none.
+    let category: String
     let homograph: Int
     let url: String
   }
@@ -650,6 +655,8 @@
               text: text,
               language: language,
               languageCode: languageCode,
+              progenitors: extractValue(from: str, key: "qualifier"),
+              category: extractValue(from: str, key: "category"),
               homograph: homograph,
               url: extractValue(from: str, key: "url")
             ))

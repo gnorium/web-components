@@ -26,6 +26,10 @@ public struct TextAreaView: HTMLContent {
   /// The id of the form this submits with, when it sits outside that form.
   let form: String?
   let `class`: String
+  /// Whether the label carries the lighter "(optional)" aside after its
+  /// text, as LabelView draws it: not part of the label text.
+  let optional: Bool
+  let optionalFlag: String
 
   public enum ValidationStatus: String, Sendable {
     case `default`
@@ -46,6 +50,8 @@ public struct TextAreaView: HTMLContent {
     startIcon: String? = nil,
     endIcon: String? = nil,
     label: String = "",
+    optional: Bool = false,
+    optionalFlag: String = "(optional)",
     tooltip: String? = nil,
     fullWidth: Bool = true,
     form: String? = nil,
@@ -68,6 +74,8 @@ public struct TextAreaView: HTMLContent {
     self.fullWidth = fullWidth
     self.form = form
     self.`class` = `class`
+    self.optional = optional
+    self.optionalFlag = optionalFlag
   }
 
   public func build() -> DOM.Node {
@@ -210,6 +218,12 @@ public struct TextAreaView: HTMLContent {
     return div {
       label {
         span { labelText }
+          .class("text-area-label")
+        if optional {
+          span { optionalFlag }
+            .class("text-area-optional-flag")
+            .data("optional-flag", true)
+        }
         if let tooltip = tooltip {
           TooltipView(tooltip: tooltip, placement: .bottom) {
             IconView { InfoIconView() }
@@ -227,6 +241,12 @@ public struct TextAreaView: HTMLContent {
           color(colorBase)
           marginBlockEnd(spacing4)
           fontFamily(typographyFontSans)
+        }
+        // An aside affixed to the label, not label text: LabelView's
+        // `.label-optional-flag`.
+        descendant(".text-area-optional-flag") {
+          fontWeight(fontWeightNormal)
+          color(colorSubtle)
         }
       }
       styledContainer

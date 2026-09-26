@@ -46,6 +46,10 @@ public struct TextInputView: HTMLContent {
   /// What the form's own validation says for each failed constraint
   /// (`FieldValidationHydration`, on a form with `novalidate`).
   let messages: ConstraintMessages
+  /// Whether the label carries the lighter "(optional)" aside after its
+  /// text, as LabelView draws it: not part of the label text.
+  let optional: Bool
+  let optionalFlag: String
 
   public enum InputType: String, Sendable {
     case text
@@ -82,6 +86,8 @@ public struct TextInputView: HTMLContent {
     endIcon: String? = nil,
     inputFontSize: CSS.Length = fontSizeMedium16,
     label: String = "",
+    optional: Bool = false,
+    optionalFlag: String = "(optional)",
     tooltip: String? = nil,
     fullWidth: Bool = true,
     class: String = "",
@@ -123,6 +129,8 @@ public struct TextInputView: HTMLContent {
     self.pattern = pattern
     self.matches = matches
     self.messages = messages
+    self.optional = optional
+    self.optionalFlag = optionalFlag
   }
 
   public func build() -> DOM.Node {
@@ -182,6 +190,11 @@ public struct TextInputView: HTMLContent {
         label {
           span { labelText }
             .class("text-input-label")
+          if optional {
+            span { optionalFlag }
+              .class("text-input-optional-flag")
+              .data("optional-flag", true)
+          }
           if let tooltip = tooltip {
             TooltipView(tooltip: tooltip, placement: .bottom) {
               IconView {
@@ -341,6 +354,12 @@ public struct TextInputView: HTMLContent {
         outlineOffset(px(-2)).important()
       }
       descendant(".text-input-clear-button[data-visible='true']") { display(.inlineFlex) }
+      // An aside affixed to the label, not label text: LabelView's
+      // `.label-optional-flag`.
+      descendant(".text-input-optional-flag") {
+        fontWeight(fontWeightNormal)
+        color(colorSubtle)
+      }
       descendant(".text-input-label-row") {
         display(.flex)
         alignItems(.center)

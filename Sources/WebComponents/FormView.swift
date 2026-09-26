@@ -179,9 +179,18 @@
           cursor(.pointer)
         }
         descendant(".form-view-label") {
+          display(.flex)
+          alignItems(.center)
+          gap(spacing4)
           fontSize(fontSizeSmall14)
           fontWeight(500)
           color(colorBase)
+        }
+        // An aside affixed to the label, not label text: LabelView's
+        // `.label-optional-flag`.
+        descendant(".form-view-optional-flag") {
+          fontWeight(fontWeightNormal)
+          color(colorSubtle)
         }
         descendant(".form-view-help-text") {
           fontSize(fontSizeSmall14)
@@ -238,7 +247,14 @@
         .class("form-field")
       } else {
         div {
-          label { field.label + (field.required ? "" : " (optional)") }
+          label {
+            field.label
+            if !field.required {
+              span { "(optional)" }
+                .class("form-view-optional-flag")
+                .data("optional-flag", true)
+            }
+          }
             .for(field.name)
             .class("form-view-label")
 

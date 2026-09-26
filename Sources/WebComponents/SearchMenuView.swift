@@ -732,6 +732,8 @@
       let text: String
       let subtext: String
       let pos: String
+      /// Its category or part of speech; "" when it has none.
+      let category: String
       let urlSegment: String
       let homograph: Int
       let color: String
@@ -867,31 +869,31 @@
         let textContent = document.createElement(.span)
         textContent.className = "menu-item-text search-menu-result-text"
 
-        // Three lines, the same for both kinds: the language; what the
-        // result IS (title or lemma); and what tells two alike apart
-        // (author(s), or part of speech with its homograph number).
-        let language = document.createElement(.span)
-        language.className = "search-menu-result-meta search-menu-result-language"
-        language.textContent = result.subtext
-        textContent.appendChild(language)
-
+        // Two rows, the same for both kinds, as every record is offered:
+        // what the result IS (title or lemma); then its language, its
+        // progenitors (authors and translators, or etymons) and its
+        // category (or part of speech, with its homograph number), "—"
+        // each when unknown.
         let label = document.createElement(.span)
         label.className = "menu-item-label search-menu-result-label"
         label.textContent = result.text
         textContent.appendChild(label)
 
-        if !stringIsEmpty(result.pos) {
-          let detail = document.createElement(.span)
-          detail.className = "search-menu-result-meta search-menu-result-detail"
-          detail.textContent = result.pos
-          if !isBiblioResult && result.homograph > 1 {
-            let sup = document.createElement(.sup)
-            sup.className = "search-menu-result-sup"
-            sup.textContent = "\(result.homograph)"
-            detail.appendChild(sup)
-          }
-          textContent.appendChild(detail)
+        let detail = document.createElement(.span)
+        detail.className = "search-menu-result-meta search-menu-result-detail"
+        detail.textContent = stringJoin(
+          [
+            stringIsEmpty(result.subtext) ? "—" : result.subtext,
+            stringIsEmpty(result.pos) ? "—" : result.pos,
+            stringIsEmpty(result.category) ? "—" : result.category,
+          ], separator: " · ")
+        if !isBiblioResult && result.homograph > 1 {
+          let sup = document.createElement(.sup)
+          sup.className = "search-menu-result-sup"
+          sup.textContent = "\(result.homograph)"
+          detail.appendChild(sup)
         }
+        textContent.appendChild(detail)
 
         item.appendChild(textContent)
 
@@ -1033,6 +1035,7 @@
               text: textValue,
               subtext: subtextValue,
               pos: qualifierValue,
+              category: extractValue(from: str, key: "category"),
               urlSegment: urlSegment,
               homograph: homograph,
               color: color

@@ -15,24 +15,15 @@ public struct DropdownView: HTMLContent {
     public let value: String
     public let display: String
     public let altDisplay: String?
-    /// A line above the display, in the alt's small grey — what a search
-    /// result puts first (a record's language). Stacked layout only.
-    public let leadDisplay: String?
-    /// A line below the alt, in the same small grey — what a record puts
-    /// last (its path). Stacked layout only.
-    public let detailDisplay: String?
     /// Lowercase form of display, for mid-sentence use (e.g. tooltip text). Pre-computed server-side to avoid WASI string ops.
     public let displayLower: String?
 
     public init(
-      value: String, display: String, altDisplay: String? = nil, leadDisplay: String? = nil,
-      detailDisplay: String? = nil, displayLower: String? = nil
+      value: String, display: String, altDisplay: String? = nil, displayLower: String? = nil
     ) {
       self.value = value
       self.display = display
       self.altDisplay = altDisplay
-      self.leadDisplay = leadDisplay
-      self.detailDisplay = detailDisplay
       self.displayLower = displayLower
     }
   }
@@ -75,11 +66,21 @@ public struct DropdownView: HTMLContent {
   /// earlier query dropped) and shows the options of the dropdown the
   /// answer holds in place of its own; an empty query shows its own again.
   let searchURL: String?
+  /// Whether the label carries the lighter "(optional)" aside after its
+  /// text, as LabelView draws it: not part of the label text.
+  let optional: Bool
+  let optionalFlag: String
+  /// A line at the end of the menu that is not an option: what the list
+  /// leaves out ("Showing the first 50. Type to narrow the list."). A
+  /// remote search's answer brings its own.
+  let note: String?
 
   public init(
     id: String,
     name: String,
     label: String,
+    optional: Bool = false,
+    optionalFlag: String = "(optional)",
     options: [DropdownOption],
     placeholder: String = "Select an option",
     selectedValue: String? = nil,
@@ -98,7 +99,8 @@ public struct DropdownView: HTMLContent {
     buttonBorderRadius: CSS.Length = borderRadiusBase,
     submitFormOnChange: Bool = false,
     form: String? = nil,
-    searchURL: String? = nil
+    searchURL: String? = nil,
+    note: String? = nil
   ) {
     self.id = id
     self.name = name
@@ -122,6 +124,9 @@ public struct DropdownView: HTMLContent {
     self.submitFormOnChange = submitFormOnChange
     self.form = form
     self.searchURL = searchURL
+    self.optional = optional
+    self.optionalFlag = optionalFlag
+    self.note = note
   }
 
   public func build() -> DOM.Node {
@@ -132,6 +137,12 @@ public struct DropdownView: HTMLContent {
         label {
           span { labelText }
             .class("dropdown-label-text")
+
+          if optional {
+            span { optionalFlag }
+              .class("dropdown-optional-flag")
+              .data("optional-flag", true)
+          }
 
           if let tooltipText = tooltip {
             TooltipView(tooltip: tooltipText, placement: .bottom) {
@@ -233,11 +244,6 @@ public struct DropdownView: HTMLContent {
             options.map { option in
               let isSelected = stringEquals(option.value, selectedValue ?? "")
               return div {
-                if optionLayout == .stacked, let lead = option.leadDisplay, !stringIsEmpty(lead) {
-                  span { lead }
-                    .class("dropdown-option-alt-text dropdown-option-lead-text")
-                    .data("stacked", true)
-                }
                 span { option.display }
                   .class("dropdown-option-display-text")
                   .data("stacked", optionLayout == .stacked)
@@ -246,11 +252,6 @@ public struct DropdownView: HTMLContent {
                   span { alt }
                     .class("dropdown-option-alt-text")
                     .data("stacked", optionLayout == .stacked)
-                }
-                if optionLayout == .stacked, let detail = option.detailDisplay, !stringIsEmpty(detail) {
-                  span { detail }
-                    .class("dropdown-option-alt-text dropdown-option-detail-text")
-                    .data("stacked", true)
                 }
               }
               .class(isSelected ? "dropdown-option is-selected" : "dropdown-option")
@@ -262,6 +263,11 @@ public struct DropdownView: HTMLContent {
               .data("selected", isSelected)
               .data("stacked", optionLayout == .stacked)
               .data("hidden", false)
+            }
+            if let note {
+              div { note }
+                .class("dropdown-note")
+                .data("dropdown-note", true)
             }
           }
           .class("dropdown-options-list")
@@ -370,9 +376,12 @@ public struct DropdownView: HTMLContent {
         border(borderWidthBase, .solid, borderColorBase)
         borderRadius(borderRadiusBase)
         boxSizing(.borderBox)
+        // One ring, the text input's: a blue border and a 1px shadow
+        // around it. A thick outline on top of them drew two rings.
         pseudoClass(.focus) {
-          outline(borderWidthThick, .solid, colorBlue).important()
+          outline(.none).important()
           borderColor(borderColorBlue).important()
+          boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
         }
       }
       // Matches LabelView, which every FieldView label uses: a dropdown in a
@@ -411,6 +420,24 @@ public struct DropdownView: HTMLContent {
         fontSize(fontSizeSmall14)
         fontWeight(fontWeightSemiBold)
         color(colorBase)
+      }
+      // An aside affixed to the label, not label text: LabelView's
+      // `.label-optional-flag`.
+      descendant(".dropdown-optional-flag") {
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeSmall14)
+        fontWeight(fontWeightNormal)
+        color(colorSubtle)
+      }
+      // Not an option: no hover, no pointer, never chosen.
+      descendant(".dropdown-note") {
+        padding(spacing8, spacing12)
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeXSmall12)
+        lineHeight(lineHeightSmall22)
+        color(colorSubtle)
+        borderBlockStart(borderWidthBase, .solid, borderColorSubtle)
+        cursor(cursorBase)
       }
       descendant(".dropdown-search-input-wrapper") {
         padding(spacing8)
@@ -542,6 +569,8 @@ public struct DropdownView: HTMLContent {
     /// A remote search's answer, shown in place of its own list.
     private var resultsList: DOM.Element?
     private var resultOptions: [DOM.Element] = []
+    /// The search answer's note, after its options.
+    private var resultNote: DOM.Element?
     private var searchURL: String = ""
     private var searchTimer: Int32 = 0
     /// Which query is the latest: an answer overtaken by a later one is
@@ -558,7 +587,7 @@ public struct DropdownView: HTMLContent {
       searchInput = container.querySelector("[data-dropdown-search=\"true\"]")
       optionsList = container.querySelector("[data-dropdown-options-list=\"true\"]")
       selectedText = container.querySelector("[data-dropdown-selected-text=\"true\"]")
-      
+
       // Read the real placeholder from its data attribute — not the current
       // button text, which for a preselected dropdown is the selected option's
       // display (so deselecting would wrongly restore that instead of the
@@ -807,6 +836,8 @@ public struct DropdownView: HTMLContent {
         resultsList = results
       }
       for old in resultOptions { results.removeChild(old) }
+      if let resultNote { results.removeChild(resultNote) }
+      resultNote = nil
       let value = (hiddenInput as? HTML.HTMLInputElement)?.value ?? ""
       var options: [DOM.Element] = []
       for option in answer.querySelectorAll("[data-dropdown-option=\"true\"]") {
@@ -822,6 +853,10 @@ public struct DropdownView: HTMLContent {
         options.append(option)
       }
       resultOptions = options
+      if let note = answer.querySelector("[data-dropdown-note=\"true\"]") {
+        results.appendChild(note)
+        resultNote = note
+      }
       bindOptions(options)
       optionsList?.setAttribute(.hidden, "")
       results.removeAttribute(.hidden)
@@ -1036,6 +1071,7 @@ public struct DropdownView: HTMLContent {
       id: String,
       name: String,
       label: String = "",
+      optional: Bool = false,
       options: [DropdownView.DropdownOption],
       placeholder: String = "Select an option",
       selectedValue: String? = nil,
@@ -1052,6 +1088,7 @@ public struct DropdownView: HTMLContent {
         id: id,
         name: name,
         label: label,
+        optional: optional,
         options: options,
         placeholder: placeholder,
         selectedValue: selectedValue,
