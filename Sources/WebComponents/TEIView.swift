@@ -31,6 +31,14 @@
     /// page's reading, which the viewer's Translated switch shows in the
     /// reading's place.
     let translation: Translation?
+    /// What to set apart in each page's reading, by the image service the
+    /// page reads: an utterance's sentence and its word
+    /// (`TEIRenderer.utterance`), each a `<mark>`.
+    let highlights: [String: [TEIHighlight]]
+    /// Whether each page's reading begins with its label, as a page turn
+    /// inside an image is marked: for pages read one after another in one
+    /// column rather than paged beside their images.
+    let labelsPages: Bool
 
     /// A translation of the transcript, page by page, in its own language:
     /// the translation's own TEI, read by the same reader as the transcript,
@@ -59,13 +67,18 @@
       }
     }
 
-    public init(teiXml: String, editable: Bool = false, translation: Translation? = nil) {
+    public init(
+      teiXml: String, editable: Bool = false, translation: Translation? = nil,
+      highlights: [String: [TEIHighlight]] = [:], labelsPages: Bool = false
+    ) {
       self.teiXml = teiXml
       self.editable = editable
       self.translation = translation
+      self.highlights = highlights
+      self.labelsPages = labelsPages
     }
 
-    public var pages: [TEIPage] { TEIRenderer.pages(in: teiXml) }
+    public var pages: [TEIPage] { TEIRenderer.pages(in: teiXml, highlights: highlights) }
 
     /// The image service a semblance reads, which is what pairs it with a
     /// canvas. `TEIRenderer` owns the rule; the view only passes it on.
@@ -178,187 +191,13 @@
       return out
     }
 
-    /// A page's lines as the reader sets them: each line on its own, except
-    /// the furniture at the head of the page (page number, running head,
-    /// signature) set on one line, which is one row.
-    enum LaidOut {
-      /// A line that stands alone: a page turn, a gap, a figure, a table,
-      /// a piece of furniture.
-      case line(TEILine)
-      /// The lines of one block of text: a paragraph, a verse line, a
-      /// heading, a speech prefix, a stage direction, a note.
-      case block([TEILine])
-      case furniture([TEILine])
-    }
-
-    /// Which lines run on together as one block: those of the same kind
-    /// of text, from a line that opens a block to the next.
-    static func blockKind(of kind: TEILine.Kind) -> String? {
-      switch kind {
-      case .text: return "text"
-      case .heading: return "heading"
-      case .speaker: return "speaker"
-      case .stage: return "stage"
-      case .note(let place): return "note \(place)"
-      default: return nil
-      }
-    }
-
-    /// Where a piece of furniture sits on its row: its own alignment, else
-    /// a running head in the middle and anything else at the start.
-    enum FurniturePlace: String, CaseIterable {
-      case start, center, end
-
-      static func of(_ line: TEILine) -> FurniturePlace {
-        let rend = line.rend.split(whereSeparator: \.isWhitespace)
-        if rend.contains("align(center)") { return .center }
-        if rend.contains("align(right)") { return .end }
-        if rend.contains("align(left)") { return .start }
-        if case .forme(.header) = line.kind { return .center }
-        return .start
-      }
-    }
-
-    static func layout(of lines: [TEILine]) -> [LaidOut] {
-      var out: [LaidOut] = []
-      var row: [TEILine] = []
-      func close() {
-        if row.count > 1 {
-          out.append(.furniture(row))
-        } else {
-          out += row.map { .line($0) }
-        }
-        row = []
-      }
-      var block: [TEILine] = []
-      func end() {
-        if !block.isEmpty { out.append(.block(block)) }
-        block = []
-      }
-      for line in lines {
-        switch line.kind {
-        case .forme(.header), .forme(.pageNumber), .forme(.signature):
-          end()
-          // Furniture that follows furniture with no line break between is
-          // on the same line.
-          if !row.isEmpty && !line.sharesLine { close() }
-          row.append(line)
-        default:
-          close()
-          guard let kind = blockKind(of: line.kind) else {
-            end()
-            out.append(.line(line))
-            continue
-          }
-          if line.opensBlock || block.first.flatMap({ blockKind(of: $0.kind) }) != kind { end() }
-          block.append(line)
-        }
-      }
-      close()
-      end()
-      return out
-    }
-
-    private func inlineContent(_ line: TEILine) -> DOM.Node {
-      span {
-        for run in line.runs {
-          switch run.kind {
-          case .text:
-            if run.alternative.isEmpty {
-              span { run.text }.class("tei-run").data("rend", run.rend)
-            } else {
-              // A regularized spelling, an expansion or a correction the
-              // transcription gives beside the reading: read on hover.
-              TooltipView(tooltip: run.alternative, placement: .top, class: "tei-run-alternative") {
-                span { run.text }.class("tei-run").data("rend", run.rend)
-              }
-            }
-          case .tex(let display):
-            span { TeXView(run.text, displayMode: display) }
-              .class("tei-run").data("rend", run.rend)
-          }
-        }
-      }.build()
-    }
-
-    private func readingLine(_ line: TEILine, facsimileURL: String, label: String) -> DOM.Node {
-      switch line.kind {
-      case .heading:
-        return h3 { inlineContent(line) }.class("tei-line tei-line-heading").data("rend", line.rend)
-          .build()
-      case .speaker:
-        return span { inlineContent(line) }.class("tei-line tei-line-speaker").data(
-          "rend", line.rend
-        ).build()
-      case .stage:
-        return span { inlineContent(line) }.class("tei-line tei-line-stage").data("rend", line.rend)
-          .build()
-      case .mark:
-        return span { line.text }.class("tei-line tei-line-mark").build()
-      case .gap(let reason):
-        return span { "[\(reason.isEmpty ? "gap" : reason)]" }.class("tei-line tei-line-gap")
-          .build()
-      case .documentBoundary:
-        return hr().class("tei-document-boundary").build()
-      case .note(let place):
-        return span { inlineContent(line) }.class("tei-line tei-line-note")
-          .data("place", place.isEmpty ? "inline" : place).build()
-      case .forme(let role):
-        return span { inlineContent(line) }.class(
-          "tei-line tei-line-forme tei-line-forme-\(role.rawValue)"
-        ).data("rend", line.rend).build()
-      case .figure(let type, let bbox):
-        guard let region = TEIRenderer.regionURL(ofFacsimile: facsimileURL, bbox: bbox) else {
-          return DOM.Node.fragment([])
-        }
-        return figure {
-          img().src(region).alt(line.text.isEmpty ? "Figure on \(label)" : line.text)
-            .loading(.lazy).class("tei-figure-image")
-          if !line.text.isEmpty { figcaption { line.text }.class("tei-figure-caption") }
-        }.class("tei-line tei-figure").data("figure-type", type.isEmpty ? "figure" : type).build()
-      case .table(let source):
-        return div {
-          table {
-            if !source.caption.isEmpty {
-              caption {
-                for line in source.caption {
-                  readingLine(line, facsimileURL: facsimileURL, label: label)
-                }
-              }
-            }
-            tbody {
-              for row in source.rows {
-                tr {
-                  for cell in row.cells {
-                    if cell.isLabel {
-                      th {
-                        for line in cell.lines {
-                          readingLine(line, facsimileURL: facsimileURL, label: label)
-                        }
-                      }.rowspan(cell.rows).colspan(cell.columns)
-                    } else {
-                      td {
-                        for line in cell.lines {
-                          readingLine(line, facsimileURL: facsimileURL, label: label)
-                        }
-                      }.rowspan(cell.rows).colspan(cell.columns)
-                    }
-                  }
-                }
-              }
-            }
-          }.class("tei-table")
-        }.class("tei-table-scroll").build()
-      case .text:
-        return span { inlineContent(line) }.class("tei-line").data("rend", line.rend).build()
-      }
-    }
-
     public func build() -> DOM.Node {
       let pages = self.pages
       // Record pages register an empty reader before fetching its contents.
       // Include formula styles then, even when no formula is present yet.
       _ = TeXView("").build()
+      // And the semblances', which a reader fetched into the page brings.
+      _ = SemblanceView(page: TEIPage(label: "", facsimileURL: "", lines: [], markup: ""), index: 0).build()
 
       return div {
         if pages.isEmpty {
@@ -366,96 +205,8 @@
             .class("tei-view-empty")
         }
         for (index, page) in pages.enumerated() {
-          div {
-            div {
-              for item in Self.layout(of: page.lines) {
-                switch item {
-                case .line(let line):
-                  readingLine(line, facsimileURL: page.facsimileURL, label: page.label)
-                case .block(let lines):
-                  // A block's lines, one to a line as the image sets them; on
-                  // a phone they run on as one paragraph, a break inside a
-                  // word joining it with no space.
-                  div {
-                    for (index, line) in lines.enumerated() {
-                      if index > 0 && !line.joinsPrevious { " " }
-                      readingLine(line, facsimileURL: page.facsimileURL, label: page.label)
-                    }
-                  }.class("tei-block").data("rend", lines[0].rend)
-                case .furniture(let pieces):
-                  // A page number and a running head set on one line keep
-                  // their places on it, as the image has them.
-                  div {
-                    for place in FurniturePlace.allCases {
-                      div {
-                        for piece in pieces where FurniturePlace.of(piece) == place {
-                          readingLine(piece, facsimileURL: page.facsimileURL, label: page.label)
-                        }
-                      }.class("tei-forme-row-\(place.rawValue)")
-                    }
-                  }.class("tei-forme-row")
-                }
-              }
-            }
-            .class("tei-page-text")
-            .data("reading-layer", "text")
-
-            div {
-              if editable {
-                // A form of its own, so the page can be sent to be read back
-                // as it is being edited — its semblance and its code.
-                form {
-                  input()
-                    .type(.hidden)
-                    .name("semblance")
-                    .value(Self.serviceID(ofFacsimile: page.facsimileURL))
-                  CodeEditorView(
-                    id: "tei-page-code-\(index)",
-                    name: "markup",
-                    value: page.markup,
-                    ariaLabel: page.label.isEmpty ? "Code of this page" : "Code of \(page.label)"
-                  )
-                }
-                .class("tei-page-edit")
-              } else {
-                CodeView(XMLFormatter.prettified(page.markup), showLineNumbers: false)
-              }
-            }
-            .class("tei-page-raw")
-            .data("reading-layer", "code")
-
-            // The translation, set by the very reader that sets the
-            // transcript above: the same lines, the same classes.
-            if let translation {
-              let translated = translation.pages[Self.serviceID(ofFacsimile: page.facsimileURL)]
-              div {
-                if let note = translated?.note {
-                  p { note }
-                    .class("tei-page-translation-note")
-                }
-                div {
-                  if let translated {
-                    for line in translated.page.lines {
-                      readingLine(line, facsimileURL: translated.page.facsimileURL, label: translated.page.label)
-                    }
-                  } else {
-                    span { "—" }
-                      .class("tei-line")
-                  }
-                }
-                .class("tei-page-text")
-              }
-              .class("tei-page-translation")
-              .data("reading-layer", "translation")
-              .lang(translation.language)
-              .dir("auto")
-            }
-          }
-          .class("tei-reading")
-          .id("tei-reading-\(index)")
-          // What pairs this reading with a canvas. The viewer matches on it.
-          .data("service-id", Self.serviceID(ofFacsimile: page.facsimileURL))
-          .data("active", index == 0 ? "true" : "false")
+          SemblanceView(
+            page: page, index: index, editable: editable, translation: translation, labeled: labelsPages)
         }
       }
       .class("tei-view")
@@ -464,12 +215,6 @@
         selector("&") {
           display(.flex)
           flexDirection(.column)
-          minWidth(0)
-        }
-        descendant(".tei-reading") {
-          display(.flex)
-          flexDirection(.column)
-          gap(spacing8)
           minWidth(0)
         }
         // A figure is set apart from the reading around it: it is a
@@ -800,6 +545,15 @@
         selector(".tei-page-raw .hljs-meta") { color(syntaxOtherDeclarations).important() }
         selector(".tei-page-raw .hljs-symbol", ".tei-page-raw .hljs-punctuation") {
           color(syntaxPlainText).important()
+        }
+        // An utterance's sentence and, more strongly, its word.
+        descendant(".tei-highlight") {
+          backgroundColor(backgroundColorYellowSubtle)
+          color(.inherit)
+        }
+        descendant(".tei-highlight[data-highlight='headword']") {
+          backgroundColor(backgroundColorYellowSubtleActive)
+          fontWeight(fontWeightSemiBold)
         }
         selector(".tei-view-empty") {
           fontFamily(typographyFontSans)
