@@ -120,51 +120,66 @@
           fontSize(fontSizeSmall14)
           lineHeight(lineHeightContent)
           color(colorSubtle)
-          // Never wider than where it is put: a flex item is otherwise as
-          // wide as its content, and a long label's line would carry the
-          // trail, and its fade, off the page.
+          // The width of where it is put, in a flex row as in a block: sized
+          // to its content, the trail left no room for the page's own crumb
+          // (which asks for none, and takes what is left) and wrapped it; and
+          // never wider, or a long label would carry the trail off the page.
+          flex("1 1 auto")
           minWidth(0)
         }
-        // Inline flow, not flex: the trail fills each line and wraps wherever
-        // it runs out — between crumbs or inside a long label — as running
-        // text does. As a row of shrinkable flex items, all the give landed on
-        // the one label with a space in it, folding "Mission Control" while
-        // the bar still had room; as wrapping flex items, a whole crumb jumped
-        // to the next line while the first could still hold half of it.
+        // A row of crumbs that wraps between crumbs, never inside one: each
+        // crumb (its label, then its chevron) keeps its size while the line
+        // has room. The page's own crumb, last, takes what the line has left
+        // and shrinks into it, fading at its end, so a long title stays after
+        // its chevron; it drops to a line of its own only when fewer than
+        // ten characters would be left for it.
         descendant(".breadcrumb-list") {
-          display(.block)
+          display(.flex)
+          flexWrap(.wrap)
+          alignItems(.center)
+          columnGap(spacing4)
+          flex(1)
           listStyle(.none)
           margin(0)
           padding(0)
           minWidth(0)
         }
         descendant(".breadcrumb-item") {
-          display(.inline)
+          display(.flex)
+          alignItems(.center)
+          gap(spacing4)
+          flex("0 1 auto")
+          minWidth(0)
+        }
+        descendant(".breadcrumb-item:last-child") {
+          flex("1 1 0")
+          minWidth(min(ch(10), CSS.LengthPercentage(perc(100))))
         }
         descendant(".breadcrumb-link") {
-          display(.inline).important()
+          display(.flex).important()
+          minWidth(0)
         }
         descendant(".breadcrumb-current") {
           color(colorBase)
           fontWeight(fontWeightNormal)
         }
-        // A label runs to `labelLength` characters, or the line, and fades
-        // out past it. Top-aligned: a box that clips sits on its bottom edge,
-        // not its text's baseline, and would ride above its neighbors.
+        // A label runs to `labelLength` characters, or its crumb's room, and
+        // fades out past it. In `ch` alone, not `min(…, 100%)`: a percentage
+        // counts for nothing when a crumb is sized to its content, so the
+        // crumb took the whole title's width and left its label adrift in it.
+        // The room is the flex items' to give (`min-width: 0` down the row).
         selector("& .breadcrumb-current", "& .breadcrumb-label") {
-          display(.inlineBlock)
-          maxWidth(min(ch(labelLength), CSS.LengthPercentage(perc(100))))
-          verticalAlign(.top)
+          display(.block)
+          minWidth(0)
+          maxWidth(ch(labelLength))
         }
         fadeOverflow("& .breadcrumb-current", "& .breadcrumb-label")
-        // Shown whole, it takes the line.
+        // Shown whole, it wraps in its crumb's room.
         selector("& .breadcrumb-current[aria-expanded='true']", "& .breadcrumb-label[aria-expanded='true']") {
-          maxWidth(perc(100))
+          maxWidth(.none)
         }
-        // Its icon, size and colour are BreadcrumbSeparatorView's; in the
-        // inline flow a margin is the only way to space it.
         descendant(".breadcrumb-separator") {
-          marginInline(spacing4)
+          flexShrink(0)
         }
         descendant(".breadcrumb-overflow") {
           display(.inlineFlex)
