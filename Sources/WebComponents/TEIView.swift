@@ -124,6 +124,7 @@
         case .figure: return "figure"
         case .table: return "table"
         case .documentBoundary: return "boundary"
+        case .note: return "note"
         }
       }
       func runs(_ line: TEILine) -> [DiffEngine.Token] {
@@ -177,12 +178,101 @@
       return out
     }
 
+    /// A page's lines as the reader sets them: each line on its own, except
+    /// the furniture at the head of the page (page number, running head,
+    /// signature) set on one line, which is one row.
+    enum LaidOut {
+      /// A line that stands alone: a page turn, a gap, a figure, a table,
+      /// a piece of furniture.
+      case line(TEILine)
+      /// The lines of one block of text: a paragraph, a verse line, a
+      /// heading, a speech prefix, a stage direction, a note.
+      case block([TEILine])
+      case furniture([TEILine])
+    }
+
+    /// Which lines run on together as one block: those of the same kind
+    /// of text, from a line that opens a block to the next.
+    static func blockKind(of kind: TEILine.Kind) -> String? {
+      switch kind {
+      case .text: return "text"
+      case .heading: return "heading"
+      case .speaker: return "speaker"
+      case .stage: return "stage"
+      case .note(let place): return "note \(place)"
+      default: return nil
+      }
+    }
+
+    /// Where a piece of furniture sits on its row: its own alignment, else
+    /// a running head in the middle and anything else at the start.
+    enum FurniturePlace: String, CaseIterable {
+      case start, center, end
+
+      static func of(_ line: TEILine) -> FurniturePlace {
+        let rend = line.rend.split(whereSeparator: \.isWhitespace)
+        if rend.contains("align(center)") { return .center }
+        if rend.contains("align(right)") { return .end }
+        if rend.contains("align(left)") { return .start }
+        if case .forme(.header) = line.kind { return .center }
+        return .start
+      }
+    }
+
+    static func layout(of lines: [TEILine]) -> [LaidOut] {
+      var out: [LaidOut] = []
+      var row: [TEILine] = []
+      func close() {
+        if row.count > 1 {
+          out.append(.furniture(row))
+        } else {
+          out += row.map { .line($0) }
+        }
+        row = []
+      }
+      var block: [TEILine] = []
+      func end() {
+        if !block.isEmpty { out.append(.block(block)) }
+        block = []
+      }
+      for line in lines {
+        switch line.kind {
+        case .forme(.header), .forme(.pageNumber), .forme(.signature):
+          end()
+          // Furniture that follows furniture with no line break between is
+          // on the same line.
+          if !row.isEmpty && !line.sharesLine { close() }
+          row.append(line)
+        default:
+          close()
+          guard let kind = blockKind(of: line.kind) else {
+            end()
+            out.append(.line(line))
+            continue
+          }
+          if line.opensBlock || block.first.flatMap({ blockKind(of: $0.kind) }) != kind { end() }
+          block.append(line)
+        }
+      }
+      close()
+      end()
+      return out
+    }
+
     private func inlineContent(_ line: TEILine) -> DOM.Node {
       span {
         for run in line.runs {
           switch run.kind {
           case .text:
-            span { run.text }.class("tei-run").data("rend", run.rend)
+            if run.alternative.isEmpty {
+              span { run.text }.class("tei-run").data("rend", run.rend)
+            } else {
+              // A regularized spelling, an expansion or a correction the
+              // transcription gives beside the reading: read on hover.
+              TooltipView(tooltip: run.alternative, placement: .top, class: "tei-run-alternative") {
+                span { run.text }.class("tei-run").data("rend", run.rend)
+              }
+            }
           case .tex(let display):
             span { TeXView(run.text, displayMode: display) }
               .class("tei-run").data("rend", run.rend)
@@ -210,10 +300,13 @@
           .build()
       case .documentBoundary:
         return hr().class("tei-document-boundary").build()
+      case .note(let place):
+        return span { inlineContent(line) }.class("tei-line tei-line-note")
+          .data("place", place.isEmpty ? "inline" : place).build()
       case .forme(let role):
         return span { inlineContent(line) }.class(
           "tei-line tei-line-forme tei-line-forme-\(role.rawValue)"
-        ).build()
+        ).data("rend", line.rend).build()
       case .figure(let type, let bbox):
         guard let region = TEIRenderer.regionURL(ofFacsimile: facsimileURL, bbox: bbox) else {
           return DOM.Node.fragment([])
@@ -275,8 +368,33 @@
         for (index, page) in pages.enumerated() {
           div {
             div {
-              for line in page.lines {
-                readingLine(line, facsimileURL: page.facsimileURL, label: page.label)
+              for item in Self.layout(of: page.lines) {
+                switch item {
+                case .line(let line):
+                  readingLine(line, facsimileURL: page.facsimileURL, label: page.label)
+                case .block(let lines):
+                  // A block's lines, one to a line as the image sets them; on
+                  // a phone they run on as one paragraph, a break inside a
+                  // word joining it with no space.
+                  div {
+                    for (index, line) in lines.enumerated() {
+                      if index > 0 && !line.joinsPrevious { " " }
+                      readingLine(line, facsimileURL: page.facsimileURL, label: page.label)
+                    }
+                  }.class("tei-block").data("rend", lines[0].rend)
+                case .furniture(let pieces):
+                  // A page number and a running head set on one line keep
+                  // their places on it, as the image has them.
+                  div {
+                    for place in FurniturePlace.allCases {
+                      div {
+                        for piece in pieces where FurniturePlace.of(piece) == place {
+                          readingLine(piece, facsimileURL: page.facsimileURL, label: page.label)
+                        }
+                      }.class("tei-forme-row-\(place.rawValue)")
+                    }
+                  }.class("tei-forme-row")
+                }
               }
             }
             .class("tei-page-text")
@@ -446,15 +564,79 @@
           borderTop(borderWidthBase, .solid, borderColorSubtle)
           marginBlock(spacing8)
         }
-        // TEI's rend, honoured. `center` is the one that carries meaning on a
-        // title page; the others are recorded and shown as they are written.
-        selector("& .tei-line[data-rend~='center']") {
-          display(.block)
+        // How each block is set on the image, TEI's rendition style on its
+        // rend: alignment and indent, on the block (or on a line standing
+        // alone), in logical terms, so that a right-aligned catchword sits
+        // at the right however the text runs.
+        selector(
+          "& .tei-block[data-rend~='align(center)']", "& .tei-page-text > .tei-line[data-rend~='align(center)']"
+        ) {
           textAlign(.center)
         }
-        selector("& .tei-line[data-rend~='right']") {
-          display(.block)
+        selector(
+          "& .tei-block[data-rend~='align(justify)']", "& .tei-page-text > .tei-line[data-rend~='align(justify)']"
+        ) {
+          textAlign(.justify)
+        }
+        selector(
+          "& .tei-block[data-rend~='align(left)']", "& .tei-page-text > .tei-line[data-rend~='align(left)']",
+          "& .tei-block[data-rend~='align(right)']:dir(rtl)",
+          "& .tei-page-text > .tei-line[data-rend~='align(right)']:dir(rtl)"
+        ) {
+          textAlign(.start)
+        }
+        selector(
+          "& .tei-block[data-rend~='align(right)']", "& .tei-page-text > .tei-line[data-rend~='align(right)']",
+          "& .tei-block[data-rend~='align(left)']:dir(rtl)",
+          "& .tei-page-text > .tei-line[data-rend~='align(left)']:dir(rtl)"
+        ) {
           textAlign(.end)
+        }
+        for level in 1...6 {
+          selector(
+            "& .tei-block[data-rend~='indent(\(level))']",
+            "& .tei-page-text > .tei-line[data-rend~='indent(\(level))']"
+          ) {
+            CSS.Property("padding-inline-start", "calc(\(level) * \(spacing24.value))")
+          }
+        }
+        // A hanging indent: the block's first line at its edge, the rest in.
+        selector("& .tei-block[data-rend~='hanging'] > .tei-line:not(:first-child)") {
+          paddingInlineStart(spacing24)
+        }
+        // One line to a line, as the image sets them.
+        descendant(".tei-block") {
+          display(.flex)
+          flexDirection(.column)
+          gap(spacing2)
+          minWidth(0)
+        }
+        // The furniture on one line, each piece in its place on it.
+        descendant(".tei-forme-row") {
+          display(.grid)
+          gridTemplateColumns("minmax(0, 1fr) auto minmax(0, 1fr)")
+          gap(spacing8)
+          alignItems(.baseline)
+        }
+        descendant(".tei-forme-row-start") { justifySelf("start") }
+        descendant(".tei-forme-row-center") { justifySelf("center") }
+        descendant(".tei-forme-row-end") { justifySelf("end") }
+        // On a phone the text is reflowed: a block's lines run on as one
+        // paragraph, still set as its block is.
+        media(maxWidth(maxWidthBreakpointMobile)) {
+          descendant(".tei-block") {
+            display(.block).important()
+          }
+          selector("& .tei-block > *") {
+            display(.inline).important()
+          }
+          selector("& .tei-block[data-rend~='hanging']") {
+            paddingInlineStart(spacing24).important()
+            CSS.Property("text-indent", "calc(-1 * \(spacing24.value))").important()
+          }
+          selector("& .tei-block[data-rend~='hanging'] > .tei-line:not(:first-child)") {
+            paddingInlineStart(0).important()
+          }
         }
         descendant(".tei-page-text") {
           display(.flex)
@@ -518,6 +700,20 @@
         descendant(".tei-line-forme-signature") {
           textAlign(.start)
           marginBlockStart(spacing8)
+        }
+        // An original note, set apart from the text it annotates as the
+        // work's apparatus is.
+        descendant(".tei-line-note") {
+          fontSize(fontSizeSmall14)
+          color(colorSubtle)
+        }
+        // The makers' own deletions, struck through as on the page; what
+        // the transcription supplies, bracketed and subtle, as it is not.
+        selector("& .tei-run[data-rend~='del']") {
+          textDecoration(.lineThrough)
+        }
+        selector("& .tei-run[data-rend~='supplied']") {
+          color(colorSubtle)
         }
         // Not a word on the page: a statement that there is none.
         descendant(".tei-line-gap") {
