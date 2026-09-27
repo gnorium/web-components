@@ -48,6 +48,11 @@ public struct TableView: HTMLContent {
     public let align: Alignment
     public let width: CSS.LengthPercentage?
     public let minWidth: CSS.LengthPercentage?
+    /// The column a phone gives its room to: on a narrow screen it takes
+    /// whatever width the others leave, never under `priorityMinWidth`, and
+    /// the others shrink to their content. At most one per table; at desktop
+    /// widths it is a column like any other.
+    public let priority: Bool
 
     public enum Alignment: Sendable {
       case start
@@ -71,7 +76,8 @@ public struct TableView: HTMLContent {
       sortable: Bool = true,
       align: Alignment = .start,
       width: CSS.LengthPercentage? = nil,
-      minWidth: CSS.LengthPercentage? = nil
+      minWidth: CSS.LengthPercentage? = nil,
+      priority: Bool = false
     ) {
       self.id = id
       self.label = label
@@ -79,6 +85,7 @@ public struct TableView: HTMLContent {
       self.align = align
       self.width = width
       self.minWidth = minWidth
+      self.priority = priority
     }
 
     /// A table's declared width is its preferred data width. A heading needs
@@ -98,11 +105,12 @@ public struct TableView: HTMLContent {
       label: String,
       sortable: Bool = true,
       align: Alignment = .start,
-      width: CSS.Length
+      width: CSS.Length,
+      priority: Bool = false
     ) {
       self.init(
         id: id, label: label, sortable: sortable, align: align,
-        width: CSS.LengthPercentage(width))
+        width: CSS.LengthPercentage(width), priority: priority)
     }
   }
 
@@ -127,9 +135,29 @@ public struct TableView: HTMLContent {
   /// The words a cell shows, however it is built — a bare string, a link, a
   /// chip. Used for the cell's title, so a value clipped at the cell's edge
   /// is never lost.
+  /// A value with a short form for a phone: `full` on wider screens,
+  /// `compact` (a language's code for its name, say) on a narrow one. The
+  /// cell's title is the full value either way.
+  public static func compact(_ full: DOM.Node, _ compact: String) -> DOM.Node {
+    span {
+      span { full }
+        .class("table-cell-full")
+      span { compact }
+        .class("table-cell-compact")
+        .ariaHidden(true)
+    }
+    .class("table-cell-compact-value")
+    .build()
+  }
+
   static func plainText(of node: DOM.Node) -> String {
     if let text = node as? DOM.Text { return text.content }
     guard let element = node as? DOM.Element else { return "" }
+    // A compact value's short form: the title is the whole one.
+    for (name, value) in element.attributes
+    where stringEquals(name, "class") && stringEquals(value, "table-cell-compact") {
+      return ""
+    }
     var parts: [String] = []
     for child in element.children {
       let text = plainText(of: child)
@@ -647,6 +675,7 @@ public struct TableView: HTMLContent {
                     .scope(.col)
                     .data("table-column-id", column.id)
                     .data("align", column.align.value)
+                    .data("priority", column.priority)
                     .data("flex", column.width == nil ? "true" : "false")
                     .data("width", column.width != nil ? column.width!.value : "")
                     .class("table-column-header")
@@ -806,6 +835,7 @@ public struct TableView: HTMLContent {
                             }
                             .scope(.row)
                             .data("align", column.align.value)
+                            .data("priority", column.priority)
                           } else {
                             td {
                               // Child rows get indentation on first cell
@@ -826,6 +856,7 @@ public struct TableView: HTMLContent {
                               .data("edge-fade", "expand")
                             }
                             .data("align", column.align.value)
+                            .data("priority", column.priority)
                             .title(cellTitle)
                             .style {
                               selector("&") {
@@ -1083,6 +1114,38 @@ public struct TableView: HTMLContent {
         // to be taken back or the auto pair recentres it mid-row.
         marginInlineStart(.auto)
         marginInlineEnd(0)
+      }
+      // A compact value shows its short form only on a phone.
+      descendant(".table-cell-compact") { display(.none) }
+      // On a phone a table with a priority column gives it the room: the
+      // table lays out by its content, at the box's width, every other
+      // column shrinks to its content (its heading included, never cut),
+      // and the priority column takes what is left, at least 20 characters
+      // of it, fading where its values run on. Resized widths (the colgroup)
+      // are the desktop's.
+      media(maxWidth(maxWidthBreakpointMobile)) {
+        selector("& .table-table:has(th[data-priority='true'])") {
+          tableLayout(.auto).important()
+          width(perc(100)).important()
+        }
+        selector("& .table-table:has(th[data-priority='true']) col") {
+          width(.auto).important()
+        }
+        selector(
+          "& .table-table:has(th[data-priority='true']) th[data-table-column-id]:not([data-priority='true'])",
+          "& .table-table:has(th[data-priority='true']) td[data-priority='false']",
+          "& .table-table:has(th[data-priority='true']) th[scope='row'][data-priority='false']"
+        ) {
+          width(px(1)).important()
+          minWidth(0).important()
+        }
+        selector("& .table-table th[data-priority='true']", "& .table-table td[data-priority='true']") {
+          width(perc(100)).important()
+          maxWidth(0).important()
+          minWidth(ch(20)).important()
+        }
+        descendant(".table-cell-full") { display(.none).important() }
+        descendant(".table-cell-compact") { display(.inline).important() }
       }
       // On a narrow phone the row would wrap unevenly: two lines instead,
       // the count over the pager, both centred. Wider, one row fits.
