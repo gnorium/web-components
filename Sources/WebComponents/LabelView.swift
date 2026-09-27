@@ -80,7 +80,7 @@ public struct LabelView: HTMLContent {
           labelContent
 
           if optional {
-            em { " \(optionalFlag)" }
+            span { " \(optionalFlag)" }
               .class("label-optional-flag")
           }
 
@@ -112,7 +112,7 @@ public struct LabelView: HTMLContent {
             labelContent
 
             if optional {
-              em { " \(optionalFlag)" }
+              span { " \(optionalFlag)" }
                 .class("label-optional-flag")
             }
 
@@ -135,7 +135,7 @@ public struct LabelView: HTMLContent {
             labelContent
 
             if optional {
-              em { " \(optionalFlag)" }
+              span { " \(optionalFlag)" }
                 .class("label-optional-flag")
             }
 
