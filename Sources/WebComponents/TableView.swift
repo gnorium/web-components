@@ -27,7 +27,9 @@ public struct TableView: HTMLContent {
   public let totalItems: Int?
   public let totalPages: Int?
   public let currentPage: Int?
-  public let paginationBaseUrl: String?
+  /// A table the server sorts and pages: every sort header and page link
+  /// is its URL. Nil sorts and pages the rows in the browser.
+  public let serverQuery: ServerQuery?
   public let headerContent: [DOM.Node]
   public let theadContent: [DOM.Node]
   public let tbodyContent: [DOM.Node]
@@ -251,6 +253,61 @@ public struct TableView: HTMLContent {
     }
   }
 
+  /// A server-sorted, server-paged table's one URL builder: its page's path
+  /// and the query in force (a search, filters), which every sort header and
+  /// page link keeps. A sort link goes to the first page; a page link keeps
+  /// the sort in force.
+  public struct ServerQuery: Sendable {
+    public let path: String
+    public let parameters: [Parameter]
+
+    public struct Parameter: Sendable {
+      public let name: String
+      public let value: String
+
+      public init(name: String, value: String) {
+        self.name = name
+        self.value = value
+      }
+    }
+
+    public init(path: String, parameters: [Parameter] = []) {
+      self.path = path
+      self.parameters = parameters
+    }
+
+    /// `path?{parameters}&sort=…&order=…&page=…`, each value percent-encoded
+    /// as `encodeURIComponent` does.
+    public func url(sort: Sort?, page: Int) -> String {
+      var pairs = parameters.map { "\($0.name)=\(Self.encode($0.value))" }
+      if let sort {
+        pairs.append("sort=\(Self.encode(sort.columnID))")
+        pairs.append("order=\(sort.direction.value)")
+      }
+      pairs.append("page=\(page)")
+      return "\(path)?\(stringJoin(pairs, separator: "&"))"
+    }
+
+    static func encode(_ string: String) -> String {
+      let hex: [UInt8] = Array("0123456789ABCDEF".utf8)
+      var bytes: [UInt8] = []
+      for byte in Array(string.utf8) {
+        let unreserved =
+          (byte >= 65 && byte <= 90) || (byte >= 97 && byte <= 122) || (byte >= 48 && byte <= 57)
+          || byte == 45 || byte == 95 || byte == 46 || byte == 33 || byte == 126 || byte == 42
+          || byte == 39 || byte == 40 || byte == 41
+        if unreserved {
+          bytes.append(byte)
+        } else {
+          bytes.append(37)
+          bytes.append(hex[Int(byte >> 4)])
+          bytes.append(hex[Int(byte & 0xF)])
+        }
+      }
+      return String(decoding: bytes, as: UTF8.self)
+    }
+  }
+
   public enum PaginationPosition: Sendable {
     case top
     case bottom
@@ -298,7 +355,7 @@ public struct TableView: HTMLContent {
     totalItems: Int? = nil,
     totalPages: Int? = nil,
     currentPage: Int? = nil,
-    paginationBaseUrl: String? = nil,
+    serverQuery: ServerQuery? = nil,
     @CSSBuilder theadStyle: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] },
     @CSSBuilder thStyle: @escaping @Sendable (Column.Alignment) -> [CSSOM.CSSRule] = { _ in [] },
     @CSSBuilder tdStyle: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] },
@@ -327,7 +384,7 @@ public struct TableView: HTMLContent {
     self.totalItems = totalItems
     self.totalPages = totalPages
     self.currentPage = currentPage
-    self.paginationBaseUrl = paginationBaseUrl
+    self.serverQuery = serverQuery
     self.theadStyle = theadStyle
     self.thStyle = thStyle
     self.tdStyle = tdStyle
@@ -364,8 +421,8 @@ public struct TableView: HTMLContent {
     if computedTotalPages <= 10 {
       pageNumbers = (1...computedTotalPages).map { pageNum in
         let pageUrl: String
-        if let baseUrl = paginationBaseUrl {
-          pageUrl = "\(baseUrl)\(pageNum)"
+        if let serverQuery {
+          pageUrl = serverQuery.url(sort: sort, page: pageNum)
         } else {
           pageUrl = "#"
         }
@@ -386,8 +443,8 @@ public struct TableView: HTMLContent {
       if computedTotalPages > 1 { pages.append(computedTotalPages) }
       pageNumbers = pages.map { pageNum in
         let pageUrl: String
-        if let baseUrl = paginationBaseUrl {
-          pageUrl = "\(baseUrl)\(max(pageNum, 1))"
+        if let serverQuery {
+          pageUrl = serverQuery.url(sort: sort, page: max(pageNum, 1))
         } else {
           pageUrl = "#"
         }
@@ -437,9 +494,11 @@ public struct TableView: HTMLContent {
 
           let prevUrl: String?
           let nextUrl: String?
-          if let baseUrl = paginationBaseUrl {
-            prevUrl = computedCurrentPage > 1 ? "\(baseUrl)\(computedCurrentPage - 1)" : nil
-            nextUrl = computedCurrentPage < computedTotalPages ? "\(baseUrl)\(computedCurrentPage + 1)" : nil
+          if let serverQuery {
+            prevUrl = computedCurrentPage > 1 ? serverQuery.url(sort: sort, page: computedCurrentPage - 1) : nil
+            nextUrl =
+              computedCurrentPage < computedTotalPages
+              ? serverQuery.url(sort: sort, page: computedCurrentPage + 1) : nil
           } else {
             prevUrl = computedCurrentPage > 1 ? "#" : nil
             nextUrl = computedCurrentPage < computedTotalPages ? "#" : nil
@@ -563,6 +622,17 @@ public struct TableView: HTMLContent {
                         .class("table-sort-button")
                         .type(.button)
                         .data("column-id", column.id)
+                        // A server-sorted table's header goes to its sort:
+                        // this column ascending, or descending when it is
+                        // already ascending.
+                        .data("sort-url", serverQuery.map { query in
+                          let ascending = sort.map {
+                            stringEquals($0.columnID, column.id) && $0.direction == .ascending
+                          } ?? false
+                          return query.url(
+                            sort: Sort(columnID: column.id, direction: ascending ? .descending : .ascending),
+                            page: 1)
+                        } ?? "")
                       } else {
                         div { column.label }
                           .class("table-header-label")
@@ -828,9 +898,11 @@ public struct TableView: HTMLContent {
 
           let prevUrl: String?
           let nextUrl: String?
-          if let baseUrl = paginationBaseUrl {
-            prevUrl = computedCurrentPage > 1 ? "\(baseUrl)\(computedCurrentPage - 1)" : nil
-            nextUrl = computedCurrentPage < computedTotalPages ? "\(baseUrl)\(computedCurrentPage + 1)" : nil
+          if let serverQuery {
+            prevUrl = computedCurrentPage > 1 ? serverQuery.url(sort: sort, page: computedCurrentPage - 1) : nil
+            nextUrl =
+              computedCurrentPage < computedTotalPages
+              ? serverQuery.url(sort: sort, page: computedCurrentPage + 1) : nil
           } else {
             prevUrl = computedCurrentPage > 1 ? "#" : nil
             nextUrl = computedCurrentPage < computedTotalPages ? "#" : nil
@@ -859,14 +931,10 @@ public struct TableView: HTMLContent {
     .class(stringIsEmpty(`class`) ? "table-view\(isEmpty ? " table-view-empty" : "")\(pending ? " table-view-pending" : "")" : "table-view\(isEmpty ? " table-view-empty" : "")\(pending ? " table-view-pending" : "") \(`class`)")
     .data("selection-mode", selectionMode?.value ?? "")
     .data("paginate", paginate ? "true" : "false")
-    .data("paginate-server", {
-      if let url = paginationBaseUrl, !stringIsEmpty(url) { return "true" }
-      return "false"
-    }())
+    .data("paginate-server", serverQuery == nil ? "false" : "true")
     .data("current-page", intToString(computedCurrentPage))
     .data("pagination-size", intToString(paginationSizeDefault))
     .data("total-items", intToString(computedTotalItems))
-    .data("pagination-base-url", paginationBaseUrl ?? "")
     .data("sort-column", sort?.columnID ?? "")
     .data("sort-order", sort?.direction.value ?? "")
     .style {
@@ -1695,6 +1763,13 @@ public struct TableView: HTMLContent {
       // Sort buttons
       for button in sortButtons {
         _ = button.addEventListener(.click) { [self] _ in
+          // A server-sorted table: the server rendered the header's link,
+          // path and query in force included.
+          let sortURL = button.getAttribute(data("sort-url")) ?? ""
+          if !stringIsEmpty(sortURL) {
+            window.location.href = sortURL
+            return
+          }
           guard let columnID = button.getAttribute(data("column-id")) else { return }
           self.toggleSort(columnID: columnID)
         }
@@ -2127,20 +2202,6 @@ public struct TableView: HTMLContent {
     }
 
     private func toggleSort(columnID: String) {
-      let isServerPaginated = stringEquals(table.getAttribute(data("paginate-server")) ?? "false", "true")
-      let baseUrl = table.getAttribute(data("pagination-base-url")) ?? ""
-
-      if isServerPaginated && !stringIsEmpty(baseUrl) {
-        var direction = "asc"
-        if let current = currentSort, stringEquals(current.columnID, columnID) {
-          direction = stringEquals(current.direction, "asc") ? "desc" : "asc"
-        }
-        let base = window.location.pathname
-        let url = "\(base)?sort=\(columnID)&order=\(direction)&page=1"
-        window.location.href = url
-        return
-      }
-
       // Toggle sort direction
       if let current = currentSort, stringEquals(current.columnID, columnID) {
         let newDirection = stringEquals(current.direction, "asc") ? "desc" : "asc"

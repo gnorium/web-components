@@ -165,7 +165,8 @@
               activeTab: tabs.first?.name ?? "",
               variant: .solid,
               class: "search-menu-tabs",
-              fullWidth: true
+              fullWidth: true,
+              idPrefix: "search-menu-"
             )
           }
             div {

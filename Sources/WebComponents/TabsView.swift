@@ -20,6 +20,10 @@
     /// Two tab sets can share a page — Mission Control has one per room —
     /// and they cannot both be "tab".
     let queryParam: String
+    /// What its tabs' and panels' ids start with, so two tab sets naming
+    /// the same tab on one page (the records tabs and the header search
+    /// menu's) do not share ids: `{idPrefix}tab-{name}`, `{idPrefix}panel-{name}`.
+    let idPrefix: String
 
     /// Visual style variant for tab buttons
     public enum Variant: String, Sendable {
@@ -37,7 +41,8 @@
       class: String = "",
       fullWidth: Bool = false,
       localStorageKey: String? = nil,
-      queryParam: String = "tab"
+      queryParam: String = "tab",
+      idPrefix: String = ""
     ) {
       self.tabs = tabs
       self.activeTab = activeTab ?? tabs.first?.name
@@ -47,6 +52,7 @@
       self.fullWidth = fullWidth
       self.localStorageKey = localStorageKey
       self.queryParam = queryParam
+      self.idPrefix = idPrefix
     }
 
     public func build() -> DOM.Node {
@@ -75,7 +81,7 @@
                   .class(tabClass)
                   .role("tab")
                   .ariaSelected(tab.name == active)
-                  .id("tab-\(tab.name)")
+                  .id("\(idPrefix)tab-\(tab.name)")
                   .data("tab-name", tab.name)
               } else {
                 // Panel-switching tabs render as buttons
@@ -84,8 +90,8 @@
                   .class(tabClass)
                   .role("tab")
                   .ariaSelected(tab.name == active)
-                  .ariaControls("panel-\(tab.name)")
-                  .id("tab-\(tab.name)")
+                  .ariaControls("\(idPrefix)panel-\(tab.name)")
+                  .id("\(idPrefix)tab-\(tab.name)")
                   .data("tab-name", tab.name)
                   .disabled(tab.disabled)
                   .tabindex(tab.name == active ? 0 : -1)
@@ -113,8 +119,9 @@
           }
           .class("tab-panel")
           .role("tabpanel")
-          .id("panel-\(tab.name)")
-          .ariaLabelledby("tab-\(tab.name)")
+          .id("\(idPrefix)panel-\(tab.name)")
+          .data("tab-panel", tab.name)
+          .ariaLabelledby("\(idPrefix)tab-\(tab.name)")
           .tabindex(0)
           .hidden(!isActive)
         }
@@ -428,8 +435,8 @@
       }
 
       for panel in tabPanels {
-        if let panelID = panel.getAttribute(.id) {
-          let shouldShow = stringEquals(panelID, "panel-\(tabName)")
+        if let panelName = panel.getAttribute(data("tab-panel")) {
+          let shouldShow = stringEquals(panelName, tabName)
           if shouldShow {
             panel.removeAttribute(.hidden)
           } else {
