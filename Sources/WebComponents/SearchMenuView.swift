@@ -144,8 +144,11 @@
     }
 
     public func build() -> DOM.Node {
+      // Its results are drawn on the client, each named by a
+      // BreadcrumbLabelView: built here so the page links its style sheet.
+      _ = BreadcrumbLabelView(context: "", text: "").build()
       // Full-screen search menu - iOS-style
-      div {
+      return div {
         // Backdrop with blur effect
         div {}
           .class("search-menu-backdrop")
@@ -387,17 +390,43 @@
           boxSizing(.borderBox)
           transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionUser)
         }
-        selector(".search-menu-result:hover", ".search-menu-result:active") {
-          color(colorBlue)
-          border(borderWidthBase, .solid, borderColorBlue)
-          outline(borderWidthBase, .solid, borderColorBlue)
-          outlineOffset(px(-2))
+        // Hovered, pressed, focused or reached with the arrow keys: solid
+        // blue, every part inverted, as DropdownView's highlighted option
+        // (its tokens). Important, as that is: the typeahead's own
+        // aria-selected rule draws a light blue.
+        selector(
+          ".search-menu-result:hover", ".search-menu-result:active", ".search-menu-result:focus",
+          ".search-menu-result[aria-selected='true']"
+        ) {
+          backgroundColor(backgroundColorBlue).important()
+          borderColor(borderColorBlue).important()
+          outline(.none).important()
+          color(colorInvertedFixed).important()
           cursor(cursorBaseHover)
         }
-        descendant(".search-menu-result:focus") {
-          color(colorBlueFocus)
-          outline(borderWidthBase, .solid, borderColorBlueFocus)
-          outlineOffset(px(-2))
+        selector(
+          ".search-menu-result:hover .search-menu-result-label",
+          ".search-menu-result:hover .search-menu-result-meta",
+          ".search-menu-result:hover .breadcrumb-label-context",
+          ".search-menu-result:hover .breadcrumb-separator-view",
+          ".search-menu-result:active .search-menu-result-label",
+          ".search-menu-result:active .search-menu-result-meta",
+          ".search-menu-result:active .breadcrumb-label-context",
+          ".search-menu-result:active .breadcrumb-separator-view"
+        ) {
+          color(colorInvertedFixed).important()
+        }
+        selector(
+          ".search-menu-result:focus .search-menu-result-label",
+          ".search-menu-result:focus .search-menu-result-meta",
+          ".search-menu-result:focus .breadcrumb-label-context",
+          ".search-menu-result:focus .breadcrumb-separator-view",
+          ".search-menu-result[aria-selected='true'] .search-menu-result-label",
+          ".search-menu-result[aria-selected='true'] .search-menu-result-meta",
+          ".search-menu-result[aria-selected='true'] .breadcrumb-label-context",
+          ".search-menu-result[aria-selected='true'] .breadcrumb-separator-view"
+        ) {
+          color(colorInvertedFixed).important()
         }
         descendant(".search-menu-result-text") {
           display(.flex)
@@ -433,7 +462,6 @@
         descendant(".search-menu-result-sup") {
           fontSize(perc(75))
         }
-        selector(".search-menu-result:hover .search-menu-result-label", ".search-menu-result:active .search-menu-result-label") { color(colorBlue) }
         selector("&[data-state='open'] [data-search-menu-backdrop='true']") {
           opacity(1)
           pointerEvents(.auto)
@@ -463,6 +491,33 @@
   import HTMLBuilder
   import WebAPIs
   import WebTypes
+
+  /// The objects of a search answer's JSON array, each as its own text, by
+  /// brace depth: SearchMenuView's and SearchBarView's results alike.
+  func searchResultObjects(in arrayContent: String) -> [String] {
+    var objects: [String] = []
+    var braceDepth = 0
+    var objStart = 0
+
+    let bytes = Array(arrayContent.utf8)
+    var i = 0
+    while i < bytes.count {
+      let char = bytes[i]
+      if char == 123 {  // '{'
+        if braceDepth == 0 {
+          objStart = i
+        }
+        braceDepth += 1
+      } else if char == 125 {  // '}'
+        braceDepth -= 1
+        if braceDepth == 0 {
+          objects.append(String(decoding: Array(bytes[objStart...i]), as: UTF8.self))
+        }
+      }
+      i += 1
+    }
+    return objects
+  }
 
   public class SearchMenuHydration: @unchecked Sendable {
     public static nonisolated(unsafe) var instance: SearchMenuHydration?
@@ -735,6 +790,8 @@
       /// Its category or part of speech; "" when it has none.
       let category: String
       let urlSegment: String
+      /// The record's own path, as the answer gives it; "" when it has none.
+      let url: String
       let homograph: Int
       let color: String
     }
@@ -856,9 +913,13 @@
         item.setAttribute(.tabindex, -1)
 
         // Construct URL for navigation
+        // Its own path when the answer gives one (JSON writes its slashes
+        // "\/"): two records of one lemma differ only there.
         let href: String
         let base = stripQuery(resultUrlBase)
-        if stringEquals(searchField, "q") || stringContains(resultUrlBase, "/articles") {
+        if !stringIsEmpty(result.url) {
+          href = stringReplace(result.url, "\\/", "/")
+        } else if stringEquals(searchField, "q") || stringContains(resultUrlBase, "/articles") {
           href = "\(base)/\(result.urlSegment)"
         } else {
           href = "\(base)/\(result.urlSegment)/\(result.text)/\(result.homograph)"
@@ -869,21 +930,22 @@
         let textContent = document.createElement(.span)
         textContent.className = "menu-item-text search-menu-result-text"
 
-        // Two rows, the same for both kinds, as every record is offered:
-        // what the result IS (title or lemma); then its language, its
-        // progenitors (authors and translators, or etymons) and its
-        // category (or part of speech, with its homograph number), "—"
-        // each when unknown.
+        // Two rows, the same for both kinds, as every record is offered
+        // (DropdownView's record options too): its language › what the
+        // result IS (title or lemma), as a breadcrumb; then its progenitors
+        // (authors and translators, or etymons) and its category (or part
+        // of speech, with its homograph number), "—" each when unknown.
         let label = document.createElement(.span)
         label.className = "menu-item-label search-menu-result-label"
-        label.textContent = result.text
+        label.innerHTML = BreadcrumbLabelView(
+          context: stringIsEmpty(result.subtext) ? "—" : result.subtext, text: result.text
+        ).render()
         textContent.appendChild(label)
 
         let detail = document.createElement(.span)
         detail.className = "search-menu-result-meta search-menu-result-detail"
         detail.textContent = stringJoin(
           [
-            stringIsEmpty(result.subtext) ? "—" : result.subtext,
             stringIsEmpty(result.pos) ? "—" : result.pos,
             stringIsEmpty(result.category) ? "—" : result.category,
           ], separator: " · ")
@@ -938,36 +1000,7 @@
         let arrayContent = stringSubstring(afterKey, from: start + 1, to: end)
         if stringTrim(arrayContent).isEmpty { return [] }
 
-        return splitJsonArray(arrayContent)
-      }
-
-      // Helper to split JSON array into object strings
-      func splitJsonArray(_ arrayContent: String) -> [String] {
-        var objects: [String] = []
-        var braceDepth = 0
-        var objStart = 0
-
-        let bytes = Array(arrayContent.utf8)
-        var i = 0
-        while i < bytes.count {
-          let char = bytes[i]
-          if char == 123 {  // '{'
-            if braceDepth == 0 {
-              objStart = i
-            }
-            braceDepth += 1
-          } else if char == 125 {  // '}'
-            braceDepth -= 1
-            if braceDepth == 0 {
-              let objLen = i - objStart + 1
-              let buffer = Array(bytes[objStart..<(objStart + objLen)])
-              let obj = String(decoding: buffer, as: UTF8.self)
-              objects.append(obj)
-            }
-          }
-          i += 1
-        }
-        return objects
+        return searchResultObjects(in: arrayContent)
       }
 
       func extractValue(from obj: String, key: String) -> String {
@@ -1010,7 +1043,7 @@
         let trimmed = stringTrim(jsonString)
         if stringStartsWith(trimmed, "[") && stringEndsWith(trimmed, "]") {
           let content = stringSubstring(trimmed, from: 1, to: cStringLength(trimmed) - 1)
-          allStrs = splitJsonArray(content)
+          allStrs = searchResultObjects(in: content)
         }
       }
 
@@ -1037,6 +1070,7 @@
               pos: qualifierValue,
               category: extractValue(from: str, key: "category"),
               urlSegment: urlSegment,
+              url: extractValue(from: str, key: "url"),
               homograph: homograph,
               color: color
             ))

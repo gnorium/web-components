@@ -13,15 +13,21 @@ import WebTypes
 public struct DropdownView: HTMLContent {
   public struct DropdownOption: Sendable {
     public let value: String
+    /// What the option belongs to, drawn before `display` as a breadcrumb
+    /// is, with BreadcrumbView's chevron between: "English › computer"
+    /// (BreadcrumbLabelView). The closed dropdown shows it the same way.
+    public let context: String?
     public let display: String
     public let altDisplay: String?
     /// Lowercase form of display, for mid-sentence use (e.g. tooltip text). Pre-computed server-side to avoid WASI string ops.
     public let displayLower: String?
 
     public init(
-      value: String, display: String, altDisplay: String? = nil, displayLower: String? = nil
+      value: String, context: String? = nil, display: String, altDisplay: String? = nil,
+      displayLower: String? = nil
     ) {
       self.value = value
+      self.context = context
       self.display = display
       self.altDisplay = altDisplay
       self.displayLower = displayLower
@@ -169,14 +175,10 @@ public struct DropdownView: HTMLContent {
         if let form { hidden.form(form) } else { hidden }
 
         // Determine display text - use selected option's display or placeholder
-        let displayText: String = {
-          if let value = selectedValue,
-            let option = options.first(where: { stringEquals($0.value, value) })
-          {
-            return option.display
-          }
-          return placeholder
-        }()
+        let selectedOption: DropdownOption? = selectedValue.flatMap { value in
+          options.first(where: { stringEquals($0.value, value) })
+        }
+        let displayText = selectedOption?.display ?? placeholder
         // Trigger button
         div {
           ButtonView(
@@ -190,7 +192,13 @@ public struct DropdownView: HTMLContent {
             contentJustifyContent: contentJustifyContent,
             borderRadius: buttonBorderRadius
           ) {
-            span { displayText }
+            span {
+              if let option = selectedOption, let context = option.context {
+                BreadcrumbLabelView(context: context, text: option.display)
+              } else {
+                displayText
+              }
+            }
               .class("dropdown-selected-text")
               .data("dropdown-selected-text", true)
               .data("placeholder", placeholder)
@@ -244,7 +252,13 @@ public struct DropdownView: HTMLContent {
             options.map { option in
               let isSelected = stringEquals(option.value, selectedValue ?? "")
               return div {
-                span { option.display }
+                span {
+                  if let context = option.context {
+                    BreadcrumbLabelView(context: context, text: option.display)
+                  } else {
+                    option.display
+                  }
+                }
                   .class("dropdown-option-display-text")
                   .data("stacked", optionLayout == .stacked)
                 
@@ -258,6 +272,7 @@ public struct DropdownView: HTMLContent {
               .data("dropdown-option", true)
               .data("value", option.value)
               .data("display", option.display)
+              .data("context", option.context ?? "")
               .data("display-lower", option.displayLower ?? option.display)
               .data("alt-display", option.altDisplay ?? "")
               .data("selected", isSelected)
@@ -456,7 +471,10 @@ public struct DropdownView: HTMLContent {
         pseudoClass(.hover) {
           backgroundColor(backgroundColorBlue).important()
           color(colorInvertedFixed).important()
-          selector(".dropdown-option-display-text", ".dropdown-option-alt-text") {
+          selector(
+            ".dropdown-option-display-text", ".dropdown-option-alt-text", ".breadcrumb-label-context",
+            ".breadcrumb-separator-view"
+          ) {
             color(colorInvertedFixed).important()
           }
         }
@@ -472,14 +490,24 @@ public struct DropdownView: HTMLContent {
         backgroundColor(backgroundColorBlue).important()
         color(colorInvertedFixed).important()
       }
-      selector(".dropdown-option[data-selected='true'] .dropdown-option-display-text", ".dropdown-option[data-selected='true'] .dropdown-option-alt-text") {
+      selector(
+        ".dropdown-option[data-selected='true'] .dropdown-option-display-text",
+        ".dropdown-option[data-selected='true'] .dropdown-option-alt-text",
+        ".dropdown-option[data-selected='true'] .breadcrumb-label-context",
+        ".dropdown-option[data-selected='true'] .breadcrumb-separator-view"
+      ) {
         color(colorInvertedFixed).important()
       }
       descendant(".dropdown-option[data-highlighted='true']") {
         backgroundColor(backgroundColorBlue).important()
         color(colorInvertedFixed).important()
       }
-      selector(".dropdown-option[data-highlighted='true'] .dropdown-option-display-text", ".dropdown-option[data-highlighted='true'] .dropdown-option-alt-text") {
+      selector(
+        ".dropdown-option[data-highlighted='true'] .dropdown-option-display-text",
+        ".dropdown-option[data-highlighted='true'] .dropdown-option-alt-text",
+        ".dropdown-option[data-highlighted='true'] .breadcrumb-label-context",
+        ".dropdown-option[data-highlighted='true'] .breadcrumb-separator-view"
+      ) {
         color(colorInvertedFixed).important()
       }
       // Wrapped, not cut: the menu is the one place a long title is read
@@ -787,6 +815,7 @@ public struct DropdownView: HTMLContent {
           stringContainsCaseInsensitive(displayValue, searchValue)
           || stringContainsCaseInsensitive(
             option.getAttribute(data("alt-display")) ?? "", searchValue)
+          || stringContainsCaseInsensitive(option.getAttribute(data("context")) ?? "", searchValue)
         if matches {
           option.setAttribute(data("hidden"), "false")
         } else {
@@ -893,8 +922,14 @@ public struct DropdownView: HTMLContent {
       // Get altDisplay for tooltip
       let altDisplay = option.getAttribute(data("alt-display")) ?? display
 
-      // Update selected text and title (tooltip)
-      selectedText?.innerHTML = display
+      // Update selected text and title (tooltip): an option with a context
+      // shows its breadcrumb label, as the server draws a chosen one.
+      if let label = option.querySelector(".breadcrumb-label-view") {
+        selectedText?.innerHTML = ""
+        selectedText?.appendChild(label.cloneNode(deep: true))
+      } else {
+        selectedText?.innerHTML = display
+      }
       selectedText?.setAttribute(.title, altDisplay)
       selectedText?.setAttribute(data("selected"), true)
       // A new title starts at its beginning, wherever the last was scrolled to.

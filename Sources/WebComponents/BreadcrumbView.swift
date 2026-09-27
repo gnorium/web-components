@@ -72,11 +72,7 @@
                     .class("breadcrumb-current")
                 }
 
-                div {
-                  NextIconView(width: px(8), height: px(8))
-                }
-                .class("breadcrumb-separator")
-                .ariaHidden(true)
+                BreadcrumbSeparatorView(class: "breadcrumb-separator")
 
                 // Overflow menu
                 span {
@@ -113,11 +109,7 @@
                 }
 
                 if !isLast {
-                  div {
-                    NextIconView(width: px(8), height: px(8))
-                  }
-                  .class("breadcrumb-separator")
-                  .ariaHidden(true)
+                  BreadcrumbSeparatorView(class: "breadcrumb-separator")
                 }
               }
             }
@@ -161,15 +153,10 @@
           color(colorBase)
           fontWeight(fontWeightNormal)
         }
+        // Its icon, size and colour are BreadcrumbSeparatorView's; in the
+        // inline flow a margin is the only way to space it.
         descendant(".breadcrumb-separator") {
-          color(colorBase)
-          userSelect(.none)
-          display(.inlineFlex)
-          alignItems(.center)
-          justifyContent(.center)
-          verticalAlign(.middle)
           marginInline(spacing4)
-          lineHeight(lineHeightContent)
         }
         descendant(".breadcrumb-overflow") {
           display(.inlineFlex)

@@ -70,7 +70,10 @@
     }
 
     public func build() -> DOM.Node {
-      div {
+      // Its suggestions are drawn on the client, each named by a
+      // BreadcrumbLabelView: built here so the page links its style sheet.
+      _ = BreadcrumbLabelView(context: "", text: "").build()
+      return div {
         // Input - if openDialog is true, make it read-only and use it as a trigger
         input()
           .type(.search)
@@ -175,8 +178,8 @@
             // Results dynamically inserted by client (WASM hydration)
             // li.search-bar-suggestion-item
             //   a.search-bar-suggestion-link
-            //     span.search-bar-suggestion-text (title or lemma)
-            //     span.search-bar-suggestion-detail (language · progenitors · category)
+            //     span.search-bar-suggestion-text (language › title or lemma)
+            //     span.search-bar-suggestion-detail (progenitors · category)
             // Styles applied directly via WebAPIs DSL in render() below
           }
           .class("search-bar-suggestions")
@@ -224,14 +227,28 @@
         selector("&.in-sidebar .search-bar-button") {
           marginInlineEnd(spacing10)
         }
+        // Under the input, over what follows, as DropdownView's menu is: in
+        // the row beside the input it squeezed the input to a sliver.
         descendant(".search-bar-dropdown") {
           display(.none)
+          position(.absolute)
+          top(perc(100))
+          insetInlineStart(0)
+          insetInlineEnd(0)
+          marginBlockStart(spacing4)
+          maxHeight(px(300))
+          overflowY(.auto)
+          backgroundColor(backgroundColorBase)
+          border(borderWidthBase, .solid, borderColorBase)
+          borderRadius(borderRadiusBase)
+          boxShadow(boxShadowMedium)
+          zIndex(zIndexDropdown)
         }
         descendant(".search-bar-dropdown[data-open='true']") {
           display(.block)
         }
-        // Two rows, as every record is offered: its title or lemma, then
-        // its language, progenitors and category.
+        // Two rows, as every record is offered: its language › its title or
+        // lemma, then its progenitors and category.
         descendant(".search-bar-suggestion-link") {
           display(.flex)
           flexDirection(.column)
@@ -240,17 +257,32 @@
           textDecoration(.none)
           color(.inherit)
           width(perc(100))
-          transition(.backgroundColor, s(0.15), .easeInOut)
-          padding(px(4), px(0))
+          padding(spacing8, spacing12)
+          boxSizing(.borderBox)
+          transition(.backgroundColor, transitionDurationBase, transitionTimingFunctionSystem)
         }
+        // The link is the whole row, so the whole row lights: hovered or
+        // reached with the arrow keys, solid blue with every part inverted,
+        // as DropdownView's highlighted option and the search menu's rows.
         selector(".search-bar-suggestion-link:hover", ".search-bar-suggestion-link.active") {
-          backgroundColor(rgba(0, 0, 0, 0.04))
+          backgroundColor(backgroundColorBlue)
         }
-        descendant(".search-bar-suggestion-link.active") {
-          backgroundColor(rgba(0, 0, 0, 0.08))
+        selector(
+          ".search-bar-suggestion-link:hover .search-bar-suggestion-text",
+          ".search-bar-suggestion-link:hover .search-bar-suggestion-detail",
+          ".search-bar-suggestion-link:hover .breadcrumb-label-context",
+          ".search-bar-suggestion-link:hover .breadcrumb-separator-view",
+          ".search-bar-suggestion-link.active .search-bar-suggestion-text",
+          ".search-bar-suggestion-link.active .search-bar-suggestion-detail",
+          ".search-bar-suggestion-link.active .breadcrumb-label-context",
+          ".search-bar-suggestion-link.active .breadcrumb-separator-view"
+        ) {
+          color(colorInvertedFixed)
         }
+        // The name in link blue, as the search menu's; its language subtle.
         descendant(".search-bar-suggestion-text") {
           width(perc(100))
+          color(colorBlue)
           fontSize(fontSizeSmall14)
           fontWeight(fontWeightSemiBold)
           overflowWrap(.breakWord)
@@ -264,10 +296,9 @@
         }
         descendant(".search-bar-suggestion-item") {
           listStyleType(.none)
-          padding(px(8), px(12))
         }
         descendant(".search-bar-suggestion-item[data-last='false']") {
-          borderBottom(px(1), .solid, rgba(0, 0, 0, 0.08))
+          borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
         }
       }
     }
@@ -455,10 +486,7 @@
 
     private func onSearch() {
       if activeIndex >= 0 && activeIndex < results.count {
-        let result = results[activeIndex]
-        let base = stripQuery(resultUrlBase)
-        let href = result.url.isEmpty ? "\(base)/\(result.languageCode)/\(result.text)/\(result.homograph)" : result.url
-        location.href = href
+        location.href = href(of: results[activeIndex])
         return
       }
       let q = (input as? HTML.HTMLInputElement)?.value ?? ""
@@ -496,6 +524,9 @@
           self.results = parsed
           self.isOpen = !parsed.isEmpty
           self.activeIndex = -1
+          // Drawn now: the answer was only kept, and shown at the next key
+          // press or focus.
+          self.render()
         } else {
           console.error("SearchBar: Failed to parse JSONFormattable")
           self.results = []
@@ -512,17 +543,19 @@
       searchBarSuggestions.innerHTML = ""
 
       for (index, result) in results.enumerated() {
-        // Create text span with lemma
+        // Its language › its title or lemma, as a breadcrumb, as
+        // SearchMenuView and DropdownView's record options draw it.
         let textSpan = document.createElement(.span)
         textSpan.className = "search-bar-suggestion-text"
-        textSpan.innerHTML = result.text
+        textSpan.innerHTML = BreadcrumbLabelView(
+          context: stringIsEmpty(result.language) ? "—" : result.language, text: result.text
+        ).render()
 
-        // Its language, progenitors and category, "—" each when unknown.
+        // Its progenitors and category, "—" each when unknown.
         let detailSpan = document.createElement(.span)
         detailSpan.className = "search-bar-suggestion-detail"
         detailSpan.textContent = stringJoin(
           [
-            stringIsEmpty(result.language) ? "—" : result.language,
             stringIsEmpty(result.progenitors) ? "—" : result.progenitors,
             stringIsEmpty(result.category) ? "—" : result.category,
           ], separator: " · ")
@@ -535,8 +568,7 @@
           _ = a.classList.add("active")
         }
 
-        let href = "\(resultUrlBase)/\(result.languageCode)/\(result.text)/\(result.homograph)"
-        a.href = href
+        a.href = href(of: result)
 
         a.appendChild(textSpan)
         a.appendChild(detailSpan)
@@ -550,6 +582,14 @@
 
         searchBarSuggestions.appendChild(li)
       }
+    }
+
+    /// Where a suggestion leads: the record's own path, as the answer gives
+    /// it (JSON writes its slashes "\/"), else one made of its segments.
+    private func href(of result: SearchBarSuggestedLemma) -> String {
+      if !stringIsEmpty(result.url) { return stringReplace(result.url, "\\/", "/") }
+      let base = stripQuery(resultUrlBase)
+      return "\(base)/\(result.languageCode)/\(result.text)/\(result.homograph)"
     }
 
     private func stripQuery(_ url: String) -> String {
@@ -594,10 +634,9 @@
         let arrayContent = stringSubstring(afterKey, from: start + 1, to: end)
         if stringTrim(arrayContent).isEmpty { return [] }
 
-        // Split by objects "},"
-        return stringSplit(arrayContent, separator: "},\" ").map { obj in
-          stringIndexOfChar(obj, CChar(UInt8(ascii: "}"))) != nil ? obj : obj + "}"
-        }
+        // Each object whole: a split on a separator no compact JSON holds
+        // left the array one object, so only its first record was offered.
+        return searchResultObjects(in: arrayContent)
       }
 
       // Helper to extract value for key

@@ -302,6 +302,12 @@
     }
 
     private func handleMenuUpdate() {
+      // Drawn with no results, the view has no menu; whoever fills it in
+      // (SearchMenuHydration) adds one, found here, or the arrow keys moved
+      // through nothing.
+      if menuElement == nil {
+        menuElement = typeaheadSearchElement.querySelector(".typeahead-search-menu")
+      }
       guard let menu = menuElement else { return }
       self.menuItems = Array(menu.querySelectorAll(".menu-item-view"))
       self.selectedIndex = -1 // Reset selection on new results
