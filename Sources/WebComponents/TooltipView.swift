@@ -607,7 +607,11 @@ public struct TooltipView: HTMLContent {
     }
 
     private func showTooltip() {
-      guard content != nil else { return }
+      guard let content else { return }
+      // A page that changes what a tooltip says after hydration (the bubble
+      // is portaled to <body>, out of its reach) sets the trigger's
+      // `data-tooltip-text`; the bubble says it as it shows.
+      if let text = trigger.getAttribute("data-tooltip-text") { content.innerHTML = text }
 
       // Cancel any pending hide
       if let timer = hideTimeout {
