@@ -931,7 +931,7 @@
 
         // Two rows, the same for both kinds, as every record is offered
         // (DropdownView's record options too): its language › what the
-        // result IS (its title), as a breadcrumb; then its progenitors
+        // result IS (its title), as a breadcrumb; then its voices
         // (authors and translators, or etymons) and its type (with its
         // homograph number), "—" each when unknown.
         let label = document.createElement(.span)

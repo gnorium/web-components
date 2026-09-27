@@ -187,7 +187,7 @@
               // li.search-bar-suggestion-item
               //   a.search-bar-suggestion-link
               //     span.search-bar-suggestion-text (language › title)
-              //     span.search-bar-suggestion-detail (progenitors · type)
+              //     span.search-bar-suggestion-detail (voices · type)
               // Styles applied directly via WebAPIs DSL in render() below
             }
             .class("search-bar-suggestions")
@@ -258,7 +258,7 @@
           display(.block)
         }
         // Two rows, as every record is offered: its language › its title,
-        // then its progenitors and type.
+        // then its voices and type.
         descendant(".search-bar-suggestion-link") {
           display(.flex)
           flexDirection(.column)
@@ -563,12 +563,12 @@
           context: stringIsEmpty(result.language) ? "—" : result.language, text: result.text
         ).render()
 
-        // Its progenitors and type, "—" each when unknown.
+        // Its voices and type, "—" each when unknown.
         let detailSpan = document.createElement(.span)
         detailSpan.className = "search-bar-suggestion-detail"
         detailSpan.textContent = stringJoin(
           [
-            stringIsEmpty(result.progenitors) ? "—" : result.progenitors,
+            stringIsEmpty(result.voices) ? "—" : result.voices,
             stringIsEmpty(result.type) ? "—" : result.type,
           ], separator: " · ")
 
@@ -615,8 +615,8 @@
     let text: String
     let language: String
     let languageCode: String
-    /// Its progenitors as text: authors and translators, or etymons.
-    let progenitors: String
+    /// Its voices as text: authors and translators, or etymons.
+    let voices: String
     /// Its type (Book, Noun…); "" when it has none.
     let type: String
     let homograph: Int
@@ -706,7 +706,7 @@
               text: text,
               language: language,
               languageCode: languageCode,
-              progenitors: extractValue(from: str, key: "qualifier"),
+              voices: extractValue(from: str, key: "qualifier"),
               type: extractValue(from: str, key: "type"),
               homograph: homograph,
               url: extractValue(from: str, key: "url")
