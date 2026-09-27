@@ -17,6 +17,11 @@
     let searchEndpoint: String
     let resultUrlBase: String
     let value: String
+    /// Whether typing offers records in a menu under the input. Without
+    /// them the bar is a plain field of its form: the button submits it, as
+    /// Enter does, and the page may act on what is typed (the records
+    /// pages' sidebar filters their table as it is typed).
+    let suggestions: Bool
 
     public init(
       inSidebar: Bool = false,
@@ -27,8 +32,10 @@
       searchField: String = "q",
       searchEndpoint: String = "/api/search",
       resultUrlBase: String = "/results",
-      value: String = ""
+      value: String = "",
+      suggestions: Bool = true
     ) {
+      self.suggestions = suggestions
       self.inSidebar = inSidebar
       self.openDialog = openDialog
       self.class = `class`
@@ -72,7 +79,7 @@
     public func build() -> DOM.Node {
       // Its suggestions are drawn on the client, each named by a
       // BreadcrumbLabelView: built here so the page links its style sheet.
-      _ = BreadcrumbLabelView(context: "", text: "").build()
+      if suggestions { _ = BreadcrumbLabelView(context: "", text: "").build() }
       return div {
         // Input - if openDialog is true, make it read-only and use it as a trigger
         input()
@@ -129,7 +136,7 @@
         button {
           SearchIconView()
         }
-        .type(.button)
+        .type(suggestions ? .button : .submit)
         .class("search-bar-button")
         .ariaLabel("Search")
         .data("search-button", true)
@@ -173,31 +180,34 @@
         }
 
         // Dropdown
-        div {
-          ul {
-            // Results dynamically inserted by client (WASM hydration)
-            // li.search-bar-suggestion-item
-            //   a.search-bar-suggestion-link
-            //     span.search-bar-suggestion-text (language › title or lemma)
-            //     span.search-bar-suggestion-detail (progenitors · category)
-            // Styles applied directly via WebAPIs DSL in render() below
-          }
-          .class("search-bar-suggestions")
-          .role(.listbox)
-          .style {
-            selector("&") {
-              listStyle(.none)
-              margin(0)
-              padding(spacing8, 0)
+        if suggestions {
+          div {
+            ul {
+              // Results dynamically inserted by client (WASM hydration)
+              // li.search-bar-suggestion-item
+              //   a.search-bar-suggestion-link
+              //     span.search-bar-suggestion-text (language › title or lemma)
+              //     span.search-bar-suggestion-detail (progenitors · category)
+              // Styles applied directly via WebAPIs DSL in render() below
+            }
+            .class("search-bar-suggestions")
+            .role(.listbox)
+            .style {
+              selector("&") {
+                listStyle(.none)
+                margin(0)
+                padding(spacing8, 0)
+              }
             }
           }
+          .class("search-bar-dropdown")
+          .data("search-dropdown", true)
+          .data("open", false)
         }
-        .class("search-bar-dropdown")
-        .data("search-dropdown", true)
-        .data("open", false)
       }
       .class(buildClass())
       .data("search-container", true)
+      .data("suggestions", suggestions)
       .style {
         selector("&") {
           display(.flex)
@@ -328,6 +338,8 @@
       guard document.querySelector(".search-bar-view") != nil else { return }
       let containers = document.querySelectorAll("[data-search-container=\"true\"]")
       for container in containers {
+        // A bar without suggestions is its form's field alone.
+        if stringEquals(container.getAttribute(data("suggestions")) ?? "", "false") { continue }
         // Local filter bars (e.g. Sessions list) skip remote typeahead.
         var skipRemote = false
         var ancestor: DOM.Element? = container
