@@ -250,7 +250,7 @@
           label {
             field.label
             if !field.required {
-              span { "(optional)" }
+              em { "(optional)" }
                 .class("form-view-optional-flag")
                 .data("optional-flag", true)
             }

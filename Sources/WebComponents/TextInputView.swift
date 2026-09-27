@@ -196,7 +196,7 @@ public struct TextInputView: HTMLContent {
           span { labelText }
             .class("text-input-label")
           if optional {
-            span { optionalFlag }
+            em { optionalFlag }
               .class("text-input-optional-flag")
               .data("optional-flag", true)
           }

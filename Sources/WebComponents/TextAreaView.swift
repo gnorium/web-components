@@ -225,7 +225,7 @@ public struct TextAreaView: HTMLContent {
         span { labelText }
           .class("text-area-label")
         if optional {
-          span { optionalFlag }
+          em { optionalFlag }
             .class("text-area-optional-flag")
             .data("optional-flag", true)
         }
