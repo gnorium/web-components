@@ -119,10 +119,12 @@ public enum OutlineMoves {
   ///   sense by its utterances.
   ///
   /// A refused move is refused where it is attempted, with an alert over the
-  /// outline and the same words in the live region: the caller's one
-  /// sentence, "A more abstract testament can't go under a more concrete
-  /// one." There is no depth limit, and no option to loosen or tighten the
-  /// rule: a bibliographic tree and a lexicographic one nest the same way.
+  /// outline and the same words in the live region: the caller's sentence,
+  /// "A more abstract testament can't go under a more concrete one.", or,
+  /// under the leaf rank, its own where it gives one ("Nothing can go under
+  /// a manifest: its images attest it."). There is no depth limit, and no
+  /// option to loosen or tighten the rule: a bibliographic tree and a
+  /// lexicographic one nest the same way.
   ///
   /// The nesting is the items' own. Each item's content is handed the pieces
   /// the outline puts in it — its handle, the line saying how its number
@@ -231,6 +233,7 @@ public enum OutlineMoves {
     let form: String?
     let numberSelector: String
     let rankRefusal: String
+    let leafRefusal: String?
     let touched: [String]
     let `class`: String
 
@@ -246,6 +249,8 @@ public enum OutlineMoves {
     ///     outline changes. Empty writes none.
     ///   - rankRefusal: What a move the ranks refuse is told, in the page's
     ///     own words for what it outlines.
+    ///   - leafRefusal: What a move under the leaf rank is told; nil says
+    ///     `rankRefusal`.
     ///   - touched: The items the reader has already moved, when the outline
     ///     is brought back mid-edit: where two readings of what moved are
     ///     equally short, theirs is the one reported.
@@ -260,6 +265,7 @@ public enum OutlineMoves {
       form: String? = nil,
       numberSelector: String = "",
       rankRefusal: String = "A more abstract item can't go under a more concrete one.",
+      leafRefusal: String? = nil,
       touched: [String] = [],
       class: String = ""
     ) {
@@ -273,6 +279,7 @@ public enum OutlineMoves {
       self.form = form
       self.numberSelector = numberSelector
       self.rankRefusal = rankRefusal
+      self.leafRefusal = leafRefusal
       self.touched = touched
       self.`class` = `class`
     }
@@ -457,6 +464,7 @@ public enum OutlineMoves {
       .data("outliner-leaf-rank", leafRank.map(String.init) ?? "")
       .data("outliner-number-selector", numberSelector)
       .data("outliner-rank-refusal", rankRefusal)
+      .data("outliner-leaf-refusal", leafRefusal ?? rankRefusal)
       .style {
         // A little room at the edges, so a ring drawn outside a row or a
         // control is not cut off by a container that clips.
@@ -707,6 +715,7 @@ public enum OutlineMoves {
     private let leafRank: Int
     private let numberSelector: String
     private let rankRefusal: String
+    private let leafRefusal: String
 
     /// The item picked up, which the toolbar and the keyboard move.
     private var held: DOM.Element?
@@ -737,6 +746,7 @@ public enum OutlineMoves {
       leafRank = parseInt(root.dataset["outliner-leaf-rank"] ?? "") ?? -1
       numberSelector = root.dataset["outliner-number-selector"] ?? ""
       rankRefusal = root.dataset["outliner-rank-refusal"] ?? ""
+      leafRefusal = root.dataset["outliner-leaf-refusal"] ?? rankRefusal
       for item in root.querySelectorAll(".outliner-item") {
         bind(item)
         if stringEquals(item.dataset["outliner-touched"] ?? "false", "true") { touched.append(id(of: item)) }
@@ -1052,7 +1062,7 @@ public enum OutlineMoves {
       }
       // Under a lower rank, or under the leaf rank, which takes nothing.
       let parentRank = rank(of: parent)
-      if let _ = parent, parentRank == leafRank { return rankRefusal }
+      if let _ = parent, parentRank == leafRank { return leafRefusal }
       guard rank(of: item) >= parentRank else { return rankRefusal }
       return nil
     }
