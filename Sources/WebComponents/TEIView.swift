@@ -15,7 +15,7 @@
   /// service it reads. That name is what pairs a page with a canvas inside
   /// ``ArtifactView``: this view draws the readings, the viewer shows the one
   /// belonging to the canvas on screen, and paging moves both at once. Each
-  /// page is one `.tei-reading` (its text, its code, its translation), paired
+  /// page is one `.tei-transcript` (its text, its code, its translation), paired
   /// with its canvas by `data-service-id`; the page's image is not drawn here.
   ///
   /// Line breaks are kept because they are evidence — a diplomatic transcript
@@ -27,17 +27,17 @@
     /// Whether each page's code can be edited. The code is edited as it
     /// is, not as the Raw view prettifies it: prettifying drops the spaces
     /// between tags, and a correction must not quietly make others. The
-    /// reading stays a reading — nothing in it can be typed into.
+    /// transcript stays a transcript — nothing in it can be typed into.
     let editable: Bool
     /// The transcript's translation, when it has one: a third layer of each
-    /// page's reading, which the viewer's Translated switch shows in the
-    /// reading's place.
+    /// page's transcript, which the viewer's Translated switch shows in the
+    /// transcript's place.
     let translation: Translation?
-    /// What to set apart in each page's reading, by the image service the
+    /// What to set apart in each page's transcript, by the image service the
     /// page reads: an utterance's sentence and its word
     /// (`TEIRenderer.utterance`), each a `<mark>`.
     let highlights: [String: [TEIHighlight]]
-    /// Whether each page's reading begins with its label, as a page turn
+    /// Whether each page's transcript begins with its label, as a page turn
     /// inside an image is marked: for pages read one after another in one
     /// column rather than paged beside their images.
     let labelsPages: Bool
@@ -88,11 +88,11 @@
       TEIRenderer.serviceID(ofFacsimile: url)
     }
 
-    /// A page's reading as the lines a diff compares: each line's runs with
+    /// A page's transcript as the lines a diff compares: each line's runs with
     /// their setting, a formula whole, a figure by its caption and region, a
     /// page turn inside the image as a line of its own. White space that only
     /// lays the code out — a line end and its indent — reads as the one
-    /// space a reading shows; spaces the transcription set are kept.
+    /// space a transcript shows; spaces the transcription set are kept.
     public static func renderedLines(of lines: [TEILine]) -> [DiffEngine.RenderedLine] {
       func style(_ rend: String) -> [String] {
         Set(rend.split(whereSeparator: \.isWhitespace).map { name -> String in
@@ -429,7 +429,7 @@
               }
             }
             .class("tei-page-text")
-            .data("reading-layer", "text")
+            .data("transcript-layer", "rendered")
 
             div {
               if editable {
@@ -453,7 +453,7 @@
               }
             }
             .class("tei-page-raw")
-            .data("reading-layer", "code")
+            .data("transcript-layer", "code")
 
             // The translation, set by the very reader that sets the
             // transcript above: the same lines, the same classes.
@@ -477,14 +477,14 @@
                 .class("tei-page-text")
               }
               .class("tei-page-translation")
-              .data("reading-layer", "translation")
+              .data("transcript-layer", "translation")
               .lang(translation.language)
               .dir("auto")
             }
           }
-          .class("tei-reading")
-          .id("tei-reading-\(index)")
-          // What pairs this reading with a canvas. The viewer matches on it.
+          .class("tei-transcript")
+          .id("tei-transcript-\(index)")
+          // What pairs this transcript with a canvas. The viewer matches on it.
           .data("service-id", Self.serviceID(ofFacsimile: page.facsimileURL))
           .data("active", index == 0 ? "true" : "false")
         }
@@ -497,13 +497,13 @@
           flexDirection(.column)
           minWidth(0)
         }
-        descendant(".tei-reading") {
+        descendant(".tei-transcript") {
           display(.flex)
           flexDirection(.column)
           gap(spacing8)
           minWidth(0)
         }
-        // A figure is set apart from the reading around it: it is a
+        // A figure is set apart from the transcript around it: it is a
         // photograph of part of the surface, not a sentence on it.
         descendant(".tei-figure") {
           display(.flex)
@@ -517,7 +517,7 @@
         descendant(".tei-figure-image") {
           maxWidth(perc(100))
           // However the region is shaped, it is an illustration inside a
-          // reading and cannot be taller than what it illustrates.
+          // transcript and cannot be taller than what it illustrates.
           maxHeight(px(320))
           width(.auto)
           height(.auto)
@@ -538,7 +538,7 @@
         }
         // `<hi rend="…">` on the run it applies to. Small caps mark an author
         // statement; italic marks a speaker prefix or an emphasis the
-        // compositor set — both are on the page, so both are in the reading.
+        // compositor set — both are on the page, so both are in the transcript.
         selector("& .tei-run[data-rend~='smallcaps']", "& .tei-run[data-rend~='small-caps']") {
           // No typed helper for this one; the builder takes a raw property.
           CSS.Property("font-variant-caps", "small-caps")
@@ -675,7 +675,7 @@
           gap(spacing2)
           minWidth(0)
         }
-        // Editable only in Raw: the reading is for reading, and nothing in it
+        // Editable only in Raw: the transcript is for reading, and nothing in it
         // looks as if it could be typed into.
         selector("&[data-editable='true'] .tei-page-text") {
           cursor(.default)
@@ -760,9 +760,9 @@
           color(colorSubtle)
           marginBlockStart(spacing8)
         }
-        // The markup takes the reading's place rather than adding a block to
+        // The markup takes the transcript's place rather than adding a block to
         // scroll past: the viewer's Raw switch swaps the two layers.
-        // The markup takes the reading's place rather than adding a block to
+        // The markup takes the transcript's place rather than adding a block to
         // scroll past: the viewer's Raw switch swaps the two layers, and the
         // block itself is a CodeView like any other.
         descendant(".tei-page-raw") {
@@ -770,7 +770,7 @@
           margin(0)
           minWidth(0)
         }
-        // The translation takes the reading's place too, under the language
+        // The translation takes the transcript's place too, under the language
         // switch on the page's record rule.
         descendant(".tei-page-translation") {
           display(.none)
@@ -799,7 +799,7 @@
           color(colorSubtle)
           marginBlockStart(spacing8)
         }
-        // The markup takes the reading's place rather than adding a block to
+        // The markup takes the transcript's place rather than adding a block to
         // scroll past: the viewer's Raw switch swaps the two layers.
         descendant(".tei-page-raw") {
           display(.none)
