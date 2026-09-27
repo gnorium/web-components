@@ -150,7 +150,7 @@ public struct DropdownView: HTMLContent {
             .class("dropdown-label-text")
 
           if optional {
-            em { optionalFlag }
+            span { optionalFlag }
               .class("dropdown-optional-flag")
               .data("optional-flag", true)
           }
