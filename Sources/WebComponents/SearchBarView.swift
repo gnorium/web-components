@@ -186,8 +186,8 @@
               // Results dynamically inserted by client (WASM hydration)
               // li.search-bar-suggestion-item
               //   a.search-bar-suggestion-link
-              //     span.search-bar-suggestion-text (language › title or lemma)
-              //     span.search-bar-suggestion-detail (progenitors · category)
+              //     span.search-bar-suggestion-text (language › title)
+              //     span.search-bar-suggestion-detail (progenitors · type)
               // Styles applied directly via WebAPIs DSL in render() below
             }
             .class("search-bar-suggestions")
@@ -257,8 +257,8 @@
         descendant(".search-bar-dropdown[data-open='true']") {
           display(.block)
         }
-        // Two rows, as every record is offered: its language › its title or
-        // lemma, then its progenitors and category.
+        // Two rows, as every record is offered: its language › its title,
+        // then its progenitors and type.
         descendant(".search-bar-suggestion-link") {
           display(.flex)
           flexDirection(.column)
@@ -555,7 +555,7 @@
       searchBarSuggestions.innerHTML = ""
 
       for (index, result) in results.enumerated() {
-        // Its language › its title or lemma, as a breadcrumb, as
+        // Its language › its title, as a breadcrumb, as
         // SearchMenuView and DropdownView's record options draw it.
         let textSpan = document.createElement(.span)
         textSpan.className = "search-bar-suggestion-text"
@@ -563,13 +563,13 @@
           context: stringIsEmpty(result.language) ? "—" : result.language, text: result.text
         ).render()
 
-        // Its progenitors and category, "—" each when unknown.
+        // Its progenitors and type, "—" each when unknown.
         let detailSpan = document.createElement(.span)
         detailSpan.className = "search-bar-suggestion-detail"
         detailSpan.textContent = stringJoin(
           [
             stringIsEmpty(result.progenitors) ? "—" : result.progenitors,
-            stringIsEmpty(result.category) ? "—" : result.category,
+            stringIsEmpty(result.type) ? "—" : result.type,
           ], separator: " · ")
 
         // Create link with flex layout
@@ -617,8 +617,8 @@
     let languageCode: String
     /// Its progenitors as text: authors and translators, or etymons.
     let progenitors: String
-    /// Its category or part of speech; "" when it has none.
-    let category: String
+    /// Its type (Book, Noun…); "" when it has none.
+    let type: String
     let homograph: Int
     let url: String
   }
@@ -707,7 +707,7 @@
               language: language,
               languageCode: languageCode,
               progenitors: extractValue(from: str, key: "qualifier"),
-              category: extractValue(from: str, key: "category"),
+              type: extractValue(from: str, key: "type"),
               homograph: homograph,
               url: extractValue(from: str, key: "url")
             ))

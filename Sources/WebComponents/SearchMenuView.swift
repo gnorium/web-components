@@ -88,7 +88,7 @@
 
     public init(
       id: String = "search-menu",
-      placeholder: String = "Search lemma",
+      placeholder: String = "Search title",
       results: [SearchResult]? = nil,
       class: String = "",
       searchField: String = "q",
@@ -673,10 +673,8 @@
           if let typeahead = document.querySelector(".search-menu-typeahead"),
              let input = typeahead.querySelector("input") as? HTML.HTMLInputElement
           {
-            if stringEquals(tabName, "biblio-records") {
+            if stringEquals(tabName, "biblio-records") || stringEquals(tabName, "lexico-records") {
               input.setAttribute("placeholder", "Search title")
-            } else if stringEquals(tabName, "lexico-records") {
-              input.setAttribute("placeholder", "Search lemma")
             }
 
             if let menu = typeahead.querySelector(".typeahead-search-menu") {
@@ -788,8 +786,8 @@
       let text: String
       let subtext: String
       let pos: String
-      /// Its category or part of speech; "" when it has none.
-      let category: String
+      /// Its type (Book, Noun…); "" when it has none.
+      let type: String
       let urlSegment: String
       /// The record's own path, as the answer gives it; "" when it has none.
       let url: String
@@ -915,7 +913,7 @@
 
         // Construct URL for navigation
         // Its own path when the answer gives one (JSON writes its slashes
-        // "\/"): two records of one lemma differ only there.
+        // "\/"): two records of one title differ only there.
         let href: String
         let base = stripQuery(resultUrlBase)
         if !stringIsEmpty(result.url) {
@@ -933,9 +931,9 @@
 
         // Two rows, the same for both kinds, as every record is offered
         // (DropdownView's record options too): its language › what the
-        // result IS (title or lemma), as a breadcrumb; then its progenitors
-        // (authors and translators, or etymons) and its category (or part
-        // of speech, with its homograph number), "—" each when unknown.
+        // result IS (its title), as a breadcrumb; then its progenitors
+        // (authors and translators, or etymons) and its type (with its
+        // homograph number), "—" each when unknown.
         let label = document.createElement(.span)
         label.className = "menu-item-label search-menu-result-label"
         label.innerHTML = BreadcrumbLabelView(
@@ -948,7 +946,7 @@
         detail.textContent = stringJoin(
           [
             stringIsEmpty(result.pos) ? "—" : result.pos,
-            stringIsEmpty(result.category) ? "—" : result.category,
+            stringIsEmpty(result.type) ? "—" : result.type,
           ], separator: " · ")
         if !isBiblioResult && result.homograph > 1 {
           let sup = document.createElement(.sup)
@@ -1069,7 +1067,7 @@
               text: textValue,
               subtext: subtextValue,
               pos: qualifierValue,
-              category: extractValue(from: str, key: "category"),
+              type: extractValue(from: str, key: "type"),
               urlSegment: urlSegment,
               url: extractValue(from: str, key: "url"),
               homograph: homograph,
