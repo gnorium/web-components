@@ -473,6 +473,12 @@ public struct AccordionView: HTMLContent {
 
       _ = summary.addEventListener(.click) { [self] event in
         guard let details = self.details else { return }
+        // A link in the header goes where it points and leaves the accordion
+        // as it is: a reference mark beside a heading is read, not opened.
+        // Not prevented either, so the link's own navigation runs.
+        if let target = event.target, let link = target.closest("a"), let _ = link.closest(".accordion-summary") {
+          return
+        }
         // Keep <details> open for the whole motion; native toggle would
         // display:none the panel before the height transition can run.
         event.preventDefault()
@@ -632,6 +638,40 @@ public struct AccordionView: HTMLContent {
       guard !stringEquals(element.dataset["accordion-hydrated"] ?? "false", "true") else { return }
       let instance = AccordionInstance(accordion: element)
       instances.append(instance)
+    }
+
+    /// Opens every closed accordion around `element`, and `element` itself
+    /// when it is an accordion's `<details>`, outermost first, then calls
+    /// `then` once each has finished opening: the way to a link's target
+    /// that lands inside closed accordions, as a reference mark in a closed
+    /// row's Metadata does.
+    ///
+    /// `then` waits on `data-open-finished`, which each accordion stamps when
+    /// its height transition ends, rather than on a guessed duration:
+    /// scrolling into a box that is still growing lands on where it was, and
+    /// the rest of the motion pushes the target off the viewport.
+    public static func reveal(_ element: DOM.Element, then: @escaping @Sendable () -> Void) {
+      var closed: [DOM.Element] = []
+      var cursor: DOM.Element? =
+        element.classList.contains("accordion-details") ? element : element.closest(".accordion-details")
+      while let details = cursor {
+        if !details.hasAttribute(.open) { closed.append(details) }
+        // Up past this accordion's own root to the one around it.
+        cursor = details.closest(".accordion-view")?.closest(".accordion-details")
+      }
+      for details in closed.reversed() {
+        details.querySelector(".accordion-summary")?.dispatchEvent(.click)
+      }
+      settle(closed, tries: 0, then: then)
+    }
+
+    private static func settle(_ opening: [DOM.Element], tries: Int, then: @escaping @Sendable () -> Void) {
+      let settled = opening.allSatisfy { stringEquals($0.dataset["open-finished"] ?? "", "true") }
+      if !settled && tries < 16 {
+        _ = window.setTimeout(50) { settle(opening, tries: tries + 1, then: then) }
+        return
+      }
+      then()
     }
   }
 
