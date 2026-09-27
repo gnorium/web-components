@@ -19,24 +19,32 @@
   /// widening the page.
   public struct DatumView: HTMLContent {
     let label: String
+    /// What stands after the label: a record page's reference marks.
+    let labelMarks: [DOM.Node]
     let value: [DOM.Node]
     let `class`: String
 
-    public init(_ label: String, class: String = "", @HTMLBuilder value: () -> [DOM.Node]) {
+    public init(
+      _ label: String, labelMarks: [DOM.Node] = [], class: String = "", @HTMLBuilder value: () -> [DOM.Node]
+    ) {
       self.label = label
+      self.labelMarks = labelMarks
       self.class = `class`
       self.value = value()
     }
 
     /// The common case: a plain value.
-    public init(_ label: String, value: String, class: String = "") {
-      self.init(label, class: `class`) { value }
+    public init(_ label: String, labelMarks: [DOM.Node] = [], value: String, class: String = "") {
+      self.init(label, labelMarks: labelMarks, class: `class`) { value }
     }
 
     public func build() -> DOM.Node {
       div {
-        div { label }
-          .class("datum-label")
+        div {
+          label
+          labelMarks
+        }
+        .class("datum-label")
         div { value }
           .class("datum-value")
       }
@@ -49,7 +57,11 @@
           minWidth(0)
         }
         // The field label's type, as TextInputView sets it.
+        // A row, its marks 4px after its words, as a field's label row.
         descendant(".datum-label") {
+          display(.flex)
+          alignItems(.center)
+          gap(spacing4)
           fontFamily(typographyFontSans)
           fontSize(fontSizeSmall14)
           fontWeight(fontWeightSemiBold)
