@@ -122,7 +122,7 @@ public enum OutlineMoves {
   /// outline and the same words in the live region: the caller's sentence,
   /// "A more abstract testament can't go under a more concrete one.", or,
   /// under the leaf rank, its own where it gives one ("Nothing can go under
-  /// a manifest: its images attest it."). There is no depth limit, and no
+  /// a digitization: its semblances attest it."). There is no depth limit, and no
   /// option to loosen or tighten the rule: a bibliographic tree and a
   /// lexicographic one nest the same way.
   ///
