@@ -390,44 +390,17 @@
           textDecoration(textDecorationNone)
           boxSizing(.borderBox)
           transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionUser)
+          pseudoClass(.hover) { cursor(cursorBaseHover) }
         }
-        // Hovered, pressed, focused or reached with the arrow keys: solid
-        // blue, every part inverted, as DropdownView's highlighted option
-        // (its tokens). Important, as that is: the typeahead's own
-        // aria-selected rule draws a light blue.
-        selector(
-          ".search-menu-result:hover", ".search-menu-result:active", ".search-menu-result:focus",
-          ".search-menu-result[aria-selected='true']"
-        ) {
-          backgroundColor(backgroundColorBlue).important()
-          borderColor(borderColorBlue).important()
-          outline(.none).important()
-          color(colorInvertedFixed).important()
-          cursor(cursorBaseHover)
-        }
-        selector(
-          ".search-menu-result:hover .search-menu-result-label",
-          ".search-menu-result:hover .search-menu-result-meta",
-          ".search-menu-result:hover .breadcrumb-label-context",
-          ".search-menu-result:hover .breadcrumb-separator-view",
-          ".search-menu-result:active .search-menu-result-label",
-          ".search-menu-result:active .search-menu-result-meta",
-          ".search-menu-result:active .breadcrumb-label-context",
-          ".search-menu-result:active .breadcrumb-separator-view"
-        ) {
-          color(colorInvertedFixed).important()
-        }
-        selector(
-          ".search-menu-result:focus .search-menu-result-label",
-          ".search-menu-result:focus .search-menu-result-meta",
-          ".search-menu-result:focus .breadcrumb-label-context",
-          ".search-menu-result:focus .breadcrumb-separator-view",
-          ".search-menu-result[aria-selected='true'] .search-menu-result-label",
-          ".search-menu-result[aria-selected='true'] .search-menu-result-meta",
-          ".search-menu-result[aria-selected='true'] .breadcrumb-label-context",
-          ".search-menu-result[aria-selected='true'] .breadcrumb-separator-view"
-        ) {
-          color(colorInvertedFixed).important()
+        // A row is a link, not a dropdown option: no filled highlight.
+        // Reached with the arrow keys (aria-selected), it wears LinkView's
+        // keyboard focus ring. Important: the typeahead's own aria-selected
+        // rule draws a light blue fill and a thin ring.
+        descendant(".search-menu-result[aria-selected='true']") {
+          backgroundColor(backgroundColorTransparent).important()
+          borderColor(borderColorSubtle).important()
+          outline(borderWidthThick, .solid, borderColorBlue).important()
+          outlineOffset(px(-2)).important()
         }
         descendant(".search-menu-result-text") {
           display(.flex)
@@ -456,9 +429,24 @@
           lineHeight(lineHeightSmall22)
           opacity(1)
         }
-        descendant(".search-menu-result[data-color='blue'] .search-menu-result-label") { color(colorBlue) }
+        // The title in the link's colors (LinkView's): its color, its hover
+        // color under the pointer, its active color pressed.
+        descendant(".search-menu-result[data-color='blue'] .search-menu-result-label") { color(colorLink) }
         descendant(".search-menu-result[data-color='green'] .search-menu-result-label") { color(colorGreen) }
         descendant(".search-menu-result[data-color='red'] .search-menu-result-label") { color(colorRed) }
+        descendant(".search-menu-result[data-color='blue']:hover .search-menu-result-label") {
+          color(colorLinkHover)
+        }
+        descendant(".search-menu-result[data-color='blue']:active .search-menu-result-label") {
+          color(colorLinkActive)
+        }
+        // Outranks the typeahead's aria-selected label blue.
+        descendant(".search-menu-result[data-color='blue'][aria-selected='true'] .search-menu-result-label") {
+          color(colorLink)
+        }
+        descendant(".search-menu-result[data-color='blue'][aria-selected='true']:hover .search-menu-result-label") {
+          color(colorLinkHover)
+        }
         // Inside the detail line: its size and colour, raised.
         descendant(".search-menu-result-sup") {
           fontSize(perc(75))
@@ -884,6 +872,7 @@
       } else {
         menu = document.createElement(.div)
         menu.className = "typeahead-search-menu search-menu-results"
+        menu.setAttribute(.role, .listbox)
         _ = menu.dataset["open"] = "false"
         typeahead.appendChild(menu)
       }
@@ -892,8 +881,10 @@
       menu.innerHTML = ""
 
       // Create new menu items using DOM API
-      for result in limitedResults {
+      for (index, result) in limitedResults.enumerated() {
         let item = document.createElement(.div)
+        // Its own id, for the input's aria-activedescendant.
+        item.setAttribute("id", "search-menu-result-\(index)")
         let isBiblioResult = stringEquals(resultUrlBase, "/biblio-records")
         item.className = isBiblioResult
           ? "menu-item-view search-menu-result search-menu-biblio-result"

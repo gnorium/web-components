@@ -277,14 +277,12 @@
         }
       }
 
+      // Only the arrow keys make a row the active one: a hovered row is a
+      // hovered link, and a hover that set it stayed lit after the pointer
+      // left.
       for (index, item) in menuItems.enumerated() {
         _ = item.addEventListener(.click) { [self] (_: Event) in
           self.selectResult(index: index)
-        }
-
-        _ = item.addEventListener(.mouseenter) { [self] (_: Event) in
-          self.selectedIndex = index
-          self.updateMenuItemStates()
         }
       }
 
@@ -311,16 +309,12 @@
       guard let menu = menuElement else { return }
       self.menuItems = Array(menu.querySelectorAll(".menu-item-view"))
       self.selectedIndex = -1 // Reset selection on new results
+      updateMenuItemStates()
 
-      // Re-bind events for new items
+      // Re-bind events for new items (click only, as above)
       for (index, item) in menuItems.enumerated() {
         _ = item.addEventListener(.click) { [self] (_: Event) in
           self.selectResult(index: index)
-        }
-
-        _ = item.addEventListener(.mouseenter) { [self] (_: Event) in
-          self.selectedIndex = index
-          self.updateMenuItemStates()
         }
       }
 
@@ -432,14 +426,22 @@
     }
 
     private func updateMenuItemStates() {
+      var activeID = ""
       for (index, item) in menuItems.enumerated() {
         if index == selectedIndex {
           _ = item.classList.add("menu-item-selected")
           item.setAttribute(.ariaSelected, true)
+          activeID = item.getAttribute("id") ?? ""
         } else {
           _ = item.classList.remove("menu-item-selected")
           item.setAttribute(.ariaSelected, false)
         }
+      }
+      // The input keeps focus; the active row is named to assistive tech.
+      if stringIsEmpty(activeID) {
+        inputElement?.removeAttribute("aria-activedescendant")
+      } else {
+        inputElement?.setAttribute("aria-activedescendant", activeID)
       }
     }
 

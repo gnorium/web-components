@@ -271,32 +271,25 @@
           boxSizing(.borderBox)
           transition(.backgroundColor, transitionDurationBase, transitionTimingFunctionSystem)
         }
-        // The link is the whole row, so the whole row lights: hovered or
-        // reached with the arrow keys, solid blue with every part inverted,
-        // as DropdownView's highlighted option and the search menu's rows.
-        selector(".search-bar-suggestion-link:hover", ".search-bar-suggestion-link.active") {
-          backgroundColor(backgroundColorBlue)
+        // A row is a link, not a dropdown option: no filled highlight.
+        // Reached with the arrow keys, it wears LinkView's keyboard focus
+        // ring.
+        descendant(".search-bar-suggestion-link.active") {
+          outline(borderWidthThick, .solid, borderColorBlue)
+          outlineOffset(px(-2))
+          borderRadius(borderRadiusBase)
         }
-        selector(
-          ".search-bar-suggestion-link:hover .search-bar-suggestion-text",
-          ".search-bar-suggestion-link:hover .search-bar-suggestion-detail",
-          ".search-bar-suggestion-link:hover .breadcrumb-label-context",
-          ".search-bar-suggestion-link:hover .breadcrumb-separator-view",
-          ".search-bar-suggestion-link.active .search-bar-suggestion-text",
-          ".search-bar-suggestion-link.active .search-bar-suggestion-detail",
-          ".search-bar-suggestion-link.active .breadcrumb-label-context",
-          ".search-bar-suggestion-link.active .breadcrumb-separator-view"
-        ) {
-          color(colorInvertedFixed)
-        }
-        // The name in link blue, as the search menu's; its language subtle.
+        // The name in the link's colors (LinkView's), as the search menu's;
+        // its language subtle.
         descendant(".search-bar-suggestion-text") {
           width(perc(100))
-          color(colorBlue)
+          color(colorLink)
           fontSize(fontSizeSmall14)
           fontWeight(fontWeightSemiBold)
           overflowWrap(.breakWord)
         }
+        descendant(".search-bar-suggestion-link:hover .search-bar-suggestion-text") { color(colorLinkHover) }
+        descendant(".search-bar-suggestion-link:active .search-bar-suggestion-text") { color(colorLinkActive) }
         descendant(".search-bar-suggestion-detail") {
           width(perc(100))
           fontSize(fontSizeXSmall12)
