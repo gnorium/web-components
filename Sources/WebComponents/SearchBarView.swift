@@ -556,14 +556,14 @@
           context: stringIsEmpty(result.language) ? "—" : result.language, text: result.text
         ).render()
 
-        // Its voices and type, "—" each when unknown.
+        // A work's voices ("—" when unknown) and its type ("—" when
+        // unknown); a word has no voices part.
         let detailSpan = document.createElement(.span)
         detailSpan.className = "search-bar-suggestion-detail"
-        detailSpan.textContent = stringJoin(
-          [
-            stringIsEmpty(result.voices) ? "—" : result.voices,
-            stringIsEmpty(result.type) ? "—" : result.type,
-          ], separator: " · ")
+        var parts: [String] = []
+        if !stringIsEmpty(result.voices) { parts.append(result.voices) }
+        parts.append(stringIsEmpty(result.type) ? "—" : result.type)
+        detailSpan.textContent = stringJoin(parts, separator: " · ")
 
         // Create link with flex layout
         let a = document.createElement(.a)

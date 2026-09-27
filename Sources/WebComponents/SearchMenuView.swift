@@ -922,9 +922,9 @@
 
         // Two rows, the same for both kinds, as every record is offered
         // (DropdownView's record options too): its language › what the
-        // result IS (its title), as a breadcrumb; then its voices
-        // (authors and translators, or etymons) and its type (with its
-        // homograph number), "—" each when unknown.
+        // result IS (its title), as a breadcrumb; then a work's voices
+        // ("—" when unknown) and its type (with its homograph number, "—"
+        // when unknown). A word has no voices part.
         let label = document.createElement(.span)
         label.className = "menu-item-label search-menu-result-label"
         label.innerHTML = BreadcrumbLabelView(
@@ -934,11 +934,10 @@
 
         let detail = document.createElement(.span)
         detail.className = "search-menu-result-meta search-menu-result-detail"
-        detail.textContent = stringJoin(
-          [
-            stringIsEmpty(result.pos) ? "—" : result.pos,
-            stringIsEmpty(result.type) ? "—" : result.type,
-          ], separator: " · ")
+        var parts: [String] = []
+        if !stringIsEmpty(result.pos) { parts.append(result.pos) }
+        parts.append(stringIsEmpty(result.type) ? "—" : result.type)
+        detail.textContent = stringJoin(parts, separator: " · ")
         if !isBiblioResult && result.homograph > 1 {
           let sup = document.createElement(.sup)
           sup.className = "search-menu-result-sup"
