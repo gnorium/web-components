@@ -76,6 +76,9 @@ public struct DropdownView: HTMLContent {
   /// text, as LabelView draws it: not part of the label text.
   let optional: Bool
   let optionalFlag: String
+  /// What stands after the label's text (and its "(optional)"), before
+  /// its tooltip: a record page's reference marks. Not label text.
+  let labelMarks: [DOM.Node]
   /// A line at the end of the menu that is not an option: what the list
   /// leaves out ("Showing the first 50. Type to narrow the list."). A
   /// remote search's answer brings its own.
@@ -87,6 +90,7 @@ public struct DropdownView: HTMLContent {
     label: String,
     optional: Bool = false,
     optionalFlag: String = "(optional)",
+    labelMarks: [DOM.Node] = [],
     options: [DropdownOption],
     placeholder: String = "Select an option",
     selectedValue: String? = nil,
@@ -132,6 +136,7 @@ public struct DropdownView: HTMLContent {
     self.searchURL = searchURL
     self.optional = optional
     self.optionalFlag = optionalFlag
+    self.labelMarks = labelMarks
     self.note = note
   }
 
@@ -149,6 +154,8 @@ public struct DropdownView: HTMLContent {
               .class("dropdown-optional-flag")
               .data("optional-flag", true)
           }
+
+          labelMarks
 
           if let tooltipText = tooltip {
             TooltipView(tooltip: tooltipText, placement: .bottom) {

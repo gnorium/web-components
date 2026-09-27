@@ -12,6 +12,9 @@ public struct LabelView: HTMLContent {
   let icon: String?
   let optional: Bool
   let optionalFlag: String
+  /// What stands after the label's text (and its "(optional)"), before
+  /// its tooltip: a record page's reference marks. Not label text.
+  let labelMarks: [DOM.Node]
   let visuallyHidden: Bool
   let isLegend: Bool
   let inputID: String?
@@ -28,6 +31,7 @@ public struct LabelView: HTMLContent {
     icon: String? = nil,
     optional: Bool = false,
     optionalFlag: String = "(optional)",
+    labelMarks: [DOM.Node] = [],
     visuallyHidden: Bool = false,
     isLegend: Bool = false,
     inputID: String? = nil,
@@ -43,6 +47,7 @@ public struct LabelView: HTMLContent {
     self.icon = icon
     self.optional = optional
     self.optionalFlag = optionalFlag
+    self.labelMarks = labelMarks
     self.visuallyHidden = visuallyHidden
     self.isLegend = isLegend
     self.inputID = inputID
@@ -79,6 +84,8 @@ public struct LabelView: HTMLContent {
               .class("label-optional-flag")
           }
 
+          labelMarks
+
           // After "(optional)", as every other field draws it.
           if let tooltip {
             TooltipView(tooltip: tooltip) { IconView { InfoIconView() } }
@@ -109,6 +116,8 @@ public struct LabelView: HTMLContent {
                 .class("label-optional-flag")
             }
 
+            labelMarks
+
             if let tooltip {
               TooltipView(tooltip: tooltip) { IconView { InfoIconView() } }
             }
@@ -129,6 +138,8 @@ public struct LabelView: HTMLContent {
               span { " \(optionalFlag)" }
                 .class("label-optional-flag")
             }
+
+            labelMarks
 
             if let tooltip {
               TooltipView(tooltip: tooltip) { IconView { InfoIconView() } }

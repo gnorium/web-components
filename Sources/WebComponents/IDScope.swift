@@ -18,6 +18,11 @@ import WebTypes
 public enum IDScope {
   /// The attribute a scoping element carries its prefix in.
   public static let attribute = "data-id-scope"
+
+  /// The attribute an element under a scope carries to keep its id as it
+  /// is: an id that names one thing on the whole page, as a reference mark
+  /// beside a field does, which the page's list of references links back to.
+  public static let unscoped = "data-id-unscoped"
 }
 
 #if SERVER
@@ -44,7 +49,8 @@ public enum IDScope {
           (node as? DOM.DocumentFragment)?.children.forEach(collect)
           return
         }
-        for (name, value) in element.attributes where name == "id" { ids.insert(value) }
+        let keeps = element.attributes.contains { $0.0 == IDScope.unscoped }
+        for (name, value) in element.attributes where name == "id" && !keeps { ids.insert(value) }
         element.children.forEach(collect)
       }
       func rewrite(_ node: DOM.Node) {
@@ -52,8 +58,9 @@ public enum IDScope {
           (node as? DOM.DocumentFragment)?.children.forEach(rewrite)
           return
         }
+        let keeps = element.attributes.contains { $0.0 == IDScope.unscoped }
         element.attributes = element.attributes.map { name, value in
-          if name == "id" { return (name, prefix + value) }
+          if name == "id" { return (name, keeps ? value : prefix + value) }
           guard IDScope.references.contains(name) else { return (name, value) }
           let tokens = value.split(separator: " ").map { ids.contains(String($0)) ? prefix + $0 : String($0) }
           return (name, tokens.joined(separator: " "))

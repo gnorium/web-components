@@ -30,6 +30,9 @@ public struct TextAreaView: HTMLContent {
   /// text, as LabelView draws it: not part of the label text.
   let optional: Bool
   let optionalFlag: String
+  /// What stands after the label's text (and its "(optional)"), before
+  /// its tooltip: a record page's reference marks. Not label text.
+  let labelMarks: [DOM.Node]
 
   public enum ValidationStatus: String, Sendable {
     case `default`
@@ -52,6 +55,7 @@ public struct TextAreaView: HTMLContent {
     label: String = "",
     optional: Bool = false,
     optionalFlag: String = "(optional)",
+    labelMarks: [DOM.Node] = [],
     tooltip: String? = nil,
     fullWidth: Bool = true,
     form: String? = nil,
@@ -76,6 +80,7 @@ public struct TextAreaView: HTMLContent {
     self.`class` = `class`
     self.optional = optional
     self.optionalFlag = optionalFlag
+    self.labelMarks = labelMarks
   }
 
   public func build() -> DOM.Node {
@@ -224,6 +229,7 @@ public struct TextAreaView: HTMLContent {
             .class("text-area-optional-flag")
             .data("optional-flag", true)
         }
+        labelMarks
         if let tooltip = tooltip {
           TooltipView(tooltip: tooltip, placement: .bottom) {
             IconView { InfoIconView() }
