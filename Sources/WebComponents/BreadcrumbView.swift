@@ -9,7 +9,7 @@
   /// A list of links to the parent pages of the current page in hierarchical order.
   public struct BreadcrumbView: HTMLContent {
     let items: [BreadcrumbItem]
-    let truncateLength: Int
+    let labelLength: Int
     let maxVisible: Int
     let `class`: String
 
@@ -27,12 +27,12 @@
 
     public init(
       items: [BreadcrumbItem],
-      truncateLength: Int = 40,
+      labelLength: Int = 40,
       maxVisible: Int = 6,
       class: String = ""
     ) {
       self.items = items
-      self.truncateLength = truncateLength
+      self.labelLength = labelLength
       self.maxVisible = maxVisible
       self.`class` = `class`
     }
@@ -50,31 +50,32 @@
       let visibleItems = folds ? Array(items.prefix(head)) + Array(items.suffix(tail)) : items
       let overflowItems = folds ? Array(items[head..<(items.count - tail)]) : []
 
-      let truncateText: (String) -> String = { text in
-        if text.count > truncateLength {
-          return String(text.prefix(truncateLength)) + "…"
-        }
-        return text
-      }
-
       return nav {
         ol {
           for (index, item) in visibleItems.enumerated() {
             let isLast = index == visibleItems.count - 1
             li {
+              // A label is whole, and one longer than `labelLength` fades
+              // out at its end (`fadeOverflow`); its title is all of it, and
+              // on a phone a tap shows all of it (on a link, a tap in the
+              // fade: the words are the link's).
               if isLast {
-                span { item.label ?? DOM.Text(truncateText(item.text ?? "")) }
+                span { item.label ?? DOM.Text(item.text ?? "") }
                   .title(item.text ?? "")
                   .class("breadcrumb-current")
                   .ariaCurrent(.page)
+                  .data("edge-fade", "expand")
               } else if let url = item.url {
                 LinkView(url: url, class: "breadcrumb-link", title: item.text) {
-                  item.label ?? DOM.Text(truncateText(item.text ?? ""))
+                  span { item.label ?? DOM.Text(item.text ?? "") }
+                    .class("breadcrumb-label")
+                    .data("edge-fade", "expand")
                 }
               } else {
-                span { item.label ?? DOM.Text(truncateText(item.text ?? "")) }
+                span { item.label ?? DOM.Text(item.text ?? "") }
                   .title(item.text ?? "")
                   .class("breadcrumb-current")
+                  .data("edge-fade", "expand")
               }
 
               if !isLast {
@@ -119,6 +120,10 @@
           fontSize(fontSizeSmall14)
           lineHeight(lineHeightContent)
           color(colorSubtle)
+          // Never wider than where it is put: a flex item is otherwise as
+          // wide as its content, and a long label's line would carry the
+          // trail, and its fade, off the page.
+          minWidth(0)
         }
         // Inline flow, not flex: the trail fills each line and wraps wherever
         // it runs out — between crumbs or inside a long label — as running
@@ -131,6 +136,7 @@
           listStyle(.none)
           margin(0)
           padding(0)
+          minWidth(0)
         }
         descendant(".breadcrumb-item") {
           display(.inline)
@@ -141,6 +147,19 @@
         descendant(".breadcrumb-current") {
           color(colorBase)
           fontWeight(fontWeightNormal)
+        }
+        // A label runs to `labelLength` characters, or the line, and fades
+        // out past it. Top-aligned: a box that clips sits on its bottom edge,
+        // not its text's baseline, and would ride above its neighbors.
+        selector("& .breadcrumb-current", "& .breadcrumb-label") {
+          display(.inlineBlock)
+          maxWidth(min(ch(labelLength), CSS.LengthPercentage(perc(100))))
+          verticalAlign(.top)
+        }
+        fadeOverflow("& .breadcrumb-current", "& .breadcrumb-label")
+        // Shown whole, it takes the line.
+        selector("& .breadcrumb-current[aria-expanded='true']", "& .breadcrumb-label[aria-expanded='true']") {
+          maxWidth(perc(100))
         }
         // Its icon, size and colour are BreadcrumbSeparatorView's; in the
         // inline flow a margin is the only way to space it.

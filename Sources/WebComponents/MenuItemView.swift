@@ -242,6 +242,7 @@
             if hasDescription {
               span { description! }
                 .class("menu-item-description")
+                .data("edge-fade", "expand")
             }
           }
           .class("menu-item-text")
@@ -428,11 +429,9 @@
               fontWeight(fontWeightNormal)
               lineHeight(lineHeightSmall22)
               color(colorSubtle)
-              if hideDescriptionOverflow {
-                overflow(.hidden)
-                textOverflow(.ellipsis)
-                whiteSpace(.nowrap)
-              }
+            }
+            if hideDescriptionOverflow {
+              fadeOverflow("& .menu-item-description")
             }
           }
 
@@ -608,11 +607,9 @@
               fontWeight(fontWeightNormal)
               lineHeight(lineHeightSmall22)
               color(colorSubtle)
-              if hideDescriptionOverflow {
-                overflow(.hidden)
-                textOverflow(.ellipsis)
-                whiteSpace(.nowrap)
-              }
+            }
+            if hideDescriptionOverflow {
+              fadeOverflow("& .menu-item-description")
             }
           }
 

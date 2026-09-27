@@ -125,7 +125,8 @@ public struct TableView: HTMLContent {
   }
 
   /// The words a cell shows, however it is built — a bare string, a link, a
-  /// chip. Used for the cell's title, so an ellipsis never hides a value.
+  /// chip. Used for the cell's title, so a value clipped at the cell's edge
+  /// is never lost.
   static func plainText(of node: DOM.Node) -> String {
     if let text = node as? DOM.Text { return text.content }
     guard let element = node as? DOM.Element else { return "" }
@@ -765,8 +766,9 @@ public struct TableView: HTMLContent {
                       for (cellIndex, column) in columns.enumerated() {
                         let cellContent: DOM.Node = row.cells.first(where: { stringEquals($0.key, column.id) })?.value ?? DOM.Text("")
                         let isFirstCell = cellIndex == 0
-                        // A cell is one line and clips with an ellipsis, so the
-                        // value it holds is also its title: hovering shows the
+                        // A cell is one line and fades out where it is clipped
+                        // (`fadeOverflow`), so the value it holds is also its
+                        // title: hovering shows the
                         // whole of it rather than leaving the reader to guess.
                         // Links carry their own text down the tree, and a title
                         // is most wanted precisely where a long one is clipped.
@@ -821,6 +823,7 @@ public struct TableView: HTMLContent {
                                 }
                               }
                               .class("table-cell-content")
+                              .data("edge-fade", "expand")
                             }
                             .data("align", column.align.value)
                             .title(cellTitle)
@@ -1185,11 +1188,14 @@ public struct TableView: HTMLContent {
       selector("& .table-table-borders-vertical td:last-child", "& .table-table-borders-vertical th:last-child") { borderInlineEnd(.none) }
       selector("& .table-table td > div:not(.table-resizer)", "& .table-table th > div:not(.table-resizer)", "& .table-table th > button", "& .table-table td > span", "& .table-table th > span") {
         whiteSpace(.nowrap).important()
-        textOverflow(.ellipsis).important()
+        textOverflow(.clip).important()
         overflow(.hidden).important()
         display(.block)
         width(perc(100))
       }
+      // A value too long for its column fades out at its end, and on a
+      // phone a tap on it shows the whole of it (EdgeFade.swift).
+      fadeOverflow("& .table-table td > div:not(.table-resizer)", "& .table-table td > span")
       // A column width is a starting size for its values. Its heading is the
       // only name a reader has for those values, so the heading may enlarge the
       // column but must never be abbreviated.
@@ -1241,7 +1247,7 @@ public struct TableView: HTMLContent {
         boxSizing(.borderBox)
         verticalAlign(.middle)
         overflow(.hidden)
-        textOverflow(.ellipsis)
+        textOverflow(.clip)
         whiteSpace(.nowrap)
         minWidth(0)
         textAlign(.start)
@@ -1420,9 +1426,6 @@ public struct TableView: HTMLContent {
       }
       descendant(".table-cell-content") {
         width(perc(100))
-        overflow(.hidden)
-        textOverflow(.ellipsis)
-        whiteSpace(.nowrap).important()
         display(.block)
       }
     }
@@ -1697,6 +1700,16 @@ public struct TableView: HTMLContent {
 
       fitHeaderLabels()
       bindEvents()
+      // Values too long for their columns fade out at their ends, and expand
+      // on a tap on a phone. The table's own cells are marked as it draws
+      // them; a cell a page built itself (a `td` of its own) is marked here.
+      let pageCells = table.querySelectorAll(
+        ".table-tbody td > div:not(.table-resizer):not(.table-selection-container):not([data-edge-fade]), "
+          + ".table-tbody td > span:not(.table-group-indent):not([data-edge-fade])")
+      for box in pageCells {
+        _ = box.setAttribute(data("edge-fade"), "expand")
+      }
+      EdgeFadeHydration.scheduleRefresh()
       TableInstance.updateZebraStriping(for: table)
 
       let isServerPaginated = stringEquals(table.getAttribute(data("paginate-server")) ?? "false", "true")

@@ -80,16 +80,16 @@ public struct TableCellView: HTMLContent {
     .data("vertical-align", vAlign.rawValue)
     .data("mono", useMonoFont)
     .data("vertical-borders", showVerticalBorders)
+    .data("edge-fade", "expand")
     .style {
       selector("&") {
         padding(spacing8, spacing12)
         fontFamily(typographyFontSans)
         fontSize(fontSizeSmall14)
         color(colorBase)
-        overflow(.hidden)
-        textOverflow(.ellipsis)
-        whiteSpace(.nowrap)
       }
+      // A value too long for its column fades out at its end (EdgeFade.swift).
+      fadeOverflow("&")
       selector("&[data-align='start']") { textAlign(.left) }
       selector("&[data-align='center']") { textAlign(.center) }
       selector("&[data-align='end']", "&[data-align='number']") { textAlign(.right) }

@@ -181,6 +181,7 @@ public struct InfoChipView: HTMLContent {
           content
         }
         .class("info-chip-text")
+        .data("edge-fade", "expand")
       }
     }
     .class(
@@ -205,7 +206,6 @@ public struct InfoChipView: HTMLContent {
         lineHeight(lineHeightXSmall20)
         borderRadius(borderRadiusPill)
         whiteSpace(.nowrap)
-        textOverflow(.ellipsis)
         overflow(.hidden)
         boxSizing(.borderBox)
       }
@@ -318,15 +318,14 @@ public struct InfoChipView: HTMLContent {
         width(sizeIconMedium)
         height(sizeIconMedium)
       }
-      // Shrinks for the ellipsis, never grows: a chip wider than its content
-      // (stretched by its container) keeps its icon and label centred.
+      // Shrinks to fit, fading out at its end, never grows: a chip wider
+      // than its content (stretched by its container) keeps its icon and
+      // label centered.
       descendant(".info-chip-text") {
         flex("0 1 auto")
         minWidth(0)
-        textOverflow(.ellipsis)
-        overflow(.hidden)
-        whiteSpace(.nowrap)
       }
+      fadeOverflow("& .info-chip-text")
     }
   }
 }
