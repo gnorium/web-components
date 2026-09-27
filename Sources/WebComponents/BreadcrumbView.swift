@@ -38,16 +38,17 @@
     }
 
     public func build() -> DOM.Node {
-      let visibleItems: [BreadcrumbItem]
-      let overflowItems: [BreadcrumbItem]
-
-      if items.count > maxVisible {
-        visibleItems = [items[0]] + items.suffix(maxVisible - 1)
-        overflowItems = Array(items[1..<(items.count - (maxVisible - 1))])
-      } else {
-        visibleItems = items
-        overflowItems = []
-      }
+      // Past `maxVisible`, the middle folds into the overflow menu: the
+      // trail's first two crumbs stay (home, and the section it is in), and
+      // so do the crumbs nearest the page, the page's own and its parents'.
+      // What goes is the run between — the crumbs a reader least needs to
+      // see to know where they are (`Gnorium › Lexico-records › … ›
+      // compute and -er › Noun › Versions › Version …`).
+      let folds = items.count > maxVisible
+      let head = folds ? min(2, max(maxVisible - 1, 1)) : items.count
+      let tail = folds ? max(maxVisible - head, 1) : 0
+      let visibleItems = folds ? Array(items.prefix(head)) + Array(items.suffix(tail)) : items
+      let overflowItems = folds ? Array(items[head..<(items.count - tail)]) : []
 
       let truncateText: (String) -> String = { text in
         if text.count > truncateLength {
@@ -59,58 +60,46 @@
       return nav {
         ol {
           for (index, item) in visibleItems.enumerated() {
+            let isLast = index == visibleItems.count - 1
             li {
-              if index == 0 && !overflowItems.isEmpty {
-                // First item
-                if let url = item.url {
-                  LinkView(url: url, class: "breadcrumb-link", title: item.text) {
-                    item.label ?? DOM.Text(truncateText(item.text ?? ""))
-                  }
-                } else {
-                  span { item.label ?? DOM.Text(truncateText(item.text ?? "")) }
-                    .title(item.text ?? "")
-                    .class("breadcrumb-current")
+              if isLast {
+                span { item.label ?? DOM.Text(truncateText(item.text ?? "")) }
+                  .title(item.text ?? "")
+                  .class("breadcrumb-current")
+                  .ariaCurrent(.page)
+              } else if let url = item.url {
+                LinkView(url: url, class: "breadcrumb-link", title: item.text) {
+                  item.label ?? DOM.Text(truncateText(item.text ?? ""))
                 }
+              } else {
+                span { item.label ?? DOM.Text(truncateText(item.text ?? "")) }
+                  .title(item.text ?? "")
+                  .class("breadcrumb-current")
+              }
 
+              if !isLast {
                 BreadcrumbSeparatorView(class: "breadcrumb-separator")
+              }
 
-                // Overflow menu
+              // The folded crumbs, after the head, where they stood.
+              if index == head - 1 && !overflowItems.isEmpty {
                 span {
                   MenuButtonView(
                     buttonLabel: "…",
+                    // Links, as the crumbs they stand for: a folded crumb
+                    // is still a way up.
                     menuItems: overflowItems.map { overflowItem in
                       MenuButtonView.MenuItem(
                         value: overflowItem.url ?? "",
-                        label: overflowItem.text ?? ""
+                        label: overflowItem.text ?? "",
+                        url: overflowItem.url
                       )
                     }
                   )
                 }
                 .class("breadcrumb-overflow")
-              } else {
-                // Regular item or current page
-                let isLast = index == visibleItems.count - 1
 
-                if isLast {
-                  span { item.label ?? DOM.Text(truncateText(item.text ?? "")) }
-                    .title(item.text ?? "")
-                    .class("breadcrumb-current")
-                    .ariaCurrent(.page)
-                } else {
-                  if let url = item.url {
-                    LinkView(url: url, class: "breadcrumb-link", title: item.text) {
-                      item.label ?? DOM.Text(truncateText(item.text ?? ""))
-                    }
-                  } else {
-                    span { item.label ?? DOM.Text(truncateText(item.text ?? "")) }
-                      .title(item.text ?? "")
-                      .class("breadcrumb-current")
-                  }
-                }
-
-                if !isLast {
-                  BreadcrumbSeparatorView(class: "breadcrumb-separator")
-                }
+                BreadcrumbSeparatorView(class: "breadcrumb-separator")
               }
             }
             .class("breadcrumb-item")
