@@ -162,6 +162,12 @@ public enum OutlineMoves {
   /// by a move near it — says so as a changed field says it: "Diff: 1.3 →
   /// 1.1". The root dispatches `outliner-change` with the JSON after every
   /// move.
+  ///
+  /// An item the page marks `data-outliner-removed="true"` is removed, with
+  /// every item under it: left out of the JSON and the numbering, drawn in
+  /// the `removed` state, never picked up, and nothing goes under it. The
+  /// page dispatches `outliner-removal` on the root after marking or
+  /// unmarking one, and the outline reads itself again.
   public struct OutlinerView: HTMLContent {
     public struct Node: Sendable {
       public let id: String
@@ -752,6 +758,8 @@ public enum OutlineMoves {
         if stringEquals(item.dataset["outliner-touched"] ?? "false", "true") { touched.append(id(of: item)) }
       }
       bindToolbar()
+      // A removal, or its undoing, marked by the page.
+      _ = root.addEventListener("outliner-removal") { [self] _ in self.changed() }
       refresh()
     }
 
@@ -784,6 +792,16 @@ public enum OutlineMoves {
 
     private func label(of item: DOM.Element) -> String {
       item.dataset["outliner-label"] ?? ""
+    }
+
+    /// Whether the page removed it, or an item it stands under.
+    private func isRemoved(_ item: DOM.Element?) -> Bool {
+      var cursor = item
+      while let current = cursor {
+        if stringEquals(current.dataset["outliner-removed"] ?? "false", "true") { return true }
+        cursor = parentItem(of: current)
+      }
+      return false
     }
 
     private func rank(of item: DOM.Element?) -> Int {
@@ -944,6 +962,8 @@ public enum OutlineMoves {
     }
 
     private func grab(_ item: DOM.Element) {
+      // A removed item stays where it was removed.
+      if isRemoved(item) { return }
       if held != nil { drop() }
       held = item
       handle(of: item)?.setAttribute("aria-pressed", "true")
@@ -1060,6 +1080,9 @@ public enum OutlineMoves {
       if let parent, isWithin(parent, item) {
         return stringJoin([label(of: item), " cannot go inside itself."], separator: "")
       }
+      if let parent, isRemoved(parent) {
+        return stringJoin([label(of: parent), " is removed."], separator: "")
+      }
       // Under a lower rank, or under the leaf rank, which takes nothing.
       let parentRank = rank(of: parent)
       if let _ = parent, parentRank == leafRank { return leafRefusal }
@@ -1081,11 +1104,13 @@ public enum OutlineMoves {
       AlertHydration.hydrate(alert: alert)
     }
 
-    /// An item's one state, by precedence: refused, held, placeholder, moved,
-    /// none.
+    /// An item's one state, by precedence: removed, refused, held,
+    /// placeholder, moved, none.
     private func paint(_ item: DOM.Element) {
       let state: String
-      if let target = refusedTarget, target.id == item.id {
+      if stringEquals(item.dataset["outliner-removed"] ?? "false", "true") {
+        state = "removed"
+      } else if let target = refusedTarget, target.id == item.id {
         state = "refused"
       } else if isHeld(item) {
         state = "held"
@@ -1365,6 +1390,7 @@ public enum OutlineMoves {
           slot.textContent = numbers[offset]
         }
       }
+      for item in root.querySelectorAll(".outliner-item[data-outliner-removed='true']") { paint(item) }
       updateToolbar()
       if let input = root.querySelector(":scope > .outliner-shape") {
         input.setAttribute("value", shapeJSON())
@@ -1376,7 +1402,7 @@ public enum OutlineMoves {
       _ list: DOM.Element, parent: String, prefix: String,
       entries: inout [OutlineMoves.Entry], walked: inout [DOM.Element], numbers: inout [String]
     ) {
-      for (position, item) in items(in: list).enumerated() {
+      for (position, item) in items(in: list).filter({ !isRemoved($0) }).enumerated() {
         let number = stringIsEmpty(prefix)
           ? intToString(position + 1) : stringJoin([prefix, intToString(position + 1)], separator: ".")
         entries.append(
@@ -1407,7 +1433,9 @@ public enum OutlineMoves {
 
     private func collect(_ list: DOM.Element?, parent: String, into entries: inout [String]) {
       guard let list else { return }
-      for (position, item) in items(in: list).enumerated() {
+      for (position, item) in items(in: list).filter({ !stringEquals($0.dataset["outliner-removed"] ?? "false", "true") })
+        .enumerated()
+      {
         entries.append(
           stringJoin(
             [
