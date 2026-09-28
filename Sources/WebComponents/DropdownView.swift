@@ -21,16 +21,21 @@ public struct DropdownView: HTMLContent {
     public let altDisplay: String?
     /// Lowercase form of display, for mid-sentence use (e.g. tooltip text). Pre-computed server-side to avoid WASI string ops.
     public let displayLower: String?
+    /// Its level in a grouped list: 0 a group's head (itself a choice, the
+    /// broad one), 1 an option under the head before it, drawn indented.
+    /// Nil in a list that is not grouped.
+    public let depth: Int?
 
     public init(
       value: String, context: String? = nil, display: String, altDisplay: String? = nil,
-      displayLower: String? = nil
+      displayLower: String? = nil, depth: Int? = nil
     ) {
       self.value = value
       self.context = context
       self.display = display
       self.altDisplay = altDisplay
       self.displayLower = displayLower
+      self.depth = depth
     }
   }
 
@@ -208,6 +213,9 @@ public struct DropdownView: HTMLContent {
             }
               .class("dropdown-selected-text")
               .data("dropdown-selected-text", true)
+            // One line, faded at its end when it runs past the trigger
+            // (`fadeOverflow`); the open list shows it whole.
+            .data("edge-fade", true)
               .data("placeholder", placeholder)
               .data("selected", selectedValue.map { value in options.contains { stringEquals($0.value, value) } } ?? false)
               .data("disabled", disabled)
@@ -285,6 +293,7 @@ public struct DropdownView: HTMLContent {
               .data("selected", isSelected)
               .data("stacked", optionLayout == .stacked)
               .data("hidden", false)
+              .data("depth", option.depth.map { "\($0)" } ?? "")
             }
             if let note {
               div { note }
@@ -332,21 +341,15 @@ public struct DropdownView: HTMLContent {
         color(colorBase)
         fontFamily(typographyFontSans)
       }
-      // One line, held inside the trigger: a title longer than the field was
-      // drawn straight through the border. It scrolls sideways, as a text
-      // input does — a swipe or a trackpad reads the rest — with no scrollbar
-      // drawn inside the trigger. No ellipsis: it stayed painted over the
-      // text while the text scrolled.
+      // One line, held inside the trigger, fading out at its end when it
+      // runs past it (`fadeOverflow`): no tap-to-expand, no ellipsis — the
+      // open list shows the whole value.
       descendant(".dropdown-selected-text") {
         textAlign(.start)
         color(colorPlaceholder)
-        whiteSpace(.nowrap)
-        overflowX(.auto)
-        overflowY(.hidden)
-        scrollbarWidth(.none)
         minWidth(0)
-        pseudoElement(.webkitScrollbar) { display(.none).important() }
       }
+      fadeOverflow("& .dropdown-selected-text")
       // The text gives way, not the chevron: beside a cut title it was
       // squeezed to a sliver.
       descendant(".dropdown-chevron") {
@@ -485,6 +488,22 @@ public struct DropdownView: HTMLContent {
             color(colorInvertedFixed).important()
           }
         }
+      }
+      // In the open list an option wraps to as many lines as it needs: a
+      // tap chooses it, nothing is cut or faded.
+      descendant(".dropdown-option-display-text") {
+        flex(1)
+        minWidth(0)
+        whiteSpace(.normal)
+        overflowWrap(.anywhere)
+      }
+      // A grouped list: each head a choice of its own, set in semibold, its
+      // options indented under it.
+      descendant(".dropdown-option[data-depth='0'] .dropdown-option-display-text") {
+        fontWeight(fontWeightSemiBold)
+      }
+      descendant(".dropdown-option[data-depth='1']") {
+        paddingInlineStart(spacing32)
       }
       descendant(".dropdown-option[data-stacked='true']") {
         flexDirection(.column)
