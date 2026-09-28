@@ -8,7 +8,7 @@
   import WebTypes
   import XMLUtilities
 
-  /// A vouched TEI document, read beside the object it was transcribed from.
+  /// A recognized TEI document, read beside the object it was transcribed from.
   ///
   /// The pipeline writes `<pb n="…" facs="…"/>` at every page turn, so the
   /// document carries its own facsimiles and each page can name the image
