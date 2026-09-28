@@ -350,7 +350,7 @@ public struct ButtonView: HTMLContent {
             transition("background-color 0.1s ease, border-color 0.1s ease, color 0.1s ease")
 
             // A mouse click focuses a button but should not ring it. Keyboard
-            // focus does: `:focus-visible` is the browser's own judgement of
+            // focus does: `:focus-visible` is the browser's own judgment of
             // when a ring is useful, and it gets the focus ring every control
             // wears — the browser's own was left to show through, in whatever
             // accent the system happened to have.
@@ -1191,7 +1191,7 @@ public struct ButtonView: HTMLContent {
             transition("background-color 0.1s ease, border-color 0.1s ease, color 0.1s ease")
 
             // A mouse click focuses a button but should not ring it. Keyboard
-            // focus does: `:focus-visible` is the browser's own judgement of
+            // focus does: `:focus-visible` is the browser's own judgment of
             // when a ring is useful, and it gets the focus ring every control
             // wears — the browser's own was left to show through, in whatever
             // accent the system happened to have.

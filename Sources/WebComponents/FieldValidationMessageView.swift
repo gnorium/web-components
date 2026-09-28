@@ -7,7 +7,7 @@ import HTMLBuilder
 import WebTypes
 
 /// The message under a field's control: a status icon and the words, in the
-/// status colour. `FieldView` draws it on the server; `FieldValidationHydration`
+/// status color. `FieldView` draws it on the server; `FieldValidationHydration`
 /// draws the same view on the client when a form validates itself.
 public struct FieldValidationMessageView: HTMLContent {
   let id: String
@@ -73,7 +73,7 @@ public struct FieldValidationMessageView: HTMLContent {
       selector("&[data-status='error']") { color(colorRed) }
       selector("&[data-status='warning']") { color(colorOrange) }
       selector("&[data-status='success']") { color(colorGreen) }
-      // As tall as the message's first line, so the icon centres on it.
+      // As tall as the message's first line, so the icon centers on it.
       descendant(".field-validation-message-icon") {
         display(.inlineFlex)
         alignItems(.center)

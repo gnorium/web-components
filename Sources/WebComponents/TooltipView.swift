@@ -294,7 +294,7 @@ public struct TooltipView: HTMLContent {
         borderRight(px(6), .solid, backgroundColorInverted)
       }
       // Above or below, the arrow sits where the hydration puts it — over the
-      // trigger's centre, clear of the corner radius — and at the middle
+      // trigger's center, clear of the corner radius — and at the middle
       // until then.
       selector(
         "&[data-placement='bottom'] .tooltip-content::after", "&[data-placement='top'] .tooltip-content::after",
@@ -429,7 +429,7 @@ public struct TooltipView: HTMLContent {
         Self.position(host, x: hostX, y: hostY)
       }
 
-      // Point the arrow at the trigger's centre. If that centre lies inside
+      // Point the arrow at the trigger's center. If that center lies inside
       // the bubble's corner zone, slide the bubble — as far as the viewport
       // allows — so the arrow sits just clear of the radius, over the trigger.
       switch placement.side {

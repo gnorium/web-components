@@ -5,7 +5,7 @@
   import HTMLBuilder
   import WebTypes
 
-  /// One labelled fact, shown as a read-only field shows its value: the label
+  /// One labeled fact, shown as a read-only field shows its value: the label
   /// above, the value in the field's box.
   ///
   /// It looks like a field because it sits among fields and is read the same

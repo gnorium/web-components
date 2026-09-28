@@ -14,10 +14,10 @@
     /// A closed set, deliberately. The size used to be any `CSS.Length` the
     /// caller liked, and the rule was written with that value inside its own
     /// selector — so each distinct value needed a rule of its own, and only the
-    /// ones the stylesheet catalogue happened to build ever got one. Every
+    /// ones the stylesheet catalog happened to build ever got one. Every
     /// other stamp rendered with no size rule at all.
     ///
-    /// Variants can be catalogued because there are finitely many of them.
+    /// Variants can be cataloged because there are finitely many of them.
     /// Arbitrary values cannot. That is the whole difference, and it is why a
     /// component's styling varies over named variants and never over values.
     public enum Size: String, Sendable, CaseIterable {
@@ -34,7 +34,7 @@
       }
     }
 
-    /// The colours a stamp comes in, for the same reason.
+    /// The colors a stamp comes in, for the same reason.
     public enum Tone: String, Sendable, CaseIterable {
       case base
       case subtle

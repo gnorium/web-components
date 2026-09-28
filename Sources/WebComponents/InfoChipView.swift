@@ -42,8 +42,8 @@ public struct InfoChipView: HTMLContent {
     case solid
   }
 
-  /// The chip's icon. `automatic` picks it by colour: green a check, red a
-  /// cross, orange a warning, gray none, any other colour a disc. `hidden`
+  /// The chip's icon. `automatic` picks it by color: green a check, red a
+  /// cross, orange a warning, gray none, any other color a disc. `hidden`
   /// draws none, not even `iconContent`.
   public enum Icon: Sendable {
     case automatic

@@ -21,7 +21,7 @@
     /// owner → the versioned URL that serves it, read once from the manifest.
     ///
     /// Two arrays, not a dictionary: hashing a String in Embedded Swift pulls
-    /// in Unicode normalisation, and the linker has no _swift_stdlib_getNormData
+    /// in Unicode normalization, and the linker has no _swift_stdlib_getNormData
     /// to give it. A handful of stylesheets is a scan, not a lookup, anyway.
     private nonisolated(unsafe) static var owners: [String] = []
     private nonisolated(unsafe) static var urls: [String] = []

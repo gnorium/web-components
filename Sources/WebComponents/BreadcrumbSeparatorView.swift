@@ -11,7 +11,7 @@ import WebTypes
 
 /// The chevron between two steps of a trail: BreadcrumbView's, and anywhere
 /// else a thing is shown under what it belongs to (BreadcrumbLabelView). One
-/// view, so every trail draws the same icon at the same size and colour.
+/// view, so every trail draws the same icon at the same size and color.
 public struct BreadcrumbSeparatorView: HTMLContent {
   let `class`: String
 

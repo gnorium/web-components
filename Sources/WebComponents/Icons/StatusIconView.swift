@@ -8,7 +8,7 @@ import WebTypes
 
 /// The icon a status is drawn with: an alert, a field's message, a result.
 /// Each status is a Codex icon (info = infoFilled, warning = alert, error,
-/// success), filled with `currentColor`, so it takes the colour around it.
+/// success), filled with `currentColor`, so it takes the color around it.
 /// Available on SERVER + CLIENT: client code renders it into a DOM element
 /// (`element.innerHTML = StatusIconView(.success).render()`).
 public struct StatusIconView: HTMLContent {

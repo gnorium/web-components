@@ -447,7 +447,7 @@
         descendant(".search-menu-result[data-color='blue'][aria-selected='true']:hover .search-menu-result-label") {
           color(colorLinkHover)
         }
-        // Inside the detail line: its size and colour, raised.
+        // Inside the detail line: its size and color, raised.
         descendant(".search-menu-result-sup") {
           fontSize(perc(75))
         }

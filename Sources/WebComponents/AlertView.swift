@@ -97,7 +97,7 @@
     }
 
     public func build() -> DOM.Node {
-      // The colour gives the icon; `icon` overrides it (a blue alert that
+      // The color gives the icon; `icon` overrides it (a blue alert that
       // reports a recoverable failure draws the error icon).
       let displayIcon: StatusIconView.Status = {
         if let icon { return icon }
@@ -174,7 +174,7 @@
               height(sizeIconMedium)
             }
             // Every case of AlertColor, or the missing one silently falls back
-            // to the body colour — as blue did, in the only place it was used.
+            // to the body color — as blue did, in the only place it was used.
             selector("&[data-color='gray']") { color(colorGray) }
             selector("&[data-color='blue']") { color(colorBlue) }
             selector("&[data-color='orange']") { color(colorOrange) }
@@ -313,8 +313,8 @@
           }
           // The dismiss button, server-rendered or built by AlertAPI: no fill
           // of its own on the alert's background, the ✕ in the alert's text
-          // colour at the status icon's size, a 40px target, and a tint of
-          // the alert's own colour on hover and focus. `.important()` beats
+          // color at the status icon's size, a 40px target, and a tint of
+          // the alert's own color on hover and focus. `.important()` beats
           // ButtonView's plain-weight fill, and `button.` outranks its
           // `.button-view[data-weight]`, which loads later.
           selector("& button.alert-dismiss") {
@@ -514,7 +514,7 @@
         alertContainer = c
       }
 
-      // The same icons as the server's AlertView: the colour gives the icon,
+      // The same icons as the server's AlertView: the color gives the icon,
       // `icon` overrides it.
       let displayIcon: StatusIconView.Status
       if let icon {

@@ -327,7 +327,7 @@
 
       // Split on "&" rather than hunting a byte offset: that needs the key's
       // length, and counting a String's characters is what drags Unicode
-      // normalisation into embedded WASM. It also anchors the match, so "tab="
+      // normalization into embedded WASM. It also anchors the match, so "tab="
       // can no longer be found inside "&othertab=".
       let key = "\(param)="
       var queryTab: String? = nil

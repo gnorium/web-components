@@ -29,10 +29,10 @@ public enum OutlineMoves {
 
   /// Whether each entry moved, in the order given.
   ///
-  /// Two orders can be equally short of the old one — swap two neighbours
+  /// Two orders can be equally short of the old one — swap two neighbors
   /// and either of them could be the one that moved. `touched` breaks the
   /// tie: an item the reader actually moved is the one reported, rather
-  /// than the neighbour it passed.
+  /// than the neighbor it passed.
   public static func moved(_ entries: [Entry], touched: [String] = []) -> [Bool] {
     var moved = entries.map { !stringEquals($0.oldParent, $0.newParent) }
     var grouped = [Bool](repeating: false, count: entries.count)
@@ -59,7 +59,7 @@ public enum OutlineMoves {
   /// Which elements belong to one longest strictly increasing subsequence —
   /// of those, the one that keeps the most `untouched` elements, and then
   /// the one that keeps the items that stood earliest. That last is the
-  /// usual case settled right: an item moved up past its neighbours is the
+  /// usual case settled right: an item moved up past its neighbors is the
   /// one that moved, not all of them moving down.
   static func longestIncreasingRun(_ values: [Int], untouched: [Bool]) -> [Bool] {
     guard !values.isEmpty else { return [] }
@@ -157,7 +157,7 @@ public enum OutlineMoves {
   /// `{"a": {"parent": "root", "position": 0}}`, where the top level's parent
   /// is `rootID`. An item that moved is marked `data-outliner-moved`: one whose
   /// parent changed, or one outside the longest run of its siblings that kept
-  /// their order — so a move marks the item moved, not every neighbour it
+  /// their order — so a move marks the item moved, not every neighbor it
   /// renumbered. Every item whose number changed — moved, or only renumbered
   /// by a move near it — says so as a changed field says it: "Diff: 1.3 →
   /// 1.1". The root dispatches `outliner-change` with the JSON after every
@@ -389,7 +389,7 @@ public enum OutlineMoves {
 
       return div {
         p {
-          "Press Space or Enter on a handle to pick an item up; a toolbar at the foot of the screen then moves it. While it is held, the up and down arrows move it among its neighbours, Tab or the right arrow puts it under the item above, Shift-Tab or the left arrow takes it out a level, and Enter, Space or Escape put it down."
+          "Press Space or Enter on a handle to pick an item up; a toolbar at the foot of the screen then moves it. While it is held, the up and down arrows move it among its neighbors, Tab or the right arrow puts it under the item above, Shift-Tab or the left arrow takes it out a level, and Enter, Space or Escape put it down."
         }
         .id("\(id)-instructions")
         .class("outliner-instructions")
@@ -558,7 +558,7 @@ public enum OutlineMoves {
         selector("&[data-outliner-dragging='true']") {
           userSelect(.none)
         }
-        // Where a drag would land: a straight bar, square-ended, centred in
+        // Where a drag would land: a straight bar, square-ended, centered in
         // the gap above the row or below it — or, for into it, along its foot,
         // indented — drawn apart from the row's border, so it never bends
         // round a rounded corner.
@@ -626,7 +626,7 @@ public enum OutlineMoves {
           display(.none)
         }
         // At the foot of the screen, clear of a phone's home indicator, and
-        // centred between both sides whichever way the line runs.
+        // centered between both sides whichever way the line runs.
         descendant(".outliner-toolbar") {
           position(.fixed)
           insetInlineStart(0)
@@ -736,7 +736,7 @@ public enum OutlineMoves {
     /// A long press ends in a click the finger did not mean.
     private var swallowClick = false
     /// The items the reader has moved, which a tie between two readings of
-    /// what moved is settled in favour of.
+    /// what moved is settled in favor of.
     private var touched: [String] = []
 
     init(root: DOM.Element) {

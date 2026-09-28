@@ -817,7 +817,7 @@
           backgroundColor(.transparent)
           padding(0)
         }
-        // The same token colours the session trace gives a tool call's markup:
+        // The same token colors the session trace gives a tool call's markup:
         // one palette for code across the site, from design tokens rather than
         // from a highlight.js theme.
         selector(".tei-page-raw .hljs-tag", ".tei-page-raw .hljs-name") {

@@ -159,7 +159,7 @@ public struct LabelView: HTMLContent {
     // Each configuration its own selector: the stylesheet keeps one rule per
     // selector, so rules that differed by parameter under one shared
     // selector let whichever label was built last set every label's size,
-    // weight and colour.
+    // weight and color.
     return root
       .class(rootClass)
       .data("label-size", labelFontSize.value)

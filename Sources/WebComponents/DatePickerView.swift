@@ -220,7 +220,7 @@ public struct DatePickerView: HTMLContent {
         boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
       }
 
-      // The calendar button sits inside the field's border, centred in its
+      // The calendar button sits inside the field's border, centered in its
       // 40px, where a text input's end icon sits: a plain button, with no fill
       // and no hover disc to cross the border or the focus ring.
       descendant(".date-picker-toggle") {

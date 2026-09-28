@@ -20,9 +20,9 @@ public enum Separation: Sendable {
   /// all, a divider where two meet, the base radius on the group's outer
   /// corners only — the first's top ones, the last's bottom ones, all four
   /// for one alone. The accordions must be siblings in their container, with
-  /// no gap between them. A grouped accordion has no coloured states of its
+  /// no gap between them. A grouped accordion has no colored states of its
   /// own; its header's keyboard focus is ringed on its border line, rounded at
-  /// all four corners wherever it sits, and raised over its neighbours.
+  /// all four corners wherever it sits, and raised over its neighbors.
   case grouped
 
   public var value: String {
@@ -419,7 +419,7 @@ public struct AccordionView: HTMLContent {
       }
       // Keyboard focus, on the border line: the focus ring every field
       // wears, rounded at all four corners whatever the item's place in the
-      // group, and drawn over its neighbours — focus already raises it.
+      // group, and drawn over its neighbors — focus already raises it.
       selector("&[data-separation='grouped']:has(> .accordion-details > .accordion-summary:focus-visible)::after") {
         content("\"\"")
         position(.absolute)
@@ -484,7 +484,7 @@ public struct AccordionView: HTMLContent {
         event.preventDefault()
 
         let motion = details.dataset["motion"] ?? "idle"
-        // A section can be asked to reverse while it is still travelling —
+        // A section can be asked to reverse while it is still traveling —
         // notably when Verbose is pressed twice. Treat the current rendered
         // height as the new starting point instead of dropping the second
         // request. This keeps every nested accordion on the same final state.
@@ -719,16 +719,16 @@ public struct AccordionView: HTMLContent {
     }
 
     /// The same card, with the title given as content rather than as text, and
-    /// with the root class the server's initialiser takes.
+    /// with the root class the server's initializer takes.
     ///
     /// A header that carries more than a word — an outcome mark beside a tool
     /// name, a path, a line range — cannot be expressed as `title: String`, and
     /// building it as `description` puts it in a second box with its own type
-    /// and colour. This mirrors `AccordionView.init`, so a client-built card is
+    /// and color. This mirrors `AccordionView.init`, so a client-built card is
     /// the server-rendered card, node for node. Build the title and content with
-    /// the DSL: `render()` serialises `DOM.Element.children`, which only the
+    /// the DSL: `render()` serializes `DOM.Element.children`, which only the
     /// builder fills, so a node taken from the live document — a factory's
-    /// `firstElementChild`, say — serialises as an empty tag.
+    /// `firstElementChild`, say — serializes as an empty tag.
     public static func createElement(
       id: String,
       isOpen: Bool = false,

@@ -7,11 +7,11 @@
 
   /// Raw text, edited where it is read.
   ///
-  /// A `CodeView` of the text, coloured as every code block on the site
+  /// A `CodeView` of the text, colored as every code block on the site
   /// is, with a textarea laid exactly over it. The textarea's own glyphs are
-  /// transparent, so the colours underneath show through, while its caret and
+  /// transparent, so the colors underneath show through, while its caret and
   /// selection stay on top; as the text changes the client copies it into the
-  /// block and colours it again. The two share one font, one line height and
+  /// block and colors it again. The two share one font, one line height and
   /// no padding, so each character of the one sits on its twin in the other,
   /// and neither wraps: the container scrolls, as a code block's does.
   public struct CodeEditorView: HTMLContent {
@@ -86,9 +86,9 @@
   import WebAPIs
   import WebTypes
 
-  /// Keeps each editor's coloured block in step with its textarea: the text
+  /// Keeps each editor's colored block in step with its textarea: the text
   /// copied across at once, so the block keeps the size the textarea needs,
-  /// and coloured again a moment after typing stops.
+  /// and colored again a moment after typing stops.
   public enum CodeEditorHydration {
     /// The editors under `root` that nothing is keeping in step yet.
     public static func hydrate(in root: DOM.Element) {
@@ -115,7 +115,7 @@
       }
     }
 
-    /// The colouring waiting for typing to stop.
+    /// The coloring waiting for typing to stop.
     private final class Pending: @unchecked Sendable {
       var timer: Int32 = 0
     }

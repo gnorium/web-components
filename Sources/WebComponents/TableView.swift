@@ -1109,9 +1109,9 @@ public struct TableView: HTMLContent {
       }
       descendant(".table-pagination-controls") {
         flexShrink(0)
-        // PaginationView centres itself with `margin: 0 auto`. Inside a table
+        // PaginationView centers itself with `margin: 0 auto`. Inside a table
         // footer it is one end of a space-between row, so the end margin has
-        // to be taken back or the auto pair recentres it mid-row.
+        // to be taken back or the auto pair recenters it mid-row.
         marginInlineStart(.auto)
         marginInlineEnd(0)
       }
@@ -1148,7 +1148,7 @@ public struct TableView: HTMLContent {
         descendant(".table-cell-compact") { display(.inline).important() }
       }
       // On a narrow phone the row would wrap unevenly: two lines instead,
-      // the count over the pager, both centred. Wider, one row fits.
+      // the count over the pager, both centered. Wider, one row fits.
       media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
         descendant(".table-pagination") {
           flexDirection(.column).important()
@@ -1456,7 +1456,7 @@ public struct TableView: HTMLContent {
         margin(.auto)
       }
       // The cell is the whole empty body, so it stretches to the row it sits in
-      // and centres its line both ways. Without the stretch it kept its own 44px
+      // and centers its line both ways. Without the stretch it kept its own 44px
       // and the message sat in the top-left corner of a tall white box.
       // Spelled through `.table-tbody td` so it outranks the cell rule that
       // sets `text-align: start` for every td: same specificity loses to
@@ -1505,7 +1505,7 @@ public struct TableView: HTMLContent {
     var visibleIndex = 0
     for row in data {
       // `if let`, not `!= nil`: an optional String compared with nil pulls
-      // in Unicode normalisation on the client.
+      // in Unicode normalization on the client.
       var isGroupChild = false
       if let _ = row.groupID { isGroupChild = !row.isGroupHeader }
       stripes.append(visibleIndex % 2 == 1)

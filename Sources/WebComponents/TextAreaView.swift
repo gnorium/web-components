@@ -183,9 +183,9 @@ public struct TextAreaView: HTMLContent {
       selector("&.text-area-has-end-icon .text-area-input") {
         paddingInlineEnd(calc(px(15) + sizeIconMedium + spacing8)).important()
       }
-      // The same rule as TextInputView's: colour only. An opacity on top of
-      // the colour made a textarea's placeholder read as a different grey
-      // from the input beside it, and WebKit ignored the colour altogether.
+      // The same rule as TextInputView's: color only. An opacity on top of
+      // the color made a textarea's placeholder read as a different grey
+      // from the input beside it, and WebKit ignored the color altogether.
       selector("& .text-area-input::placeholder") {
         color(colorPlaceholder).important()
         customProperty("-webkit-text-fill-color", colorPlaceholder).important()

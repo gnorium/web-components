@@ -12,9 +12,9 @@ import WebTypes
 
 /// A name under what it belongs to, as a breadcrumb reads: "English › computer".
 ///
-/// The context comes first, plain and subtle (BreadcrumbView's trail colour),
+/// The context comes first, plain and subtle (BreadcrumbView's trail color),
 /// then BreadcrumbView's own chevron, then the name, which keeps whatever
-/// weight and colour its container gives it (link blue in the search menu,
+/// weight and color its container gives it (link blue in the search menu,
 /// semibold in a dropdown). Inline flow, as BreadcrumbView's trail is: a long
 /// name wraps as running text and uses the whole width, where a column after
 /// the chevron was left a narrow strip on a phone. The chevron never starts a

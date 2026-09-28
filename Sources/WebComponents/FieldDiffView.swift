@@ -7,7 +7,7 @@ import HTMLBuilder
 import WebTypes
 
 /// A field, and how it changed: the one way every form part draws a field
-/// and its diff — a coloured border on the control and, under it, its
+/// and its diff — a colored border on the control and, under it, its
 /// "Diff:" line, a `DiffView`.
 ///
 /// Two sources, one look:
@@ -86,13 +86,13 @@ public struct FieldDiffView: HTMLContent {
 
   /// How a field says what an edit did to it, for every form that edits and
   /// every page that shows an edit: green added, red removed, orange changed
-  /// — the control's own border, and a ring of the same colour — and its
+  /// — the control's own border, and a ring of the same color — and its
   /// diff under it shown only once there is one.
   ///
   /// The live diff marks the control with `data-diff-state`; a saved diff
-  /// wraps it in `.diff-wrap-added`, `-removed` or `-changed`. The colour is
+  /// wraps it in `.diff-wrap-added`, `-removed` or `-changed`. The color is
   /// forced: a dropdown's trigger is a button, and a button's own border
-  /// colour otherwise wins, leaving a grey border inside an orange ring.
+  /// color otherwise wins, leaving a grey border inside an orange ring.
   @CSSBuilder
   public static func stateCSS() -> [CSSOM.CSSRule] {
     descendant("[data-diff-state='unchanged']") {
@@ -123,7 +123,7 @@ public struct FieldDiffView: HTMLContent {
     }
   }
 
-  /// A saved diff colours the field's own control, not the facts a choice
+  /// A saved diff colors the field's own control, not the facts a choice
   /// shows about itself in its info panel — they are not fields, and have
   /// no diff line of their own.
   @CSSBuilder

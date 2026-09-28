@@ -15,8 +15,8 @@ import WebTypes
 /// its new one, a text's or a page's old lines against its new ones.
 ///
 /// The thing edited shows its new value, clean, framed in orange. This says
-/// how it changed, under the label "Diff:", in the subtle text colour with
-/// the characters that changed coloured — red where they were, green where
+/// how it changed, under the label "Diff:", in the subtle text color with
+/// the characters that changed colored — red where they were, green where
 /// they are — and nothing given a background. No mark is drawn on the text:
 /// real text is itself underlined and struck through, so a mark of that kind
 /// could not be told from the text.
@@ -36,7 +36,7 @@ import WebTypes
 ///   for a line taken out, "+" for one put in — in a field's own frame,
 ///   scrolled once it is taller than a reader's pane. A long line wraps under
 ///   its own text, the gutter beside it. The gutter and the pairing of the
-///   lines carry the meaning, and the colour only says exactly where.
+///   lines carry the meaning, and the color only says exactly where.
 ///
 /// `text`, `outline`, `choice` and `passage` are built in the browser too, as
 /// a field is edited; `code` and `rendered` are drawn by the server.
@@ -54,13 +54,13 @@ public struct DiffView: HTMLContent {
     case choice(old: String, new: String)
     /// A checkbox's change: one ticked box, ☑︎, green where the box was
     /// ticked, red where it was unticked. "Checked → Not checked" says in four words
-    /// what the colour of one mark says.
+    /// what the color of one mark says.
     case check(ticked: Bool)
     /// A multi-line text's old value against its new one, line by line.
     case passage(old: String, new: String)
     #if SERVER
-      /// Source text, monospaced and uncoloured: it is the past, and syntax
-      /// colour would compete with the live source above it.
+      /// Source text, monospaced and uncolored: it is the past, and syntax
+      /// color would compete with the live source above it.
       case code(old: String, new: String)
       /// Rendered text as it reads, each line drawn with its formatting, so a
       /// line that changed only how it is set shows the difference itself.
@@ -93,7 +93,7 @@ public struct DiffView: HTMLContent {
 
   public func build() -> DOM.Node {
     // A line's text as the pair it belongs to split it: the changed stretches
-    // coloured by the row they sit in, white space among them made visible.
+    // colored by the row they sit in, white space among them made visible.
     func segmentNodes(_ segments: [DiffSegment]) -> [DOM.Node] {
       segments.map { segment -> DOM.Node in
         switch segment {
@@ -216,7 +216,7 @@ public struct DiffView: HTMLContent {
       body = span {
         span {
           // The ballot box with check, held to its text form by U+FE0E: a
-          // colour emoji would ignore the green and the red.
+          // color emoji would ignore the green and the red.
           span { "\u{2611}\u{FE0E}" }
             .class("diff-view-changed")
             .ariaHidden(true)
@@ -284,7 +284,7 @@ public struct DiffView: HTMLContent {
                     }
                   }
                 case .formula:
-                  // A formula is compared whole, and coloured whole.
+                  // A formula is compared whole, and colored whole.
                   if own.contains(true) {
                     span { TeXView(token.text) }
                       .class("diff-view-changed")
@@ -396,7 +396,7 @@ public struct DiffView: HTMLContent {
         paddingInlineStart(calc(ch(1) + spacing8))
         userSelect(.none)
       }
-      // What the tick says, for a reader who does not see its colour.
+      // What the tick says, for a reader who does not see its color.
       descendant(".diff-view-visually-hidden") {
         position(.absolute)
         width(px(1))
@@ -410,7 +410,7 @@ public struct DiffView: HTMLContent {
         margin(0)
       }
       // The characters that changed: red where they were, green where they
-      // are. Colour only; the gutter, or the arrow, says which is which.
+      // are. Color only; the gutter, or the arrow, says which is which.
       selector("& .diff-view-row[data-diff-line='removed'] .diff-view-changed", "& .diff-view-old .diff-view-changed") {
         color(colorRed)
       }

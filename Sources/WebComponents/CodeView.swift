@@ -6,11 +6,11 @@
   import WebTypes
 
   /// Raw text, shown as code: monospaced, on the page's own ground, and
-  /// coloured by the site's syntax tokens rather than by a highlight.js theme.
+  /// colored by the site's syntax tokens rather than by a highlight.js theme.
   ///
-  /// The colouring itself happens on the client, and only for a block someone
+  /// The coloring itself happens on the client, and only for a block someone
   /// can actually see — see `CodeHydration`. A document of a few hundred
-  /// thousand characters is not worth colouring until it is open.
+  /// thousand characters is not worth coloring until it is open.
   public struct CodeView: HTMLContent {
     let text: String
     let language: String
@@ -93,7 +93,7 @@
           padding(0)
         }
         // One palette for code across the site: the same tokens the session
-        // trace colours a tool call's markup with.
+        // trace colors a tool call's markup with.
         // `descendant(a, b)` nests one selector inside the other, so each of
         // these is its own rule: they are alternatives, not a path.
         descendant(".hljs-tag") { color(syntaxPlainText).important() }
@@ -117,14 +117,14 @@
   import WebAPIs
   import WebTypes
 
-  /// Colours the code blocks someone can see, when they can see them.
+  /// Colors the code blocks someone can see, when they can see them.
   ///
   /// A page may hold a thousand blocks — one per page of a transcription —
-  /// behind switches, accordions and a viewer's pager. Colouring them all at
+  /// behind switches, accordions and a viewer's pager. Coloring them all at
   /// load would spend a second of the main thread on markup nobody has asked
   /// for, so nothing happens until a block has a box on screen: at load, after
   /// any click that may have opened one, and whenever an object viewer turns to
-  /// another canvas. A block already coloured is left alone.
+  /// another canvas. A block already colored is left alone.
   public final class CodeHydration: @unchecked Sendable {
     public static nonisolated(unsafe) var instance: CodeHydration?
 
