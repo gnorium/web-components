@@ -545,7 +545,9 @@ public struct ComboboxView: HTMLContent {
     /// The reader typed: what it posts follows at once, and the list
     /// narrows to what matches.
     private func typed() {
-      commit(value: Self.valueOf(text, among: own + results))
+      // A server's suggestion is taken only by choosing it: namesakes read
+      // alike, and a name typed is the name typed.
+      commit(value: Self.valueOf(text, among: own))
       if stringIsEmpty(searchURL) {
         filter(text)
         setActive(-1)
