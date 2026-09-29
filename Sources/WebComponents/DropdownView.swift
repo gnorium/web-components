@@ -428,6 +428,22 @@ public struct DropdownView: HTMLContent {
           insetInlineStart(0).important()
           insetInlineEnd(0).important()
         }
+        // Placed over the page from a scrollport: its field's width, as a
+        // phone's menu is.
+        descendant(".dropdown-menu[data-placement='fixed']") {
+          width((`var`("--dropdown-placed-width") as CSS.Length)).important()
+          insetInlineStart((`var`("--dropdown-placed-start") as CSS.Length)).important()
+          insetInlineEnd(.auto).important()
+        }
+      }
+      // Placed over the page from a scrollport (`place()`): fixed at its
+      // field's place on the screen, which the page writes as it moves.
+      descendant(".dropdown-menu[data-placement='fixed']") {
+        position(.fixed)
+        top((`var`("--dropdown-placed-top") as CSS.Length))
+        insetInlineStart((`var`("--dropdown-placed-start") as CSS.Length))
+        insetInlineEnd(.auto)
+        minWidth((`var`("--dropdown-placed-width") as CSS.Length))
       }
       descendant(".dropdown-search-input") {
         width(perc(100))
@@ -859,6 +875,7 @@ public struct DropdownView: HTMLContent {
       isOpen = true
       menu?.setAttribute(data("open"), true)
       _ = container?.classList.add("is-open")
+      place()
       morphChevron()
       highlightIndex = -1
     }
@@ -867,6 +884,7 @@ public struct DropdownView: HTMLContent {
       isOpen = false
       menu?.setAttribute(data("open"), false)
       _ = container?.classList.remove("is-open")
+      unplace()
       morphChevron()
       (searchInput as? HTML.HTMLInputElement)?.value = ""
       filterOptions()  // Reset filter
@@ -874,6 +892,61 @@ public struct DropdownView: HTMLContent {
 
     private func morphChevron() {
       chevronInstance?.setState(expanded: isOpen, animated: true)
+    }
+
+    // MARK: - In a scrollport
+
+    /// Whether the scroll and resize listeners that keep a placed menu by
+    /// its field are bound.
+    private var placementBound = false
+
+    /// A dropdown in a scrollport — a box that scrolls sideways, as a deep
+    /// tree does (`OutlinerView`), marked `data-scrollport` — would have its
+    /// menu cut off at the box's edge, or scrolled inside it. There the open
+    /// menu is placed over the page instead, under its field (fixed, at the
+    /// field's place on the screen, at least its width), and kept there as
+    /// anything scrolls or the window resizes. Anywhere else it hangs from
+    /// the field as its stylesheet says.
+    private func place() {
+      guard let menu, let container, let _ = container.closest("[data-scrollport='true']"),
+        let rect = container.getBoundingClientRect()
+      else { return }
+      menu.setAttribute(data("placement"), "fixed")
+      menu.setStyleProperty("--dropdown-placed-top", stringJoin([intToString(Int(rect.bottom)), "px"], separator: ""))
+      menu.setStyleProperty("--dropdown-placed-width", stringJoin([intToString(Int(rect.width)), "px"], separator: ""))
+      // From the field's start: its left, or its right where the line runs
+      // right to left.
+      let rightToLeft = stringEquals(container.closest("[dir]")?.getAttribute("dir") ?? "", "rtl")
+      let start = rightToLeft ? window.innerWidth - rect.right : rect.left
+      menu.setStyleProperty("--dropdown-placed-start", stringJoin([intToString(Int(start)), "px"], separator: ""))
+      // A menu hanging from its field scrolls with the page, so an option
+      // below the screen's foot is scrolled to; a placed one stays put, so
+      // the page is scrolled up to bring its foot on screen, as far as the
+      // field's top allows. The scroll listener places it again.
+      if let box = menu.getBoundingClientRect() {
+        let overflow = box.bottom + 16 - window.innerHeight
+        if overflow > 0 {
+          let room = rect.top - 16
+          window.scrollTo(window.scrollX, window.scrollY + (overflow < room ? overflow : max(room, 0)))
+        }
+      }
+      guard !placementBound else { return }
+      placementBound = true
+      let follow: @Sendable (Event) -> Void = { [self] _ in
+        guard self.isOpen else { return }
+        self.place()
+      }
+      _ = document.addEventListener(Event.scroll, follow, capture: true, passive: true)
+      _ = window.addEventListener("resize", follow, capture: false, passive: true)
+    }
+
+    /// Back to hanging from its field.
+    private func unplace() {
+      guard let menu else { return }
+      menu.removeAttribute(data("placement"))
+      for property in ["--dropdown-placed-top", "--dropdown-placed-width", "--dropdown-placed-start"] {
+        menu.setStyleProperty(property, "")
+      }
     }
 
     private func filterOptions() {

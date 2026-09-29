@@ -101,8 +101,32 @@ public enum OutlineMoves {
   import HTMLBuilder
   import WebTypes
 
-  /// A nested list its reader can rearrange: by dragging an item's handle,
-  /// by picking it up and moving it with a toolbar, or from the keyboard.
+  /// The site's one tree: a nested list drawn as a real tree, indented, that
+  /// its reader may also rearrange — the record pages' testament and
+  /// sentiment trees, an origin's steps, the amendment and submission
+  /// outlines, a form's nested steps.
+  ///
+  /// **Drawn indented.** Each level stands a step (`spacing24`) further in
+  /// than its parent, a thin guide line down from the parent's toggle along
+  /// every level under it. An item with items under it has a toggle at its
+  /// start that collapses and expands them; an item without keeps the
+  /// toggle's room, so siblings line up (a tree with no nesting at all
+  /// draws no toggle column). Its children are the outline's to place:
+  /// under the item's own node, never inside it, so a deep tree is never a
+  /// box in a box in a box.
+  ///
+  /// **Deep trees scroll.** The tree sits in a sideways scrollport (as a
+  /// table does), and every node is at least `minWidthTreeNode` wide, so a
+  /// node at depth 100 is as readable as one at depth 1: past the width the
+  /// column gives, the tree scrolls, never the page. A menu opened inside
+  /// the scrollport is placed over the page, not cut off at its edge
+  /// (`DropdownView`).
+  ///
+  /// **Arranged** only where it has a `name` (the hidden input the
+  /// arrangement posts as): then its reader can rearrange it — by dragging
+  /// an item's handle, by picking it up and moving it with a toolbar, or
+  /// from the keyboard. With no `name` it is a tree to read: no handles, no
+  /// toolbar, nothing posted.
   ///
   /// Each item carries content the caller builds, a label to announce it by,
   /// and a rank. Ranks order the levels an outline may nest — the smaller the
@@ -126,24 +150,22 @@ public enum OutlineMoves {
   /// option to loosen or tighten the rule: a bibliographic tree and a
   /// lexicographic one nest the same way.
   ///
-  /// The nesting is the items' own. Each item's content is handed the pieces
-  /// the outline puts in it — its handle, the line saying how its number
-  /// changed, and the list of the items under it — and places them in its own
-  /// layout: the handle in its header, the list inside its body. A child sits
-  /// inside its parent, is carried with it, and is hidden when its parent is
-  /// closed; the indent is whatever the parent's body gives it.
+  /// Each item's content is handed the pieces the outline puts in it — its
+  /// handle and the line saying how its number changed, both nil in a tree
+  /// to read — and places them in its own layout: the handle in its header.
   ///
-  /// The handle is the only control in a row. Pressing it — a click, a tap,
-  /// Space or Enter — picks the item up: it is marked as held, and a toolbar
-  /// appears at the foot of the screen with the four moves — up, down, out a
-  /// level, in a level — each unavailable where it cannot go, and Done. The
-  /// item stays held through as many moves as it takes, until Done, another
-  /// press on its handle, or Escape. From the keyboard, while it is held, ↑
-  /// and ↓ move it among its siblings, Tab and → put it under the item above,
-  /// Shift-Tab and ← take it out to its parent's level, and Enter, Space or
-  /// Escape put it down. Tab is only taken while an item is held. A handle
-  /// can also be dragged: with a mouse at once, on a touch screen after a
-  /// long press.
+  /// The handle is the only control in a row that moves it. Pressing it — a
+  /// click, a tap, Space or Enter — picks the item up: it is marked as held,
+  /// and a toolbar appears at the foot of the screen with the four moves —
+  /// up, down, out a level, in a level — each unavailable where it cannot
+  /// go, and Done. The item stays held through as many moves as it takes,
+  /// until Done, another press on its handle, or Escape. From the keyboard,
+  /// while it is held, ↑ and ↓ move it among its siblings, Tab and → put it
+  /// under the item above, Shift-Tab and ← take it out to its parent's
+  /// level, and Enter, Space or Escape put it down. Tab is only taken while
+  /// an item is held. A handle can also be dragged: with a mouse at once, on
+  /// a touch screen after a long press. An item moved under a collapsed one
+  /// opens it.
   ///
   /// Each item wears one state at a time, in `data-outline-state`, which is
   /// all a caller styles: `refused` while a dragged item hovers it and may
@@ -181,6 +203,9 @@ public enum OutlineMoves {
       /// place: its handle is drawn disabled and nothing picks it up, though
       /// a movable item may still be moved past it, into it or out of it.
       public let movable: Bool
+      /// Extra attributes for the item (`li`), for a page that finds its
+      /// items by them.
+      public let data: [(String, String)]
       /// The item, given the pieces the outline puts in it.
       public let content: @Sendable (Slots) -> [DOM.Node]
       public let children: [Node]
@@ -188,9 +213,10 @@ public enum OutlineMoves {
       public init(
         id: String,
         label: String,
-        rank: Int,
+        rank: Int = 0,
         origin: Origin? = nil,
         movable: Bool = true,
+        data: [(String, String)] = [],
         children: [Node] = [],
         @HTMLBuilder content: @escaping @Sendable (Slots) -> [DOM.Node]
       ) {
@@ -199,21 +225,20 @@ public enum OutlineMoves {
         self.rank = rank
         self.origin = origin
         self.movable = movable
+        self.data = data
         self.children = children
         self.content = content
       }
     }
 
-    /// What the outline puts in an item, for the item to place: every piece
-    /// must be placed, the handle and the number's diff before the list.
+    /// What the outline puts in an item, for the item to place. Both are
+    /// nil in a tree to read.
     public struct Slots: Sendable {
       /// The grip that picks the item up, for the start of its header.
-      public let handle: DOM.Node
+      public let handle: DOM.Node?
       /// "Diff: 2.1 → 1.1", shown once the item's number has changed, for
       /// under its title.
-      public let diff: DOM.Node
-      /// The items under this one, for inside its body.
-      public let children: DOM.Node
+      public let diff: DOM.Node?
     }
 
     /// An item's place in the arrangement moves are counted from.
@@ -235,7 +260,7 @@ public enum OutlineMoves {
     let rootRank: Int
     let leafRank: Int?
     let nodes: [Node]
-    let name: String
+    let name: String?
     let form: String?
     let numberSelector: String
     let rankRefusal: String
@@ -249,7 +274,8 @@ public enum OutlineMoves {
     ///   - rootRank: The rank of that root; nothing may rise above it.
     ///   - leafRank: The most concrete rank, which nothing may sit under.
     ///   - name: The hidden input's name, and `form` the form it submits
-    ///     with when the outline is not inside it.
+    ///     with when the outline is not inside it. Nil draws a tree to
+    ///     read, which nothing rearranges.
     ///   - numberSelector: Where in an item's content its number — 1, 2.1 —
     ///     is written, so a caller that shows numbers keeps them true as the
     ///     outline changes. Empty writes none.
@@ -263,11 +289,11 @@ public enum OutlineMoves {
     public init(
       id: String,
       label: String,
-      rootID: String,
+      rootID: String = "root",
       rootRank: Int = 0,
       leafRank: Int? = nil,
       nodes: [Node],
-      name: String,
+      name: String? = nil,
       form: String? = nil,
       numberSelector: String = "",
       rankRefusal: String = "A more abstract item can't go under a more concrete one.",
@@ -289,6 +315,9 @@ public enum OutlineMoves {
       self.touched = touched
       self.`class` = `class`
     }
+
+    /// Whether its reader may rearrange it.
+    private var arranges: Bool { name != nil }
 
     private static func json(_ value: String) -> String {
       var out = "\""
@@ -334,25 +363,49 @@ public enum OutlineMoves {
       return Set(zip(entries, OutlineMoves.moved(entries, touched: touched)).filter(\.1).map(\.0.id))
     }
 
-    public func build() -> DOM.Node {
-      let moved = movedIDs
-      // A list of items and every list under them: the nesting is data, so
-      // the markup recurses.
-      func list(_ nodes: [Node], parent: String, prefix: String) -> HTML.HTMLOListElement {
-        ol {
-          for (position, node) in nodes.enumerated() {
-            item(node, parent: parent, position: position, prefix: prefix)
-          }
-        }
-        .class("outliner-list")
+    /// One item of a tree to read, and every item under it: what a page
+    /// adds to a tree already drawn (a form's new step) asks the server for.
+    public struct Item: HTMLContent {
+      let node: Node
+
+      public init(_ node: Node) {
+        self.node = node
       }
 
-      func item(_ node: Node, parent: String, position: Int, prefix: String) -> DOM.Node {
-        let number = prefix.isEmpty ? "\(position + 1)" : "\(prefix).\(position + 1)"
-        let origin = node.origin ?? Origin(parent: parent, position: position, number: number)
-        let isMoved = moved.contains(node.id)
-        // The grip: what is pressed to pick the item up, what is dragged, and
-        // what the keyboard grabs.
+      public func build() -> DOM.Node {
+        OutlinerView.item(
+          node, parent: "", position: 0, prefix: "", treeID: "outliner", arranges: false, moved: [], touched: [])
+      }
+    }
+
+    /// The toggle that collapses an item's children and expands them again:
+    /// its chevron points down while they show. Hidden (its room kept) on
+    /// an item with nothing under it.
+    private static func toggle(_ node: Node, treeID: String) -> DOM.Node {
+      button {
+        AnimatedRightDownChevronView(
+          id: "\(treeID)-toggle-\(node.id)", expanded: true, width: sizeIconSmall, height: sizeIconSmall)
+      }
+      .type(.button)
+      .class("outliner-toggle")
+      .ariaExpanded(true)
+      .ariaLabel(node.label)
+      .build()
+    }
+
+    /// An item and every item under it. The nesting is data, so the markup
+    /// recurses.
+    static func item(
+      _ node: Node, parent: String, position: Int, prefix: String, treeID: String, arranges: Bool,
+      moved: Set<String>, touched: [String]
+    ) -> DOM.Node {
+      let number = prefix.isEmpty ? "\(position + 1)" : "\(prefix).\(position + 1)"
+      let origin = node.origin ?? Origin(parent: parent, position: position, number: number)
+      let isMoved = moved.contains(node.id)
+      var slots = Slots(handle: nil, diff: nil)
+      if arranges {
+        // The grip: what is pressed to pick the item up, what is dragged,
+        // and what the keyboard grabs.
         let handle = button {
           DraggableIconView(width: size16, height: size16)
         }
@@ -362,328 +415,448 @@ public enum OutlineMoves {
         .disabled(!node.movable)
         .ariaLabel(node.movable ? "Move \(node.label)" : "\(node.label) stays where it is")
         .ariaPressed(false)
-        .ariaDescribedby("\(id)-instructions")
+        .ariaDescribedby("\(treeID)-instructions")
         .build()
-        // How its number changed, as a changed field says it — shown whenever
-        // its number is no longer what it was, and written again by the
-        // client as moves change it.
+        // How its number changed, as a changed field says it — shown
+        // whenever its number is no longer what it was, and written again
+        // by the client as moves change it.
         let diff = div { DiffView(.outline(old: origin.number, new: number)) }
           .class("outliner-diff")
           .data("visible", !stringEquals(origin.number, number))
           .build()
-        return li {
-          div {
-            node.content(
-              Slots(
-                handle: handle, diff: diff,
-                children: list(node.children, parent: node.id, prefix: number).build()))
-          }
-          .class("outliner-row")
-        }
-        .class("outliner-item")
-        .data("outliner-id", node.id)
-        .data("outliner-label", node.label)
-        .data("outliner-rank", node.rank)
-        .data("outliner-original-parent", origin.parent)
-        .data("outliner-original-position", origin.position)
-        .data("outliner-original-number", origin.number)
-        .data("outliner-moved", isMoved)
-        .data("outliner-touched", touched.contains(node.id))
-        .data("outline-state", isMoved ? "moved" : "none")
-        .build()
+        slots = Slots(handle: handle, diff: diff)
       }
+      var element = li {
+        div {
+          toggle(node, treeID: treeID)
+          div { node.content(slots) }
+            .class("outliner-node")
+        }
+        .class("outliner-row")
+        ol {
+          for (index, child) in node.children.enumerated() {
+            item(
+              child, parent: node.id, position: index, prefix: number, treeID: treeID, arranges: arranges,
+              moved: moved, touched: touched)
+          }
+        }
+        .class("outliner-list")
+      }
+      .class("outliner-item")
+      .data("outliner-id", node.id)
+      .data("outliner-label", node.label)
+      .data("outliner-collapsed", false)
+      if arranges {
+        element =
+          element
+          .data("outliner-rank", node.rank)
+          .data("outliner-original-parent", origin.parent)
+          .data("outliner-original-position", origin.position)
+          .data("outliner-original-number", origin.number)
+          .data("outliner-moved", isMoved)
+          .data("outliner-touched", touched.contains(node.id))
+          .data("outline-state", isMoved ? "moved" : "none")
+      }
+      for (key, value) in node.data {
+        element = element.data(key, value)
+      }
+      return element.build()
+    }
+
+    public func build() -> DOM.Node {
+      let moved = arranges ? movedIDs : []
+      let top = ol {
+        for (position, node) in nodes.enumerated() {
+          Self.item(
+            node, parent: rootID, position: position, prefix: "", treeID: id, arranges: arranges, moved: moved,
+            touched: touched)
+        }
+      }
+      .class("outliner-list")
+      .ariaLabel(label)
 
       return div {
-        p {
-          "Press Space or Enter on a handle to pick an item up; a toolbar at the foot of the screen then moves it. While it is held, the up and down arrows move it among its neighbors, Tab or the right arrow puts it under the item above, Shift-Tab or the left arrow takes it out a level, and Enter, Space or Escape put it down."
-        }
-        .id("\(id)-instructions")
-        .class("outliner-instructions")
-
-        div()
-          .class("outliner-live")
-          .ariaLive(.assertive)
-
-        div()
-          .class("outliner-feedback")
-        // The alert a refusal is said in, cloned into the slot above.
-        div {
-          AlertView(color: .red, inline: true, allowUserDismiss: true) {
-            span {}
+        if arranges {
+          p {
+            "Press Space or Enter on a handle to pick an item up; a toolbar at the foot of the screen then moves it. While it is held, the up and down arrows move it among its neighbors, Tab or the right arrow puts it under the item above, Shift-Tab or the left arrow takes it out a level, and Enter, Space or Escape put it down."
           }
-        }
-        .class("outliner-feedback-template")
-        .hidden()
+          .id("\(id)-instructions")
+          .class("outliner-instructions")
 
-        list(nodes, parent: rootID, prefix: "")
-          .ariaLabel(label)
+          div()
+            .class("outliner-live")
+            .ariaLive(.assertive)
 
-        if let form {
-          input()
-            .type(.hidden)
-            .name(name)
-            .form(form)
-            .value(shapeJSON)
-            .class("outliner-shape")
-        } else {
-          input()
-            .type(.hidden)
-            .name(name)
-            .value(shapeJSON)
-            .class("outliner-shape")
-        }
-
-        // The moves for the item held, at the foot of the screen where a
-        // thumb reaches them, whatever the row's width.
-        div {
-          span {}
-            .class("outliner-toolbar-label")
-          // Large: a thumb's size, as the button sizes give it.
+          div()
+            .class("outliner-feedback")
+          // The alert a refusal is said in, cloned into the slot above.
           div {
-            ButtonView(
-              icon: ArrowUpIconView(width: size20, height: size20), weight: .quiet, size: .large,
-              ariaLabel: "Move up", data: [("outliner-action", "up")])
-            ButtonView(
-              icon: ArrowDownIconView(width: size20, height: size20), weight: .quiet, size: .large,
-              ariaLabel: "Move down", data: [("outliner-action", "down")])
-            ButtonView(
-              icon: ArrowPreviousIconView(width: size20, height: size20), weight: .quiet, size: .large,
-              ariaLabel: "Outdent", data: [("outliner-action", "outdent")])
-            ButtonView(
-              icon: ArrowNextIconView(width: size20, height: size20), weight: .quiet, size: .large,
-              ariaLabel: "Indent", data: [("outliner-action", "indent")])
+            AlertView(color: .red, inline: true, allowUserDismiss: true) {
+              span {}
+            }
           }
-          .class("outliner-toolbar-moves")
-          ButtonView(
-            label: "Done", buttonColor: .blue, weight: .solid, size: .large,
-            data: [("outliner-action", "done")])
+          .class("outliner-feedback-template")
+          .hidden()
         }
-        .class("outliner-toolbar")
-        .role("toolbar")
-        .ariaLabel("Move \(label.lowercased())")
-        .data("visible", false)
+
+        // The scrollport: a deep tree scrolls here, never the page.
+        div { top }
+          .class("outliner-scroll")
+          .data("scrollport", true)
+
+        if let name {
+          if let form {
+            input()
+              .type(.hidden)
+              .name(name)
+              .form(form)
+              .value(shapeJSON)
+              .class("outliner-shape")
+          } else {
+            input()
+              .type(.hidden)
+              .name(name)
+              .value(shapeJSON)
+              .class("outliner-shape")
+          }
+
+          // The moves for the item held, at the foot of the screen where a
+          // thumb reaches them, whatever the row's width.
+          div {
+            span {}
+              .class("outliner-toolbar-label")
+            // Large: a thumb's size, as the button sizes give it.
+            div {
+              ButtonView(
+                icon: ArrowUpIconView(width: size20, height: size20), weight: .quiet, size: .large,
+                ariaLabel: "Move up", data: [("outliner-action", "up")])
+              ButtonView(
+                icon: ArrowDownIconView(width: size20, height: size20), weight: .quiet, size: .large,
+                ariaLabel: "Move down", data: [("outliner-action", "down")])
+              ButtonView(
+                icon: ArrowPreviousIconView(width: size20, height: size20), weight: .quiet, size: .large,
+                ariaLabel: "Outdent", data: [("outliner-action", "outdent")])
+              ButtonView(
+                icon: ArrowNextIconView(width: size20, height: size20), weight: .quiet, size: .large,
+                ariaLabel: "Indent", data: [("outliner-action", "indent")])
+            }
+            .class("outliner-toolbar-moves")
+            ButtonView(
+              label: "Done", buttonColor: .blue, weight: .solid, size: .large,
+              data: [("outliner-action", "done")])
+          }
+          .class("outliner-toolbar")
+          .role("toolbar")
+          .ariaLabel("Move \(label.lowercased())")
+          .data("visible", false)
+        }
       }
       .id(id)
       .class(`class`.isEmpty ? "outliner-view" : "outliner-view \(`class`)")
+      .data("outliner-arranges", arranges)
       .data("outliner-root-id", rootID)
       .data("outliner-root-rank", rootRank)
       .data("outliner-leaf-rank", leafRank.map(String.init) ?? "")
       .data("outliner-number-selector", numberSelector)
       .data("outliner-rank-refusal", rankRefusal)
       .data("outliner-leaf-refusal", leafRefusal ?? rankRefusal)
-      .style {
-        // A little room at the edges, so a ring drawn outside a row or a
-        // control is not cut off by a container that clips.
-        selector("&") {
-          display(.flex)
-          flexDirection(.column)
-          gap(spacing8)
-          minWidth(0)
-          padding(spacing4)
-        }
-        selector("& .outliner-instructions", "& .outliner-live") {
-          position(.absolute)
-          width(px(1))
-          height(px(1))
-          margin(px(-1))
-          padding(0)
-          overflow(.hidden)
-          clip(rect(0, 0, 0, 0))
-          whiteSpace(.nowrap)
-          borderWidth(0)
-        }
-        descendant(".outliner-feedback:empty") {
-          display(.none)
-        }
-        descendant(".outliner-feedback-template") {
-          display(.none)
-        }
-        descendant(".outliner-list") {
-          display(.flex)
-          flexDirection(.column)
-          gap(spacing8)
-          listStyle(.none)
-          margin(0)
-          padding(0)
-          minWidth(0)
-        }
-        // An item with nothing under it has an empty list, kept so a move
-        // can put something there.
-        descendant(".outliner-list:empty") {
-          display(.none)
-        }
-        descendant(".outliner-item") {
-          minWidth(0)
-        }
-        descendant(".outliner-row") {
-          position(.relative)
-          minWidth(0)
-          borderRadius(borderRadiusBase)
-        }
-        descendant(".outliner-handle") {
-          display(.inlineFlex)
-          alignItems(.center)
-          justifyContent(.center)
-          flexShrink(0)
-          width(size24)
-          height(size24)
-          padding(0)
-          border(.none)
-          borderRadius(borderRadiusBase)
-          backgroundColor(.transparent)
-          color(colorSubtle)
-          cursor(.grab)
-          // A long press drags it; the screen neither scrolls nor offers to
-          // copy under the finger.
-          touchAction(.none)
-          userSelect(.none)
-          CSS.Property("-webkit-touch-callout", "none")
-          transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-        }
-        // An item that keeps its place: its grip greyed, and nothing to grab.
-        descendant(".outliner-handle:disabled") {
-          color(colorDisabled)
-          cursor(cursorBase)
-        }
-        descendant(".outliner-handle:not(:disabled):hover") {
-          backgroundColor(backgroundColorInteractiveSubtleHover)
-          color(colorBase)
-        }
-        descendant(".outliner-handle:focus-visible") {
-          outline(borderWidthThick, .solid, borderColorBlueFocus)
-          outlineOffset(-borderWidthThick)
-        }
-        // Held: the grip filled. How the rest of the item reads as held is
-        // its own layout's to say.
-        descendant(".outliner-handle[aria-pressed='true']") {
-          backgroundColor(backgroundColorBlue)
-          color(colorInvertedFixed)
-          cursor(.grabbing)
-        }
-        // Nothing is selected by a drag that strays over text.
-        selector("&[data-outliner-dragging='true']") {
-          userSelect(.none)
-        }
-        // Where a drag would land: a straight bar, square-ended, centered in
-        // the gap above the row or below it — or, for into it, along its foot,
-        // indented — drawn apart from the row's border, so it never bends
-        // round a rounded corner.
-        selector(
-          "& .outliner-row[data-outliner-drop='before']::before",
-          "& .outliner-row[data-outliner-drop='after']::after",
-          "& .outliner-row[data-outliner-drop='inside']::after"
-        ) {
-          content("\"\"")
-          position(.absolute)
-          insetInlineStart(0)
-          insetInlineEnd(0)
-          height(borderWidthThick)
-          backgroundColor(borderColorBlue)
-          borderRadius(borderRadiusSharp)
-          zIndex(zIndexToolbar)
-          pointerEvents(.none)
-        }
-        descendant(".outliner-row[data-outliner-drop='before']::before") {
-          top(-(spacing8 + borderWidthThick) / 2)
-        }
-        descendant(".outliner-row[data-outliner-drop='after']::after") {
-          bottom(-(spacing8 + borderWidthThick) / 2)
-        }
-        descendant(".outliner-row[data-outliner-drop='inside']::after") {
-          bottom(-borderWidthThick / 2)
-          insetInlineStart(spacing32)
-        }
-        descendant(".outliner-item[data-outline-state='refused'] > .outliner-row") {
-          cursor(.notAllowed)
-        }
-        // Where the dragged item was: a quiet placeholder, its content faint
-        // inside a solid outline. A drag is not a change; the item is marked
-        // moved only once it lands somewhere it did not stand.
-        descendant(".outliner-item[data-outline-state='placeholder'] > .outliner-row") {
-          outline(borderWidthBase, .solid, borderColorBase)
-          outlineOffset(-borderWidthBase)
-        }
-        descendant(".outliner-item[data-outline-state='placeholder'] > .outliner-row > *") {
-          opacity(opacityLow)
-        }
-        // What follows the pointer: the item's header alone, opaque. Parked
-        // above the viewport for a mouse, whose drag image is taken from it;
-        // under a finger, a little above it and back from it toward its
-        // start, where the finger does not hide it. Its start is the line's:
-        // the client measures the finger from that side.
-        descendant(".outliner-drag-preview") {
-          position(.fixed)
-          insetBlockStart(0)
-          insetInlineStart(0)
-          transform(translate(perc(0), perc(-200)))
-          zIndex(zIndexToolbar)
-          display(.flex)
-          alignItems(.center)
-          gap(spacing8)
-          padding(spacing8, spacing12)
-          backgroundColor(backgroundColorBase)
-          border(borderWidthBase, .solid, borderColorBase)
-          borderRadius(borderRadiusBase)
-          boxShadow(boxShadowMedium)
-          pointerEvents(.none)
-          whiteSpace(.nowrap)
-        }
-        descendant(".outliner-diff[data-visible='false']") {
-          display(.none)
-        }
-        // At the foot of the screen, clear of a phone's home indicator, and
-        // centered between both sides whichever way the line runs.
-        descendant(".outliner-toolbar") {
-          position(.fixed)
-          insetInlineStart(0)
-          insetInlineEnd(0)
-          insetBlockEnd(spacing16 + CSS.Length.environment("safe-area-inset-bottom"))
-          width(.fitContent)
-          marginInline(.auto)
-          zIndex(zIndexToolbar)
-          display(.flex)
-          alignItems(.center)
-          gap(spacing8)
-          padding(spacing8)
-          maxWidth(vw(100) - spacing16 * 2)
-          backgroundColor(backgroundColorBase)
-          border(borderWidthBase, .solid, borderColorSubtle)
-          borderRadius(borderRadiusPill)
-          boxShadow(boxShadowLarge)
-        }
-        descendant(".outliner-drag-preview[data-following='true']") {
-          transform(translate(-spacing16, perc(-100) - spacing32))
-        }
-        // Back toward the start is rightward where the line runs right to left.
-        descendant(".outliner-drag-preview[data-following='true']:dir(rtl)") {
-          transform(translate(spacing16, perc(-100) - spacing32))
-        }
-        descendant(".outliner-toolbar[data-visible='false']") {
-          display(.none)
-        }
+      .style { Self.treeCSS() }
+      .build()
+    }
+
+    /// The tree's own rules: its indent, guide lines, toggles and
+    /// scrollport, and an arranged outline's handles, drop marks and
+    /// toolbar.
+    @CSSBuilder
+    public static func treeCSS() -> [CSSOM.CSSRule] {
+      selector("&") {
+        display(.flex)
+        flexDirection(.column)
+        gap(spacing8)
+        minWidth(0)
+      }
+      // The scrollport, as a table's: sideways only, its bar over nothing.
+      // A little room at its edges, so a ring drawn outside a row or a
+      // control is not cut off by the edge that scrolls.
+      descendant(".outliner-scroll") {
+        overflowX(.auto)
+        minWidth(0)
+        padding(spacing4)
+      }
+      selector(
+        "& .outliner-scroll::-webkit-scrollbar-track", "& .outliner-scroll::-webkit-scrollbar-track-piece",
+        "& .outliner-scroll::-webkit-scrollbar-corner"
+      ) {
+        backgroundColor(.transparent).important()
+      }
+      selector("& .outliner-instructions", "& .outliner-live") {
+        position(.absolute)
+        width(px(1))
+        height(px(1))
+        margin(px(-1))
+        padding(0)
+        overflow(.hidden)
+        clip(rect(0, 0, 0, 0))
+        whiteSpace(.nowrap)
+        borderWidth(0)
+      }
+      descendant(".outliner-feedback:empty") {
+        display(.none)
+      }
+      descendant(".outliner-feedback-template") {
+        display(.none)
+      }
+      descendant(".outliner-list") {
+        display(.flex)
+        flexDirection(.column)
+        gap(spacing8)
+        listStyle(.none)
+        margin(0)
+        padding(0)
+        minWidth(0)
+      }
+      // A level a step in from its parent, the step the toggle's width; a
+      // thin line down from the parent's toggle, through every level
+      // under it.
+      descendant(".outliner-list .outliner-list") {
+        position(.relative)
+        paddingInlineStart(size24)
+      }
+      descendant(".outliner-list .outliner-list::before") {
+        content("\"\"")
+        position(.absolute)
+        insetBlockStart(0)
+        insetBlockEnd(0)
+        insetInlineStart((size24 - borderWidthBase) / 2)
+        width(borderWidthBase)
+        backgroundColor(borderColorSubtle)
+        pointerEvents(.none)
+      }
+      // An item with nothing under it has an empty list, kept so a move
+      // (or a form's new step) can put something there. A page may hide an
+      // item's list (a form's step whose children no longer apply).
+      selector("& .outliner-list:empty", "& .outliner-list[hidden]") {
+        display(.none)
+      }
+      descendant(".outliner-item") {
+        display(.flex)
+        flexDirection(.column)
+        gap(spacing8)
+        minWidth(0)
+      }
+      descendant(".outliner-item[data-outliner-collapsed='true'] > .outliner-list") {
+        display(.none)
+      }
+      descendant(".outliner-row") {
+        position(.relative)
+        display(.flex)
+        alignItems(.flexStart)
+        minWidth(0)
+        borderRadius(borderRadiusBase)
+      }
+      // The node: never narrower than a node is read at, however deep.
+      descendant(".outliner-node") {
+        flex(1)
+        minWidth(minWidthTreeNode)
+      }
+      // The toggle: the step's width, as tall as a node's one-line header
+      // (a line and 16px either side, inside its border), so its chevron
+      // stands on the node's first line.
+      descendant(".outliner-toggle") {
+        display(.inlineFlex)
+        alignItems(.center)
+        justifyContent(.center)
+        flexShrink(0)
+        width(size24)
+        height(spacing16 * 2 + lineHeightSmall22 + borderWidthBase * 2)
+        padding(0)
+        border(.none)
+        borderRadius(borderRadiusBase)
+        backgroundColor(.transparent)
+        color(colorSubtle)
+        cursor(cursorBase)
+        transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+      }
+      descendant(".outliner-toggle:hover") {
+        backgroundColor(backgroundColorInteractiveSubtleHover)
+        color(colorBase)
+      }
+      descendant(".outliner-toggle:focus-visible") {
+        outline(borderWidthThick, .solid, borderColorBlueFocus)
+        outlineOffset(-borderWidthThick)
+      }
+      selector(
+        "& .outliner-item:has(> .outliner-list:empty) > .outliner-row > .outliner-toggle",
+        "& .outliner-item:has(> .outliner-list[hidden]) > .outliner-row > .outliner-toggle"
+      ) {
+        visibility(.hidden)
+      }
+      // A tree with no nesting at all has no toggle column.
+      selector("&:not(:has(.outliner-item > .outliner-list:not(:empty))) .outliner-toggle") {
+        display(.none)
+      }
+      descendant(".outliner-handle") {
+        display(.inlineFlex)
+        alignItems(.center)
+        justifyContent(.center)
+        flexShrink(0)
+        width(size24)
+        height(size24)
+        padding(0)
+        border(.none)
+        borderRadius(borderRadiusBase)
+        backgroundColor(.transparent)
+        color(colorSubtle)
+        cursor(.grab)
+        // A long press drags it; the screen neither scrolls nor offers to
+        // copy under the finger.
+        touchAction(.none)
+        userSelect(.none)
+        CSS.Property("-webkit-touch-callout", "none")
+        transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+      }
+      // An item that keeps its place: its grip greyed, and nothing to grab.
+      descendant(".outliner-handle:disabled") {
+        color(colorDisabled)
+        cursor(cursorBase)
+      }
+      descendant(".outliner-handle:not(:disabled):hover") {
+        backgroundColor(backgroundColorInteractiveSubtleHover)
+        color(colorBase)
+      }
+      descendant(".outliner-handle:focus-visible") {
+        outline(borderWidthThick, .solid, borderColorBlueFocus)
+        outlineOffset(-borderWidthThick)
+      }
+      // Held: the grip filled. How the rest of the item reads as held is
+      // its own layout's to say.
+      descendant(".outliner-handle[aria-pressed='true']") {
+        backgroundColor(backgroundColorBlue)
+        color(colorInvertedFixed)
+        cursor(.grabbing)
+      }
+      // Nothing is selected by a drag that strays over text.
+      selector("&[data-outliner-dragging='true']") {
+        userSelect(.none)
+      }
+      // Where a drag would land: a straight bar, square-ended, centered in
+      // the gap above the row or below it — or, for into it, along its foot,
+      // indented — drawn apart from the row's border, so it never bends
+      // round a rounded corner.
+      selector(
+        "& .outliner-row[data-outliner-drop='before']::before",
+        "& .outliner-row[data-outliner-drop='after']::after",
+        "& .outliner-row[data-outliner-drop='inside']::after"
+      ) {
+        content("\"\"")
+        position(.absolute)
+        insetInlineStart(0)
+        insetInlineEnd(0)
+        height(borderWidthThick)
+        backgroundColor(borderColorBlue)
+        borderRadius(borderRadiusSharp)
+        zIndex(zIndexToolbar)
+        pointerEvents(.none)
+      }
+      descendant(".outliner-row[data-outliner-drop='before']::before") {
+        top(-(spacing8 + borderWidthThick) / 2)
+      }
+      descendant(".outliner-row[data-outliner-drop='after']::after") {
+        bottom(-(spacing8 + borderWidthThick) / 2)
+      }
+      descendant(".outliner-row[data-outliner-drop='inside']::after") {
+        bottom(-borderWidthThick / 2)
+        insetInlineStart(size24 * 2)
+      }
+      descendant(".outliner-item[data-outline-state='refused'] > .outliner-row") {
+        cursor(.notAllowed)
+      }
+      // Where the dragged item was: a quiet placeholder, its content faint
+      // inside a solid outline. A drag is not a change; the item is marked
+      // moved only once it lands somewhere it did not stand.
+      descendant(".outliner-item[data-outline-state='placeholder'] > .outliner-row") {
+        outline(borderWidthBase, .solid, borderColorBase)
+        outlineOffset(-borderWidthBase)
+      }
+      descendant(".outliner-item[data-outline-state='placeholder'] > .outliner-row > *") {
+        opacity(opacityLow)
+      }
+      // What follows the pointer: the item's header alone, opaque. Parked
+      // above the viewport for a mouse, whose drag image is taken from it;
+      // under a finger, a little above it and back from it toward its
+      // start, where the finger does not hide it. Its start is the line's:
+      // the client measures the finger from that side.
+      descendant(".outliner-drag-preview") {
+        position(.fixed)
+        insetBlockStart(0)
+        insetInlineStart(0)
+        transform(translate(perc(0), perc(-200)))
+        zIndex(zIndexToolbar)
+        display(.flex)
+        alignItems(.center)
+        gap(spacing8)
+        padding(spacing8, spacing12)
+        backgroundColor(backgroundColorBase)
+        border(borderWidthBase, .solid, borderColorBase)
+        borderRadius(borderRadiusBase)
+        boxShadow(boxShadowMedium)
+        pointerEvents(.none)
+        whiteSpace(.nowrap)
+      }
+      descendant(".outliner-diff[data-visible='false']") {
+        display(.none)
+      }
+      // At the foot of the screen, clear of a phone's home indicator, and
+      // centered between both sides whichever way the line runs.
+      descendant(".outliner-toolbar") {
+        position(.fixed)
+        insetInlineStart(0)
+        insetInlineEnd(0)
+        insetBlockEnd(spacing16 + CSS.Length.environment("safe-area-inset-bottom"))
+        width(.fitContent)
+        marginInline(.auto)
+        zIndex(zIndexToolbar)
+        display(.flex)
+        alignItems(.center)
+        gap(spacing8)
+        padding(spacing8)
+        maxWidth(vw(100) - spacing16 * 2)
+        backgroundColor(backgroundColorBase)
+        border(borderWidthBase, .solid, borderColorSubtle)
+        borderRadius(borderRadiusPill)
+        boxShadow(boxShadowLarge)
+      }
+      descendant(".outliner-drag-preview[data-following='true']") {
+        transform(translate(-spacing16, perc(-100) - spacing32))
+      }
+      // Back toward the start is rightward where the line runs right to left.
+      descendant(".outliner-drag-preview[data-following='true']:dir(rtl)") {
+        transform(translate(spacing16, perc(-100) - spacing32))
+      }
+      descendant(".outliner-toolbar[data-visible='false']") {
+        display(.none)
+      }
+      descendant(".outliner-toolbar-label") {
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeSmall14)
+        color(colorSubtle)
+        whiteSpace(.nowrap)
+        overflow(.hidden)
+        minWidth(0)
+        paddingInline(spacing8)
+      }
+      descendant(".outliner-toolbar-moves") {
+        display(.flex)
+        gap(spacing4)
+        flexShrink(0)
+      }
+      // On a phone the row is named by the ring round it; the toolbar is
+      // its moves alone.
+      media(maxWidth(maxWidthBreakpointMobile)) {
         descendant(".outliner-toolbar-label") {
-          fontFamily(typographyFontSans)
-          fontSize(fontSizeSmall14)
-          color(colorSubtle)
-          whiteSpace(.nowrap)
-          overflow(.hidden)
-          minWidth(0)
-          paddingInline(spacing8)
-        }
-        descendant(".outliner-toolbar-moves") {
-          display(.flex)
-          gap(spacing4)
-          flexShrink(0)
-        }
-        // On a phone the row is named by the ring round it; the toolbar is
-        // its moves alone.
-        media(maxWidth(maxWidthBreakpointMobile)) {
-          descendant(".outliner-toolbar-label") {
-            display(.none).important()
-          }
+          display(.none).important()
         }
       }
-      .build()
     }
   }
 #endif
@@ -694,21 +867,59 @@ public enum OutlineMoves {
   import WebAPIs
   import WebTypes
 
-  /// Every outliner on the page.
+  /// Every tree on the page: each toggle collapses and expands its item's
+  /// children, and an arranged outline is rearranged.
   public final class OutlinerHydration: @unchecked Sendable {
     public static nonisolated(unsafe) var instance: OutlinerHydration?
     private var outliners: [OutlinerInstance] = []
+    /// The one listener every toggle answers to, on the document: a tree
+    /// the page adds later (a fragment, a form's new step) needs nothing
+    /// bound.
+    private static nonisolated(unsafe) var togglesBound = false
 
     public static func hydrateIfPresent() {
       guard document.querySelector(".outliner-view") != nil else { return }
+      bindToggles()
       instance = OutlinerHydration()
     }
 
     public init() {
-      for root in document.querySelectorAll(".outliner-view") {
+      for root in document.querySelectorAll(".outliner-view[data-outliner-arranges='true']") {
         guard !stringEquals(root.dataset["outliner-hydrated"] ?? "false", "true") else { continue }
         root.setAttribute(data("outliner-hydrated"), "true")
         outliners.append(OutlinerInstance(root: root))
+      }
+    }
+
+    private static func bindToggles() {
+      guard !togglesBound else { return }
+      togglesBound = true
+      _ = document.addEventListener(.click) { event in
+        guard let target = event.target, let toggle = target.closest(".outliner-toggle"),
+          let item = toggle.closest(".outliner-item")
+        else { return }
+        event.preventDefault()
+        setCollapsed(item, !stringEquals(item.dataset["outliner-collapsed"] ?? "false", "true"))
+      }
+    }
+
+    /// Collapses an item's children, or expands them: its toggle and its
+    /// chevron say which.
+    public static func setCollapsed(_ item: DOM.Element, _ collapsed: Bool) {
+      item.setAttribute(data("outliner-collapsed"), collapsed ? "true" : "false")
+      guard let toggle = item.querySelector(":scope > .outliner-row > .outliner-toggle") else { return }
+      toggle.setAttribute("aria-expanded", collapsed ? "false" : "true")
+      toggle.querySelector(".animated-right-down-chevron-view")?.setAttribute(
+        data("expanded"), collapsed ? "false" : "true")
+    }
+
+    /// Expands every collapsed item above `element`, so it shows: an item
+    /// moved under a collapsed one, a step added under one.
+    public static func expand(around element: DOM.Element) {
+      var cursor = element.parentElement?.closest(".outliner-item")
+      while let item = cursor {
+        if stringEquals(item.dataset["outliner-collapsed"] ?? "false", "true") { setCollapsed(item, false) }
+        cursor = item.parentElement?.closest(".outliner-item")
       }
     }
   }
@@ -769,10 +980,9 @@ public enum OutlineMoves {
       list.querySelectorAll(":scope > .outliner-item")
     }
 
-    /// The list of an item's children, wherever its content put it: the
-    /// first list inside the item, since its own comes before any nested one.
+    /// The list of an item's children, after its row.
     private func childList(of item: DOM.Element) -> DOM.Element? {
-      item.querySelector(".outliner-list")
+      item.querySelector(":scope > .outliner-list")
     }
 
     /// The item a list belongs to — the nearest item it sits inside; nil for
@@ -814,9 +1024,9 @@ public enum OutlineMoves {
       return -1
     }
 
-    /// An item's own handle: the first inside it, before its children's.
+    /// An item's own handle, in its row.
     private func handle(of item: DOM.Element) -> DOM.Element? {
-      item.querySelector(".outliner-handle")
+      item.querySelector(":scope > .outliner-row .outliner-handle")
     }
 
     private func row(of item: DOM.Element) -> DOM.Element? {
@@ -1137,6 +1347,8 @@ public enum OutlineMoves {
       root.querySelector(":scope > .outliner-feedback")?.setInnerHTML("")
       let itemID = id(of: item)
       if !touched.contains(where: { stringEquals($0, itemID) }) { touched.append(itemID) }
+      // Moved under a collapsed item, it is shown: it opens.
+      OutlinerHydration.expand(around: item)
       changed()
       announce(stringJoin([label(of: item), ", now ", number(of: item), "."], separator: ""))
       root.dispatchEvent(CustomEvent(type: "outliner-move", detail: id(of: item)))
@@ -1369,7 +1581,7 @@ public enum OutlineMoves {
     /// Numbers, moved marks, the toolbar and the submitted JSON — all read
     /// off the outline as it now stands.
     private func refresh() {
-      guard let top = root.querySelector(":scope > .outliner-list") else { return }
+      guard let top = root.querySelector(":scope > .outliner-scroll > .outliner-list") else { return }
       var entries: [OutlineMoves.Entry] = []
       var walked: [DOM.Element] = []
       var numbers: [String] = []
@@ -1427,7 +1639,7 @@ public enum OutlineMoves {
 
     private func shapeJSON() -> String {
       var entries: [String] = []
-      collect(root.querySelector(":scope > .outliner-list"), parent: rootID, into: &entries)
+      collect(root.querySelector(":scope > .outliner-scroll > .outliner-list"), parent: rootID, into: &entries)
       return stringJoin(["{", stringJoin(entries, separator: ","), "}"], separator: "")
     }
 
