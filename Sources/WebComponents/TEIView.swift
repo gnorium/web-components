@@ -473,10 +473,13 @@
                 case .block(let lines):
                   // A block's lines, one to a line as the image sets them; on
                   // a phone they run on as one paragraph, a break inside a
-                  // word joining it with no space.
+                  // word joining it with no space. The block always holds
+                  // text between its lines (empty at such a break), so its
+                  // markup is written inline: an indented block put a
+                  // newline, a space as read, inside the broken word.
                   div {
                     for (index, line) in lines.enumerated() {
-                      if index > 0 && !line.joinsPrevious { " " }
+                      if index > 0 { line.joinsPrevious ? "" : " " }
                       readingLine(line, facsimileURL: page.facsimileURL, label: page.label, tabStop: tabStop)
                     }
                   }.class("tei-block").data("rend", lines[0].rend)
