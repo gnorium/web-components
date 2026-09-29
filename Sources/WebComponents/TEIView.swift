@@ -41,10 +41,12 @@
     /// inside an image is marked: for pages read one after another in one
     /// column rather than paged beside their images.
     let labelsPages: Bool
-    /// A word-for-word gloss of the transcript, when it has one: a fourth
-    /// layer of each page, each word over its gloss, which the viewer's
-    /// Interlinear switch shows in the transcript's place.
-    let interlinear: Interlinear?
+    /// Where a word's details are read, when the transcript's words can be
+    /// opened: each word of the transcript (a `<w>`, as an anchor counts
+    /// the page) is then a control that opens them, and the client asks this
+    /// address for them (`?semblance=…&line=…&word=…`). Nil: the transcript
+    /// is read whole.
+    let wordDetailsURL: String?
 
     /// A translation of the transcript, page by page, in its own language:
     /// the translation's own TEI, read by the same reader as the transcript,
@@ -73,39 +75,21 @@
       }
     }
 
-    /// A word-for-word gloss of the transcript in another language: each
-    /// word, as an utterance's anchor counts it (its line and its place
-    /// among the words starting on that line, `TEIRenderer.words(of:)`), with
-    /// the word its gloss language has for it, "—" where there is none.
-    public struct Interlinear: Sendable {
-      /// The glosses' language, as a BCP 47 tag names it.
-      public let language: String
-      /// Each page's glosses, by the image service it reads; each word's by
-      /// its place (`key(line:word:)`).
-      public let glosses: [String: [String: String]]
-
-      public init(language: String, glosses: [String: [String: String]]) {
-        self.language = language
-        self.glosses = glosses
-      }
-
-      /// A word's place on its page, as the glosses are keyed: "3:2".
-      public static func key(line: Int, word: Int) -> String { "\(line):\(word)" }
-    }
-
     public init(
       teiXml: String, editable: Bool = false, translation: Translation? = nil,
-      highlights: [String: [TEIHighlight]] = [:], labelsPages: Bool = false, interlinear: Interlinear? = nil
+      highlights: [String: [TEIHighlight]] = [:], labelsPages: Bool = false, wordDetailsURL: String? = nil
     ) {
       self.teiXml = teiXml
       self.editable = editable
       self.translation = translation
       self.highlights = highlights
       self.labelsPages = labelsPages
-      self.interlinear = interlinear
+      self.wordDetailsURL = wordDetailsURL
     }
 
-    public var pages: [TEIPage] { TEIRenderer.pages(in: teiXml, highlights: highlights) }
+    public var pages: [TEIPage] {
+      TEIRenderer.pages(in: teiXml, highlights: highlights, marksWords: wordDetailsURL != nil)
+    }
 
     /// The image service a semblance reads, which is what pairs it with a
     /// canvas. `TEIRenderer` owns the rule; the view only passes it on.
@@ -299,20 +283,57 @@
       return out
     }
 
-    private func inlineContent(_ line: TEILine) -> DOM.Node {
-      span {
-        for run in line.runs {
-          if let highlight = run.highlight {
-            // An utterance's sentence, or its word: marked, as the page
-            // has it.
-            mark { runContent(run) }
+    private func inlineContent(_ line: TEILine, tabStop: TEIWordPlace? = nil) -> DOM.Node {
+      // An utterance's sentence, or its word, marked as the page has it: one
+      // mark over the runs it covers.
+      var marked: [(highlight: TEIHighlight.Kind?, runs: [TEILine.Run])] = []
+      for run in line.runs {
+        if let last = marked.last, last.highlight == run.highlight {
+          marked[marked.count - 1].runs.append(run)
+        } else {
+          marked.append((run.highlight, [run]))
+        }
+      }
+      return span {
+        for group in marked {
+          if let highlight = group.highlight {
+            mark { wordContent(group.runs, tabStop: tabStop) }
               .class("tei-highlight")
               .data("highlight", highlight.rawValue)
           } else {
-            runContent(run)
+            wordContent(group.runs, tabStop: tabStop)
           }
         }
       }.build()
+    }
+
+    /// Runs, the runs of one word together as one control: its details open
+    /// from it. The page's first word is its one stop in the tab order; the
+    /// arrow keys move between its words.
+    private func wordContent(_ runs: [TEILine.Run], tabStop: TEIWordPlace?) -> [DOM.Node] {
+      var words: [(word: TEIWordPlace?, runs: [TEILine.Run])] = []
+      for run in runs {
+        if let word = run.word, let last = words.last, last.word == word {
+          words[words.count - 1].runs.append(run)
+        } else {
+          words.append((run.word, [run]))
+        }
+      }
+      return words.flatMap { group -> [DOM.Node] in
+        guard let word = group.word else { return group.runs.map(runContent) }
+        return [
+          span {
+            for run in group.runs { runContent(run) }
+          }
+          .class("tei-word")
+          .role(.button)
+          .tabindex(word == tabStop ? 0 : -1)
+          .ariaHaspopup(.dialog)
+          .data("line", word.line)
+          .data("word", word.word)
+          .build()
+        ]
+      }
     }
 
     private func runContent(_ run: TEILine.Run) -> DOM.Node {
@@ -332,17 +353,34 @@
       }
     }
 
-    private func readingLine(_ line: TEILine, facsimileURL: String, label: String) -> DOM.Node {
+    /// A page's first word, where its words can be opened: the one stop
+    /// the page has in the tab order.
+    static func firstWord(of lines: [TEILine]) -> TEIWordPlace? {
+      for line in lines {
+        if case .table(let table) = line.kind {
+          if let word = firstWord(of: table.caption + table.rows.flatMap { $0.cells.flatMap(\.lines) }) {
+            return word
+          }
+        } else if let word = line.runs.lazy.compactMap(\.word).first {
+          return word
+        }
+      }
+      return nil
+    }
+
+    private func readingLine(
+      _ line: TEILine, facsimileURL: String, label: String, tabStop: TEIWordPlace? = nil
+    ) -> DOM.Node {
       switch line.kind {
       case .heading:
-        return h3 { inlineContent(line) }.class("tei-line tei-line-heading").data("rend", line.rend)
+        return h3 { inlineContent(line, tabStop: tabStop) }.class("tei-line tei-line-heading").data("rend", line.rend)
           .build()
       case .speaker:
-        return span { inlineContent(line) }.class("tei-line tei-line-speaker").data(
+        return span { inlineContent(line, tabStop: tabStop) }.class("tei-line tei-line-speaker").data(
           "rend", line.rend
         ).build()
       case .stage:
-        return span { inlineContent(line) }.class("tei-line tei-line-stage").data("rend", line.rend)
+        return span { inlineContent(line, tabStop: tabStop) }.class("tei-line tei-line-stage").data("rend", line.rend)
           .build()
       case .mark:
         return span { line.text }.class("tei-line tei-line-mark").build()
@@ -352,10 +390,10 @@
       case .documentBoundary:
         return hr().class("tei-document-boundary").build()
       case .note(let place):
-        return span { inlineContent(line) }.class("tei-line tei-line-note")
+        return span { inlineContent(line, tabStop: tabStop) }.class("tei-line tei-line-note")
           .data("place", place.isEmpty ? "inline" : place).build()
       case .forme(let role):
-        return span { inlineContent(line) }.class(
+        return span { inlineContent(line, tabStop: tabStop) }.class(
           "tei-line tei-line-forme tei-line-forme-\(role.rawValue)"
         ).data("rend", line.rend).build()
       case .figure(let type, let bbox):
@@ -373,7 +411,7 @@
             if !source.caption.isEmpty {
               caption {
                 for line in source.caption {
-                  readingLine(line, facsimileURL: facsimileURL, label: label)
+                  readingLine(line, facsimileURL: facsimileURL, label: label, tabStop: tabStop)
                 }
               }
             }
@@ -384,13 +422,13 @@
                     if cell.isLabel {
                       th {
                         for line in cell.lines {
-                          readingLine(line, facsimileURL: facsimileURL, label: label)
+                          readingLine(line, facsimileURL: facsimileURL, label: label, tabStop: tabStop)
                         }
                       }.rowspan(cell.rows).colspan(cell.columns)
                     } else {
                       td {
                         for line in cell.lines {
-                          readingLine(line, facsimileURL: facsimileURL, label: label)
+                          readingLine(line, facsimileURL: facsimileURL, label: label, tabStop: tabStop)
                         }
                       }.rowspan(cell.rows).colspan(cell.columns)
                     }
@@ -401,7 +439,7 @@
           }.class("tei-table")
         }.class("tei-table-scroll").build()
       case .text:
-        return span { inlineContent(line) }.class("tei-line").data("rend", line.rend).build()
+        return span { inlineContent(line, tabStop: tabStop) }.class("tei-line").data("rend", line.rend).build()
       }
     }
 
@@ -417,6 +455,7 @@
             .class("tei-view-empty")
         }
         for (index, page) in pages.enumerated() {
+          let tabStop = wordDetailsURL == nil ? nil : Self.firstWord(of: page.lines)
           div {
             div {
               if labelsPages {
@@ -427,7 +466,7 @@
               for item in Self.layout(of: page.lines) {
                 switch item {
                 case .line(let line):
-                  readingLine(line, facsimileURL: page.facsimileURL, label: page.label)
+                  readingLine(line, facsimileURL: page.facsimileURL, label: page.label, tabStop: tabStop)
                 case .block(let lines):
                   // A block's lines, one to a line as the image sets them; on
                   // a phone they run on as one paragraph, a break inside a
@@ -435,7 +474,7 @@
                   div {
                     for (index, line) in lines.enumerated() {
                       if index > 0 && !line.joinsPrevious { " " }
-                      readingLine(line, facsimileURL: page.facsimileURL, label: page.label)
+                      readingLine(line, facsimileURL: page.facsimileURL, label: page.label, tabStop: tabStop)
                     }
                   }.class("tei-block").data("rend", lines[0].rend)
                 case .furniture(let pieces):
@@ -445,7 +484,7 @@
                     for place in FurniturePlace.allCases {
                       div {
                         for piece in pieces where FurniturePlace.of(piece) == place {
-                          readingLine(piece, facsimileURL: page.facsimileURL, label: page.label)
+                          readingLine(piece, facsimileURL: page.facsimileURL, label: page.label, tabStop: tabStop)
                         }
                       }.class("tei-forme-row-\(place.rawValue)")
                     }
@@ -506,45 +545,6 @@
               .lang(translation.language)
               .dir("auto")
             }
-
-            // The words of the transcript, each over its gloss, line by line
-            // as an anchor counts them.
-            if let interlinear {
-              let glosses = interlinear.glosses[Self.serviceID(ofFacsimile: page.facsimileURL)] ?? [:]
-              let words = TEIRenderer.words(of: page)
-              let lines = words.reduce(into: [[TEIWordPosition]]()) { lines, word in
-                if let last = lines.last?.last, last.line == word.line {
-                  lines[lines.count - 1].append(word)
-                } else {
-                  lines.append([word])
-                }
-              }
-              div {
-                if lines.isEmpty {
-                  span { "—" }
-                    .class("tei-line")
-                }
-                for line in lines {
-                  div {
-                    for word in line {
-                      span {
-                        span { word.surface }
-                          .class("tei-interlinear-surface")
-                          .dir("auto")
-                        span { glosses[Interlinear.key(line: word.line, word: word.word)] ?? "—" }
-                          .class("tei-interlinear-gloss")
-                          .lang(interlinear.language)
-                          .dir("auto")
-                      }
-                      .class("tei-interlinear-word")
-                    }
-                  }
-                  .class("tei-interlinear-line")
-                }
-              }
-              .class("tei-page-interlinear")
-              .data("transcript-layer", "interlinear")
-            }
           }
           .class("tei-transcript")
           .id("tei-transcript-\(index)")
@@ -555,6 +555,7 @@
       }
       .class("tei-view")
       .data("editable", editable)
+      .data("word-details", wordDetailsURL ?? "")
       .style {
         selector("&") {
           display(.flex)
@@ -757,30 +758,22 @@
           color(colorBase)
           overflowWrap(.breakWord)
         }
+        // The transcript looks as the printed page does (user, 2026-09-29):
+        // only what the TEI encodes as typography (`<hi rend>`) is styled; a
+        // tag (a heading, a speaker, a stage direction, a note, the forme
+        // work) keeps its place on the page and no face or color of its own.
         descendant(".tei-line-heading") {
-          fontFamily(typographyFontSans)
-          fontSize(fontSizeMedium16)
-          fontWeight(fontWeightSemiBold)
+          fontSize(.inherit)
+          fontWeight(.inherit)
           margin(spacing8, spacing0, spacing4)
         }
         descendant(".tei-line-speaker") {
-          fontWeight(fontWeightSemiBold)
           marginBlockStart(spacing8)
-        }
-        descendant(".tei-line-stage") {
-          fontStyle(.italic)
-          color(colorSubtle)
         }
         // The work's own apparatus, set where the compositor set it: the head
         // over the text, the catchword at the foot by the outer edge, the
         // signature at the foot by the inner one. In the flow they read as
         // lines of the play, which is what they are not.
-        descendant(".tei-line-forme") {
-          fontFamily(typographyFontSans)
-          fontSize(fontSizeXSmall12)
-          letterSpacing(px(0.3))
-          color(colorSubtle)
-        }
         descendant(".tei-line-forme-header") {
           textAlign(.center)
           marginBlockEnd(spacing8)
@@ -798,17 +791,11 @@
         }
         // An original note, set apart from the text it annotates as the
         // work's apparatus is.
-        descendant(".tei-line-note") {
-          fontSize(fontSizeSmall14)
-          color(colorSubtle)
-        }
+
         // The makers' own deletions, struck through as on the page; what
-        // the transcription supplies, bracketed and subtle, as it is not.
+        // the transcription supplies is set in its brackets.
         selector("& .tei-run[data-rend~='del']") {
           textDecoration(.lineThrough)
-        }
-        selector("& .tei-run[data-rend~='supplied']") {
-          color(colorSubtle)
         }
         // Not a word on the page: a statement that there is none.
         descendant(".tei-line-gap") {
@@ -842,46 +829,11 @@
           gap(spacing12)
           minWidth(0)
         }
-        // The gloss takes the transcript's place too, under the viewer's
-        // Interlinear switch: each line's words side by side, wrapping, each
-        // word over its gloss.
-        descendant(".tei-page-interlinear") {
-          display(.none)
-          flexDirection(.column)
-          gap(spacing12)
-          minWidth(0)
-        }
-        descendant(".tei-interlinear-line") {
-          display(.flex)
-          flexWrap(.wrap)
-          columnGap(spacing12)
-          rowGap(spacing8)
-          minWidth(0)
-        }
-        descendant(".tei-interlinear-word") {
-          display(.inlineFlex)
-          flexDirection(.column)
-          gap(spacing2)
-          minWidth(0)
-        }
-        descendant(".tei-interlinear-gloss") {
-          fontFamily(typographyFontSans)
-          fontSize(fontSizeXSmall12)
-          color(colorSubtle)
-        }
         descendant(".tei-page-translation-note") {
           fontFamily(typographyFontSans)
           fontSize(fontSizeSmall14)
           color(colorOrange)
           margin(0)
-        }
-        // The work's own apparatus: a running head is on the page and not in
-        // the play, so it is shown as what it is rather than as a line of it.
-        descendant(".tei-line-forme") {
-          fontFamily(typographyFontSans)
-          fontSize(fontSizeXSmall12)
-          letterSpacing(px(0.3))
-          color(colorSubtle)
         }
         // A side of the leaf, inside an image that carries two of them.
         descendant(".tei-line-mark") {
@@ -934,6 +886,16 @@
         descendant(".tei-highlight[data-highlight='headword']") {
           backgroundColor(backgroundColorRedSubtle)
           border(borderWidthBase, .solid, borderColorRed)
+        }
+        // A word that opens its details: the printed page's own type, the
+        // accent color only under the pointer, on keyboard focus and while
+        // its details are open (user, 2026-09-29).
+        descendant(".tei-word") {
+          cursor(.pointer)
+          outline(.none)
+        }
+        selector("& .tei-word:hover", "& .tei-word:focus-visible", "& .tei-word[aria-expanded='true']") {
+          color(colorBlue)
         }
         selector(".tei-view-empty") {
           fontFamily(typographyFontSans)
