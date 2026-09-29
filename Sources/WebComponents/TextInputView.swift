@@ -53,6 +53,9 @@ public struct TextInputView: HTMLContent {
   /// What stands after the label's text (and its "(optional)"), before
   /// its tooltip: a record page's reference marks. Not label text.
   let labelMarks: [DOM.Node]
+  /// More attributes on the input itself, by name: what a control built on
+  /// the field says it is (ComboboxView's `role`, `aria-expanded`…).
+  let inputAttributes: [(String, String)]
 
   public enum InputType: String, Sendable {
     case text
@@ -104,7 +107,8 @@ public struct TextInputView: HTMLContent {
     maxLength: Int? = nil,
     pattern: String? = nil,
     matches: String? = nil,
-    messages: ConstraintMessages = ConstraintMessages()
+    messages: ConstraintMessages = ConstraintMessages(),
+    inputAttributes: [(String, String)] = []
   ) {
     self.id = id
     self.name = name
@@ -136,6 +140,7 @@ public struct TextInputView: HTMLContent {
     self.optional = optional
     self.optionalFlag = optionalFlag
     self.labelMarks = labelMarks
+    self.inputAttributes = inputAttributes
   }
 
   public func build() -> DOM.Node {
@@ -188,6 +193,9 @@ public struct TextInputView: HTMLContent {
     }
     for (name, message) in messages.dataAttributes {
       inputEl = inputEl.data(name, message)
+    }
+    for (name, value) in inputAttributes {
+      inputEl = inputEl.addingAttribute(name, value)
     }
 
     var container = div {
