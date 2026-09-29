@@ -71,6 +71,7 @@
           weight: weight,
           size: size,
           disabled: disabled,
+          iconOnly: isIconOnly,
           ariaLabel: ariaLabel ?? label,
           fullWidth: fullWidth,
           class: "",

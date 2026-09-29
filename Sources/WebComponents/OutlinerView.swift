@@ -107,11 +107,14 @@ public enum OutlineMoves {
   /// outlines, a form's nested steps.
   ///
   /// **Drawn indented.** Each level stands a step (`spacing24`) further in
-  /// than its parent, a thin guide line down from the parent's toggle along
-  /// every level under it. An item with items under it has a toggle at its
-  /// start that collapses and expands them; an item without keeps the
-  /// toggle's room, so siblings line up (a tree with no nesting at all
-  /// draws no toggle column). Its children are the outline's to place:
+  /// than its parent, a thin guide line down the step's middle along every
+  /// level under it. An item with items under it has a toggle at its start
+  /// that collapses and expands them; an item without keeps the toggle's
+  /// room, so siblings line up (a tree with no nesting at all draws no
+  /// toggle column). An item that is itself an accordion (`accordion`: a
+  /// record's row, with its own chevron) has no toggle and no toggle
+  /// column: its own chevron collapses it and the items under it, as one
+  /// (user, 2026-09-30). Its children are the outline's to place:
   /// under the item's own node, never inside it, so a deep tree is never a
   /// box in a box in a box.
   ///
@@ -206,6 +209,11 @@ public enum OutlineMoves {
       /// Extra attributes for the item (`li`), for a page that finds its
       /// items by them.
       public let data: [(String, String)]
+      /// Whether the item is itself an accordion (`AccordionView`, the
+      /// first in its content): its own chevron is its collapse control,
+      /// hiding the items under it with its body, and the tree draws no
+      /// toggle for it. Open as the accordion is drawn open.
+      public let accordion: Bool
       /// The item, given the pieces the outline puts in it.
       public let content: @Sendable (Slots) -> [DOM.Node]
       public let children: [Node]
@@ -217,6 +225,7 @@ public enum OutlineMoves {
         origin: Origin? = nil,
         movable: Bool = true,
         data: [(String, String)] = [],
+        accordion: Bool = false,
         children: [Node] = [],
         @HTMLBuilder content: @escaping @Sendable (Slots) -> [DOM.Node]
       ) {
@@ -226,6 +235,7 @@ public enum OutlineMoves {
         self.origin = origin
         self.movable = movable
         self.data = data
+        self.accordion = accordion
         self.children = children
         self.content = content
       }
@@ -393,6 +403,24 @@ public enum OutlineMoves {
       .build()
     }
 
+    /// Whether the first accordion in an item's content (in document order,
+    /// the outermost) is drawn open; nil where there is none.
+    private static func accordionIsOpen(_ nodes: [DOM.Node]) -> Bool? {
+      for node in nodes {
+        if let element = node as? DOM.Element {
+          if let classes = element.attributes.first(where: { $0.0 == "class" })?.1,
+            classes.split(separator: " ").contains("accordion-details")
+          {
+            return element.attributes.first(where: { $0.0 == "data-expanded" })?.1 == "true"
+          }
+          if let open = accordionIsOpen(element.children) { return open }
+        } else if let fragment = node as? DOM.DocumentFragment {
+          if let open = accordionIsOpen(fragment.children) { return open }
+        }
+      }
+      return nil
+    }
+
     /// An item and every item under it. The nesting is data, so the markup
     /// recurses.
     static func item(
@@ -426,10 +454,15 @@ public enum OutlineMoves {
           .build()
         slots = Slots(handle: handle, diff: diff)
       }
+      let content = node.content(slots)
+      // An accordion item starts collapsed where its accordion starts closed.
+      let collapsed = node.accordion && accordionIsOpen(content) == false
       var element = li {
         div {
-          toggle(node, treeID: treeID)
-          div { node.content(slots) }
+          if !node.accordion {
+            toggle(node, treeID: treeID)
+          }
+          div { content }
             .class("outliner-node")
         }
         .class("outliner-row")
@@ -445,7 +478,8 @@ public enum OutlineMoves {
       .class("outliner-item")
       .data("outliner-id", node.id)
       .data("outliner-label", node.label)
-      .data("outliner-collapsed", false)
+      .data("outliner-collapsed", collapsed)
+      .data("outliner-accordion", node.accordion)
       if arranges {
         element =
           element
@@ -616,8 +650,8 @@ public enum OutlineMoves {
         minWidth(0)
       }
       // A level a step in from its parent, the step the toggle's width; a
-      // thin line down from the parent's toggle, through every level
-      // under it.
+      // thin line down the step's middle (under the parent's toggle, where
+      // it has one), through every level under it.
       descendant(".outliner-list .outliner-list") {
         position(.relative)
         paddingInlineStart(size24)
@@ -880,7 +914,28 @@ public enum OutlineMoves {
     public static func hydrateIfPresent() {
       guard document.querySelector(".outliner-view") != nil else { return }
       bindToggles()
+      bindAccordions()
       instance = OutlinerHydration()
+    }
+
+    /// An item that is itself an accordion collapses with it: its items
+    /// show while its accordion is open, whatever opens or closes it.
+    public static func bindAccordions() {
+      for item in document.querySelectorAll(".outliner-item[data-outliner-accordion='true']") {
+        guard !stringEquals(item.dataset["outliner-accordion-bound"] ?? "false", "true"),
+          let accordion = ownAccordion(of: item)
+        else { continue }
+        item.setAttribute(data("outliner-accordion-bound"), "true")
+        _ = accordion.addEventListener("accordion-toggle") { (event: Event) in
+          item.setAttribute(data("outliner-collapsed"), stringEquals(event.detail, "true") ? "false" : "true")
+        }
+      }
+    }
+
+    /// An accordion item's own accordion: the first in its node, which is
+    /// the outermost.
+    private static func ownAccordion(of item: DOM.Element) -> DOM.Element? {
+      item.querySelector(":scope > .outliner-row > .outliner-node .accordion-view")
     }
 
     public init() {
@@ -914,11 +969,19 @@ public enum OutlineMoves {
     }
 
     /// Expands every collapsed item above `element`, so it shows: an item
-    /// moved under a collapsed one, a step added under one.
+    /// moved under a collapsed one, a step added under one. An accordion
+    /// item is opened by its own chevron.
     public static func expand(around element: DOM.Element) {
       var cursor = element.parentElement?.closest(".outliner-item")
       while let item = cursor {
-        if stringEquals(item.dataset["outliner-collapsed"] ?? "false", "true") { setCollapsed(item, false) }
+        if stringEquals(item.dataset["outliner-collapsed"] ?? "false", "true") {
+          if stringEquals(item.dataset["outliner-accordion"] ?? "false", "true"),
+            let summary = ownAccordion(of: item)?.querySelector(".accordion-summary")
+          {
+            summary.click()
+          }
+          setCollapsed(item, false)
+        }
         cursor = item.parentElement?.closest(".outliner-item")
       }
     }

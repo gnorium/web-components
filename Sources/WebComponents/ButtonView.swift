@@ -35,6 +35,9 @@ public struct ButtonView: HTMLContent {
   var controlsID: String? = nil
   var submitName: String? = nil
   var submitValue: String? = nil
+  /// Whether the content is the caller's own, placed as given (never
+  /// wrapped as an icon), icon-only or not.
+  var customContent = false
 
   /// Button type attribute
   public enum ButtonType: String, Sendable {
@@ -211,13 +214,15 @@ public struct ButtonView: HTMLContent {
     self.dataAttributes = data
   }
 
-  /// Create a button with custom content
+  /// Create a button with custom content. `iconOnly` when the content is
+  /// an icon alone (a toggle's), for the square an icon-only button is.
   public init(
     label: String = "",
     buttonColor: ButtonColor = .gray,
     weight: ButtonWeight = .subtle,
     size: ButtonSize = .medium,
     disabled: Bool = false,
+    iconOnly: Bool = false,
     url: String? = nil,
     type: ButtonType = .button,
     ariaLabel: String? = nil,
@@ -237,7 +242,8 @@ public struct ButtonView: HTMLContent {
     self.weight = weight
     self.size = size
     self.icon = .fragment { content() }
-    self.iconOnly = false  // Custom content is treated as the full body
+    self.iconOnly = iconOnly
+    self.customContent = true
     self.disabled = disabled
     self.ariaLabel = ariaLabel
     self.url = url
@@ -319,7 +325,7 @@ public struct ButtonView: HTMLContent {
     @HTMLBuilder
     func renderContent() -> [DOM.Node] {
       if let icon = icon {
-        if stringIsEmpty(label) && iconOnly {
+        if stringIsEmpty(label) && iconOnly && !customContent {
           span { icon }
             .class("button-icon")
             .ariaHidden(true)
