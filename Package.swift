@@ -45,6 +45,7 @@ let package = Package(
           name: "MarkdownUtilities", package: "markdown-utilities",
           condition: .when(platforms: [.macOS, .linux, .windows])),
         .product(name: "SVGBuilder", package: "web-builders"),
+        .product(name: "MathMLBuilder", package: "web-builders"),
         .product(
           name: "XMLUtilities", package: "xml-utilities",
           condition: .when(platforms: [.macOS, .linux, .windows])),

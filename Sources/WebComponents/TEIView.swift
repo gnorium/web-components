@@ -5,6 +5,7 @@
   import DOMBuilder
   import Foundation
   import HTMLBuilder
+  import MathMLBuilder
   import WebTypes
   import XMLUtilities
 
@@ -155,8 +156,9 @@
         var tokens: [DiffEngine.Token] = []
         for (index, run) in line.runs.enumerated() {
           switch run.kind {
-          case .tex:
-            tokens.append(.init(kind: .formula, text: run.text, style: style(run.rend)))
+          case .math(let formula):
+            // A formula compares as the TeX it was written in.
+            tokens.append(.init(kind: .formula, text: formula.source, style: style(run.rend)))
           case .text:
             var text = spaced(run.text)
             if index == 0 { text = String(text.drop(while: \.isWhitespace)) }
@@ -284,27 +286,31 @@
     }
 
     private func inlineContent(_ line: TEILine, facsimileURL: String, tabStop: TEIWordPlace? = nil) -> DOM.Node {
-      // An utterance's sentence, or its word, marked as the page has it: one
-      // mark over the runs it covers.
+      span { markedContent(line.runs, facsimileURL: facsimileURL, tabStop: tabStop) }.build()
+    }
+
+    /// Runs, an utterance's sentence, or its word, marked as the page has it:
+    /// one mark over the runs it covers.
+    private func markedContent(_ runs: [TEILine.Run], facsimileURL: String, tabStop: TEIWordPlace?) -> [DOM.Node] {
       var marked: [(highlight: TEIHighlight.Kind?, runs: [TEILine.Run])] = []
-      for run in line.runs {
+      for run in runs {
         if let last = marked.last, last.highlight == run.highlight {
           marked[marked.count - 1].runs.append(run)
         } else {
           marked.append((run.highlight, [run]))
         }
       }
-      return span {
-        for group in marked {
-          if let highlight = group.highlight {
-            mark { wordContent(group.runs, facsimileURL: facsimileURL, tabStop: tabStop) }
-              .class("tei-highlight")
-              .data("highlight", highlight.rawValue)
-          } else {
-            wordContent(group.runs, facsimileURL: facsimileURL, tabStop: tabStop)
-          }
+      return marked.flatMap { group -> [DOM.Node] in
+        guard let highlight = group.highlight else {
+          return wordContent(group.runs, facsimileURL: facsimileURL, tabStop: tabStop)
         }
-      }.build()
+        return [
+          mark { wordContent(group.runs, facsimileURL: facsimileURL, tabStop: tabStop) }
+            .class("tei-highlight")
+            .data("highlight", highlight.rawValue)
+            .build()
+        ]
+      }
     }
 
     /// Runs, the runs of one word together as one control: its details open
@@ -320,10 +326,12 @@
         }
       }
       return words.flatMap { group -> [DOM.Node] in
-        guard let word = group.word else { return group.runs.map { runContent($0, facsimileURL: facsimileURL) } }
+        guard let word = group.word else {
+          return group.runs.map { runContent($0, facsimileURL: facsimileURL, tabStop: tabStop) }
+        }
         return [
           span {
-            for run in group.runs { runContent(run, facsimileURL: facsimileURL) }
+            for run in group.runs { runContent(run, facsimileURL: facsimileURL, tabStop: tabStop) }
           }
           .class("tei-word")
           .role(.button)
@@ -336,7 +344,7 @@
       }
     }
 
-    private func runContent(_ run: TEILine.Run, facsimileURL: String) -> DOM.Node {
+    private func runContent(_ run: TEILine.Run, facsimileURL: String, tabStop: TEIWordPlace?) -> DOM.Node {
       switch run.kind {
       case .text:
         // A decorated initial with its box: the decoration cut from the
@@ -357,9 +365,30 @@
         return TooltipView(tooltip: run.alternative, placement: .top, class: "tei-run-alternative") {
           span { run.text }.class("tei-run").data("rend", run.rend)
         }.build()
-      case .tex(let display):
-        return span { TeXView(run.text, displayMode: display) }
-          .class("tei-run").data("rend", run.rend).build()
+      case .math(let formula):
+        return mathContent(formula, facsimileURL: facsimileURL, tabStop: tabStop)
+      }
+    }
+
+    /// A formula drawn as the browser draws MathML (MathML Core): each
+    /// symbol it prints is a word of the page, opened as a printed word is.
+    private func mathContent(_ formula: TEIMath, facsimileURL: String, tabStop: TEIWordPlace?) -> DOM.Node {
+      func drawn(_ node: TEIMath.Node) -> DOM.Node {
+        switch node {
+        case .element(let name, let attributes, let children):
+          return MathML.MathMLElement(name, attributes: attributes.map { ($0.name, $0.value) }) {
+            for child in children { drawn(child) }
+          }
+        case .token(let name, let attributes, let runs):
+          return MathML.MathMLElement(name, attributes: attributes.map { ($0.name, $0.value) }) {
+            markedContent(runs, facsimileURL: facsimileURL, tabStop: tabStop)
+          }
+        }
+      }
+      return MathML.MathMLElement(
+        "math", attributes: [("class", "tei-math"), ("display", formula.display ? "block" : "inline")]
+      ) {
+        for node in formula.content { drawn(node) }
       }
     }
 
@@ -371,7 +400,10 @@
           if let word = firstWord(of: table.caption + table.rows.flatMap { $0.cells.flatMap(\.lines) }) {
             return word
           }
-        } else if let word = line.runs.lazy.compactMap(\.word).first {
+        } else if let word = line.runs.lazy.flatMap({ run -> [TEIWordPlace] in
+          if case .math(let formula) = run.kind { return formula.runs.compactMap(\.word) }
+          return run.word.map { [$0] } ?? []
+        }).first {
           return word
         }
       }
@@ -458,10 +490,6 @@
 
     public func build() -> DOM.Node {
       let pages = self.pages
-      // Record pages register an empty reader before fetching its contents.
-      // Include formula styles then, even when no formula is present yet.
-      _ = TeXView("").build()
-
       return div {
         if pages.isEmpty {
           p { "This document has no page breaks to read by. The raw XML is below." }
@@ -935,6 +963,12 @@
         }
         selector("& .tei-word:hover", "& .tei-word:focus-visible", "& .tei-word[aria-expanded='true']") {
           color(colorBlue)
+        }
+        // A formula set on its own line scrolls within the page's width
+        // rather than widening it.
+        selector("& .tei-math[display='block']") {
+          maxWidth(perc(100))
+          overflowX(.auto)
         }
         selector(".tei-view-empty") {
           fontFamily(typographyFontSans)
