@@ -889,7 +889,7 @@
           backgroundColor(backgroundColorYellowSubtle)
           color(.inherit)
         }
-        descendant(".tei-highlight[data-highlight='headword']") {
+        descendant(".tei-highlight[data-highlight='title']") {
           backgroundColor(backgroundColorRedSubtle)
           border(borderWidthBase, .solid, borderColorRed)
         }
