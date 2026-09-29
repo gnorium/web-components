@@ -283,7 +283,7 @@
       return out
     }
 
-    private func inlineContent(_ line: TEILine, tabStop: TEIWordPlace? = nil) -> DOM.Node {
+    private func inlineContent(_ line: TEILine, facsimileURL: String, tabStop: TEIWordPlace? = nil) -> DOM.Node {
       // An utterance's sentence, or its word, marked as the page has it: one
       // mark over the runs it covers.
       var marked: [(highlight: TEIHighlight.Kind?, runs: [TEILine.Run])] = []
@@ -297,11 +297,11 @@
       return span {
         for group in marked {
           if let highlight = group.highlight {
-            mark { wordContent(group.runs, tabStop: tabStop) }
+            mark { wordContent(group.runs, facsimileURL: facsimileURL, tabStop: tabStop) }
               .class("tei-highlight")
               .data("highlight", highlight.rawValue)
           } else {
-            wordContent(group.runs, tabStop: tabStop)
+            wordContent(group.runs, facsimileURL: facsimileURL, tabStop: tabStop)
           }
         }
       }.build()
@@ -310,7 +310,7 @@
     /// Runs, the runs of one word together as one control: its details open
     /// from it. The page's first word is its one stop in the tab order; the
     /// arrow keys move between its words.
-    private func wordContent(_ runs: [TEILine.Run], tabStop: TEIWordPlace?) -> [DOM.Node] {
+    private func wordContent(_ runs: [TEILine.Run], facsimileURL: String, tabStop: TEIWordPlace?) -> [DOM.Node] {
       var words: [(word: TEIWordPlace?, runs: [TEILine.Run])] = []
       for run in runs {
         if let word = run.word, let last = words.last, last.word == word {
@@ -320,10 +320,10 @@
         }
       }
       return words.flatMap { group -> [DOM.Node] in
-        guard let word = group.word else { return group.runs.map(runContent) }
+        guard let word = group.word else { return group.runs.map { runContent($0, facsimileURL: facsimileURL) } }
         return [
           span {
-            for run in group.runs { runContent(run) }
+            for run in group.runs { runContent(run, facsimileURL: facsimileURL) }
           }
           .class("tei-word")
           .role(.button)
@@ -336,9 +336,19 @@
       }
     }
 
-    private func runContent(_ run: TEILine.Run) -> DOM.Node {
+    private func runContent(_ run: TEILine.Run, facsimileURL: String) -> DOM.Node {
       switch run.kind {
       case .text:
+        // A decorated initial with its box: the decoration cut from the
+        // facsimile as a figure's is, with its letter drawn over it
+        // transparent, so the letter stays the word's text (selected, found,
+        // copied, read aloud) while the page's own initial is what shows.
+        if !run.bbox.isEmpty, let region = TEIRenderer.regionURL(ofFacsimile: facsimileURL, bbox: run.bbox) {
+          return span {
+            img().src(region).alt("").loading(.lazy).class("tei-figure-image tei-initial-image")
+            span { run.text }.class("tei-initial-letter")
+          }.class("tei-run tei-initial").data("rend", run.rend).build()
+        }
         if run.alternative.isEmpty {
           return span { run.text }.class("tei-run").data("rend", run.rend).build()
         }
@@ -373,14 +383,14 @@
     ) -> DOM.Node {
       switch line.kind {
       case .heading:
-        return h3 { inlineContent(line, tabStop: tabStop) }.class("tei-line tei-line-heading").data("rend", line.rend)
+        return h3 { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line tei-line-heading").data("rend", line.rend)
           .build()
       case .speaker:
-        return span { inlineContent(line, tabStop: tabStop) }.class("tei-line tei-line-speaker").data(
+        return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line tei-line-speaker").data(
           "rend", line.rend
         ).build()
       case .stage:
-        return span { inlineContent(line, tabStop: tabStop) }.class("tei-line tei-line-stage").data("rend", line.rend)
+        return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line tei-line-stage").data("rend", line.rend)
           .build()
       case .mark:
         return span { line.text }.class("tei-line tei-line-mark").build()
@@ -390,10 +400,10 @@
       case .documentBoundary:
         return hr().class("tei-document-boundary").build()
       case .note(let place):
-        return span { inlineContent(line, tabStop: tabStop) }.class("tei-line tei-line-note")
+        return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line tei-line-note")
           .data("place", place.isEmpty ? "inline" : place).build()
       case .forme(let role):
-        return span { inlineContent(line, tabStop: tabStop) }.class(
+        return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class(
           "tei-line tei-line-forme tei-line-forme-\(role.rawValue)"
         ).data("rend", line.rend).build()
       case .figure(let type, let bbox):
@@ -441,7 +451,7 @@
       case .text:
         // Whether the break before it falls inside a word (`<lb
         // break="no"/>`): a reader's find reads the two lines as one word.
-        return span { inlineContent(line, tabStop: tabStop) }.class("tei-line").data("rend", line.rend)
+        return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line").data("rend", line.rend)
           .data("joins-previous", line.joinsPrevious).build()
       }
     }
@@ -596,10 +606,26 @@
           borderRadius(borderRadiusBase)
           border(borderWidthBase, .solid, borderColorSubtle)
         }
-        // A decorated initial is one letter tall in the text; shown at the
-        // width of a plate it stops being an initial and becomes a poster.
-        selector("& .tei-figure[data-figure-type='initial'] .tei-figure-image") {
+        // A decorated initial is one letter of the text; shown at the width
+        // of a plate it stops being an initial and becomes a poster.
+        descendant(".tei-initial-image") {
           maxWidth(px(96))
+          maxHeight(px(96))
+          verticalAlign(.bottom)
+        }
+        descendant(".tei-initial") {
+          position(.relative)
+          display(.inlineBlock)
+        }
+        // The letter the decoration stands for: over the crop, the size of
+        // it, transparent; still the word's text.
+        descendant(".tei-initial-letter") {
+          position(.absolute)
+          inset(0)
+          display(.flex)
+          alignItems(.center)
+          justifyContent(.center)
+          color(.transparent)
         }
         descendant(".tei-figure-caption") {
           fontFamily(typographyFontSans)
