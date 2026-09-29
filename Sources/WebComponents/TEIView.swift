@@ -806,6 +806,12 @@
           gap(spacing2)
           minWidth(0)
         }
+        // The page's first line starts where its pane's padding ends: a
+        // heading's or a speaker's space above it is space from the line
+        // before, and at the top of the page there is none (user, 2026-09-29).
+        selector("& .tei-page-text > :first-child", "& .tei-page-text > :first-child > .tei-line:first-child") {
+          marginBlockStart(0).important()
+        }
         // Editable only in Raw: the transcript is for reading, and nothing in it
         // looks as if it could be typed into.
         selector("&[data-editable='true'] .tei-page-text") {

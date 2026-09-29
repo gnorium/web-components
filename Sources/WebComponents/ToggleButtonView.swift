@@ -108,6 +108,9 @@
               .class(isIconOnly ? "toggle-button-label-hidden" : "toggle-button-label")
           }
         }
+        // The state on the control itself, for assistive technology; the
+        // wrapper's copy below is what the styles and hosts read.
+        .ariaPressed(modelValue)
       }
       .class(fullClass)
       .data("toggle-button", "true")
@@ -206,15 +209,10 @@
     }
 
     private func bindEvents() {
+      // Enter and Space press the native <button>, which clicks it: a
+      // keydown handler of its own toggled twice, back to where it was.
       _ = button.addEventListener(.click) { [self] _ in
         self.toggle()
-      }
-
-      _ = button.addEventListener(.keydown) { [self] (event: Event) in
-        let key = event.key
-        if stringEquals(key, "Enter") || stringEquals(key, " ") {
-          self.toggle()
-        }
       }
     }
 
@@ -225,6 +223,7 @@
 
       modelValue.toggle()
       button.setAttribute(.ariaPressed, modelValue ? true : false)
+      button.querySelector("button")?.setAttribute(.ariaPressed, modelValue ? true : false)
 
       let event = CustomEvent(type: "toggle-button-update", detail: modelValue ? "true" : "false")
       button.dispatchEvent(event)

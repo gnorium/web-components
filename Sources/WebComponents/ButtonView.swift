@@ -31,6 +31,7 @@ public struct ButtonView: HTMLContent {
   var formID: String? = nil
   var popoverTargetID: String? = nil
   var expanded: Bool? = nil
+  var pressed: Bool? = nil
   var controlsID: String? = nil
   var submitName: String? = nil
   var submitValue: String? = nil
@@ -293,6 +294,13 @@ public struct ButtonView: HTMLContent {
   public func ariaExpanded(_ value: Bool) -> Self {
     var copy = self
     copy.expanded = value
+    return copy
+  }
+
+  /// The standard `aria-pressed` attribute: whether a toggle button is on.
+  public func ariaPressed(_ value: Bool) -> Self {
+    var copy = self
+    copy.pressed = value
     return copy
   }
 
@@ -2000,6 +2008,10 @@ public struct ButtonView: HTMLContent {
 
       if let expanded {
         bBtn = bBtn.ariaExpanded(expanded)
+      }
+
+      if let pressed {
+        bBtn = bBtn.ariaPressed(pressed)
       }
 
       if let controlsID {
