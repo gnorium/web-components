@@ -352,7 +352,9 @@
         // facsimile as a figure's is, with its letter drawn over it
         // transparent, so the letter stays the word's text (selected, found,
         // copied, read aloud) while the page's own initial is what shows.
-        if let zone = run.zone, let region = TEIRenderer.regionURL(ofFacsimile: facsimileURL, zone: zone) {
+        // Asked at twice the 96px it is drawn at, never more: an image service
+        // on IIIF Image API 3 refuses to enlarge a small region (HTTP 400).
+        if let zone = run.zone, let region = TEIRenderer.regionURL(ofFacsimile: facsimileURL, zone: zone, fitting: 192) {
           return span {
             img().src(region).alt("").loading(.lazy).class("tei-figure-image tei-initial-image")
             span { run.text }.class("tei-initial-letter")
@@ -374,7 +376,23 @@
     /// A formula drawn as the browser draws MathML (MathML Core): each
     /// symbol it prints is a word of the page, opened as a printed word is.
     private func mathContent(_ formula: TEIMath, facsimileURL: String, tabStop: TEIWordPlace?) -> DOM.Node {
-      TEIMathView(formula) { runs in markedContent(runs, facsimileURL: facsimileURL, tabStop: tabStop) }.build()
+      TEIMathView(formula) { runs in
+        // A symbol is one word: the token element itself is the word (and
+        // its highlight), its text its own, so an operator keeps MathML's
+        // spacing for it. A token of several words (an <mtext>) marks each.
+        if runs.allSatisfy({ $0.word == nil && $0.highlight == nil }) { return TEIMathView.text(runs) }
+        guard let word = runs.first?.word, runs.allSatisfy({ $0.word == word && $0.highlight == runs.first?.highlight })
+        else {
+          return TEIMathView.Token(content: markedContent(runs, facsimileURL: facsimileURL, tabStop: tabStop))
+        }
+        var attributes: [(String, String)] = [
+          ("class", runs.first?.highlight == nil ? "tei-word" : "tei-word tei-highlight"), ("role", "button"),
+          ("tabindex", word == tabStop ? "0" : "-1"), ("aria-haspopup", "dialog"),
+          ("data-line", "\(word.line)"), ("data-word", "\(word.word)"),
+        ]
+        if let highlight = runs.first?.highlight { attributes.append(("data-highlight", highlight.rawValue)) }
+        return TEIMathView.Token(attributes: attributes, content: [DOM.Text(runs.map(\.text).joined())])
+      }.build()
     }
 
     /// A page's first word, where its words can be opened: the one stop

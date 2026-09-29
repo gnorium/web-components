@@ -16,17 +16,31 @@
   /// text is, its reason in brackets, "[illegible]": a statement that there
   /// is no symbol, not one.
   public struct TEIMathView: HTMLContent {
-    let formula: TEIMath
-    let tokens: @Sendable ([TEILine.Run]) -> [DOM.Node]
+    /// How a token element is drawn: attributes of its own, and its content.
+    public struct Token {
+      public let attributes: [(String, String)]
+      public let content: [DOM.Node]
 
-    /// `tokens` draws a token's runs; by default, their text.
-    public init(_ formula: TEIMath, tokens: @escaping @Sendable ([TEILine.Run]) -> [DOM.Node] = TEIMathView.text) {
+      public init(attributes: [(String, String)] = [], content: [DOM.Node]) {
+        self.attributes = attributes
+        self.content = content
+      }
+    }
+
+    let formula: TEIMath
+    let tokens: @Sendable ([TEILine.Run]) -> Token
+
+    /// `tokens` draws a token's runs; by default, their text. An operator's
+    /// text should stay the `<mo>`'s own text: MathML Core finds its spacing
+    /// (a fence's none, a relation's thick space) by that text, and an
+    /// element around it loses it ("sin ( x )").
+    public init(_ formula: TEIMath, tokens: @escaping @Sendable ([TEILine.Run]) -> Token = TEIMathView.text) {
       self.formula = formula
       self.tokens = tokens
     }
 
-    public static func text(_ runs: [TEILine.Run]) -> [DOM.Node] {
-      runs.map { DOM.Text($0.text) }
+    public static func text(_ runs: [TEILine.Run]) -> Token {
+      Token(content: [DOM.Text(runs.map(\.text).joined())])
     }
 
     public func build() -> DOM.Node {
@@ -37,8 +51,9 @@
             for child in children { drawn(child) }
           }
         case .token(let name, let attributes, let runs):
-          return MathML.MathMLElement(name, attributes: attributes.map { ($0.name, $0.value) }) {
-            tokens(runs)
+          let token = tokens(runs)
+          return MathML.MathMLElement(name, attributes: attributes.map { ($0.name, $0.value) } + token.attributes) {
+            token.content
           }
         case .gap(let reason):
           return MathML.MathMLElement("mtext", attributes: [("class", "tei-math-view-gap")]) {
