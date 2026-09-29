@@ -155,6 +155,17 @@
             border(.none)
             minWidth(0)
           }
+          // A fieldset's rendered legend sits in its border, outside the
+          // flex layout, so the gap never reached it and the label hugged
+          // its control. A floated legend is not the rendered legend (HTML
+          // "The fieldset and legend elements" rendering): it is an ordinary
+          // flex item, the gap applies, and it stays the fieldset's
+          // accessible name.
+          selector("& > legend") {
+            float(.inlineStart)
+            inlineSize(perc(100))
+            padding(0)
+          }
           selector("&[data-disabled='true']") { opacity(opacityMedium) }
           descendant(".field-input-wrapper") { display(.block) }
           descendant(".field-help-text") {
