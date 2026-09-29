@@ -41,6 +41,10 @@
     /// inside an image is marked: for pages read one after another in one
     /// column rather than paged beside their images.
     let labelsPages: Bool
+    /// A word-for-word gloss of the transcript, when it has one: a fourth
+    /// layer of each page, each word over its gloss, which the viewer's
+    /// Interlinear switch shows in the transcript's place.
+    let interlinear: Interlinear?
 
     /// A translation of the transcript, page by page, in its own language:
     /// the translation's own TEI, read by the same reader as the transcript,
@@ -69,15 +73,36 @@
       }
     }
 
+    /// A word-for-word gloss of the transcript in another language: each
+    /// word, as an utterance's anchor counts it (its line and its place
+    /// among the words starting on that line, `TEIRenderer.words(of:)`), with
+    /// the word its gloss language has for it, "—" where there is none.
+    public struct Interlinear: Sendable {
+      /// The glosses' language, as a BCP 47 tag names it.
+      public let language: String
+      /// Each page's glosses, by the image service it reads; each word's by
+      /// its place (`key(line:word:)`).
+      public let glosses: [String: [String: String]]
+
+      public init(language: String, glosses: [String: [String: String]]) {
+        self.language = language
+        self.glosses = glosses
+      }
+
+      /// A word's place on its page, as the glosses are keyed: "3:2".
+      public static func key(line: Int, word: Int) -> String { "\(line):\(word)" }
+    }
+
     public init(
       teiXml: String, editable: Bool = false, translation: Translation? = nil,
-      highlights: [String: [TEIHighlight]] = [:], labelsPages: Bool = false
+      highlights: [String: [TEIHighlight]] = [:], labelsPages: Bool = false, interlinear: Interlinear? = nil
     ) {
       self.teiXml = teiXml
       self.editable = editable
       self.translation = translation
       self.highlights = highlights
       self.labelsPages = labelsPages
+      self.interlinear = interlinear
     }
 
     public var pages: [TEIPage] { TEIRenderer.pages(in: teiXml, highlights: highlights) }
@@ -481,6 +506,45 @@
               .lang(translation.language)
               .dir("auto")
             }
+
+            // The words of the transcript, each over its gloss, line by line
+            // as an anchor counts them.
+            if let interlinear {
+              let glosses = interlinear.glosses[Self.serviceID(ofFacsimile: page.facsimileURL)] ?? [:]
+              let words = TEIRenderer.words(of: page)
+              let lines = words.reduce(into: [[TEIWordPosition]]()) { lines, word in
+                if let last = lines.last?.last, last.line == word.line {
+                  lines[lines.count - 1].append(word)
+                } else {
+                  lines.append([word])
+                }
+              }
+              div {
+                if lines.isEmpty {
+                  span { "—" }
+                    .class("tei-line")
+                }
+                for line in lines {
+                  div {
+                    for word in line {
+                      span {
+                        span { word.surface }
+                          .class("tei-interlinear-surface")
+                          .dir("auto")
+                        span { glosses[Interlinear.key(line: word.line, word: word.word)] ?? "—" }
+                          .class("tei-interlinear-gloss")
+                          .lang(interlinear.language)
+                          .dir("auto")
+                      }
+                      .class("tei-interlinear-word")
+                    }
+                  }
+                  .class("tei-interlinear-line")
+                }
+              }
+              .class("tei-page-interlinear")
+              .data("transcript-layer", "interlinear")
+            }
           }
           .class("tei-transcript")
           .id("tei-transcript-\(index)")
@@ -777,6 +841,33 @@
           flexDirection(.column)
           gap(spacing12)
           minWidth(0)
+        }
+        // The gloss takes the transcript's place too, under the viewer's
+        // Interlinear switch: each line's words side by side, wrapping, each
+        // word over its gloss.
+        descendant(".tei-page-interlinear") {
+          display(.none)
+          flexDirection(.column)
+          gap(spacing12)
+          minWidth(0)
+        }
+        descendant(".tei-interlinear-line") {
+          display(.flex)
+          flexWrap(.wrap)
+          columnGap(spacing12)
+          rowGap(spacing8)
+          minWidth(0)
+        }
+        descendant(".tei-interlinear-word") {
+          display(.inlineFlex)
+          flexDirection(.column)
+          gap(spacing2)
+          minWidth(0)
+        }
+        descendant(".tei-interlinear-gloss") {
+          fontFamily(typographyFontSans)
+          fontSize(fontSizeXSmall12)
+          color(colorSubtle)
         }
         descendant(".tei-page-translation-note") {
           fontFamily(typographyFontSans)
