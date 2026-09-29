@@ -439,7 +439,10 @@
           }.class("tei-table")
         }.class("tei-table-scroll").build()
       case .text:
-        return span { inlineContent(line, tabStop: tabStop) }.class("tei-line").data("rend", line.rend).build()
+        // Whether the break before it falls inside a word (`<lb
+        // break="no"/>`): a reader's find reads the two lines as one word.
+        return span { inlineContent(line, tabStop: tabStop) }.class("tei-line").data("rend", line.rend)
+          .data("joins-previous", line.joinsPrevious).build()
       }
     }
 
