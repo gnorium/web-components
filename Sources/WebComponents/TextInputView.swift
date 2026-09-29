@@ -260,8 +260,13 @@ public struct TextInputView: HTMLContent {
     }
 
     return container.style {
+      // The label row and the box in a column, 8px apart as every field's
+      // label and control (FieldView, DropdownView, ComboboxView): the gap,
+      // never a margin on the label.
       selector("&") {
-        display(.inlineBlock)
+        display(.inlineFlex)
+        flexDirection(.column)
+        gap(spacing8)
       }
       selector("&.text-input-full-width") { width(perc(100)) }
       descendant(".text-input-control") { position(.relative) }
@@ -381,7 +386,6 @@ public struct TextInputView: HTMLContent {
         fontSize(fontSizeSmall14)
         fontWeight(600)
         color(colorBase)
-        marginBlockEnd(spacing4)
         fontFamily(typographyFontSans)
       }
     }

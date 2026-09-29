@@ -245,7 +245,6 @@ public struct TextAreaView: HTMLContent {
           fontSize(fontSizeSmall14)
           fontWeight(600)
           color(colorBase)
-          marginBlockEnd(spacing4)
           fontFamily(typographyFontSans)
         }
         // An aside affixed to the label, not label text: LabelView's
@@ -256,6 +255,19 @@ public struct TextAreaView: HTMLContent {
         }
       }
       styledContainer
+    }
+    .class("text-area-field")
+    .style {
+      // The label row and the box in a column, 8px apart as every field's
+      // label and control (FieldView, DropdownView, TextInputView): the gap,
+      // never a margin on the label. Start-aligned, so a box that is not
+      // full width keeps its own width.
+      selector("&") {
+        display(.flex)
+        flexDirection(.column)
+        alignItems(.flexStart)
+        gap(spacing8)
+      }
     }
   }
 }
