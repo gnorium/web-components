@@ -516,6 +516,7 @@ public struct DropdownView: HTMLContent {
         padding(spacing12)
       }
       descendant(".dropdown-option[data-hidden='true']") { display(.none) }
+      descendant(".dropdown-option[data-excluded='true']") { display(.none) }
       descendant(".dropdown-option[data-selected='true']") {
         backgroundColor(backgroundColorBlue).important()
         color(colorInvertedFixed).important()
@@ -812,6 +813,7 @@ public struct DropdownView: HTMLContent {
     }
 
     private func openDropdown() {
+      applyExclusions()
       isOpen = true
       menu?.setAttribute(data("open"), true)
       _ = container?.classList.add("is-open")
@@ -927,6 +929,7 @@ public struct DropdownView: HTMLContent {
       optionsList?.setAttribute(.hidden, "")
       results.removeAttribute(.hidden)
       allOptions = options
+      applyExclusions()
       highlightIndex = -1
     }
 
@@ -934,6 +937,23 @@ public struct DropdownView: HTMLContent {
       resultsList?.setAttribute(.hidden, "")
       optionsList?.removeAttribute(.hidden)
       allOptions = ownOptions
+      applyExclusions()
+    }
+
+    /// Marks the options the page withholds: values a page sets on the
+    /// root as `data-excluded-values` (comma-separated) while it runs — an
+    /// origin step's record, which another step already names. Such an
+    /// option, its own or a search's, is neither shown nor reached by the
+    /// keyboard; read afresh each time the menu shows.
+    private func applyExclusions() {
+      let listed = container?.closest(".dropdown-view")?.getAttribute(data("excluded-values")) ?? ""
+      let excluded = stringIsEmpty(listed) ? [] : stringSplit(listed, separator: ",")
+      for option in allOptions {
+        let value = option.getAttribute(data("value")) ?? ""
+        var out = false
+        for other in excluded where stringEquals(other, value) { out = true }
+        option.setAttribute(data("excluded"), out)
+      }
     }
 
     private func selectOption(_ option: DOM.Element) {
@@ -1008,7 +1028,9 @@ public struct DropdownView: HTMLContent {
       while steps < allOptions.count {
         highlightIndex = ((highlightIndex + delta) % allOptions.count + allOptions.count) % allOptions.count
         steps += 1
-        if !stringEquals(allOptions[highlightIndex].getAttribute(data("hidden")) ?? "", "true") {
+        if !stringEquals(allOptions[highlightIndex].getAttribute(data("hidden")) ?? "", "true")
+          && !stringEquals(allOptions[highlightIndex].getAttribute(data("excluded")) ?? "", "true")
+        {
           break
         }
       }

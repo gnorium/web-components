@@ -200,22 +200,26 @@
         // Col 3: + button (row 0) or − button spanning cols 3+4 (other rows)
         if isFirst {
           ButtonView(
-            label: "+",
+            label: "",
+            icon: IconView { AddIconView() },
             buttonColor: .gray,
             weight: .subtle,
             size: .medium,
             disabled: addExhausted,
             type: .button,
+            ariaLabel: "Add filter",
             class: "filter-bar-add-btn",
             labelFontWeight: fontWeightSemiBold
           )
         } else {
           ButtonView(
-            label: "−",
+            label: "",
+            icon: IconView { SubtractIconView() },
             buttonColor: .gray,
             weight: .subtle,
             size: .medium,
             type: .button,
+            ariaLabel: "Remove filter",
             class: "filter-bar-remove-btn",
             labelFontWeight: fontWeightSemiBold
           )
@@ -597,11 +601,13 @@
 
       // Col 3–4: remove button spanning both cols
       let btn = ButtonViewFactory.createElement(
-        label: "−",
+        label: "",
+        icon: IconView { SubtractIconView() },
         buttonColor: .gray,
         weight: .subtle,
         size: .medium,
         type: .button,
+        ariaLabel: "Remove filter",
         class: "filter-bar-remove-btn"
       )
       row.appendChild(btn)

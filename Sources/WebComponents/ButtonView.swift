@@ -2079,5 +2079,33 @@ public struct ButtonView: HTMLContent {
       wrapper.innerHTML = view.render()
       return wrapper.firstElementChild ?? wrapper
     }
+
+    /// A button with an icon before its label, or the icon alone when the
+    /// label is empty (then `ariaLabel` names it): a filter row's −.
+    public static func createElement<T: HTMLContent>(
+      label: String,
+      icon: T,
+      buttonColor: ButtonView.ButtonColor = .gray,
+      weight: ButtonView.ButtonWeight = .subtle,
+      size: ButtonView.ButtonSize = .medium,
+      type: ButtonView.ButtonType = .button,
+      ariaLabel: String? = nil,
+      class: String = ""
+    ) -> DOM.Element {
+      let wrapper = document.createElement(.div)
+      let view = ButtonView(
+        label: label,
+        icon: icon,
+        buttonColor: buttonColor,
+        weight: weight,
+        size: size,
+        type: type,
+        ariaLabel: ariaLabel,
+        class: `class`,
+        labelFontWeight: fontWeightSemiBold
+      )
+      wrapper.innerHTML = view.render()
+      return wrapper.firstElementChild ?? wrapper
+    }
   }
 #endif

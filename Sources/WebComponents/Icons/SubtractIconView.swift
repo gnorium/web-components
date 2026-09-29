@@ -6,10 +6,10 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-/// Codex `add` icon: the + of a control that adds or creates ("Add genre",
-/// a filter bar's first row). Available on SERVER + CLIENT (the client
-/// builds form rows and filter rows with it).
-public struct AddIconView: HTMLContent {
+/// Codex `subtract` icon: the − of a control that subtracts an item from a
+/// list ("Remove genre", a filter bar's later rows). Available on SERVER +
+/// CLIENT (the client builds form rows and filter rows with it).
+public struct SubtractIconView: HTMLContent {
   let width: CSS.Length
   let height: CSS.Length
   let `class`: String
@@ -27,9 +27,9 @@ public struct AddIconView: HTMLContent {
   public func build() -> DOM.Node {
     svg {
       path()
-        .d(M(11, 9), V(4), H(9), v(5), H(4), v(2), h(5), v(5), h(2), v(-5), h(5), V(9), Z())
+        .d(M(4, 9), h(12), v(2), H(4), Z())
     }
-    .class(stringIsEmpty(`class`) ? "add-icon-view" : "add-icon-view \(`class`)")
+    .class(stringIsEmpty(`class`) ? "subtract-icon-view" : "subtract-icon-view \(`class`)")
     .width(width)
     .height(height)
     .viewBox(0, 0, 20, 20)
