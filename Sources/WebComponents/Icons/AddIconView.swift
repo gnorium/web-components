@@ -37,3 +37,13 @@ public struct AddIconView: HTMLContent {
     .fill(.currentColor)
   }
 }
+
+extension IconView {
+  /// The add icon as a medium button wears it before its words, or alone
+  /// in a compact bar: the size of the button's text (`sizeIconSmall`, as
+  /// ButtonView sizes a medium button's icon), so "+ Add genre" reads like
+  /// its words.
+  public static var add: IconView {
+    IconView(icon: { size in AddIconView(width: size, height: size) }, size: .small)
+  }
+}

@@ -37,3 +37,13 @@ public struct SubtractIconView: HTMLContent {
     .fill(.currentColor)
   }
 }
+
+extension IconView {
+  /// The subtract icon as a medium button wears it before its words, or alone
+  /// in a compact bar: the size of the button's text (`sizeIconSmall`, as
+  /// ButtonView sizes a medium button's icon), so "+ Add genre" reads like
+  /// its words.
+  public static var subtract: IconView {
+    IconView(icon: { size in SubtractIconView(width: size, height: size) }, size: .small)
+  }
+}

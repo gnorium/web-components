@@ -201,7 +201,7 @@
         if isFirst {
           ButtonView(
             label: "",
-            icon: IconView { AddIconView() },
+            icon: IconView.add,
             buttonColor: .gray,
             weight: .subtle,
             size: .medium,
@@ -214,7 +214,7 @@
         } else {
           ButtonView(
             label: "",
-            icon: IconView { SubtractIconView() },
+            icon: IconView.subtract,
             buttonColor: .gray,
             weight: .subtle,
             size: .medium,
@@ -602,7 +602,7 @@
       // Col 3–4: remove button spanning both cols
       let btn = ButtonViewFactory.createElement(
         label: "",
-        icon: IconView { SubtractIconView() },
+        icon: IconView.subtract,
         buttonColor: .gray,
         weight: .subtle,
         size: .medium,

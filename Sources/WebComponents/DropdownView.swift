@@ -88,6 +88,13 @@ public struct DropdownView: HTMLContent {
   /// leaves out ("Showing the first 50. Type to narrow the list."). A
   /// remote search's answer brings its own.
   let note: String?
+  /// Whether several options may be chosen at once (an origin step's
+  /// relations): a click toggles an option and the menu stays open, the
+  /// closed dropdown shows the chosen ones' names in the order chosen
+  /// ("Translation, Abridgment"), and the value input holds their values
+  /// comma-separated. `selectedValues` are the chosen ones then.
+  let multiple: Bool
+  let selectedValues: [String]
 
   public init(
     id: String,
@@ -115,7 +122,9 @@ public struct DropdownView: HTMLContent {
     submitFormOnChange: Bool = false,
     form: String? = nil,
     searchURL: String? = nil,
-    note: String? = nil
+    note: String? = nil,
+    multiple: Bool = false,
+    selectedValues: [String] = []
   ) {
     self.id = id
     self.name = name
@@ -143,6 +152,18 @@ public struct DropdownView: HTMLContent {
     self.optionalFlag = optionalFlag
     self.labelMarks = labelMarks
     self.note = note
+    self.multiple = multiple
+    self.selectedValues = selectedValues
+  }
+
+  /// Whether `value` is chosen: one of `selectedValues` when several may
+  /// be, else `selectedValue`.
+  private func isChosen(_ value: String) -> Bool {
+    if multiple {
+      for chosen in selectedValues where stringEquals(chosen, value) { return true }
+      return false
+    }
+    return stringEquals(value, selectedValue ?? "")
   }
 
   public func build() -> DOM.Node {
@@ -181,16 +202,29 @@ public struct DropdownView: HTMLContent {
           .type(.hidden)
           .id(id)
           .name(name)
-          .value(selectedValue ?? "")
+          .value(multiple ? stringJoin(selectedValues, separator: ",") : (selectedValue ?? ""))
           .required(required)
           .disabled(disabled)
         if let form { hidden.form(form) } else { hidden }
 
         // Determine display text - use selected option's display or placeholder
-        let selectedOption: DropdownOption? = selectedValue.flatMap { value in
-          options.first(where: { stringEquals($0.value, value) })
+        let selectedOption: DropdownOption? =
+          multiple
+          ? nil
+          : selectedValue.flatMap { value in
+            options.first(where: { stringEquals($0.value, value) })
+          }
+        // Several chosen: their names in the order chosen.
+        var chosenNames: [String] = []
+        if multiple {
+          for value in selectedValues {
+            if let option = options.first(where: { stringEquals($0.value, value) }) { chosenNames.append(option.display) }
+          }
         }
-        let displayText = selectedOption?.display ?? placeholder
+        let displayText =
+          multiple
+          ? (chosenNames.isEmpty ? placeholder : stringJoin(chosenNames, separator: ", "))
+          : (selectedOption?.display ?? placeholder)
         // Trigger button
         div {
           ButtonView(
@@ -217,7 +251,11 @@ public struct DropdownView: HTMLContent {
             // (`fadeOverflow`); the open list shows it whole.
             .data("edge-fade", true)
               .data("placeholder", placeholder)
-              .data("selected", selectedValue.map { value in options.contains { stringEquals($0.value, value) } } ?? false)
+              .data(
+                "selected",
+                multiple
+                  ? !chosenNames.isEmpty
+                  : (selectedValue.map { value in options.contains { stringEquals($0.value, value) } } ?? false))
               .data("disabled", disabled)
               .data("stacked", optionLayout == .stacked)
               .title(options.first { stringEquals($0.value, selectedValue ?? "") }?.altDisplay ?? displayText)
@@ -265,7 +303,7 @@ public struct DropdownView: HTMLContent {
           // Options list
           div {
             options.map { option in
-              let isSelected = stringEquals(option.value, selectedValue ?? "")
+              let isSelected = isChosen(option.value)
               return div {
                 span {
                   if let context = option.context {
@@ -316,6 +354,7 @@ public struct DropdownView: HTMLContent {
     .data("submit-form-on-change", submitFormOnChange ? "true" : "false")
     .data("full-width", fullWidth ? "true" : "false")
     .data("search-url", searchURL ?? "")
+    .data("multiple", multiple)
     .style {
       selector("&") {
         display(.flex)
@@ -638,6 +677,8 @@ public struct DropdownView: HTMLContent {
     /// The search answer's note, after its options.
     private var resultNote: DOM.Element?
     private var searchURL: String = ""
+    /// Whether several options may be chosen (`DropdownView.multiple`).
+    private var multiple = false
     private var searchTimer: Int32 = 0
     /// Which query is the latest: an answer overtaken by a later one is
     /// dropped.
@@ -678,6 +719,7 @@ public struct DropdownView: HTMLContent {
       }
       ownOptions = allOptions
       searchURL = container.closest(".dropdown-view")?.getAttribute(data("search-url")) ?? ""
+      multiple = stringEquals(container.closest(".dropdown-view")?.getAttribute(data("multiple")) ?? "", "true")
 
       bindEvents()
     }
@@ -906,10 +948,9 @@ public struct DropdownView: HTMLContent {
       for old in resultOptions { results.removeChild(old) }
       if let resultNote { results.removeChild(resultNote) }
       resultNote = nil
-      let value = (hiddenInput as? HTML.HTMLInputElement)?.value ?? ""
       var options: [DOM.Element] = []
       for option in answer.querySelectorAll("[data-dropdown-option=\"true\"]") {
-        let selected = !stringIsEmpty(value) && stringEquals(option.getAttribute(data("value")) ?? "", value)
+        let selected = isChosen(option.getAttribute(data("value")) ?? "")
         if selected {
           _ = option.classList.add("is-selected")
         } else {
@@ -956,7 +997,61 @@ public struct DropdownView: HTMLContent {
       }
     }
 
+    /// The chosen values: the value input's, comma-separated when several
+    /// may be chosen.
+    private func chosenValues() -> [String] {
+      let value = (hiddenInput as? HTML.HTMLInputElement)?.value ?? ""
+      if stringIsEmpty(value) { return [] }
+      return multiple ? stringSplit(value, separator: ",") : [value]
+    }
+
+    private func isChosen(_ value: String) -> Bool {
+      if stringIsEmpty(value) { return false }
+      for chosen in chosenValues() where stringEquals(chosen, value) { return true }
+      return false
+    }
+
+    /// Several may be chosen: the option toggled in or out, the names shown
+    /// in the order chosen, the menu kept open.
+    private func toggleOption(_ option: DOM.Element) {
+      guard let value = option.getAttribute(data("value")) else { return }
+      var values: [String] = []
+      var removed = false
+      for chosen in chosenValues() {
+        if stringEquals(chosen, value) { removed = true } else { values.append(chosen) }
+      }
+      if !removed { values.append(value) }
+      (hiddenInput as? HTML.HTMLInputElement)?.value = stringJoin(values, separator: ",")
+      if let container {
+        (container.closest(".dropdown-view") ?? container).removeAttribute("data-invalid")
+      }
+      var names: [String] = []
+      for chosen in values {
+        for opt in ownOptions + resultOptions where stringEquals(opt.getAttribute(data("value")) ?? "", chosen) {
+          names.append(opt.getAttribute(data("display")) ?? chosen)
+          break
+        }
+      }
+      let shown = stringJoin(names, separator: ", ")
+      selectedText?.innerHTML = values.isEmpty ? placeholder : shown
+      if values.isEmpty { selectedText?.removeAttribute(.title) } else { selectedText?.setAttribute(.title, shown) }
+      selectedText?.setAttribute(data("selected"), !values.isEmpty)
+      selectedText?.scrollLeft = 0
+      for opt in ownOptions + resultOptions {
+        let chosen = isChosen(opt.getAttribute(data("value")) ?? "")
+        if chosen { _ = opt.classList.add("is-selected") } else { _ = opt.classList.remove("is-selected") }
+        opt.setAttribute(data("selected"), chosen)
+      }
+      if let hiddenInput {
+        hiddenInput.dispatchEvent(.change)
+      }
+    }
+
     private func selectOption(_ option: DOM.Element) {
+      if multiple {
+        toggleOption(option)
+        return
+      }
       guard let value = option.getAttribute(data("value")),
         let display = option.getAttribute(data("display"))
       else { return }
