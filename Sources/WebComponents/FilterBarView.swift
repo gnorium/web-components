@@ -82,7 +82,8 @@
 
   // MARK: - Server view
 
-  /// Smart filter bar: dynamic add/remove filter rows, Apply on row 1.
+  /// Smart filter bar: dynamic add/remove filter rows, Apply on row 1, in a
+  /// `QueryCardView`.
   ///
   /// Layout (CSS grid, display:contents on rows):
   ///   Col 1: field picker  Col 2: value  Col 3: +/–  Col 4: Apply (row 1) or placeholder
@@ -140,7 +141,7 @@
       let addExhausted = rows.count >= schema.count && !schema.contains(where: \.repeatable)
       let schemaJSON = buildSchemaJSON()
 
-      return form {
+      return QueryCardView(action: action, class: `class`.isEmpty ? "filter-bar-view" : "filter-bar-view \(`class`)") {
         for hidden in hiddenFields {
           input()
             .type(.hidden)
@@ -182,21 +183,7 @@
           }
         }
       }
-      .action(action)
-      .method(.get)
-      .class("filter-bar-view \(`class`)")
-      .style {
-        selector("&") {
-          display(.flex)
-          flexDirection(.column)
-          gap(spacing12)
-          padding(spacing12, spacing16)
-          border(borderWidthBase, .solid, borderColorBase)
-          borderRadius(borderRadiusBase)
-          backgroundColor(backgroundColorNeutralSubtle)
-          width(perc(100))
-        }
-      }
+      .build()
     }
 
     @HTMLBuilder
