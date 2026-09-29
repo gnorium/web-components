@@ -889,10 +889,17 @@
         }
         // A word that opens its details: the printed page's own type, the
         // accent color only under the pointer, on keyboard focus and while
-        // its details are open (user, 2026-09-29).
+        // its details are open (user, 2026-09-29). The focus ring every
+        // control has, from the keyboard only (:focus-visible), never for a
+        // click or a tap.
         descendant(".tei-word") {
           cursor(.pointer)
+          borderRadius(borderRadiusMinimal)
           outline(.none)
+        }
+        selector("& .tei-word:focus-visible") {
+          outline(borderWidthThick, .solid, borderColorBlueFocus)
+          outlineOffset(borderWidthBase)
         }
         selector("& .tei-word:hover", "& .tei-word:focus-visible", "& .tei-word[aria-expanded='true']") {
           color(colorBlue)
