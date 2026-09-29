@@ -9,6 +9,7 @@ import WebTypes
 
 #if SERVER
   import Foundation
+  import XMLUtilities
 #endif
 
 /// What changed, under the thing that changed: a field's old value against
@@ -284,12 +285,15 @@ public struct DiffView: HTMLContent {
                     }
                   }
                 case .formula:
-                  // A formula is compared whole, and colored whole.
-                  if own.contains(true) {
-                    span { TeXView(token.text) }
-                      .class("diff-view-changed")
-                  } else {
-                    TeXView(token.text)
+                  // A formula is compared whole (its MathML, `TEIMath.markup`),
+                  // drawn as the page draws it, and colored whole.
+                  if let formula = TEIRenderer.math(markup: token.text) {
+                    if own.contains(true) {
+                      span { TEIMathView(formula) }
+                        .class("diff-view-changed")
+                    } else {
+                      TEIMathView(formula)
+                    }
                   }
                 case .figure:
                   span {

@@ -157,8 +157,9 @@
         for (index, run) in line.runs.enumerated() {
           switch run.kind {
           case .math(let formula):
-            // A formula compares as the TeX it was written in.
-            tokens.append(.init(kind: .formula, text: formula.source, style: style(run.rend)))
+            // A formula compares as the MathML it draws: two that draw alike
+            // compare alike, however their TeX was written.
+            tokens.append(.init(kind: .formula, text: formula.markup, style: style(run.rend)))
           case .text:
             var text = spaced(run.text)
             if index == 0 { text = String(text.drop(while: \.isWhitespace)) }
@@ -174,10 +175,10 @@
       var out: [DiffEngine.RenderedLine] = []
       for line in lines {
         switch line.kind {
-        case .figure(_, let bbox):
+        case .figure(_, let zone):
           out.append(
             .init(
-              tokens: [.init(kind: .figure, text: line.text, style: bbox.isEmpty ? [] : ["region \(bbox)"])],
+              tokens: [.init(kind: .figure, text: line.text, style: zone.map { ["region \($0.corners)"] } ?? [])],
               opensBlock: true, role: role(line.kind)))
         case .gap(let reason):
           out.append(.init(tokens: [.init(text: "[\(reason.isEmpty ? "gap" : reason)]")], role: role(line.kind)))
@@ -351,7 +352,7 @@
         // facsimile as a figure's is, with its letter drawn over it
         // transparent, so the letter stays the word's text (selected, found,
         // copied, read aloud) while the page's own initial is what shows.
-        if !run.bbox.isEmpty, let region = TEIRenderer.regionURL(ofFacsimile: facsimileURL, bbox: run.bbox) {
+        if let zone = run.zone, let region = TEIRenderer.regionURL(ofFacsimile: facsimileURL, zone: zone) {
           return span {
             img().src(region).alt("").loading(.lazy).class("tei-figure-image tei-initial-image")
             span { run.text }.class("tei-initial-letter")
@@ -373,23 +374,7 @@
     /// A formula drawn as the browser draws MathML (MathML Core): each
     /// symbol it prints is a word of the page, opened as a printed word is.
     private func mathContent(_ formula: TEIMath, facsimileURL: String, tabStop: TEIWordPlace?) -> DOM.Node {
-      func drawn(_ node: TEIMath.Node) -> DOM.Node {
-        switch node {
-        case .element(let name, let attributes, let children):
-          return MathML.MathMLElement(name, attributes: attributes.map { ($0.name, $0.value) }) {
-            for child in children { drawn(child) }
-          }
-        case .token(let name, let attributes, let runs):
-          return MathML.MathMLElement(name, attributes: attributes.map { ($0.name, $0.value) }) {
-            markedContent(runs, facsimileURL: facsimileURL, tabStop: tabStop)
-          }
-        }
-      }
-      return MathML.MathMLElement(
-        "math", attributes: [("class", "tei-math"), ("display", formula.display ? "block" : "inline")]
-      ) {
-        for node in formula.content { drawn(node) }
-      }
+      TEIMathView(formula) { runs in markedContent(runs, facsimileURL: facsimileURL, tabStop: tabStop) }.build()
     }
 
     /// A page's first word, where its words can be opened: the one stop
@@ -438,8 +423,8 @@
         return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class(
           "tei-line tei-line-forme tei-line-forme-\(role.rawValue)"
         ).data("rend", line.rend).build()
-      case .figure(let type, let bbox):
-        guard let region = TEIRenderer.regionURL(ofFacsimile: facsimileURL, bbox: bbox) else {
+      case .figure(let type, let zone):
+        guard let zone, let region = TEIRenderer.regionURL(ofFacsimile: facsimileURL, zone: zone) else {
           return DOM.Node.fragment([])
         }
         return figure {
@@ -490,6 +475,9 @@
 
     public func build() -> DOM.Node {
       let pages = self.pages
+      // Record pages register an empty reader before fetching its contents:
+      // formula styles are registered then, even with no formula yet.
+      _ = TEIMathView(TEIMath(display: false, content: [])).build()
       return div {
         if pages.isEmpty {
           p { "This document has no page breaks to read by. The raw XML is below." }
@@ -963,12 +951,6 @@
         }
         selector("& .tei-word:hover", "& .tei-word:focus-visible", "& .tei-word[aria-expanded='true']") {
           color(colorBlue)
-        }
-        // A formula set on its own line scrolls within the page's width
-        // rather than widening it.
-        selector("& .tei-math[display='block']") {
-          maxWidth(perc(100))
-          overflowX(.auto)
         }
         selector(".tei-view-empty") {
           fontFamily(typographyFontSans)
