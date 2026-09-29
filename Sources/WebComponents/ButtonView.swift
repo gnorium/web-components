@@ -32,6 +32,8 @@ public struct ButtonView: HTMLContent {
   var popoverTargetID: String? = nil
   var expanded: Bool? = nil
   var controlsID: String? = nil
+  var submitName: String? = nil
+  var submitValue: String? = nil
 
   /// Button type attribute
   public enum ButtonType: String, Sendable {
@@ -265,6 +267,16 @@ public struct ButtonView: HTMLContent {
   public func form(_ id: String) -> Self {
     var copy = self
     copy.formID = id
+    return copy
+  }
+
+  /// The standard `name` and `value` attributes of a submit button: the
+  /// pair it adds to its form's data, where the form's other fields are,
+  /// when it is the button submitting. A link-button submits nothing.
+  public func submits(name: String, value: String) -> Self {
+    var copy = self
+    copy.submitName = name
+    copy.submitValue = value
     return copy
   }
 
@@ -1992,6 +2004,10 @@ public struct ButtonView: HTMLContent {
 
       if let controlsID {
         bBtn = bBtn.ariaControls(controlsID)
+      }
+
+      if let submitName, let submitValue {
+        bBtn = bBtn.addingAttribute("name", submitName).addingAttribute("value", submitValue)
       }
 
       return bBtn

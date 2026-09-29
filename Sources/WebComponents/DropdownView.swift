@@ -490,12 +490,16 @@ public struct DropdownView: HTMLContent {
         }
       }
       // In the open list an option wraps to as many lines as it needs: a
-      // tap chooses it, nothing is cut or faded.
+      // tap chooses it, nothing is cut or faded. It wraps between words
+      // only, and only when the viewport is narrower than it (the menu is
+      // as wide as its longest option): "anywhere" broke "transform/ation"
+      // in a menu as narrow as its trigger. A word wider than the viewport
+      // itself is the one that breaks.
       descendant(".dropdown-option-display-text") {
         flex(1)
         minWidth(0)
         whiteSpace(.normal)
-        overflowWrap(.anywhere)
+        overflowWrap(.breakWord)
       }
       // A grouped list: each head a choice of its own, set in semibold, its
       // options indented under it.
@@ -562,13 +566,20 @@ public struct DropdownView: HTMLContent {
         position(.absolute)
         top(perc(100))
         insetInlineStart(0)
+        // At least as wide as its longest option on one line (and as its
+        // trigger, or 250px beside a fixed-width trigger), never wider than
+        // the viewport's page, its gutters aside: the options wrap only
+        // when the viewport forces them to.
         if let mw = menuWidth {
           width(mw)
         } else if dropdownWidth != nil {
+          width(.maxContent)
           minWidth(px(250))
         } else {
-          insetInlineEnd(0)
+          width(.maxContent)
+          minWidth(perc(100))
         }
+        maxWidth(vw(100) - spacing16 * 2)
         marginBlockStart(spacing4)
         backgroundColor(backgroundColorBase)
         border(borderWidthBase, .solid, borderColorBase)
