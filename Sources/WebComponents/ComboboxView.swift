@@ -39,6 +39,9 @@ public struct ComboboxView: HTMLContent {
   let id: String
   let name: String
   let labelText: String
+  /// The field's name for a screen reader where no label is drawn (a
+  /// query row read as a sentence); ignored when `label` is given.
+  let ariaLabel: String?
   let optional: Bool
   let optionalFlag: String
   /// What stands after the label's text (and its "(optional)"), before its
@@ -70,6 +73,7 @@ public struct ComboboxView: HTMLContent {
     id: String,
     name: String,
     label: String = "",
+    ariaLabel: String? = nil,
     optional: Bool = false,
     optionalFlag: String = "(optional)",
     labelMarks: [DOM.Node] = [],
@@ -90,6 +94,7 @@ public struct ComboboxView: HTMLContent {
     self.id = id
     self.name = name
     self.labelText = label
+    self.ariaLabel = ariaLabel
     self.optional = optional
     self.optionalFlag = optionalFlag
     self.labelMarks = labelMarks
@@ -129,7 +134,11 @@ public struct ComboboxView: HTMLContent {
       ("spellcheck", "false"),
       ("data-combobox-input", "true"),
     ]
-    if hasLabel { attributes.append(("aria-labelledby", labelID)) }
+    if hasLabel {
+      attributes.append(("aria-labelledby", labelID))
+    } else if let ariaLabel {
+      attributes.append(("aria-label", ariaLabel))
+    }
     let hidden = input()
       .type(.hidden)
       .id(id)
@@ -201,6 +210,7 @@ public struct ComboboxView: HTMLContent {
           .class("combobox-listbox")
           .role(.listbox)
           .ariaLabelledby(hasLabel ? labelID : nil)
+          .ariaLabel(hasLabel ? nil : ariaLabel)
           .data("combobox-listbox", true)
 
           if let note {
