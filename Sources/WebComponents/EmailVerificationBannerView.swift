@@ -37,10 +37,7 @@
             .class("resend-verification-email")
 
           // Dismiss button
-          button { "✕" }
-            .type(.button)
-            .class("dismiss-verification-banner")
-            .ariaLabel("Dismiss")
+          CloseButtonView(ariaLabel: "Dismiss", class: "dismiss-verification-banner")
         }
         .class("email-verification-banner-view")
       }
@@ -85,16 +82,6 @@
         }
         descendant(".resend-verification-email:hover") { backgroundColor(backgroundColorBlueSubtle) }
         descendant(".resend-verification-email:active") { backgroundColor(backgroundColorBlueSubtleActive) }
-        descendant(".dismiss-verification-banner") {
-          padding(spacing8, spacing12)
-          backgroundColor(.transparent)
-          color(colorSubtle)
-          border(.none)
-          fontSize(fontSizeMedium16)
-          cursor(cursorBaseHover)
-          transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-        }
-        descendant(".dismiss-verification-banner:hover") { color(colorBase) }
       }
     }
   }
