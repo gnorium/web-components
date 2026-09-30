@@ -8,7 +8,8 @@
   /// The reminder, at the top of a page's content, that the signed-in
   /// account's email address is unverified: the design system's warning
   /// alert (its icon, colors and close control; dismissing it is
-  /// `AlertHydration`'s), with Resend email as the alert's own quiet action.
+  /// `AlertHydration`'s), with Resend email as the alert's own action: a button (it posts), drawn
+  /// as a link — blue text, no fill — so it doesn't sit on the alert as a pill.
   /// `EmailVerificationBannerHydration` sends the link again.
   public struct EmailVerificationBannerView: HTMLContent {
     let email: String
@@ -33,7 +34,7 @@
           .class("email-verification-banner-message")
 
           ButtonView(
-            label: "Resend email", buttonColor: .gray, weight: .quiet, size: .medium,
+            label: "Resend email", buttonColor: .blue, weight: .plain, size: .medium,
             class: "email-verification-banner-resend")
         }
         .class("email-verification-banner-content")
@@ -52,6 +53,8 @@
             minWidth(0)
             overflowWrap(.anywhere)
           }
+          // The address is emphasized as all emphasis is: semibold.
+          descendant(".email-verification-banner-message strong") { fontWeight(fontWeightSemiBold) }
         }
       }
     }

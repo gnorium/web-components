@@ -314,16 +314,15 @@ public struct TextInputView: HTMLContent {
         color(colorDisabled).important()
         customProperty("-webkit-text-fill-color", colorDisabled).important()
       }
-      selector("&:not(.text-input-disabled):not(.text-input-read-only) .text-input-input:focus") {
-        borderColor(borderColorBlueFocus).important()
-        outline(.none).important()
-        boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
-      }
-      // Focus only, like the search bar: a hover border on a field reads as a
-      // half-finished focus ring, and tells the reader nothing the cursor has
-      // not already told them.
+      // Focused, the field's ring: its border blue and a 1px outline of the
+      // same color, two pixels in all — no shadow. Focus only, like the
+      // search bar: a hover border on a field reads as a half-finished focus
+      // ring, and tells the reader nothing the cursor has not already told
+      // them.
       selector("&:not(.text-input-disabled):not(.text-input-read-only) .text-input-input:focus") {
         borderColor(borderColorBlue).important()
+        outline(borderWidthBase, .solid, borderColorBlue).important()
+        outlineOffset(px(0)).important()
       }
       selector("& .text-input-start-icon", "& .text-input-end-icon") {
         position(.absolute)
