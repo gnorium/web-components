@@ -69,7 +69,10 @@
 
   /// Resend Email on ``EmailVerificationBannerView``: the server sends a new
   /// link to the signed-in account's own address (the request names none).
-  /// The close control is the alert's own (`AlertHydration`).
+  /// The button keeps its label and is disabled only while it sends; the
+  /// outcome is an alert of its own just above the banner — green when the
+  /// link went, red when it didn't — replacing the last one. The close
+  /// control is the alert's own (`AlertHydration`).
   public class EmailVerificationBannerHydration: @unchecked Sendable {
     public static nonisolated(unsafe) var instance: EmailVerificationBannerHydration?
 
@@ -77,12 +80,14 @@
       guard let banner = document.querySelector(".email-verification-banner-view"),
         let resend = banner.querySelector(".email-verification-banner-resend")
       else { return }
-      instance = EmailVerificationBannerHydration(resend: resend)
+      instance = EmailVerificationBannerHydration(banner: banner, resend: resend)
     }
 
+    private let banner: DOM.Element
     private let resend: DOM.Element
 
-    private init(resend: DOM.Element) {
+    private init(banner: DOM.Element, resend: DOM.Element) {
+      self.banner = banner
       self.resend = resend
       _ = resend.addEventListener(.click) { [self] _ in
         self.send()
@@ -90,19 +95,40 @@
     }
 
     private func send() {
-      setLabel("Sending…", disabled: true)
+      setDisabled(true)
       window.fetch("/auth/resend-verification", method: "POST", body: "") { [self] response in
+        let slot = self.notices()
         if stringContains(response.text(), "\"success\":true") {
-          AlertAPI.showSuccess("We sent a new link. Check your inbox.")
-          self.setLabel("Email Sent", disabled: true)
+          // The address the banner names, as the server sent to it.
+          // Read with no `??`: that selects HTMLContent's nil default
+          // instead of the DOM's text (gnorium-textcontent-optional-trap).
+          var to = ""
+          if let address = self.banner.querySelector(".email-verification-banner-message strong") {
+            let email = address.textContent
+            if !stringIsEmpty(email) { to = " to \(email)" }
+          }
+          AlertAPI.showSuccess(
+            "We sent a new verification link\(to). If it isn't in your inbox in a few minutes, check your spam folder.",
+            container: slot)
         } else {
-          AlertAPI.showError("The email didn't send. Try again.")
-          self.setLabel("Resend Email", disabled: false)
+          AlertAPI.showError("The email didn't send. Try again.", container: slot)
         }
+        self.setDisabled(false)
       }
     }
 
-    private func setLabel(_ text: String, disabled: Bool) {
+    /// The slot just above the banner that the outcome's alert stands in,
+    /// emptied of the last outcome; made the first time.
+    private func notices() -> DOM.Element {
+      if let slot = document.querySelector(".email-verification-banner-notices") {
+        slot.innerHTML = ""
+        return slot
+      }
+      banner.insertAdjacentHTML(.beforebegin, "<div class=\"email-verification-banner-notices\"></div>")
+      return document.querySelector(".email-verification-banner-notices") ?? banner
+    }
+
+    private func setDisabled(_ disabled: Bool) {
       // A disabled ButtonView's own marks: `disabled` and `aria-disabled`.
       if disabled {
         _ = resend.setAttribute("disabled", "disabled")
@@ -111,7 +137,6 @@
         resend.removeAttribute("disabled")
         resend.removeAttribute("aria-disabled")
       }
-      resend.querySelector(".button-label")?.textContent = text
     }
   }
 #endif
