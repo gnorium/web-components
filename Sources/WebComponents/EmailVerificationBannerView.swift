@@ -8,8 +8,7 @@
   /// The reminder, at the top of a page's content, that the signed-in
   /// account's email address is unverified: the design system's warning
   /// alert (its icon, colors and close control; dismissing it is
-  /// `AlertHydration`'s), with Resend email as the alert's own action: a button (it posts), drawn
-  /// as a link — blue text, no fill — so it doesn't sit on the alert as a pill.
+  /// `AlertHydration`'s), with Resend Email as the alert's own action: a plain blue button.
   /// `EmailVerificationBannerHydration` sends the link again.
   public struct EmailVerificationBannerView: HTMLContent {
     let email: String
@@ -34,7 +33,7 @@
           .class("email-verification-banner-message")
 
           ButtonView(
-            label: "Resend email", buttonColor: .blue, weight: .plain, size: .medium,
+            label: "Resend Email", buttonColor: .blue, weight: .plain, size: .medium,
             class: "email-verification-banner-resend")
         }
         .class("email-verification-banner-content")
@@ -68,7 +67,7 @@
   import WebAPIs
   import WebTypes
 
-  /// Resend email on ``EmailVerificationBannerView``: the server sends a new
+  /// Resend Email on ``EmailVerificationBannerView``: the server sends a new
   /// link to the signed-in account's own address (the request names none).
   /// The close control is the alert's own (`AlertHydration`).
   public class EmailVerificationBannerHydration: @unchecked Sendable {
@@ -95,10 +94,10 @@
       window.fetch("/auth/resend-verification", method: "POST", body: "") { [self] response in
         if stringContains(response.text(), "\"success\":true") {
           AlertAPI.showSuccess("We sent a new link. Check your inbox.")
-          self.setLabel("Email sent", disabled: true)
+          self.setLabel("Email Sent", disabled: true)
         } else {
           AlertAPI.showError("The email didn't send. Try again.")
-          self.setLabel("Resend email", disabled: false)
+          self.setLabel("Resend Email", disabled: false)
         }
       }
     }

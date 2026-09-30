@@ -491,7 +491,7 @@ public struct ButtonView: HTMLContent {
 
           // Quiet/Plain — opaque base bg + transparent border (not see-through on borders/surfaces)
           selector("&[data-weight='quiet'], &[data-weight='plain']") {
-            backgroundColor(backgroundColorBase).important()
+            backgroundColor(backgroundColorTransparent).important()
             borderColor(.transparent).important()
           }
           selector("&[data-weight='quiet'][data-color='gray'], &[data-weight='plain'][data-color='gray']") {
@@ -517,7 +517,7 @@ public struct ButtonView: HTMLContent {
             cursor(cursorNotAllowed).important()
           }
           selector("&[data-weight='quiet'][aria-disabled='true'], &[data-weight='plain'][aria-disabled='true']") {
-            backgroundColor(backgroundColorBase).important()
+            backgroundColor(backgroundColorTransparent).important()
             borderColor(.transparent).important()
           }
           selector("&[data-weight='subtle'][aria-disabled='true'], &[data-weight='solid'][aria-disabled='true'], &[data-weight='static'][aria-disabled='true']") {
@@ -789,7 +789,7 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-red-active")).important()
           }
           selector("&[data-weight='plain'][data-color='red']:hover:not(:disabled)") {
-            color(colorBase).important()
+            color(colorRedHover).important()
           }
           selector("&[data-weight='plain'][data-color='red']:active:not(:disabled)") {
             color(`var`("--color-red-active")).important()
@@ -820,7 +820,7 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-orange-active")).important()
           }
           selector("&[data-weight='plain'][data-color='orange']:hover:not(:disabled)") {
-            color(colorBase).important()
+            color(colorOrangeHover).important()
           }
           selector("&[data-weight='plain'][data-color='orange']:active:not(:disabled)") {
             color(`var`("--color-orange-active")).important()
@@ -851,7 +851,7 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-yellow-active")).important()
           }
           selector("&[data-weight='plain'][data-color='yellow']:hover:not(:disabled)") {
-            color(colorBase).important()
+            color(colorYellowHover).important()
           }
           selector("&[data-weight='plain'][data-color='yellow']:active:not(:disabled)") {
             color(`var`("--color-yellow-active")).important()
@@ -882,7 +882,7 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-green-active")).important()
           }
           selector("&[data-weight='plain'][data-color='green']:hover:not(:disabled)") {
-            color(colorBase).important()
+            color(colorGreenHover).important()
           }
           selector("&[data-weight='plain'][data-color='green']:active:not(:disabled)") {
             color(`var`("--color-green-active")).important()
@@ -913,7 +913,7 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-mint-active")).important()
           }
           selector("&[data-weight='plain'][data-color='mint']:hover:not(:disabled)") {
-            color(colorBase).important()
+            color(colorMintHover).important()
           }
           selector("&[data-weight='plain'][data-color='mint']:active:not(:disabled)") {
             color(`var`("--color-mint-active")).important()
@@ -944,7 +944,7 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-teal-active")).important()
           }
           selector("&[data-weight='plain'][data-color='teal']:hover:not(:disabled)") {
-            color(colorBase).important()
+            color(colorTealHover).important()
           }
           selector("&[data-weight='plain'][data-color='teal']:active:not(:disabled)") {
             color(`var`("--color-teal-active")).important()
@@ -975,7 +975,7 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-cyan-active")).important()
           }
           selector("&[data-weight='plain'][data-color='cyan']:hover:not(:disabled)") {
-            color(colorBase).important()
+            color(colorCyanHover).important()
           }
           selector("&[data-weight='plain'][data-color='cyan']:active:not(:disabled)") {
             color(`var`("--color-cyan-active")).important()
@@ -1006,7 +1006,7 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-blue-active")).important()
           }
           selector("&[data-weight='plain'][data-color='blue']:hover:not(:disabled)") {
-            color(colorBase).important()
+            color(colorBlueHover).important()
           }
           selector("&[data-weight='plain'][data-color='blue']:active:not(:disabled)") {
             color(`var`("--color-blue-active")).important()
@@ -1037,7 +1037,7 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-indigo-active")).important()
           }
           selector("&[data-weight='plain'][data-color='indigo']:hover:not(:disabled)") {
-            color(colorBase).important()
+            color(colorIndigoHover).important()
           }
           selector("&[data-weight='plain'][data-color='indigo']:active:not(:disabled)") {
             color(`var`("--color-indigo-active")).important()
@@ -1068,7 +1068,7 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-purple-active")).important()
           }
           selector("&[data-weight='plain'][data-color='purple']:hover:not(:disabled)") {
-            color(colorBase).important()
+            color(colorPurpleHover).important()
           }
           selector("&[data-weight='plain'][data-color='purple']:active:not(:disabled)") {
             color(`var`("--color-purple-active")).important()
@@ -1099,7 +1099,7 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-pink-active")).important()
           }
           selector("&[data-weight='plain'][data-color='pink']:hover:not(:disabled)") {
-            color(colorBase).important()
+            color(colorPinkHover).important()
           }
           selector("&[data-weight='plain'][data-color='pink']:active:not(:disabled)") {
             color(`var`("--color-pink-active")).important()
@@ -1130,7 +1130,7 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-brown-active")).important()
           }
           selector("&[data-weight='plain'][data-color='brown']:hover:not(:disabled)") {
-            color(colorBase).important()
+            color(colorBrownHover).important()
           }
           selector("&[data-weight='plain'][data-color='brown']:active:not(:disabled)") {
             color(`var`("--color-brown-active")).important()
@@ -1360,7 +1360,7 @@ public struct ButtonView: HTMLContent {
 
           // Quiet/Plain — opaque base bg + transparent border (mirrors <a> branch)
           selector("&[data-weight='quiet'], &[data-weight='plain']") {
-            backgroundColor(backgroundColorBase).important()
+            backgroundColor(backgroundColorTransparent).important()
             borderColor(.transparent).important()
           }
           selector("&[data-weight='quiet'][data-color='gray'], &[data-weight='plain'][data-color='gray']") {
@@ -1643,7 +1643,7 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-red-active")).important()
           }
           selector("&[data-weight='plain'][data-color='red']:hover:not(:disabled)") {
-            color(colorBase).important()
+            color(colorRedHover).important()
           }
           selector("&[data-weight='plain'][data-color='red']:active:not(:disabled)") {
             color(`var`("--color-red-active")).important()
@@ -1674,7 +1674,7 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-orange-active")).important()
           }
           selector("&[data-weight='plain'][data-color='orange']:hover:not(:disabled)") {
-            color(colorBase).important()
+            color(colorOrangeHover).important()
           }
           selector("&[data-weight='plain'][data-color='orange']:active:not(:disabled)") {
             color(`var`("--color-orange-active")).important()
@@ -1705,7 +1705,7 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-yellow-active")).important()
           }
           selector("&[data-weight='plain'][data-color='yellow']:hover:not(:disabled)") {
-            color(colorBase).important()
+            color(colorYellowHover).important()
           }
           selector("&[data-weight='plain'][data-color='yellow']:active:not(:disabled)") {
             color(`var`("--color-yellow-active")).important()
@@ -1736,7 +1736,7 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-green-active")).important()
           }
           selector("&[data-weight='plain'][data-color='green']:hover:not(:disabled)") {
-            color(colorBase).important()
+            color(colorGreenHover).important()
           }
           selector("&[data-weight='plain'][data-color='green']:active:not(:disabled)") {
             color(`var`("--color-green-active")).important()
@@ -1767,7 +1767,7 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-mint-active")).important()
           }
           selector("&[data-weight='plain'][data-color='mint']:hover:not(:disabled)") {
-            color(colorBase).important()
+            color(colorMintHover).important()
           }
           selector("&[data-weight='plain'][data-color='mint']:active:not(:disabled)") {
             color(`var`("--color-mint-active")).important()
@@ -1798,7 +1798,7 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-teal-active")).important()
           }
           selector("&[data-weight='plain'][data-color='teal']:hover:not(:disabled)") {
-            color(colorBase).important()
+            color(colorTealHover).important()
           }
           selector("&[data-weight='plain'][data-color='teal']:active:not(:disabled)") {
             color(`var`("--color-teal-active")).important()
@@ -1829,7 +1829,7 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-cyan-active")).important()
           }
           selector("&[data-weight='plain'][data-color='cyan']:hover:not(:disabled)") {
-            color(colorBase).important()
+            color(colorCyanHover).important()
           }
           selector("&[data-weight='plain'][data-color='cyan']:active:not(:disabled)") {
             color(`var`("--color-cyan-active")).important()
@@ -1860,7 +1860,7 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-blue-active")).important()
           }
           selector("&[data-weight='plain'][data-color='blue']:hover:not(:disabled)") {
-            color(colorBase).important()
+            color(colorBlueHover).important()
           }
           selector("&[data-weight='plain'][data-color='blue']:active:not(:disabled)") {
             color(`var`("--color-blue-active")).important()
@@ -1891,7 +1891,7 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-indigo-active")).important()
           }
           selector("&[data-weight='plain'][data-color='indigo']:hover:not(:disabled)") {
-            color(colorBase).important()
+            color(colorIndigoHover).important()
           }
           selector("&[data-weight='plain'][data-color='indigo']:active:not(:disabled)") {
             color(`var`("--color-indigo-active")).important()
@@ -1922,7 +1922,7 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-purple-active")).important()
           }
           selector("&[data-weight='plain'][data-color='purple']:hover:not(:disabled)") {
-            color(colorBase).important()
+            color(colorPurpleHover).important()
           }
           selector("&[data-weight='plain'][data-color='purple']:active:not(:disabled)") {
             color(`var`("--color-purple-active")).important()
@@ -1953,7 +1953,7 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-pink-active")).important()
           }
           selector("&[data-weight='plain'][data-color='pink']:hover:not(:disabled)") {
-            color(colorBase).important()
+            color(colorPinkHover).important()
           }
           selector("&[data-weight='plain'][data-color='pink']:active:not(:disabled)") {
             color(`var`("--color-pink-active")).important()
@@ -1984,7 +1984,7 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-brown-active")).important()
           }
           selector("&[data-weight='plain'][data-color='brown']:hover:not(:disabled)") {
-            color(colorBase).important()
+            color(colorBrownHover).important()
           }
           selector("&[data-weight='plain'][data-color='brown']:active:not(:disabled)") {
             color(`var`("--color-brown-active")).important()
