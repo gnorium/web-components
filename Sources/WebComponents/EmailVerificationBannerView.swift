@@ -5,7 +5,11 @@
   import HTMLBuilder
   import WebTypes
 
-  /// Banner component to remind users to verify their email
+  /// The reminder, at the top of a page's content, that the signed-in
+  /// account's email address is unverified: the design system's warning
+  /// alert (its icon, colors and close control; dismissing it is
+  /// `AlertHydration`'s), with Resend email as the alert's own quiet action.
+  /// `EmailVerificationBannerHydration` sends the link again.
   public struct EmailVerificationBannerView: HTMLContent {
     let email: String
     let `class`: String
@@ -16,77 +20,39 @@
     }
 
     public func build() -> DOM.Node {
-      div {
+      AlertView(
+        color: .orange, allowUserDismiss: true, dismissButtonLabel: "Dismiss",
+        class: `class`.isEmpty ? "email-verification-banner-view" : "email-verification-banner-view \(`class`)"
+      ) {
         div {
-          // Icon
-          span { StatusIconView(.warning) }
-            .class("email-verification-banner-icon")
-            .ariaHidden(true)
-
-          // Alert
           span {
-            "Please verify your email address. We sent a verification email to "
+            "Verify your email address: we sent a link to "
             strong { email }
             "."
           }
           .class("email-verification-banner-message")
 
-          // Resend button
-          button { "Resend Email" }
-            .type(.button)
-            .class("resend-verification-email")
-
-          // Dismiss button
-          CloseButtonView(ariaLabel: "Dismiss", class: "dismiss-verification-banner")
+          ButtonView(
+            label: "Resend email", buttonColor: .gray, weight: .quiet, size: .medium,
+            class: "email-verification-banner-resend")
         }
         .class("email-verification-banner-content")
-      }
-      .class(`class`.isEmpty ? "email-verification-banner-view" : "email-verification-banner-view \(`class`)")
-      .data("hydrate", "email-verification-banner")
-      .data("dismissed", false)
-      .style {
-        selector("&") {
-          backgroundColor(backgroundColorOrangeSubtle)
-          borderBlockEnd(borderWidthBase, .solid, borderColorOrange)
-          padding(spacing12, spacing16)
+        .style {
+          // The message and its action on one line where they fit; on a
+          // phone the action wraps under the message.
+          selector("&") {
+            display(.flex)
+            flexWrap(.wrap)
+            alignItems(.center)
+            columnGap(spacing12)
+            rowGap(spacing4)
+          }
+          descendant(".email-verification-banner-message") {
+            flex(1, 1, px(240))
+            minWidth(0)
+            overflowWrap(.anywhere)
+          }
         }
-        selector("&[data-dismissed='true']") { display(.none) }
-        // On a phone the message takes its own line; the buttons wrap under it.
-        descendant(".email-verification-banner-content") {
-          display(.flex)
-          flexWrap(.wrap)
-          alignItems(.center)
-          gap(spacing12)
-          maxWidth(px(1200))
-          marginInline(.auto)
-        }
-        descendant(".email-verification-banner-icon") {
-          display(.flex)
-          flexShrink(0)
-          color(colorOrange)
-        }
-        descendant(".email-verification-banner-message") {
-          fontSize(fontSizeSmall14)
-          color(colorBase)
-          flexGrow(1)
-          flexBasis(px(240))
-          minWidth(0)
-          overflowWrap(.anywhere)
-        }
-        descendant(".resend-verification-email") {
-          padding(spacing8, spacing12)
-          backgroundColor(backgroundColorBase)
-          color(colorBlue)
-          border(borderWidthBase, .solid, borderColorBlue)
-          borderRadius(borderRadiusBase)
-          fontSize(fontSizeSmall14)
-          fontWeight(fontWeightSemiBold)
-          fontFamily(fontFamilyBase)
-          cursor(cursorBaseHover)
-          transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-        }
-        descendant(".resend-verification-email:hover") { backgroundColor(backgroundColorBlueSubtle) }
-        descendant(".resend-verification-email:active") { backgroundColor(backgroundColorBlueSubtleActive) }
       }
     }
   }
@@ -99,94 +65,49 @@
   import WebAPIs
   import WebTypes
 
+  /// Resend email on ``EmailVerificationBannerView``: the server sends a new
+  /// link to the signed-in account's own address (the request names none).
+  /// The close control is the alert's own (`AlertHydration`).
   public class EmailVerificationBannerHydration: @unchecked Sendable {
-    nonisolated(unsafe) private var banner: DOM.Element?
-    nonisolated(unsafe) private var resendButton: DOM.Element?
-    nonisolated(unsafe) private var dismissButton: DOM.Element?
+    public static nonisolated(unsafe) var instance: EmailVerificationBannerHydration?
 
-    public init?() {
-      banner = document.querySelector(".email-verification-banner-view")
-      guard banner != nil else {
-        return nil
-      }
-
-      resendButton = document.querySelector(".resend-verification-email")
-      dismissButton = document.querySelector(".dismiss-verification-banner")
-
-      bindEvents()
+    public static func hydrateIfPresent() {
+      guard let banner = document.querySelector(".email-verification-banner-view"),
+        let resend = banner.querySelector(".email-verification-banner-resend")
+      else { return }
+      instance = EmailVerificationBannerHydration(resend: resend)
     }
 
-    nonisolated private func bindEvents() {
-      // Handle resend button
-      if let resend = resendButton {
-        _ = resend.addEventListener(.click) { [self] _ in
-          self.handleResendEmail()
-        }
-      }
+    private let resend: DOM.Element
 
-      // Handle dismiss button
-      if let dismiss = dismissButton {
-        _ = dismiss.addEventListener(.click) { [self] _ in
-          self.handleDismiss()
-        }
+    private init(resend: DOM.Element) {
+      self.resend = resend
+      _ = resend.addEventListener(.click) { [self] _ in
+        self.send()
       }
     }
 
-    nonisolated private func handleResendEmail() {
-      guard let button = resendButton else { return }
-
-      // Disable button
-      (button as? HTML.HTMLButtonElement)?.disabled = true
-      button.textContent = "Sending..."
-
-      // The server sends the link to the signed-in account's own address:
-      // the request names no address.
-      window.fetch("/auth/resend-verification", method: "POST", body: "") {
-        [self] response in
-        let jsonString = response.text()
-
-        let isSuccess =
-          jsonString.utf8.withContiguousStorageIfAvailable { jsonBytes -> Bool in
-            let successPattern = "\"success\":true".utf8
-            let patternArray = Array(successPattern)
-            let patternCount = patternArray.count
-
-            guard jsonBytes.count >= patternCount else { return false }
-
-            for startIndex in 0...(jsonBytes.count - patternCount) {
-              var match = true
-              for offset in 0..<patternCount {
-                if jsonBytes[startIndex + offset] != patternArray[offset] {
-                  match = false
-                  break
-                }
-              }
-              if match {
-                return true
-              }
-            }
-            return false
-          } ?? false
-
-        if isSuccess {
-          AlertAPI.showSuccess("Verification email sent! Please check your inbox.")
-          if let btn = self.resendButton {
-            btn.textContent = "Email Sent"
-          }
+    private func send() {
+      setLabel("Sending…", disabled: true)
+      window.fetch("/auth/resend-verification", method: "POST", body: "") { [self] response in
+        if stringContains(response.text(), "\"success\":true") {
+          AlertAPI.showSuccess("We sent a new link. Check your inbox.")
+          self.setLabel("Email sent", disabled: true)
         } else {
-          AlertAPI.showError("Failed to send verification email. Please try again.")
-          if let btn = self.resendButton {
-            (btn as? HTML.HTMLButtonElement)?.disabled = false
-            btn.textContent = "Resend Email"
-          }
+          AlertAPI.showError("The email didn't send. Try again.")
+          self.setLabel("Resend email", disabled: false)
         }
       }
     }
 
-    nonisolated private func handleDismiss() {
-      if let banner = banner {
-        banner.setAttribute(data("dismissed"), "true")
+    private func setLabel(_ text: String, disabled: Bool) {
+      // The attribute itself: a queried element is a plain `DOM.Element`.
+      if disabled {
+        _ = resend.setAttribute("disabled", "")
+      } else {
+        resend.removeAttribute("disabled")
       }
+      resend.querySelector(".button-label")?.textContent = text
     }
   }
 #endif

@@ -29,6 +29,7 @@ public struct ButtonView: HTMLContent {
   var dataAttributes: [(String, String)]
   /// The id of the form this submits with, when it sits outside that form.
   var formID: String? = nil
+  var downloadFilename: String? = nil
   var popoverTargetID: String? = nil
   var expanded: Bool? = nil
   var pressed: Bool? = nil
@@ -274,6 +275,15 @@ public struct ButtonView: HTMLContent {
   public func form(_ id: String) -> Self {
     var copy = self
     copy.formID = id
+    return copy
+  }
+
+  /// The standard `download` attribute of a link-button: the link saves its
+  /// target as a file of this name instead of opening it. A button that is
+  /// not a link has nothing to download.
+  public func download(_ filename: String) -> Self {
+    var copy = self
+    copy.downloadFilename = filename
     return copy
   }
 
@@ -1180,6 +1190,9 @@ public struct ButtonView: HTMLContent {
         aBtn = aBtn.data(key, value)
       }
 
+      if let downloadFilename {
+        aBtn = aBtn.download(downloadFilename)
+      }
       return aBtn
     } else {
       var bBtn = button { renderContent() }
