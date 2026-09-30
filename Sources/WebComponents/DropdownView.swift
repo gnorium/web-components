@@ -282,8 +282,9 @@ public struct DropdownView: HTMLContent {
 
         // Shown by the submit guard when this dropdown is required and empty:
         // a red border alone said something was wrong without saying what.
+        // The same message every field draws (FieldValidationMessageView).
         if required {
-          span { requiredMessage }
+          div { FieldValidationMessageView(status: .error, message: requiredMessage) }
             .class("dropdown-required-message")
             .role(.alert)
         }
@@ -474,16 +475,14 @@ public struct DropdownView: HTMLContent {
         paddingInline(px(15))
       }
       // Set by the submit guard when a required dropdown has no value.
+      // The field's ring in red: its 1px border and a 1px outline, two
+      // pixels in all without the border growing and moving the text.
       selector("&[data-invalid='true'] .dropdown-trigger") {
         borderColor(borderColorRed).important()
-        borderWidth(borderWidthThick).important()
+        outline(borderWidthBase, .solid, borderColorRed).important()
+        outlineOffset(px(0)).important()
       }
-      descendant(".dropdown-required-message") {
-        display(.none)
-        fontFamily(typographyFontSans)
-        fontSize(fontSizeSmall14)
-        color(colorRed)
-      }
+      descendant(".dropdown-required-message") { display(.none) }
       selector("&[data-invalid='true'] .dropdown-required-message") {
         display(.block)
       }
@@ -752,6 +751,11 @@ public struct DropdownView: HTMLContent {
       else { return }
 
       _ = form.addEventListener(.submit) { [self] (event: Event) in
+        // Only a submit the reader made is checked. The page dispatches one
+        // itself only to have the form's lists and statements written out
+        // (a draft carried to an amendment, the outline's work form), and
+        // marking an empty dropdown red there flashed on the way out.
+        guard event.isTrusted else { return }
         guard let field = self.hiddenInput as? HTML.HTMLInputElement,
           let container = self.container
         else { return }

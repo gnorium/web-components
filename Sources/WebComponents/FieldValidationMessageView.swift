@@ -63,12 +63,21 @@ public struct FieldValidationMessageView: HTMLContent {
     }
 
     return message.style {
+      // The words start where a field's text starts — the control's border
+      // and its 15px inline padding in (TextInputView) — and the icon
+      // stands inside that inset, at the field's edge.
       selector("&") {
         display(.flex)
         alignItems(.flexStart)
-        gap(spacing4)
         fontSize(fontSizeSmall14)
         lineHeight(lineHeightSmall22)
+      }
+      selector("& .field-validation-message-icon") {
+        display(.inlineFlex)
+        alignItems(.center)
+        flexShrink(0)
+        width(calc(px(15) + borderWidthBase))
+        minHeight(lineHeightSmall22)
       }
       selector("&[data-status='error']") { color(colorRed) }
       selector("&[data-status='warning']") { color(colorOrange) }
@@ -159,6 +168,10 @@ public struct ConstraintMessages: Sendable {
       _ = document.addEventListener(
         .submit,
         { event in
+          // Only a submit the reader made is checked: one the page
+          // dispatches itself only writes the form out (DropdownView's
+          // check says the same).
+          guard event.isTrusted else { return }
           guard let form = event.target, let _ = form.getAttribute("novalidate") else { return }
           guard let firstInvalid = FieldValidationHydration.check(form: form) else { return }
           firstInvalid.focus()
@@ -306,11 +319,12 @@ public struct ConstraintMessages: Sendable {
         }
       } else {
         let html = FieldValidationMessageView(id: id, status: .error, message: text).render()
-        if let field = control.closest(".field-view") {
+        // Inside the column the control stands in, so it sits the column's
+        // gap under the control (a field's, a labeled text input's), never
+        // the wider gap of the form around it.
+        if let field = control.closest(".field-view") ?? control.closest(".text-input-view") {
           field.insertAdjacentHTML(.beforeend, html)
-        } else if let anchor = control.closest(".checkbox-view") ?? control.closest(".text-input-view")
-          ?? control.closest(".text-area-view")
-        {
+        } else if let anchor = control.closest(".checkbox-view") ?? control.closest(".text-area-view") {
           anchor.insertAdjacentHTML(.afterend, html)
         } else {
           control.insertAdjacentHTML(.afterend, html)

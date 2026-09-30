@@ -167,7 +167,12 @@ public struct TextAreaView: HTMLContent {
       selector("&.text-area-read-only .text-area-input") {
         backgroundColor(backgroundColorNeutralSubtle)
       }
-      selector("&.text-area-error .text-area-input") { borderColor(borderColorRed) }
+      // In error, the field's ring in red, as TextInputView's is drawn.
+      selector("&.text-area-error .text-area-input") {
+        borderColor(borderColorRed)
+        outline(borderWidthBase, .solid, borderColorRed)
+        outlineOffset(px(0))
+      }
       selector("&.text-area-autosize .text-area-input") {
         resize(.none)
         fieldSizing(.content)

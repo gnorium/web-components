@@ -299,7 +299,13 @@ public struct TextInputView: HTMLContent {
       selector("&.text-input-read-only .text-input-input") {
         backgroundColor(backgroundColorNeutralSubtle)
       }
-      selector("&.text-input-error .text-input-input") { borderColor(borderColorRed) }
+      // In error, the field's ring in red: its border and a 1px outline of
+      // the same color, two pixels in all, as its focus ring is drawn.
+      selector("&.text-input-error .text-input-input") {
+        borderColor(borderColorRed)
+        outline(borderWidthBase, .solid, borderColorRed)
+        outlineOffset(px(0))
+      }
       selector("&.text-input-has-start-icon .text-input-input") {
         paddingInlineStart(calc(px(15) + sizeIconMedium + spacing8)).important()
       }
