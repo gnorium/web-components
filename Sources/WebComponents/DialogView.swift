@@ -237,7 +237,6 @@
           width(min(calc(vw(100) - px(60)), px(900)))
           backgroundColor(backgroundColorBase)
           borderRadius(borderRadiusBase)
-          boxShadow(boxShadowOutsetMediumAround)
           overflow(.hidden)
         }
         descendant(".dialog-header-title") {
@@ -289,8 +288,9 @@
           display(.flex)
           flexDirection(.column)
           gap(spacing4)
-          padding(spacing16)
-          borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
+          // One inset for header, body and footer, so their text lines up;
+          // no dividers between them.
+          padding(spacing16, spacing16, px(0))
         }
         descendant(".dialog-footer-text") {
           fontFamily(typographyFontSans)
@@ -316,8 +316,7 @@
           display(.flex)
           flexDirection(.column)
           gap(spacing12)
-          padding(spacing20, spacing24)
-          borderBlockStart(borderWidthBase, .solid, borderColorSubtle)
+          padding(px(0), spacing16, spacing16)
         }
         descendant(".dialog-footer[data-default='true'][data-has-footer-text='false']") {
           flexDirection(.row)
@@ -329,7 +328,7 @@
           fontSize(fontSizeMedium16)
           lineHeight(lineHeightMedium26)
           color(colorBase)
-          padding(spacing8)
+          padding(spacing12, spacing16)
           overflowY(.auto)
           flex(1)
         }
