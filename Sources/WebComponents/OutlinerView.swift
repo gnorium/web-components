@@ -114,9 +114,13 @@ public enum OutlineMoves {
   /// toggle column). An item that is itself an accordion (`accordion`: a
   /// record's row, with its own chevron) has no toggle and no toggle
   /// column: its own chevron collapses it and the items under it, as one
-  /// (user, 2026-09-30). Its children are the outline's to place:
-  /// under the item's own node, never inside it, so a deep tree is never a
-  /// box in a box in a box.
+  /// (user, 2026-09-30), and its card holds the items under it, after what
+  /// it opens into (2026-10-01). Its children are the outline's to place,
+  /// never its content's.
+  ///
+  /// **Its own controls last.** An item's `footer` (a tree node's + and −)
+  /// is its last row, after its content and every item under it: "+" adds
+  /// below it (user, 2026-10-01).
   ///
   /// **Deep trees scroll.** The tree sits in a sideways scrollport (as a
   /// table does), and every node is at least `minWidthTreeNode` wide, so a
@@ -216,6 +220,11 @@ public enum OutlineMoves {
       public let accordion: Bool
       /// The item, given the pieces the outline puts in it.
       public let content: @Sendable (Slots) -> [DOM.Node]
+      /// The item's own controls (a tree node's + and −: "+" adds below
+      /// it), drawn as its last row: after its content and every item under
+      /// it, inside its card where it is one (`accordion`). Shown whether
+      /// its items are or not.
+      public let footer: @Sendable () -> [DOM.Node]
       public let children: [Node]
 
       public init(
@@ -227,7 +236,8 @@ public enum OutlineMoves {
         data: [(String, String)] = [],
         accordion: Bool = false,
         children: [Node] = [],
-        @HTMLBuilder content: @escaping @Sendable (Slots) -> [DOM.Node]
+        @HTMLBuilder content: @escaping @Sendable (Slots) -> [DOM.Node],
+        @HTMLBuilder footer: @escaping @Sendable () -> [DOM.Node] = { [] }
       ) {
         self.id = id
         self.label = label
@@ -238,6 +248,7 @@ public enum OutlineMoves {
         self.accordion = accordion
         self.children = children
         self.content = content
+        self.footer = footer
       }
     }
 
@@ -494,6 +505,11 @@ public enum OutlineMoves {
           }
         }
         .class("outliner-list")
+        let footer = node.footer()
+        if !footer.isEmpty {
+          div { footer }
+            .class("outliner-footer")
+        }
       }
       .class("outliner-item")
       .data("outliner-id", node.id)
@@ -719,6 +735,18 @@ public enum OutlineMoves {
       }
       descendant(".outliner-item[data-outliner-accordion='true'] > .outliner-list::before") {
         display(.none)
+      }
+      // An item's own controls, its last row. In a card, inset as the
+      // card's content is, their room taken by what is shown in them: a
+      // footer with nothing to show takes none.
+      descendant(".outliner-footer") {
+        display(.flex)
+        flexDirection(.column)
+        minWidth(0)
+      }
+      descendant(".outliner-item[data-outliner-accordion='true'] > .outliner-footer > *") {
+        paddingInline(spacing16)
+        paddingBlockEnd(spacing16)
       }
       descendant(".outliner-row") {
         position(.relative)
