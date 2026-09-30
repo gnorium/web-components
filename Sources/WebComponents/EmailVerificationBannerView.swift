@@ -69,9 +69,10 @@
 
   /// Resend Email on ``EmailVerificationBannerView``: the server sends a new
   /// link to the signed-in account's own address (the request names none).
-  /// The button keeps its label and is disabled only while it sends; the
-  /// outcome is an alert of its own just above the banner — green when the
-  /// link went, red when it didn't — replacing the last one. The close
+  /// The button is disabled while it sends, then for a minute after a link
+  /// goes, counting down ("Resend in 59s"), as the server refuses a new link
+  /// sooner (429); the outcome is an alert of its own just above the banner —
+  /// green when the link went, red when it didn't — replacing the last one. The close
   /// control is the alert's own (`AlertHydration`).
   public class EmailVerificationBannerHydration: @unchecked Sendable {
     public static nonisolated(unsafe) var instance: EmailVerificationBannerHydration?
@@ -110,11 +111,60 @@
           AlertAPI.showSuccess(
             "We sent a new verification link\(to).",
             container: slot)
+          self.coolDown(Self.cooldownSeconds)
+        } else if let seconds = Self.retryAfter(in: response.text()) {
+          // Too soon since the last link: the server's 429 says how long.
+          self.coolDown(seconds)
         } else {
-          AlertAPI.showError("The email didn't send. Try again.", container: slot)
+          AlertAPI.showError("The email wasn't able to be sent.", container: slot)
+          self.setDisabled(false)
         }
-        self.setDisabled(false)
       }
+    }
+
+    /// The wait between links, as the server enforces it
+    /// (`EmailVerification.resendCooldown`).
+    static let cooldownSeconds = 60
+
+    /// The button waits, counting down — "Resend in 59s" — then offers
+    /// Resend Email again.
+    private func coolDown(_ seconds: Int) {
+      guard seconds > 0 else {
+        setLabel("Resend Email")
+        setDisabled(false)
+        return
+      }
+      setDisabled(true)
+      setLabel("Resend in \(seconds)s")
+      _ = window.setTimeout(1000) { [self] in
+        self.coolDown(seconds - 1)
+      }
+    }
+
+    /// The seconds a 429 answer's `"retryAfter":` names; nil for any other
+    /// answer.
+    static func retryAfter(in body: String) -> Int? {
+      let key = "\"retryAfter\":"
+      guard let start = stringIndexOf(body, key) else { return nil }
+      var value = 0
+      var digits = 0
+      var index = 0
+      for byte in body.utf8 {
+        if index >= start + key.utf8.count {
+          if byte >= 48 && byte <= 57 {
+            value = value * 10 + Int(byte - 48)
+            digits += 1
+          } else if digits > 0 || byte != 32 {
+            break
+          }
+        }
+        index += 1
+      }
+      return digits > 0 ? value : nil
+    }
+
+    private func setLabel(_ text: String) {
+      resend.querySelector(".button-label")?.textContent = text
     }
 
     /// The slot just above the banner that the outcome's alert stands in,
