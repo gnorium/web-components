@@ -98,7 +98,7 @@ public struct TableCellView: HTMLContent {
       selector("&[data-vertical-align='middle']") { verticalAlign(.middle) }
       selector("&[data-vertical-align='bottom']") { verticalAlign(.bottom) }
       selector("&[data-mono='true']", ".table-cell-mono") { fontFamily(typographyFontMono) }
-      selector("&[data-vertical-borders='true']") { borderInlineEnd(borderWidthBase, .solid, borderColorSubtle) }
+      selector("&[data-vertical-borders='true']") { borderInlineEnd(borderWidthBase, .solid, borderColorBase) }
       selector(".table-cell-selection-input") { cursor(.pointer) }
       selector(".table-selection-container") {
         display(.flex)

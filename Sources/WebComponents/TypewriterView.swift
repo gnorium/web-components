@@ -7,7 +7,7 @@
   import WebTypes
 
   /// Wraps any block element with a cycling typewriter animation on hydration.
-  /// Types each phrase, pauses, deletes it, then moves to the next — looping forever.
+  /// Types each phrase, pauses, deletes it, then moves to the next—looping forever.
   /// The first phrase is rendered as textContent for SEO / no-JS fallback.
   /// All phrases are encoded as data attributes; TypewriterHydration discovers and drives them.
   public struct TypewriterView: HTMLContent {
@@ -306,7 +306,7 @@
       }
 
       window.setTimeout(charIntervalMs) { [self] in
-        // Advance to next codepoint boundary — multi-byte chars (e.g. —, é, ñ) are
+        // Advance to next codepoint boundary—multi-byte chars (e.g. —, é, ñ) are
         // 2-4 UTF-8 bytes; slicing mid-codepoint produces invalid UTF-8 → "?" flash.
         let bytes = Array(phrase.utf8)
         var next = charIndex + 1
@@ -348,7 +348,7 @@
 
       window.setTimeout(deleteIntervalMs) { [self] in
         let phrase = phrases[phraseIndex]
-        // Retreat to previous codepoint start — skip back over continuation bytes.
+        // Retreat to previous codepoint start—skip back over continuation bytes.
         let bytes = Array(phrase.utf8)
         var prev = charIndex - 1
         while prev > 0 && (bytes[prev] & 0xC0) == 0x80 { prev -= 1 }

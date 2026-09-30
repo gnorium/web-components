@@ -6,7 +6,7 @@ import EmbeddedSwiftUtilities
 import HTMLBuilder
 import WebTypes
 
-/// Animated 120° conic sector — indeterminate activity mark (leaf).
+/// Animated 120° conic sector—indeterminate activity mark (leaf).
 /// Available on SERVER + CLIENT so RotatingSectorFactory can render without replicas.
 public struct RotatingSectorView: HTMLContent {
   let size: CSS.Length

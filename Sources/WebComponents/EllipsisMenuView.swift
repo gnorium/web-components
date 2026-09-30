@@ -31,7 +31,7 @@
           .class("ellipsis-menu-backdrop")
           .data("ellipsis-menu-backdrop", "true")
 
-        // Menu container — slides down from navbar
+        // Menu container—slides down from navbar
         div {
           ContainerView(size: .full) {
             div {

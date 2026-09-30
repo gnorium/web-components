@@ -15,7 +15,7 @@ struct StyleSheetEmitter {
     }
 
     StaticStyleSheetEmitter.begin(publicDirectory: publicDir)
-    // Catalog — one instance emits full superset via data-attributes
+    // Catalog—one instance emits full superset via data-attributes
     _ = ButtonView(label: "Solid", weight: .solid).build()
     _ = ButtonView(label: "Subtle", weight: .subtle).build()
     _ = ButtonView(icon: IconView { SearchIconView() }, size: .medium, ariaLabel: "search").build()

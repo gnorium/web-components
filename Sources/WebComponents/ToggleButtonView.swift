@@ -9,8 +9,8 @@
 
   /// A button that can be toggled on and off with state persistence.
   ///
-  /// Unselected (off): `colorBase` label + base surface / subtle border — same language
-  /// as ColorScheme “Dark”. Selected (on): solid blue fill + inverted label — same as
+  /// Unselected (off): `colorBase` label + base surface / subtle border—same language
+  /// as ColorScheme “Dark”. Selected (on): solid blue fill + inverted label—same as
   /// ColorScheme “Light”.
   public struct ToggleButtonView: HTMLContent {
     let label: String
@@ -131,7 +131,7 @@
         }
 
         // Off: colorBase (ColorScheme unselected / “Dark”). Gated the same
-        // way the ON rule below is — a caller that passes `indicateSelection:
+        // way the ON rule below is—a caller that passes `indicateSelection:
         // false` to keep its own colored base (a permanently solid button
         // that merely toggles WHAT it does, not how it looks) was having its
         // white-on-blue label overridden back to colorBase regardless, which
@@ -244,8 +244,8 @@
       instance = ToggleButtonHydration()
     }
 
-    /// The toggles under `root` — a fragment swapped in after the page's own
-    /// pass — join the page's.
+    /// The toggles under `root`—a fragment swapped in after the page's own
+    /// pass—join the page's.
     public static func hydrate(in root: DOM.Element) {
       if let instance {
         instance.hydrateAllToggleButtons(in: root)

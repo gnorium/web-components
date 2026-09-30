@@ -10,7 +10,7 @@
   /// keeps a page's CSS to what is on it. A component built after load is not
   /// on it at render time, and cannot be: an alert is raised because something
   /// happened. Linking every such component's styles on every page in case one
-  /// is raised is the same mistake in the other direction — any component can be
+  /// is raised is the same mistake in the other direction—any component can be
   /// built anywhere, so that argument ends with every page carrying everything.
   ///
   /// So the component asks, at the moment it is built, for the one file it

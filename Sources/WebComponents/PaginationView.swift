@@ -11,8 +11,8 @@ import WebTypes
 
 /// Editable page control: previous / `[n]` of `M` / next.
 ///
-/// - ``Size/normal`` — table / list footers (44px targets, spaced layout)
-/// - ``Size/mini`` — chrome pagers (session, artifact, attempt switcher)
+/// - ``Size/normal``—table / list footers (44px targets, spaced layout)
+/// - ``Size/mini``—chrome pagers (session, artifact, attempt switcher)
 ///
 /// URL mode (`previousUrl` / `nextUrl` / `pageNumbers`) is hydrated by
 /// ``PaginationHydration``. Query / custom mode sets `kind` and prev/next
@@ -338,7 +338,7 @@ public struct PaginationView: HTMLContent {
         color(colorBase)
         fontWeight(fontWeightNormal)
         padding(spacing0, spacing8)
-        border(borderWidthBase, .solid, borderColorSubtle)
+        border(borderWidthBase, .solid, borderColorBase)
         borderRadius(borderRadiusBase)
         backgroundColor(backgroundColorBase)
         height(minSizeInteractiveTouch)
@@ -419,7 +419,7 @@ public struct PaginationView: HTMLContent {
     private func hydrate() {
       let paginationViews = document.querySelectorAll(".pagination-view")
       for view in paginationViews {
-        // Host-owned pagers (session / attempt) — skip URL navigation.
+        // Host-owned pagers (session / attempt)—skip URL navigation.
         let kind = view.getAttribute("data-pager-kind") ?? ""
         if !stringIsEmpty(kind) { continue }
 

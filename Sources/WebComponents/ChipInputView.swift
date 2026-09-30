@@ -142,7 +142,7 @@
           maxWidth(perc(100))
           padding(spacing4, spacing8)
           backgroundColor(backgroundColorInteractiveSubtle)
-          border(borderWidthBase, .solid, borderColorSubtle)
+          border(borderWidthBase, .solid, borderColorBase)
           borderRadius(borderRadiusBase)
           fontSize(fontSizeSmall14)
           fontWeight(fontWeightNormal)
@@ -152,7 +152,7 @@
           userSelect(.none)
           pseudoClass(.hover) {
             backgroundColor(backgroundColorInteractiveSubtleHover).important()
-            borderColor(borderColorSubtle).important()
+            borderColor(borderColorBase).important()
             transform(translateY(px(-1)))
             boxShadow(px(0), px(2), px(4), boxShadowColorBase).important()
           }

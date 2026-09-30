@@ -14,8 +14,8 @@
   /// values of one field as alternatives (OR) and different fields as
   /// conditions that all hold (AND).
   ///
-  /// Two fields may submit one parameter — a select of set spans and a date,
-  /// both `since` — and a value in force goes to the first that can hold it.
+  /// Two fields may submit one parameter—a select of set spans and a date,
+  /// both `since`—and a value in force goes to the first that can hold it.
   public enum FilterField: Sendable {
     case text(name: String, label: String, placeholder: String)
     case select(
@@ -168,7 +168,7 @@
           descendant(".filter-bar-row") { display(.contents) }
           descendant(".filter-bar-row[data-first='false'] .filter-bar-remove-btn") { gridColumn("3 / span 2") }
           // On a phone the bar stacks: each part on its own line at full
-          // width — field, value, the + or − — and Apply last, under every
+          // width—field, value, the + or −—and Apply last, under every
           // filter.
           media(maxWidth(maxWidthBreakpointMobile)) {
             selector("&") {
@@ -225,7 +225,7 @@
           )
         }
 
-        // Col 4: Apply (row 0 only — other rows have − spanning into this col)
+        // Col 4: Apply (row 0 only—other rows have − spanning into this col)
         if isFirst {
           ButtonView(
             label: "Apply",
@@ -353,7 +353,7 @@
     }
   }
 
-  // WASM-safe schema entry — struct avoids [String:String] dict subscript (String.hashValue culprit)
+  // WASM-safe schema entry—struct avoids [String:String] dict subscript (String.hashValue culprit)
   private struct SchemaEntry: @unchecked Sendable {
     /// What the field picker names it by; `name` is the parameter it submits.
     let key: String
@@ -685,7 +685,7 @@
       return extractFirstQuotedString(after)
     }
 
-    // Extracts first "..." string. UTF-8 byte-safe — handles ASCII JSON content.
+    // Extracts first "..." string. UTF-8 byte-safe—handles ASCII JSON content.
     private func extractFirstQuotedString(_ s: String) -> String? {
       let bytes = Array(s.utf8)
       let quote = UInt8(ascii: "\"")

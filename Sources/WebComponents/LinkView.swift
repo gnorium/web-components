@@ -126,8 +126,8 @@ public struct LinkView: HTMLContent {
         // :focus-visible, not :focus. A plain :focus rule fires on a mouse
         // click as well as on keyboard navigation, so Chromium drew a ring
         // around every link the moment it was clicked. :focus-visible is the
-        // selector that means "focused, and the browser judges a ring useful" —
-        // keyboard users keep it, mouse users never see it.
+        // selector that means "focused, and the browser judges a ring useful"—keyboard
+        // users keep it, mouse users never see it.
         selector("&:focus-visible") {
           outline(borderWidthThick, .solid, borderColorBlue).important()
           outlineOffset(px(-2)).important()

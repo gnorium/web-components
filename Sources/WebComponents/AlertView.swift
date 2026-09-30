@@ -128,8 +128,8 @@
           return nil
         case .default:
           // Red and blue both persist: red because it needs a person, blue
-          // because the condition it reports — a dropped stream, a stalled
-          // worker — outlives any 10s timeout. Vanishing while the run is still
+          // because the condition it reports—a dropped stream, a stalled
+          // worker—outlives any 10s timeout. Vanishing while the run is still
           // stopped is worse than not appearing at all.
           return alertColor == .red || alertColor == .blue ? nil : 10000
         case .custom(let ms):
@@ -174,7 +174,7 @@
               height(sizeIconMedium)
             }
             // Every case of AlertColor, or the missing one silently falls back
-            // to the body color — as blue did, in the only place it was used.
+            // to the body color—as blue did, in the only place it was used.
             selector("&[data-color='gray']") { color(colorGray) }
             selector("&[data-color='blue']") { color(colorBlue) }
             selector("&[data-color='orange']") { color(colorOrange) }
@@ -280,8 +280,8 @@
             borderColor(borderColorGray)
           }
           // Informational rather than a failure: nothing is broken and nothing is
-          // asked of the reader. Used for recoverable conditions — a dropped
-          // stream, a stalled worker — so red keeps meaning "this needs a person".
+          // asked of the reader. Used for recoverable conditions—a dropped
+          // stream, a stalled worker—so red keeps meaning "this needs a person".
           selector("&.alert-blue:not(.alert-inline)") {
             backgroundColor(backgroundColorBlueSubtle)
             borderColor(borderColorBlue)
@@ -838,7 +838,7 @@
       instance = AlertHydration()
     }
 
-    /// An alert put on the page after its own pass — one cloned from a
+    /// An alert put on the page after its own pass—one cloned from a
     /// rendered `AlertView` to say something that has just happened.
     public static func hydrate(alert: DOM.Element) {
       guard let instance else {

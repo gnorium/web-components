@@ -17,8 +17,8 @@
     let fullWidth: Bool
     let localStorageKey: String?
     /// Which query parameter carries this tab set's selection.
-    /// Two tab sets can share a page — Mission Control has one per room —
-    /// and they cannot both be "tab".
+    /// Two tab sets can share a page—Mission Control has one per room—and
+    /// they cannot both be "tab".
     let queryParam: String
     /// What its tabs' and panels' ids start with, so two tab sets naming
     /// the same tab on one page (the records tabs and the header search
@@ -138,18 +138,18 @@
       .data("active-tab", active)
       .data("local-storage-key", localStorageKey ?? "")
       .data("query-param", queryParam)
-      // ZERO REPETITION — every selector and property is declared exactly once
+      // ZERO REPETITION—every selector and property is declared exactly once
       // in this single style block. The descendant/child/selector chains below
       // cover every visual state for the root, header, list, both tab button
       // variants (<a> and <button>), scroll buttons, and panels.
       .style {
-        // Self — root .tabs-view container
+        // Self—root .tabs-view container
         selector("&") {
           display(.block)
           fontFamily(typographyFontSans)
         }
         selector("&.tabs-framed") {
-          border(borderWidthBase, .solid, borderColorSubtle)
+          border(borderWidthBase, .solid, borderColorBase)
           borderRadius(borderRadiusBase)
         }
         selector("&.tabs-full-width") {
@@ -185,7 +185,7 @@
           flexWrap(.wrap)
         }
 
-        // Tab buttons — ONE rule chain covers both <a> and <button> tags
+        // Tab buttons—ONE rule chain covers both <a> and <button> tags
         selector("& [role='tab']") {
           display(.flex)
           alignItems(.center)
@@ -290,7 +290,7 @@
   import WebAPIs
   import WebTypes
 
-  // (Client-side hydration code unchanged — copied from original file)
+  // (Client-side hydration code unchanged—copied from original file)
 
   /// JavaScript TabsInstance handles hydration of one TabsView in the DOM.
   final class TabsInstance: @unchecked Sendable {

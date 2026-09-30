@@ -13,7 +13,7 @@
     ///
     /// A closed set, deliberately. The size used to be any `CSS.Length` the
     /// caller liked, and the rule was written with that value inside its own
-    /// selector — so each distinct value needed a rule of its own, and only the
+    /// selector—so each distinct value needed a rule of its own, and only the
     /// ones the stylesheet catalog happened to build ever got one. Every
     /// other stamp rendered with no size rule at all.
     ///
@@ -101,7 +101,7 @@
   import WebTypes
 
   /// Hydrates all `<time class="local-time-view">` elements on the page,
-  /// converting their UTC fallback text to the user's local timezone — and,
+  /// converting their UTC fallback text to the user's local timezone—and,
   /// the same way, any element carrying `data-local-time-iso`, whose stamp is
   /// one part of a sentence rather than the whole of it.
   public class LocalTimeHydration: @unchecked Sendable {

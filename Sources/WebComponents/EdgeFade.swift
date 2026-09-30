@@ -15,8 +15,8 @@ import WebTypes
 // line goes on. Both SERVER and CLIENT: tables are drawn on either side, so
 // the rules and the hydration live together and must stay embedded-safe.
 //
-// The fade is drawn only on a box whose line actually runs past it — a short
-// value right-aligned against the box's end would otherwise fade too — so the
+// The fade is drawn only on a box whose line actually runs past it—a short
+// value right-aligned against the box's end would otherwise fade too—so the
 // box is marked `data-overflowing` by `EdgeFadeHydration`, which measures it.
 // Before hydration a long value is simply clipped.
 //
@@ -91,16 +91,16 @@ private func edgeFadeGradient(_ toward: CSS.GradientDirection) -> String {
   /// expandable one, on touch and narrow screens, the button it becomes.
   ///
   /// One watcher for the page, not one per box: the boxes are re-read
-  /// whenever the page changes in a way that could change a line's fit — a
+  /// whenever the page changes in a way that could change a line's fit—a
   /// node added or its text changed, a class or style or `hidden` turned (a
   /// page of rows shown, a column dragged, a menu opened), the window
-  /// resized — at most once a frame. A box a component draws on the client
+  /// resized—at most once a frame. A box a component draws on the client
   /// (a search menu's rows, a dropdown's value) is covered the moment it is
   /// in the page. Taps and keys are taken once, for the whole page.
   public final class EdgeFadeHydration: @unchecked Sendable {
     public static nonisolated(unsafe) var instance: EdgeFadeHydration?
     /// Touch or narrow: where a box expands on a tap. No hover there, so
-    /// the box's title — the whole value — is out of reach.
+    /// the box's title—the whole value—is out of reach.
     nonisolated(unsafe) static var tapToExpand = false
     nonisolated(unsafe) static var refreshQueued = false
     /// What a tap already means something on: a box in one, or holding one,

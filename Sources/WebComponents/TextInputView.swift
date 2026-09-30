@@ -287,7 +287,7 @@ public struct TextInputView: HTMLContent {
         boxSizing(.borderBox)
       }
       // WebKit paints a disabled control's text with -webkit-text-fill-color,
-      // which its UA sheet sets for :disabled — so `color` alone left Safari
+      // which its UA sheet sets for :disabled—so `color` alone left Safari
       // painting system grey over ours, for the value and the placeholder both.
       selector("&.text-input-disabled .text-input-input") {
         color(colorDisabled)
@@ -321,7 +321,7 @@ public struct TextInputView: HTMLContent {
         customProperty("-webkit-text-fill-color", colorDisabled).important()
       }
       // Focused, the field's ring: its border blue and a 1px outline of the
-      // same color, two pixels in all — no shadow. Focus only, like the
+      // same color, two pixels in all—no shadow. Focus only, like the
       // search bar: a hover border on a field reads as a half-finished focus
       // ring, and tells the reader nothing the cursor has not already told
       // them.
@@ -455,7 +455,7 @@ public struct TextInputView: HTMLContent {
       }
 
       // A focused number input steps its value on a wheel event in Chromium,
-      // and the only way to stop that is to cancel the event — which also
+      // and the only way to stop that is to cancel the event—which also
       // cancels the scroll. So the scroll is done by hand: the value stands,
       // focus stays, the page moves, exactly as it does over a text field.
       if let input, stringEquals(input.getAttribute("type") ?? "", "number") {

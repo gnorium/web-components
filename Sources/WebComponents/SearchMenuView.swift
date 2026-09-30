@@ -332,7 +332,7 @@
           fontWeight(fontWeightSemiBold)
           color(colorBase)
           backgroundColor(backgroundColorNeutralSubtle)
-          border(borderWidthBase, .solid, borderColorSubtle)
+          border(borderWidthBase, .solid, borderColorBase)
           borderRadius(borderRadiusMinimal)
           boxShadow(px(0), px(1), px(1), px(0), rgba(0, 0, 0, 0.05))
           lineHeight(1)
@@ -346,8 +346,8 @@
           display(.flex)
           // The panel is as tall as what it holds; the rest of the overlay is
           // backdrop. Flex stretches its children by default, so the panel grew
-          // to the full height of the viewport and painted white over the blur
-          // — the search menu appeared to have no backdrop at all.
+          // to the full height of the viewport and painted white over the blur—the
+          // search menu appeared to have no backdrop at all.
           alignItems(.flexStart)
         }
         selector("&[data-state='opening']", "&[data-state='open']") { pointerEvents(.auto) }
@@ -383,7 +383,7 @@
           lineHeight(lineHeightSmall22)
           color(colorBase)
           backgroundColor(backgroundColorTransparent)
-          border(borderWidthBase, .solid, borderColorSubtle)
+          border(borderWidthBase, .solid, borderColorBase)
           borderRadius(borderRadiusBase)
           cursor(cursorBase)
           userSelect(.none)

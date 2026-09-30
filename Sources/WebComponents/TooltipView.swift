@@ -75,7 +75,7 @@ public struct TooltipView: HTMLContent {
       }
     }
 
-    /// The same alignment on the opposite side — where the bubble goes when
+    /// The same alignment on the opposite side—where the bubble goes when
     /// its own side has no room.
     public var opposite: Placement {
       switch self {
@@ -171,9 +171,9 @@ public struct TooltipView: HTMLContent {
       }
       // Portal host: on hydration the bubble moves into one of these at the
       // end of <body>, a fixed point set from the trigger's rect. Inside the
-      // trigger it inherited every ancestor's stacking context and transform
-      // — a legend on a fieldset border painted it under the cards below —
-      // and could not be pulled back inside the viewport at a screen edge.
+      // trigger it inherited every ancestor's stacking context and
+      // transform—a legend on a fieldset border painted it under the cards
+      // below—and could not be pulled back inside the viewport at a screen edge.
       selector("&[data-portal='true']") {
         position(.fixed)
         display(.block)
@@ -293,8 +293,8 @@ public struct TooltipView: HTMLContent {
         borderBottom(px(6), .solid, backgroundColorTransparent)
         borderRight(px(6), .solid, backgroundColorInverted)
       }
-      // Above or below, the arrow sits where the hydration puts it — over the
-      // trigger's center, clear of the corner radius — and at the middle
+      // Above or below, the arrow sits where the hydration puts it—over the
+      // trigger's center, clear of the corner radius—and at the middle
       // until then.
       selector(
         "&[data-placement='bottom'] .tooltip-content::after", "&[data-placement='top'] .tooltip-content::after",
@@ -430,8 +430,8 @@ public struct TooltipView: HTMLContent {
       }
 
       // Point the arrow at the trigger's center. If that center lies inside
-      // the bubble's corner zone, slide the bubble — as far as the viewport
-      // allows — so the arrow sits just clear of the radius, over the trigger.
+      // the bubble's corner zone, slide the bubble—as far as the viewport
+      // allows—so the arrow sits just clear of the radius, over the trigger.
       switch placement.side {
       case .top, .bottom:
         guard let bubble = content.getBoundingClientRect() else { return }
@@ -658,7 +658,7 @@ public struct TooltipView: HTMLContent {
       instance = TooltipHydration()
     }
 
-    /// The tooltips under `root` — a fragment fetched into the page after its
+    /// The tooltips under `root`—a fragment fetched into the page after its
     /// own pass. One already bound is left alone.
     public static func hydrate(in root: DOM.Element) {
       guard let instance else {

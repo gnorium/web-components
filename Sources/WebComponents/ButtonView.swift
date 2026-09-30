@@ -6,7 +6,7 @@ import EmbeddedSwiftUtilities
 import HTMLBuilder
 import WebTypes
 
-/// Button — triggers an action when the user clicks or taps on it.
+/// Button—triggers an action when the user clicks or taps on it.
 public struct ButtonView: HTMLContent {
   let label: String
   let buttonColor: ButtonColor
@@ -47,22 +47,22 @@ public struct ButtonView: HTMLContent {
     case reset
   }
 
-  /// Button color — Apple HIG color for the button's action identity
+  /// Button color—Apple HIG color for the button's action identity
   public enum ButtonColor: String, Sendable, CaseIterable {
     case gray, red, orange, yellow, green, mint, teal, cyan, blue, indigo, purple, pink, brown
   }
 
   /// Button weight (visual prominence)
   public enum ButtonWeight: String, Sendable, CaseIterable {
-    /// Solid buttons signal the main action — filled background, inverted text
+    /// Solid buttons signal the main action—filled background, inverted text
     case solid
-    /// Subtle buttons are the default — light background, colored text, border
+    /// Subtle buttons are the default—light background, colored text, border
     case subtle
-    /// Static buttons — no interactive feedback at all (for structured controls like dropdowns)
+    /// Static buttons—no interactive feedback at all (for structured controls like dropdowns)
     case `static`
-    /// Quiet buttons — transparent, no border, hover shows subtle background
+    /// Quiet buttons—transparent, no border, hover shows subtle background
     case quiet
-    /// Plain buttons — transparent, no background change on hover
+    /// Plain buttons—transparent, no background change on hover
     case plain
   }
 
@@ -298,7 +298,7 @@ public struct ButtonView: HTMLContent {
   }
 
   /// The standard `popovertarget` attribute: the popover this button opens
-  /// and closes, with no script — and which the popover is then anchored to.
+  /// and closes, with no script—and which the popover is then anchored to.
   public func popoverTarget(_ id: String) -> Self {
     var copy = self
     copy.popoverTargetID = id
@@ -364,7 +364,7 @@ public struct ButtonView: HTMLContent {
         .data("font-weight", fontWeightKey)
         .style {
           selector("&") {
-            // Base — common props only — fontWeight/color via data-attributes below (cacheable)
+            // Base—common props only—fontWeight/color via data-attributes below (cacheable)
             alignItems(.center)
             gap(spacingHorizontalButton)
             fontFamily(labelFontFamily)
@@ -381,14 +381,14 @@ public struct ButtonView: HTMLContent {
             cursor(.pointer)
             // Named properties, not `all`. `all` included outline-color, so a
             // mouse click painted the browser's own focus ring for a frame and
-            // then faded it out over 100ms — the black ring that flashed on
+            // then faded it out over 100ms—the black ring that flashed on
             // every close button.
             transition("background-color 0.1s ease, border-color 0.1s ease, color 0.1s ease")
 
             // A mouse click focuses a button but should not ring it. Keyboard
             // focus does: `:focus-visible` is the browser's own judgment of
             // when a ring is useful, and it gets the focus ring every control
-            // wears — the browser's own was left to show through, in whatever
+            // wears—the browser's own was left to show through, in whatever
             // accent the system happened to have.
             pseudoClass(.focus) {
               outline(borderWidthBase, .solid, borderColorTransparent).important()
@@ -398,7 +398,7 @@ public struct ButtonView: HTMLContent {
               outlineOffset(borderWidthBase).important()
             }
 
-            // Disabled state — static via data-attributes (cacheable)
+            // Disabled state—static via data-attributes (cacheable)
             pseudoClass(.disabled) {
               color(colorDisabled).important()
               cursor(cursorNotAllowed).important()
@@ -426,7 +426,7 @@ public struct ButtonView: HTMLContent {
           if !stringEquals(buttonBorderRadius.value, borderRadiusPill.value) {
             selector("&.\(borderRadiusClass)") { borderRadius(buttonBorderRadius) }
           }
-          // Variant — static superset via data-attributes (one instance emits all)
+          // Variant—static superset via data-attributes (one instance emits all)
           selector("&[data-icon-only='true']") {
             display(.flex)
             justifyContent(.center)
@@ -489,7 +489,7 @@ public struct ButtonView: HTMLContent {
           selector("&[data-icon-only='false'][data-size='medium']") { padding(0, spacingHorizontalButton) }
           selector("&[data-icon-only='false'][data-size='large']") { padding(0, spacingHorizontalButtonLarge) }
 
-          // Quiet/Plain — opaque base bg + transparent border (not see-through on borders/surfaces)
+          // Quiet/Plain—opaque base bg + transparent border (not see-through on borders/surfaces)
           selector("&[data-weight='quiet'], &[data-weight='plain']") {
             backgroundColor(backgroundColorTransparent).important()
             borderColor(.transparent).important()
@@ -532,7 +532,7 @@ public struct ButtonView: HTMLContent {
             backgroundColor(backgroundColorDisabled).important()
             borderColor(borderColorDisabled).important()
           }
-          // Solid / Subtle / Static superset — cacheable overrides for per-instance base (fixes Mission Control blue vs white)
+          // Solid / Subtle / Static superset—cacheable overrides for per-instance base (fixes Mission Control blue vs white)
           selector("&[data-weight='solid'][data-color='gray']") {
             backgroundColor(backgroundColorInteractive)
             color(colorBase)
@@ -729,7 +729,7 @@ public struct ButtonView: HTMLContent {
             borderColor(`var`("--border-color-brown"))
           }
 
-          // Hover / Active — cacheable via data-attributes (covers all solid/subtle/quiet/plain)
+          // Hover / Active—cacheable via data-attributes (covers all solid/subtle/quiet/plain)
           selector("&[data-weight='subtle'][data-color='gray']:hover:not(:disabled)") {
             backgroundColor(backgroundColorInteractiveSubtleHover).important()
           }
@@ -1208,7 +1208,7 @@ public struct ButtonView: HTMLContent {
         .disabled(disabled)
         .style {
           selector("&") {
-            // Base — common per-instance props (static superset via data-attributes below)
+            // Base—common per-instance props (static superset via data-attributes below)
             alignItems(.center)
             gap(spacingHorizontalButton)
             fontFamily(labelFontFamily)
@@ -1225,14 +1225,14 @@ public struct ButtonView: HTMLContent {
             cursor(.pointer)
             // Named properties, not `all`. `all` included outline-color, so a
             // mouse click painted the browser's own focus ring for a frame and
-            // then faded it out over 100ms — the black ring that flashed on
+            // then faded it out over 100ms—the black ring that flashed on
             // every close button.
             transition("background-color 0.1s ease, border-color 0.1s ease, color 0.1s ease")
 
             // A mouse click focuses a button but should not ring it. Keyboard
             // focus does: `:focus-visible` is the browser's own judgment of
             // when a ring is useful, and it gets the focus ring every control
-            // wears — the browser's own was left to show through, in whatever
+            // wears—the browser's own was left to show through, in whatever
             // accent the system happened to have.
             pseudoClass(.focus) {
               outline(borderWidthBase, .solid, borderColorTransparent).important()
@@ -1242,7 +1242,7 @@ public struct ButtonView: HTMLContent {
               outlineOffset(borderWidthBase).important()
             }
 
-            // Disabled state — static via data-attributes (cacheable)
+            // Disabled state—static via data-attributes (cacheable)
             pseudoClass(.disabled) {
               color(colorDisabled).important()
               cursor(cursorNotAllowed).important()
@@ -1270,7 +1270,7 @@ public struct ButtonView: HTMLContent {
           if !stringEquals(buttonBorderRadius.value, borderRadiusPill.value) {
             selector("&.\(borderRadiusClass)") { borderRadius(buttonBorderRadius) }
           }
-          // Variant — static superset via data-attributes (one instance emits all)
+          // Variant—static superset via data-attributes (one instance emits all)
           selector("&[data-icon-only='true']") {
             display(.flex)
             justifyContent(.center)
@@ -1358,7 +1358,7 @@ public struct ButtonView: HTMLContent {
             height(sizeIconMedium)
           }
 
-          // Quiet/Plain — opaque base bg + transparent border (mirrors <a> branch)
+          // Quiet/Plain—opaque base bg + transparent border (mirrors <a> branch)
           selector("&[data-weight='quiet'], &[data-weight='plain']") {
             backgroundColor(backgroundColorTransparent).important()
             borderColor(.transparent).important()
@@ -1386,7 +1386,7 @@ public struct ButtonView: HTMLContent {
             backgroundColor(backgroundColorDisabled).important()
             borderColor(borderColorDisabled).important()
           }
-          // Solid / Subtle / Static superset — mirrors aBtn branch (fixes solid blue)
+          // Solid / Subtle / Static superset—mirrors aBtn branch (fixes solid blue)
           selector("&[data-weight='solid'][data-color='gray']") {
             backgroundColor(backgroundColorInteractive)
             color(colorBase)
@@ -1583,7 +1583,7 @@ public struct ButtonView: HTMLContent {
             borderColor(`var`("--border-color-brown"))
           }
 
-          // Hover / Active — cacheable via data-attributes (covers all solid/subtle/quiet/plain)
+          // Hover / Active—cacheable via data-attributes (covers all solid/subtle/quiet/plain)
           selector("&[data-weight='subtle'][data-color='gray']:hover:not(:disabled)") {
             backgroundColor(backgroundColorInteractiveSubtleHover).important()
           }

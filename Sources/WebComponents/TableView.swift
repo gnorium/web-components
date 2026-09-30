@@ -132,7 +132,7 @@ public struct TableView: HTMLContent {
     }
   }
 
-  /// The words a cell shows, however it is built — a bare string, a link, a
+  /// The words a cell shows, however it is built—a bare string, a link, a
   /// chip. Used for the cell's title, so a value clipped at the cell's edge
   /// is never lost.
   /// A value with a short form for a phone: `full` on wider screens,
@@ -433,11 +433,11 @@ public struct TableView: HTMLContent {
     let hasCustomTfoot = !tfootContent.isEmpty
     let hasFooter = !footerContent.isEmpty
     let hasEmptyState = !emptyStateContent.isEmpty
-    // Custom tbody supplies its own rows (data often stays []) — not an empty table.
+    // Custom tbody supplies its own rows (data often stays [])—not an empty table.
     let isEmpty = data.isEmpty && !pending && !hasCustomTbody
 
     let computedCurrentPage = currentPage ?? 1
-    // A grouped table pages by what a reader counts — the parent rows. Counting
+    // A grouped table pages by what a reader counts—the parent rows. Counting
     // every row made one antiphon with 413 runs read as "1–25 of 414", and the
     // first page was mostly that antiphon's own children.
     let topLevelCount = data.filter { $0.groupID == nil || $0.isGroupHeader }.count
@@ -1443,7 +1443,7 @@ public struct TableView: HTMLContent {
         flex(1)
       }
       // `margin: auto` rather than `flex: 1`: the message should sit in the
-      // middle of the empty body, not stretch to fill it — stretched, the line
+      // middle of the empty body, not stretch to fill it—stretched, the line
       // collapsed to nothing between the cell's own padding.
       selector("& .table-tbody td.table-empty-state > .table-empty-state-content") {
         display(.flex)
@@ -1534,7 +1534,7 @@ public struct TableView: HTMLContent {
     if isLast { classes.append("table-row-last") }
     classes.append(isEven ? "table-row-even" : "table-row-odd")
     // A row that renders collapsed is also taken out of the layout. The class
-    // above only fades and lifts it — it keeps its 44px — so a group rendered
+    // above only fades and lifts it—it keeps its 44px—so a group rendered
     // shut still pushed the table open by a row per child. With 413 runs under
     // one antiphon that was a thousand pixels of blank table. Expanding removes
     // this class first, then animates.
@@ -1815,7 +1815,7 @@ public struct TableView: HTMLContent {
         }
       }
 
-      // Group header expand/collapse — ONLY chevron is clickable
+      // Group header expand/collapse—ONLY chevron is clickable
       for header in groupHeaders {
         if let chevron = header.querySelector(".animated-right-down-chevron-view") {
           _ = chevron.addEventListener(.click) { [self] _ in
@@ -1824,7 +1824,7 @@ public struct TableView: HTMLContent {
         }
       }
 
-      // Nested sub-row group expand/collapse — ONLY chevron is clickable
+      // Nested sub-row group expand/collapse—ONLY chevron is clickable
       let subrowToggleRows = Array(table.querySelectorAll(".table-tbody tr:has(.lemma-history-toggle), .table-tbody tr:has(.table-subrow-toggle)"))
       for row in subrowToggleRows {
         if let toggle = row.querySelector(".lemma-history-toggle") ?? row.querySelector(".table-subrow-toggle") {
@@ -1906,7 +1906,7 @@ public struct TableView: HTMLContent {
         }
       }
 
-      // Row link navigation — click anywhere on row to navigate
+      // Row link navigation—click anywhere on row to navigate
       let linkRows = table.querySelectorAll("tr[data-url]:not([data-url=''])")
       for row in linkRows {
         _ = row.addEventListener(.click) { (event: Event) in
@@ -2383,7 +2383,7 @@ public struct TableView: HTMLContent {
         }
       }
 
-      // Animate sort indicator chevrons — show only on active column
+      // Animate sort indicator chevrons—show only on active column
       for btn in sortButtons {
         guard let btnColumnID = btn.getAttribute(data("column-id")) else { continue }
         let isActive = stringEquals(btnColumnID, columnID)
@@ -2456,9 +2456,9 @@ public struct TableView: HTMLContent {
         let startIdx = (page - 1) * pageSize
         let endIdx = min(startIdx + pageSize, topLevelRows.count)
 
-        // A page is a page of parent rows. Children come with their parent —
-        // shown when the parent is on this page and its group is open, hidden
-        // otherwise — rather than being counted into the page themselves.
+        // A page is a page of parent rows. Children come with their parent—shown
+        // when the parent is on this page and its group is open, hidden
+        // otherwise—rather than being counted into the page themselves.
         var visibleGroupIDs: [String] = []
         var topLevelIndex = 0
         for row in allDataRows {

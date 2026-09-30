@@ -11,8 +11,8 @@ import WebTypes
 ///
 /// It looks like a field because it sits among fields and is read the same
 /// way, but it is not one. Nothing can be typed into it and nothing submits
-/// it, so it has no control: the value is ordinary content — text, a link
-/// that clicks, a date — and a screen reader reads it as text rather than
+/// it, so it has no control: the value is ordinary content—text, a link
+/// that clicks, a date—and a screen reader reads it as text rather than
 /// announcing a read-only input. The label is not a `<label>`, since there
 /// is no control for it to label.
 ///

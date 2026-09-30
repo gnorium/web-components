@@ -3,15 +3,15 @@ import WebTypes
 
 /// Ids made unique where one form is drawn several times on a page.
 ///
-/// A form's fields are named for what they are — `work-edition`,
-/// `as-publication-year` — and a page that draws the same form for several
+/// A form's fields are named for what they are—`work-edition`,
+/// `as-publication-year`—and a page that draws the same form for several
 /// things at once, one per testament, would repeat every one of them. An id
 /// names one element on a page, and a label's `for` and an `aria-describedby`
 /// pointing at a repeated one find the first, wherever it is.
 ///
 /// So the element that holds one copy of the form scopes it: every id under
-/// it is prefixed, and every reference to one of those ids — a label's `for`,
-/// the ARIA attributes that name elements — is prefixed with it. References
+/// it is prefixed, and every reference to one of those ids—a label's `for`,
+/// the ARIA attributes that name elements—is prefixed with it. References
 /// to ids outside it are left alone, and so is its own id, which what stands
 /// outside it names. It carries its prefix in `data-id-scope`, where client
 /// code working inside it reads it back to name an element by its id.

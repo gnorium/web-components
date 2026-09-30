@@ -10,7 +10,7 @@ import EmbeddedSwiftUtilities
 import HTMLBuilder
 import WebTypes
 
-/// InfoChip — a non-interactive indicator that provides information and/or conveys a status.
+/// InfoChip—a non-interactive indicator that provides information and/or conveys a status.
 public struct InfoChipView: HTMLContent {
   let chipColor: InfoChipColor
   let weight: Weight
@@ -60,7 +60,7 @@ public struct InfoChipView: HTMLContent {
   public enum Size: String, Sendable {
     /// Standard status chip: 40px control height.
     case medium
-    /// Header / primary status — 44px tall, ``fontSizeXLarge20``
+    /// Header / primary status—44px tall, ``fontSizeXLarge20``
     case large
   }
 

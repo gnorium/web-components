@@ -62,7 +62,7 @@
             flexShrink(0)
             zIndex(zIndexSticky)
             backgroundColor(backgroundColorBase)
-            borderInlineEnd(borderWidthBase, .solid, borderColorSubtle)
+            borderInlineEnd(borderWidthBase, .solid, borderColorBase)
             overflow(.hidden)
             transition((.width, transitionDurationMedium, .ease), (.minWidth, transitionDurationMedium, .ease))
           }

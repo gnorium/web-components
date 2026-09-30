@@ -9,7 +9,7 @@
   /// colored by the site's syntax tokens rather than by a highlight.js theme.
   ///
   /// The coloring itself happens on the client, and only for a block someone
-  /// can actually see — see `CodeHydration`. A document of a few hundred
+  /// can actually see—see `CodeHydration`. A document of a few hundred
   /// thousand characters is not worth coloring until it is open.
   public struct CodeView: HTMLContent {
     let text: String
@@ -24,7 +24,7 @@
       self.showLineNumbers = showLineNumbers
     }
 
-    /// "1\n2\n3…" — as many as the text has lines.
+    /// "1\n2\n3…"—as many as the text has lines.
     static func lineNumbers(of text: String) -> String {
       var out = ""
       var line = 1
@@ -41,7 +41,7 @@
         // The numbers are a column of their own rather than a counter on each
         // line: a highlighter needs the code to be one run of text, and a
         // wrapped line would put the gutter out of step with it anyway. So the
-        // lines do not wrap — they scroll, as they do in an editor — and the
+        // lines do not wrap—they scroll, as they do in an editor—and the
         // gutter stays put while they do.
         if showLineNumbers {
           span { Self.lineNumbers(of: text) }
@@ -82,7 +82,7 @@
           backgroundColor(backgroundColorBase)
           userSelect(.none)
           paddingInlineEnd(spacing8)
-          borderInlineEnd(borderWidthBase, .solid, borderColorSubtle)
+          borderInlineEnd(borderWidthBase, .solid, borderColorBase)
         }
         descendant(".code-view-code") {
           flexGrow(0)
@@ -119,8 +119,8 @@
 
   /// Colors the code blocks someone can see, when they can see them.
   ///
-  /// A page may hold a thousand blocks — one per page of a transcription —
-  /// behind switches, accordions and a viewer's pager. Coloring them all at
+  /// A page may hold a thousand blocks—one per page of a transcription—behind
+  /// switches, accordions and a viewer's pager. Coloring them all at
   /// load would spend a second of the main thread on markup nobody has asked
   /// for, so nothing happens until a block has a box on screen: at load, after
   /// any click that may have opened one, and whenever an object viewer turns to
@@ -157,7 +157,7 @@
     public static func highlightVisible() {
       for block in document.querySelectorAll(".code-view-code") {
         // highlight.js writes data-highlighted="yes" itself, which overwrote the
-        // "true" this used to look for — so every block was highlighted again on
+        // "true" this used to look for—so every block was highlighted again on
         // every click, and highlight.js warned each time that it had been handed
         // markup it had written. Any value at all means done.
         guard stringIsEmpty(block.dataset["highlighted"] ?? "") else { continue }

@@ -17,24 +17,23 @@ import WebTypes
 ///
 /// The thing edited shows its new value, clean, framed in orange. This says
 /// how it changed, under the label "Diff:", in the subtle text color with
-/// the characters that changed colored — red where they were, green where
-/// they are — and nothing given a background. No mark is drawn on the text:
+/// the characters that changed colored—red where they were, green where
+/// they are—and nothing given a background. No mark is drawn on the text:
 /// real text is itself underlined and struck through, so a mark of that kind
 /// could not be told from the text.
 ///
 /// Two shapes, by how much there is to show:
 ///
-/// - **A line** — `text`, `outline`, `choice`, `check` — sits where a field's diff
+/// - **A line**—`text`, `outline`, `choice`, `check`—sits where a field's diff
 ///   line has always sat, under the field: "Diff: old → new". Each kind of
 ///   value is compared by its own unit, which the caller names: a text word
 ///   by word, then letter by letter inside a changed word; an outline number
-///   level by level, by position; a choice — a dropdown's, a date part's —
-///   whole; a checkbox's as one tick, green ticked, red unticked. A value
+///   level by level, by position; a choice—a dropdown's, a date part's—whole; a checkbox's as one tick, green ticked, red unticked. A value
 ///   put where there was none is the new one alone, green; one cleared is
 ///   the old one alone, red.
-/// - **A box** — `passage`, `code`, `rendered` — holds the changed lines with a
-///   little context, marked by their gutter as a unified diff marks them — "−"
-///   for a line taken out, "+" for one put in — in a field's own frame,
+/// - **A box**—`passage`, `code`, `rendered`—holds the changed lines with a
+///   little context, marked by their gutter as a unified diff marks them—"−"
+///   for a line taken out, "+" for one put in—in a field's own frame,
 ///   scrolled once it is taller than a reader's pane. A long line wraps under
 ///   its own text, the gutter beside it. The gutter and the pairing of the
 ///   lines carry the meaning, and the color only says exactly where.
@@ -46,11 +45,11 @@ public struct DiffView: HTMLContent {
     /// A one-line text's old value against its new one: word by word, then
     /// letter by letter inside a word that changed.
     case text(old: String, new: String)
-    /// An outline number's old value against its new one — 1.2 → 2.3 —
-    /// level by level, by position: a level is kept or changed whole.
+    /// An outline number's old value against its new one—1.2 → 2.3—level
+    /// by level, by position: a level is kept or changed whole.
     case outline(old: String, new: String)
     /// A choice's old value against its new one, whole: a dropdown's, a
-    /// date's — a character diff of two option names says nothing their
+    /// date's—a character diff of two option names says nothing their
     /// names do not.
     case choice(old: String, new: String)
     /// A checkbox's change: one ticked box, ☑︎, green where the box was
@@ -65,7 +64,7 @@ public struct DiffView: HTMLContent {
       case code(old: String, new: String)
       /// Rendered text as it reads, each line drawn with its formatting, so a
       /// line that changed only how it is set shows the difference itself.
-      /// `new` is nil when the new text cannot be rendered — its markup broken
+      /// `new` is nil when the new text cannot be rendered—its markup broken
       /// mid-edit.
       case rendered(old: [DiffEngine.RenderedLine], new: [DiffEngine.RenderedLine]?)
     #endif
@@ -298,7 +297,7 @@ public struct DiffView: HTMLContent {
                 case .figure:
                   span {
                     if regionChanged {
-                      "[Figure: \(token.text) — region changed]"
+                      "[Figure: \(token.text)—region changed]"
                     } else {
                       token.text.isEmpty ? "[Figure]" : "[Figure: \(token.text)]"
                     }

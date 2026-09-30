@@ -9,7 +9,7 @@ import WebTypes
 /// One month as a grid of days, six weeks of seven: the days of the months
 /// either side muted, today ringed, the chosen day filled (activating it again
 /// unpicks it). The ARIA grid a
-/// date picker moves through with the keyboard — one day, the focused one,
+/// date picker moves through with the keyboard—one day, the focused one,
 /// takes Tab (roving tabindex).
 ///
 /// Built on both sides: the server renders the first month, the client

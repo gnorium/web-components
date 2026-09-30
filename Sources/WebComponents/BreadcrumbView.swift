@@ -41,7 +41,7 @@
       // Past `maxVisible`, the middle folds into the overflow menu: the
       // trail's first two crumbs stay (home, and the section it is in), and
       // so do the crumbs nearest the page, the page's own and its parents'.
-      // What goes is the run between — the crumbs a reader least needs to
+      // What goes is the run between—the crumbs a reader least needs to
       // see to know where they are (`Gnorium › Lexico-records › … ›
       // compute and -er › Noun › Versions › Version …`).
       let folds = items.count > maxVisible

@@ -10,7 +10,7 @@
   /// A ButtonGroup consists of a set of two or more normal buttons.
   /// Children that actually wrap to a new line (detected at runtime by
   /// `ButtonGroupHydration` via offsetTop comparison) automatically stretch
-  /// to fill the row's full width — no hardcoded breakpoint required.
+  /// to fill the row's full width—no hardcoded breakpoint required.
   public struct ButtonGroupView: HTMLContent {
     public struct ButtonItem: Sendable {
       public let value: String
@@ -74,7 +74,7 @@
     /// `.fused` is a single segmented control with joined borders and one
     /// shared radius across the whole group (the classic toggle-group look).
     /// `.apart` spaces each button apart with a gap, keeping each button's
-    /// own independent shape — used for action toolbars and preference
+    /// own independent shape—used for action toolbars and preference
     /// pickers like color scheme / contrast toggles.
     public enum Shape: Sendable, Equatable {
       case fused
@@ -221,10 +221,10 @@
   import WebAPIs
   import WebTypes
 
-  /// Toggles a single `selected` class on each `.button-group-button` inside `group` —
-  /// the button matching `selectedValue` (compared against its `data-value` attribute)
+  /// Toggles a single `selected` class on each `.button-group-button` inside `group`—the
+  /// button matching `selectedValue` (compared against its `data-value` attribute)
   /// gets `.selected`, every other button has it removed. Styling for `.selected` is
-  /// emitted once, self-contained, by `ButtonGroupView` — it does
+  /// emitted once, self-contained, by `ButtonGroupView`—it does
   /// not depend on any other button on the page sharing a particular color/weight, so
   /// it can't drift out of sync the way swapping `button-color-*`/`button-weight-*`
   /// classes across buttons could.
@@ -332,7 +332,7 @@
     // Must measure with `data-wrapped` cleared first: once set, the CSS
     // forces each child to flex-basis 100% (its own full-width row), which
     // makes every subsequent measurement see wrapped children regardless of
-    // available width — a sticky state that would never revert on grow.
+    // available width—a sticky state that would never revert on grow.
     private func updateWrappedState(_ group: DOM.Element) {
       group.removeAttribute("data-wrapped")
       let children = group.querySelectorAll(":scope > *")

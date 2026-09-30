@@ -212,7 +212,7 @@
           insetInlineEnd(0)
           marginBlockStart(spacing4)
           backgroundColor(backgroundColorBase)
-          border(borderWidthBase, .solid, borderColorSubtle)
+          border(borderWidthBase, .solid, borderColorBase)
           borderRadius(borderRadiusBase)
           boxShadow(boxShadowMedium)
           zIndex(100)
@@ -271,7 +271,7 @@
         }
         descendant(".menu-group-divider") {
           height(borderWidthBase)
-          backgroundColor(borderColorSubtle)
+          backgroundColor(borderColorBase)
           margin(spacing8, spacing0)
           border(.none)
         }

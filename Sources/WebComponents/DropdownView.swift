@@ -45,7 +45,7 @@ public struct DropdownView: HTMLContent {
   public enum OptionLayout: Sendable {
     /// Display and alt on one line, alt pushed to the far end.
     case inline
-    /// Display over alt, two rows — so neither has to be truncated.
+    /// Display over alt, two rows—so neither has to be truncated.
     case stacked
   }
 
@@ -382,7 +382,7 @@ public struct DropdownView: HTMLContent {
         fontFamily(typographyFontSans)
       }
       // One line, held inside the trigger, fading out at its end when it
-      // runs past it (`fadeOverflow`): no tap-to-expand, no ellipsis — the
+      // runs past it (`fadeOverflow`): no tap-to-expand, no ellipsis—the
       // open list shows the whole value.
       descendant(".dropdown-selected-text") {
         textAlign(.start)
@@ -415,7 +415,7 @@ public struct DropdownView: HTMLContent {
         flex(1)
         justifyContent(.spaceBetween)
       }
-      // Trigger radius comes from ButtonView(borderRadius:) — do not override here
+      // Trigger radius comes from ButtonView(borderRadius:)—do not override here
       // (shared .dropdown-view CSS would otherwise force one radius for all instances).
       media(maxWidth(maxWidthBreakpointMobile)) {
         descendant(".dropdown-trigger-wrapper") {
@@ -515,12 +515,12 @@ public struct DropdownView: HTMLContent {
         fontSize(fontSizeXSmall12)
         lineHeight(lineHeightSmall22)
         color(colorSubtle)
-        borderBlockStart(borderWidthBase, .solid, borderColorSubtle)
+        borderBlockStart(borderWidthBase, .solid, borderColorBase)
         cursor(cursorBase)
       }
       descendant(".dropdown-search-input-wrapper") {
         padding(spacing8)
-        borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
+        borderBlockEnd(borderWidthBase, .solid, borderColorBase)
       }
       descendant(".dropdown-option") {
         display(.flex)
@@ -596,7 +596,7 @@ public struct DropdownView: HTMLContent {
         color(colorInvertedFixed).important()
       }
       // Wrapped, not cut: the menu is the one place a long title is read
-      // whole — the trigger above it is the one that ellipses.
+      // whole—the trigger above it is the one that ellipses.
       descendant(".dropdown-option-display-text[data-stacked='true']") {
         fontWeight(fontWeightSemiBold)
         fontSize(fontSizeSmall14)
@@ -710,7 +710,7 @@ public struct DropdownView: HTMLContent {
       optionsList = container.querySelector("[data-dropdown-options-list=\"true\"]")
       selectedText = container.querySelector("[data-dropdown-selected-text=\"true\"]")
 
-      // Read the real placeholder from its data attribute — not the current
+      // Read the real placeholder from its data attribute—not the current
       // button text, which for a preselected dropdown is the selected option's
       // display (so deselecting would wrongly restore that instead of the
       // placeholder).
@@ -741,7 +741,7 @@ public struct DropdownView: HTMLContent {
 
     /// Enforces `required` for this dropdown on its form's submit.
     ///
-    /// Server-side guards stay — they are the real protection. This only makes
+    /// Server-side guards stay—they are the real protection. This only makes
     /// the failure visible where the reader can fix it.
     private func bindRequiredValidation() {
       guard let input = hiddenInput as? HTML.HTMLInputElement,
@@ -906,8 +906,8 @@ public struct DropdownView: HTMLContent {
     /// its field are bound.
     private var placementBound = false
 
-    /// A dropdown in a scrollport — a box that scrolls sideways, as a deep
-    /// tree does (`OutlinerView`), marked `data-scrollport` — would have its
+    /// A dropdown in a scrollport—a box that scrolls sideways, as a deep
+    /// tree does (`OutlinerView`), marked `data-scrollport`—would have its
     /// menu cut off at the box's edge, or scrolled inside it. There the open
     /// menu is placed over the page instead, under its field (fixed, at the
     /// field's place on the screen, at least its width), and kept there as
@@ -1061,7 +1061,7 @@ public struct DropdownView: HTMLContent {
     }
 
     /// Marks the options the page withholds: values a page sets on the
-    /// root as `data-excluded-values` (comma-separated) while it runs — an
+    /// root as `data-excluded-values` (comma-separated) while it runs—an
     /// origin step's record, which another step already names. Such an
     /// option, its own or a search's, is neither shown nor reached by the
     /// keyboard; read afresh each time the menu shows.

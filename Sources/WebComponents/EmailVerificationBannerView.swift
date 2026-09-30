@@ -71,8 +71,8 @@
   /// link to the signed-in account's own address (the request names none).
   /// The button is disabled while it sends, then for a minute after a link
   /// goes, counting down ("Resend in 59s"), as the server refuses a new link
-  /// sooner (429); the outcome is an alert of its own just above the banner —
-  /// green when the link went, red when it didn't — replacing the last one. The close
+  /// sooner (429); the outcome is an alert of its own just above the banner—green
+  /// when the link went, red when it didn't—replacing the last one. The close
   /// control is the alert's own (`AlertHydration`).
   public class EmailVerificationBannerHydration: @unchecked Sendable {
     public static nonisolated(unsafe) var instance: EmailVerificationBannerHydration?
@@ -126,7 +126,7 @@
     /// (`EmailVerification.resendCooldown`).
     static let cooldownSeconds = 60
 
-    /// The button waits, counting down — "Resend in 59s" — then offers
+    /// The button waits, counting down—"Resend in 59s"—then offers
     /// Resend Email again.
     private func coolDown(_ seconds: Int) {
       guard seconds > 0 else {

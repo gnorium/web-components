@@ -6,7 +6,7 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-/// Visual cross / x-mark leaf. Use for close, failed, or clear — meaning is call-site.
+/// Visual cross / x-mark leaf. Use for close, failed, or clear—meaning is call-site.
 /// Available on SERVER + CLIENT so CrossIconFactory can render without hand-built SVG replicas.
 public struct CrossIconView: HTMLContent {
   let width: CSS.Length
@@ -45,7 +45,7 @@ public struct CrossIconView: HTMLContent {
 #if CLIENT
   import WebAPIs
 
-  /// CLIENT factory — create CrossIconView DOM matching server-rendered markup.
+  /// CLIENT factory—create CrossIconView DOM matching server-rendered markup.
   public enum CrossIconFactory {
     public static func createElement(
       width: CSS.Length = px(20),

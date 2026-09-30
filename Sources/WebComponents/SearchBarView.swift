@@ -301,7 +301,7 @@
           listStyleType(.none)
         }
         descendant(".search-bar-suggestion-item[data-last='false']") {
-          borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
+          borderBlockEnd(borderWidthBase, .solid, borderColorBase)
         }
       }
     }

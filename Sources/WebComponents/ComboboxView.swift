@@ -15,7 +15,7 @@ import WebTypes
 /// provider, a holding institution, a genre).
 ///
 /// What it posts (`name`, on a hidden input whose id is `id`) is the chosen
-/// suggestion's value, or the typed text when it names none — a typed text
+/// suggestion's value, or the typed text when it names none—a typed text
 /// equal to a suggestion's name, letter case aside, is that suggestion.
 ///
 /// The suggestions are its own (`options`), or a server's (`searchURL`):
@@ -373,7 +373,7 @@ public struct ComboboxView: HTMLContent {
         fontSize(fontSizeXSmall12)
         lineHeight(lineHeightSmall22)
         color(colorSubtle)
-        borderBlockStart(borderWidthBase, .solid, borderColorSubtle)
+        borderBlockStart(borderWidthBase, .solid, borderColorBase)
       }
     }
   }

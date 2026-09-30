@@ -4,9 +4,9 @@ import DesignTokens
 import EmbeddedSwiftUtilities
 import WebTypes
 
-// A block that can run to any length — a model's reasoning, a prompt with a
+// A block that can run to any length—a model's reasoning, a prompt with a
 // page transcript in it, a tool's dump, a work's pedigree of tens of
-// thousands of lines — is capped at `size256` tall and scrolls inside, so the
+// thousands of lines—is capped at `size256` tall and scrolls inside, so the
 // page around it stays in view and does not grow with it. Both SERVER and
 // CLIENT: session cards are drawn on either side.
 

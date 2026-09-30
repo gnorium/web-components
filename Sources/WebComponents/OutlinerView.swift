@@ -3,8 +3,8 @@ import EmbeddedSwiftUtilities
 /// Which items of an outline moved between two arrangements of it.
 ///
 /// An item moved when its parent changed. Among items that kept their parent,
-/// the ones that kept their order relative to each other did not move — the
-/// longest run of them whose old positions still increase — and every other
+/// the ones that kept their order relative to each other did not move—the
+/// longest run of them whose old positions still increase—and every other
 /// one did. So dragging one item to the top of a list reports that one item,
 /// not the whole list it renumbered: renumbering alone is never a move.
 ///
@@ -29,7 +29,7 @@ public enum OutlineMoves {
 
   /// Whether each entry moved, in the order given.
   ///
-  /// Two orders can be equally short of the old one — swap two neighbors
+  /// Two orders can be equally short of the old one—swap two neighbors
   /// and either of them could be the one that moved. `touched` breaks the
   /// tie: an item the reader actually moved is the one reported, rather
   /// than the neighbor it passed.
@@ -56,8 +56,8 @@ public enum OutlineMoves {
     return moved
   }
 
-  /// Which elements belong to one longest strictly increasing subsequence —
-  /// of those, the one that keeps the most `untouched` elements, and then
+  /// Which elements belong to one longest strictly increasing subsequence—of
+  /// those, the one that keeps the most `untouched` elements, and then
   /// the one that keeps the items that stood earliest. That last is the
   /// usual case settled right: an item moved up past its neighbors is the
   /// one that moved, not all of them moving down.
@@ -102,7 +102,7 @@ public enum OutlineMoves {
   import WebTypes
 
   /// The site's one tree: a nested list drawn as a real tree, indented, that
-  /// its reader may also rearrange — the record pages' testament and
+  /// its reader may also rearrange—the record pages' testament and
   /// sentiment trees, an origin's steps, the amendment and submission
   /// outlines, a form's nested steps.
   ///
@@ -126,14 +126,14 @@ public enum OutlineMoves {
   /// (`DropdownView`).
   ///
   /// **Arranged** only where it has a `name` (the hidden input the
-  /// arrangement posts as): then its reader can rearrange it — by dragging
+  /// arrangement posts as): then its reader can rearrange it—by dragging
   /// an item's handle, by picking it up and moving it with a toolbar, or
   /// from the keyboard. With no `name` it is a tree to read: no handles, no
   /// toolbar, nothing posted.
   ///
   /// Each item carries content the caller builds, a label to announce it by,
-  /// and a rank. Ranks order the levels an outline may nest — the smaller the
-  /// number, the higher the level — and one rule holds for every outline,
+  /// and a rank. Ranks order the levels an outline may nest—the smaller the
+  /// number, the higher the level—and one rule holds for every outline,
   /// whatever it outlines:
   ///
   /// - an item may sit under an item of its own rank: an edition grouping
@@ -153,14 +153,14 @@ public enum OutlineMoves {
   /// option to loosen or tighten the rule: a bibliographic tree and a
   /// lexicographic one nest the same way.
   ///
-  /// Each item's content is handed the pieces the outline puts in it — its
+  /// Each item's content is handed the pieces the outline puts in it—its
   /// handle and the line saying how its number changed, both nil in a tree
-  /// to read — and places them in its own layout: the handle in its header.
+  /// to read—and places them in its own layout: the handle in its header.
   ///
-  /// The handle is the only control in a row that moves it. Pressing it — a
-  /// click, a tap, Space or Enter — picks the item up: it is marked as held,
-  /// and a toolbar appears at the foot of the screen with the four moves —
-  /// up, down, out a level, in a level — each unavailable where it cannot
+  /// The handle is the only control in a row that moves it. Pressing it—a
+  /// click, a tap, Space or Enter—picks the item up: it is marked as held,
+  /// and a toolbar appears at the foot of the screen with the four moves—up,
+  /// down, out a level, in a level—each unavailable where it cannot
   /// go, and Done. The item stays held through as many moves as it takes,
   /// until Done, another press on its handle, or Escape. From the keyboard,
   /// while it is held, ↑ and ↓ move it among its siblings, Tab and → put it
@@ -182,9 +182,9 @@ public enum OutlineMoves {
   /// `{"a": {"parent": "root", "position": 0}}`, where the top level's parent
   /// is `rootID`. An item that moved is marked `data-outliner-moved`: one whose
   /// parent changed, or one outside the longest run of its siblings that kept
-  /// their order — so a move marks the item moved, not every neighbor it
-  /// renumbered. Every item whose number changed — moved, or only renumbered
-  /// by a move near it — says so as a changed field says it: "Diff: 1.3 →
+  /// their order—so a move marks the item moved, not every neighbor it
+  /// renumbered. Every item whose number changed—moved, or only renumbered
+  /// by a move near it—says so as a changed field says it: "Diff: 1.3 →
   /// 1.1". The root dispatches `outliner-change` with the JSON after every
   /// move.
   ///
@@ -286,8 +286,8 @@ public enum OutlineMoves {
     ///   - name: The hidden input's name, and `form` the form it submits
     ///     with when the outline is not inside it. Nil draws a tree to
     ///     read, which nothing rearranges.
-    ///   - numberSelector: Where in an item's content its number — 1, 2.1 —
-    ///     is written, so a caller that shows numbers keeps them true as the
+    ///   - numberSelector: Where in an item's content its number—1, 2.1—is
+    ///     written, so a caller that shows numbers keeps them true as the
     ///     outline changes. Empty writes none.
     ///   - rankRefusal: What a move the ranks refuse is told, in the page's
     ///     own words for what it outlines.
@@ -464,7 +464,7 @@ public enum OutlineMoves {
         .ariaPressed(false)
         .ariaDescribedby("\(treeID)-instructions")
         .build()
-        // How its number changed, as a changed field says it — shown
+        // How its number changed, as a changed field says it—shown
         // whenever its number is no longer what it was, and written again
         // by the client as moves change it.
         let diff = div { DiffView(.outline(old: origin.number, new: number)) }
@@ -683,7 +683,7 @@ public enum OutlineMoves {
         insetBlockEnd(0)
         insetInlineStart((size24 - borderWidthBase) / 2)
         width(borderWidthBase)
-        backgroundColor(borderColorSubtle)
+        backgroundColor(borderColorBase)
         pointerEvents(.none)
       }
       // An item with nothing under it has an empty list, kept so a move
@@ -703,7 +703,7 @@ public enum OutlineMoves {
       }
       // An accordion item is one card, as a record page reads: its own
       // accordion's border drawn round the whole item, so the items under it
-      // stand inside it, after what its accordion opens into — no step in,
+      // stand inside it, after what its accordion opens into—no step in,
       // no guide line; the card is the nesting.
       descendant(".outliner-item[data-outliner-accordion='true']") {
         gap(0)
@@ -813,8 +813,8 @@ public enum OutlineMoves {
         userSelect(.none)
       }
       // Where a drag would land: a straight bar, square-ended, centered in
-      // the gap above the row or below it — or, for into it, along its foot,
-      // indented — drawn apart from the row's border, so it never bends
+      // the gap above the row or below it—or, for into it, along its foot,
+      // indented—drawn apart from the row's border, so it never bends
       // round a rounded corner.
       selector(
         "& .outliner-row[data-outliner-drop='before']::before",
@@ -895,7 +895,7 @@ public enum OutlineMoves {
         padding(spacing8)
         maxWidth(vw(100) - spacing16 * 2)
         backgroundColor(backgroundColorBase)
-        border(borderWidthBase, .solid, borderColorSubtle)
+        border(borderWidthBase, .solid, borderColorBase)
         borderRadius(borderRadiusPill)
         boxShadow(boxShadowLarge)
       }
@@ -1087,7 +1087,7 @@ public enum OutlineMoves {
       item.querySelector(":scope > .outliner-list")
     }
 
-    /// The item a list belongs to — the nearest item it sits inside; nil for
+    /// The item a list belongs to—the nearest item it sits inside; nil for
     /// the top level.
     private func owner(of list: DOM.Element) -> DOM.Element? {
       list.parentElement?.closest(".outliner-item")
@@ -1472,7 +1472,7 @@ public enum OutlineMoves {
     }
 
     /// A drag begins: the item is the one dragged, its place a placeholder,
-    /// and a preview of its header — the line with its handle — is made to
+    /// and a preview of its header—the line with its handle—is made to
     /// follow the pointer.
     private func begin(_ item: DOM.Element) {
       dragged = item
@@ -1680,7 +1680,7 @@ public enum OutlineMoves {
       root.dispatchEvent(CustomEvent(type: "outliner-change", detail: shapeJSON()))
     }
 
-    /// Numbers, moved marks, the toolbar and the submitted JSON — all read
+    /// Numbers, moved marks, the toolbar and the submitted JSON—all read
     /// off the outline as it now stands.
     private func refresh() {
       guard let top = root.querySelector(":scope > .outliner-scroll > .outliner-list") else { return }

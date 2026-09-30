@@ -19,8 +19,8 @@
   /// page is one `.tei-transcript` (its text, its code, its translation), paired
   /// with its canvas by `data-service-id`; the page's image is not drawn here.
   ///
-  /// Line breaks are kept because they are evidence — a diplomatic transcript
-  /// says where the compositor broke the line — and the tags that survive the
+  /// Line breaks are kept because they are evidence—a diplomatic transcript
+  /// says where the compositor broke the line—and the tags that survive the
   /// strip are the ones a reader of the text needs: headings, speakers, stage
   /// directions.
   public struct TEIView: HTMLContent {
@@ -28,7 +28,7 @@
     /// Whether each page's code can be edited. The code is edited as it
     /// is, not as the Raw view prettifies it: prettifying drops the spaces
     /// between tags, and a correction must not quietly make others. The
-    /// transcript stays a transcript — nothing in it can be typed into.
+    /// transcript stays a transcript—nothing in it can be typed into.
     let editable: Bool
     /// The transcript's translation, when it has one: a third layer of each
     /// page's transcript, which the viewer's Translated switch shows in the
@@ -53,7 +53,7 @@
     /// the translation's own TEI, read by the same reader as the transcript,
     /// so the two are set alike line for line.
     public struct Translation: Sendable {
-      /// One page's translation, read, and a note on it — that its text has
+      /// One page's translation, read, and a note on it—that its text has
       /// changed since, say.
       public struct Page: Sendable {
         public let page: TEIPage
@@ -101,7 +101,7 @@
     /// A page's transcript as the lines a diff compares: each line's runs with
     /// their setting, a formula whole, a figure by its caption and region, a
     /// page turn inside the image as a line of its own. White space that only
-    /// lays the code out — a line end and its indent — reads as the one
+    /// lays the code out—a line end and its indent—reads as the one
     /// space a transcript shows; spaces the transcription set are kept.
     public static func renderedLines(of lines: [TEILine]) -> [DiffEngine.RenderedLine] {
       func style(_ rend: String) -> [String] {
@@ -548,7 +548,7 @@
             div {
               if editable {
                 // A form of its own, so the page can be sent to be read back
-                // as it is being edited — its semblance and its code.
+                // as it is being edited—its semblance and its code.
                 form {
                   input()
                     .type(.hidden)
@@ -638,7 +638,7 @@
           height(.auto)
           objectFit(.contain)
           borderRadius(borderRadiusBase)
-          border(borderWidthBase, .solid, borderColorSubtle)
+          border(borderWidthBase, .solid, borderColorBase)
         }
         // A decorated initial is one letter of the text; shown at the width
         // of a plate it stops being an initial and becomes a poster.
@@ -669,7 +669,7 @@
         }
         // `<hi rend="…">` on the run it applies to. Small caps mark an author
         // statement; italic marks a speaker prefix or an emphasis the
-        // compositor set — both are on the page, so both are in the transcript.
+        // compositor set—both are on the page, so both are in the transcript.
         selector("& .tei-run[data-rend~='smallcaps']", "& .tei-run[data-rend~='small-caps']") {
           // No typed helper for this one; the builder takes a raw property.
           CSS.Property("font-variant-caps", "small-caps")
@@ -711,7 +711,7 @@
           color(colorBase)
         }
         selector("& .tei-table td", "& .tei-table th") {
-          border(borderWidthBase, .solid, borderColorSubtle)
+          border(borderWidthBase, .solid, borderColorBase)
           padding(spacing4, spacing8)
           verticalAlign(.middle)
           textAlign(.start)
@@ -723,7 +723,7 @@
         descendant(".tei-document-boundary") {
           width(perc(100))
           border(.none)
-          borderTop(borderWidthBase, .solid, borderColorSubtle)
+          borderTop(borderWidthBase, .solid, borderColorBase)
           marginBlock(spacing8)
         }
         // How each block is set on the image, TEI's rendition style on its

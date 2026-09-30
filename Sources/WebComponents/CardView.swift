@@ -111,7 +111,7 @@
             selector("&") {
               display(.block)
               backgroundColor(backgroundColorBase)
-              border(borderWidthBase, .solid, borderColorSubtle)
+              border(borderWidthBase, .solid, borderColorBase)
               borderRadius(borderRadiusBase)
               overflow(.hidden)
               boxShadow(boxShadowSmall)
@@ -215,7 +215,7 @@
             selector("&") {
               display(.block)
               backgroundColor(backgroundColorBase)
-              border(borderWidthBase, .solid, borderColorSubtle)
+              border(borderWidthBase, .solid, borderColorBase)
               borderRadius(borderRadiusBase)
               overflow(.hidden)
               boxShadow(boxShadowSmall)

@@ -7,33 +7,33 @@ import HTMLBuilder
 import WebTypes
 
 /// A field, and how it changed: the one way every form part draws a field
-/// and its diff — a colored border on the control and, under it, its
+/// and its diff—a colored border on the control and, under it, its
 /// "Diff:" line, a `DiffView`.
 ///
 /// Two sources, one look:
 ///
-/// - **Live** (`key:originalValue:`) — a field under edit. The form's
+/// - **Live** (`key:originalValue:`)—a field under edit. The form's
 ///   hydration finds the wrapper by `data-field-diff-view`, compares the
 ///   field with `data-original-value` on input and change, marks the control
-///   that carries the border with `data-diff-state` — `unchanged`, `added`,
-///   `removed`, `changed` — and draws its diff into the slot under it, shown
+///   that carries the border with `data-diff-state`—`unchanged`, `added`,
+///   `removed`, `changed`—and draws its diff into the slot under it, shown
 ///   with `data-visible`.
-/// - **Saved** (`originalValue:value:`) — a field as an edit left it, drawn by
+/// - **Saved** (`originalValue:value:`)—a field as an edit left it, drawn by
 ///   the server: marked `.diff-wrap-added`, `-removed` or `-changed`, its diff
 ///   already in the slot. A value put where there was none is the new one
 ///   alone, green; one cleared is the old one alone, red; one changed is
 ///   "old → new". A field that did not change is the field alone, with
-///   neither, and so is one given no original — a form that is not a diff.
+///   neither, and so is one given no original—a form that is not a diff.
 ///
 /// The form that holds the fields draws those states through `stateCSS()`,
-/// so fields outside a wrapper — a repeatable list's rows edited live — are
+/// so fields outside a wrapper—a repeatable list's rows edited live—are
 /// drawn the same way.
 public struct FieldDiffView: HTMLContent {
   /// How a saved field's two values are compared: the `DiffView` mode.
   public enum Comparison: Sendable {
     /// A one-line text, word by word, then letter by letter.
     case text
-    /// A choice — a dropdown's, a date part's — whole, by the names shown.
+    /// A choice—a dropdown's, a date part's—whole, by the names shown.
     case choice
     /// A multi-line text, line by line.
     case passage
@@ -85,8 +85,8 @@ public struct FieldDiffView: HTMLContent {
   }
 
   /// How a field says what an edit did to it, for every form that edits and
-  /// every page that shows an edit: green added, red removed, orange changed
-  /// — the control's own border, and a ring of the same color — and its
+  /// every page that shows an edit: green added, red removed, orange changed—the
+  /// control's own border, and a ring of the same color—and its
   /// diff under it shown only once there is one.
   ///
   /// The live diff marks the control with `data-diff-state`; a saved diff
@@ -124,7 +124,7 @@ public struct FieldDiffView: HTMLContent {
   }
 
   /// A saved diff colors the field's own control, not the facts a choice
-  /// shows about itself in its info panel — they are not fields, and have
+  /// shows about itself in its info panel—they are not fields, and have
   /// no diff line of their own.
   @CSSBuilder
   static func state(_ name: String, color: CSS.Color) -> [CSSOM.CSSRule] {

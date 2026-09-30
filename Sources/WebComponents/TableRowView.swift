@@ -66,7 +66,7 @@ public struct TableRowView: HTMLContent {
     .data("row-id", id)
     .data("group-header", isGroupHeader)
     .style {
-      selector("&") { borderBottom(px(1), .solid, borderColorSubtle) }
+      selector("&") { borderBottom(px(1), .solid, borderColorBase) }
       pseudoClass(.hover) { backgroundColor(backgroundColorInteractiveSubtleHover) }
       selector("&[data-group-header='true']") {
         backgroundColor(backgroundColorNeutralSubtle)

@@ -63,8 +63,8 @@ public struct FieldValidationMessageView: HTMLContent {
     }
 
     return message.style {
-      // The words start where a field's text starts — the control's border
-      // and its 15px inline padding in (TextInputView) — and the icon
+      // The words start where a field's text starts—the control's border
+      // and its 15px inline padding in (TextInputView)—and the icon
       // stands inside that inset, at the field's edge: 12px, leaving a 4px
       // gap before the words.
       selector("&") {
