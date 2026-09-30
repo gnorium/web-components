@@ -39,9 +39,9 @@
           // Dismiss button
           CloseButtonView(ariaLabel: "Dismiss", class: "dismiss-verification-banner")
         }
-        .class("email-verification-banner-view")
+        .class("email-verification-banner-content")
       }
-      .class(`class`.isEmpty ? "email-verification-banner" : "email-verification-banner \(`class`)")
+      .class(`class`.isEmpty ? "email-verification-banner-view" : "email-verification-banner-view \(`class`)")
       .data("hydrate", "email-verification-banner")
       .data("dismissed", false)
       .style {
@@ -51,12 +51,14 @@
           padding(spacing12, spacing16)
         }
         selector("&[data-dismissed='true']") { display(.none) }
-        descendant(".email-verification-banner-view") {
+        // On a phone the message takes its own line; the buttons wrap under it.
+        descendant(".email-verification-banner-content") {
           display(.flex)
+          flexWrap(.wrap)
           alignItems(.center)
           gap(spacing12)
           maxWidth(px(1200))
-          margin(0, .auto)
+          marginInline(.auto)
         }
         descendant(".email-verification-banner-icon") {
           display(.flex)
@@ -66,7 +68,10 @@
         descendant(".email-verification-banner-message") {
           fontSize(fontSizeSmall14)
           color(colorBase)
-          flex(1)
+          flexGrow(1)
+          flexBasis(px(240))
+          minWidth(0)
+          overflowWrap(.anywhere)
         }
         descendant(".resend-verification-email") {
           padding(spacing8, spacing12)
@@ -100,7 +105,7 @@
     nonisolated(unsafe) private var dismissButton: DOM.Element?
 
     public init?() {
-      banner = document.querySelector(".email-verification-banner")
+      banner = document.querySelector(".email-verification-banner-view")
       guard banner != nil else {
         return nil
       }
