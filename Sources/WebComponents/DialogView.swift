@@ -288,10 +288,10 @@
           display(.flex)
           flexDirection(.column)
           gap(spacing4)
-          // AlertView's inset — 16px inline, 12px block — shared by header,
-          // body and footer, so their text lines up;
-          // no dividers between them.
-          padding(spacing12, spacing16, px(0))
+          // 16px on every outer edge, shared by header, body and footer so
+          // their text lines up; 8px from the title to its text, 16px from
+          // the text to the buttons; no dividers between them.
+          padding(spacing16, spacing16, px(0))
         }
         descendant(".dialog-footer-text") {
           fontFamily(typographyFontSans)
@@ -317,7 +317,7 @@
           display(.flex)
           flexDirection(.column)
           gap(spacing12)
-          padding(px(0), spacing16, spacing12)
+          padding(px(0), spacing16, spacing16)
         }
         descendant(".dialog-footer[data-default='true'][data-has-footer-text='false']") {
           flexDirection(.row)
@@ -329,7 +329,7 @@
           fontSize(fontSizeMedium16)
           lineHeight(lineHeightMedium26)
           color(colorBase)
-          padding(spacing12, spacing16)
+          padding(spacing8, spacing16, spacing16)
           overflowY(.auto)
           flex(1)
         }
