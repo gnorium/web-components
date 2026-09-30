@@ -101,11 +101,13 @@
     }
 
     private func setLabel(_ text: String, disabled: Bool) {
-      // The attribute itself: a queried element is a plain `DOM.Element`.
+      // A disabled ButtonView's own marks: `disabled` and `aria-disabled`.
       if disabled {
-        _ = resend.setAttribute("disabled", "")
+        _ = resend.setAttribute("disabled", "disabled")
+        _ = resend.setAttribute("aria-disabled", "true")
       } else {
         resend.removeAttribute("disabled")
+        resend.removeAttribute("aria-disabled")
       }
       resend.querySelector(".button-label")?.textContent = text
     }
