@@ -70,6 +70,10 @@ public struct AccordionView: HTMLContent {
   let titleContent: [DOM.Node]
   let descriptionContent: [DOM.Node]
   let contentSlot: [DOM.Node]
+  /// Controls in the header, between the title and the chevron: a tree
+  /// node's own + and − (`RecordRowView`). A press on one works the
+  /// control and never opens or closes the accordion.
+  let actionsContent: [DOM.Node]
   let `class`: String
 
   public init(
@@ -86,10 +90,12 @@ public struct AccordionView: HTMLContent {
     class: String = "",
     @HTMLBuilder title: () -> [DOM.Node],
     @HTMLBuilder description: () -> [DOM.Node] = { [] },
+    @HTMLBuilder actions: () -> [DOM.Node] = { [] },
     @HTMLBuilder content: () -> [DOM.Node]
   ) {
     self.id = id
     self.isOpen = isOpen
+    self.actionsContent = actions()
     self.actionIcon = actionIcon
     self.actionAlwaysVisible = actionAlwaysVisible
     self.actionButtonLabel = actionButtonLabel
@@ -186,6 +192,30 @@ public struct AccordionView: HTMLContent {
           }
         }
 
+        if !actionsContent.isEmpty {
+          div { actionsContent }
+            .class("accordion-header-actions")
+            .style {
+              selector("&") {
+                display(.flex)
+                alignItems(.center)
+                flexShrink(0)
+                minWidth(0)
+              }
+              // A phone: on a line of their own under the title, full
+              // width, as every add/remove group is there.
+              media(maxWidth(maxWidthBreakpointMobile)) {
+                selector("&") {
+                  order(1).important()
+                  flexBasis(perc(100)).important()
+                }
+                selector("& > *") {
+                  flex(1).important()
+                }
+              }
+            }
+        }
+
         if let icon = actionIcon {
           button {
             span { icon }
@@ -248,6 +278,8 @@ public struct AccordionView: HTMLContent {
       .style {
         selector("&") {
           display(.flex)
+          // Its header controls take a line of their own on a phone.
+          flexWrap(.wrap)
           alignItems(.center)
           gap(spacing8)
           cursor(cursorBaseHover)
@@ -477,6 +509,11 @@ public struct AccordionView: HTMLContent {
         // as it is: a reference mark beside a heading is read, not opened.
         // Not prevented either, so the link's own navigation runs.
         if let target = event.target, let link = target.closest("a"), let _ = link.closest(".accordion-summary") {
+          return
+        }
+        // A control in the header works itself, never the accordion.
+        if let target = event.target, let _ = target.closest(".accordion-header-actions") {
+          event.preventDefault()
           return
         }
         // Keep <details> open for the whole motion; native toggle would

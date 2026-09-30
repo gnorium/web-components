@@ -421,6 +421,25 @@ public enum OutlineMoves {
       return nil
     }
 
+    /// Marks the first accordion in an item's content (the outermost) as the
+    /// item's own: the one its card is drawn by.
+    private static func markOwnAccordion(_ nodes: [DOM.Node]) -> Bool {
+      for node in nodes {
+        if let element = node as? DOM.Element {
+          if let classes = element.attributes.first(where: { $0.0 == "class" })?.1,
+            classes.split(separator: " ").contains("accordion-view")
+          {
+            element.attributes.append(("data-outliner-own-accordion", "true"))
+            return true
+          }
+          if markOwnAccordion(element.children) { return true }
+        } else if let fragment = node as? DOM.DocumentFragment {
+          if markOwnAccordion(fragment.children) { return true }
+        }
+      }
+      return false
+    }
+
     /// An item and every item under it. The nesting is data, so the markup
     /// recurses.
     static func item(
@@ -457,6 +476,7 @@ public enum OutlineMoves {
       let content = node.content(slots)
       // An accordion item starts collapsed where its accordion starts closed.
       let collapsed = node.accordion && accordionIsOpen(content) == false
+      if node.accordion { _ = markOwnAccordion(content) }
       var element = li {
         div {
           if !node.accordion {
@@ -679,6 +699,25 @@ public enum OutlineMoves {
         minWidth(0)
       }
       descendant(".outliner-item[data-outliner-collapsed='true'] > .outliner-list") {
+        display(.none)
+      }
+      // An accordion item is one card, as a record page reads: its own
+      // accordion's border drawn round the whole item, so the items under it
+      // stand inside it, after what its accordion opens into — no step in,
+      // no guide line; the card is the nesting.
+      descendant(".outliner-item[data-outliner-accordion='true']") {
+        gap(0)
+        border(borderWidthBase, .solid, borderColorBase)
+        borderRadius(borderRadiusBase)
+      }
+      descendant(".outliner-item[data-outliner-accordion='true'] > .outliner-row [data-outliner-own-accordion='true']") {
+        border(.none)
+      }
+      descendant(".outliner-item[data-outliner-accordion='true'] > .outliner-list") {
+        paddingInline(spacing16)
+        paddingBlockEnd(spacing16)
+      }
+      descendant(".outliner-item[data-outliner-accordion='true'] > .outliner-list::before") {
         display(.none)
       }
       descendant(".outliner-row") {
