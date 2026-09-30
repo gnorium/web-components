@@ -746,8 +746,10 @@ public struct DropdownView: HTMLContent {
     private func bindRequiredValidation() {
       guard let input = hiddenInput as? HTML.HTMLInputElement,
         input.hasAttribute("required"),
-        let container,
-        let form = container.closest("form")
+        let _ = container,
+        // Its form, as the platform's `form` property says: the one its
+        // `form` attribute names, else the one it stands in.
+        let form = FieldValidationHydration.owner(of: input)
       else { return }
 
       _ = form.addEventListener(.submit) { [self] (event: Event) in

@@ -146,6 +146,9 @@ public struct ConstraintMessages: Sendable {
   /// still evaluates (`validity`) and autofill and mobile keyboards still
   /// read. A confirmation names the control it repeats with `data-matches`.
   /// The words come from `ConstraintMessages` (`data-value-missing`, …).
+  /// A form's controls are its form-associated ones, as the platform's
+  /// `form.elements` are: those inside it and those that name it by their
+  /// `form` attribute, wherever they stand.
   ///
   /// On submit every control is checked; an invalid form is neither sent nor
   /// handed to the page's own submit handler (this listens in the capture
@@ -185,7 +188,7 @@ public struct ConstraintMessages: Sendable {
       // button under the pointer, and the click that blurred it misses.
       _ = document.addEventListener(.input) { event in
         guard let control = FieldValidationHydration.control(event.target) else { return }
-        guard let form = control.closest("form") else { return }
+        guard let form = FieldValidationHydration.owner(of: control) else { return }
         FieldValidationHydration.revalidateTouched(in: form)
       }
     }
@@ -193,12 +196,34 @@ public struct ConstraintMessages: Sendable {
     /// The event's target when it is a constrained control of a form that
     /// validates itself.
     static func control(_ target: DOM.Element?) -> DOM.Element? {
-      guard let target, let _ = target.closest("form[novalidate]") else { return nil }
-      guard let form = target.closest("form") else { return nil }
-      for control in form.querySelectorAll(controls) where control.id == target.id {
+      guard let target, let form = owner(of: target), let _ = form.getAttribute("novalidate") else { return nil }
+      for control in controls(of: form) where control.id == target.id {
         return control
       }
       return nil
+    }
+
+    /// The form an element belongs to, as the platform's `form` property
+    /// says: the one its `form` attribute names, else the one it stands in.
+    public static func owner(of element: DOM.Element) -> DOM.Element? {
+      if let named = element.getAttribute("form"), !stringIsEmpty(named) {
+        return document.querySelector(stringJoin(["[id='", named, "']"], separator: ""))
+      }
+      return element.closest("form")
+    }
+
+    /// A form's constrained controls: inside it, and those naming it by
+    /// their `form` attribute from elsewhere on the page.
+    static func controls(of form: DOM.Element) -> [DOM.Element] {
+      var out = form.querySelectorAll(controls)
+      if let id = form.getAttribute("id"), !stringIsEmpty(id) {
+        for control in document.querySelectorAll(controls) {
+          guard let named = control.getAttribute("form"), stringEquals(named, id) else { continue }
+          guard control.closest("form")?.id != form.id else { continue }
+          out.append(control)
+        }
+      }
+      return out
     }
 
     /// Checks every control, shows or clears each message, and focuses the
@@ -213,7 +238,7 @@ public struct ConstraintMessages: Sendable {
     /// invalid control, if any.
     static func check(form: DOM.Element) -> DOM.Element? {
       var firstInvalid: DOM.Element?
-      for control in form.querySelectorAll(controls) {
+      for control in controls(of: form) {
         guard isLive(control) else {
           clear(control)
           continue
@@ -232,7 +257,7 @@ public struct ConstraintMessages: Sendable {
     /// Re-checks the controls already touched: a confirmation follows the
     /// field it repeats.
     static func revalidateTouched(in form: DOM.Element) {
-      for control in form.querySelectorAll(controls) {
+      for control in controls(of: form) {
         guard let _ = control.getAttribute("data-validation-touched") else { continue }
         guard isLive(control) else {
           clear(control)
