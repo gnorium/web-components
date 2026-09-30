@@ -714,7 +714,12 @@ public enum OutlineMoves {
         gap(spacing8)
         minWidth(0)
       }
-      descendant(".outliner-item[data-outliner-collapsed='true'] > .outliner-list") {
+      // Collapsed, an item folds away everything under its row: its children
+      // and its own controls, which belong to its content.
+      selector(
+        "& .outliner-item[data-outliner-collapsed='true'] > .outliner-list",
+        "& .outliner-item[data-outliner-collapsed='true'] > .outliner-footer"
+      ) {
         display(.none)
       }
       // An accordion item is one card, as a record page reads: its own
