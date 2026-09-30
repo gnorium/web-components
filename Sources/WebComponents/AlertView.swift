@@ -232,7 +232,7 @@
           }
           selector("&:not(.alert-inline)") {
             minHeight(px(64))
-            padding(spacing12, spacing16)
+            padding(spacing16)
             borderWidth(borderWidthBase)
             borderStyle(.solid)
             borderRadius(borderRadiusBase)
@@ -249,8 +249,8 @@
             width(perc(100))
             minWidth(0)
             boxSizing(.borderBox)
-            paddingBlock(spacing12)
-            paddingInline(spacing16)
+            // 16px every side, as a dialog's edges.
+            padding(spacing16)
           }
           selector("&.alert-motion.alert-inline .alert-motion-content") { padding(spacing8) }
           // A server-rendered moving alert waits closed until it hydrates, so
@@ -637,7 +637,7 @@
     static func open(_ alertEl: DOM.Element) {
       guard let motionContent = alertEl.querySelector(".alert-motion-content") else { return }
       let inline = alertEl.classList.contains("alert-inline")
-      let finishedPadding = inline ? "8px" : "12px"
+      let finishedPadding = inline ? "8px" : "16px"
       let finishedInlinePadding = inline ? "8px" : "16px"
       let finishedMinHeight = inline ? "0px" : "64px"
       // The stylesheet normally puts padding on .alert-view. Safari resolves
@@ -721,7 +721,7 @@
       // the shell's; moving makes the panel the padded box, at the same size.
       element.classList.add("alert-motion")
       let startHeight = element.offsetHeight
-      let finishedPadding = element.getAttribute(data("motion-padding")) ?? "12px"
+      let finishedPadding = element.getAttribute(data("motion-padding")) ?? "16px"
       motionContent.style.setProperty("opacity", "1")
       motionContent.classList.remove("alert-motion-content-entering")
       element.style.setProperty("height", "\(startHeight)px")
