@@ -108,7 +108,7 @@
             if !stringIsEmpty(email) { to = " to \(email)" }
           }
           AlertAPI.showSuccess(
-            "We sent a new verification link\(to). If it isn't in your inbox in a few minutes, check your spam folder.",
+            "We sent a new verification link\(to).",
             container: slot)
         } else {
           AlertAPI.showError("The email didn't send. Try again.", container: slot)
