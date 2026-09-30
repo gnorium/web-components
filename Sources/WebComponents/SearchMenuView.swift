@@ -393,14 +393,16 @@
           pseudoClass(.hover) { cursor(cursorBaseHover) }
         }
         // A row is a link, not a dropdown option: no filled highlight.
-        // Reached with the arrow keys (aria-selected), it wears LinkView's
-        // keyboard focus ring. Important: the typeahead's own aria-selected
-        // rule draws a light blue fill and a thin ring.
-        descendant(".search-menu-result[aria-selected='true']") {
+        // Reached with the arrow keys (aria-selected) or under the pointer,
+        // it wears a field's ring: its own border blue and a ring of the
+        // same color outside it, two pixels of blue in all. Important: the
+        // typeahead's own aria-selected rule draws a light blue fill and a
+        // thin ring.
+        selector("& .search-menu-result[aria-selected='true']", "& .search-menu-result:hover") {
           backgroundColor(backgroundColorTransparent).important()
-          borderColor(borderColorSubtle).important()
-          outline(borderWidthThick, .solid, borderColorBlue).important()
-          outlineOffset(px(-2)).important()
+          borderColor(borderColorBlue).important()
+          outline(borderWidthBase, .solid, borderColorBlue).important()
+          outlineOffset(px(0)).important()
         }
         descendant(".search-menu-result-text") {
           display(.flex)
