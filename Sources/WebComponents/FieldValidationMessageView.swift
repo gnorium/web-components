@@ -48,7 +48,7 @@ public struct FieldValidationMessageView: HTMLContent {
     }
 
     var message = div {
-      span { IconView(icon: { s in StatusIconView(iconStatus, width: s, height: s) }, size: .small) }
+      span { IconView(icon: { s in StatusIconView(iconStatus, width: s, height: s) }, size: .xSmall) }
         .class("field-validation-message-icon")
         .ariaHidden(true)
 
@@ -65,7 +65,8 @@ public struct FieldValidationMessageView: HTMLContent {
     return message.style {
       // The words start where a field's text starts — the control's border
       // and its 15px inline padding in (TextInputView) — and the icon
-      // stands inside that inset, at the field's edge.
+      // stands inside that inset, at the field's edge: 12px, leaving a 4px
+      // gap before the words.
       selector("&") {
         display(.flex)
         alignItems(.flexStart)
