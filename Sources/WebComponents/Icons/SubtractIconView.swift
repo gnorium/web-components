@@ -7,7 +7,7 @@ import SVGBuilder
 import WebTypes
 
 /// Codex `subtract` icon: the − of a control that subtracts an item from a
-/// list ("Remove genre", a filter bar's later rows). Available on SERVER +
+/// list ("− Genre", a filter bar's later rows), edge to edge in its 12-unit box. Available on SERVER +
 /// CLIENT (the client builds form rows and filter rows with it).
 public struct SubtractIconView: HTMLContent {
   let width: CSS.Length
@@ -27,12 +27,12 @@ public struct SubtractIconView: HTMLContent {
   public func build() -> DOM.Node {
     svg {
       path()
-        .d(M(4, 9), h(12), v(2), H(4), Z())
+        .d(M(0, 5), h(12), v(2), H(0), Z())
     }
     .class(stringIsEmpty(`class`) ? "subtract-icon-view" : "subtract-icon-view \(`class`)")
     .width(width)
     .height(height)
-    .viewBox(0, 0, 20, 20)
+    .viewBox(0, 0, 12, 12)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.currentColor)
   }
@@ -44,6 +44,6 @@ extension IconView {
   /// ButtonView sizes a medium button's icon), so "+ Add genre" reads like
   /// its words.
   public static var subtract: IconView {
-    IconView(icon: { size in SubtractIconView(width: size, height: size) }, size: .small)
+    IconView(icon: { size in SubtractIconView(width: size, height: size) }, size: .xSmall)
   }
 }

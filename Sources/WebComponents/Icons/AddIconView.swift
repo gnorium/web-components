@@ -6,8 +6,9 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-/// Codex `add` icon: the + of a control that adds or creates ("Add genre",
-/// a filter bar's first row). Available on SERVER + CLIENT (the client
+/// Codex `add` icon: the + of a control that adds or creates ("+ Genre",
+/// a filter bar's first row), drawn edge to edge in its 12-unit box so it
+/// sits tight to its label. Available on SERVER + CLIENT (the client
 /// builds form rows and filter rows with it).
 public struct AddIconView: HTMLContent {
   let width: CSS.Length
@@ -27,12 +28,12 @@ public struct AddIconView: HTMLContent {
   public func build() -> DOM.Node {
     svg {
       path()
-        .d(M(11, 9), V(4), H(9), v(5), H(4), v(2), h(5), v(5), h(2), v(-5), h(5), V(9), Z())
+        .d(M(7, 5), V(0), H(5), v(5), H(0), v(2), h(5), v(5), h(2), v(-5), h(5), V(5), Z())
     }
     .class(stringIsEmpty(`class`) ? "add-icon-view" : "add-icon-view \(`class`)")
     .width(width)
     .height(height)
-    .viewBox(0, 0, 20, 20)
+    .viewBox(0, 0, 12, 12)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.currentColor)
   }
@@ -44,6 +45,6 @@ extension IconView {
   /// ButtonView sizes a medium button's icon), so "+ Add genre" reads like
   /// its words.
   public static var add: IconView {
-    IconView(icon: { size in AddIconView(width: size, height: size) }, size: .small)
+    IconView(icon: { size in AddIconView(width: size, height: size) }, size: .xSmall)
   }
 }

@@ -366,7 +366,9 @@ public struct ButtonView: HTMLContent {
           selector("&") {
             // Base—common props only—fontWeight/color via data-attributes below (cacheable)
             alignItems(.center)
-            gap(spacingHorizontalButton)
+            // Icon to label: tight, as the icon's own box already holds room
+            // around its glyph ("+ Testament" reads as one label).
+            gap(spacing4)
             fontFamily(labelFontFamily)
             fontSize(fontSizeMedium16)
             textDecoration(.none)
@@ -1158,16 +1160,15 @@ public struct ButtonView: HTMLContent {
             alignItems(.center)
             justifyContent(.center)
           }
+          // The box is as wide as its icon, so a tight icon sits tight to
+          // its label; its height keeps the row's alignment.
           selector("&[data-size='mini'] .button-icon", "&[data-size='small'] .button-icon") {
-            width(sizeIconXSmall)
             height(sizeIconXSmall)
           }
           selector("&[data-size='medium'] .button-icon") {
-            width(sizeIconSmall)
             height(sizeIconSmall)
           }
           selector("&[data-size='large'] .button-icon") {
-            width(sizeIconMedium)
             height(sizeIconMedium)
           }
         }
@@ -1210,7 +1211,9 @@ public struct ButtonView: HTMLContent {
           selector("&") {
             // Base—common per-instance props (static superset via data-attributes below)
             alignItems(.center)
-            gap(spacingHorizontalButton)
+            // Icon to label: tight, as the icon's own box already holds room
+            // around its glyph ("+ Testament" reads as one label).
+            gap(spacing4)
             fontFamily(labelFontFamily)
             fontSize(fontSizeMedium16)
             textDecoration(.none)
@@ -1345,16 +1348,15 @@ public struct ButtonView: HTMLContent {
             alignItems(.center)
             justifyContent(.center)
           }
+          // The box is as wide as its icon, so a tight icon sits tight to
+          // its label; its height keeps the row's alignment.
           selector("&[data-size='mini'] .button-icon", "&[data-size='small'] .button-icon") {
-            width(sizeIconXSmall)
             height(sizeIconXSmall)
           }
           selector("&[data-size='medium'] .button-icon") {
-            width(sizeIconSmall)
             height(sizeIconSmall)
           }
           selector("&[data-size='large'] .button-icon") {
-            width(sizeIconMedium)
             height(sizeIconMedium)
           }
 
