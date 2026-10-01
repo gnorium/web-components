@@ -24,13 +24,13 @@ private func pointsToString(_ points: [(Double, Double)]) -> String {
 ///
 public struct AnimatedUpDownChevronView: HTMLContent {
   public static let collapsedPoints: [(Double, Double)] = [
-    (2, 5.5), (10, 13.5), (18, 5.5),
+    (41.58, 247.39), (512, 717.81), (982.42, 247.39),
   ]
   public static let expandedPoints: [(Double, Double)] = [
-    (2, 14.5), (10, 6.5), (18, 14.5),
+    (41.58, 776.61), (512, 306.19), (982.42, 776.61),
   ]
   public static let midpointPoints: [(Double, Double)] = [
-    (2, 10), (10, 10), (18, 10),
+    (41.58, 512), (512, 512), (982.42, 512),
   ]
 
   public let id: String
@@ -69,9 +69,11 @@ public struct AnimatedUpDownChevronView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
-    // MARK: - Chevron Geometry (20x20 viewBox)
+    // MARK: - Chevron Geometry (1024 x 1024 viewBox)
     // The collapsed centerline is identical to AnimatedRightDownChevronView;
-    // the expanded centerline is its exact vertical mirror about y = 10.
+    // the expanded centerline is its exact vertical mirror about y = 512.
+    // The box is tight to the ink of all three shapes (butt ends included),
+    // so its width is the chevron's and the shapes share one center.
 
     return svg {
       if expanded {
@@ -86,11 +88,11 @@ public struct AnimatedUpDownChevronView: HTMLContent {
     .id("\(id)-up-down-chevron")
     .width(width)
     .height(height)
-    .viewBox(0, 0, 20, 20)
+    .viewBox(0, 0, 1024, 1024)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.none)
     .stroke(.currentColor)
-    .strokeWidth(2)
+    .strokeWidth(117.61)
     .strokeLinecap(.butt)
     .strokeLinejoin(.miter)
     .style {

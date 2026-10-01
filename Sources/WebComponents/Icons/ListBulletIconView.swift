@@ -25,28 +25,28 @@
       svg {
         path()
           .d(
-            M(7, 15), h(12), v(2), H(7), Z(), m(0, -6), h(12), v(2), H(7), Z(), m(0, -6), h(12),
-            v(2), H(7), Z())
+            M(341.33, 796.44), h(682.67), v(113.78), H(341.33), Z(), m(0, -341.33), h(682.67),
+            v(113.78), H(341.33), Z(), m(0, -341.33), h(682.67), v(113.78), H(341.33), Z())
 
         circle()
-          .cx(3)
-          .cy(4)
-          .r(2)
+          .cx(113.78)
+          .cy(170.67)
+          .r(113.78)
 
         circle()
-          .cx(3)
-          .cy(10)
-          .r(2)
+          .cx(113.78)
+          .cy(512)
+          .r(113.78)
 
         circle()
-          .cx(3)
-          .cy(16)
-          .r(2)
+          .cx(113.78)
+          .cy(853.33)
+          .r(113.78)
       }
       .class(`class`.isEmpty ? "list-bullet-icon-view" : "list-bullet-icon-view \(`class`)")
       .width(width)
       .height(height)
-      .viewBox(0, 0, 20, 20)
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
 

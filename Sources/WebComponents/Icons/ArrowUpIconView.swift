@@ -25,13 +25,13 @@
       svg {
         path()
           .d(
-            M(3.42, 11.41), L(9, 5.83), V(18), H(11), V(5.83), L(16.59, 11.41), L(18, 10), L(10, 2),
-            L(2, 10), Z())
+            M(90.88, 602.24), L(448, 245.12), V(1024), H(576), V(245.12), L(933.76, 602.24),
+            L(1024, 512), L(512, 0), L(0, 512), Z())
       }
       .class(`class`.isEmpty ? "arrow-up-icon-view" : "arrow-up-icon-view \(`class`)")
       .width(width)
       .height(height)
-      .viewBox(0, 0, 20, 20)
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
 

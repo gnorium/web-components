@@ -337,8 +337,8 @@
           }
           selector("& .alert-dismiss svg") {
             display(.block)
-            width(sizeIconMedium).important()
-            height(sizeIconMedium).important()
+            width(sizeIconSmall).important()
+            height(sizeIconSmall).important()
           }
           selector("&.alert-gray .alert-dismiss:hover", "&.alert-gray .alert-dismiss:focus-visible") {
             backgroundColor(backgroundColorGraySubtleHover).important()

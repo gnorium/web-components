@@ -366,8 +366,9 @@ public struct ButtonView: HTMLContent {
           selector("&") {
             // Base—common props only—fontWeight/color via data-attributes below (cacheable)
             alignItems(.center)
-            // Icon to label: tight, as the icon's own box already holds room
-            // around its glyph ("+ Testament" reads as one label).
+            // Icon to label: icons are drawn edge to edge in their box, so
+            // this gap is all the room between them ("+ Testament" reads as
+            // one label).
             gap(spacing4)
             fontFamily(labelFontFamily)
             fontSize(fontSizeMedium16)
@@ -1211,8 +1212,9 @@ public struct ButtonView: HTMLContent {
           selector("&") {
             // Base—common per-instance props (static superset via data-attributes below)
             alignItems(.center)
-            // Icon to label: tight, as the icon's own box already holds room
-            // around its glyph ("+ Testament" reads as one label).
+            // Icon to label: icons are drawn edge to edge in their box, so
+            // this gap is all the room between them ("+ Testament" reads as
+            // one label).
             gap(spacing4)
             fontFamily(labelFontFamily)
             fontSize(fontSizeMedium16)

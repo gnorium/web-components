@@ -88,7 +88,7 @@ public struct LabelView: HTMLContent {
 
           // After "(optional)", as every other field draws it.
           if let tooltip {
-            TooltipView(tooltip: tooltip) { IconView { InfoIconView() } }
+            TooltipView(tooltip: tooltip) { IconView(icon: { size in InfoIconView(width: size, height: size) }, size: .small) }
           }
         }
         .class("label-text")
@@ -119,7 +119,7 @@ public struct LabelView: HTMLContent {
             labelMarks
 
             if let tooltip {
-              TooltipView(tooltip: tooltip) { IconView { InfoIconView() } }
+              TooltipView(tooltip: tooltip) { IconView(icon: { size in InfoIconView(width: size, height: size) }, size: .small) }
             }
           }
           .for(forID)
@@ -142,7 +142,7 @@ public struct LabelView: HTMLContent {
             labelMarks
 
             if let tooltip {
-              TooltipView(tooltip: tooltip) { IconView { InfoIconView() } }
+              TooltipView(tooltip: tooltip) { IconView(icon: { size in InfoIconView(width: size, height: size) }, size: .small) }
             }
           }
           .class("label-text")

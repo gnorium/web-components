@@ -23,14 +23,13 @@
       svg {
         path()
           .d(
-            M(1, 3), v(2), h(18), V(3), Z(),
-            M(1, 11), h(18), V(9), H(1), Z(),
-            M(1, 17), h(18), v(-2), H(1), Z())
+            M(0, 113.78), v(113.78), h(1024), V(113.78), Z(), M(0, 568.89), h(1024), V(455.11),
+            H(0), Z(), M(0, 910.22), h(1024), v(-113.78), H(0), Z())
       }
       .class(`class`.isEmpty ? "menu-icon-view" : "menu-icon-view \(`class`)")
       .width(width)
       .height(height)
-      .viewBox(0, 0, 20, 20)
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
 

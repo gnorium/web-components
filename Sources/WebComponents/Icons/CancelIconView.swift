@@ -25,15 +25,15 @@
       svg {
         path()
           .d(
-            M(10, 0), a(10, 10, 0, true, false, 10, 10), A(10, 10, 0, false, false, 10, 0),
-            M(2, 10), a(8, 8, 0, false, true, 1.69, -4.9), L(14.9, 16.31),
-            A(8, 8, 0, false, true, 2, 10), m(14.31, 4.9), L(5.1, 3.69),
-            A(8, 8, 0, false, true, 16.31, 14.9))
+            M(512, 0), a(512, 512, 0, true, false, 512, 512), A(512, 512, 0, false, false, 512, 0),
+            M(102.4, 512), a(409.6, 409.6, 0, false, true, 86.53, -250.88), L(762.88, 835.07),
+            A(409.6, 409.6, 0, false, true, 102.4, 512), m(732.67, 250.88), L(261.12, 188.93),
+            A(409.6, 409.6, 0, false, true, 835.07, 762.88))
       }
       .class(`class`.isEmpty ? "cancel-icon-view" : "cancel-icon-view \(`class`)")
       .width(width)
       .height(height)
-      .viewBox(0, 0, 20, 20)
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
 

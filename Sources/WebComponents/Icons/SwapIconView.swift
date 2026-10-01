@@ -30,20 +30,18 @@
         // Codex arrowNext.svg
         path()
           .d(
-            M(8.59, 3.42), L(14.17, 9), H(2), v(2), h(12.17), l(-5.58, 5.59), L(10, 18), l(8, -8),
-            l(-8, -8), Z())
-          .transform(translate(5, 0), scale(0.5))
+            M(471.89, 40.39), L(630.61, 199.11), H(284.44), v(56.89), h(346.17), l(-158.72, 159),
+            L(512, 455.11), l(227.56, -227.55), l(-227.56, -227.56), Z())
         // Codex arrowPrevious.svg
         path()
           .d(
-            M(11.41, 16.58), L(5.83, 11), H(18), V(9), H(5.83), L(11.41, 3.41), L(10, 2), L(2, 10),
-            L(10, 18), Z())
-          .transform(translate(5, 10), scale(0.5))
+            M(552.11, 983.61), L(393.39, 824.89), H(739.56), V(768), H(393.39), L(552.11, 609),
+            L(512, 568.89), L(284.44, 796.44), L(512, 1024), Z())
       }
       .class(`class`.isEmpty ? "swap-icon-view" : "swap-icon-view \(`class`)")
       .width(width)
       .height(height)
-      .viewBox(0, 0, 20, 20)
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
     }

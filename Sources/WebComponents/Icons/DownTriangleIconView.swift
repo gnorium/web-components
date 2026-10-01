@@ -24,12 +24,12 @@
     public func build() -> DOM.Node {
       svg {
         path()
-          .d(M(10, 15), L(2, 5), h(16), Z())
+          .d(M(512, 832), L(0, 192), h(1024), Z())
       }
       .class(`class`.isEmpty ? "down-triangle-icon-view" : "down-triangle-icon-view \(`class`)")
       .width(width)
       .height(height)
-      .viewBox(0, 0, 20, 20)
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
 

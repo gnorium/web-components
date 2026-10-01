@@ -26,12 +26,14 @@ public struct CollapseIconView: HTMLContent {
   public func build() -> DOM.Node {
     svg {
       path()
-        .d(m(2.5, 15.25), l(7.5, -7.5), l(7.5, 7.5), l(1.5, -1.5), l(-9, -9), l(-9, 9), Z())
+        .d(
+          M(85.33, 810.67), l(426.67, -426.67), l(426.67, 426.67), l(85.33, -85.34), l(-512, -512),
+          l(-512, 512), Z())
     }
     .class(stringIsEmpty(`class`) ? "collapse-icon-view" : "collapse-icon-view \(`class`)")
     .width(width)
     .height(height)
-    .viewBox(0, 0, 20, 20)
+    .viewBox(0, 0, 1024, 1024)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.currentColor)
 

@@ -26,16 +26,20 @@
       svg {
         path()
           .d(
-            M(15, 6), a(1.54, 1.54, 0, false, true, -1.5, -1.5), a(1.5, 1.5, 0, false, true, 3, 0),
-            A(1.54, 1.54, 0, false, true, 15, 6), m(-1.5, -5), A(5.55, 5.55, 0, false, false, 8, 6.5),
-            a(6.8, 6.8, 0, false, false, 0.7, 2.8), L(1, 17), v(2), h(4), v(-2), h(2), v(-2), h(2), l(3.2, -3.2),
-            a(6, 6, 0, false, false, 1.3, 0.2), A(5.55, 5.55, 0, false, false, 19, 6.5),
-            A(5.55, 5.55, 0, false, false, 13.5, 1))
+            M(796.44, 284.44), a(87.61, 87.61, 0, false, true, -85.33, -85.33),
+            a(85.33, 85.33, 0, false, true, 170.67, 0),
+            A(87.61, 87.61, 0, false, true, 796.44, 284.44), m(-85.33, -284.44),
+            A(315.73, 315.73, 0, false, false, 398.22, 312.89),
+            a(386.84, 386.84, 0, false, false, 39.82, 159.29), L(0, 910.22), v(113.78), h(227.56),
+            v(-113.78), h(113.77), v(-113.78), h(113.78), l(182.05, -182.04),
+            a(341.33, 341.33, 0, false, false, 73.95, 11.38),
+            A(315.73, 315.73, 0, false, false, 1024, 312.89),
+            A(315.73, 315.73, 0, false, false, 711.11, 0))
       }
       .class(`class`.isEmpty ? "key-icon-view" : "key-icon-view \(`class`)")
       .width(width)
       .height(height)
-      .viewBox(0, 0, 20, 20)
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
     }

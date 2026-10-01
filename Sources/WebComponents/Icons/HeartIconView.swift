@@ -25,14 +25,15 @@
       svg {
         path()
           .d(
-            M(14.75, 1), A(5.24, 5.24, 0, false, false, 10, 4),
-            A(5.24, 5.24, 0, false, false, 0, 6.25), C(0, 11.75, 10, 19, 10, 19),
-            s(10, -7.25, 10, -12.75), A(5.25, 5.25, 0, false, false, 14.75, 1))
+            M(755.2, 52.48), A(268.28, 268.28, 0, false, false, 512.01, 206.08),
+            A(268.28, 268.28, 0, false, false, 0.02, 321.28),
+            C(0.02, 602.87, 512.01, 974.07, 512.01, 974.07), s(511.99, -371.2, 511.99, -652.79),
+            A(268.8, 268.8, 0, false, false, 755.2, 52.48))
       }
       .class(`class`.isEmpty ? "heart-icon-view" : "heart-icon-view \(`class`)")
       .width(width)
       .height(height)
-      .viewBox(0, 0, 20, 20)
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
 

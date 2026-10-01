@@ -686,7 +686,7 @@ public struct TooltipView: HTMLContent {
     ) -> DOM.Element {
       let wrapper = document.createElement(.span)
       let view = TooltipView(tooltip: text, placement: placement, font: font) {
-        InfoIconView(width: px(20), height: px(20))
+        InfoIconView(width: px(16), height: px(16))
       }
       wrapper.innerHTML = view.render()
       let element = wrapper.firstElementChild ?? wrapper

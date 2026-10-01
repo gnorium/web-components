@@ -25,16 +25,16 @@ public struct DiscIconView: HTMLContent {
   public func build() -> DOM.Node {
     svg {
       circle()
-        .cx(10)
-        .cy(10)
-        .r(10)
+        .cx(512)
+        .cy(512)
+        .r(512)
     }
     .class(
       stringIsEmpty(`class`) ? "disc-icon-view" : "disc-icon-view \(`class`)"
     )
     .width(width)
     .height(height)
-    .viewBox(0, 0, 20, 20)
+    .viewBox(0, 0, 1024, 1024)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.currentColor)
   }

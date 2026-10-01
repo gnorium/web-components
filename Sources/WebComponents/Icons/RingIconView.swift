@@ -25,19 +25,19 @@ public struct RingIconView: HTMLContent {
   public func build() -> DOM.Node {
     svg {
       circle()
-        .cx(10)
-        .cy(10)
-        .r(8.75)
+        .cx(512)
+        .cy(512)
+        .r(448)
         .fill(.none)
         .stroke(.currentColor)
-        .strokeWidth(2.5)
+        .strokeWidth(128)
     }
     .class(
       stringIsEmpty(`class`) ? "ring-icon-view" : "ring-icon-view \(`class`)"
     )
     .width(width)
     .height(height)
-    .viewBox(0, 0, 20, 20)
+    .viewBox(0, 0, 1024, 1024)
     .xmlns("http://www.w3.org/2000/svg")
   }
 }

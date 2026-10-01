@@ -24,12 +24,12 @@
     public func build() -> DOM.Node {
       svg {
         path()
-          .d(M(17, 6), L(3, 1), v(18), h(2), v(-6.87), Z())
+          .d(M(910.22, 284.44), L(113.78, 0), v(1024), h(113.78), v(-390.83), Z())
       }
       .class(`class`.isEmpty ? "flag-icon-view" : "flag-icon-view \(`class`)")
       .width(width)
       .height(height)
-      .viewBox(0, 0, 20, 20)
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
 

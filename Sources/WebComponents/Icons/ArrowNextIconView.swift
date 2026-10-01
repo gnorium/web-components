@@ -25,13 +25,13 @@
       svg {
         path()
           .d(
-            M(8.59, 3.42), L(14.17, 9), H(2), v(2), h(12.17), l(-5.58, 5.59), L(10, 18), l(8, -8),
-            l(-8, -8), Z())
+            M(421.76, 90.88), L(778.88, 448), H(0), v(128), h(778.88), l(-357.12, 357.76),
+            L(512, 1024), l(512, -512), l(-512, -512), Z())
       }
       .class(`class`.isEmpty ? "arrow-next-icon-view" : "arrow-next-icon-view \(`class`)")
       .width(width)
       .height(height)
-      .viewBox(0, 0, 20, 20)
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
       // Next and previous are directions along the line, not left and

@@ -26,14 +26,16 @@
       svg {
         path()
           .d(
-            M(2, 2), a(2, 2, 0, false, false, -2, 2), v(12), a(2, 2, 0, false, false, 2, 2), h(16),
-            a(2, 2, 0, false, false, 2, -2), V(4), a(2, 2, 0, false, false, -2, -2), Z(),
-            m(-0.17, 13), l(4.09, -5.25), l(2.92, 3.51), L(12.92, 8), l(5.25, 7), Z())
+            M(102.4, 102.4), a(102.4, 102.4, 0, false, false, -102.4, 102.4), v(614.4),
+            a(102.4, 102.4, 0, false, false, 102.4, 102.4), h(819.2),
+            a(102.4, 102.4, 0, false, false, 102.4, -102.4), V(204.8),
+            a(102.4, 102.4, 0, false, false, -102.4, -102.4), Z(), m(-8.7, 665.6), l(209.4, -268.8),
+            l(149.51, 179.71), L(661.5, 409.6), l(268.8, 358.4), Z())
       }
       .class(`class`.isEmpty ? "image-icon-view" : "image-icon-view \(`class`)")
       .width(width)
       .height(height)
-      .viewBox(0, 0, 20, 20)
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
     }

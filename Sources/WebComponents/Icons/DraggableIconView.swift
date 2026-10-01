@@ -25,13 +25,13 @@
       svg {
         path()
           .d(
-            M(2, 11), h(16), v(2), H(2), Z(), m(0, -4), h(16), v(2), H(2), Z(), m(11, 8), H(7),
-            l(3, 3), Z(), M(7, 5), h(6), l(-3, -3), Z())
+            M(0, 576), h(1024), v(128), H(0), Z(), m(0, -256), h(1024), v(128), H(0), Z(),
+            m(704, 512), H(320), l(192, 192), Z(), M(320, 192), h(384), l(-192, -192), Z())
       }
       .class(`class`.isEmpty ? "draggable-icon-view" : "draggable-icon-view \(`class`)")
       .width(width)
       .height(height)
-      .viewBox(0, 0, 20, 20)
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
 

@@ -21,19 +21,21 @@
     public func build() -> DOM.Node {
       svg {
         path()
-          .d(M(11, 3), a(8, 8, 0, true, false, 0, 16), a(8, 8, 0, false, false, 0, -16), Z())
+          .d(
+            M(460.8, 51.2), a(409.6, 409.6, 0, true, false, 0, 819.2),
+            a(409.6, 409.6, 0, false, false, 0, -819.2), Z())
 
         path()
-          .d(m(21, 21), l(-4.35, -4.35))
+          .d(M(972.8, 972.8), l(-222.72, -222.72))
       }
       .class("search-icon-view")
       .width(width)
       .height(height)
       .xmlns("http://www.w3.org/2000/svg")
-      .viewBox(0, 0, 24, 24)
+      .viewBox(0, 0, 1024, 1024)
       .fill(.none)
       .stroke(.currentColor)
-      .strokeWidth(2)
+      .strokeWidth(102.4)
       .strokeLinecap(.round)
       .strokeLinejoin(.round)
 

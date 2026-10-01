@@ -24,24 +24,24 @@
     public func build() -> DOM.Node {
       svg {
         circle()
-          .cx(3)
-          .cy(10)
-          .r(2)
+          .cx(113.78)
+          .cy(512)
+          .r(113.78)
 
         circle()
-          .cx(10)
-          .cy(10)
-          .r(2)
+          .cx(512)
+          .cy(512)
+          .r(113.78)
 
         circle()
-          .cx(17)
-          .cy(10)
-          .r(2)
+          .cx(910.22)
+          .cy(512)
+          .r(113.78)
       }
       .class(`class`.isEmpty ? "ellipsis-icon-view" : "ellipsis-icon-view \(`class`)")
       .width(width)
       .height(height)
-      .viewBox(0, 0, 20, 20)
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
 

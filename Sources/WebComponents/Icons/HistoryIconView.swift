@@ -24,17 +24,21 @@
     public func build() -> DOM.Node {
       svg {
         path()
-          .d(M(9, 6), v(5), h(0.06), l(2.48, 2.47), l(1.41, -1.41), L(11, 10.11), V(6), Z())
+          .d(
+            M(470.49, 290.59), v(276.76), h(3.32), l(137.27, 136.72), l(78.04, -78.05),
+            L(581.19, 518.09), V(290.59), Z())
 
         path()
           .d(
-            M(10, 1), a(9, 9, 0, false, false, -7.85, 13.35), L(0.5, 16), H(6), v(-5.5),
-            l(-2.38, 2.38), A(7, 7, 0, true, true, 10, 17), v(2), a(9, 9, 0, false, false, 0, -18))
+            M(525.84, 13.84), a(498.16, 498.16, 0, false, false, -434.51, 738.94), L(0, 844.11),
+            H(304.43), v(-304.43), l(-131.73, 131.73),
+            A(387.46, 387.46, 0, true, true, 525.84, 899.46), v(110.7),
+            a(498.16, 498.16, 0, false, false, 0, -996.32))
       }
       .class(`class`.isEmpty ? "history-icon-view" : "history-icon-view \(`class`)")
       .width(width)
       .height(height)
-      .viewBox(0, 0, 20, 20)
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
 

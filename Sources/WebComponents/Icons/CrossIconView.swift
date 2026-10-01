@@ -26,17 +26,17 @@ public struct CrossIconView: HTMLContent {
   public func build() -> DOM.Node {
     svg {
       path()
-        .d(M(1.9943, 0), L(20, 18.0057), L(18.0057, 20), L(0, 2.0085), Z())
+        .d(M(102.11, 0), L(1024, 921.89), L(921.89, 1024), L(0, 102.84), Z())
 
       path()
-        .d(M(20, 1.9943), L(1.9943, 20), L(0, 18.0057), L(18.0057, 0), Z())
+        .d(M(1024, 102.11), L(102.11, 1024), L(0, 921.89), L(921.89, 0), Z())
     }
     .class(
       stringIsEmpty(`class`) ? "cross-icon-view" : "cross-icon-view \(`class`)"
     )
     .width(width)
     .height(height)
-    .viewBox(0, 0, 20, 20)
+    .viewBox(0, 0, 1024, 1024)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.currentColor)
   }

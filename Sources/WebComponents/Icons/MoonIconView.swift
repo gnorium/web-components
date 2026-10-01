@@ -25,15 +25,17 @@
       svg {
         path()
           .d(
-            M(17.39, 15.14), A(7.33, 7.33, 0, false, true, 11.75, 1.6),
-            c(0.23, -0.11, 0.56, -0.23, 0.79, -0.34), a(8.2, 8.2, 0, false, false, -5.41, 0.45),
-            a(9, 9, 0, true, false, 7, 16.58), a(8.42, 8.42, 0, false, false, 4.29, -3.84),
-            a(5.3, 5.3, 0, false, true, -1.03, 0.69))
+            M(933.65, 801.67), A(415.46, 415.46, 0, false, true, 613.97, 34.23),
+            c(13.04, -6.24, 31.74, -13.04, 44.78, -19.27),
+            a(464.77, 464.77, 0, false, false, -306.64, 25.5),
+            a(510.12, 510.12, 0, true, false, 396.76, 939.75),
+            a(477.24, 477.24, 0, false, false, 243.16, -217.65),
+            a(300.4, 300.4, 0, false, true, -58.38, 39.11))
       }
       .class(`class`.isEmpty ? "moon-icon-view" : "moon-icon-view \(`class`)")
       .width(width)
       .height(height)
-      .viewBox(0, 0, 20, 20)
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
 

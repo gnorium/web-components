@@ -25,19 +25,21 @@
       svg {
         path()
           .d(
-            M(20, 5), H(9), l(-7, 7), l(7, 7), h(11), a(2, 2, 0, false, false, 2, -2), V(7),
-            a(2, 2, 0, false, false, -2, -2), Z(), M(18, 9), l(-6, 6), M(12, 9), l(6, 6))
+            M(884.36, 186.18), H(372.36), l(-325.81, 325.82), l(325.81, 325.82), h(512),
+            a(93.09, 93.09, 0, false, false, 93.09, -93.09), V(279.27),
+            a(93.09, 93.09, 0, false, false, -93.09, -93.09), Z(), M(791.27, 372.36),
+            l(-279.27, 279.28), M(512, 372.36), l(279.27, 279.28))
       }
       .class(`class`.isEmpty ? "delete-icon-view" : "delete-icon-view \(`class`)")
       .width(width)
       .height(height)
-      .viewBox(0, 0, 24, 24)
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.none)
       .stroke(.currentColor)
       .strokeLinecap(.round)
       .strokeLinejoin(.round)
-      .strokeWidth(px(2))
+      .strokeWidth(px(93.09))
 
     }
   }

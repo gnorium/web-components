@@ -25,16 +25,19 @@
       svg {
         path()
           .d(
-            M(17, 12), v(5), H(3), v(-5), H(1), v(5), a(2, 2, 0, false, false, 2, 2), h(14),
-            a(2, 2, 0, false, false, 2, -2), v(-5), Z())
+            M(910.22, 625.78), v(284.44), H(113.78), v(-284.44), H(0), v(284.44),
+            a(113.78, 113.78, 0, false, false, 113.78, 113.78), h(796.44),
+            a(113.78, 113.78, 0, false, false, 113.78, -113.78), v(-284.44), Z())
 
         path()
-          .d(M(10, 1), L(5, 7), h(4), v(8), h(2), V(7), h(4), Z())
+          .d(
+            M(512, 0), L(227.56, 341.33), h(227.55), v(455.11), h(113.78), V(341.33), h(227.55),
+            Z())
       }
       .class(`class`.isEmpty ? "upload-icon-view" : "upload-icon-view \(`class`)")
       .width(width)
       .height(height)
-      .viewBox(0, 0, 20, 20)
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
 

@@ -25,13 +25,14 @@ public struct InfoFilledIconView: HTMLContent {
     svg {
       path()
         .d(
-          M(10, 0), C(4.477, 0, 0, 4.477, 0, 10), s(4.477, 10, 10, 10), s(10, -4.477, 10, -10),
-          S(15.523, 0, 10, 0), M(9, 5), h(2), v(2), H(9), Z(), m(0, 4), h(2), v(6), H(9), Z())
+          M(512, 0), C(229.22, 0, 0, 229.22, 0, 512), s(229.22, 512, 512, 512),
+          s(512, -229.22, 512, -512), S(794.78, 0, 512, 0), M(460.8, 256), h(102.4), v(102.4),
+          H(460.8), Z(), m(0, 204.8), h(102.4), v(307.2), H(460.8), Z())
     }
     .class(stringIsEmpty(`class`) ? "info-filled-icon-view" : "info-filled-icon-view \(`class`)")
     .width(width)
     .height(height)
-    .viewBox(0, 0, 20, 20)
+    .viewBox(0, 0, 1024, 1024)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.currentColor)
   }

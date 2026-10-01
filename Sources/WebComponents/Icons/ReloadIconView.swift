@@ -26,14 +26,14 @@
       svg {
         path()
           .d(
-            M(15.65, 4.35), A(8, 8, 0, true, false, 17.4, 13), h(-2.22),
-            a(6, 6, 0, true, true, -1, -7.22), L(11, 9), h(7), V(2), Z()
-          )
+            M(873.75, 150.86), A(511.51, 511.51, 0, true, false, 985.64, 703.93), h(-141.95),
+            a(383.63, 383.63, 0, true, true, -63.93, -461.64), L(576.43, 448.18), h(447.57),
+            V(0.61), Z())
       }
       .class(`class`.isEmpty ? "reload-icon-view" : "reload-icon-view \(`class`)")
       .width(width)
       .height(height)
-      .viewBox(0, 0, 20, 20)
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
     }

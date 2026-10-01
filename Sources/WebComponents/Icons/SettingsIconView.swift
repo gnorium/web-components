@@ -26,7 +26,9 @@
         g {
           path()
             .id("a")
-            .d(M(1.5, -10), h(-3), l(-1, 6.5), h(5), m(0, 7), h(-5), l(1, 6.5), h(3))
+            .d(
+              M(76.8, -512), h(-153.6), l(-51.2, 332.8), h(256), m(0, 358.4), h(-256),
+              l(51.2, 332.8), h(153.6))
 
           use()
             .href("#a")
@@ -41,17 +43,18 @@
             .transform(rotate(135))
         }
         .xmlnsXlink("http://www.w3.org/1999/xlink")
-        .transform(translate(10, 10))
+        .transform(translate(512, 512))
 
         path()
           .d(
-            M(10, 2.5), a(7.5, 7.5, 0, false, false, 0, 15), a(7.5, 7.5, 0, false, false, 0, -15),
-            v(4), a(3.5, 3.5, 0, false, true, 0, 7), a(3.5, 3.5, 0, false, true, 0, -7))
+            M(512, 128), a(384, 384, 0, false, false, 0, 768),
+            a(384, 384, 0, false, false, 0, -768), v(204.8),
+            a(179.2, 179.2, 0, false, true, 0, 358.4), a(179.2, 179.2, 0, false, true, 0, -358.4))
       }
       .class(`class`.isEmpty ? "settings-icon-view" : "settings-icon-view \(`class`)")
       .width(width)
       .height(height)
-      .viewBox(0, 0, 20, 20)
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
 

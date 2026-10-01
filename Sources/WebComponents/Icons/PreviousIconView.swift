@@ -25,12 +25,14 @@ public struct PreviousIconView: HTMLContent {
   public func build() -> DOM.Node {
     svg {
       path()
-        .d(m(4, 10), l(9, 9), l(1.4, -1.5), L(7, 10), l(7.4, -7.5), L(13, 1), Z())
+        .d(
+          M(216.18, 512), l(512, 512), l(79.64, -85.33), L(386.84, 512), l(420.98, -426.67),
+          L(728.18, 0), Z())
     }
     .class(stringIsEmpty(`class`) ? "previous-icon-view" : "previous-icon-view \(`class`)")
     .width(width)
     .height(height)
-    .viewBox(0, 0, 20, 20)
+    .viewBox(0, 0, 1024, 1024)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.currentColor)
     // Next and previous are directions along the line, not left and right:

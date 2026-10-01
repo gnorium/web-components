@@ -55,17 +55,17 @@ public struct AnimatedRightDownChevronView: HTMLContent {
   public func build() -> DOM.Node {
     var svgNode = svg {
       polyline()
-        .points("2,5.5 10,13.5 18,5.5")
+        .points("41.58,247.39 512,717.81 982.42,247.39")
     }
     .class(stringIsEmpty(`class`) ? "animated-right-down-chevron-view" : "animated-right-down-chevron-view \(`class`)")
     .id("\(id)-chevron")
     .width(width)
     .height(height)
-    .viewBox(0, 0, 20, 20)
+    .viewBox(0, 0, 1024, 1024)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.none)
     .stroke(.currentColor)
-    .strokeWidth(2)
+    .strokeWidth(117.61)
     .strokeLinecap(.butt)
     .strokeLinejoin(.miter)
     .data("expanded", expanded ? "true" : "false")

@@ -25,26 +25,26 @@
       svg {
         // Outer circle
         circle()
-          .cx(12)
-          .cy(12)
-          .r(10)
+          .cx(512)
+          .cy(512)
+          .r(465.45)
           .fill(.none)
           .stroke(.currentColor)
-          .strokeWidth(2)
+          .strokeWidth(93.09)
 
         // Inner semicircle (not filled - less contrast)
         path()
-          .d(M(12, 18), a(6, 6, 0, false, false, 0, -12), v(12), Z())
+          .d(M(512, 791.27), a(279.27, 279.27, 0, false, false, 0, -558.54), v(558.54), Z())
           .fill(.none)
           .stroke(.currentColor)
-          .strokeWidth(2)
+          .strokeWidth(93.09)
           .strokeLinecap(.round)
           .strokeLinejoin(.round)
       }
       .class(`class`.isEmpty ? "less-contrast-icon-view" : "less-contrast-icon-view \(`class`)")
       .width(width)
       .height(height)
-      .viewBox(0, 0, 24, 24)
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .ariaHidden(true)
 

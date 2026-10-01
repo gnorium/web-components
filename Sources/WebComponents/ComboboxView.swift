@@ -159,9 +159,7 @@ public struct ComboboxView: HTMLContent {
           labelMarks
           if let tooltip {
             TooltipView(tooltip: tooltip, placement: .bottom) {
-              IconView {
-                InfoIconView()
-              }
+              IconView(icon: { size in InfoIconView(width: size, height: size) }, size: .small)
             }
           }
         }

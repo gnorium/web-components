@@ -20,7 +20,7 @@
         ButtonView(
           icon: IconView(
             icon: { size in SearchIconView(width: size, height: size) },
-            size: .medium),
+            size: .small),
           weight: weight,
           size: .medium,
           ariaLabel: "Search",

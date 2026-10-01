@@ -24,8 +24,10 @@
     public func build() -> DOM.Node {
       svg {
         path()
-          .d(M(8, 2), a(4, 4, 0, false, false, 6, 6), a(6, 6, 0, true, true, -6, -6), Z())
-          .strokeWidth(1.5)
+          .d(
+            M(512, 56.89), a(303.4, 303.4, 0, false, false, 455.11, 455.11),
+            a(455.11, 455.11, 0, true, true, -455.11, -455.11), Z())
+          .strokeWidth(113.78)
           .strokeLinecap(.round)
           .strokeLinejoin(.round)
       }
@@ -33,7 +35,7 @@
       .xmlns("http://www.w3.org/2000/svg")
       .width(width)
       .height(height)
-      .viewBox(0, 0, 16, 16)
+      .viewBox(0, 0, 1024, 1024)
       .fill(.none)
       .stroke(.currentColor)
 

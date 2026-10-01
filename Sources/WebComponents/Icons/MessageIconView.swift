@@ -25,18 +25,19 @@
       svg {
         path()
           .d(
-            M(0, 8), v(8), a(2, 2, 0, false, false, 2, 2), h(16), a(2, 2, 0, false, false, 2, -2),
-            V(8), l(-10, 4), Z())
+            M(0, 409.6), v(409.6), a(102.4, 102.4, 0, false, false, 102.4, 102.4), h(819.2),
+            a(102.4, 102.4, 0, false, false, 102.4, -102.4), V(409.6), l(-512, 204.8), Z())
 
         path()
           .d(
-            M(2, 2), a(2, 2, 0, false, false, -2, 2), v(2), l(10, 4), l(10, -4), V(4),
-            a(2, 2, 0, false, false, -2, -2), Z())
+            M(102.4, 102.4), a(102.4, 102.4, 0, false, false, -102.4, 102.4), v(102.4),
+            l(512, 204.8), l(512, -204.8), V(204.8),
+            a(102.4, 102.4, 0, false, false, -102.4, -102.4), Z())
       }
       .class(`class`.isEmpty ? "message-icon-view" : "message-icon-view \(`class`)")
       .width(width)
       .height(height)
-      .viewBox(0, 0, 20, 20)
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
 

@@ -25,14 +25,14 @@ public struct InfoIconView: HTMLContent {
     svg {
       path()
         .d(
-          M(4, 10), a(6, 6, 0, true, false, 12, 0), a(6, 6, 0, false, false, -12, 0),
-          m(6, -8), a(8, 8, 0, true, true, 0, 16), a(8, 8, 0, false, true, 0, -16),
-          m(1, 7), v(5), H(9), V(9), Z(), m(0, -1), V(6), H(9), v(2), Z())
+          M(128, 512), a(384, 384, 0, true, false, 768, 0), a(384, 384, 0, false, false, -768, 0),
+          m(384, -512), a(512, 512, 0, true, true, 0, 1024), a(512, 512, 0, false, true, 0, -1024),
+          m(64, 448), v(320), H(448), V(448), Z(), m(0, -64), V(256), H(448), v(128), Z())
     }
     .class(stringIsEmpty(`class`) ? "info-icon-view" : "info-icon-view \(`class`)")
     .width(width)
     .height(height)
-    .viewBox(0, 0, 20, 20)
+    .viewBox(0, 0, 1024, 1024)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.currentColor)
   }

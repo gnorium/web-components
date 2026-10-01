@@ -26,15 +26,15 @@ public struct CloseIconView: HTMLContent {
   public func build() -> DOM.Node {
     svg {
       path()
-        .d(M(4.34, 2.93), l(12.73, 12.73), l(-1.41, 1.41), L(2.93, 4.35), Z())
+        .d(M(102.11, 0), l(921.89, 921.89), l(-102.11, 102.11), L(0, 102.83), Z())
 
       path()
-        .d(M(17.07, 4.34), L(4.34, 17.07), l(-1.41, -1.41), L(15.66, 2.93), Z())
+        .d(M(1024, 102.11), L(102.11, 1024), l(-102.11, -102.11), L(921.89, 0), Z())
     }
     .class(stringIsEmpty(`class`) ? "close-icon-view" : "close-icon-view \(`class`)")
     .width(width)
     .height(height)
-    .viewBox(0, 0, 20, 20)
+    .viewBox(0, 0, 1024, 1024)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.currentColor)
   }

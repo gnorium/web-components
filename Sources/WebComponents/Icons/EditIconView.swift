@@ -25,14 +25,14 @@
       svg {
         path()
           .d(
-            m(16.77, 8), l(1.94, -2), a(1, 1, 0, false, false, 0, -1.41), l(-3.34, -3.3),
-            a(1, 1, 0, false, false, -1.41, 0), L(12, 3.23), Z(), M(1, 14.25), V(19), h(4.75),
-            l(9.96, -9.96), l(-4.75, -4.75), Z())
+            M(897.1, 398.25), l(110.36, -113.77), a(56.89, 56.89, 0, false, false, 0, -80.21),
+            l(-190, -187.73), a(56.89, 56.89, 0, false, false, -80.21, 0), L(625.75, 126.9), Z(),
+            M(0, 753.79), V(1024), h(270.21), l(566.59, -566.59), l(-270.21, -270.21), Z())
       }
       .class(`class`.isEmpty ? "edit-icon-view" : "edit-icon-view \(`class`)")
       .width(width)
       .height(height)
-      .viewBox(0, 0, 20, 20)
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
 

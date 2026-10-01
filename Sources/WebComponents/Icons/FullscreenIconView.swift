@@ -25,21 +25,21 @@
       svg {
         // Top-left corner bracket
         path()
-          .d(M(1, 1), V(7), H(3), V(3), H(7), V(1), Z())
+          .d(M(0, 0), V(341.33), H(113.78), V(113.78), H(341.33), V(0), Z())
         // Bottom-left corner bracket
         path()
-          .d(M(3, 13), H(1), V(19), H(7), V(17), H(3), Z())
+          .d(M(113.78, 682.67), H(0), V(1024), H(341.33), V(910.22), H(113.78), Z())
         // Bottom-right corner bracket
         path()
-          .d(M(17, 17), H(13), V(19), H(19), V(13), H(17), Z())
+          .d(M(910.22, 910.22), H(682.67), V(1024), H(1024), V(682.67), H(910.22), Z())
         // Top-right corner bracket
         path()
-          .d(M(17, 1), H(13), V(3), H(17), V(7), H(19), V(1), Z())
+          .d(M(910.22, 0), H(682.67), V(113.78), H(910.22), V(341.33), H(1024), V(0), Z())
       }
       .class(`class`.isEmpty ? "fullscreen-icon-view" : "fullscreen-icon-view \(`class`)")
       .width(width)
       .height(height)
-      .viewBox(0, 0, 20, 20)
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
     }

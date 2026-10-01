@@ -25,13 +25,14 @@ public struct ErrorIconView: HTMLContent {
     svg {
       path()
         .d(
-          M(13.728, 1), H(6.272), L(1, 6.272), v(7.456), L(6.272, 19), h(7.456), L(19, 13.728),
-          V(6.272), Z(), M(11, 15), H(9), v(-2), h(2), Z(), m(0, -4), H(9), V(5), h(2), Z())
+          M(724.08, 0), H(299.92), L(0, 299.92), v(424.16), L(299.92, 1024), h(424.16),
+          L(1024, 724.08), V(299.92), Z(), M(568.89, 796.44), H(455.11), v(-113.77), h(113.78), Z(),
+          m(0, -227.55), H(455.11), V(227.56), h(113.78), Z())
     }
     .class(stringIsEmpty(`class`) ? "error-icon-view" : "error-icon-view \(`class`)")
     .width(width)
     .height(height)
-    .viewBox(0, 0, 20, 20)
+    .viewBox(0, 0, 1024, 1024)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.currentColor)
   }
