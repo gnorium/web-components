@@ -39,10 +39,16 @@ public struct AddIconView: HTMLContent {
 }
 
 extension IconView {
-  /// The add icon as a medium button wears it before its 16px words, or
-  /// alone in a compact bar: `.small` (sizeIconSmall), the size of the
-  /// button's text, so "+ Genre" reads like its words.
+  /// The add icon as a medium button wears it before its 16px words:
+  /// sizeIconXSmall, the text's size minus 4px, so "+ Genre" reads like
+  /// its words (IconView.size(beside:)).
   public static var add: IconView {
+    IconView(icon: { size in AddIconView(size: size) }, size: sizeIconXSmall)
+  }
+
+  /// The add icon alone in a medium icon-only button (a filter bar's
+  /// bare +): sizeIconSmall, the button's own icon size.
+  public static var addAlone: IconView {
     IconView(icon: { size in AddIconView(size: size) }, size: sizeIconSmall)
   }
 }

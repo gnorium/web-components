@@ -207,8 +207,9 @@
               display(.flex)
               alignItems(.center)
               justifyContent(.center)
-              width(sizeIconSmall)
-              height(sizeIconSmall)
+              // Beside the item's 14px text: its size minus 4px.
+              width(size10)
+              height(size10)
               flexShrink(0)
             }
           }

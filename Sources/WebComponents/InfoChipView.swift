@@ -125,7 +125,8 @@ public struct InfoChipView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
-    let iconLength: CSS.Length = size == .large ? sizeIconMedium : sizeIconSmall
+    // Beside the chip's text (16px, or 20px large): its size minus 4px.
+    let iconLength: CSS.Length = size == .large ? sizeIconSmall : sizeIconXSmall
 
     let hasIconContent = !iconContent.isEmpty
     let resolvedIcon: Icon = {
@@ -301,7 +302,7 @@ public struct InfoChipView: HTMLContent {
         display(.inlineFlex)
         alignItems(.center)
         justifyContent(.center)
-        height(sizeIconSmall)
+        height(sizeIconXSmall)
         flexShrink(0)
       }
       descendant(".info-chip-icon > svg") {
@@ -310,15 +311,15 @@ public struct InfoChipView: HTMLContent {
       }
       // The sector is no view-box icon: a square of the icon's height.
       descendant(".info-chip-icon > .rotating-sector-view") {
+        width(sizeIconXSmall)
+        height(sizeIconXSmall)
+      }
+      selector("&.info-chip-large .info-chip-icon > .rotating-sector-view") {
         width(sizeIconSmall)
         height(sizeIconSmall)
       }
-      selector("&.info-chip-large .info-chip-icon > .rotating-sector-view") {
-        width(sizeIconMedium)
-        height(sizeIconMedium)
-      }
       selector("&.info-chip-large .info-chip-icon") {
-        height(sizeIconMedium)
+        height(sizeIconSmall)
       }
       // Shrinks to fit, fading out at its end, never grows: a chip wider
       // than its content (stretched by its container) keeps its icon and

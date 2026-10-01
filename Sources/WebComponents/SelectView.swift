@@ -85,7 +85,8 @@
         AnimatedUpDownChevronView(
           id: "\(id)-chevron",
           expanded: false,
-          size: sizeIconSmall,
+          // Beside the value's 16px text: its size minus 4px.
+          size: sizeIconXSmall,
           class: "select-indicator"
         )
       }
@@ -186,8 +187,9 @@
           alignItems(.center)
           justifyContent(.center)
           flexShrink(0)
-          width(sizeIconSmall)
-          height(sizeIconSmall)
+          // Beside the 16px label: its size minus 4px.
+          width(sizeIconXSmall)
+          height(sizeIconXSmall)
         }
         descendant(".select-menu[data-expanded='true']") { display(.flex) }
       }

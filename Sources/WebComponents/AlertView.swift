@@ -152,7 +152,7 @@
         // if it weren't there (`display: contents`).
         div {
           span {
-            StatusIconView(displayIcon, size: sizeIconSmall)
+            StatusIconView(displayIcon, size: sizeIconXSmall)
           }
           .class("alert-icon")
           .ariaHidden(true)
@@ -571,7 +571,7 @@
       // Icon
       let iconElement = document.createElement(.span)
       iconElement.className = "alert-icon"
-      iconElement.innerHTML = StatusIconView(displayIcon, size: sizeIconSmall).render()
+      iconElement.innerHTML = StatusIconView(displayIcon, size: sizeIconXSmall).render()
       iconElement.setAttribute(.ariaHidden, true)
       switch type {
       case .gray: iconElement.setAttribute(data("color"), "gray")

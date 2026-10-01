@@ -185,7 +185,7 @@ public struct DropdownView: HTMLContent {
 
           if let tooltipText = tooltip {
             TooltipView(tooltip: tooltipText, placement: .bottom) {
-              IconView(icon: { size in InfoIconView(size: size) }, size: fontSizeSmall14)
+              IconView(icon: { size in InfoIconView(size: size) }, size: size10)
             }
           }
         }
@@ -258,14 +258,9 @@ public struct DropdownView: HTMLContent {
               .data("stacked", optionLayout == .stacked)
               .title(options.first { stringEquals($0.value, selectedValue ?? "") }?.altDisplay ?? displayText)
 
-            // Animated chevron icon (switch, not ==, since ButtonSize is String-raw)
-            let chevronDim: CSS.Length =
-              switch buttonSize {
-              case .mini: sizeIconXSmall
-              case .small: fontSizeSmall14
-              case .medium: sizeIconSmall
-              case .large: fontSizeLarge18
-              }
+            // Animated chevron icon, beside the value's text: its size
+            // minus 4px.
+            let chevronDim = buttonSize.labelIconSize
             AnimatedUpDownChevronView(
               id: "dropdown-\(id)",
               expanded: false,

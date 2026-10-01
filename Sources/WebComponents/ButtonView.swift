@@ -89,14 +89,26 @@ public struct ButtonView: HTMLContent {
       }
     }
 
-    /// The size of an icon in this button: the font size of its text
-    /// (12, 14, 16, 18px), as an icon token where one matches.
+    /// The size of an icon-only button's icon: the font size its text
+    /// would have (12, 14, 16, 18px), as an icon token where one matches.
+    /// An icon alone sets its own size; beside a label, see labelIconSize.
     public var iconSize: CSS.Length {
       switch self {
       case .mini: return sizeIconXSmall
       case .small: return fontSizeSmall14
       case .medium: return sizeIconSmall
       case .large: return fontSizeLarge18
+      }
+    }
+
+    /// The size of an icon beside this button's label: its text's font
+    /// size minus 4px (IconView.size(beside:))—8, 10, 12, 14px.
+    public var labelIconSize: CSS.Length {
+      switch self {
+      case .mini: return size8
+      case .small: return size10
+      case .medium: return sizeIconXSmall
+      case .large: return size14
       }
     }
   }
