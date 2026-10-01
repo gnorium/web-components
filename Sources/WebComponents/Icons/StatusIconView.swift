@@ -1,4 +1,5 @@
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
 import DOMBuilder
 import EmbeddedSwiftUtilities
@@ -13,8 +14,7 @@ import WebTypes
 /// (`element.innerHTML = StatusIconView(.success).render()`).
 public struct StatusIconView: HTMLContent {
   let status: Status
-  let width: CSS.Length
-  let height: CSS.Length
+  let iconSize: CSS.Length
   let `class`: String
 
   public enum Status: Sendable {
@@ -26,13 +26,11 @@ public struct StatusIconView: HTMLContent {
 
   public init(
     _ status: Status,
-    width: CSS.Length = px(20),
-    height: CSS.Length = px(20),
+    size: CSS.Length,
     class: String = ""
   ) {
     self.status = status
-    self.width = width
-    self.height = height
+    self.iconSize = size
     self.class = `class`
   }
 
@@ -40,13 +38,13 @@ public struct StatusIconView: HTMLContent {
     let classes = stringIsEmpty(`class`) ? "status-icon-view" : "status-icon-view \(`class`)"
     switch status {
     case .info:
-      return InfoFilledIconView(width: width, height: height, class: classes).build()
+      return InfoFilledIconView(size: iconSize, class: classes).build()
     case .warning:
-      return AlertIconView(width: width, height: height, class: classes).build()
+      return AlertIconView(size: iconSize, class: classes).build()
     case .error:
-      return ErrorIconView(width: width, height: height, class: classes).build()
+      return ErrorIconView(size: iconSize, class: classes).build()
     case .success:
-      return SuccessIconView(width: width, height: height, class: classes).build()
+      return SuccessIconView(size: iconSize, class: classes).build()
     }
   }
 }

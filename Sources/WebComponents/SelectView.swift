@@ -85,8 +85,7 @@
         AnimatedUpDownChevronView(
           id: "\(id)-chevron",
           expanded: false,
-          width: sizeIconSmall,
-          height: sizeIconSmall,
+          size: sizeIconSmall,
           class: "select-indicator"
         )
       }

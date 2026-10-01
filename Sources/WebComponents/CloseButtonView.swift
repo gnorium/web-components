@@ -19,7 +19,7 @@
 
     public func build() -> DOM.Node {
       ButtonView(
-        icon: IconView(icon: { size in CloseIconView(width: size, height: size) }, size: .small),
+        icon: IconView(icon: { size in CloseIconView(size: size) }, size: .small),
         weight: .plain,
         size: .medium,
         ariaLabel: ariaLabel,

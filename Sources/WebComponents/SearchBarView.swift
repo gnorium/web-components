@@ -134,7 +134,7 @@
 
         // Button
         button {
-          SearchIconView(width: px(16), height: px(16))
+          SearchIconView(size: sizeIconXSmall)
         }
         .type(suggestions ? .button : .submit)
         .class("search-bar-button")

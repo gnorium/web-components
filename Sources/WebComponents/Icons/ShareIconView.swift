@@ -1,5 +1,6 @@
 #if SERVER
   import CSSBuilder
+  import CSSOMBuilder
   import DesignTokens
   import DOMBuilder
   import HTMLBuilder
@@ -7,17 +8,14 @@
   import WebTypes
 
   public struct ShareIconView: HTMLContent {
-    let width: CSS.Length
-    let height: CSS.Length
+    let iconSize: CSS.Length
     let `class`: String
 
     public init(
-      width: CSS.Length = px(20),
-      height: CSS.Length = px(20),
+      size: CSS.Length,
       class: String = ""
     ) {
-      self.width = width
-      self.height = height
+      self.iconSize = size
       self.class = `class`
     }
 
@@ -25,14 +23,13 @@
       svg {
         path()
           .d(
-            M(625.78, 312.89), V(85.33), l(398.22, 398.23), l(-398.22, 398.22), v(-227.56),
-            c(-284.45, 0, -483.56, 85.34, -625.78, 284.45), l(45.51, -170.67), l(11.38, -22.76),
-            A(682.67, 682.67, 0, false, true, 625.78, 312.89))
+            M(625.78, 227.56), V(0), l(398.22, 398.22), l(-398.22, 398.22), v(-227.55),
+            c(-284.45, 0, -483.56, 85.33, -625.78, 284.44), l(45.51, -170.66), l(11.38, -22.76),
+            A(682.67, 682.67, 0, false, true, 625.78, 227.56))
       }
       .class(`class`.isEmpty ? "share-icon-view" : "share-icon-view \(`class`)")
-      .width(width)
-      .height(height)
-      .viewBox(0, 0, 1024, 1024)
+      .style { width(iconSize) }
+      .viewBox(0, 0, 1024, 853.33)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
 

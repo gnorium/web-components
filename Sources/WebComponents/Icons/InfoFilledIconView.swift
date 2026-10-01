@@ -1,4 +1,5 @@
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
 import DOMBuilder
 import EmbeddedSwiftUtilities
@@ -7,17 +8,14 @@ import SVGBuilder
 import WebTypes
 
 public struct InfoFilledIconView: HTMLContent {
-  let width: CSS.Length
-  let height: CSS.Length
+  let iconSize: CSS.Length
   let `class`: String
 
   public init(
-    width: CSS.Length = px(20),
-    height: CSS.Length = px(20),
+    size: CSS.Length,
     class: String = ""
   ) {
-    self.width = width
-    self.height = height
+    self.iconSize = size
     self.class = `class`
   }
 
@@ -30,8 +28,7 @@ public struct InfoFilledIconView: HTMLContent {
           H(460.8), Z(), m(0, 204.8), h(102.4), v(307.2), H(460.8), Z())
     }
     .class(stringIsEmpty(`class`) ? "info-filled-icon-view" : "info-filled-icon-view \(`class`)")
-    .width(width)
-    .height(height)
+    .style { height(iconSize) }
     .viewBox(0, 0, 1024, 1024)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.currentColor)

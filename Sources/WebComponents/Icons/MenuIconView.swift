@@ -1,21 +1,20 @@
 #if SERVER
+  import CSSBuilder
+  import CSSOMBuilder
   import SVGBuilder
   import HTMLBuilder
   import DOMBuilder
   import WebTypes
 
   public struct MenuIconView: HTMLContent {
-    let width: CSS.Length
-    let height: CSS.Length
+    let iconSize: CSS.Length
     let `class`: String
 
     public init(
-      width: CSS.Length = px(20),
-      height: CSS.Length = px(20),
+      size: CSS.Length,
       class: String = ""
     ) {
-      self.width = width
-      self.height = height
+      self.iconSize = size
       self.class = `class`
     }
 
@@ -23,13 +22,12 @@
       svg {
         path()
           .d(
-            M(0, 113.78), v(113.78), h(1024), V(113.78), Z(), M(0, 568.89), h(1024), V(455.11),
-            H(0), Z(), M(0, 910.22), h(1024), v(-113.78), H(0), Z())
+            M(0, 0), v(113.78), h(1024), V(0), Z(), M(0, 455.11), h(1024), V(341.33), H(0), Z(),
+            M(0, 796.44), h(1024), v(-113.77), H(0), Z())
       }
       .class(`class`.isEmpty ? "menu-icon-view" : "menu-icon-view \(`class`)")
-      .width(width)
-      .height(height)
-      .viewBox(0, 0, 1024, 1024)
+      .style { width(iconSize) }
+      .viewBox(0, 0, 1024, 796.44)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
 

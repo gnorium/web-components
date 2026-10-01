@@ -1,5 +1,6 @@
 #if SERVER
   import CSSBuilder
+  import CSSOMBuilder
   import DesignTokens
   import DOMBuilder
   import HTMLBuilder
@@ -7,17 +8,14 @@
   import WebTypes
 
   public struct ListBulletIconView: HTMLContent {
-    let width: CSS.Length
-    let height: CSS.Length
+    let iconSize: CSS.Length
     let `class`: String
 
     public init(
-      width: CSS.Length = px(20),
-      height: CSS.Length = px(20),
+      size: CSS.Length,
       class: String = ""
     ) {
-      self.width = width
-      self.height = height
+      self.iconSize = size
       self.class = `class`
     }
 
@@ -25,28 +23,27 @@
       svg {
         path()
           .d(
-            M(341.33, 796.44), h(682.67), v(113.78), H(341.33), Z(), m(0, -341.33), h(682.67),
+            M(341.33, 739.56), h(682.67), v(113.77), H(341.33), Z(), m(0, -341.34), h(682.67),
             v(113.78), H(341.33), Z(), m(0, -341.33), h(682.67), v(113.78), H(341.33), Z())
 
         circle()
           .cx(113.78)
-          .cy(170.67)
+          .cy(113.78)
           .r(113.78)
 
         circle()
           .cx(113.78)
-          .cy(512)
+          .cy(455.11)
           .r(113.78)
 
         circle()
           .cx(113.78)
-          .cy(853.33)
+          .cy(796.44)
           .r(113.78)
       }
       .class(`class`.isEmpty ? "list-bullet-icon-view" : "list-bullet-icon-view \(`class`)")
-      .width(width)
-      .height(height)
-      .viewBox(0, 0, 1024, 1024)
+      .style { width(iconSize) }
+      .viewBox(0, 0, 1024, 910.22)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
 

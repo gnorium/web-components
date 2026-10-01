@@ -156,17 +156,17 @@ public struct InfoChipView: HTMLContent {
           } else {
             switch resolvedIcon {
             case .ring:
-              RingIconView(width: iconLength, height: iconLength)
+              RingIconView(size: iconLength)
             case .disc:
-              DiscIconView(width: iconLength, height: iconLength)
+              DiscIconView(size: iconLength)
             case .check:
-              CheckIconView(width: iconLength, height: iconLength)
+              CheckIconView(size: iconLength)
             case .cross:
-              CrossIconView(width: iconLength, height: iconLength)
+              CrossIconView(size: iconLength)
             case .warning:
-              AlertIconView(width: iconLength, height: iconLength)
+              AlertIconView(size: iconLength)
             case .info:
-              InfoIconView(width: iconLength, height: iconLength)
+              InfoIconView(size: iconLength)
             case .automatic, .hidden:
               [DOM.Node]()
             }
@@ -301,21 +301,23 @@ public struct InfoChipView: HTMLContent {
         display(.inlineFlex)
         alignItems(.center)
         justifyContent(.center)
-        width(sizeIconSmall)
         height(sizeIconSmall)
         flexShrink(0)
       }
       descendant(".info-chip-icon > svg") {
-        width(perc(100))
         height(perc(100))
         display(.block)
       }
+      // The sector is no view-box icon: a square of the icon's height.
       descendant(".info-chip-icon > .rotating-sector-view") {
-        width(perc(100))
-        height(perc(100))
+        width(sizeIconSmall)
+        height(sizeIconSmall)
+      }
+      selector("&.info-chip-large .info-chip-icon > .rotating-sector-view") {
+        width(sizeIconMedium)
+        height(sizeIconMedium)
       }
       selector("&.info-chip-large .info-chip-icon") {
-        width(sizeIconMedium)
         height(sizeIconMedium)
       }
       // Shrinks to fit, fading out at its end, never grows: a chip wider

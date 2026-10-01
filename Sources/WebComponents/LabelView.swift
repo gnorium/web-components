@@ -61,6 +61,13 @@ public struct LabelView: HTMLContent {
     self.descriptionContent = description()
   }
 
+  /// The info icon is the size of the label's text: sizeIconXSmall beside
+  /// 14px and smaller labels, sizeIconSmall beside 16px and larger ones.
+  private var infoIconSize: IconView.IconSize {
+    stringEquals(labelFontSize.value, fontSizeSmall14.value)
+      || stringEquals(labelFontSize.value, fontSizeXSmall12.value) ? .xSmall : .small
+  }
+
   public func build() -> DOM.Node {
     let hasDescription = !descriptionContent.isEmpty
     let rootClass = stringIsEmpty(`class`)
@@ -88,7 +95,7 @@ public struct LabelView: HTMLContent {
 
           // After "(optional)", as every other field draws it.
           if let tooltip {
-            TooltipView(tooltip: tooltip) { IconView(icon: { size in InfoIconView(width: size, height: size) }, size: .small) }
+            TooltipView(tooltip: tooltip) { IconView(icon: { size in InfoIconView(size: size) }, size: infoIconSize) }
           }
         }
         .class("label-text")
@@ -119,7 +126,7 @@ public struct LabelView: HTMLContent {
             labelMarks
 
             if let tooltip {
-              TooltipView(tooltip: tooltip) { IconView(icon: { size in InfoIconView(width: size, height: size) }, size: .small) }
+              TooltipView(tooltip: tooltip) { IconView(icon: { size in InfoIconView(size: size) }, size: infoIconSize) }
             }
           }
           .for(forID)
@@ -142,7 +149,7 @@ public struct LabelView: HTMLContent {
             labelMarks
 
             if let tooltip {
-              TooltipView(tooltip: tooltip) { IconView(icon: { size in InfoIconView(width: size, height: size) }, size: .small) }
+              TooltipView(tooltip: tooltip) { IconView(icon: { size in InfoIconView(size: size) }, size: infoIconSize) }
             }
           }
           .class("label-text")

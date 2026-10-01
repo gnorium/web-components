@@ -12,8 +12,7 @@ import WebTypes
 public struct AnimatedRightDownChevronView: HTMLContent {
   public let id: String
   public let expanded: Bool
-  public let width: CSS.Length
-  public let height: CSS.Length
+  public let size: CSS.Length
   public var `class`: String
   public var data: [TableView.AttributePair] = []
   public var customStyleRules: [(@Sendable () -> [CSSOM.CSSRule])] = []
@@ -21,14 +20,12 @@ public struct AnimatedRightDownChevronView: HTMLContent {
   public init(
     id: String,
     expanded: Bool = false,
-    width: CSS.Length = px(20),
-    height: CSS.Length = px(20),
+    size: CSS.Length,
     class: String = ""
   ) {
     self.id = id
     self.expanded = expanded
-    self.width = width
-    self.height = height
+    self.size = size
     self.class = `class`
   }
 
@@ -59,8 +56,7 @@ public struct AnimatedRightDownChevronView: HTMLContent {
     }
     .class(stringIsEmpty(`class`) ? "animated-right-down-chevron-view" : "animated-right-down-chevron-view \(`class`)")
     .id("\(id)-chevron")
-    .width(width)
-    .height(height)
+    .style { height(size) }
     .viewBox(0, 0, 1024, 1024)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.none)
@@ -94,9 +90,9 @@ public struct AnimatedRightDownChevronView: HTMLContent {
   import WebAPIs
 
   public enum AnimatedRightDownChevronFactory {
-    public static func createElement(id: String, expanded: Bool = false) -> DOM.Element {
+    public static func createElement(id: String, expanded: Bool = false, size: CSS.Length) -> DOM.Element {
       let wrapper = document.createElement(.span)
-      let view = AnimatedRightDownChevronView(id: id, expanded: expanded)
+      let view = AnimatedRightDownChevronView(id: id, expanded: expanded, size: size)
       wrapper.innerHTML = view.render()
       if let svg = wrapper.firstElementChild {
         return svg

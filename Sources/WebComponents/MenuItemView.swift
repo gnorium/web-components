@@ -177,7 +177,7 @@
           items.append(
             span {
               if selected {
-                span { CheckIconView() }
+                span { CheckIconView(size: sizeIconXSmall) }
                   .class("menu-item-checkmark")
                   .ariaHidden(true)
               }
@@ -348,7 +348,6 @@
               color(colorInvertedFixed)
             }
             selector("& .menu-item-checkmark svg") {
-              width(perc(100))
               height(perc(100))
             }
             descendant(".menu-item-thumbnail") {
@@ -526,7 +525,6 @@
               color(colorInvertedFixed)
             }
             selector("& .menu-item-checkmark svg") {
-              width(perc(100))
               height(perc(100))
             }
             descendant(".menu-item-thumbnail") {

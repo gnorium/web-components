@@ -21,8 +21,8 @@
         ButtonView(
           icon: IconView(
             icon: { size in
-              MenuIconView(width: size, height: size)
-            }, size: .medium),
+              MenuIconView(size: size)
+            }, size: .small),
           weight: .quiet,
           size: .medium,
           ariaLabel: "Open menu",

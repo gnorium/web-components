@@ -1,5 +1,6 @@
 #if SERVER
   import CSSBuilder
+  import CSSOMBuilder
   import DesignTokens
   import DOMBuilder
   import HTMLBuilder
@@ -7,17 +8,14 @@
   import WebTypes
 
   public struct CancelIconView: HTMLContent {
-    let width: CSS.Length
-    let height: CSS.Length
+    let iconSize: CSS.Length
     let `class`: String
 
     public init(
-      width: CSS.Length = px(20),
-      height: CSS.Length = px(20),
+      size: CSS.Length,
       class: String = ""
     ) {
-      self.width = width
-      self.height = height
+      self.iconSize = size
       self.class = `class`
     }
 
@@ -31,8 +29,7 @@
             A(409.6, 409.6, 0, false, true, 835.07, 762.88))
       }
       .class(`class`.isEmpty ? "cancel-icon-view" : "cancel-icon-view \(`class`)")
-      .width(width)
-      .height(height)
+      .style { height(iconSize) }
       .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)

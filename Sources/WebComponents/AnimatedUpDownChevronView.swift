@@ -24,33 +24,30 @@ private func pointsToString(_ points: [(Double, Double)]) -> String {
 ///
 public struct AnimatedUpDownChevronView: HTMLContent {
   public static let collapsedPoints: [(Double, Double)] = [
-    (41.58, 247.39), (512, 717.81), (982.42, 247.39),
+    (41.58, 41.58), (512, 512), (982.42, 41.58),
   ]
   public static let expandedPoints: [(Double, Double)] = [
-    (41.58, 776.61), (512, 306.19), (982.42, 776.61),
+    (41.58, 570.8), (512, 100.38), (982.42, 570.8),
   ]
   public static let midpointPoints: [(Double, Double)] = [
-    (41.58, 512), (512, 512), (982.42, 512),
+    (41.58, 306.19), (512, 306.19), (982.42, 306.19),
   ]
 
   public let id: String
   public let expanded: Bool
-  public let width: CSS.Length
-  public let height: CSS.Length
+  public let size: CSS.Length
   public var `class`: String
   public var customStyleRules: [(@Sendable () -> [CSSOM.CSSRule])] = []
 
   public init(
     id: String,
     expanded: Bool = false,
-    width: CSS.Length = px(20),
-    height: CSS.Length = px(20),
+    size: CSS.Length,
     class: String = ""
   ) {
     self.id = id
     self.expanded = expanded
-    self.width = width
-    self.height = height
+    self.size = size
     self.class = `class`
   }
 
@@ -69,11 +66,11 @@ public struct AnimatedUpDownChevronView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
-    // MARK: - Chevron Geometry (1024 x 1024 viewBox)
-    // The collapsed centerline is identical to AnimatedRightDownChevronView;
-    // the expanded centerline is its exact vertical mirror about y = 512.
-    // The box is tight to the ink of all three shapes (butt ends included),
-    // so its width is the chevron's and the shapes share one center.
+    // MARK: - Chevron Geometry (1024 x 612.38 viewBox)
+    // The collapsed centerline is AnimatedRightDownChevronView's down chevron;
+    // the expanded centerline is its exact vertical mirror about y = 306.19.
+    // The box is tight to the union of all three shapes' ink (butt ends
+    // and miter tips included), so they share one box and one center.
 
     return svg {
       if expanded {
@@ -86,9 +83,8 @@ public struct AnimatedUpDownChevronView: HTMLContent {
       stringIsEmpty(`class`) ? "animated-up-down-chevron-view" : "animated-up-down-chevron-view \(`class`)"
     )
     .id("\(id)-up-down-chevron")
-    .width(width)
-    .height(height)
-    .viewBox(0, 0, 1024, 1024)
+    .style { width(size) }
+    .viewBox(0, 0, 1024, 612.38)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.none)
     .stroke(.currentColor)
@@ -206,9 +202,9 @@ public struct AnimatedUpDownChevronView: HTMLContent {
     ///   - id: Base ID (element gets id="\(id)-up-down-chevron")
     ///   - expanded: Initial state (false = down v, true = up ^)
     /// - Returns: A wrapper element containing the SVG
-    public static func createElement(id: String, expanded: Bool = false) -> DOM.Element {
+    public static func createElement(id: String, expanded: Bool = false, size: CSS.Length) -> DOM.Element {
       let wrapper = document.createElement(.span)
-      let view = AnimatedUpDownChevronView(id: id, expanded: expanded)
+      let view = AnimatedUpDownChevronView(id: id, expanded: expanded, size: size)
       wrapper.innerHTML = view.render()
       if let svg = wrapper.firstElementChild {
         return svg

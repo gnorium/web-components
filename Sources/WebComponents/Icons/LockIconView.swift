@@ -1,5 +1,6 @@
 #if SERVER
   import CSSBuilder
+  import CSSOMBuilder
   import DesignTokens
   import DOMBuilder
   import HTMLBuilder
@@ -8,17 +9,14 @@
 
   /// Codex `lock` icon.
   public struct LockIconView: HTMLContent {
-    let width: CSS.Length
-    let height: CSS.Length
+    let iconSize: CSS.Length
     let `class`: String
 
     public init(
-      width: CSS.Length = px(20),
-      height: CSS.Length = px(20),
+      size: CSS.Length,
       class: String = ""
     ) {
-      self.width = width
-      self.height = height
+      self.iconSize = size
       self.class = `class`
     }
 
@@ -26,19 +24,18 @@
       svg {
         path()
           .d(
-            M(822.78, 409.6), H(768), V(256), s(0, -256, -256, -256), s(-256, 256, -256, 256),
-            v(153.6), H(201.22), A(98.82, 98.82, 0, false, false, 102.4, 508.42), v(417.28),
-            A(98.82, 98.82, 0, false, false, 201.22, 1024), h(621.56),
-            A(98.82, 98.82, 0, false, false, 921.6, 925.18), V(508.42),
-            A(98.82, 98.82, 0, false, false, 822.78, 409.6), M(512, 819.2),
+            M(720.38, 409.6), H(665.6), V(256), s(0, -256, -256, -256), s(-256, 256, -256, 256),
+            v(153.6), H(98.82), A(98.82, 98.82, 0, false, false, 0, 508.42), v(417.28),
+            A(98.82, 98.82, 0, false, false, 98.82, 1024), h(621.56),
+            A(98.82, 98.82, 0, false, false, 819.2, 925.18), V(508.42),
+            A(98.82, 98.82, 0, false, false, 720.38, 409.6), M(409.6, 819.2),
             a(102.4, 102.4, 0, true, true, 102.4, -102.4),
-            a(102.4, 102.4, 0, false, true, -102.4, 102.4), m(153.6, -409.6), H(358.4), V(281.6),
-            C(358.4, 204.8, 358.4, 102.4, 512, 102.4), s(153.6, 102.4, 153.6, 179.2), Z())
+            a(102.4, 102.4, 0, false, true, -102.4, 102.4), m(153.6, -409.6), H(256), V(281.6),
+            C(256, 204.8, 256, 102.4, 409.6, 102.4), s(153.6, 102.4, 153.6, 179.2), Z())
       }
       .class(`class`.isEmpty ? "lock-icon-view" : "lock-icon-view \(`class`)")
-      .width(width)
-      .height(height)
-      .viewBox(0, 0, 1024, 1024)
+      .style { height(iconSize) }
+      .viewBox(0, 0, 819.2, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
     }

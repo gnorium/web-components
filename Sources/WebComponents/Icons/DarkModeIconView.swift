@@ -1,5 +1,6 @@
 #if SERVER
   import CSSBuilder
+  import CSSOMBuilder
   import DesignTokens
   import DOMBuilder
   import HTMLBuilder
@@ -8,17 +9,14 @@
 
   public struct DarkModeIconView: HTMLContent {
     let `class`: String
-    let width: CSS.Length
-    let height: CSS.Length
+    let iconSize: CSS.Length
 
     public init(
       class: String = "",
-      width: CSS.Length = px(16),
-      height: CSS.Length = px(16)
+      size: CSS.Length
     ) {
       self.class = `class`
-      self.width = width
-      self.height = height
+      self.iconSize = size
     }
 
     public func build() -> DOM.Node {
@@ -33,8 +31,7 @@
       }
       .class(`class`.isEmpty ? "dark-mode-icon-view" : "dark-mode-icon-view \(`class`)")
       .xmlns("http://www.w3.org/2000/svg")
-      .width(width)
-      .height(height)
+      .style { height(iconSize) }
       .viewBox(0, 0, 1024, 1024)
       .fill(.none)
       .stroke(.currentColor)

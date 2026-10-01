@@ -1,4 +1,5 @@
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
 import DOMBuilder
 import EmbeddedSwiftUtilities
@@ -7,17 +8,14 @@ import SVGBuilder
 import WebTypes
 
 public struct SuccessIconView: HTMLContent {
-  let width: CSS.Length
-  let height: CSS.Length
+  let iconSize: CSS.Length
   let `class`: String
 
   public init(
-    width: CSS.Length = px(20),
-    height: CSS.Length = px(20),
+    size: CSS.Length,
     class: String = ""
   ) {
-    self.width = width
-    self.height = height
+    self.iconSize = size
     self.class = `class`
   }
 
@@ -30,8 +28,7 @@ public struct SuccessIconView: HTMLContent {
           L(153.6, 512), Z())
     }
     .class(stringIsEmpty(`class`) ? "success-icon-view" : "success-icon-view \(`class`)")
-    .width(width)
-    .height(height)
+    .style { height(iconSize) }
     .viewBox(0, 0, 1024, 1024)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.currentColor)

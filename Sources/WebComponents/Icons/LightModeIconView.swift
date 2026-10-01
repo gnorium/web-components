@@ -1,5 +1,6 @@
 #if SERVER
   import CSSBuilder
+  import CSSOMBuilder
   import DesignTokens
   import DOMBuilder
   import HTMLBuilder
@@ -8,21 +9,18 @@
 
   public struct LightModeIconView: HTMLContent {
     let `class`: String
-    let width: CSS.Length
-    let height: CSS.Length
+    let iconSize: CSS.Length
     let stroke: CSS.Color
     let strokeWidth: CSS.Length
 
     public init(
       class: String = "",
-      width: CSS.Length = px(16),
-      height: CSS.Length = px(16),
+      size: CSS.Length,
       stroke: CSS.Color = .currentColor,
       strokeWidth: CSS.Length = 100.54
     ) {
       self.class = `class`
-      self.width = width
-      self.height = height
+      self.iconSize = size
       self.stroke = stroke
       self.strokeWidth = strokeWidth
     }
@@ -98,8 +96,7 @@
         .clipPath(url("#clip"))
       }
       .class(`class`.isEmpty ? "light-mode-icon-view" : "light-mode-icon-view \(`class`)")
-      .width(width)
-      .height(height)
+      .style { height(iconSize) }
       .viewBox(0, 0, 1024, 1024)
       .fill(.none)
       .stroke(stroke)

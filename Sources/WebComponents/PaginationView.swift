@@ -113,7 +113,7 @@ public struct PaginationView: HTMLContent {
       size == .mini
       ? calc(ch(digitCount) + px(10))
       : calc(ch(digitCount) + px(20))
-    let iconSize: CSS.Length = size == .mini ? px(12) : px(16)
+    let iconSize: CSS.Length = size == .mini ? sizeIconXSmall : sizeIconSmall
     let useButtons = stringEquals(previousUrl, nil) && stringEquals(nextUrl, nil) && showControls
 
     let sizeClass = "pagination-size-\(size.rawValue)"
@@ -126,7 +126,7 @@ public struct PaginationView: HTMLContent {
         div {
           if let prevHref = previousUrl {
             var link = a {
-              PreviousIconView(width: iconSize, height: iconSize)
+              PreviousIconView(size: iconSize)
             }
             .class("pagination-prev")
             .href(prevHref)
@@ -137,7 +137,7 @@ public struct PaginationView: HTMLContent {
             link
           } else if useButtons {
             var btn = button {
-              PreviousIconView(width: iconSize, height: iconSize)
+              PreviousIconView(size: iconSize)
             }
             .type(.button)
             .class(previousDisabled ? "pagination-prev pagination-disabled" : "pagination-prev")
@@ -149,7 +149,7 @@ public struct PaginationView: HTMLContent {
             btn
           } else {
             span {
-              PreviousIconView(width: iconSize, height: iconSize)
+              PreviousIconView(size: iconSize)
             }
             .class("pagination-prev pagination-disabled")
             .ariaLabel(previousAriaLabel)
@@ -215,7 +215,7 @@ public struct PaginationView: HTMLContent {
         div {
           if let nextHref = nextUrl {
             var link = a {
-              NextIconView(width: iconSize, height: iconSize)
+              NextIconView(size: iconSize)
             }
             .class("pagination-next")
             .href(nextHref)
@@ -226,7 +226,7 @@ public struct PaginationView: HTMLContent {
             link
           } else if useButtons {
             var btn = button {
-              NextIconView(width: iconSize, height: iconSize)
+              NextIconView(size: iconSize)
             }
             .type(.button)
             .class(nextDisabled ? "pagination-next pagination-disabled" : "pagination-next")
@@ -238,7 +238,7 @@ public struct PaginationView: HTMLContent {
             btn
           } else {
             span {
-              NextIconView(width: iconSize, height: iconSize)
+              NextIconView(size: iconSize)
             }
             .class("pagination-next pagination-disabled")
             .ariaLabel(nextAriaLabel)

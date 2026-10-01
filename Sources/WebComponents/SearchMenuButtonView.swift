@@ -19,7 +19,7 @@
       div {
         ButtonView(
           icon: IconView(
-            icon: { size in SearchIconView(width: size, height: size) },
+            icon: { size in SearchIconView(size: size) },
             size: .small),
           weight: weight,
           size: .medium,

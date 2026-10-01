@@ -111,7 +111,7 @@ public struct DatePickerView: HTMLContent {
       )
 
       ButtonView(
-        icon: IconView { CalendarIconView() },
+        icon: IconView(icon: { s in CalendarIconView(size: s) }, size: .small),
         weight: .plain,
         size: .medium,
         disabled: disabled,
@@ -127,7 +127,7 @@ public struct DatePickerView: HTMLContent {
         class: "date-picker-popover",
         header: {
           ButtonView(
-            icon: IconView { PreviousIconView() },
+            icon: IconView(icon: { s in PreviousIconView(size: s) }, size: .small),
             weight: .quiet,
             size: .medium,
             ariaLabel: "Previous month",
@@ -138,7 +138,7 @@ public struct DatePickerView: HTMLContent {
             .class("date-picker-month-title")
             .ariaLive(.polite)
           ButtonView(
-            icon: IconView { NextIconView() },
+            icon: IconView(icon: { s in NextIconView(size: s) }, size: .small),
             weight: .quiet,
             size: .medium,
             ariaLabel: "Next month",

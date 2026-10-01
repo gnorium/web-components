@@ -1,5 +1,6 @@
 #if SERVER
   import CSSBuilder
+  import CSSOMBuilder
   import DesignTokens
   import DOMBuilder
   import HTMLBuilder
@@ -8,21 +9,18 @@
 
   public struct ThreadsIconView: HTMLContent {
     let `class`: String
-    let width: CSS.Length
-    let height: CSS.Length
+    let iconSize: CSS.Length
     let fill: CSS.Color
     let monochrome: Bool
 
     public init(
       class: String = "",
-      width: CSS.Length = px(20),
-      height: CSS.Length = px(20),
+      size: CSS.Length,
       fill: CSS.Color = colorBase,
       monochrome: Bool = false
     ) {
       self.class = `class`
-      self.width = width
-      self.height = height
+      self.iconSize = size
       self.fill = fill
       self.monochrome = monochrome
     }
@@ -64,8 +62,7 @@
           .fill(monochrome ? colorInverted : .white)
       }
       .class(`class`.isEmpty ? "threads-icon-view" : "threads-icon-view \(`class`)")
-      .width(width)
-      .height(height)
+      .style { height(iconSize) }
       .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .xmlnsXlink("http://www.w3.org/1999/xlink")

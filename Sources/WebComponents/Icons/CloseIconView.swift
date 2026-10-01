@@ -1,4 +1,5 @@
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
 import DOMBuilder
 import EmbeddedSwiftUtilities
@@ -9,17 +10,14 @@ import WebTypes
 /// Codex `close` icon: the ✕ of a close or dismiss button. Available on
 /// SERVER + CLIENT (client code renders it: `StatusIconView` shows how).
 public struct CloseIconView: HTMLContent {
-  let width: CSS.Length
-  let height: CSS.Length
+  let iconSize: CSS.Length
   let `class`: String
 
   public init(
-    width: CSS.Length = px(20),
-    height: CSS.Length = px(20),
+    size: CSS.Length,
     class: String = ""
   ) {
-    self.width = width
-    self.height = height
+    self.iconSize = size
     self.class = `class`
   }
 
@@ -32,8 +30,7 @@ public struct CloseIconView: HTMLContent {
         .d(M(1024, 102.11), L(102.11, 1024), l(-102.11, -102.11), L(921.89, 0), Z())
     }
     .class(stringIsEmpty(`class`) ? "close-icon-view" : "close-icon-view \(`class`)")
-    .width(width)
-    .height(height)
+    .style { height(iconSize) }
     .viewBox(0, 0, 1024, 1024)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.currentColor)

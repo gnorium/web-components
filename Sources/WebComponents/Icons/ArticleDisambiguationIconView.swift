@@ -1,5 +1,6 @@
 #if SERVER
   import CSSBuilder
+  import CSSOMBuilder
   import DesignTokens
   import DOMBuilder
   import HTMLBuilder
@@ -7,17 +8,14 @@
   import WebTypes
 
   public struct ArticleDisambiguationIconView: HTMLContent {
-    let width: CSS.Length
-    let height: CSS.Length
+    let iconSize: CSS.Length
     let `class`: String
 
     public init(
-      width: CSS.Length = px(20),
-      height: CSS.Length = px(20),
+      size: CSS.Length,
       class: String = ""
     ) {
-      self.width = width
-      self.height = height
+      self.iconSize = size
       self.class = `class`
     }
 
@@ -25,21 +23,20 @@
       svg {
         path()
           .d(
-            M(796.44, 0), H(227.56), c(-62.58, 0, -113.78, 51.2, -113.78, 113.78), v(341.33),
-            h(261.69), l(210.49, -210.49), L(512, 170.67), h(227.56), v(227.55), l(-73.96, -73.95),
-            L(477.87, 512), l(187.73, 187.73), L(739.56, 625.78), v(227.55), h(-227.56),
-            l(73.96, -73.95), L(375.47, 568.89), H(113.78), v(341.33),
-            c(0, 62.58, 51.2, 113.78, 113.78, 113.78), h(568.88),
-            c(62.58, 0, 113.78, -51.2, 113.78, -113.78), V(113.78),
-            c(0, -62.58, -51.2, -113.78, -113.78, -113.78))
+            M(682.67, 0), H(113.78), c(-62.58, 0, -113.78, 51.2, -113.78, 113.78), v(341.33),
+            h(261.69), l(210.49, -210.49), L(398.22, 170.67), h(227.56), v(227.55),
+            l(-73.96, -73.95), L(364.09, 512), l(187.73, 187.73), L(625.78, 625.78), v(227.55),
+            h(-227.56), l(73.96, -73.95), L(261.69, 568.89), H(0), v(341.33),
+            c(0, 62.58, 51.2, 113.78, 113.78, 113.78), h(568.89),
+            c(62.57, 0, 113.77, -51.2, 113.77, -113.78), V(113.78),
+            c(0, -62.58, -51.2, -113.78, -113.77, -113.78))
       }
       .class(
         `class`.isEmpty
           ? "article-disambiguation-icon-view" : "article-disambiguation-icon-view \(`class`)"
       )
-      .width(width)
-      .height(height)
-      .viewBox(0, 0, 1024, 1024)
+      .style { height(iconSize) }
+      .viewBox(0, 0, 796.44, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
 

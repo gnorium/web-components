@@ -66,15 +66,20 @@ public struct IconView: HTMLContent {
     self.`class` = `class`
   }
 
+  /// The icon's length for its size. Icons are drawn tight, so their box
+  /// follows the glyph: the length sets the glyph's longer edge (its height,
+  /// or its width when wider than tall), set inline so the token resolves,
+  /// and the other edge follows the view box. The size is the size of the
+  /// text the icon sits with: `.small` beside 16px text, `.xSmall` beside
+  /// 14px or smaller, `.medium` for larger standalone controls.
   private static func sizeToLength(_ size: IconSize) -> CSS.Length {
-    // Return concrete pixel values for SVGContent attributes (SVGContent doesn't support CSSContent variables)
     switch size {
     case .medium:
-      return px(20)  // fontSizeMedium16 (16px) + 4px
+      return sizeIconMedium
     case .small:
-      return px(16)  // fontSizeSmall14 (14px) + 2px
+      return sizeIconSmall
     case .xSmall:
-      return px(12)
+      return sizeIconXSmall
     }
   }
 
@@ -110,18 +115,9 @@ public struct IconView: HTMLContent {
         justifyContent(.center)
         flexShrink(0)
       }
-      selector("&[data-size='medium']") {
-        width(sizeIconMedium)
-        height(sizeIconMedium)
-      }
-      selector("&[data-size='small']") {
-        width(sizeIconSmall)
-        height(sizeIconSmall)
-      }
-      selector("&[data-size='x-small']") {
-        width(sizeIconXSmall)
-        height(sizeIconXSmall)
-      }
+      selector("&[data-size='medium']") { height(sizeIconMedium) }
+      selector("&[data-size='small']") { height(sizeIconSmall) }
+      selector("&[data-size='x-small']") { height(sizeIconXSmall) }
       if let iconColor {
         selector("&[data-color='\(iconColorValue)']") { color(iconColor) }
       }

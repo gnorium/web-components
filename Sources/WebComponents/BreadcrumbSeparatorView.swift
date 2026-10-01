@@ -21,7 +21,7 @@ public struct BreadcrumbSeparatorView: HTMLContent {
 
   public func build() -> DOM.Node {
     span {
-      NextIconView(width: px(8), height: px(8))
+      NextIconView(size: sizeIconXSmall)
     }
     .class(stringIsEmpty(`class`) ? "breadcrumb-separator-view" : "breadcrumb-separator-view \(`class`)")
     .ariaHidden(true)

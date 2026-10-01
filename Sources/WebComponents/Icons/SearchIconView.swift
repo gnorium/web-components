@@ -1,5 +1,6 @@
 #if SERVER
   import CSSBuilder
+  import CSSOMBuilder
   import DesignTokens
   import DOMBuilder
   import HTMLBuilder
@@ -7,15 +8,12 @@
   import WebTypes
 
   public struct SearchIconView: HTMLContent {
-    let width: CSS.Length
-    let height: CSS.Length
+    let iconSize: CSS.Length
 
     public init(
-      width: CSS.Length = px(20),
-      height: CSS.Length = px(20)
+      size: CSS.Length
     ) {
-      self.width = width
-      self.height = height
+      self.iconSize = size
     }
 
     public func build() -> DOM.Node {
@@ -29,8 +27,7 @@
           .d(M(972.8, 972.8), l(-222.72, -222.72))
       }
       .class("search-icon-view")
-      .width(width)
-      .height(height)
+      .style { height(iconSize) }
       .xmlns("http://www.w3.org/2000/svg")
       .viewBox(0, 0, 1024, 1024)
       .fill(.none)

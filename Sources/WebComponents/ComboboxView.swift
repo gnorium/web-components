@@ -159,7 +159,7 @@ public struct ComboboxView: HTMLContent {
           labelMarks
           if let tooltip {
             TooltipView(tooltip: tooltip, placement: .bottom) {
-              IconView(icon: { size in InfoIconView(width: size, height: size) }, size: .small)
+              IconView(icon: { size in InfoIconView(size: size) }, size: .xSmall)
             }
           }
         }
@@ -186,7 +186,7 @@ public struct ComboboxView: HTMLContent {
         // Shows every suggestion, whatever is typed; not a stop in the tab
         // order (the arrow keys open the list from the field).
         button {
-          AnimatedUpDownChevronView(id: "combobox-\(id)", expanded: false, width: px(16), height: px(16))
+          AnimatedUpDownChevronView(id: "combobox-\(id)", expanded: false, size: sizeIconSmall)
         }
         .type(.button)
         .class("combobox-toggle")

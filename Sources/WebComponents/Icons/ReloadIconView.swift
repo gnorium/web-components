@@ -1,5 +1,6 @@
 #if SERVER
   import CSSBuilder
+  import CSSOMBuilder
   import DesignTokens
   import DOMBuilder
   import HTMLBuilder
@@ -8,17 +9,14 @@
 
   /// Circular reload / rerun mark (Codex `reload.svg`).
   public struct ReloadIconView: HTMLContent {
-    let width: CSS.Length
-    let height: CSS.Length
+    let iconSize: CSS.Length
     let `class`: String
 
     public init(
-      width: CSS.Length = px(20),
-      height: CSS.Length = px(20),
+      size: CSS.Length,
       class: String = ""
     ) {
-      self.width = width
-      self.height = height
+      self.iconSize = size
       self.class = `class`
     }
 
@@ -26,14 +24,13 @@
       svg {
         path()
           .d(
-            M(873.75, 150.86), A(511.51, 511.51, 0, true, false, 985.64, 703.93), h(-141.95),
-            a(383.63, 383.63, 0, true, true, -63.93, -461.64), L(576.43, 448.18), h(447.57),
-            V(0.61), Z())
+            M(873.75, 150.37), A(511.51, 511.51, 0, true, false, 985.64, 703.43), h(-141.95),
+            a(383.63, 383.63, 0, true, true, -63.93, -461.63), L(576.43, 447.68), h(447.57),
+            V(0.11), Z())
       }
       .class(`class`.isEmpty ? "reload-icon-view" : "reload-icon-view \(`class`)")
-      .width(width)
-      .height(height)
-      .viewBox(0, 0, 1024, 1024)
+      .style { width(iconSize) }
+      .viewBox(0, 0, 1024, 1023.01)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
     }

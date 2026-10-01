@@ -1,5 +1,6 @@
 #if SERVER
   import CSSBuilder
+  import CSSOMBuilder
   import DesignTokens
   import DOMBuilder
   import HTMLBuilder
@@ -7,17 +8,14 @@
   import WebTypes
 
   public struct CheckAllIconView: HTMLContent {
-    let width: CSS.Length
-    let height: CSS.Length
+    let iconSize: CSS.Length
     let `class`: String
 
     public init(
-      width: CSS.Length = px(20),
-      height: CSS.Length = px(20),
+      size: CSS.Length,
       class: String = ""
     ) {
-      self.width = width
-      self.height = height
+      self.iconSize = size
       self.class = `class`
     }
 
@@ -25,15 +23,14 @@
       svg {
         path()
           .d(
-            M(0, 656.43), l(73.77, -73.77), l(115.34, 115.33), l(431.21, -526.8), l(80.01, 65.46),
-            l(-503.95, 616.16), Z(), M(608.37, 515.64), h(259.77), v(103.9), h(-259.77), Z(),
-            m(-155.86, 207.81), h(259.77), v(103.91), H(452.51), Z(), m(311.72, -415.63), h(259.77),
-            v(103.91), h(-259.77), Z())
+            M(0, 485.24), l(73.77, -73.77), l(115.34, 115.34), l(431.21, -526.81), l(80.01, 65.46),
+            l(-503.95, 616.17), Z(), M(608.37, 344.45), h(259.77), v(103.91), h(-259.77), Z(),
+            m(-155.86, 207.81), h(259.77), v(103.91), H(452.51), Z(), m(311.72, -415.62), h(259.77),
+            v(103.9), h(-259.77), Z())
       }
       .class(`class`.isEmpty ? "check-all-icon-view" : "check-all-icon-view \(`class`)")
-      .width(width)
-      .height(height)
-      .viewBox(0, 0, 1024, 1024)
+      .style { width(iconSize) }
+      .viewBox(0, 0, 1024, 681.63)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.currentColor)
 

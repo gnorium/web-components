@@ -21,7 +21,7 @@
         ButtonView(
           label: "",
           icon: IconView(
-            icon: { s in ConfigureIconView(width: s, height: s) },
+            icon: { s in ConfigureIconView(size: s) },
             size: size == .small ? .xSmall : size == .medium ? .small : .medium),
           weight: .plain,
           size: size,

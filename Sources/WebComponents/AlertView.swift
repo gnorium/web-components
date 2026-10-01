@@ -152,7 +152,7 @@
         // if it weren't there (`display: contents`).
         div {
           span {
-            StatusIconView(displayIcon)
+            StatusIconView(displayIcon, size: sizeIconSmall)
           }
           .class("alert-icon")
           .ariaHidden(true)
@@ -162,16 +162,12 @@
               display(.flex)
               alignItems(.center)
               justifyContent(.center)
-              minWidth(sizeIconMedium)
-              width(sizeIconMedium)
-              height(sizeIconMedium)
+              height(sizeIconSmall)
               flexShrink(0)
             }
             selector("& svg") {
               display(.block)
               flexShrink(0)
-              width(sizeIconMedium)
-              height(sizeIconMedium)
             }
             // Every case of AlertColor, or the missing one silently falls back
             // to the body color—as blue did, in the only place it was used.
@@ -335,11 +331,7 @@
             cursor(cursorBaseHover)
             transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
           }
-          selector("& .alert-dismiss svg") {
-            display(.block)
-            width(sizeIconSmall).important()
-            height(sizeIconSmall).important()
-          }
+          selector("& .alert-dismiss svg") { display(.block) }
           selector("&.alert-gray .alert-dismiss:hover", "&.alert-gray .alert-dismiss:focus-visible") {
             backgroundColor(backgroundColorGraySubtleHover).important()
           }
@@ -579,7 +571,7 @@
       // Icon
       let iconElement = document.createElement(.span)
       iconElement.className = "alert-icon"
-      iconElement.innerHTML = StatusIconView(displayIcon).render()
+      iconElement.innerHTML = StatusIconView(displayIcon, size: sizeIconSmall).render()
       iconElement.setAttribute(.ariaHidden, true)
       switch type {
       case .gray: iconElement.setAttribute(data("color"), "gray")
@@ -600,7 +592,7 @@
       if allowUserDismiss {
         let dismissBtn = document.createElement(.button)
         dismissBtn.className = "alert-dismiss"
-        dismissBtn.innerHTML = CloseIconView().render()
+        dismissBtn.innerHTML = CloseIconView(size: sizeIconSmall).render()
         // Sized inline as well: the opening measures the alert's height at
         // once, before a just-requested alert-view.css may have arrived, and
         // a button measured at its unstyled size makes the alert jump 2px

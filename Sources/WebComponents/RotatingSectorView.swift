@@ -40,10 +40,12 @@ public struct RotatingSectorView: HTMLContent {
     let sector = span {}
       .class(hasContent && showLabel ? "rotating-sector" : rootClass)
       .style {
+        // Its size inline: one shared class rule would give every sector
+        // the last size the stylesheet saw.
+        width(size)
+        height(size)
         selector("&") {
           display(.inlineBlock)
-          width(size)
-          height(size)
           borderRadius(borderRadiusCircle)
           background(
             conicGradient(

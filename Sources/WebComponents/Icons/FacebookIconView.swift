@@ -1,5 +1,6 @@
 #if SERVER
   import CSSBuilder
+  import CSSOMBuilder
   import DesignTokens
   import DOMBuilder
   import HTMLBuilder
@@ -8,21 +9,18 @@
 
   public struct FacebookIconView: HTMLContent {
     let `class`: String
-    let width: CSS.Length
-    let height: CSS.Length
+    let iconSize: CSS.Length
     let fill: CSS.Color
     let monochrome: Bool
 
     public init(
       class: String = "",
-      width: CSS.Length = px(20),
-      height: CSS.Length = px(20),
+      size: CSS.Length,
       fill: CSS.Color = colorBase,
       monochrome: Bool = false
     ) {
       self.class = `class`
-      self.width = width
-      self.height = height
+      self.iconSize = size
       self.fill = fill
       self.monochrome = monochrome
     }
@@ -49,8 +47,8 @@
                   h(105.58), v(-67.42), c(0, -174.27, 78.87, -255.04, 249.96, -255.04),
                   c(32.43, 0, 88.4, 6.36, 111.3, 12.72), V(344.09),
                   c(-12.09, -1.27, -33.07, -1.91, -59.15, -1.91),
-                  c(-83.95, 0, -116.39, 31.8, -116.39, 114.49), V(512), h(167.24),
-                  l(-28.73, 156.46), h(-138.51), V(1020.25),
+                  c(-83.95, 0, -116.39, 31.8, -116.39, 114.49), V(512), h(167.23),
+                  l(-28.72, 156.46), h(-138.51), V(1020.25),
                   C(827.54, 989.63, 1024, 773.77, 1024, 512))
                 .fill(monochrome ? fill : hex(0x0866FF))
 
@@ -71,8 +69,7 @@
         }
       }
       .class(`class`.isEmpty ? "facebook-icon-view" : "facebook-icon-view \(`class`)")
-      .width(width)
-      .height(height)
+      .style { height(iconSize) }
       .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .xmlnsXlink("http://www.w3.org/1999/xlink")

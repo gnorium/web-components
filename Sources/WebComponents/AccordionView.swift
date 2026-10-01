@@ -230,7 +230,12 @@ public struct AccordionView: HTMLContent {
         span {
           AnimatedRightDownChevronView(
             id: "accordion-\(id)",
-            expanded: isOpen
+            expanded: isOpen,
+            // The size of the title's text: 16px titles take sizeIconSmall,
+            // 14px and smaller sizeIconXSmall.
+            size: stringEquals(titleFontSize.value, fontSizeSmall14.value)
+              || stringEquals(titleFontSize.value, fontSizeXSmall12.value)
+              ? sizeIconXSmall : sizeIconSmall
           )
         }
         .class("accordion-expand-icon")

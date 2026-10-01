@@ -1,5 +1,6 @@
 #if SERVER
   import CSSBuilder
+  import CSSOMBuilder
   import DesignTokens
   import DOMBuilder
   import HTMLBuilder
@@ -8,17 +9,14 @@
 
   public struct ViewDetailsIconView: HTMLContent {
     let `class`: String
-    let width: CSS.Length
-    let height: CSS.Length
+    let iconSize: CSS.Length
 
     public init(
       class: String = "",
-      width: CSS.Length = px(20),
-      height: CSS.Length = px(20)
+      size: CSS.Length
     ) {
       self.class = `class`
-      self.width = width
-      self.height = height
+      self.iconSize = size
     }
 
     public func build() -> DOM.Node {
@@ -43,8 +41,7 @@
             M(614.4, 921.6), h(358.4))
       }
       .class(`class`.isEmpty ? "view-details-icon-view" : "view-details-icon-view \(`class`)")
-      .width(width)
-      .height(height)
+      .style { height(iconSize) }
       .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.none)

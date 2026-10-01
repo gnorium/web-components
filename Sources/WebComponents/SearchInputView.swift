@@ -67,8 +67,8 @@
             // Clear button
             button {
               IconView(
-                icon: { DeleteIconView() },
-                size: .medium
+                icon: { size in DeleteIconView(size: size) },
+                size: .small
               )
             }
             .type(.button)
@@ -79,7 +79,7 @@
             // View details icon (positioned to the left of clear button)
             span {
               IconView(
-                icon: { size in ViewDetailsIconView(width: size, height: size) },
+                icon: { size in ViewDetailsIconView(size: size) },
                 size: .small
               )
             }
@@ -89,7 +89,7 @@
 
           if searchIcon {
             button {
-              SearchIconView(width: px(16), height: px(16))
+              SearchIconView(size: sizeIconSmall)
             }
             .type(.submit)
             .class("search-input-search-icon")

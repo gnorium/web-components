@@ -640,8 +640,7 @@ public struct TableView: HTMLContent {
                                 }
                                 return false
                               }(),
-                              width: px(20),
-                              height: px(20)
+                              size: sizeIconSmall
                             )
                           }
                           .class("table-sort-icon")
@@ -822,8 +821,7 @@ public struct TableView: HTMLContent {
                                 AnimatedRightDownChevronView(
                                   id: "table-group-\(gid)",
                                   expanded: false,
-                                  width: px(20),
-                                  height: px(20)
+                                  size: sizeIconSmall
                                 )
                               }
                               // Child rows get indentation
@@ -1069,10 +1067,6 @@ public struct TableView: HTMLContent {
       }
       selector("& .table-measure-sort-button .table-sort-icon", "& .table-measure-sort-button .table-sort-icon svg") {
         display(.inlineFlex).important()
-        width(px(20)).important()
-        minWidth(px(20)).important()
-        maxWidth(px(20)).important()
-        height(px(20)).important()
         flexShrink(0).important()
       }
       selector("& .table-measure-sort-button .table-sort-icon") {

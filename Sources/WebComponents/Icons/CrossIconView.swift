@@ -1,4 +1,5 @@
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
 import DOMBuilder
 import EmbeddedSwiftUtilities
@@ -9,17 +10,14 @@ import WebTypes
 /// Visual cross / x-mark leaf. Use for close, failed, or clear—meaning is call-site.
 /// Available on SERVER + CLIENT so CrossIconFactory can render without hand-built SVG replicas.
 public struct CrossIconView: HTMLContent {
-  let width: CSS.Length
-  let height: CSS.Length
+  let iconSize: CSS.Length
   let `class`: String
 
   public init(
-    width: CSS.Length = px(20),
-    height: CSS.Length = px(20),
+    size: CSS.Length,
     class: String = ""
   ) {
-    self.width = width
-    self.height = height
+    self.iconSize = size
     self.class = `class`
   }
 
@@ -34,8 +32,7 @@ public struct CrossIconView: HTMLContent {
     .class(
       stringIsEmpty(`class`) ? "cross-icon-view" : "cross-icon-view \(`class`)"
     )
-    .width(width)
-    .height(height)
+    .style { height(iconSize) }
     .viewBox(0, 0, 1024, 1024)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.currentColor)
@@ -48,12 +45,11 @@ public struct CrossIconView: HTMLContent {
   /// CLIENT factory—create CrossIconView DOM matching server-rendered markup.
   public enum CrossIconFactory {
     public static func createElement(
-      width: CSS.Length = px(20),
-      height: CSS.Length = px(20),
+      size: CSS.Length,
       class: String = ""
     ) -> DOM.Element {
       let wrapper = document.createElement(.span)
-      let view = CrossIconView(width: width, height: height, class: `class`)
+      let view = CrossIconView(size: size, class: `class`)
       wrapper.innerHTML = view.render()
       if let svg = wrapper.firstElementChild {
         return svg

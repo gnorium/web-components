@@ -62,7 +62,7 @@
         div {
           // Scroll buttons only for quiet variant (solid wraps instead)
           if variant == .quiet {
-            button { PreviousIconView() }
+            button { PreviousIconView(size: sizeIconXSmall) }
               .type(.button)
               .class("tabs-scroll-button tabs-scroll-prev")
               .ariaLabel("Scroll to previous tabs")
@@ -102,7 +102,7 @@
           .role("tablist")
 
           if variant == .quiet {
-            button { NextIconView() }
+            button { NextIconView(size: sizeIconXSmall) }
               .type(.button)
               .class("tabs-scroll-button tabs-scroll-next")
               .ariaLabel("Scroll to next tabs")

@@ -1,4 +1,5 @@
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
 import DOMBuilder
 import EmbeddedSwiftUtilities
@@ -9,17 +10,14 @@ import WebTypes
 /// Collapse / compress glyph. Available on SERVER + CLIENT: the live trace
 /// builds the compaction card with it, as the server does.
 public struct CollapseIconView: HTMLContent {
-  let width: CSS.Length
-  let height: CSS.Length
+  let iconSize: CSS.Length
   let `class`: String
 
   public init(
-    width: CSS.Length = px(20),
-    height: CSS.Length = px(20),
+    size: CSS.Length,
     class: String = ""
   ) {
-    self.width = width
-    self.height = height
+    self.iconSize = size
     self.class = `class`
   }
 
@@ -27,13 +25,12 @@ public struct CollapseIconView: HTMLContent {
     svg {
       path()
         .d(
-          M(85.33, 810.67), l(426.67, -426.67), l(426.67, 426.67), l(85.33, -85.34), l(-512, -512),
+          M(85.33, 597.33), l(426.67, -426.66), l(426.67, 426.66), l(85.33, -85.33), l(-512, -512),
           l(-512, 512), Z())
     }
     .class(stringIsEmpty(`class`) ? "collapse-icon-view" : "collapse-icon-view \(`class`)")
-    .width(width)
-    .height(height)
-    .viewBox(0, 0, 1024, 1024)
+    .style { width(iconSize) }
+    .viewBox(0, 0, 1024, 597.33)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.currentColor)
 

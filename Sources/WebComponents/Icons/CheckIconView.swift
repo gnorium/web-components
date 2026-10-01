@@ -1,4 +1,5 @@
 import CSSBuilder
+import CSSOMBuilder
 import DesignTokens
 import DOMBuilder
 import EmbeddedSwiftUtilities
@@ -8,17 +9,14 @@ import WebTypes
 
 /// Visual check-mark leaf. Available on SERVER + CLIENT for CheckIconFactory.
 public struct CheckIconView: HTMLContent {
-  let width: CSS.Length
-  let height: CSS.Length
+  let iconSize: CSS.Length
   let `class`: String
 
   public init(
-    width: CSS.Length = px(20),
-    height: CSS.Length = px(20),
+    size: CSS.Length,
     class: String = ""
   ) {
-    self.width = width
-    self.height = height
+    self.iconSize = size
     self.class = `class`
   }
 
@@ -26,15 +24,14 @@ public struct CheckIconView: HTMLContent {
     svg {
       path()
         .d(
-          M(325.02, 738), L(82.13, 495.11), l(-82.13, 82.13), L(325.02, 902.84), L(1024, 203.87),
+          M(325.02, 616.85), L(82.13, 373.95), l(-82.13, 82.13), L(325.02, 781.69), L(1024, 82.71),
           l(-82.13, -82.71), Z())
     }
     .class(
       stringIsEmpty(`class`) ? "check-icon-view" : "check-icon-view \(`class`)"
     )
-    .width(width)
-    .height(height)
-    .viewBox(0, 0, 1024, 1024)
+    .style { width(iconSize) }
+    .viewBox(0, 0, 1024, 781.69)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.currentColor)
   }
@@ -45,12 +42,11 @@ public struct CheckIconView: HTMLContent {
 
   public enum CheckIconFactory {
     public static func createElement(
-      width: CSS.Length = px(20),
-      height: CSS.Length = px(20),
+      size: CSS.Length,
       class: String = ""
     ) -> DOM.Element {
       let wrapper = document.createElement(.span)
-      let view = CheckIconView(width: width, height: height, class: `class`)
+      let view = CheckIconView(size: size, class: `class`)
       wrapper.innerHTML = view.render()
       if let svg = wrapper.firstElementChild {
         return svg

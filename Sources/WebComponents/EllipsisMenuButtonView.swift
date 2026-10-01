@@ -20,8 +20,8 @@
         ButtonView(
           icon: IconView(
             icon: { size in
-              EllipsisIconView(width: size, height: size)
-            }, size: .medium),
+              EllipsisIconView(size: size)
+            }, size: .small),
           weight: weight,
           size: .medium,
           ariaLabel: "Settings",
