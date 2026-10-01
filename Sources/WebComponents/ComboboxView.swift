@@ -159,7 +159,7 @@ public struct ComboboxView: HTMLContent {
           labelMarks
           if let tooltip {
             TooltipView(tooltip: tooltip, placement: .bottom) {
-              IconView(icon: { size in InfoIconView(size: size) }, size: .xSmall)
+              IconView(icon: { size in InfoIconView(size: size) }, size: fontSizeSmall14)
             }
           }
         }
@@ -243,7 +243,7 @@ public struct ComboboxView: HTMLContent {
       descendant(".combobox-label") {
         display(.flex)
         alignItems(.center)
-        gap(spacing4)
+        gap(spacing8)
       }
       descendant(".combobox-label-text") {
         fontFamily(typographyFontSans)

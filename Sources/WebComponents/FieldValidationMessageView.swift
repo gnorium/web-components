@@ -48,7 +48,7 @@ public struct FieldValidationMessageView: HTMLContent {
     }
 
     var message = div {
-      span { IconView(icon: { s in StatusIconView(iconStatus, size: s) }, size: .xSmall) }
+      span { IconView(icon: { s in StatusIconView(iconStatus, size: s) }, size: size8) }
         .class("field-validation-message-icon")
         .ariaHidden(true)
 
@@ -63,22 +63,24 @@ public struct FieldValidationMessageView: HTMLContent {
     }
 
     return message.style {
-      // The words start where a field's text starts—the control's border
-      // and its 15px inline padding in (TextInputView)—and the icon
-      // stands inside that inset, at the field's edge: 12px, leaving a 4px
-      // gap before the words.
+      // 12px words below a 14px label, and an 8px icon: 12px letters stand
+      // well short of their font size, so an icon of 12 looked too big (user,
+      // 2026-10-01). The words start where a field's text starts—the
+      // control's border and its 15px inline padding in (TextInputView)—and
+      // the icon stands inside that inset at the field's edge, leaving an
+      // 8px gap before the words; it centers on the first line.
       selector("&") {
         display(.flex)
         alignItems(.flexStart)
-        fontSize(fontSizeSmall14)
-        lineHeight(lineHeightSmall22)
+        fontSize(fontSizeXSmall12)
+        lineHeight(lineHeightXSmall20)
       }
       selector("& .field-validation-message-icon") {
         display(.inlineFlex)
         alignItems(.center)
         flexShrink(0)
         width(calc(px(15) + borderWidthBase))
-        minHeight(lineHeightSmall22)
+        minHeight(lineHeightXSmall20)
       }
       selector("&[data-status='error']") { color(colorRed) }
       selector("&[data-status='warning']") { color(colorOrange) }
@@ -87,9 +89,9 @@ public struct FieldValidationMessageView: HTMLContent {
       descendant(".field-validation-message-icon") {
         display(.inlineFlex)
         alignItems(.center)
-        justifyContent(.center)
+        justifyContent(.flexStart)
         flexShrink(0)
-        height(lineHeightSmall22)
+        height(lineHeightXSmall20)
       }
       descendant(".field-validation-message-text") { flex(1) }
     }

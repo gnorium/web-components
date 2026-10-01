@@ -68,7 +68,7 @@
             button {
               IconView(
                 icon: { size in DeleteIconView(size: size) },
-                size: .small
+                size: sizeIconSmall
               )
             }
             .type(.button)
@@ -80,7 +80,7 @@
             span {
               IconView(
                 icon: { size in ViewDetailsIconView(size: size) },
-                size: .small
+                size: sizeIconSmall
               )
             }
             .class("search-input-view-details-icon")

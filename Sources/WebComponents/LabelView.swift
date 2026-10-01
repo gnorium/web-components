@@ -61,12 +61,8 @@ public struct LabelView: HTMLContent {
     self.descriptionContent = description()
   }
 
-  /// The info icon is the size of the label's text: sizeIconXSmall beside
-  /// 14px and smaller labels, sizeIconSmall beside 16px and larger ones.
-  private var infoIconSize: IconView.IconSize {
-    stringEquals(labelFontSize.value, fontSizeSmall14.value)
-      || stringEquals(labelFontSize.value, fontSizeXSmall12.value) ? .xSmall : .small
-  }
+  /// The info icon is the size of the label's text.
+  private var infoIconSize: CSS.Length { IconView.size(matching: labelFontSize) }
 
   public func build() -> DOM.Node {
     let hasDescription = !descriptionContent.isEmpty
@@ -192,7 +188,8 @@ public struct LabelView: HTMLContent {
         descendant(".label-text") {
           display(.flex)
           alignItems(.center)
-          gap(spacing4)
+          // Words to the tight info icon: the icon has no room of its own.
+          gap(spacing8)
           fontFamily(typographyFontSans)
           lineHeight(lineHeightMedium26)
           color(colorBase)

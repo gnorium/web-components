@@ -18,8 +18,8 @@ struct StyleSheetEmitter {
     // Catalog—one instance emits full superset via data-attributes
     _ = ButtonView(label: "Solid", weight: .solid).build()
     _ = ButtonView(label: "Subtle", weight: .subtle).build()
-    _ = ButtonView(icon: IconView(icon: { s in SearchIconView(size: s) }, size: .small), size: .medium, ariaLabel: "search").build()
-    _ = ButtonView(icon: IconView(icon: { s in SearchIconView(size: s) }, size: .small), size: .medium, ariaLabel: "search", class: "navbar-search-btn").build()
+    _ = ButtonView(icon: IconView(icon: { s in SearchIconView(size: s) }, size: sizeIconSmall), size: .medium, ariaLabel: "search").build()
+    _ = ButtonView(icon: IconView(icon: { s in SearchIconView(size: s) }, size: sizeIconSmall), size: .medium, ariaLabel: "search", class: "navbar-search-btn").build()
     _ = SearchBarView(openDialog: true, class: "home", placeholder: "Search", ariaLabel: "Search", searchField: "q", searchEndpoint: "/search/suggest", resultUrlBase: "/search").build()
     _ = UnicodeGridView().build()
     _ = TeXView("x", displayMode: true).build()

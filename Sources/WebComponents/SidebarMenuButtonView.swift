@@ -22,7 +22,7 @@
           icon: IconView(
             icon: { size in
               MenuIconView(size: size)
-            }, size: .small),
+            }, size: sizeIconSmall),
           weight: .quiet,
           size: .medium,
           ariaLabel: "Open menu",

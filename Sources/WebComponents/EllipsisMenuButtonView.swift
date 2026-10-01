@@ -21,7 +21,7 @@
           icon: IconView(
             icon: { size in
               EllipsisIconView(size: size)
-            }, size: .small),
+            }, size: sizeIconSmall),
           weight: weight,
           size: .medium,
           ariaLabel: "Settings",

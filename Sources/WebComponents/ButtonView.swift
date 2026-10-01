@@ -88,6 +88,17 @@ public struct ButtonView: HTMLContent {
       case .large: return minSizeInteractiveTouch
       }
     }
+
+    /// The size of an icon in this button: the font size of its text
+    /// (12, 14, 16, 18px), as an icon token where one matches.
+    public var iconSize: CSS.Length {
+      switch self {
+      case .mini: return sizeIconXSmall
+      case .small: return fontSizeSmall14
+      case .medium: return sizeIconSmall
+      case .large: return fontSizeLarge18
+      }
+    }
   }
 
   // MARK: - Initialization
@@ -366,10 +377,9 @@ public struct ButtonView: HTMLContent {
           selector("&") {
             // Base—common props only—fontWeight/color via data-attributes below (cacheable)
             alignItems(.center)
-            // Icon to label: icons are drawn edge to edge in their box, so
-            // this gap is all the room between them ("+ Testament" reads as
-            // one label).
-            gap(spacing4)
+            // Icon to label: icons are drawn tight, with no room of their
+            // own around the glyph, so this gap is all the room between them.
+            gap(spacing8)
             fontFamily(labelFontFamily)
             fontSize(fontSizeMedium16)
             textDecoration(.none)
@@ -1161,17 +1171,12 @@ public struct ButtonView: HTMLContent {
             alignItems(.center)
             justifyContent(.center)
           }
-          // The box is as wide as its icon, so a tight icon sits tight to
-          // its label; its height keeps the row's alignment.
-          selector("&[data-size='mini'] .button-icon", "&[data-size='small'] .button-icon") {
-            height(sizeIconXSmall)
-          }
-          selector("&[data-size='medium'] .button-icon") {
-            height(sizeIconSmall)
-          }
-          selector("&[data-size='large'] .button-icon") {
-            height(sizeIconMedium)
-          }
+          // The box is as wide as its icon and as tall as the button's
+          // text (ButtonSize.iconSize), so the icon sits on the label's line.
+          selector("&[data-size='mini'] .button-icon") { height(ButtonSize.mini.iconSize) }
+          selector("&[data-size='small'] .button-icon") { height(ButtonSize.small.iconSize) }
+          selector("&[data-size='medium'] .button-icon") { height(ButtonSize.medium.iconSize) }
+          selector("&[data-size='large'] .button-icon") { height(ButtonSize.large.iconSize) }
         }
 
       // `aria-disabled`, not a class: `.class` would replace the button's
@@ -1212,10 +1217,9 @@ public struct ButtonView: HTMLContent {
           selector("&") {
             // Base—common per-instance props (static superset via data-attributes below)
             alignItems(.center)
-            // Icon to label: icons are drawn edge to edge in their box, so
-            // this gap is all the room between them ("+ Testament" reads as
-            // one label).
-            gap(spacing4)
+            // Icon to label: icons are drawn tight, with no room of their
+            // own around the glyph, so this gap is all the room between them.
+            gap(spacing8)
             fontFamily(labelFontFamily)
             fontSize(fontSizeMedium16)
             textDecoration(.none)
@@ -1350,17 +1354,12 @@ public struct ButtonView: HTMLContent {
             alignItems(.center)
             justifyContent(.center)
           }
-          // The box is as wide as its icon, so a tight icon sits tight to
-          // its label; its height keeps the row's alignment.
-          selector("&[data-size='mini'] .button-icon", "&[data-size='small'] .button-icon") {
-            height(sizeIconXSmall)
-          }
-          selector("&[data-size='medium'] .button-icon") {
-            height(sizeIconSmall)
-          }
-          selector("&[data-size='large'] .button-icon") {
-            height(sizeIconMedium)
-          }
+          // The box is as wide as its icon and as tall as the button's
+          // text (ButtonSize.iconSize), so the icon sits on the label's line.
+          selector("&[data-size='mini'] .button-icon") { height(ButtonSize.mini.iconSize) }
+          selector("&[data-size='small'] .button-icon") { height(ButtonSize.small.iconSize) }
+          selector("&[data-size='medium'] .button-icon") { height(ButtonSize.medium.iconSize) }
+          selector("&[data-size='large'] .button-icon") { height(ButtonSize.large.iconSize) }
 
           // Quiet/Plain—opaque base bg + transparent border (mirrors <a> branch)
           selector("&[data-weight='quiet'], &[data-weight='plain']") {

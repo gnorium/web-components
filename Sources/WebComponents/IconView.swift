@@ -11,20 +11,25 @@ import WebTypes
 public struct IconView: HTMLContent {
   let icon: [DOM.Node]
   let iconLabel: String?
-  let size: IconSize
+  let size: CSS.Length
   let iconColor: CSS.Color?
   let `class`: String
 
-  public enum IconSize: String, Sendable {
-    case medium
-    case small
-    case xSmall = "x-small"
+  /// An icon's size is the font size of the text it sits with: the icon
+  /// token where one matches (sizeIconXSmall 12, sizeIconSmall 16,
+  /// sizeIconMedium 20), otherwise that font-size token itself
+  /// (fontSizeSmall14, fontSizeLarge18, ...).
+  public static func size(matching fontSize: CSS.Length) -> CSS.Length {
+    if stringEquals(fontSize.value, fontSizeXSmall12.value) { return sizeIconXSmall }
+    if stringEquals(fontSize.value, fontSizeMedium16.value) { return sizeIconSmall }
+    if stringEquals(fontSize.value, fontSizeXLarge20.value) { return sizeIconMedium }
+    return fontSize
   }
 
   public init<T: HTMLContent>(
     icon: [T],
     iconLabel: String? = nil,
-    size: IconSize = .medium,
+    size: CSS.Length,
     iconColor: CSS.Color? = nil,
     class: String = ""
   ) {
@@ -39,7 +44,7 @@ public struct IconView: HTMLContent {
   public init<T: HTMLContent>(
     @HTMLBuilder icon: () -> [T],
     iconLabel: String? = nil,
-    size: IconSize = .medium,
+    size: CSS.Length,
     iconColor: CSS.Color? = nil,
     class: String = ""
   ) {
@@ -54,44 +59,20 @@ public struct IconView: HTMLContent {
   public init<T: HTMLContent>(
     @HTMLBuilder icon: (_ size: CSS.Length) -> [T],
     iconLabel: String? = nil,
-    size: IconSize = .medium,
+    size: CSS.Length,
     iconColor: CSS.Color? = nil,
     class: String = ""
   ) {
-    let actualSize = Self.sizeToLength(size)
-    self.icon = icon(actualSize).map { $0.build() }
+    self.icon = icon(size).map { $0.build() }
     self.iconLabel = iconLabel
     self.size = size
     self.iconColor = iconColor
     self.`class` = `class`
   }
 
-  /// The icon's length for its size. Icons are drawn tight, so their box
-  /// follows the glyph: the length sets the glyph's longer edge (its height,
-  /// or its width when wider than tall), set inline so the token resolves,
-  /// and the other edge follows the view box. The size is the size of the
-  /// text the icon sits with: `.small` beside 16px text, `.xSmall` beside
-  /// 14px or smaller, `.medium` for larger standalone controls.
-  private static func sizeToLength(_ size: IconSize) -> CSS.Length {
-    switch size {
-    case .medium:
-      return sizeIconMedium
-    case .small:
-      return sizeIconSmall
-    case .xSmall:
-      return sizeIconXSmall
-    }
-  }
-
   public func build() -> DOM.Node {
     // Embedded-safe: no String += concatenation or rawValue interpolation.
-    let sizeClass: String
-    switch size {
-    case .medium: sizeClass = "icon-medium"
-    case .small: sizeClass = "icon-small"
-    case .xSmall: sizeClass = "icon-x-small"
-    }
-    var classParts = ["icon-view", sizeClass]
+    var classParts = ["icon-view"]
     if !stringIsEmpty(`class`) {
       classParts.append(`class`)
     }
@@ -106,18 +87,17 @@ public struct IconView: HTMLContent {
     }
     .class(iconClasses)
     .ariaHidden(isHidden)
-    .data("size", size.rawValue)
     .data("color", iconColorValue)
     .style {
+      // The icon's box is as tall as its size, set inline so every size
+      // token resolves; its width follows the icon.
+      height(size)
       selector("&") {
         display(.flex)
         alignItems(.center)
         justifyContent(.center)
         flexShrink(0)
       }
-      selector("&[data-size='medium']") { height(sizeIconMedium) }
-      selector("&[data-size='small']") { height(sizeIconSmall) }
-      selector("&[data-size='x-small']") { height(sizeIconXSmall) }
       if let iconColor {
         selector("&[data-color='\(iconColorValue)']") { color(iconColor) }
       }

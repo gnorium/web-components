@@ -89,18 +89,10 @@
                   alignItems(.center)
                   justifyContent(.center)
                 }
-                selector("&[data-size='mini']", "&[data-size='small']") {
-                  width(sizeIconXSmall)
-                  height(sizeIconXSmall)
-                }
-                selector("&[data-size='medium']") {
-                  width(sizeIconSmall)
-                  height(sizeIconSmall)
-                }
-                selector("&[data-size='large']") {
-                  width(sizeIconMedium)
-                  height(sizeIconMedium)
-                }
+                selector("&[data-size='mini']") { height(ButtonView.ButtonSize.mini.iconSize) }
+                selector("&[data-size='small']") { height(ButtonView.ButtonSize.small.iconSize) }
+                selector("&[data-size='medium']") { height(ButtonView.ButtonSize.medium.iconSize) }
+                selector("&[data-size='large']") { height(ButtonView.ButtonSize.large.iconSize) }
               }
           }
 

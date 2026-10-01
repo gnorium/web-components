@@ -1053,7 +1053,7 @@ public struct TableView: HTMLContent {
       descendant(".table-measure-sort-button") {
         display(.inlineFlex).important()
         alignItems(.center).important()
-        gap(px(4)).important()
+        gap(spacing8).important()
         width(.auto).important()
         minWidth(.auto).important()
         maxWidth(.none).important()
@@ -1373,7 +1373,7 @@ public struct TableView: HTMLContent {
         alignItems(.center)
         flexShrink(1)
         height(px(26))
-        gap(spacing4)
+        gap(spacing8)
         width(perc(100))
         padding(0)
         backgroundColor(backgroundColorTransparent)

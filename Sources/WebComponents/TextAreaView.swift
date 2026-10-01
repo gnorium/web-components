@@ -237,7 +237,7 @@ public struct TextAreaView: HTMLContent {
         labelMarks
         if let tooltip = tooltip {
           TooltipView(tooltip: tooltip, placement: .bottom) {
-            IconView(icon: { size in InfoIconView(size: size) }, size: .xSmall)
+            IconView(icon: { size in InfoIconView(size: size) }, size: fontSizeSmall14)
           }
         }
       }
@@ -246,7 +246,7 @@ public struct TextAreaView: HTMLContent {
         selector("&") {
           display(.flex)
           alignItems(.center)
-          gap(spacing4)
+          gap(spacing8)
           fontSize(fontSizeSmall14)
           fontWeight(600)
           color(colorBase)

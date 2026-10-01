@@ -43,6 +43,6 @@ extension IconView {
   /// alone in a compact bar: `.small` (sizeIconSmall), the size of the
   /// button's text, so "+ Genre" reads like its words.
   public static var add: IconView {
-    IconView(icon: { size in AddIconView(size: size) }, size: .small)
+    IconView(icon: { size in AddIconView(size: size) }, size: sizeIconSmall)
   }
 }

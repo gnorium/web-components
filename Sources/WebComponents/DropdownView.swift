@@ -185,7 +185,7 @@ public struct DropdownView: HTMLContent {
 
           if let tooltipText = tooltip {
             TooltipView(tooltip: tooltipText, placement: .bottom) {
-              IconView(icon: { size in InfoIconView(size: size) }, size: .xSmall)
+              IconView(icon: { size in InfoIconView(size: size) }, size: fontSizeSmall14)
             }
           }
         }
@@ -261,9 +261,10 @@ public struct DropdownView: HTMLContent {
             // Animated chevron icon (switch, not ==, since ButtonSize is String-raw)
             let chevronDim: CSS.Length =
               switch buttonSize {
-              case .mini, .small: sizeIconXSmall
+              case .mini: sizeIconXSmall
+              case .small: fontSizeSmall14
               case .medium: sizeIconSmall
-              case .large: sizeIconMedium
+              case .large: fontSizeLarge18
               }
             AnimatedUpDownChevronView(
               id: "dropdown-\(id)",
@@ -372,7 +373,7 @@ public struct DropdownView: HTMLContent {
       descendant(".field-label") {
         display(.flex)
         alignItems(.center)
-        gap(spacing4)
+        gap(spacing8)
         fontSize(textFontSize)
         fontWeight(600)
         color(colorBase)
@@ -485,11 +486,11 @@ public struct DropdownView: HTMLContent {
       }
       // Semi-bold, matching the field labels beside it. Bold made a dropdown
       // read as a heavier field than the text inputs it sits among.
-      // The label and its tooltip in a row, 4px apart, as every field's.
+      // The label and its tooltip in a row, 8px apart, as every field's.
       descendant(".dropdown-label") {
         display(.flex)
         alignItems(.center)
-        gap(spacing4)
+        gap(spacing8)
       }
       descendant(".dropdown-label-text") {
         fontFamily(typographyFontSans)

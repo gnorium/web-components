@@ -22,7 +22,7 @@
           label: "",
           icon: IconView(
             icon: { s in ConfigureIconView(size: s) },
-            size: size == .small ? .xSmall : size == .medium ? .small : .medium),
+            size: size.iconSize),
           weight: .plain,
           size: size,
           url: url,

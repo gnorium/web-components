@@ -40,6 +40,6 @@ extension IconView {
   /// alone in a compact bar: `.small` (sizeIconSmall), the size of the
   /// button's text, so "− Genre" reads like its words.
   public static var subtract: IconView {
-    IconView(icon: { size in SubtractIconView(size: size) }, size: .small)
+    IconView(icon: { size in SubtractIconView(size: size) }, size: sizeIconSmall)
   }
 }

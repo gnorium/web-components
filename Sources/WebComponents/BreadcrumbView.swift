@@ -115,7 +115,7 @@
           display(.flex)
           alignItems(.center)
           flexWrap(.wrap)
-          gap(spacing4)
+          gap(spacing8)
           fontFamily(typographyFontSans)
           fontSize(fontSizeSmall14)
           lineHeight(lineHeightContent)
@@ -133,11 +133,13 @@
         // and shrinks into it, fading at its end, so a long title stays after
         // its chevron; it drops to a line of its own only when fewer than
         // ten characters would be left for it.
+        // 8px each side of every separator (the item's gap before it, the
+        // list's after it): the separator is tight, with no room of its own.
         descendant(".breadcrumb-list") {
           display(.flex)
           flexWrap(.wrap)
           alignItems(.center)
-          columnGap(spacing4)
+          columnGap(spacing8)
           flex(1)
           listStyle(.none)
           margin(0)
@@ -147,7 +149,7 @@
         descendant(".breadcrumb-item") {
           display(.flex)
           alignItems(.center)
-          gap(spacing4)
+          gap(spacing8)
           flex("0 1 auto")
           minWidth(0)
         }
@@ -184,7 +186,7 @@
         descendant(".breadcrumb-overflow") {
           display(.inlineFlex)
           alignItems(.center)
-          gap(spacing4)
+          gap(spacing8)
         }
       }
     }

@@ -598,16 +598,16 @@ public enum OutlineMoves {
             // Large: a thumb's size, as the button sizes give it.
             div {
               ButtonView(
-                icon: ArrowUpIconView(size: sizeIconMedium), weight: .quiet, size: .large,
+                icon: ArrowUpIconView(size: fontSizeLarge18), weight: .quiet, size: .large,
                 ariaLabel: "Move up", data: [("outliner-action", "up")])
               ButtonView(
-                icon: ArrowDownIconView(size: sizeIconMedium), weight: .quiet, size: .large,
+                icon: ArrowDownIconView(size: fontSizeLarge18), weight: .quiet, size: .large,
                 ariaLabel: "Move down", data: [("outliner-action", "down")])
               ButtonView(
-                icon: ArrowPreviousIconView(size: sizeIconMedium), weight: .quiet, size: .large,
+                icon: ArrowPreviousIconView(size: fontSizeLarge18), weight: .quiet, size: .large,
                 ariaLabel: "Outdent", data: [("outliner-action", "outdent")])
               ButtonView(
-                icon: ArrowNextIconView(size: sizeIconMedium), weight: .quiet, size: .large,
+                icon: ArrowNextIconView(size: fontSizeLarge18), weight: .quiet, size: .large,
                 ariaLabel: "Indent", data: [("outliner-action", "indent")])
             }
             .class("outliner-toolbar-moves")
