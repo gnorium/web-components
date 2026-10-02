@@ -785,6 +785,16 @@ public struct DropdownView: HTMLContent {
         self.toggleDropdown()
       }
 
+      // The label points at the hidden value input, which cannot take the
+      // focus: a click on it focuses the trigger and opens nothing, as a
+      // native select's label does.
+      if let label = container?.closest(".dropdown-view")?.querySelector(".dropdown-label") {
+        _ = label.addEventListener(.click) { [self] event in
+          event.preventDefault()
+          (self.trigger?.querySelector("button") ?? self.trigger)?.focus()
+        }
+      }
+
       // `required` on the value input does NOTHING: it is type="hidden", and
       // hidden inputs are barred from constraint validation. The browser
       // submitted a dropdown with nothing chosen and the reader got the

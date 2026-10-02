@@ -509,6 +509,15 @@ public struct ComboboxView: HTMLContent {
       _ = field.addEventListener(.keydown) { [self] event in
         self.key(event)
       }
+      // A click on the label focuses the field and opens nothing, as a
+      // native select's label does: the browser would pass it on to the
+      // field as a click, which opens the list.
+      if let label = root.querySelector(".combobox-label") {
+        _ = label.addEventListener(.click) { [self] event in
+          event.preventDefault()
+          self.field.focus()
+        }
+      }
       // A click or tap in the field opens the list, as the toggle does: on a
       // phone it is the only way to see what is on it.
       _ = field.addEventListener(.click) { [self] _ in
