@@ -103,14 +103,23 @@
           // The address the banner names, as the server sent to it.
           // Read with no `??`: that selects HTMLContent's nil default
           // instead of the DOM's text (gnorium-textcontent-optional-trap).
-          var to = ""
+          let content = document.createElement(.span)
+          content.textContent = "We sent a new verification link."
           if let address = self.banner.querySelector(".email-verification-banner-message strong") {
             let email = address.textContent
-            if !stringIsEmpty(email) { to = " to \(email)" }
+            if !stringIsEmpty(email) {
+              content.textContent = "We sent a new verification link to "
+              let emphasis = document.createElement(.strong)
+              emphasis.textContent = email
+              emphasis.style.setProperty("font-weight", "var(--font-weight-semi-bold)")
+              content.appendChild(emphasis)
+              let period = document.createElement(.span)
+              period.textContent = "."
+              content.appendChild(period)
+            }
           }
-          AlertAPI.showSuccess(
-            "We sent a new verification link\(to).",
-            container: slot)
+          // Build the complete message before the alert measures its opening height.
+          AlertAPI.showSuccess(content.innerHTML, container: slot)
           self.coolDown(Self.cooldownSeconds)
         } else if let seconds = Self.retryAfter(in: response.text()) {
           // Too soon since the last link: the server's 429 says how long.
