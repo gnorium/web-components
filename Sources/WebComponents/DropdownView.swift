@@ -787,10 +787,12 @@ public struct DropdownView: HTMLContent {
 
       // The label points at the hidden value input, which cannot take the
       // focus: a click on it focuses the trigger and opens nothing, as a
-      // native select's label does.
+      // native select's label does. One that ends selecting the label's
+      // words (to copy them) leaves the focus, and the selection, alone.
       if let label = container?.closest(".dropdown-view")?.querySelector(".dropdown-label") {
         _ = label.addEventListener(.click) { [self] event in
           event.preventDefault()
+          if let selection = window.getSelection(), !selection.isCollapsed { return }
           (self.trigger?.querySelector("button") ?? self.trigger)?.focus()
         }
       }

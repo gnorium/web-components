@@ -511,10 +511,13 @@ public struct ComboboxView: HTMLContent {
       }
       // A click on the label focuses the field and opens nothing, as a
       // native select's label does: the browser would pass it on to the
-      // field as a click, which opens the list.
+      // field as a click, which opens the list. One that ends selecting the
+      // label's words (to copy them) leaves the focus alone: in the field it
+      // would drop the selection.
       if let label = root.querySelector(".combobox-label") {
         _ = label.addEventListener(.click) { [self] event in
           event.preventDefault()
+          if let selection = window.getSelection(), !selection.isCollapsed { return }
           self.field.focus()
         }
       }
