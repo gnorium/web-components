@@ -685,9 +685,10 @@ public struct TooltipView: HTMLContent {
       font: TooltipView.Font = .sans
     ) -> DOM.Element {
       let wrapper = document.createElement(.span)
-      // Beside 14px text (a session card's title): its size minus 4px.
+      // Beside 14px text (a session card's title): an info icon is the
+      // tooltip's control, as large as its text.
       let view = TooltipView(tooltip: text, placement: placement, font: font) {
-        InfoIconView(size: size10)
+        InfoIconView(size: fontSizeSmall14)
       }
       wrapper.innerHTML = view.render()
       let element = wrapper.firstElementChild ?? wrapper
