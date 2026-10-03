@@ -105,12 +105,12 @@
       if isLink {
         a { cardContentElement }
           .href(url)
-          .class(`class`.isEmpty ? "card-view card-is-link" : "card-view card-is-link \(`class`)")
+          .class(`class`.isEmpty ? "card-view card-is-link surface" : "card-view card-is-link surface \(`class`)")
           .data("has-media", hasMedia && !hasTitleOnly)
           .style {
             selector("&") {
               display(.block)
-              backgroundColor(backgroundColorBase)
+              // Frame fill follows the surrounding surface depth.
               border(borderWidthBase, .solid, borderColorBase)
               borderRadius(borderRadiusBase)
               overflow(.hidden)
@@ -209,12 +209,12 @@
           }
       } else {
         div { cardContentElement }
-          .class(`class`.isEmpty ? "card-view" : "card-view \(`class`)")
+          .class(`class`.isEmpty ? "card-view surface" : "card-view surface \(`class`)")
           .data("has-media", hasMedia && !hasTitleOnly)
           .style {
             selector("&") {
               display(.block)
-              backgroundColor(backgroundColorBase)
+              // Frame fill follows the surrounding surface depth.
               border(borderWidthBase, .solid, borderColorBase)
               borderRadius(borderRadiusBase)
               overflow(.hidden)

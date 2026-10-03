@@ -1,9 +1,9 @@
-#if SERVER
   import CSSBuilder
   import CSSOMBuilder
   import DesignTokens
   import DOMBuilder
   import HTMLBuilder
+  import EmbeddedSwiftUtilities
   import SVGBuilder
   import WebTypes
 
@@ -45,4 +45,3 @@
 
     }
   }
-#endif

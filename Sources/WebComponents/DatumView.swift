@@ -59,10 +59,12 @@ public struct DatumView: HTMLContent {
         flexDirection(.column)
         gap(spacing4)
         minWidth(0)
+        backgroundColor(.transparent)
       }
       // The field label's type, as TextInputView sets it.
       // A row, its marks 4px after its words, as a field's label row.
       descendant(".datum-label") {
+        backgroundColor(.transparent)
         display(.flex)
         alignItems(.center)
         gap(spacing4)
@@ -90,7 +92,8 @@ public struct DatumView: HTMLContent {
         fontFamily(typographyFontSans)
         fontSize(fontSizeMedium16)
         color(colorBase)
-        backgroundColor(backgroundColorNeutralSubtle)
+        // Read-only values share the disabled field ground at every depth.
+        backgroundColor(backgroundColorDisabled)
         border(borderWidthBase, .solid, borderColorBase)
         borderRadius(borderRadiusBase)
         minWidth(0)

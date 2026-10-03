@@ -1,9 +1,8 @@
-#if SERVER
   import CSSBuilder
   import DesignTokens
   import CSSOMBuilder
   import DOMBuilder
-  import Foundation
+  import EmbeddedSwiftUtilities
   import HTMLBuilder
   import WebTypes
 
@@ -203,7 +202,7 @@
         .ariaLabelledby("dialog-title")
       }
       .class(
-        `class`.isEmpty ? "dialog-view dialog-backdrop" : "dialog-view dialog-backdrop \(`class`)"
+        stringIsEmpty(`class`) ? "dialog-view dialog-backdrop" : stringJoin(["dialog-view dialog-backdrop ", `class`], separator: "")
       )
       .data("open", open ? "true" : "false")
       .style {
@@ -336,8 +335,6 @@
       }
     }
   }
-#endif
-
 #if CLIENT
   import DesignTokens
   import DOMBuilder
@@ -357,13 +354,17 @@
 
     public static func hydrateIfPresent() {
       guard document.querySelector(".dialog-view") != nil else { return }
-      instance = DialogHydration()
+      if let instance { instance.hydrateAllDialogs(); instance.hydrateTriggers() } else { instance = DialogHydration() }
     }
+
+    public static func hydrateNew() { hydrateIfPresent() }
 
     private func hydrateAllDialogs() {
       let allDialogs = document.querySelectorAll(".dialog-view")
 
       for dialog in allDialogs {
+        if stringEquals(dialog.dataset["dialogHydrated"] ?? "", "true") { continue }
+        dialog.dataset["dialogHydrated"] = "true"
         let instance = DialogInstance(dialog: dialog)
         let id = dialog.id
         if id > 0 {
@@ -376,6 +377,8 @@
       let triggers = document.querySelectorAll("[data-dialog-trigger]")
 
       for trigger in triggers {
+        if stringEquals(trigger.dataset["dialogTriggerHydrated"] ?? "", "true") { continue }
+        trigger.dataset["dialogTriggerHydrated"] = "true"
         _ = trigger.addEventListener(.click) { event in
           // Find the closest element with the data attribute (in case click target is a child span/icon)
           guard let targetElement = event.target?.closest("[data-dialog-trigger]"),
