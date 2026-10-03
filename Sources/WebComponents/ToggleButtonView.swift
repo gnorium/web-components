@@ -27,6 +27,9 @@
     let size: ButtonView.ButtonSize
     var `class`: String
     let labelFontWeight: CSS.FontWeight
+    /// An icon after the label, like the chevron of a button that opens a
+    /// menu (`MenuButtonView`).
+    let trailingIcon: DOM.Node?
 
     public init<T: HTMLContent>(
       label: String,
@@ -42,7 +45,8 @@
       indicateSelection: Bool = true,
       size: ButtonView.ButtonSize = .medium,
       class: String = "",
-      labelFontWeight: CSS.FontWeight = fontWeightNormal
+      labelFontWeight: CSS.FontWeight = fontWeightNormal,
+      trailingIcon: DOM.Node? = nil
     ) {
       self.label = label
       self.icon = icon.map { $0.build() }
@@ -58,6 +62,7 @@
       self.size = size
       self.class = `class`
       self.labelFontWeight = labelFontWeight
+      self.trailingIcon = trailingIcon
     }
 
     public func build() -> DOM.Node {
@@ -99,6 +104,19 @@
           if !label.isEmpty {
             span { label }
               .class(isIconOnly ? "toggle-button-label-hidden" : "toggle-button-label")
+          }
+
+          if let trailingIcon {
+            span { trailingIcon }
+              .class("toggle-button-trailing-icon")
+              .ariaHidden(true)
+              .style {
+                selector("&") {
+                  display(.flex)
+                  alignItems(.center)
+                  justifyContent(.center)
+                }
+              }
           }
         }
         // The state on the control itself, for assistive technology; the

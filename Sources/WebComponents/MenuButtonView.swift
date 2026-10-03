@@ -39,6 +39,11 @@
     let iconOnly: Bool
     let menuItems: [MenuItem]
     let buttonWeight: ButtonView.ButtonWeight
+    let buttonColor: ButtonView.ButtonColor
+    /// A chevron after the label, pointing down while the menu is closed
+    /// and up while it is open: for a button whose label does not say it
+    /// opens a menu.
+    let chevron: Bool
     let disabled: Bool
     let ariaLabel: String?
     let size: ButtonView.ButtonSize
@@ -52,6 +57,8 @@
       iconOnly: Bool = false,
       menuItems: [MenuItem],
       buttonWeight: ButtonView.ButtonWeight = .subtle,
+      buttonColor: ButtonView.ButtonColor = .gray,
+      chevron: Bool = false,
       disabled: Bool = false,
       ariaLabel: String? = nil,
       size: ButtonView.ButtonSize = .medium,
@@ -64,6 +71,8 @@
       self.iconOnly = iconOnly
       self.menuItems = menuItems
       self.buttonWeight = buttonWeight
+      self.buttonColor = buttonColor
+      self.chevron = chevron
       self.disabled = disabled
       self.ariaLabel = ariaLabel
       self.size = size
@@ -80,6 +89,7 @@
           icon: buttonIcon,
           modelValue: false,
           weight: buttonWeight,
+          buttonColor: buttonColor,
           disabled: disabled,
           iconOnly: iconOnly,
           ariaLabel: ariaLabel,
@@ -87,7 +97,9 @@
           indicateSelection: indicateSelection,
           size: size,
           class: "menu-button-trigger",
-          labelFontWeight: labelFontWeight
+          labelFontWeight: labelFontWeight,
+          trailingIcon: chevron
+            ? AnimatedUpDownChevronView(id: "menu-button-\(buttonLabel)", size: size.labelIconSize).build() : nil
         )
 
         // Menu
@@ -262,6 +274,7 @@
     private var trigger: DOM.Element?
     private var menu: DOM.Element?
     private var menuItems: [DOM.Element] = []
+    private var chevron: AnimatedUpDownChevronInstance?
     private var isOpen: Bool = false
     private var currentFocusIndex: Int = -1
 
@@ -273,6 +286,9 @@
 
       if let menu = menu {
         menuItems = Array(menu.querySelectorAll("[data-menu-item=\"true\"]"))
+      }
+      if let element = trigger?.querySelector(".animated-up-down-chevron-view") {
+        chevron = AnimatedUpDownChevronInstance(element: element)
       }
 
       bindEvents()
@@ -323,6 +339,7 @@
     private func openMenu() {
       menu?.dataset["open"] = "true"
       trigger?.setAttribute(.ariaExpanded, "true")
+      chevron?.setState(expanded: true)
       isOpen = true
 
       // Focus first menu item
@@ -335,6 +352,7 @@
     private func closeMenu() {
       menu?.dataset["open"] = "false"
       trigger?.setAttribute(.ariaExpanded, "false")
+      chevron?.setState(expanded: false)
       isOpen = false
       currentFocusIndex = -1
       trigger?.focus()
