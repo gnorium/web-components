@@ -157,8 +157,7 @@ public enum OutlineMoves {
   /// a digitization: its semblances attest it."). The ranks have no option to
   /// loosen or tighten them: a bibliographic tree and a lexicographic one
   /// nest the same way. An outline may also cap its depth (`maxDepth`): a
-  /// sentiment tree stops three levels under its title (branch, sense,
-  /// subsense), and a move that would put an item, or one it carries,
+  /// sentiment tree stops five levels under its title, and a move that would put an item, or one it carries,
   /// deeper is refused in the outline's own words (`depthRefusal`).
   ///
   /// Each item's content is handed the pieces the outline puts in it—its
