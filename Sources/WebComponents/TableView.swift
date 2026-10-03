@@ -1350,13 +1350,21 @@ public struct TableView: HTMLContent {
         justifyContent(.center)
       }
       selector(".table-selection-container input", ".table-selection-container label", ".table-selection-container button") { cursor(.pointer).important() }
+      // The handle lies wholly inside its own heading, its line on the
+      // heading's edge and its grip before it. Each heading is sticky, so each
+      // stacks on its own and the next one is drawn over anything this one
+      // puts past its edge: a grip that straddled the edge lost its outer
+      // half to the next heading, and a press on the line itself went there.
       descendant(".table-resizer") {
         position(.absolute)
         top(spacing8)
-        right(px(-8))
+        right(0)
         bottom(spacing8)
         width(px(1))
-        padding(0, spacing8)
+        paddingTop(0)
+        paddingBottom(0)
+        paddingLeft(spacing16)
+        paddingRight(0)
         boxSizing(.contentBox).important()
         cursor(.colResize)
         zIndex(10)
