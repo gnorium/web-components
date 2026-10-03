@@ -238,7 +238,13 @@
           selector("&.alert-inline") { padding(spacing8) }
           // A moving alert's padding is its panel's, so the shell can close to
           // nothing while the panel's spacing closes with it.
-          selector("&.alert-motion") { padding(0) }
+          selector("&.alert-motion") {
+            padding(0)
+            // The panel can be taller than the animating shell. Keep its top
+            // at the shell's top so overflow reveals downward, not outward
+            // from a vertically centered slice.
+            alignItems(.flexStart)
+          }
           selector("& .alert-motion-content") { display(.contents) }
           selector("&.alert-motion .alert-motion-content") {
             display(.flex)
