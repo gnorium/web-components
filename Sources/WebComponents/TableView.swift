@@ -2273,6 +2273,36 @@ public struct TableView: HTMLContent {
       self.table.dispatchEvent(event)
     }
 
+    /// A row's sort key in a column: the `data-sort-value` its cell's
+    /// content gives (a date's signed year, where its words would sort
+    /// "AD 900" after "AD 1450"), else the cell's text.
+    private static func sortKey(_ row: DOM.Element, column: Int) -> (text: String, valued: Bool) {
+      let cells = Array(row.querySelectorAll(":scope > td, :scope > th"))
+      guard column < cells.count else { return ("", false) }
+      if let valued = cells[column].querySelector("[data-sort-value]"),
+        let value = valued.getAttribute(data("sort-value"))
+      {
+        return (value, true)
+      }
+      return (cells[column].textContent, false)
+    }
+
+    /// Whether `a` goes before `b`: numbers as numbers, else text. A cell
+    /// with no sort value goes after one with (an unknown "—" after every
+    /// date) whichever way the column is sorted.
+    private static func precedes(_ a: DOM.Element, _ b: DOM.Element, column: Int, ascending: Bool) -> Bool {
+      let keyA = sortKey(a, column: column)
+      let keyB = sortKey(b, column: column)
+      if keyA.valued != keyB.valued { return keyA.valued }
+      let cmp: Int
+      if let numA = parseInt(keyA.text), let numB = parseInt(keyB.text) {
+        cmp = numA < numB ? -1 : (numA > numB ? 1 : 0)
+      } else {
+        cmp = stringCompare(keyA.text, keyB.text)
+      }
+      return ascending ? cmp < 0 : cmp > 0
+    }
+
     private func toggleSort(columnID: String) {
       // Toggle sort direction
       if let current = currentSort, stringEquals(current.columnID, columnID) {
@@ -2336,35 +2366,13 @@ public struct TableView: HTMLContent {
 
       // Sort top-level groups (batch headers or flat rows)
       batchGroups.sort { a, b in
-        let cellsA = Array(a.headerRow.querySelectorAll(":scope > td, :scope > th"))
-        let cellsB = Array(b.headerRow.querySelectorAll(":scope > td, :scope > th"))
-        let textA = columnIndex < cellsA.count ? cellsA[columnIndex].textContent : ""
-        let textB = columnIndex < cellsB.count ? cellsB[columnIndex].textContent : ""
-
-        let cmp: Int
-        if let numA = parseInt(textA), let numB = parseInt(textB) {
-          cmp = numA < numB ? -1 : (numA > numB ? 1 : 0)
-        } else {
-          cmp = stringCompare(textA, textB)
-        }
-        return isAscending ? cmp < 0 : cmp > 0
+        Self.precedes(a.headerRow, b.headerRow, column: columnIndex, ascending: isAscending)
       }
 
       // Sort lemma groups locally inside each batch group
       for i in 0..<batchGroups.count {
         batchGroups[i].lemmaGroups.sort { a, b in
-          let cellsA = Array(a.parentRow.querySelectorAll(":scope > td, :scope > th"))
-          let cellsB = Array(b.parentRow.querySelectorAll(":scope > td, :scope > th"))
-          let textA = columnIndex < cellsA.count ? cellsA[columnIndex].textContent : ""
-          let textB = columnIndex < cellsB.count ? cellsB[columnIndex].textContent : ""
-
-          let cmp: Int
-          if let numA = parseInt(textA), let numB = parseInt(textB) {
-            cmp = numA < numB ? -1 : (numA > numB ? 1 : 0)
-          } else {
-            cmp = stringCompare(textA, textB)
-          }
-          return isAscending ? cmp < 0 : cmp > 0
+          Self.precedes(a.parentRow, b.parentRow, column: columnIndex, ascending: isAscending)
         }
       }
 
