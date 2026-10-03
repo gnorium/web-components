@@ -325,7 +325,24 @@ public struct ConstraintMessages: Sendable {
       {
         return said(control, "data-mismatch", "The two entries don't match.")
       }
+      if let remoteValue = control.getAttribute("data-remote-value"), stringEquals(value, remoteValue) {
+        return control.getAttribute("data-remote-error")
+      }
       return nil
+    }
+
+    /// Remote errors apply only to the exact value checked; editing cannot
+    /// leave an obsolete availability result blocking submission.
+    public static func remoteError(_ text: String?, value: String, on control: DOM.Element) {
+      if let text {
+        _ = control.setAttribute("data-remote-error", text)
+        _ = control.setAttribute("data-remote-value", value)
+        show(text, on: control)
+      } else {
+        control.removeAttribute("data-remote-error")
+        control.removeAttribute("data-remote-value")
+        clear(control)
+      }
     }
 
     static func said(_ control: DOM.Element, _ attribute: String, _ fallback: String) -> String {

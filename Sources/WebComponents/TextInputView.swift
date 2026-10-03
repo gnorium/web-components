@@ -323,7 +323,7 @@ public struct TextInputView: HTMLContent {
       // search bar: a hover border on a field reads as a half-finished focus
       // ring, and tells the reader nothing the cursor has not already told
       // them.
-      selector("&:not(.text-input-disabled):not(.text-input-read-only) .text-input-input:focus") {
+      selector("&:not(.text-input-disabled):not(.text-input-read-only):not(.text-input-error) .text-input-input:focus") {
         borderColor(borderColorBlue).important()
         outline(borderWidthBase, .solid, borderColorBlue).important()
         outlineOffset(px(0)).important()
