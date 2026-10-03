@@ -53,6 +53,12 @@ public struct TableView: HTMLContent {
     /// the others shrink to their content. At most one per table; at desktop
     /// widths it is a column like any other.
     public let priority: Bool
+    /// A column whose values wrap onto more lines rather than fade where
+    /// they run on: its words are never cut, and the width measured for it is
+    /// its longest word (or its heading, which never wraps), not its values
+    /// on one line. For a secondary column whose values are phrases, so the
+    /// room goes to the columns that need it. At every width.
+    public let wraps: Bool
 
     public enum Alignment: Sendable {
       case start
@@ -77,7 +83,8 @@ public struct TableView: HTMLContent {
       align: Alignment = .start,
       width: CSS.LengthPercentage? = nil,
       minWidth: CSS.LengthPercentage? = nil,
-      priority: Bool = false
+      priority: Bool = false,
+      wraps: Bool = false
     ) {
       self.id = id
       self.label = label
@@ -86,6 +93,7 @@ public struct TableView: HTMLContent {
       self.width = width
       self.minWidth = minWidth
       self.priority = priority
+      self.wraps = wraps
     }
 
     /// A table's declared width is its preferred data width. A heading needs
@@ -106,11 +114,12 @@ public struct TableView: HTMLContent {
       sortable: Bool = true,
       align: Alignment = .start,
       width: CSS.Length,
-      priority: Bool = false
+      priority: Bool = false,
+      wraps: Bool = false
     ) {
       self.init(
         id: id, label: label, sortable: sortable, align: align,
-        width: CSS.LengthPercentage(width), priority: priority)
+        width: CSS.LengthPercentage(width), priority: priority, wraps: wraps)
     }
   }
 
@@ -843,20 +852,36 @@ public struct TableView: HTMLContent {
                                 span { "" }
                                   .class("table-group-indent")
                               }
-                              div {
-                                if isFirstCell, let url = row.url {
-                                  LinkView(url: url) {
+                              // A wrapping column shows its whole value, so
+                              // there is no fade to draw or tap open.
+                              if column.wraps {
+                                div {
+                                  if isFirstCell, let url = row.url {
+                                    LinkView(url: url) {
+                                      cellContent
+                                    }
+                                  } else {
                                     cellContent
                                   }
-                                } else {
-                                  cellContent
                                 }
+                                .class("table-cell-content")
+                              } else {
+                                div {
+                                  if isFirstCell, let url = row.url {
+                                    LinkView(url: url) {
+                                      cellContent
+                                    }
+                                  } else {
+                                    cellContent
+                                  }
+                                }
+                                .class("table-cell-content")
+                                .data("edge-fade", "expand")
                               }
-                              .class("table-cell-content")
-                              .data("edge-fade", "expand")
                             }
                             .data("align", column.align.value)
                             .data("priority", column.priority)
+                            .data("wraps", column.wraps)
                             .title(cellTitle)
                             .style {
                               selector("&") {
@@ -1051,6 +1076,14 @@ public struct TableView: HTMLContent {
         textOverflow(.clip).important()
         flexShrink(0).important()
         whiteSpace(.nowrap).important()
+      }
+      // A wrapping column's value is measured at its narrowest: the table
+      // shrinks round it to its longest word.
+      descendant(".table-measure-table:has(.table-measure-cell-wraps)") {
+        width(px(1)).important()
+      }
+      selector("& .table-measure-cell.table-measure-cell-wraps", "& .table-measure-cell.table-measure-cell-wraps *") {
+        whiteSpace(.normal).important()
       }
       descendant(".table-measure-sort-button") {
         display(.inlineFlex).important()
@@ -1255,6 +1288,16 @@ public struct TableView: HTMLContent {
       // A value too long for its column fades out at its end, and on a
       // phone a tap on it shows the whole of it (EdgeFade.swift).
       fadeOverflow("& .table-table td > div:not(.table-resizer)", "& .table-table td > span")
+      // A wrapping column's value runs onto more lines instead, whole. Its
+      // heading still never wraps (below).
+      selector(
+        "& .table-table td[data-wraps='true']",
+        "& .table-table td[data-wraps='true'] > div:not(.table-resizer)",
+        "& .table-table td[data-wraps='true'] > span"
+      ) {
+        whiteSpace(.normal).important()
+        overflow(.visible).important()
+      }
       // A column width is a starting size for its values. Its heading is the
       // only name a reader has for those values, so the heading may enlarge the
       // column but must never be abbreviated.
@@ -1627,7 +1670,11 @@ public struct TableView: HTMLContent {
     private func measureCellContent(_ cell: DOM.Element) -> Double {
       let tag = cell.tagName
       let tempCell = document.createElement(tag)
-      tempCell.className = "\(cell.className) table-measure-cell"
+      // A wrapping column's body value measures at its longest word; its
+      // heading, like every heading, on one line.
+      let wraps = !stringEquals(tag, "th") && !stringEquals(tag, "TH")
+        && stringEquals(cell.getAttribute(data("wraps")) ?? "", "true")
+      tempCell.className = "\(cell.className) table-measure-cell\(wraps ? " table-measure-cell-wraps" : "")"
       tempCell.innerHTML = cell.innerHTML
 
       // Strip name and id attributes from any input elements inside the tempCell.
@@ -1763,8 +1810,8 @@ public struct TableView: HTMLContent {
       // on a tap on a phone. The table's own cells are marked as it draws
       // them; a cell a page built itself (a `td` of its own) is marked here.
       let pageCells = table.querySelectorAll(
-        ".table-tbody td > div:not(.table-resizer):not(.table-selection-container):not([data-edge-fade]), "
-          + ".table-tbody td > span:not(.table-group-indent):not([data-edge-fade])")
+        ".table-tbody td:not([data-wraps='true']) > div:not(.table-resizer):not(.table-selection-container):not([data-edge-fade]), "
+          + ".table-tbody td:not([data-wraps='true']) > span:not(.table-group-indent):not([data-edge-fade])")
       for box in pageCells {
         _ = box.setAttribute(data("edge-fade"), "expand")
       }
