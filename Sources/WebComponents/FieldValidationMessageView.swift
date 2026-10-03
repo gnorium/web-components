@@ -19,7 +19,7 @@ public struct FieldValidationMessageView: HTMLContent {
     case warning
     case success
     /// A note that blocks nothing: what the page could not do, said
-    /// beside the field (`FieldValidationHydration.note`).
+    /// beside the field.
     case info
   }
 
@@ -349,33 +349,6 @@ public struct ConstraintMessages: Sendable {
         control.removeAttribute("data-remote-error")
         control.removeAttribute("data-remote-value")
         clear(control)
-      }
-    }
-
-    /// A note under the control that blocks nothing: no error state, no
-    /// part in the form's validity—what the page could not do with a value
-    /// the form will still send. Nil takes it away.
-    public static func note(_ text: String?, on control: DOM.Element) {
-      let id = "\(control.getAttribute("id") ?? "field")-validation-note"
-      if let existing = document.querySelector("#\(id)") { existing.remove() }
-      let describedBy = control.getAttribute("aria-describedby") ?? ""
-      var tokens: [String] = []
-      for token in stringSplit(describedBy, separator: " ") where !stringIsEmpty(token) && !stringEquals(token, id) {
-        tokens.append(token)
-      }
-      if let text {
-        let html = FieldValidationMessageView(id: id, status: .info, message: text).render()
-        if let field = control.closest(".field-view") ?? control.closest(".text-input-view") {
-          field.insertAdjacentHTML(.beforeend, html)
-        } else {
-          control.insertAdjacentHTML(.afterend, html)
-        }
-        tokens.append(id)
-      }
-      if tokens.isEmpty {
-        control.removeAttribute("aria-describedby")
-      } else {
-        _ = control.setAttribute("aria-describedby", stringJoin(tokens, separator: " "))
       }
     }
 
