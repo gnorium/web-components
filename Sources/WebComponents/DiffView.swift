@@ -71,6 +71,7 @@ public struct DiffView: HTMLContent {
   }
 
   let mode: Mode
+  let showAllLines: Bool
   /// What stands before it: "Diff:" unless a page says otherwise. Empty
   /// draws none.
   let label: String
@@ -79,8 +80,9 @@ public struct DiffView: HTMLContent {
   /// The one label every diff is given, a line's and a box's alike.
   public static let defaultLabel = "Diff:"
 
-  public init(_ mode: Mode, label: String = DiffView.defaultLabel, class: String = "") {
+  public init(_ mode: Mode, label: String = DiffView.defaultLabel, class: String = "", showAllLines: Bool = false) {
     self.mode = mode
+    self.showAllLines = showAllLines
     self.label = label
     self.`class` = `class`
   }
@@ -238,7 +240,8 @@ public struct DiffView: HTMLContent {
       case .code(let old, let new):
         isLine = false
         modeName = "code"
-        body = rows(DiffEngine.hunks(DiffEngine.lines(old: old, new: new), context: 3)) { line in
+        let lines = DiffEngine.lines(old: old, new: new)
+        body = rows(showAllLines ? [lines] : DiffEngine.hunks(lines, context: 3)) { line in
           segmentNodes(line.segments)
         }
       case .rendered(let old, let new):

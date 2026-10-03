@@ -2016,9 +2016,9 @@ public struct ButtonView: HTMLContent {
 
         }
 
-      if disabled {
-        bBtn = bBtn.ariaDisabled(true)
-      }
+      // Native disabled already supplies the accessibility state and tracks
+      // later property changes. A static aria-disabled would stay true when
+      // hydration enables the button, preserving its gray text and blocked cursor.
 
       if let ariaLbl = effectiveAriaLabel {
         bBtn = bBtn.ariaLabel(ariaLbl)
