@@ -140,8 +140,10 @@ public enum OutlineMoves {
   /// number, the higher the level—and one rule holds for every outline,
   /// whatever it outlines:
   ///
-  /// - an item may sit under an item of its own rank: an edition grouping
-  ///   editions, a sense grouping senses;
+  /// - an item may sit under an item of its own rank: a sense grouping
+  ///   senses—unless the outline's ranks are strict (`strictRanks`), where
+  ///   each rank stands only under a higher one: a testament tree's
+  ///   edition › impression › issue › copy › manifest;
   /// - it may sit under an item of any higher rank, at any depth the
   ///   outline allows;
   /// - it may never sit under an item of a lower rank: an edition under a
@@ -154,9 +156,7 @@ public enum OutlineMoves {
   /// outline and the same words in the live region: the caller's sentence,
   /// "A more abstract testament can't go under a more concrete one.", or,
   /// under the leaf rank, its own where it gives one ("Nothing can go under
-  /// a digitization: its semblances attest it."). The ranks have no option to
-  /// loosen or tighten them: a bibliographic tree and a lexicographic one
-  /// nest the same way. An outline may also cap its depth (`maxDepth`): a
+  /// a digitization: its semblances attest it."). An outline may also cap its depth (`maxDepth`): a
   /// sentiment tree stops five levels under its title, and a move that would put an item, or one it carries,
   /// deeper is refused in the outline's own words (`depthRefusal`).
   ///
@@ -289,6 +289,7 @@ public enum OutlineMoves {
     let numberSelector: String
     let rankRefusal: String
     let leafRefusal: String?
+    let strictRanks: Bool
     let maxDepth: Int?
     let depthRefusal: String
     let touched: [String]
@@ -309,6 +310,8 @@ public enum OutlineMoves {
     ///     own words for what it outlines.
     ///   - leafRefusal: What a move under the leaf rank is told; nil says
     ///     `rankRefusal`.
+    ///   - strictRanks: Whether an item may sit only under a higher rank,
+    ///     never under one of its own.
     ///   - maxDepth: The most levels items may stand under the root, the
     ///     top level the first; nil for no limit.
     ///   - depthRefusal: What a move past `maxDepth` is told.
@@ -327,6 +330,7 @@ public enum OutlineMoves {
       numberSelector: String = "",
       rankRefusal: String = "A more abstract item can't go under a more concrete one.",
       leafRefusal: String? = nil,
+      strictRanks: Bool = false,
       maxDepth: Int? = nil,
       depthRefusal: String = "An item can't go that deep.",
       touched: [String] = [],
@@ -343,6 +347,7 @@ public enum OutlineMoves {
       self.numberSelector = numberSelector
       self.rankRefusal = rankRefusal
       self.leafRefusal = leafRefusal
+      self.strictRanks = strictRanks
       self.maxDepth = maxDepth
       self.depthRefusal = depthRefusal
       self.touched = touched
@@ -642,6 +647,7 @@ public enum OutlineMoves {
       .data("outliner-number-selector", numberSelector)
       .data("outliner-rank-refusal", rankRefusal)
       .data("outliner-leaf-refusal", leafRefusal ?? rankRefusal)
+      .data("outliner-strict-ranks", strictRanks)
       .data("outliner-max-depth", maxDepth.map(String.init) ?? "")
       .data("outliner-depth-refusal", depthRefusal)
       .style { Self.treeCSS() }
@@ -1082,6 +1088,8 @@ public enum OutlineMoves {
     private let numberSelector: String
     private let rankRefusal: String
     private let leafRefusal: String
+    /// Whether an item stands only under a higher rank.
+    private let strictRanks: Bool
     /// The most levels under the root; -1 for no limit.
     private let maxDepth: Int
     private let depthRefusal: String
@@ -1116,6 +1124,7 @@ public enum OutlineMoves {
       numberSelector = root.dataset["outliner-number-selector"] ?? ""
       rankRefusal = root.dataset["outliner-rank-refusal"] ?? ""
       leafRefusal = root.dataset["outliner-leaf-refusal"] ?? rankRefusal
+      strictRanks = stringEquals(root.dataset["outliner-strict-ranks"] ?? "false", "true")
       maxDepth = parseInt(root.dataset["outliner-max-depth"] ?? "") ?? -1
       depthRefusal = root.dataset["outliner-depth-refusal"] ?? ""
       for item in root.querySelectorAll(".outliner-item") {
@@ -1474,7 +1483,9 @@ public enum OutlineMoves {
       // Under a lower rank, or under the leaf rank, which takes nothing.
       let parentRank = rank(of: parent)
       if let _ = parent, parentRank == leafRank { return leafRefusal }
-      guard rank(of: item) >= parentRank else { return rankRefusal }
+      guard rank(of: item) > parentRank || (!strictRanks && rank(of: item) == parentRank) else {
+        return rankRefusal
+      }
       // Past the outline's depth, it or the deepest item it carries.
       if maxDepth >= 0, depth(of: parent) + height(of: item) > maxDepth { return depthRefusal }
       return nil
