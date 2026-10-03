@@ -152,7 +152,9 @@
         // if it weren't there (`display: contents`).
         div {
           span {
-            StatusIconView(displayIcon, size: sizeIconXSmall)
+            // The alert's mark, not a word of its message: as large as the
+            // close button's × across from it, not its text's size minus 4.
+            StatusIconView(displayIcon, size: sizeIconSmall)
           }
           .class("alert-icon")
           .ariaHidden(true)
@@ -571,7 +573,7 @@
       // Icon
       let iconElement = document.createElement(.span)
       iconElement.className = "alert-icon"
-      iconElement.innerHTML = StatusIconView(displayIcon, size: sizeIconXSmall).render()
+      iconElement.innerHTML = StatusIconView(displayIcon, size: sizeIconSmall).render()
       iconElement.setAttribute(.ariaHidden, true)
       switch type {
       case .gray: iconElement.setAttribute(data("color"), "gray")
