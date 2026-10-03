@@ -1133,24 +1133,24 @@ public struct TableView: HTMLContent {
       // column shrinks to its content (its heading included, never cut),
       // and the priority column takes what is left, at least 20 characters
       // of it, fading where its values run on. Resized widths (the colgroup)
-      // are the desktop's.
+      // take precedence after an explicit drag on either screen size.
       media(maxWidth(maxWidthBreakpointMobile)) {
-        selector("& .table-table:has(th[data-priority='true'])") {
+        selector("& .table-table:not([data-manually-resized='true']):has(th[data-priority='true'])") {
           tableLayout(.auto).important()
           width(perc(100)).important()
         }
-        selector("& .table-table:has(th[data-priority='true']) col") {
+        selector("& .table-table:not([data-manually-resized='true']):has(th[data-priority='true']) col") {
           width(.auto).important()
         }
         selector(
-          "& .table-table:has(th[data-priority='true']) th[data-table-column-id]:not([data-priority='true'])",
-          "& .table-table:has(th[data-priority='true']) td[data-priority='false']",
-          "& .table-table:has(th[data-priority='true']) th[scope='row'][data-priority='false']"
+          "& .table-table:not([data-manually-resized='true']):has(th[data-priority='true']) th[data-table-column-id]:not([data-priority='true'])",
+          "& .table-table:not([data-manually-resized='true']):has(th[data-priority='true']) td[data-priority='false']",
+          "& .table-table:not([data-manually-resized='true']):has(th[data-priority='true']) th[scope='row'][data-priority='false']"
         ) {
           width(px(1)).important()
           minWidth(0).important()
         }
-        selector("& .table-table th[data-priority='true']", "& .table-table td[data-priority='true']") {
+        selector("& .table-table:not([data-manually-resized='true']) th[data-priority='true']", "& .table-table:not([data-manually-resized='true']) td[data-priority='true']") {
           width(perc(100)).important()
           maxWidth(0).important()
           minWidth(ch(20)).important()
@@ -1598,6 +1598,7 @@ public struct TableView: HTMLContent {
     }
 
     private var table: DOM.Element
+    public var isAttached: Bool { document.body.contains(table) }
     private var wrapper: DOM.Element
     private var tableTable: DOM.Element
     private var selectAllCheckbox: DOM.Element?
@@ -2031,6 +2032,7 @@ public struct TableView: HTMLContent {
       let delta = mouseEvent.clientX - startX
       hasDragged = true
       let newWidth = max(dragFloor, startWidth + delta)
+      tableTable.setAttribute(data("manually-resized"), "true")
       
       setColumnWidth(for: th, width: newWidth)
       
@@ -2618,15 +2620,26 @@ public struct TableView: HTMLContent {
 
     public static func hydrateIfPresent() {
       guard document.querySelector(".table-view") != nil else { return }
-      instance = TableHydration()
+      if instance == nil { instance = TableHydration() }
+      else { instance?.hydrate(in: document.body) }
+    }
+
+    /// Bind tables inserted by a live region without rebinding existing ones.
+    public static func hydrate(in root: DOM.Element) {
+      if instance == nil { instance = TableHydration() }
+      instance?.hydrate(in: root)
     }
 
     private func hydrateAllTables() {
-      let allTables = document.querySelectorAll(".table-view")
+      hydrate(in: document.body)
+    }
 
-      for table in allTables {
-        let instance = TableInstance(table: table)
-        instances.append(instance)
+    private func hydrate(in root: DOM.Element) {
+      instances.removeAll { !$0.isAttached }
+      for table in root.querySelectorAll(".table-view") {
+        if stringEquals(table.getAttribute(data("table-hydrated")) ?? "", "true") { continue }
+        instances.append(TableInstance(table: table))
+        table.setAttribute(data("table-hydrated"), "true")
       }
     }
   }
