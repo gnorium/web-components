@@ -48,6 +48,14 @@
           display(.grid)
           minWidth(0)
         }
+        // The editor owns its surface and scrollport. Both overlaid layers
+        // stay flush so the textarea caret aligns with the colored text.
+        descendant(".code-view") {
+          backgroundColor(.transparent)
+          padding(0)
+          borderRadius(0)
+          overflow(.visible)
+        }
         // One cell, both layers in it: the block sizes the cell to the text,
         // and the textarea stretches over exactly that.
         selector("& > .code-view", "& > .code-editor-input") {

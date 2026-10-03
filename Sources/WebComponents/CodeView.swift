@@ -5,7 +5,7 @@
   import HTMLBuilder
   import WebTypes
 
-  /// Raw text, shown as code: monospaced, on the page's own ground, and
+  /// Raw text, shown as code: monospaced, on one quiet code surface, and
   /// colored by the site's syntax tokens rather than by a highlight.js theme.
   ///
   /// The coloring itself happens on the client, and only for a block someone
@@ -63,14 +63,17 @@
           fontSize(fontSizeXSmall12)
           lineHeight(lineHeightXSmall20)
           color(syntaxPlainText)
-          backgroundColor(backgroundColorBase)
+          backgroundColor(backgroundColorNeutralSubtle)
           whiteSpace(.pre)
-          // The block does not scroll: its container does. A scroller here puts
-          // the bar directly under the code, floating in the middle of a tall
-          // pane; the pane's own bar sits at the bottom, where a reader looks.
-          overflowX(.visible)
+          // Standalone files own horizontal scrolling and rounded clipping.
+          // Reader/editor panes override this when they own the scrollport.
+          minWidth(0)
+          maxWidth(perc(100))
+          boxSizing(.borderBox)
+          overflowX(.auto)
+          borderRadius(borderRadiusBase)
           margin(0)
-          padding(0)
+          padding(spacing16)
         }
         descendant(".code-view-gutter") {
           position(.sticky)
@@ -79,7 +82,7 @@
           flexShrink(0)
           textAlign(.end)
           color(colorSubtle)
-          backgroundColor(backgroundColorBase)
+          backgroundColor(backgroundColorNeutralSubtle)
           userSelect(.none)
           paddingInlineEnd(spacing8)
           borderInlineEnd(borderWidthBase, .solid, borderColorBase)
