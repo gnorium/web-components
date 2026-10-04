@@ -50,6 +50,7 @@ public struct InfoChipView: HTMLContent {
     case hidden
     case ring
     case disc
+    case ringedDisc
     case check
     case cross
     case warning
@@ -160,6 +161,8 @@ public struct InfoChipView: HTMLContent {
               RingIconView(size: iconLength)
             case .disc:
               DiscIconView(size: iconLength)
+            case .ringedDisc:
+              RingedDiscIconView(size: iconLength)
             case .check:
               CheckIconView(size: iconLength)
             case .cross:
