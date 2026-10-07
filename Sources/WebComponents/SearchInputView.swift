@@ -83,7 +83,7 @@
                 size: sizeIconSmall
               )
             }
-            .class("search-input-view-details-icon")
+            .class("search-input-details-icon")
             .ariaHidden(true)
           }
 
@@ -162,7 +162,7 @@
           borderColor(borderColorDisabled).important()
           cursor(cursorNotAllowed).important()
         }
-        descendant(".search-input-view-details-icon") {
+        descendant(".search-input-details-icon") {
           position(.absolute)
           right(px(52))
           top(perc(50))

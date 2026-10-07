@@ -56,7 +56,7 @@
             token.content
           }
         case .gap(let reason):
-          return MathML.MathMLElement("mtext", attributes: [("class", "tei-math-view-gap")]) {
+          return MathML.MathMLElement("mtext", attributes: [("class", "tei-math-gap")]) {
             "[\(reason.isEmpty ? "gap" : reason)]"
           }
         }
@@ -78,7 +78,7 @@
         }
         // Not a symbol on the page: a statement that there is none, as a gap
         // in the text says it.
-        descendant(".tei-math-view-gap") {
+        descendant(".tei-math-gap") {
           fontFamily(typographyFontSans)
           fontSize(fontSizeXSmall12)
           fontStyle(.italic)

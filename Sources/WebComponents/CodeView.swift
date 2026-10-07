@@ -45,12 +45,12 @@
         // gutter stays put while they do.
         if showLineNumbers {
           span { Self.lineNumbers(of: text) }
-            .class("code-view-gutter")
+            .class("code-gutter")
             .ariaHidden(true)
         }
 
         code { text }
-          .class("code-view-code language-\(language)")
+          .class("code-code language-\(language)")
       }
       .class("code-view")
       .style {
@@ -75,7 +75,7 @@
           margin(0)
           padding(spacing16)
         }
-        descendant(".code-view-gutter") {
+        descendant(".code-gutter") {
           position(.sticky)
           insetInlineStart(px(0))
           flexGrow(0)
@@ -87,7 +87,7 @@
           paddingInlineEnd(spacing8)
           borderInlineEnd(borderWidthBase, .solid, borderColorBase)
         }
-        descendant(".code-view-code") {
+        descendant(".code-code") {
           flexGrow(0)
           flexShrink(0)
           fontFamily(typographyFontMono)
@@ -158,7 +158,7 @@
     }
 
     public static func highlightVisible() {
-      for block in document.querySelectorAll(".code-view-code") {
+      for block in document.querySelectorAll(".code-code") {
         // highlight.js writes data-highlighted="yes" itself, which overwrote the
         // "true" this used to look for—so every block was highlighted again on
         // every click, and highlight.js warned each time that it had been handed

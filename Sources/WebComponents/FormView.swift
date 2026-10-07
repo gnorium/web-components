@@ -88,7 +88,7 @@
       div {
         // Header
         h1 { title }
-          .class("form-view-title")
+          .class("form-title")
 
         // Form
         form {
@@ -100,19 +100,19 @@
           div {
             button { submitLabel }
               .type(.submit)
-              .class("form-view-submit")
+              .class("form-submit")
 
             if let url = cancelUrl {
               a { cancelLabel }
                 .href(url)
-                .class("form-view-cancel")
+                .class("form-cancel")
             }
           }
           .class("form-actions")
         }
         .action(formAction)
         .method(.post)
-        .class("form-view-form")
+        .class("form-form")
       }
       .class("form-view")
       .style {
@@ -124,14 +124,14 @@
           flexDirection(.column)
           gap(spacing32)
         }
-        descendant(".form-view-title") {
+        descendant(".form-title") {
           fontFamily(typographyFontSans)
           fontSize(px(32))
           fontWeight(.normal)
           color(colorBase)
           margin(0)
         }
-        descendant(".form-view-form") {
+        descendant(".form-form") {
           display(.flex)
           flexDirection(.column)
           gap(spacing24)
@@ -140,7 +140,7 @@
           display(.flex)
           gap(spacing16)
         }
-        descendant(".form-view-submit") {
+        descendant(".form-submit") {
           padding(spacing12, spacing24)
           fontFamily(typographyFontSans)
           fontSize(fontSizeMedium16)
@@ -152,8 +152,8 @@
           cursor(.pointer)
           transition(.backgroundColor, transitionDurationBase, transitionTimingFunctionSystem)
         }
-        descendant(".form-view-submit:hover") { backgroundColor(backgroundColorBlueHover) }
-        descendant(".form-view-cancel") {
+        descendant(".form-submit:hover") { backgroundColor(backgroundColorBlueHover) }
+        descendant(".form-cancel") {
           padding(spacing12, spacing24)
           fontFamily(typographyFontSans)
           fontSize(fontSizeMedium16)
@@ -164,13 +164,13 @@
           textDecoration(.none)
           transition(.backgroundColor, transitionDurationBase, transitionTimingFunctionSystem)
         }
-        descendant(".form-view-cancel:hover") { backgroundColor(backgroundColorInteractiveSubtleHover) }
+        descendant(".form-cancel:hover") { backgroundColor(backgroundColorInteractiveSubtleHover) }
         descendant(".form-field") {
           display(.flex)
           flexDirection(.column)
           gap(spacing8)
         }
-        descendant(".form-view-checkbox-label") {
+        descendant(".form-checkbox-label") {
           display(.flex)
           alignItems(.center)
           gap(spacing8)
@@ -178,7 +178,7 @@
           color(colorBase)
           cursor(.pointer)
         }
-        descendant(".form-view-label") {
+        descendant(".form-label") {
           display(.flex)
           alignItems(.center)
           gap(spacing4)
@@ -188,11 +188,11 @@
         }
         // An aside affixed to the label, not label text: LabelView's
         // `.label-optional-flag`.
-        descendant(".form-view-optional-flag") {
+        descendant(".form-optional-flag") {
           fontWeight(fontWeightNormal)
           color(colorSubtle)
         }
-        descendant(".form-view-help-text") {
+        descendant(".form-help-text") {
           fontSize(fontSizeSmall14)
           color(colorSubtle)
         }
@@ -237,11 +237,11 @@
 
             span { field.label }
           }
-          .class("form-view-checkbox-label")
+          .class("form-checkbox-label")
 
           if let help = field.helpText {
             p { help }
-              .class("form-view-help-text")
+              .class("form-help-text")
           }
         }
         .class("form-field")
@@ -251,18 +251,18 @@
             field.label
             if !field.required {
               span { "(optional)" }
-                .class("form-view-optional-flag")
+                .class("form-optional-flag")
                 .data("optional-flag", true)
             }
           }
             .for(field.name)
-            .class("form-view-label")
+            .class("form-label")
 
           fieldInput(field)
 
           if let help = field.helpText {
             p { help }
-              .class("form-view-help-text")
+              .class("form-help-text")
           }
         }
         .class("form-field")

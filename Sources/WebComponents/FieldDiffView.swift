@@ -182,7 +182,7 @@ public struct FieldDiffView: HTMLContent {
       div {
         if let diff { diff }
       }
-      .class("field-diff-view-diff")
+      .class("field-diff-diff")
       .data("diff-annotation", "true")
       .data("visible", state.map { _ in true } ?? false)
     }
@@ -203,13 +203,13 @@ public struct FieldDiffView: HTMLContent {
           gap(spacing4)
           minWidth(0)
         }
-        selector("& > .field-diff-view-diff[data-visible='false']") {
+        selector("& > .field-diff-diff[data-visible='false']") {
           display(.none)
         }
         // A checkbox's diff line starts under its label's text, not where a
         // text field's text starts: the box's width and the gap the checkbox
         // sets after it, in place of the line's own indent.
-        selector("&:has(> .diff-field-input > .checkbox-view) > .field-diff-view-diff > .diff-view") {
+        selector("&:has(> .diff-field-input > .checkbox-view) > .field-diff-diff > .diff-view") {
           paddingInlineStart(calc("\(minSizeInputBinary.value) + \(spacing8.value)")).important()
         }
         descendant(".diff-field-input") {

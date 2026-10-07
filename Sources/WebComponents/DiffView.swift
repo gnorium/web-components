@@ -103,7 +103,7 @@ public struct DiffView: HTMLContent {
           return DOM.Text(text)
         case .changed(let text):
           return span { Self.visible(text) }
-            .class("diff-view-changed")
+            .class("diff-changed")
             .build()
         }
       }
@@ -117,12 +117,12 @@ public struct DiffView: HTMLContent {
       div {
         if hunks.isEmpty {
           p { "No diff." }
-            .class("diff-view-note")
+            .class("diff-note")
         }
         for (index, hunk) in hunks.enumerated() {
           if index > 0 {
             div { "⋯" }
-              .class("diff-view-gap")
+              .class("diff-gap")
               .ariaHidden(true)
           }
           for line in hunk {
@@ -134,13 +134,13 @@ public struct DiffView: HTMLContent {
                 case .inserted: "+"
                 }
               }
-              .class("diff-view-sign")
+              .class("diff-sign")
               .ariaHidden(true)
               span { content(line) }
-                .class("diff-view-content")
+                .class("diff-content")
                 .dir("auto")
             }
-            .class("diff-view-row")
+            .class("diff-row")
             .data(
               "diff-line",
               {
@@ -153,7 +153,7 @@ public struct DiffView: HTMLContent {
           }
         }
       }
-      .class("diff-view-lines")
+      .class("diff-lines")
       .build()
     }
 
@@ -174,43 +174,43 @@ public struct DiffView: HTMLContent {
       body = span {
         if !stringIsEmpty(old) {
           span { segmentNodes(stringIsEmpty(new) ? [.changed(old)] : pair.old) }
-            .class("diff-view-old")
+            .class("diff-old")
             .dir("auto")
         }
         if !stringIsEmpty(old) && !stringIsEmpty(new) {
           span { "→" }
-            .class("diff-view-arrow")
+            .class("diff-arrow")
             .ariaHidden(true)
         }
         if !stringIsEmpty(new) {
           span { segmentNodes(stringIsEmpty(old) ? [.changed(new)] : pair.new) }
-            .class("diff-view-new")
+            .class("diff-new")
             .dir("auto")
         }
       }
-      .class("diff-view-content")
+      .class("diff-content")
       .build()
     case .choice(let old, let new):
       isLine = true
       modeName = "choice"
       body = span {
         if !stringIsEmpty(old) {
-          span { span { old }.class("diff-view-changed") }
-            .class("diff-view-old")
+          span { span { old }.class("diff-changed") }
+            .class("diff-old")
             .dir("auto")
         }
         if !stringIsEmpty(old) && !stringIsEmpty(new) {
           span { "→" }
-            .class("diff-view-arrow")
+            .class("diff-arrow")
             .ariaHidden(true)
         }
         if !stringIsEmpty(new) {
-          span { span { new }.class("diff-view-changed") }
-            .class("diff-view-new")
+          span { span { new }.class("diff-changed") }
+            .class("diff-new")
             .dir("auto")
         }
       }
-      .class("diff-view-content")
+      .class("diff-content")
       .build()
     case .check(let ticked):
       isLine = true
@@ -220,15 +220,15 @@ public struct DiffView: HTMLContent {
           // The ballot box with check, held to its text form by U+FE0E: a
           // color emoji would ignore the green and the red.
           span { "\u{2611}\u{FE0E}" }
-            .class("diff-view-changed")
+            .class("diff-changed")
             .ariaHidden(true)
           span { ticked ? "Ticked" : "Unticked" }
-            .class("diff-view-visually-hidden")
+            .class("diff-visually-hidden")
         }
-        .class(ticked ? "diff-view-new" : "diff-view-old")
+        .class(ticked ? "diff-new" : "diff-old")
         .title(ticked ? "Ticked" : "Unticked")
       }
-      .class("diff-view-content")
+      .class("diff-content")
       .build()
     case .passage(let old, let new):
       isLine = false
@@ -267,7 +267,7 @@ public struct DiffView: HTMLContent {
             // the break; a look-alike says which characters on hover.
             if case .breakKind? = line.note {
               span { line.content.opensBlock ? "¶ " : "↵ " }
-                .class("diff-view-break")
+                .class("diff-break")
                 .title(line.content.opensBlock ? "Paragraph break" : "Line break")
             }
             span {
@@ -278,7 +278,7 @@ public struct DiffView: HTMLContent {
                   for run in Self.runs(token.text, own) {
                     if run.changed {
                       span { Self.visible(run.text) }
-                        .class("diff-view-changed")
+                        .class("diff-changed")
                         .data("style", token.style.joined(separator: " "))
                         .title(Self.title(of: line, run.text))
                     } else {
@@ -292,7 +292,7 @@ public struct DiffView: HTMLContent {
                   if let formula = TEIRenderer.math(markup: token.text) {
                     if own.contains(true) {
                       span { TEIMathView(formula) }
-                        .class("diff-view-changed")
+                        .class("diff-changed")
                     } else {
                       TEIMathView(formula)
                     }
@@ -305,7 +305,7 @@ public struct DiffView: HTMLContent {
                       token.text.isEmpty ? "[Figure]" : "[Figure: \(token.text)]"
                     }
                   }
-                  .class(own.contains(true) || regionChanged ? "diff-view-figure diff-view-changed" : "diff-view-figure")
+                  .class(own.contains(true) || regionChanged ? "diff-figure diff-changed" : "diff-figure")
                 }
               }
             }
@@ -313,7 +313,7 @@ public struct DiffView: HTMLContent {
           }
         } else {
           body = p { "Fix the markup to see the rendered diff." }
-            .class("diff-view-note")
+            .class("diff-note")
             .build()
         }
     #endif
@@ -323,13 +323,13 @@ public struct DiffView: HTMLContent {
     return div {
       if !stringIsEmpty(label) {
         span { label }
-          .class("diff-view-label")
+          .class("diff-label")
       }
       if isLine {
         body
       } else {
         div { body }
-          .class("diff-view-box")
+          .class("diff-box")
       }
     }
     .class(rootClass)
@@ -357,7 +357,7 @@ public struct DiffView: HTMLContent {
       }
       // The values beside the label, old → new flowing as a line of text
       // does, a long one wrapping under its own start.
-      selector("&[data-shape='line'] > .diff-view-content") {
+      selector("&[data-shape='line'] > .diff-content") {
         flex(1, 1, px(0))
       }
       selector("&[data-shape='box']") {
@@ -368,7 +368,7 @@ public struct DiffView: HTMLContent {
       }
       // A field's own frame, as tall as a reader's pane at most, then
       // scrolled.
-      descendant(".diff-view-box") {
+      descendant(".diff-box") {
         border(borderWidthBase, .solid, borderColorBase)
         borderRadius(borderRadiusBase)
         padding(spacing8, spacing12)
@@ -376,34 +376,34 @@ public struct DiffView: HTMLContent {
         overflow(.auto)
         minWidth(0)
       }
-      descendant(".diff-view-lines") {
+      descendant(".diff-lines") {
         display(.flex)
         flexDirection(.column)
         minWidth(0)
       }
-      descendant(".diff-view-row") {
+      descendant(".diff-row") {
         display(.flex)
         alignItems(.baseline)
         gap(spacing8)
         minHeight(lineHeightXSmall20)
       }
-      descendant(".diff-view-sign") {
+      descendant(".diff-sign") {
         flexShrink(0)
         width(ch(1))
         whiteSpace(.pre)
         userSelect(.none)
       }
-      descendant(".diff-view-content") {
+      descendant(".diff-content") {
         minWidth(0)
         whiteSpace(.preWrap)
         overflowWrap(.anywhere)
       }
-      descendant(".diff-view-gap") {
+      descendant(".diff-gap") {
         paddingInlineStart(calc(ch(1) + spacing8))
         userSelect(.none)
       }
       // What the tick says, for a reader who does not see its color.
-      descendant(".diff-view-visually-hidden") {
+      descendant(".diff-visually-hidden") {
         position(.absolute)
         width(px(1))
         height(px(1))
@@ -411,44 +411,44 @@ public struct DiffView: HTMLContent {
         clip(rect(px(0), px(0), px(0), px(0)))
         whiteSpace(.nowrap)
       }
-      descendant(".diff-view-note") {
+      descendant(".diff-note") {
         fontStyle(.italic)
         margin(0)
       }
       // The characters that changed: red where they were, green where they
       // are. Color only; the gutter, or the arrow, says which is which.
-      selector("& .diff-view-row[data-diff-line='removed'] .diff-view-changed", "& .diff-view-old .diff-view-changed") {
+      selector("& .diff-row[data-diff-line='removed'] .diff-changed", "& .diff-old .diff-changed") {
         color(colorRed)
       }
-      selector("& .diff-view-row[data-diff-line='inserted'] .diff-view-changed", "& .diff-view-new .diff-view-changed") {
+      selector("& .diff-row[data-diff-line='inserted'] .diff-changed", "& .diff-new .diff-changed") {
         color(colorGreen)
       }
       // From the old to the new, in the direction the line reads: the
       // arrow's own box holds the space either side of it, so it wraps
       // with the text it sits in.
-      descendant(".diff-view-arrow") {
+      descendant(".diff-arrow") {
         display(.inlineBlock)
         paddingInline(spacing4)
       }
-      descendant(".diff-view-arrow:dir(rtl)") {
+      descendant(".diff-arrow:dir(rtl)") {
         transform(scaleX(-1))
       }
 
       // Code: as it is written, monospaced, its indentation kept.
-      selector("&[data-diff-mode='code'] .diff-view-box") {
+      selector("&[data-diff-mode='code'] .diff-box") {
         fontFamily(typographyFontMono)
       }
 
       // Rendered: the reading's own type, each line set as it reads.
-      selector("&[data-diff-mode='rendered'] .diff-view-box") {
+      selector("&[data-diff-mode='rendered'] .diff-box") {
         fontFamily(typographyFontSerif)
         fontSize(fontSizeSmall14)
         lineHeight(lineHeightMedium26)
       }
-      selector("&[data-diff-mode='rendered'] .diff-view-row") {
+      selector("&[data-diff-mode='rendered'] .diff-row") {
         minHeight(lineHeightMedium26)
       }
-      selector("&[data-diff-mode='rendered'] .diff-view-content") {
+      selector("&[data-diff-mode='rendered'] .diff-content") {
         whiteSpace(.normal)
       }
       selector("& [data-role='heading']", "& [data-role='speaker']") {
@@ -457,11 +457,11 @@ public struct DiffView: HTMLContent {
       descendant("[data-role='stage']") {
         fontStyle(.italic)
       }
-      selector("& [data-role^='forme']", "& [data-role='page']", "& .diff-view-figure", "& .diff-view-break") {
+      selector("& [data-role^='forme']", "& [data-role='page']", "& .diff-figure", "& .diff-break") {
         fontFamily(typographyFontSans)
         fontSize(fontSizeXSmall12)
       }
-      descendant(".diff-view-figure") {
+      descendant(".diff-figure") {
         fontStyle(.italic)
       }
       descendant("[data-style~='italic']") { fontStyle(.italic) }

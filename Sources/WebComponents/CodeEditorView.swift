@@ -104,7 +104,7 @@
         if view.hasAttribute("data-code-editor-hydrated") { continue }
         view.setAttribute(data("code-editor-hydrated"), "true")
         guard let input = view.querySelector(".code-editor-input") as? HTML.HTMLTextAreaElement,
-          let code = view.querySelector(".code-view-code")
+          let code = view.querySelector(".code-code")
         else { continue }
         let pending = Pending()
         _ = input.addEventListener(.input) { _ in

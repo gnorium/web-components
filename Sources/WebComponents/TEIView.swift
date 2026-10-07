@@ -499,7 +499,7 @@
       return div {
         if pages.isEmpty {
           p { "This document has no page breaks to read by. The raw XML is below." }
-            .class("tei-view-empty")
+            .class("tei-empty")
         }
         for (index, page) in pages.enumerated() {
           let tabStop = wordDetailsURL == nil ? nil : Self.firstWord(of: page.lines)
@@ -976,7 +976,7 @@
         selector("& .tei-word:hover", "& .tei-word:focus-visible", "& .tei-word[aria-expanded='true']") {
           color(colorBlue)
         }
-        selector(".tei-view-empty") {
+        selector(".tei-empty") {
           fontFamily(typographyFontSans)
           fontSize(fontSizeSmall14)
           color(colorSubtle)

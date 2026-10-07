@@ -977,7 +977,7 @@ public struct TableView: HTMLContent {
         .class("table-footer")
       }
     }
-    .class(stringIsEmpty(`class`) ? "table-view\(isEmpty ? " table-view-empty" : "")\(pending ? " table-view-pending" : "")" : "table-view\(isEmpty ? " table-view-empty" : "")\(pending ? " table-view-pending" : "") \(`class`)")
+    .class(stringIsEmpty(`class`) ? "table-view\(isEmpty ? " table-empty" : "")\(pending ? " table-pending" : "")" : "table-view\(isEmpty ? " table-empty" : "")\(pending ? " table-pending" : "") \(`class`)")
     .data("selection-mode", selectionMode?.value ?? "")
     .data("paginate", paginate ? "true" : "false")
     .data("paginate-server", serverQuery == nil ? "false" : "true")
@@ -994,13 +994,13 @@ public struct TableView: HTMLContent {
         gap(spacing16)
         minHeight(0)
       }
-      selector("&.table-view-empty tbody tr:hover", "&.table-view-pending tbody tr:hover") { backgroundColor(.transparent).important() }
-      selector("&.table-view-empty tbody tr:active", "&.table-view-pending tbody tr:active") { backgroundColor(.transparent).important() }
-      selector("&.table-view-empty .table-row-link", "&.table-view-pending .table-row-link", "&.table-view-empty tr[data-url]:not([data-url=''])", "&.table-view-pending tr[data-url]:not([data-url=''])") { cursor(.default).important() }
-      selector("&.table-view-empty .table-sort-button", "&.table-view-pending .table-sort-button") { cursor(.default).important() }
-      selector("&.table-view-empty .table-sort-button:hover", "&.table-view-pending .table-sort-button:hover", "&.table-view-empty .table-sort-button:active", "&.table-view-pending .table-sort-button:active") { color(.inherit).important() }
-      selector("&.table-view-empty .table-sort-button:hover .table-sort-icon", "&.table-view-pending .table-sort-button:hover .table-sort-icon") { color(.inherit).important() }
-      selector("&.table-view-empty .table-pagination", "&.table-view-pending .table-pagination") {
+      selector("&.table-empty tbody tr:hover", "&.table-pending tbody tr:hover") { backgroundColor(.transparent).important() }
+      selector("&.table-empty tbody tr:active", "&.table-pending tbody tr:active") { backgroundColor(.transparent).important() }
+      selector("&.table-empty .table-row-link", "&.table-pending .table-row-link", "&.table-empty tr[data-url]:not([data-url=''])", "&.table-pending tr[data-url]:not([data-url=''])") { cursor(.default).important() }
+      selector("&.table-empty .table-sort-button", "&.table-pending .table-sort-button") { cursor(.default).important() }
+      selector("&.table-empty .table-sort-button:hover", "&.table-pending .table-sort-button:hover", "&.table-empty .table-sort-button:active", "&.table-pending .table-sort-button:active") { color(.inherit).important() }
+      selector("&.table-empty .table-sort-button:hover .table-sort-icon", "&.table-pending .table-sort-button:hover .table-sort-icon") { color(.inherit).important() }
+      selector("&.table-empty .table-pagination", "&.table-pending .table-pagination") {
         opacity(0.5)
         pointerEvents(.none)
       }
@@ -1216,7 +1216,7 @@ public struct TableView: HTMLContent {
         minWidth(0)
         minHeight(0)
       }
-      selector("&.table-view-empty .table-inner-wrapper") {
+      selector("&.table-empty .table-inner-wrapper") {
         minHeight(px(160))
         flexShrink(0)
       }
@@ -1232,7 +1232,7 @@ public struct TableView: HTMLContent {
         color(colorBase)
         width(perc(100))
       }
-      selector("&.table-view-empty .table-table") {
+      selector("&.table-empty .table-table") {
         display(.flex)
         flexDirection(.column)
         flex(1)
@@ -1466,7 +1466,7 @@ public struct TableView: HTMLContent {
         borderRightWidth(px(0))
         padding(px(0))
       }
-      selector("&.table-view-empty .table-tbody") {
+      selector("&.table-empty .table-tbody") {
         display(.flex)
         flexDirection(.column)
         flex(1)
