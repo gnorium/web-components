@@ -12,7 +12,7 @@
   /// (``DiffView``, the formula whole) draw it alike.
   ///
   /// A mark that could not be read (TEI's `<gap>` in MathML's `<semantics>`,
-  /// gnorium-python recognition `formulas.py`) is drawn as a gap in the
+  /// gnorium-python `bibliographic_explication/formulas.py`) is drawn as a gap in the
   /// text is, its reason in brackets, "[illegible]": a statement that there
   /// is no symbol, not one.
   public struct TEIMathView: HTMLContent {
