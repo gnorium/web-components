@@ -31,8 +31,9 @@ import WebTypes
 ///   level by level, by position; a choice—a dropdown's, a date part's—whole; a checkbox's as one tick, green ticked, red unticked. A value
 ///   put where there was none is the new one alone, green; one cleared is
 ///   the old one alone, red.
-/// - **A box**—`passage`, `code`, `rendered`—holds the changed lines with a
-///   little context, marked by their gutter as a unified diff marks them—"−"
+/// - **A box**—`passage`, `code`, `rendered`—holds the whole text, every
+///   line, never a summary of snippets (user, 2026-10-08), the changed lines
+///   marked by their gutter as a unified diff marks them—"−"
 ///   for a line taken out, "+" for one put in—in a field's own frame,
 ///   scrolled once it is taller than a reader's pane. A long line wraps under
 ///   its own text, the gutter beside it. The gutter and the pairing of the
@@ -71,7 +72,6 @@ public struct DiffView: HTMLContent {
   }
 
   let mode: Mode
-  let showAllLines: Bool
   /// What stands before it: "Diff:" unless a page says otherwise. Empty
   /// draws none.
   let label: String
@@ -80,9 +80,8 @@ public struct DiffView: HTMLContent {
   /// The one label every diff is given, a line's and a box's alike.
   public static let defaultLabel = "Diff:"
 
-  public init(_ mode: Mode, label: String = DiffView.defaultLabel, class: String = "", showAllLines: Bool = false) {
+  public init(_ mode: Mode, label: String = DiffView.defaultLabel, class: String = "") {
     self.mode = mode
-    self.showAllLines = showAllLines
     self.label = label
     self.`class` = `class`
   }
@@ -233,7 +232,7 @@ public struct DiffView: HTMLContent {
     case .passage(let old, let new):
       isLine = false
       modeName = "passage"
-      body = rows(DiffEngine.hunks(DiffEngine.lines(old: old, new: new), context: 2)) { line in
+      body = rows([DiffEngine.lines(old: old, new: new)]) { line in
         segmentNodes(line.segments)
       }
     #if SERVER
@@ -241,14 +240,14 @@ public struct DiffView: HTMLContent {
         isLine = false
         modeName = "code"
         let lines = DiffEngine.lines(old: old, new: new)
-        body = rows(showAllLines ? [lines] : DiffEngine.hunks(lines, context: 3)) { line in
+        body = rows([lines]) { line in
           segmentNodes(line.segments)
         }
       case .rendered(let old, let new):
         isLine = false
         modeName = "rendered"
         if let new {
-          body = rows(DiffEngine.hunks(DiffEngine.lines(old: old, new: new), context: 2)) { line in
+          body = rows([DiffEngine.lines(old: old, new: new)]) { line in
             // Which characters of the line changed, one flag a character, so
             // each run can be split where the change starts and ends and keep
             // its own setting either side.
