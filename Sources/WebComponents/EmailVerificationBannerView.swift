@@ -10,25 +10,51 @@
   /// alert (its icon, colors and close control; dismissing it is
   /// `AlertHydration`'s), with Resend Email as the alert's own action: a plain blue button.
   /// `EmailVerificationBannerHydration` sends the link again.
+  ///
+  /// The same alert, blue, tells someone registering that the link which
+  /// opens registration's second step is on its way (`Purpose.registration`).
   public struct EmailVerificationBannerView: HTMLContent {
+    /// What the link it sends is for.
+    public enum Purpose: Sendable {
+      /// The signed-in account's own address, unverified: a warning.
+      case unverified
+      /// Registration's first step done: the address's link, which opens
+      /// the second.
+      case registration
+    }
+
     let email: String
+    let purpose: Purpose
+    /// The seconds before another link may be sent: the button counts them
+    /// down from the start (`EmailVerification.resendCooldown`).
+    let cooldown: Int
     let `class`: String
 
-    public init(email: String, class: String = "") {
+    public init(email: String, purpose: Purpose = .unverified, cooldown: Int = 0, class: String = "") {
       self.email = email
+      self.purpose = purpose
+      self.cooldown = cooldown
       self.`class` = `class`
     }
 
     public func build() -> DOM.Node {
       AlertView(
-        color: .orange, allowUserDismiss: true, dismissButtonLabel: "Dismiss",
+        color: purpose == .registration ? .blue : .orange, allowUserDismiss: purpose == .unverified,
+        dismissButtonLabel: "Dismiss",
         class: `class`.isEmpty ? "email-verification-banner-view" : "email-verification-banner-view \(`class`)"
       ) {
         div {
           span {
-            "Verify your email address: we sent a link to "
-            strong { email }
-            "."
+            switch purpose {
+            case .unverified:
+              "Verify your email address: we sent a link to "
+              strong { email }
+              "."
+            case .registration:
+              "Check your email: we sent a link to "
+              strong { email }
+              ". Open it to choose your username and password."
+            }
           }
           .class("email-verification-banner-message")
 
@@ -37,6 +63,8 @@
             class: "email-verification-banner-resend")
         }
         .class("email-verification-banner-content")
+        .data("resend-url", purpose == .registration ? "/auth/register/resend" : "/auth/resend-verification")
+        .data("cooldown", "\(cooldown)")
         .style {
           // The message and its action on one line where they fit; on a
           // phone the action wraps under the message.
@@ -93,11 +121,20 @@
       _ = resend.addEventListener(.click) { [self] _ in
         self.send()
       }
+      // A link sent moments ago (registration's first step): the wait the
+      // server named, counted down from the start.
+      let waiting = banner.querySelector(".email-verification-banner-content")?.getAttribute("data-cooldown") ?? "0"
+      if let seconds = Self.retryAfter(in: stringJoin(["\"retryAfter\":", waiting], separator: "")), seconds > 0 {
+        setDisabled(true)
+        coolDown(seconds)
+      }
     }
 
     private func send() {
       setDisabled(true)
-      window.fetch("/auth/resend-verification", method: "POST", body: "") { [self] response in
+      let url = banner.querySelector(".email-verification-banner-content")?.getAttribute("data-resend-url")
+        ?? "/auth/resend-verification"
+      window.fetch(url, method: "POST", body: "") { [self] response in
         let slot = self.notices()
         if stringContains(response.text(), "\"success\":true") {
           // The address the banner names, as the server sent to it.
