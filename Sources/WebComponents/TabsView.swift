@@ -71,6 +71,8 @@
           }
 
           div {
+            // Solid tabs: the active tab's pill glides to the tab chosen.
+            if variant == .solid { SlidingPillView() }
             for tab in tabs {
               let tabClass = tab.`class`.isEmpty ? "tab-view" : "tab-view \(tab.`class`)"
 
@@ -181,6 +183,7 @@
           pseudoElement(.webkitScrollbar) { display(.none).important() }
         }
         selector("&.tabs-solid > .tabs-header .tabs-list") {
+          position(.relative)
           gap(spacing8)
           flexWrap(.wrap)
         }
@@ -219,11 +222,16 @@
           color(colorBase)
           fontWeight(fontWeightSemiBold)
         }
+        selector("&.tabs-solid [role='tab']") { zIndex(1) }
         selector("&.tabs-solid [role='tab'][aria-selected='true']") {
           cursor(.default)
           color(colorInvertedFixed)
-          backgroundColor(colorBlue)
+          backgroundColor(backgroundColorBlue)
           fontWeight(fontWeightSemiBold)
+        }
+        // Once the pill is placed it is the active tab's fill.
+        selector("&.tabs-solid .tabs-list[data-sliding-pill='ready'] [role='tab'][aria-selected='true']") {
+          backgroundColor(backgroundColorTransparent)
         }
         selector("&.tabs-quiet [role='tab'][aria-selected='false']") { color(colorSubtle) }
         selector("&.tabs-solid [role='tab'][aria-selected='false']") { color(colorBlue) }
@@ -236,7 +244,7 @@
           outlineOffset(px(-2))
         }
         selector("&.tabs-solid [role='tab']:active") {
-          backgroundColor(colorBlue)
+          backgroundColor(backgroundColorBlue)
           color(colorInvertedFixed)
           outline(.none)
         }
@@ -313,6 +321,9 @@
 
       bindEvents()
       updateScrollButtons()
+      if let list = tabsList, let pill = list.querySelector(":scope > .sliding-pill-view") {
+        SlidingPill.attach(pill, in: list) { list.querySelector("[role='tab'][aria-selected='true']") }
+      }
       restoreOrSaveTabPreference()
     }
 
@@ -446,6 +457,13 @@
       }
 
       tabsElement.setAttribute(data("active-tab"), tabName)
+
+      // A link tab's pill glides while the next page loads; the click
+      // navigates as it always did.
+      if let list = tabsList, let pill = list.querySelector(":scope > .sliding-pill-view") {
+        SlidingPill.place(
+          pill, in: list, under: list.querySelector("[role='tab'][aria-selected='true']"), animate: true)
+      }
 
       let event = CustomEvent(type: "update:active", detail: tabName)
       tabsElement.dispatchEvent(event)
