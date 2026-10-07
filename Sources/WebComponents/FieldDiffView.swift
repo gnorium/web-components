@@ -86,7 +86,7 @@ public struct FieldDiffView: HTMLContent {
 
   /// How a field says what an edit did to it, for every form that edits and
   /// every page that shows an edit: green added, red removed, orange changed—the
-  /// control's own border, and a ring of the same color—and its
+  /// control's own border, and an outline of the same color—and its
   /// diff under it shown only once there is one.
   ///
   /// The live diff marks the control with `data-diff-state`; a saved diff
@@ -97,14 +97,15 @@ public struct FieldDiffView: HTMLContent {
   public static func stateCSS() -> [CSSOM.CSSRule] {
     descendant("[data-diff-state='unchanged']") {
       border(borderWidthBase, .solid, borderColorBase)
-      boxShadow(.none)
+      outline(.none)
     }
     state("added", color: borderColorGreen)
     state("removed", color: borderColorRed)
     state("changed", color: borderColorOrange)
     descendant("[data-diff-state='focused']") {
       borderColor(borderColorBlueFocus).important()
-      boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
+      outline(borderWidthBase, .solid, borderColorBlueFocus).important()
+      outlineOffset(px(0)).important()
     }
     selector(
       "& [data-diff-annotation][data-visible='false']",
@@ -134,8 +135,10 @@ public struct FieldDiffView: HTMLContent {
       "& .diff-wrap-\(name) .text-area-input:not(.form-info-panel *)",
       "& .diff-wrap-\(name) .dropdown-trigger:not(.form-info-panel *)"
     ) {
+      // A ring is the border and an outline of its color, never a shadow.
       borderColor(color).important()
-      boxShadow(px(0), px(0), px(0), px(1), color).important()
+      outline(borderWidthBase, .solid, color).important()
+      outlineOffset(px(0)).important()
     }
   }
 
