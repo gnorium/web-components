@@ -6,7 +6,7 @@
   import WebTypes
 
   /// The reminder, at the top of a page's content, that the signed-in
-  /// account's email address is unverified: the design system's warning
+  /// account's new email address waits for its link: the design system's warning
   /// alert (its icon, colors and close control; dismissing it is
   /// `AlertHydration`'s), with Resend Email as the alert's own action: a plain blue button.
   /// `EmailVerificationBannerHydration` sends the link again.
@@ -16,8 +16,9 @@
   public struct EmailVerificationBannerView: HTMLContent {
     /// What the link it sends is for.
     public enum Purpose: Sendable {
-      /// The signed-in account's own address, unverified: a warning.
-      case unverified
+      /// The signed-in account's new address, pending until its link is
+      /// opened (the account keeps its verified one meanwhile): a warning.
+      case newAddress
       /// Registration's first step done: the address's link, which opens
       /// the second.
       case registration
@@ -30,7 +31,7 @@
     let cooldown: Int
     let `class`: String
 
-    public init(email: String, purpose: Purpose = .unverified, cooldown: Int = 0, class: String = "") {
+    public init(email: String, purpose: Purpose = .newAddress, cooldown: Int = 0, class: String = "") {
       self.email = email
       self.purpose = purpose
       self.cooldown = cooldown
@@ -39,17 +40,17 @@
 
     public func build() -> DOM.Node {
       AlertView(
-        color: purpose == .registration ? .blue : .orange, allowUserDismiss: purpose == .unverified,
+        color: purpose == .registration ? .blue : .orange, allowUserDismiss: purpose == .newAddress,
         dismissButtonLabel: "Dismiss",
         class: `class`.isEmpty ? "email-verification-banner-view" : "email-verification-banner-view \(`class`)"
       ) {
         div {
           span {
             switch purpose {
-            case .unverified:
-              "Verify your email address: we sent a link to "
+            case .newAddress:
+              "Verify your new address "
               strong { email }
-              "."
+              ": open the link we sent to it."
             case .registration:
               "Check your email: we sent a link to "
               strong { email }
