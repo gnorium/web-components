@@ -422,6 +422,16 @@ public struct DiffView: HTMLContent {
         fontStyle(.italic)
         margin(0)
       }
+      // A line's diff—"old → new" under a field—has no line to tint: its
+      // changed characters are colored, red where they were, green where
+      // they are, on nothing (user, 2026-10-08). The fill is a box's, over
+      // its line's tint.
+      selector("& .diff-old .diff-changed") {
+        color(colorRed)
+      }
+      selector("& .diff-new .diff-changed") {
+        color(colorGreen)
+      }
       // A changed line reads in the base color on its subtle tint, red
       // where it was, green where it is; the characters that changed in it
       // stand out on the solid red or green, inverted (user, 2026-10-08).
@@ -434,14 +444,14 @@ public struct DiffView: HTMLContent {
         backgroundColor(backgroundColorGreenSubtle)
         color(colorBase)
       }
-      selector("& .diff-row[data-diff-line='removed'] .diff-changed", "& .diff-old .diff-changed") {
+      selector("& .diff-row[data-diff-line='removed'] .diff-changed") {
         backgroundColor(backgroundColorRed)
         color(colorInvertedFixed)
         borderRadius(borderRadiusMinimal)
         webkitBoxDecorationBreak(.clone)
         boxDecorationBreak(.clone)
       }
-      selector("& .diff-row[data-diff-line='inserted'] .diff-changed", "& .diff-new .diff-changed") {
+      selector("& .diff-row[data-diff-line='inserted'] .diff-changed") {
         backgroundColor(backgroundColorGreen)
         color(colorInvertedFixed)
         borderRadius(borderRadiusMinimal)
