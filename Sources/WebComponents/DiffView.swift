@@ -387,6 +387,14 @@ public struct DiffView: HTMLContent {
         gap(spacing8)
         minHeight(lineHeightXSmall20)
       }
+      // A box of lines gives its sides' inset to each line, so a changed
+      // line's tint runs from edge to edge.
+      selector("& .diff-box:has(> .diff-lines)") {
+        paddingInline(0)
+      }
+      selector("& .diff-box > .diff-lines > .diff-row") {
+        paddingInline(spacing12)
+      }
       descendant(".diff-sign") {
         flexShrink(0)
         width(ch(1))
@@ -415,13 +423,31 @@ public struct DiffView: HTMLContent {
         fontStyle(.italic)
         margin(0)
       }
-      // The characters that changed: red where they were, green where they
-      // are. Color only; the gutter, or the arrow, says which is which.
+      // A changed line reads in the base color on its subtle tint, red
+      // where it was, green where it is; the characters that changed in it
+      // stand out on the solid red or green, inverted (user, 2026-10-08).
+      // The same tokens as everywhere: no colors of the diff's own.
+      selector("& .diff-row[data-diff-line='removed']") {
+        backgroundColor(backgroundColorRedSubtle)
+        color(colorBase)
+      }
+      selector("& .diff-row[data-diff-line='inserted']") {
+        backgroundColor(backgroundColorGreenSubtle)
+        color(colorBase)
+      }
       selector("& .diff-row[data-diff-line='removed'] .diff-changed", "& .diff-old .diff-changed") {
-        color(colorRed)
+        backgroundColor(backgroundColorRed)
+        color(colorInvertedFixed)
+        borderRadius(borderRadiusMinimal)
+        webkitBoxDecorationBreak(.clone)
+        boxDecorationBreak(.clone)
       }
       selector("& .diff-row[data-diff-line='inserted'] .diff-changed", "& .diff-new .diff-changed") {
-        color(colorGreen)
+        backgroundColor(backgroundColorGreen)
+        color(colorInvertedFixed)
+        borderRadius(borderRadiusMinimal)
+        webkitBoxDecorationBreak(.clone)
+        boxDecorationBreak(.clone)
       }
       // From the old to the new, in the direction the line reads: the
       // arrow's own box holds the space either side of it, so it wraps
