@@ -89,7 +89,6 @@ public struct AccordionView: HTMLContent {
     @HTMLBuilder content: () -> [DOM.Node]
   ) {
     self.id = id
-    self.isOpen = isOpen
     self.actionIcon = actionIcon
     self.actionAlwaysVisible = actionAlwaysVisible
     self.actionButtonLabel = actionButtonLabel
@@ -101,8 +100,38 @@ public struct AccordionView: HTMLContent {
     self.`class` = `class`
     self.titleContent = title()
     self.descriptionContent = description()
-    self.contentSlot = content()
+    let content = content()
+    self.contentSlot = content
+    // An accordion holding a field an edit changed opens on it: a diff is
+    // read, not hunted for.
+    #if SERVER
+      self.isOpen = isOpen || Self.holdsFieldDiff(content)
+    #else
+      self.isOpen = isOpen
+    #endif
   }
+
+  #if SERVER
+    /// Whether any of `nodes` draws a saved field diff (`FieldDiffView`'s
+    /// `.diff-wrap-added`, `-removed` or `-changed`).
+    static func holdsFieldDiff(_ nodes: [DOM.Node]) -> Bool {
+      for node in nodes {
+        if let element = node as? DOM.Element {
+          for (name, value) in element.attributes where name == "class" {
+            if value.contains("diff-wrap-added") || value.contains("diff-wrap-removed")
+              || value.contains("diff-wrap-changed")
+            {
+              return true
+            }
+          }
+          if holdsFieldDiff(element.children) { return true }
+        } else if let fragment = node as? DOM.DocumentFragment, holdsFieldDiff(fragment.children) {
+          return true
+        }
+      }
+      return false
+    }
+  #endif
 
   public func build() -> DOM.Node {
     let hasDescription = !descriptionContent.isEmpty
