@@ -577,14 +577,13 @@
                   p { note }
                     .class("tei-page-translation-note")
                 }
+                // A page not translated is empty, never a dash: a dash in a
+                // text would read as the page's (user, 2026-10-07).
                 div {
                   if let translated {
                     for line in translated.page.lines {
                       readingLine(line, facsimileURL: translated.page.facsimileURL, label: translated.page.label)
                     }
-                  } else {
-                    span { "—" }
-                      .class("tei-line")
                   }
                 }
                 .class("tei-page-text")
@@ -593,6 +592,15 @@
               .data("transcript-layer", "translation")
               .lang(translation.language)
               .dir("auto")
+              // The translation's own code, under Raw while its language
+              // switch is on (user, 2026-10-07): two switches, four layers.
+              if let translated {
+                div {
+                  CodeView(XMLFormatter.prettified(translated.page.markup), showLineNumbers: false)
+                }
+                .class("tei-page-raw")
+                .data("transcript-layer", "translation-code")
+              }
             }
           }
           .class("tei-transcript")

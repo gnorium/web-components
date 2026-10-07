@@ -28,7 +28,13 @@
     }
 
     public func build() -> DOM.Node {
-      HTMLText(content: MarkdownRenderer.render(markdown), isRaw: true)
+      // Every fence framed as a code block (user, 2026-10-07); built once
+      // so the page carries the frame's sheet even with none.
+      _ = CodeBlockView(language: "", codeHTML: "").build()
+      return HTMLText(
+        content: MarkdownRenderer.render(markdown) { language, code in
+          CodeBlockView(language: language, codeHTML: code).render()
+        }, isRaw: true)
     }
   }
 #endif
