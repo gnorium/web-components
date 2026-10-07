@@ -12,6 +12,8 @@
     let alertColor: AlertColor
     let inline: Bool
     let icon: StatusIconView.Status?
+    /// A mark in place of the status icon, where one is given.
+    let mark: DOM.Node?
     let animatesIn: Bool
     let allowUserDismiss: Bool
     let dismissButtonLabel: String
@@ -57,6 +59,7 @@
       self.alertColor = type
       self.inline = inline
       self.icon = icon
+      self.mark = nil
       self.animatesIn = animatesIn
       self.allowUserDismiss = allowUserDismiss
       self.dismissButtonLabel = dismissButtonLabel
@@ -70,6 +73,7 @@
       color: AlertColor = .gray,
       inline: Bool = false,
       icon: StatusIconView.Status? = nil,
+      mark: DOM.Node? = nil,
       animatesIn: Bool = false,
       allowUserDismiss: Bool = false,
       dismissButtonLabel: String = "Close",
@@ -78,6 +82,7 @@
       class: String = "",
       @HTMLBuilder content: () -> [DOM.Node]
     ) {
+      self.mark = mark
       self.alertColor = color
       self.inline = inline
       self.icon = icon
@@ -154,7 +159,9 @@
           span {
             // The alert's mark, not a word of its message: as large as the
             // close button's × across from it, not its text's size minus 4.
-            StatusIconView(displayIcon, size: sizeIconSmall)
+            // A state rather than a verdict (a session waiting or running)
+            // shows its own mark: the ring, the rotating sector.
+            if let mark { mark } else { StatusIconView(displayIcon, size: sizeIconSmall) }
           }
           .class("alert-icon")
           .ariaHidden(true)
