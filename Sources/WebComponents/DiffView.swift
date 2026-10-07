@@ -541,3 +541,49 @@ extension DiffView {
     }
   }
 #endif
+
+extension DiffView {
+  /// The words a text's diff puts in and takes out, as a diffstat counts a
+  /// field's size: its words alone—white space and punctuation count for
+  /// nothing—compared as `text` compares them, byte for byte.
+  public static func wordCount(old: String, new: String) -> (added: Int, removed: Int) {
+    func words(_ text: String) -> [[UInt8]] {
+      DiffEngine.tokens(text).compactMap { token -> [UInt8]? in
+        guard let first = token.utf8.first else { return nil }
+        switch first {
+        case 0x30...0x39, 0x41...0x5A, 0x61...0x7A, 0x5F, 0x80...0xFF: return Array(token.utf8)
+        default: return nil
+        }
+      }
+    }
+    return count(DiffEngine.edits(old: words(old), new: words(new)))
+  }
+
+  /// The lines a passage's or a source's diff marks "+" and "−", as a
+  /// diffstat counts them.
+  public static func lineCount(old: String, new: String) -> (added: Int, removed: Int) {
+    var added = 0
+    var removed = 0
+    for line in DiffEngine.lines(old: old, new: new) {
+      switch line.kind {
+      case .inserted: added += 1
+      case .removed: removed += 1
+      case .unchanged: break
+      }
+    }
+    return (added, removed)
+  }
+
+  static func count(_ script: [DiffEngine.Edit]) -> (added: Int, removed: Int) {
+    var added = 0
+    var removed = 0
+    for edit in script {
+      switch edit {
+      case .insert: added += 1
+      case .delete: removed += 1
+      case .keep: break
+      }
+    }
+    return (added, removed)
+  }
+}

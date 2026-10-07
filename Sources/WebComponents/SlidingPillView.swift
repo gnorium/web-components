@@ -22,8 +22,8 @@
   /// once placed (`data-sliding-pill="ready"` on the host) the host leaves
   /// the fill to the thumb. Placed on load and on resize without moving;
   /// moved by a selection with the base transition. A reader who prefers
-  /// reduced motion never gets the thumb: the host keeps its own selected
-  /// fill, which cross-fades from the old item to the new one.
+  /// reduced motion gets the thumb too, never moving: it jumps to the new
+  /// item at once, the item's label with it (user, 2026-10-08).
   public struct SlidingPillView: HTMLContent {
     public init() {}
 
@@ -94,9 +94,7 @@
     /// the host's own selected styling back, when there is no item.
     public static func place(_ layer: DOM.Element, in host: DOM.Element, under item: DOM.Element?, animate: Bool) {
       guard let thumb = layer.querySelector(".sliding-pill-thumb") else { return }
-      // Reduced motion: no movement at all. The host's own fill stays, and
-      // its background transition cross-fades the selection instead.
-      guard !window.matchMedia("(prefers-reduced-motion: reduce)"), let item, let origin = layer.getBoundingClientRect(), let box = item.getBoundingClientRect(),
+      guard let item, let origin = layer.getBoundingClientRect(), let box = item.getBoundingClientRect(),
         box.width > 0, box.height > 0
       else {
         thumb.setAttribute(data("placed"), "false")
@@ -104,8 +102,10 @@
         return
       }
       // A first placement is never a move: it would glide in from the corner.
+      // Reduced motion: never a move, the thumb jumps (user, 2026-10-08).
       let wasPlaced = stringEquals(thumb.getAttribute(data("placed")) ?? "", "true")
-      thumb.setAttribute(data("animate"), animate && wasPlaced ? "true" : "false")
+      let moves = animate && wasPlaced && !window.matchMedia("(prefers-reduced-motion: reduce)")
+      thumb.setAttribute(data("animate"), moves ? "true" : "false")
       thumb.style.setProperty("--sliding-pill-x", doubleToString(box.left - origin.left) + "px")
       thumb.style.setProperty("--sliding-pill-y", doubleToString(box.top - origin.top) + "px")
       thumb.style.setProperty("--sliding-pill-width", doubleToString(box.width) + "px")

@@ -198,6 +198,9 @@
           border(.none)
           cursor(cursorBaseHover)
           transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+          // Reduced motion: the selection switches at once, its label with
+          // the pill (user, 2026-10-08).
+          media(prefersReducedMotion(.reduce)) { transition(.none).important() }
           position(.relative)
           fontFamily(typographyFontSans)
           backgroundColor(.transparent)

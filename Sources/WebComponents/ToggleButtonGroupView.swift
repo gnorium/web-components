@@ -191,6 +191,9 @@
           borderColor(borderColorTransparent).important()
           backgroundColor(backgroundColorTransparent).important()
           transition("background-color \(transitionDurationBase.value) \(transitionTimingFunctionSystem.value), color \(transitionDurationBase.value) \(transitionTimingFunctionSystem.value)")
+          // Reduced motion: the selection switches at once, its label with
+          // the pill (user, 2026-10-08).
+          media(prefersReducedMotion(.reduce)) { transition(.none).important() }
         }
         for buttonSize in [ButtonView.ButtonSize.mini, .small, .medium, .large] {
           selector("&[data-mode='slider'] .toggle-button-group-button[data-size='\(buttonSize.rawValue)']") {
