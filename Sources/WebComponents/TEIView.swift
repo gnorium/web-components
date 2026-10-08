@@ -25,10 +25,11 @@
   /// directions.
   public struct TEIView: HTMLContent {
     let teiXml: String
-    /// Whether each page's code can be edited. The code is edited as it
-    /// is, not as the Raw view prettifies it: prettifying drops the spaces
-    /// between tags, and a correction must not quietly make others. The
-    /// transcript stays a transcript—nothing in it can be typed into.
+    /// Whether each page's code can be edited. The editor opens on the code
+    /// as the Raw view lays it out (`XMLFormatter.prettified`), which keeps
+    /// every text as written and reads the same; what a person saves is
+    /// what they edited. The transcript stays a transcript—nothing in it
+    /// can be typed into.
     let editable: Bool
     /// The transcript's translation, when it has one: a third layer of each
     /// page's transcript, which the viewer's Translated switch shows in the
@@ -157,7 +158,7 @@
       }
       func runs(_ line: TEILine) -> [DiffEngine.Token] {
         var tokens: [DiffEngine.Token] = []
-        for (index, run) in line.runs.enumerated() {
+        for run in line.runs {
           switch run.kind {
           case .math(let formula):
             // A formula compares as the MathML it draws: two that draw alike
@@ -165,12 +166,22 @@
             tokens.append(.init(kind: .formula, text: formula.markup, style: style(run.rend)))
           case .text:
             var text = spaced(run.text)
-            if index == 0 { text = String(text.drop(while: \.isWhitespace)) }
-            if index == line.runs.count - 1 {
-              while text.last?.isWhitespace == true { text.removeLast() }
+            // A line starts at its first character; white space running on
+            // from the last run's is one space, as a reading draws it, so a
+            // layout's line breaks between elements (`XMLFormatter.prettified`)
+            // add none.
+            if tokens.isEmpty || tokens.last?.text.last?.isWhitespace == true {
+              text = String(text.drop(while: \.isWhitespace))
             }
             if !text.isEmpty { tokens.append(.init(text: text, style: style(run.rend))) }
           }
+        }
+        // And ends at its last.
+        if let last = tokens.last, case .text = last.kind, last.text.last?.isWhitespace == true {
+          var text = last.text
+          while text.last?.isWhitespace == true { text.removeLast() }
+          tokens.removeLast()
+          if !text.isEmpty { tokens.append(.init(text: text, style: last.style)) }
         }
         return tokens
       }
@@ -593,7 +604,7 @@
                   CodeEditorView(
                     id: "tei-page-code-\(index)",
                     name: "markup",
-                    value: page.markup,
+                    value: XMLFormatter.prettified(page.markup),
                     ariaLabel: page.label.isEmpty ? "Code of this page" : "Code of \(page.label)"
                   )
                 }

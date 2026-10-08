@@ -94,16 +94,15 @@ public struct DiffView: HTMLContent {
 
   public func build() -> DOM.Node {
     // A line's text as the pair it belongs to split it: the changed stretches
-    // colored by the row they sit in, white space among them made visible.
+    // colored by the row they sit in. Changed white space is its own blank,
+    // filled—never a glyph standing in for it, which a copy would carry.
     func segmentNodes(_ segments: [DiffSegment]) -> [DOM.Node] {
       segments.map { segment -> DOM.Node in
         switch segment {
         case .unchanged(let text):
           return DOM.Text(text)
         case .changed(let text):
-          return span { Self.visible(text) }
-            .class("diff-changed")
-            .build()
+          return Self.changed(text)
         }
       }
     }
@@ -135,9 +134,19 @@ public struct DiffView: HTMLContent {
               }
               .class("diff-sign")
               .ariaHidden(true)
-              span { content(line) }
-                .class("diff-content")
-                .dir("auto")
+              span {
+                content(line)
+                // The line break it gained or lost: a blank at its end,
+                // filled as a changed space is.
+                if line.breakChanged {
+                  span {}
+                    .class("diff-changed diff-changed-break")
+                    .data("blank", "true")
+                    .title("Line break")
+                }
+              }
+              .class("diff-content")
+              .dir("auto")
             }
             .class("diff-row")
             .data(
@@ -277,8 +286,9 @@ public struct DiffView: HTMLContent {
                 case .text:
                   for run in Self.runs(token.text, own) {
                     if run.changed {
-                      span { Self.visible(run.text) }
+                      span { run.text }
                         .class("diff-changed")
+                        .data("blank", DiffEngine.isSpace(run.text))
                         .data("style", token.style.joined(separator: " "))
                         .title(Self.title(of: line, run.text))
                     } else {
@@ -433,6 +443,22 @@ public struct DiffView: HTMLContent {
       selector("& .diff-new .diff-changed") {
         color(colorGreen)
       }
+      // A changed blank has no color to show: it is filled, as Xcode fills
+      // one, in the subtle red or green a box's changed line is tinted.
+      selector("& .diff-old .diff-changed[data-blank='true']") {
+        backgroundColor(backgroundColorRedSubtle)
+      }
+      selector("& .diff-new .diff-changed[data-blank='true']") {
+        backgroundColor(backgroundColorGreenSubtle)
+      }
+      // A line break gained or lost: a blank one character wide at the
+      // line's end.
+      descendant(".diff-changed-break") {
+        display(.inlineBlock)
+        width(ch(1))
+        height(em(1))
+        verticalAlign(.textBottom)
+      }
       // A changed line reads in the base color on its subtle tint, red
       // where it was, green where it is; the characters that changed in it
       // stand out on the solid red or green, inverted (user, 2026-10-08).
@@ -494,6 +520,10 @@ public struct DiffView: HTMLContent {
       selector("&[data-diff-mode='rendered'] .diff-content") {
         whiteSpace(.normal)
       }
+      // A changed space in a reading is kept, so its fill shows.
+      selector("&[data-diff-mode='rendered'] .diff-changed[data-blank='true']") {
+        whiteSpace(.preWrap)
+      }
       selector("& [data-role='heading']", "& [data-role='speaker']") {
         fontWeight(fontWeightSemiBold)
       }
@@ -548,20 +578,14 @@ extension DiffView {
     return 1
   }
 
-  /// White space that changed, made visible: a space is drawn as a middle
-  /// dot, since a changed space is otherwise a change nobody can see.
-  static func visible(_ text: String) -> String {
-    guard DiffEngine.isSpace(text) else { return text }
-    var bytes: [UInt8] = []
-    for byte in text.utf8 {
-      if byte == 0x20 {
-        bytes.append(0xC2)
-        bytes.append(0xB7)
-      } else {
-        bytes.append(byte)
-      }
-    }
-    return String(decoding: bytes, as: UTF8.self)
+  /// A changed stretch, exactly its characters. White space alone is
+  /// marked as such (`data-blank`): on a line of a box the fill shows it,
+  /// and a line's diff, which colors only, fills it too.
+  static func changed(_ text: String) -> DOM.Node {
+    span { text }
+      .class("diff-changed")
+      .data("blank", DiffEngine.isSpace(text))
+      .build()
   }
 }
 
