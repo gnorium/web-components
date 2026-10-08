@@ -60,8 +60,10 @@
           alignItems(.flexStart)
           gap(spacing12)
           fontFamily(typographyFontMono)
-          fontSize(fontSizeXSmall12)
-          lineHeight(lineHeightXSmall20)
+          // CodeEditorView's own size (user, 2026-10-08): code reads at one
+          // size whether it can be edited or not, line for line.
+          fontSize(fontSizeMedium16)
+          lineHeight(lineHeightSmall22)
           color(syntaxPlainText)
           backgroundColor(backgroundColorNeutralSubtle)
           whiteSpace(.pre)

@@ -116,8 +116,9 @@
           borderRadius(0)
           border(.none)
           fontFamily(typographyFontMono)
-          fontSize(rem(0.875))
-          lineHeight(1.5)
+          // CodeEditorView's size: every code display reads at one size.
+          fontSize(fontSizeMedium16)
+          lineHeight(lineHeightSmall22)
           color(syntaxPlainText)
           // Wrap long TEI lines: `anywhere` split tag names (`<title` /
           // `Stmt>`), so break only where a token cannot fit the line.

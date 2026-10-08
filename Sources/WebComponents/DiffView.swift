@@ -471,8 +471,15 @@ public struct DiffView: HTMLContent {
       }
 
       // Code: as it is written, monospaced, its indentation kept.
+      // At CodeEditorView's size, so a page's diff and its editor run line
+      // for line.
       selector("&[data-diff-mode='code'] .diff-box") {
         fontFamily(typographyFontMono)
+        fontSize(fontSizeMedium16)
+        lineHeight(lineHeightSmall22)
+      }
+      selector("&[data-diff-mode='code'] .diff-row") {
+        minHeight(lineHeightSmall22)
       }
 
       // Rendered: the reading's own type, each line set as it reads.
