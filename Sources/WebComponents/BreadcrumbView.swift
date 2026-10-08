@@ -96,7 +96,11 @@
           padding(0)
           minWidth(0)
         }
-        descendant(".breadcrumb-item:has([data-edge-fade-expanded='true'])") {
+        selector(
+          "& .breadcrumb-item:has([data-edge-fade-expanded='true'])",
+          // A label is in its link: the link's keyboard focus opens it.
+          "& .breadcrumb-item:has(.breadcrumb-label\(edgeFadeFocusOpen[1]))"
+        ) {
           flexShrink(0)
           maxWidth(.none)
         }
@@ -125,7 +129,11 @@
           maxWidth(px(240))
         }
         fadeOverflow("& .breadcrumb-label")
-        descendant(".breadcrumb-label[data-edge-fade-expanded='true']") {
+        selector(
+          "& .breadcrumb-label[data-edge-fade-expanded='true']",
+          "& .breadcrumb-label\(edgeFadeFocusOpen[0])",
+          "& .breadcrumb-label\(edgeFadeFocusOpen[1])"
+        ) {
           whiteSpace(.nowrap).important()
           width(.maxContent)
           maxWidth(.none)

@@ -96,11 +96,27 @@ public func fadeOverflow(_ selectors: String...) -> [CSSOM.CSSRule] {
     cursor(.pointer)
   }
   // Wrapped where it must, anywhere at all: an ID or a URL has no spaces. A
-  // box that lays its value out as a row wraps the row as well.
+  // box that lays its value out as a row wraps the row as well. Shown whole
+  // too, with no fade, while a link or a control in it (or the one it is
+  // in) has the keyboard's focus: Tab reaches the link, not the box, so the
+  // whole value is in sight as it would be in an input. A click's focus is
+  // no `:focus-visible`, and leaves the box as it was.
   selector(edgeFadeSelectors(selectors, "[data-edge-fade-expanded='true']")) {
     whiteSpace(.normal).important()
     overflowWrap(.anywhere).important()
     flexWrap(.wrap).important()
+  }
+  // A rule of its own: a browser without `:has` drops it, not the one above.
+  selector(
+    stringJoin(
+      [edgeFadeSelectors(selectors, edgeFadeFocusOpen[0]), edgeFadeSelectors(selectors, edgeFadeFocusOpen[1])],
+      separator: ", ")
+  ) {
+    whiteSpace(.normal).important()
+    overflowWrap(.anywhere).important()
+    flexWrap(.wrap).important()
+    maskImage(.custom("none")).important()
+    webkitMaskImage(.custom("none")).important()
   }
 }
 
@@ -153,6 +169,13 @@ public func fadeInputOverflow(control: String, input: String) -> [CSSOM.CSSRule]
     opacity(1)
   }
 }
+
+/// An expandable box shown whole while the keyboard's focus is on a control
+/// in it, or on the control it is in: suffixes for its selectors.
+public let edgeFadeFocusOpen = [
+  "[data-edge-fade='expand']:has(:focus-visible)",
+  "[data-edge-fade='expand']:is(:focus-visible *)",
+]
 
 /// Each selector with `suffix` on it, as one selector list.
 private func edgeFadeSelectors(_ selectors: [String], _ suffix: String) -> String {
