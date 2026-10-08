@@ -7,33 +7,96 @@ import HTMLBuilder
 import WebTypes
 
 // Both SERVER and CLIENT: the search menu draws it on the client from its
-// JSON, a gloss's heading on the server. Build() must stay embedded-safe
+// JSON, a gloss's title on the server. Build() must stay embedded-safe
 // (stringIsEmpty, not String.isEmpty).
 
 /// A record as the records search menu offers one, in two rows: its
-/// language › its title (`BreadcrumbLabelView`), then what it is, small and
-/// subtle—its class, a work's voices and type—with a homograph's number
-/// raised after it. "Middle English › anker", "Noun".
+/// language › its title (`BreadcrumbLabelView`), the language and chevron
+/// subordinate (12px and 8px beside the 14px title), the title the linked
+/// grain the path leads to; then, small and subtle, a path of what tells it
+/// from the records listed with it (`metas`, the clash rule): its class
+/// always › its voices only where another listed record has its language,
+/// title and class › a homograph's number only where they clash still. "Middle English › anker", "Noun"; "Old English › An
+/// Anglo-Saxon Dictionary", "Dictionary". One record alone (a gloss's
+/// title) is its class alone. Only the title is ever a link.
 ///
 /// With a `url` the title is a link to the record, in the link's colors
-/// (a gloss's heading); without, it takes its container's (a search menu
+/// (a gloss's title); without, it takes its container's (a search menu
 /// row, which is the link itself). With no `context`, the title alone: a
 /// term with no record.
 public struct RecordLabelView: HTMLContent {
   let context: String
   let text: String
-  let meta: String
-  let homograph: Int
+  /// The meta row's segments, a path as the first row is: class, then
+  /// voices, then a homograph's number, where the clash rule shows them.
+  let meta: [String]
   let url: String
   let `class`: String
 
-  public init(context: String, text: String, meta: String, homograph: Int = 0, url: String = "", class: String = "") {
+  /// A record among those listed together, as the clash rule reads it.
+  public struct Entry: Sendable {
+    public let language: String
+    public let title: String
+    /// Its class by its name ("Dictionary", "Noun"); "" when unknown.
+    public let type: String
+    /// A work's voices as its record page names them; "" for none.
+    public let voices: String
+    /// A word's homograph number; 0 for none.
+    public let homograph: Int
+
+    public init(language: String, title: String, type: String, voices: String = "", homograph: Int = 0) {
+      self.language = language
+      self.title = title
+      self.type = type
+      self.voices = voices
+      self.homograph = homograph
+    }
+  }
+
+  /// The clash rule (user, 2026-10-08), each record's meta row against the
+  /// others listed with it: its class, always ("—" when unknown); then its
+  /// voices where another has the same language, title and class ("—" when
+  /// unknown beside a namesake's; none for words, which have no voices); then
+  /// its homograph number (0 for none) where another has the same voices too. Embedded-safe: it runs in the search menu.
+  public static func metas(_ entries: [Entry]) -> [[String]] {
+    func same(_ a: Entry, _ b: Entry) -> Bool {
+      stringEquals(a.language, b.language) && stringEquals(a.title, b.title) && stringEquals(a.type, b.type)
+    }
+    var out: [[String]] = []
+    for (index, entry) in entries.enumerated() {
+      let type = stringIsEmpty(entry.type) ? "—" : entry.type
+      var namesake = false
+      var voiced = !stringIsEmpty(entry.voices)
+      var twin = false
+      for (other, candidate) in entries.enumerated() where other != index && same(entry, candidate) {
+        namesake = true
+        if !stringIsEmpty(candidate.voices) { voiced = true }
+        if stringEquals(entry.voices, candidate.voices) { twin = true }
+      }
+      guard namesake else {
+        out.append([type])
+        continue
+      }
+      // A word has no voices: its namesakes go straight to their numbers.
+      var segments = [type]
+      if voiced { segments.append(stringIsEmpty(entry.voices) ? "—" : entry.voices) }
+      if twin && entry.homograph > 0 { segments.append("\(entry.homograph)") }
+      out.append(segments)
+    }
+    return out
+  }
+
+  public init(context: String, text: String, meta: [String], url: String = "", class: String = "") {
     self.context = context
     self.text = text
     self.meta = meta
-    self.homograph = homograph
     self.url = url
     self.`class` = `class`
+  }
+
+  /// One record alone (a gloss's title): its class, a meta row of one.
+  public init(context: String, text: String, meta: String, url: String = "", class: String = "") {
+    self.init(context: context, text: text, meta: [meta], url: url, class: `class`)
   }
 
   public func build() -> DOM.Node {
@@ -48,11 +111,16 @@ public struct RecordLabelView: HTMLContent {
           if stringIsEmpty(context) { text } else { BreadcrumbLabelView(context: context, text: text) }
         }
       }
+      // A path as the first row is: class › voices › homograph number,
+      // the same small chevron between them.
       span {
-        meta
-        if homograph > 1 {
-          sup { "\(homograph)" }
-            .class("record-label-sup")
+        for (index, segment) in meta.enumerated() {
+          if index > 0 {
+            "\u{00A0}"
+            BreadcrumbSeparatorView()
+            " "
+          }
+          segment
         }
       }
       .class("record-label-meta")
@@ -71,14 +139,25 @@ public struct RecordLabelView: HTMLContent {
         fontWeight(fontWeightNormal)
         overflowWrap(.breakWord)
       }
+      // The language and its chevron are subordinate to the title: the
+      // language at the meta line's size, the chevron at that size minus 4
+      // (the icon rule). Here only: every other breadcrumb keeps its own.
+      descendant(".breadcrumb-label-context") {
+        fontSize(fontSizeXSmall12)
+        color(colorSubtle)
+      }
+      // The meta row's chevrons as its first row's: quiet, on the baseline.
+      descendant(".record-label-meta .breadcrumb-separator-view") {
+        color(colorSubtle)
+        verticalAlign(.baseline)
+      }
+      descendant(".breadcrumb-separator-view .next-icon-view") {
+        height(size8).important()
+      }
       descendant(".record-label-meta") {
         fontSize(fontSizeXSmall12)
         fontWeight(fontWeightNormal)
         color(colorSubtle)
-      }
-      // Inside the meta line: its size and color, raised.
-      descendant(".record-label-sup") {
-        fontSize(perc(75))
       }
     }
   }

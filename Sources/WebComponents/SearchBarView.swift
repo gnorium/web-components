@@ -547,6 +547,12 @@
       dropdown.setAttribute(data("open"), isOpen)
       searchBarSuggestions.innerHTML = ""
 
+      // Each row's detail by the clash rule (`RecordLabelView.metas`).
+      let metas = RecordLabelView.metas(
+        results.map {
+          RecordLabelView.Entry(
+            language: $0.language, title: $0.text, type: $0.type, voices: $0.voices, homograph: $0.homograph)
+        })
       for (index, result) in results.enumerated() {
         // Its language › its title, as a breadcrumb, as
         // SearchMenuView and DropdownView's record options draw it.
@@ -556,14 +562,11 @@
           context: stringIsEmpty(result.language) ? "—" : result.language, text: result.text
         ).render()
 
-        // A work's voices ("—" when unknown) and its type ("—" when
-        // unknown); a word has no voices part.
+        // Its class, and its voices and homograph number only where they
+        // tell it from another row.
         let detailSpan = document.createElement(.span)
         detailSpan.className = "search-bar-suggestion-detail"
-        var parts: [String] = []
-        if !stringIsEmpty(result.voices) { parts.append(result.voices) }
-        parts.append(stringIsEmpty(result.type) ? "—" : result.type)
-        detailSpan.textContent = stringJoin(parts, separator: " · ")
+        detailSpan.textContent = stringJoin(metas[index], separator: " › ")
 
         // Create link with flex layout
         let a = document.createElement(.a)

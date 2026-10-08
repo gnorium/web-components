@@ -372,7 +372,11 @@
         }
         descendant(".search-menu-results[data-open='true']") { display(.flex) }
         descendant(".search-menu-results[data-open='false']") { display(.none) }
+        // A row never shrinks below its two lines: the results are a
+        // scrolling column, whose rows would otherwise be squeezed to fit
+        // its height, their meta line spilling onto the next row.
         descendant(".search-menu-result") {
+          flexShrink(0)
           display(.flex)
           alignItems(.center)
           gap(spacing12)
@@ -867,6 +871,13 @@
 
       menu.innerHTML = ""
 
+      // Each row's meta by the clash rule, against the rows drawn with it.
+      let metas = RecordLabelView.metas(
+        limitedResults.map {
+          RecordLabelView.Entry(
+            language: $0.subtext, title: $0.text, type: $0.type, voices: $0.pos, homograph: $0.homograph)
+        })
+
       // Create new menu items using DOM API
       for (index, result) in limitedResults.enumerated() {
         let item = document.createElement(.div)
@@ -904,17 +915,14 @@
         item.setAttribute(data("url"), href)
 
         // Two rows, the same for both kinds, as every record is offered
-        // (DropdownView's record options too, a gloss's heading): its
-        // language › what the result IS (its title), as a breadcrumb; then
-        // a work's voices ("—" when unknown) and its type (with its
-        // homograph number, "—" when unknown). A word has no voices part.
-        var parts: [String] = []
-        if !stringIsEmpty(result.pos) { parts.append(result.pos) }
-        parts.append(stringIsEmpty(result.type) ? "—" : result.type)
+        // (a gloss's title too): its language › what the result IS (its
+        // title), as a breadcrumb; then its class, and its voices and
+        // homograph number only where they tell it from another row
+        // (`RecordLabelView.metas`).
         let holder = document.createElement(.span)
         holder.innerHTML = RecordLabelView(
           context: stringIsEmpty(result.subtext) ? "—" : result.subtext, text: result.text,
-          meta: stringJoin(parts, separator: " · "), homograph: isBiblioResult ? 0 : result.homograph,
+          meta: metas[index],
           class: "menu-item-text search-menu-result-text"
         ).render()
         guard let textContent = holder.firstElementChild else { continue }
