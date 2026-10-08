@@ -178,7 +178,9 @@
           gap(spacing8)
           flex(1)
         }
-        fadeOverflow("& .select-label")
+        // A closed select's value only fades: a swipe on the handle is not
+        // a scroll of its value.
+        fadeOverflow("& .select-label", scrolls: false)
         descendant(".select-label[data-selected='false']") {
           color(colorPlaceholder).important()
         }

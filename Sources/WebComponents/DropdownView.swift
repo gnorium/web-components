@@ -382,7 +382,9 @@ public struct DropdownView: HTMLContent {
         color(colorPlaceholder)
         minWidth(0)
       }
-      fadeOverflow("& .dropdown-selected-text")
+      // A closed dropdown's value only fades: a swipe on the trigger is not
+      // a scroll of its value.
+      fadeOverflow("& .dropdown-selected-text", scrolls: false)
       // The text gives way, not the chevron: beside a cut title it was
       // squeezed to a sliver.
       descendant(".dropdown-chevron") {

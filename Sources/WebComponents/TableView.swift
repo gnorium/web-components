@@ -1263,12 +1263,12 @@ public struct TableView: HTMLContent {
       selector("& .table-table td > div:not(.table-resizer)", "& .table-table th > div:not(.table-resizer)", "& .table-table th > button", "& .table-table td > span", "& .table-table th > span") {
         whiteSpace(.nowrap).important()
         textOverflow(.clip).important()
-        overflow(.hidden).important()
         display(.block)
         width(perc(100))
       }
-      // A value too long for its column fades out at its end, and on a
-      // phone a tap on it shows the whole of it (EdgeFade.swift).
+      // A value too long for its column fades out at each edge that hides
+      // some of it and scrolls sideways, and on a phone a tap on it shows the
+      // whole of it (EdgeFade.swift).
       fadeOverflow("& .table-table td > div:not(.table-resizer)", "& .table-table td > span")
       // A column that fits its heading: its values ask for no width of their
       // own (a table laid out by its content sizes the column by the heading

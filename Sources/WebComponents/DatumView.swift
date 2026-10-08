@@ -16,8 +16,9 @@ import WebTypes
 /// announcing a read-only input. The label is not a `<label>`, since there
 /// is no control for it to label.
 ///
-/// A long value without spaces, an id, breaks anywhere rather than
-/// widening the page.
+/// One line, like the input it looks like: a long value (an id, a byline)
+/// never widens the page. It fades at each edge that hides some of it and
+/// scrolls sideways, and on touch a tap wraps it whole (`fadeOverflow`).
 ///
 /// Built on the server and in the client alike (a live trace card's detail
 /// shows its size as one).
@@ -49,8 +50,12 @@ public struct DatumView: HTMLContent {
         labelMarks
       }
       .class("datum-label")
-      div { value }
-        .class("datum-value")
+      div {
+        div { value }
+          .class("datum-text")
+          .data("edge-fade", "expand")
+      }
+      .class("datum-value")
     }
     .class(stringIsEmpty(`class`) ? "datum-view" : "datum-view \(`class`)")
     .style {
@@ -75,17 +80,9 @@ public struct DatumView: HTMLContent {
       }
       // A read-only field's box, to the pixel: the control height, its
       // padding, border, corner and ground.
-      // One line, like the input it looks like: a long id or byline scrolls
-      // sideways under a swipe rather than wrapping or ellipsing, with no
-      // scrollbar drawn inside the box.
       descendant(".datum-value") {
         display(.flex)
-        flexWrap(.nowrap)
         alignItems(.center)
-        whiteSpace(.nowrap)
-        overflowX(.auto)
-        overflowY(.hidden)
-        scrollbarWidth(.none)
         minHeight(minSizeInteractiveTouch)
         paddingBlock(spacing8)
         paddingInline(px(15))
@@ -97,8 +94,19 @@ public struct DatumView: HTMLContent {
         border(borderWidthBase, .solid, borderColorBase)
         borderRadius(borderRadiusBase)
         minWidth(0)
-        pseudoElement(.webkitScrollbar) { display(.none).important() }
       }
+      // The value's one line, inside the box so that the fades take its
+      // letters and not the box's border or ground: past the box it fades
+      // and scrolls sideways, and a tap on touch wraps it (EdgeFade.swift).
+      // A row, as the box was, so a value of several parts sits in one line.
+      descendant(".datum-text") {
+        display(.flex)
+        flexWrap(.nowrap)
+        alignItems(.center)
+        flex(1)
+        minWidth(0)
+      }
+      fadeOverflow("& .datum-text")
     }
     .build()
   }
