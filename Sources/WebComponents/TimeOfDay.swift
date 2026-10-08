@@ -31,6 +31,26 @@ public struct TimeOfDay: Sendable {
   /// Minutes since midnight.
   public var minutes: Int { hour * 60 + minute }
 
+  /// The time `minutes` past midnight, wrapped into the day: a time moved
+  /// into another zone may cross midnight either way.
+  public init(minutes: Int) {
+    let wrapped = ((minutes % 1_440) + 1_440) % 1_440
+    self.init(hour: wrapped / 60, minute: wrapped % 60)
+  }
+
+  /// The hour on a 12-hour clock, 1 to 12.
+  public var hour12: Int { hour % 12 == 0 ? 12 : hour % 12 }
+
+  public var isPM: Bool { hour >= 12 }
+
+  /// "9:05 AM", as the tables' "at" columns read.
+  public var text12: String { "\(hour12):\(Self.twoDigits(minute)) \(isPM ? "PM" : "AM")" }
+
+  /// From a 12-hour clock: 12 AM is midnight, 12 PM noon.
+  public init(hour12: Int, minute: Int, pm: Bool) {
+    self.init(hour: hour12 % 12 + (pm ? 12 : 0), minute: minute)
+  }
+
   /// `7` → `07`.
   public static func twoDigits(_ value: Int) -> String {
     let clamped = value < 0 ? 0 : value % 100
@@ -38,10 +58,14 @@ public struct TimeOfDay: Sendable {
   }
 }
 
-/// A span of the day as one URL value carries it: `09:00..17:30`, either end
-/// open (`09:00..`, `..17:30`). Both ends are whole minutes, the end's
-/// included; an end before its start runs across midnight (`22:00..06:00`).
+/// A span of the day as one URL value carries it: two UTC times of day,
+/// `03:30Z..12:00Z` (9:00 AM–5:30 PM in India), either end open
+/// (`03:30Z..`, `..12:00Z`). Both ends are whole minutes, the end's
+/// included; an end before its start runs across midnight (`22:00Z..06:00Z`),
+/// which a span moved into UTC often does. The reader picks and reads it in
+/// their own clock (`local`, `fromLocal`, by ViewerZone's offset).
 public struct TimeRangeValue: Sendable {
+  /// UTC.
   public let start: TimeOfDay?
   public let end: TimeOfDay?
 
@@ -50,8 +74,8 @@ public struct TimeRangeValue: Sendable {
     self.end = end
   }
 
-  /// Reads `start..end`; nil for anything else, or for a span open at both
-  /// ends.
+  /// Reads `start..end`, each `HH:MMZ`; nil for anything else, or for a
+  /// span open at both ends.
   public static func parse(_ string: String) -> TimeRangeValue? {
     let trimmed = stringTrim(string)
     guard let dots = stringIndexOf(trimmed, "..") else { return nil }
@@ -60,32 +84,55 @@ public struct TimeRangeValue: Sendable {
     var start: TimeOfDay?
     var end: TimeOfDay?
     if !stringIsEmpty(lower) {
-      guard let time = TimeOfDay.parse(lower) else { return nil }
+      guard let time = utc(lower) else { return nil }
       start = time
     }
     if !stringIsEmpty(upper) {
-      guard let time = TimeOfDay.parse(upper) else { return nil }
+      guard let time = utc(upper) else { return nil }
       end = time
     }
     if case .none = start, case .none = end { return nil }
     return TimeRangeValue(start: start, end: end)
   }
 
-  /// As a URL carries it.
-  public var param: String { "\(start?.text ?? "")..\(end?.text ?? "")" }
+  /// `HH:MMZ`.
+  static func utc(_ string: String) -> TimeOfDay? {
+    let bytes = Array(string.utf8)
+    guard bytes.count == 6, bytes[5] == 90 else { return nil }
+    return TimeOfDay.parse(stringSubstring(string, from: 0, to: 5))
+  }
 
-  /// "09:00–17:30", "Since 09:00", "Until 17:30"—a closed en dash, as a
-  /// range of days is written (CalendarDate.rangeText)—the zone after it
-  /// when one is named: "09:00–17:30 UTC".
-  public func label(zone: String = "") -> String {
-    let suffix = stringIsEmpty(zone) ? "" : " \(zone)"
-    if let start, let end { return "\(start.text)–\(end.text)\(suffix)" }
-    if let start { return "Since \(start.text)\(suffix)" }
-    if let end { return "Until \(end.text)\(suffix)" }
+  /// As a URL carries it: `03:30Z..12:00Z`.
+  public var param: String {
+    "\(start.map { "\($0.text)Z" } ?? "")..\(end.map { "\($0.text)Z" } ?? "")"
+  }
+
+  /// The span in the reader's clock.
+  public var local: (start: TimeOfDay?, end: TimeOfDay?) {
+    let offset = ViewerZone.offsetMinutes()
+    return (start.map { TimeOfDay(minutes: $0.minutes + offset) }, end.map { TimeOfDay(minutes: $0.minutes + offset) })
+  }
+
+  /// A span picked in the reader's clock, carried in UTC.
+  public static func fromLocal(start: TimeOfDay?, end: TimeOfDay?) -> TimeRangeValue {
+    let offset = ViewerZone.offsetMinutes()
+    return TimeRangeValue(
+      start: start.map { TimeOfDay(minutes: $0.minutes - offset) },
+      end: end.map { TimeOfDay(minutes: $0.minutes - offset) })
+  }
+
+  /// "9:00 AM–5:30 PM", "Since 9:00 AM", "Until 5:30 PM": the reader's
+  /// clock, a closed en dash, as a range of days is written
+  /// (CalendarDate.rangeText).
+  public var label: String {
+    let (first, last) = local
+    if let first, let last { return "\(first.text12)–\(last.text12)" }
+    if let first { return "Since \(first.text12)" }
+    if let last { return "Until \(last.text12)" }
     return ""
   }
 
-  /// Whether a minute of the day falls in the span.
+  /// Whether a UTC minute of the day falls in the span.
   public func contains(minutes: Int) -> Bool {
     switch (start, end) {
     case (.some(let first), .some(let last)):

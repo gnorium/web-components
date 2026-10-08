@@ -10,15 +10,17 @@ import WebTypes
 // client (the filter bar adds fields there). build() stays embedded-safe:
 // stringIsEmpty/stringEquals, `if let` rather than `== nil` on a String?.
 
-/// A field that holds a time of day, hours and minutes on a 24-hour clock,
-/// picked from two scrolling columns—hours, minutes—in the date picker's
-/// popover, field and footer (DatePickerView), so the two read as one family.
+/// A field that holds a time of day on a 12-hour clock, as the tables' "at"
+/// columns read ("5:40 PM"), picked from three scrolling columns—hour 1–12,
+/// minutes, AM/PM—in the date picker's popover, field and footer
+/// (DatePickerView), so the two read as one family.
 ///
-/// The field shows the time ("09:30"); a hidden input carries it as `HH:MM`
-/// under `name`. A range input (`range: true`) holds a span of the day
-/// instead (`TimeRangeValue`, `09:00..17:30`): Time start and Time end—as
-/// a year range's are Year start and Year end (FormDateView)—each its hours
-/// and minutes, side by side in one popover, as a date range is one popover.
+/// The field shows the time ("9:30 AM"); a hidden input carries it as `HH:MM`
+/// (24-hour) under `name`. A range input (`range: true`) holds a span of the
+/// day instead, in the reader's clock and carried in UTC (`TimeRangeValue`,
+/// `03:30Z..12:00Z`, read "9:00 AM–5:30 PM" in India): Time start and Time
+/// end—as a year range's are Year start and Year end (FormDateView)—each its
+/// columns, side by side in one popover, as a date range is one popover.
 /// Either end may stay open. The field is read-only and asks for no
 /// keyboard: a tap opens the columns, and a tap on an hour or a minute sets
 /// it. With the keyboard, Enter, Space or ↓ opens them; ↑ and ↓ move through
@@ -27,13 +29,10 @@ import WebTypes
 public struct TimeInputView: HTMLContent {
   let id: String
   let name: String
-  /// `HH:MM`, or for a range `HH:MM..HH:MM`; empty for none.
+  /// `HH:MM`, or for a range `HH:MMZ..HH:MMZ`; empty for none.
   let value: String
   let placeholder: String
   let range: Bool
-  /// The zone the times are in, named after them in the field ("UTC");
-  /// empty names none.
-  let zone: String
   let labelText: String
   let fullWidth: Bool
   let disabled: Bool
@@ -47,7 +46,6 @@ public struct TimeInputView: HTMLContent {
     value: String = "",
     placeholder: String = "Select a time",
     range: Bool = false,
-    zone: String = "",
     label: String = "",
     fullWidth: Bool = true,
     disabled: Bool = false,
@@ -59,7 +57,6 @@ public struct TimeInputView: HTMLContent {
     self.value = value
     self.placeholder = placeholder
     self.range = range
-    self.zone = zone
     self.labelText = label
     self.fullWidth = fullWidth
     self.disabled = disabled
@@ -67,30 +64,35 @@ public struct TimeInputView: HTMLContent {
     self.form = form
   }
 
-  /// The value in force: one time, or a span.
+  /// The value in force, in the reader's clock: one time, or a span.
   static func parts(_ value: String, range: Bool) -> (start: TimeOfDay?, end: TimeOfDay?) {
     if range {
       guard let span = TimeRangeValue.parse(value) else { return (nil, nil) }
-      return (span.start, span.end)
+      return span.local
     }
     return (TimeOfDay.parse(value), nil)
   }
 
-  /// What the field shows for a value.
-  static func fieldText(start: TimeOfDay?, end: TimeOfDay?, range: Bool, zone: String) -> String {
-    if range { return TimeRangeValue(start: start, end: end).label(zone: zone) }
-    guard let start else { return "" }
-    return stringIsEmpty(zone) ? start.text : "\(start.text) \(zone)"
+  /// The value a form submits for times in the reader's clock: a span in
+  /// UTC, a single time as it is.
+  static func param(start: TimeOfDay?, end: TimeOfDay?, range: Bool) -> String {
+    guard range else { return start?.text ?? "" }
+    if case .none = start, case .none = end { return "" }
+    return TimeRangeValue.fromLocal(start: start, end: end).param
+  }
+
+  /// What the field shows: "9:00 AM–5:30 PM", "Since 9:00 AM", "9:30 AM".
+  static func fieldText(start: TimeOfDay?, end: TimeOfDay?, range: Bool) -> String {
+    guard range else { return start?.text12 ?? "" }
+    if let start, let end { return "\(start.text12)–\(end.text12)" }
+    if let start { return "Since \(start.text12)" }
+    if let end { return "Until \(end.text12)" }
+    return ""
   }
 
   public func build() -> DOM.Node {
     let (start, end) = Self.parts(value, range: range)
-    let param: String
-    if range {
-      if case .none = start, case .none = end { param = "" } else { param = TimeRangeValue(start: start, end: end).param }
-    } else {
-      param = start?.text ?? ""
-    }
+    let param = Self.param(start: start, end: end, range: range)
     let rootClass = stringIsEmpty(`class`)
       ? "time-input-view\(fullWidth ? " time-input-full-width" : "")"
       : "time-input-view\(fullWidth ? " time-input-full-width" : "") \(`class`)"
@@ -111,7 +113,7 @@ public struct TimeInputView: HTMLContent {
         id: id,
         name: "",
         placeholder: placeholder,
-        value: Self.fieldText(start: start, end: end, range: range, zone: zone),
+        value: Self.fieldText(start: start, end: end, range: range),
         disabled: disabled,
         readonly: true,
         label: labelText,
@@ -171,7 +173,6 @@ public struct TimeInputView: HTMLContent {
     }
     .class(rootClass)
     .data("range", range)
-    .data("zone", zone)
     .data("open", false)
     .style {
       selector("&") {
@@ -221,13 +222,13 @@ public struct TimeInputView: HTMLContent {
 
       // As wide as the field, like the date picker's calendar; border only.
       descendant(".time-input-popover") {
-        minWidth(calc("min(\(minSizeInteractiveTouch.value) * 4 + \(spacing8.value) * 3 + \(borderWidthBase.value) * 2, 100vw - \(spacing16.value) * 2)")).important()
+        minWidth(calc("min(\(minSizeInteractiveTouch.value) * 5 + \(spacing8.value) * 3 + \(borderWidthBase.value) * 2, 100vw - \(spacing16.value) * 2)")).important()
         maxWidth(.none).important()
         boxShadow(.none).important()
         boxSizing(.borderBox)
       }
       selector("&[data-range='true'] .time-input-popover") {
-        minWidth(calc("min(\(minSizeInteractiveTouch.value) * 8 + \(spacing8.value) * 6 + \(spacing16.value) + \(borderWidthBase.value) * 2, 100vw - \(spacing16.value) * 2)")).important()
+        minWidth(calc("min(\(minSizeInteractiveTouch.value) * 10 + \(spacing8.value) * 6 + \(spacing16.value) + \(borderWidthBase.value) * 2, 100vw - \(spacing16.value) * 2)")).important()
       }
       descendant(".time-input-popover[data-placement^='bottom']") {
         top(calc("100% + \(spacing4.value)"))
@@ -276,7 +277,6 @@ public struct TimeInputView: HTMLContent {
     private let resetButton: DOM.Element?
     private let doneButton: DOM.Element?
     private let isRange: Bool
-    private let zone: String
     private var start: TimeOfDay?
     private var end: TimeOfDay?
     private var isOpen = false
@@ -290,10 +290,12 @@ public struct TimeInputView: HTMLContent {
       resetButton = root.querySelector(".time-input-reset")
       doneButton = root.querySelector(".time-input-done")
       isRange = stringEquals(root.getAttribute(data("range")) ?? "", "true")
-      zone = root.getAttribute(data("zone")) ?? ""
       let parts = TimeInputView.parts(valueInput?.value ?? "", range: isRange)
       start = parts.start
       end = parts.end
+      // The server drew the times in the zone the request named; the
+      // browser's is the reader's own, so they are shown again in it.
+      field?.value = TimeInputView.fieldText(start: start, end: end, range: isRange)
 
       root.setAttribute(data("hydrated"), true)
       if let field {
@@ -431,10 +433,12 @@ public struct TimeInputView: HTMLContent {
       else { return }
       let isEnd = stringEquals(part, "end")
       let current = isEnd ? end : start
-      let isHour = stringEquals(unit, "hour")
-      let time = TimeOfDay(
-        hour: isHour ? value : current?.hour ?? 0,
-        minute: isHour ? current?.minute ?? 0 : value)
+      // A part first given its hour starts at :00 AM; first given its
+      // minutes or its half of the day, at 12.
+      let hour12 = stringEquals(unit, "hour") ? value : current?.hour12 ?? 12
+      let minute = stringEquals(unit, "minute") ? value : current?.minute ?? 0
+      let pm = stringEquals(unit, "period") ? value == 1 : current?.isPM ?? false
+      let time = TimeOfDay(hour12: hour12, minute: minute, pm: pm)
       if isEnd { end = time } else { start = time }
       commit()
       markAll()
@@ -444,16 +448,8 @@ public struct TimeInputView: HTMLContent {
 
     /// The value and the field, from the times in force.
     private func commit() {
-      if isRange {
-        if case .none = start, case .none = end {
-          valueInput?.value = ""
-        } else {
-          valueInput?.value = TimeRangeValue(start: start, end: end).param
-        }
-      } else {
-        valueInput?.value = start?.text ?? ""
-      }
-      field?.value = TimeInputView.fieldText(start: start, end: end, range: isRange, zone: zone)
+      valueInput?.value = TimeInputView.param(start: start, end: end, range: isRange)
+      field?.value = TimeInputView.fieldText(start: start, end: end, range: isRange)
       valueInput?.dispatchEvent(.input)
       valueInput?.dispatchEvent(.change)
     }
@@ -465,11 +461,18 @@ public struct TimeInputView: HTMLContent {
           let part = column.closest(".time-input-part-view")?.getAttribute(data("part"))
         else { continue }
         let time = stringEquals(part, "end") ? end : start
-        let selected: Int? = time.map { stringEquals(unit, "hour") ? $0.hour : $0.minute }
-        let focus = selected ?? 0
-        for (index, option) in column.querySelectorAll(".time-input-option").enumerated() {
-          let isSelected = selected.map { $0 == index } ?? false
+        let selected: Int? = time.map { time in
+          stringEquals(unit, "hour") ? time.hour12 : stringEquals(unit, "minute") ? time.minute : time.isPM ? 1 : 0
+        }
+        let options = column.querySelectorAll(".time-input-option")
+        var focus = 0
+        for (index, option) in options.enumerated() {
+          let value = parseInt(option.getAttribute(data("value")) ?? "")
+          let isSelected = selected.map { selected in value.map { $0 == selected } ?? false } ?? false
+          if isSelected { focus = index }
           option.setAttribute("aria-selected", isSelected ? "true" : "false")
+        }
+        for (index, option) in options.enumerated() {
           option.setAttribute("tabindex", index == focus ? "0" : "-1")
         }
       }
@@ -581,7 +584,6 @@ public struct TimeInputView: HTMLContent {
       value: String = "",
       placeholder: String = "Select a time",
       range: Bool = false,
-      zone: String = "",
       fullWidth: Bool = true,
       class: String = "",
       hydrator: TimeInputHydration? = nil
@@ -593,7 +595,6 @@ public struct TimeInputView: HTMLContent {
         value: value,
         placeholder: placeholder,
         range: range,
-        zone: zone,
         fullWidth: fullWidth,
         class: `class`
       )

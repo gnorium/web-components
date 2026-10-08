@@ -47,20 +47,32 @@
       }
     }
 
+    /// What of the moment a stamp shows: the day and time ("Jun 15, 2026
+    /// at 9:10 AM"), the day alone ("Jun 15, 2026"), as a table's "on"
+    /// column, or the time alone ("9:10 AM"), as its "at" column.
+    public enum Format: String, Sendable {
+      case dateTime = "date-time"
+      case date
+      case time
+    }
+
     let date: Date
     let size: Size
     let tone: Tone
+    let format: Format
     let fallbackSuffix: String
 
     public init(
       date: Date,
       size: Size = .xSmall12,
       tone: Tone = .base,
+      format: Format = .dateTime,
       fallbackSuffix: String = "UTC"
     ) {
       self.date = date
       self.size = size
       self.tone = tone
+      self.format = format
       self.fallbackSuffix = fallbackSuffix
     }
 
@@ -72,8 +84,18 @@
       displayFormatter.timeZone = TimeZone(identifier: "UTC")
       displayFormatter.dateFormat = "MMM d, yyyy 'at' h:mm a"
 
-      return time { displayFormatter.string(from: date) + " " + fallbackSuffix }
+      // A day or a time alone is drawn in the zone the request named
+      // (ViewerZone), which the client keeps or corrects; it names no zone.
+      let partFormatter = DateFormatter()
+      partFormatter.locale = Locale(identifier: "en_US_POSIX")
+      partFormatter.timeZone = TimeZone(identifier: ViewerZone.identifier) ?? TimeZone(identifier: "UTC")
+      partFormatter.dateFormat = format == .date ? "MMM d, yyyy" : "h:mm a"
+      let text = format == .dateTime
+        ? displayFormatter.string(from: date) + " " + fallbackSuffix : partFormatter.string(from: date)
+
+      return time { text }
         .datetime(isoFormatter.string(from: date))
+        .data("format", format.rawValue)
         .class("local-time-view local-time-\(size.rawValue) local-time-\(tone.rawValue)")
         .style {
           // Every variant, every time. The set is small and closed, so the
@@ -123,6 +145,18 @@
       let elements = document.querySelectorAll("time.local-time-view")
       for element in elements {
         guard let iso = element.getAttribute("datetime") else { continue }
+        // A table's "on" or "at" cell: the day or the time alone, in the
+        // reader's clock.
+        if let format = element.getAttribute(data("format")), !stringEquals(format, "date-time") {
+          guard let minutes = DateRangeValue.parseInstant(stringSubstring(iso, from: 0, to: 16) + "Z") else { continue }
+          let moment = JSDate(time: Double(minutes) * 60_000)
+          let text = stringEquals(format, "date")
+            ? CalendarDate(year: moment.fullYear, month: moment.month + 1, day: moment.date).display
+            : TimeOfDay(hour: moment.hours, minute: moment.minutes).text12
+          element.textContent = text
+          element.closest("td")?.setAttribute("title", text)
+          continue
+        }
         guard let localString = formatLocalDate(iso) else { continue }
         element.textContent = localString
         element.setAttribute("title", localString)

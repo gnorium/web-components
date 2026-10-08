@@ -9,8 +9,8 @@ import WebTypes
 // Built on both sides, inside TimeInputView: embedded-safe.
 
 /// One time in a time input's popover: its label (Time start, Time end),
-/// with its tooltip as a form's labels have, over its hours and minutes,
-/// each a listbox column that scrolls.
+/// with its tooltip as a form's labels have, over its hour (1–12), minutes
+/// and AM/PM, each a listbox column that scrolls.
 public struct TimeInputPartView: HTMLContent {
   /// "start" or "end".
   let part: String
@@ -35,11 +35,18 @@ public struct TimeInputPartView: HTMLContent {
         LabelView(labelFontSize: fontSizeSmall14, tooltip: tooltip, class: "time-input-part-caption") { caption }
       }
       div {
-        column(unit: "hour", label: "\(prefix)hours", count: 24, selected: time?.hour)
+        column(
+          unit: "hour", label: "\(prefix)hour", values: Array(1...12), selected: time?.hour12,
+          text: { "\($0)" })
         span { ":" }
           .class("time-input-separator")
           .ariaHidden(true)
-        column(unit: "minute", label: "\(prefix)minutes", count: 60, selected: time?.minute)
+        column(
+          unit: "minute", label: "\(prefix)minutes", values: Array(0..<60), selected: time?.minute,
+          text: { TimeOfDay.twoDigits($0) })
+        column(
+          unit: "period", label: "\(prefix)AM or PM", values: [0, 1], selected: time.map { $0.isPM ? 1 : 0 },
+          text: { $0 == 1 ? "PM" : "AM" })
       }
       .class("time-input-columns")
     }
@@ -104,15 +111,17 @@ public struct TimeInputPartView: HTMLContent {
     }
   }
 
-  /// A column of hours or minutes: one option takes Tab, the selected one
-  /// or else the first (roving tabindex).
+  /// A column of hours, minutes or AM/PM: one option takes Tab, the
+  /// selected one or else the first (roving tabindex).
   @HTMLBuilder
-  private func column(unit: String, label: String, count: Int, selected: Int?) -> [DOM.Node] {
-    let focus = selected ?? 0
+  private func column(
+    unit: String, label: String, values: [Int], selected: Int?, text: (Int) -> String
+  ) -> [DOM.Node] {
+    let focus = selected ?? values[0]
     ul {
-      for value in 0..<count {
+      for value in values {
         let isSelected = selected.map { $0 == value } ?? false
-        li { TimeOfDay.twoDigits(value) }
+        li { text(value) }
           .class("time-input-option")
           .role(.option)
           .tabindex(value == focus ? 0 : -1)

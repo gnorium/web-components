@@ -193,28 +193,8 @@ public struct CalendarDate: Sendable {
   // MARK: - Today
 
   /// Today where the reader is: the browser's zone on the client, the
-  /// server's on the server (a page's first render, which the client redraws).
+  /// request's on the server (ViewerZone).
   public static func today() -> CalendarDate {
-    #if CLIENT
-      let now = JSDate()
-      return CalendarDate(year: now.fullYear, month: now.month + 1, day: now.date)
-    #else
-      let parts = Calendar(identifier: .gregorian).dateComponents([.year, .month, .day], from: Date())
-      return CalendarDate(year: parts.year ?? 1970, month: parts.month ?? 1, day: parts.day ?? 1)
-    #endif
-  }
-
-  /// Today in UTC, on either side: the day a range of UTC days (DateRangeValue)
-  /// counts from, so the client's calendar and the server's filter agree on
-  /// which day "today" is wherever the reader is.
-  public static func utcToday() -> CalendarDate {
-    #if CLIENT
-      let milliseconds = JSDate.now()
-    #else
-      let milliseconds = Date().timeIntervalSince1970 * 1000
-    #endif
-    let days = milliseconds / 86_400_000
-    let whole = Int(days)
-    return CalendarDate(dayNumber: Double(whole) > days ? whole - 1 : whole)
+    ViewerZone.today()
   }
 }

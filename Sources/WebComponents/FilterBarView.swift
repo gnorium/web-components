@@ -9,7 +9,7 @@
   // MARK: - Schema
   /// Declares the available filterable fields for a page.
   ///
-  /// A `repeatable` select may fill several rows. Each row submits its own
+  /// A `repeatable` select or text may fill several rows. Each row submits its own
   /// `name=value`, so the query repeats the parameter; a page reads repeated
   /// values of one field as alternatives (OR) and different fields as
   /// conditions that all hold (AND).
@@ -20,7 +20,9 @@
   /// A range is one parameter holding both its ends (`2026-10-01..2026-10-08`,
   /// `-7d..`, `09:00..17:00`), so it never repeats.
   public enum FilterField: Sendable {
-    case text(name: String, label: String, placeholder: String)
+    /// Typed text; `repeatable` lets it fill several rows, alternatives
+    /// (two IDs list both objects).
+    case text(name: String, label: String, placeholder: String, repeatable: Bool = false)
     case select(
       name: String, label: String, options: [(value: String, label: String)],
       repeatable: Bool = false)
@@ -30,17 +32,17 @@
     /// range: presets beside a calendar.
     case dateRange(name: String, label: String)
     /// A span of the day (`TimeRangeValue`), picked with a time input's
-    /// range; `zone` names the zone its times are in ("UTC").
-    case timeRange(name: String, label: String, zone: String)
+    /// range, in the reader's clock, carried in UTC.
+    case timeRange(name: String, label: String)
 
     /// The parameter the field submits.
     public var name: String {
       switch self {
-      case .text(let name, _, _): return name
+      case .text(let name, _, _, _): return name
       case .select(let name, _, _, _): return name
       case .date(let name, _): return name
       case .dateRange(let name, _): return name
-      case .timeRange(let name, _, _): return name
+      case .timeRange(let name, _): return name
       }
     }
 
@@ -56,17 +58,18 @@
 
     public var label: String {
       switch self {
-      case .text(_, let label, _): return label
+      case .text(_, let label, _, _): return label
       case .select(_, let label, _, _): return label
       case .date(_, let label): return label
       case .dateRange(_, let label): return label
-      case .timeRange(_, let label, _): return label
+      case .timeRange(_, let label): return label
       }
     }
 
     public var repeatable: Bool {
       switch self {
-      case .text, .date, .dateRange, .timeRange: return false
+      case .date, .dateRange, .timeRange: return false
+      case .text(_, _, _, let repeatable): return repeatable
       case .select(_, _, _, let repeatable): return repeatable
       }
     }
@@ -288,7 +291,7 @@
     @HTMLBuilder
     private func valueInput(field: FilterField, value: String, rowIndex: Int) -> some HTMLContent {
       switch field {
-      case .text(let name, _, let placeholder):
+      case .text(let name, _, let placeholder, _):
         TextInputView(
           id: "filter-\(name)-\(rowIndex)",
           name: name,
@@ -332,14 +335,13 @@
           range: true
         )
 
-      case .timeRange(let name, let label, let zone):
+      case .timeRange(let name, let label):
         TimeInputView(
           id: "filter-\(name)-\(rowIndex)",
           name: name,
           value: value,
           placeholder: label,
           range: true,
-          zone: zone,
           fullWidth: true,
           class: "filter-bar-value-input"
         )
@@ -350,9 +352,9 @@
       var parts: [String] = []
       for field in schema {
         switch field {
-        case .text(let name, let label, let placeholder):
+        case .text(let name, let label, let placeholder, let repeatable):
           parts.append(
-            "{\"key\":\"\(field.key)\",\"name\":\"\(name)\",\"label\":\"\(label)\",\"type\":\"text\",\"placeholder\":\"\(placeholder)\"}"
+            "{\"key\":\"\(field.key)\",\"name\":\"\(name)\",\"label\":\"\(label)\",\"type\":\"text\",\"repeatable\":\"\(repeatable)\",\"placeholder\":\"\(placeholder)\"}"
           )
         case .select(let name, let label, let options, let repeatable):
           let opts = options.map { "{\"\($0.value)\":\"\($0.label)\"}" }.joined(separator: ",")
@@ -367,9 +369,9 @@
           parts.append(
             "{\"key\":\"\(field.key)\",\"name\":\"\(name)\",\"label\":\"\(label)\",\"type\":\"daterange\"}"
           )
-        case .timeRange(let name, let label, let zone):
+        case .timeRange(let name, let label):
           parts.append(
-            "{\"key\":\"\(field.key)\",\"name\":\"\(name)\",\"label\":\"\(label)\",\"type\":\"timerange\",\"zone\":\"\(zone)\"}"
+            "{\"key\":\"\(field.key)\",\"name\":\"\(name)\",\"label\":\"\(label)\",\"type\":\"timerange\"}"
           )
         }
       }
@@ -424,8 +426,6 @@
     let isDate: Bool
     let isDateRange: Bool
     let isTimeRange: Bool
-    /// A time range's zone ("UTC").
-    let zone: String
     let placeholder: String
     let repeatable: Bool
   }
@@ -468,12 +468,11 @@
         let isDate = stringEquals(typeStr, "date")
         let isDateRange = stringEquals(typeStr, "daterange")
         let isTimeRange = stringEquals(typeStr, "timerange")
-        let zone = extractJSONString(obj, key: "zone") ?? ""
         let repeatable = extractJSONString(obj, key: "repeatable").map { stringEquals($0, "true") } ?? false
         schema.append(
           SchemaEntry(
             key: key, name: name, label: label, isText: isText, isDate: isDate, isDateRange: isDateRange,
-            isTimeRange: isTimeRange, zone: zone, placeholder: placeholder, repeatable: repeatable))
+            isTimeRange: isTimeRange, placeholder: placeholder, repeatable: repeatable))
       }
     }
 
@@ -554,7 +553,6 @@
           value: value,
           placeholder: entry.label,
           range: true,
-          zone: entry.zone,
           fullWidth: true,
           class: "filter-bar-value-input",
           hydrator: timeInputHydration
@@ -667,7 +665,6 @@
           name: field.name,
           placeholder: field.label,
           range: true,
-          zone: field.zone,
           fullWidth: true,
           class: "filter-bar-value-input",
           hydrator: timeInputHydration

@@ -19,13 +19,14 @@ import WebTypes
 /// it as `yyyy-mm-dd` under `name`, which is what the form submits. The field
 /// is read-only and asks for no keyboard: tapping it opens the calendar.
 ///
-/// A range picker (`range: true`) holds a range of UTC days instead
+/// A range picker (`range: true`) holds a range of the reader's days instead
 /// (`DateRangeValue`): presets on the left—Today, Last 7, 30 and 90 days—
 /// and the calendar on the right, as Google Analytics, Stripe, Grafana and
 /// Datadog lay theirs out. A preset selects its days in the calendar and
 /// stays relative in the value (`-7d..`); two days picked in the calendar
-/// make a fixed range (`2026-10-01..2026-10-08`), the first alone an open
-/// one (`2026-10-01..`). The field shows it in words ("Oct 1 – Oct 8, 2026",
+/// make a fixed range—the UTC instants that bound those local days
+/// (`2026-09-30T18:30Z..2026-10-08T18:30Z`, Oct 1–8 in India)—the first alone
+/// an open one. The field shows it in words ("Oct 1 – Oct 8, 2026",
 /// "Last 7 days"). On a phone the presets sit above the calendar.
 public struct DatePickerView: HTMLContent {
   let id: String
@@ -96,9 +97,10 @@ public struct DatePickerView: HTMLContent {
     let rangeValue = range ? DateRangeValue.parse(value) : nil
     let minDate = min.flatMap { CalendarDate.parse($0) }
     let maxDate = max.flatMap { CalendarDate.parse($0) }
-    // A range counts its days in UTC, as the server filters them.
-    let today = range ? CalendarDate.utcToday() : CalendarDate.today()
-    let rangeDays = rangeValue.map { $0.days(today: today) }
+    // The reader's days, both kinds (ViewerZone): a range's instants are
+    // drawn as the days they bound.
+    let today = CalendarDate.today()
+    let rangeDays = rangeValue.map { $0.days() }
     let rangeStart = rangeDays.flatMap { $0.start }
     let rangeEnd = rangeDays.flatMap { $0.end }
     let focused = (selected ?? rangeEnd ?? rangeStart ?? today).clamped(min: minDate, max: maxDate)
@@ -480,7 +482,7 @@ public struct DatePickerView: HTMLContent {
       minDate = CalendarDate.parse(root.getAttribute(data("min")) ?? "")
       maxDate = CalendarDate.parse(root.getAttribute(data("max")) ?? "")
       monthLabelID = monthTitle.map { $0.getAttribute("id") ?? "" } ?? ""
-      let start = isRange ? CalendarDate.utcToday() : CalendarDate.today()
+      let start = CalendarDate.today()
       shown = start
       focused = start
 
@@ -495,6 +497,12 @@ public struct DatePickerView: HTMLContent {
       // The field is the keyboard's way in; the button is a target for the
       // pointer, so it takes no Tab stop of its own.
       toggle?.setAttribute("tabindex", "-1")
+
+      // The server drew the range in the zone the request named; the
+      // browser's is the reader's own, so the words are said again in it.
+      if isRange, let range = currentRange() {
+        field?.value = range.label
+      }
 
       bindEvents()
     }
@@ -551,7 +559,7 @@ public struct DatePickerView: HTMLContent {
             return
           }
           self.setRange(range)
-          let days = range.days(today: self.today())
+          let days = range.days()
           if let day = days.end ?? days.start {
             self.focused = day.clamped(min: self.minDate, max: self.maxDate)
             self.shown = self.focused
@@ -658,16 +666,15 @@ public struct DatePickerView: HTMLContent {
       isRange ? DateRangeValue.parse(valueInput?.value ?? "") : nil
     }
 
-    /// Today as this picker counts days: UTC for a range, as the server
-    /// filters one; the reader's own day for a single date.
+    /// Today, the reader's.
     private func today() -> CalendarDate {
-      isRange ? CalendarDate.utcToday() : CalendarDate.today()
+      CalendarDate.today()
     }
 
     private func open(fromKeyboard: Bool) {
       guard let popover else { return }
       if let _ = field?.getAttribute("disabled") { return }
-      let days = currentRange().map { $0.days(today: today()) }
+      let days = currentRange().map { $0.days() }
       let start = (currentValue() ?? days?.end ?? days?.start ?? today()).clamped(min: minDate, max: maxDate)
       focused = start
       shown = start
@@ -698,8 +705,8 @@ public struct DatePickerView: HTMLContent {
       if isRange {
         // The first day starts a range, open at its end; the second closes
         // it, whichever comes first. A third starts again.
-        if let current = currentRange(), !current.isRelative, case .day(let first)? = current.start,
-          case .none = current.end
+        if let current = currentRange(), !current.isRelative, case .instant? = current.start,
+          case .none = current.end, let first = current.days().start
         {
           setRange(DateRangeValue.fixed(first, date))
         } else {
@@ -769,7 +776,7 @@ public struct DatePickerView: HTMLContent {
     /// Draws the month on show, and bars paging past the bounds.
     private func render() {
       monthTitle?.textContent = shown.monthTitle
-      let days = currentRange().map { $0.days(today: today()) }
+      let days = currentRange().map { $0.days() }
       let view = DatePickerMonthView(
         month: shown,
         selected: currentValue(),
