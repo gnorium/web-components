@@ -733,6 +733,9 @@ public struct DatePickerView: HTMLContent {
 
     private func setRange(_ range: DateRangeValue?) {
       guard isRange else { return }
+      // Filtering by date: the server counts a relative range's days in
+      // the reader's zone from here on.
+      if let _ = range { ViewerZoneHydration.remember() }
       valueInput?.value = range.map { $0.param } ?? ""
       field?.value = range.map { $0.label } ?? ""
       valueInput?.dispatchEvent(.input)

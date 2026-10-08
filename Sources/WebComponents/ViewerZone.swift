@@ -100,42 +100,61 @@ public enum ViewerZone {
 }
 
 #if CLIENT
-  /// Tells the server the reader's zone: the `tz` cookie, the browser's IANA
-  /// zone, which the server reads to count a relative range's days ("Last 7
-  /// days") and to draw days and times in the reader's clock. Set when the
-  /// zone the page was drawn in (`<html data-time-zone>`) is not the
-  /// browser's; a page whose filters count relative days is then read
-  /// again, so its rows are the reader's days the first time too.
+  /// Tells the server the reader's zone—the `tz` cookie, the browser's IANA
+  /// zone—only when the reader filters by date or time: picks a preset, a
+  /// range or a span (`remember`), or opens a link carrying a relative range
+  /// or a span (`hydrateIfPresent`). A plain page view never sets it: the
+  /// tables draw local times on the client (LocalTimeView); only counting a
+  /// relative range's days needs the zone on the server.
   public enum ViewerZoneHydration {
     public static func hydrateIfPresent() {
-      guard let html = document.querySelector("html"),
-        let drawn = html.getAttribute(data("time-zone"))
-      else { return }
+      let query = window.location.search
+      let relative = countsRelativeRange(query)
+      guard relative || carriesTimeSpan(query) else { return }
+      guard remember() else { return }
+      // A relative range was counted on the server's clock: read once more,
+      // on the reader's (once a tab, so a server that cannot read the zone
+      // does not send the page back for ever).
       let zone = JSDate.resolvedTimeZone
-      guard !stringIsEmpty(zone), !stringEquals(zone, drawn) else { return }
-      document.setCookie(name: "tz", value: zone, maxAge: 31_536_000)
-      // Read again once a tab: a server that cannot read the zone would
-      // otherwise send the same page back for ever.
       let reloaded = sessionStorage.getItem("gnorium:tz-reloaded") ?? ""
-      if countsRelativeDays(window.location.search), !stringEquals(reloaded, zone) {
+      if relative, !stringEquals(reloaded, zone) {
         sessionStorage.setItem("gnorium:tz-reloaded", zone)
         window.location.reload()
       }
     }
 
-    /// Whether a query holds a range counting back days: `=-7d..`.
-    static func countsRelativeDays(_ query: String) -> Bool {
+    /// Sets the cookie when the zone the page was drawn in
+    /// (`<html data-time-zone>`) is not the browser's; whether it did.
+    @discardableResult
+    public static func remember() -> Bool {
+      let zone = JSDate.resolvedTimeZone
+      guard !stringIsEmpty(zone), let html = document.querySelector("html") else { return false }
+      let drawn = html.getAttribute(data("time-zone")) ?? ""
+      guard !stringEquals(zone, drawn) else { return false }
+      document.setCookie(name: "tz", value: zone, maxAge: 31_536_000)
+      html.setAttribute(data("time-zone"), zone)
+      return true
+    }
+
+    /// Whether a query holds a range counting back from now: `=-7d..`,
+    /// `=-1h..`.
+    static func countsRelativeRange(_ query: String) -> Bool {
       let bytes = Array(query.utf8)
       var index = 0
       while index + 2 < bytes.count {
         if bytes[index] == 61, bytes[index + 1] == 45 {  // "=-"
           var cursor = index + 2
           while cursor < bytes.count, bytes[cursor] >= 48, bytes[cursor] <= 57 { cursor += 1 }
-          if cursor > index + 2, cursor < bytes.count, bytes[cursor] == 100 { return true }  // "d"
+          if cursor > index + 2, cursor < bytes.count, bytes[cursor] == 100 || bytes[cursor] == 104 { return true }
         }
         index += 1
       }
       return false
+    }
+
+    /// Whether a query holds a span of the day, its zone in brackets.
+    static func carriesTimeSpan(_ query: String) -> Bool {
+      stringContains(query, "%5B") || stringContains(query, "[")
     }
   }
 #endif

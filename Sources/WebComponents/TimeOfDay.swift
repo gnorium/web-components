@@ -128,8 +128,7 @@ public struct TimeRangeValue: Sendable {
 
   /// The span on the reader's clock today: its own times when it was set in
   /// the reader's zone; else each end moved through today's moment in its
-  /// zone—a time of day has no single other-zone equivalent, so the words
-  /// name the zone it was set in too (`label`).
+  /// zone.
   public var local: (start: TimeOfDay?, end: TimeOfDay?) {
     if isReadersZone { return (start, end) }
     let today = ViewerZone.today()
@@ -140,18 +139,12 @@ public struct TimeRangeValue: Sendable {
     return (start.map(move), end.map(move))
   }
 
-  /// "9:00 AM–5:30 PM", "Since 9:00 AM", "Until 5:30 PM" on the reader's
-  /// clock, a closed en dash as a range of days is written; set in another
-  /// zone, that zone's own span follows, named by its city: "11:30 PM–8:00
-  /// AM (9:00 AM–5:30 PM Kolkata time)".
+  /// "9:00 AM–5:30 PM", "Since 9:00 AM", "Until 5:30 PM": the span on the
+  /// reader's clock, a closed en dash as a range of days is written. One set
+  /// in another zone is shown converted; the URL keeps its own zone.
   public var label: String {
     let (first, last) = local
-    let words = Self.words(first, last)
-    let own = Self.words(start, end)
-    // The same clock under another name (Asia/Calcutta, Asia/Kolkata) says
-    // nothing more.
-    if isReadersZone || stringEquals(words, own) { return words }
-    return "\(words) (\(own) \(Self.city(zone)) time)"
+    return Self.words(first, last)
   }
 
   static func words(_ first: TimeOfDay?, _ last: TimeOfDay?) -> String {
@@ -159,12 +152,6 @@ public struct TimeRangeValue: Sendable {
     if let first { return "Since \(first.text12)" }
     if let last { return "Until \(last.text12)" }
     return ""
-  }
-
-  /// "America/New_York" → "New York"; "UTC" stays.
-  static func city(_ zone: String) -> String {
-    let parts = stringSplit(zone, separator: "/")
-    return stringReplace(parts.last ?? zone, "_", " ")
   }
 
   /// Whether a wall-clock minute of the day (in `zone`) falls in the span.

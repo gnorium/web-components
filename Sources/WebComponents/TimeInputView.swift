@@ -19,8 +19,7 @@ import WebTypes
 /// (24-hour) under `name`. A range input (`range: true`) holds a span of the
 /// day instead, picked in the reader's clock and carried with the reader's
 /// IANA zone (`TimeRangeValue`, `09:00..17:30[Asia/Kolkata]`); one set in
-/// another zone reads in the reader's clock with its own span after it
-/// ("11:30 PM–8:00 AM (9:00 AM–5:30 PM Kolkata time)"): Time start and Time
+/// another zone reads converted to the reader's clock: Time start and Time
 /// end—as a year range's are Year start and Year end (FormDateView)—each its
 /// columns, side by side in one popover, as a date range is one popover.
 /// Either end may stay open. The field is read-only and asks for no
@@ -90,8 +89,8 @@ public struct TimeInputView: HTMLContent {
     return TimeRangeValue.words(start, end)
   }
 
-  /// What the field shows for a value as given: a span set in another zone
-  /// names that zone's own span too (TimeRangeValue.label).
+  /// What the field shows for a value as given, on the reader's clock
+  /// (TimeRangeValue.label).
   static func valueText(_ value: String, range: Bool) -> String {
     guard range else { return TimeOfDay.parse(value)?.text12 ?? "" }
     return TimeRangeValue.parse(value)?.label ?? ""
@@ -458,6 +457,7 @@ public struct TimeInputView: HTMLContent {
     /// The value and the field, from the times in force.
     private func commit() {
       valueInput?.value = TimeInputView.param(start: start, end: end, range: isRange)
+      if isRange, !stringIsEmpty(valueInput?.value ?? "") { ViewerZoneHydration.remember() }
       field?.value = TimeInputView.fieldText(start: start, end: end, range: isRange)
       valueInput?.dispatchEvent(.input)
       valueInput?.dispatchEvent(.change)
