@@ -60,15 +60,42 @@ public enum ViewerZone {
     #endif
   }
 
-  /// Minutes the reader's clock is ahead of UTC now: +330 in India, −240
-  /// in New York in summer. A time of day travels as UTC and is shown by
-  /// this offset.
-  public static func offsetMinutes() -> Int {
+  /// The reader's zone by its IANA name ("America/New_York").
+  public static func name() -> String {
     #if CLIENT
-      return -JSDate().timezoneOffset
+      let zone = JSDate.resolvedTimeZone
+      return stringIsEmpty(zone) ? "UTC" : zone
     #else
-      return zone.secondsFromGMT(for: Date()) / 60
+      return identifier
     #endif
+  }
+
+  /// Minutes `zone` is ahead of UTC at a moment—its own offset that day,
+  /// daylight saving included, from the IANA database (the browser's Intl
+  /// on the client, Foundation's on the server).
+  public static func offsetMinutes(zone: String, epochMinutes: Int) -> Int {
+    #if CLIENT
+      return JSDate.offsetMinutes(zone: zone, at: Double(epochMinutes) * 60_000)
+    #else
+      let timeZone = TimeZone(identifier: zone) ?? TimeZone(secondsFromGMT: 0)!
+      return timeZone.secondsFromGMT(for: Date(timeIntervalSince1970: Double(epochMinutes) * 60)) / 60
+    #endif
+  }
+
+  /// The moment `zone`'s clocks read `minutes` past midnight on `day`: the
+  /// offset is the one in force then, found by asking twice (a guess, then
+  /// the offset at the guess). A wall time a spring-forward skips lands an
+  /// hour on, as the clocks do.
+  public static func epochMinutes(day: CalendarDate, minutes: Int, zone: String) -> Int {
+    let wall = day.dayNumber * 1_440 + minutes
+    let first = wall - offsetMinutes(zone: zone, epochMinutes: wall)
+    return wall - offsetMinutes(zone: zone, epochMinutes: first)
+  }
+
+  /// What `zone`'s clocks read at a moment, as minutes past its midnight.
+  public static func wallMinutes(epochMinutes: Int, zone: String) -> Int {
+    let local = epochMinutes + offsetMinutes(zone: zone, epochMinutes: epochMinutes)
+    return ((local % 1_440) + 1_440) % 1_440
   }
 }
 

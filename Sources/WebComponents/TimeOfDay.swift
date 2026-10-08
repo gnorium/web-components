@@ -58,81 +58,116 @@ public struct TimeOfDay: Sendable {
   }
 }
 
-/// A span of the day as one URL value carries it: two UTC times of day,
-/// `03:30Z..12:00Z` (9:00 AM–5:30 PM in India), either end open
-/// (`03:30Z..`, `..12:00Z`). Both ends are whole minutes, the end's
-/// included; an end before its start runs across midnight (`22:00Z..06:00Z`),
-/// which a span moved into UTC often does. The reader picks and reads it in
-/// their own clock (`local`, `fromLocal`, by ViewerZone's offset).
+/// A span of the day as one URL value carries it: wall-clock times and the
+/// IANA zone they were set in, RFC 9557's annotation—`09:00..17:30[America/New_York]`.
+/// A time of day is not an instant: "9 AM in New York" is 13:00 UTC in
+/// summer and 14:00 in winter, so the zone travels with it and each moment
+/// is asked in that zone on its own date (the server: `TimeRangeFilter`).
+/// Either end may be open (`09:00..[Asia/Kolkata]`); an end before its start
+/// runs across midnight; the end's minute is included.
 public struct TimeRangeValue: Sendable {
-  /// UTC.
+  /// Wall-clock times in `zone`.
   public let start: TimeOfDay?
   public let end: TimeOfDay?
+  /// The IANA zone they were set in.
+  public let zone: String
 
-  public init(start: TimeOfDay?, end: TimeOfDay?) {
+  public init(start: TimeOfDay?, end: TimeOfDay?, zone: String) {
     self.start = start
     self.end = end
+    self.zone = zone
   }
 
-  /// Reads `start..end`, each `HH:MMZ`; nil for anything else, or for a
-  /// span open at both ends.
+  /// Reads `start..end[Zone/Name]`; nil for anything else, for no zone, or
+  /// for a span open at both ends.
   public static func parse(_ string: String) -> TimeRangeValue? {
     let trimmed = stringTrim(string)
-    guard let dots = stringIndexOf(trimmed, "..") else { return nil }
-    let lower = stringSubstring(trimmed, from: 0, to: dots)
-    let upper = stringSubstring(trimmed, from: dots + 2)
+    guard let bracket = stringIndexOf(trimmed, "["), stringEndsWith(trimmed, "]") else { return nil }
+    let zone = stringSubstring(trimmed, from: bracket + 1, to: trimmed.utf8.count - 1)
+    guard isZoneName(zone) else { return nil }
+    let span = stringSubstring(trimmed, from: 0, to: bracket)
+    guard let dots = stringIndexOf(span, "..") else { return nil }
+    let lower = stringSubstring(span, from: 0, to: dots)
+    let upper = stringSubstring(span, from: dots + 2)
     var start: TimeOfDay?
     var end: TimeOfDay?
     if !stringIsEmpty(lower) {
-      guard let time = utc(lower) else { return nil }
+      guard let time = TimeOfDay.parse(lower) else { return nil }
       start = time
     }
     if !stringIsEmpty(upper) {
-      guard let time = utc(upper) else { return nil }
+      guard let time = TimeOfDay.parse(upper) else { return nil }
       end = time
     }
     if case .none = start, case .none = end { return nil }
-    return TimeRangeValue(start: start, end: end)
+    return TimeRangeValue(start: start, end: end, zone: zone)
   }
 
-  /// `HH:MMZ`.
-  static func utc(_ string: String) -> TimeOfDay? {
-    let bytes = Array(string.utf8)
-    guard bytes.count == 6, bytes[5] == 90 else { return nil }
-    return TimeOfDay.parse(stringSubstring(string, from: 0, to: 5))
+  /// An IANA name's characters: letters, digits, `/`, `_`, `+`, `-`.
+  static func isZoneName(_ zone: String) -> Bool {
+    let bytes = Array(zone.utf8)
+    guard !bytes.isEmpty, bytes.count <= 64 else { return false }
+    for byte in bytes {
+      let letter = (byte >= 65 && byte <= 90) || (byte >= 97 && byte <= 122)
+      let digit = byte >= 48 && byte <= 57
+      guard letter || digit || byte == 47 || byte == 95 || byte == 43 || byte == 45 else { return false }
+    }
+    return true
   }
 
-  /// As a URL carries it: `03:30Z..12:00Z`.
-  public var param: String {
-    "\(start.map { "\($0.text)Z" } ?? "")..\(end.map { "\($0.text)Z" } ?? "")"
-  }
+  /// As a URL carries it: `09:00..17:30[America/New_York]`.
+  public var param: String { "\(start?.text ?? "")..\(end?.text ?? "")[\(zone)]" }
 
-  /// The span in the reader's clock.
-  public var local: (start: TimeOfDay?, end: TimeOfDay?) {
-    let offset = ViewerZone.offsetMinutes()
-    return (start.map { TimeOfDay(minutes: $0.minutes + offset) }, end.map { TimeOfDay(minutes: $0.minutes + offset) })
-  }
-
-  /// A span picked in the reader's clock, carried in UTC.
+  /// A span picked in the reader's clock, carried with the reader's zone.
   public static func fromLocal(start: TimeOfDay?, end: TimeOfDay?) -> TimeRangeValue {
-    let offset = ViewerZone.offsetMinutes()
-    return TimeRangeValue(
-      start: start.map { TimeOfDay(minutes: $0.minutes - offset) },
-      end: end.map { TimeOfDay(minutes: $0.minutes - offset) })
+    TimeRangeValue(start: start, end: end, zone: ViewerZone.name())
   }
 
-  /// "9:00 AM–5:30 PM", "Since 9:00 AM", "Until 5:30 PM": the reader's
-  /// clock, a closed en dash, as a range of days is written
-  /// (CalendarDate.rangeText).
+  /// Whether it was set in the reader's own zone.
+  public var isReadersZone: Bool { stringEquals(zone, ViewerZone.name()) }
+
+  /// The span on the reader's clock today: its own times when it was set in
+  /// the reader's zone; else each end moved through today's moment in its
+  /// zone—a time of day has no single other-zone equivalent, so the words
+  /// name the zone it was set in too (`label`).
+  public var local: (start: TimeOfDay?, end: TimeOfDay?) {
+    if isReadersZone { return (start, end) }
+    let today = ViewerZone.today()
+    let move = { (time: TimeOfDay) -> TimeOfDay in
+      let moment = ViewerZone.epochMinutes(day: today, minutes: time.minutes, zone: zone)
+      return TimeOfDay(minutes: ViewerZone.wallMinutes(epochMinutes: moment, zone: ViewerZone.name()))
+    }
+    return (start.map(move), end.map(move))
+  }
+
+  /// "9:00 AM–5:30 PM", "Since 9:00 AM", "Until 5:30 PM" on the reader's
+  /// clock, a closed en dash as a range of days is written; set in another
+  /// zone, that zone's own span follows, named by its city: "11:30 PM–8:00
+  /// AM (9:00 AM–5:30 PM Kolkata time)".
   public var label: String {
     let (first, last) = local
+    let words = Self.words(first, last)
+    let own = Self.words(start, end)
+    // The same clock under another name (Asia/Calcutta, Asia/Kolkata) says
+    // nothing more.
+    if isReadersZone || stringEquals(words, own) { return words }
+    return "\(words) (\(own) \(Self.city(zone)) time)"
+  }
+
+  static func words(_ first: TimeOfDay?, _ last: TimeOfDay?) -> String {
     if let first, let last { return "\(first.text12)–\(last.text12)" }
     if let first { return "Since \(first.text12)" }
     if let last { return "Until \(last.text12)" }
     return ""
   }
 
-  /// Whether a UTC minute of the day falls in the span.
+  /// "America/New_York" → "New York"; "UTC" stays.
+  static func city(_ zone: String) -> String {
+    let parts = stringSplit(zone, separator: "/")
+    return stringReplace(parts.last ?? zone, "_", " ")
+  }
+
+  /// Whether a wall-clock minute of the day (in `zone`) falls in the span.
   public func contains(minutes: Int) -> Bool {
     switch (start, end) {
     case (.some(let first), .some(let last)):

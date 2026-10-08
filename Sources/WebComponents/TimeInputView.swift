@@ -17,8 +17,10 @@ import WebTypes
 ///
 /// The field shows the time ("9:30 AM"); a hidden input carries it as `HH:MM`
 /// (24-hour) under `name`. A range input (`range: true`) holds a span of the
-/// day instead, in the reader's clock and carried in UTC (`TimeRangeValue`,
-/// `03:30Z..12:00Z`, read "9:00 AM–5:30 PM" in India): Time start and Time
+/// day instead, picked in the reader's clock and carried with the reader's
+/// IANA zone (`TimeRangeValue`, `09:00..17:30[Asia/Kolkata]`); one set in
+/// another zone reads in the reader's clock with its own span after it
+/// ("11:30 PM–8:00 AM (9:00 AM–5:30 PM Kolkata time)"): Time start and Time
 /// end—as a year range's are Year start and Year end (FormDateView)—each its
 /// columns, side by side in one popover, as a date range is one popover.
 /// Either end may stay open. The field is read-only and asks for no
@@ -29,7 +31,7 @@ import WebTypes
 public struct TimeInputView: HTMLContent {
   let id: String
   let name: String
-  /// `HH:MM`, or for a range `HH:MMZ..HH:MMZ`; empty for none.
+  /// `HH:MM`, or for a range `HH:MM..HH:MM[Zone/Name]`; empty for none.
   let value: String
   let placeholder: String
   let range: Bool
@@ -73,26 +75,33 @@ public struct TimeInputView: HTMLContent {
     return (TimeOfDay.parse(value), nil)
   }
 
-  /// The value a form submits for times in the reader's clock: a span in
-  /// UTC, a single time as it is.
+  /// The value a form submits for times in the reader's clock: a span
+  /// with the reader's zone, a single time as it is.
   static func param(start: TimeOfDay?, end: TimeOfDay?, range: Bool) -> String {
     guard range else { return start?.text ?? "" }
     if case .none = start, case .none = end { return "" }
     return TimeRangeValue.fromLocal(start: start, end: end).param
   }
 
-  /// What the field shows: "9:00 AM–5:30 PM", "Since 9:00 AM", "9:30 AM".
+  /// What the field shows for times picked in the reader's clock: "9:00
+  /// AM–5:30 PM", "Since 9:00 AM", "9:30 AM".
   static func fieldText(start: TimeOfDay?, end: TimeOfDay?, range: Bool) -> String {
     guard range else { return start?.text12 ?? "" }
-    if let start, let end { return "\(start.text12)–\(end.text12)" }
-    if let start { return "Since \(start.text12)" }
-    if let end { return "Until \(end.text12)" }
-    return ""
+    return TimeRangeValue.words(start, end)
+  }
+
+  /// What the field shows for a value as given: a span set in another zone
+  /// names that zone's own span too (TimeRangeValue.label).
+  static func valueText(_ value: String, range: Bool) -> String {
+    guard range else { return TimeOfDay.parse(value)?.text12 ?? "" }
+    return TimeRangeValue.parse(value)?.label ?? ""
   }
 
   public func build() -> DOM.Node {
     let (start, end) = Self.parts(value, range: range)
-    let param = Self.param(start: start, end: end, range: range)
+    // The value as given—a span keeps the zone it was set in until the
+    // reader picks anew.
+    let param = range ? TimeRangeValue.parse(value)?.param ?? "" : TimeOfDay.parse(value)?.text ?? ""
     let rootClass = stringIsEmpty(`class`)
       ? "time-input-view\(fullWidth ? " time-input-full-width" : "")"
       : "time-input-view\(fullWidth ? " time-input-full-width" : "") \(`class`)"
@@ -113,7 +122,7 @@ public struct TimeInputView: HTMLContent {
         id: id,
         name: "",
         placeholder: placeholder,
-        value: Self.fieldText(start: start, end: end, range: range),
+        value: Self.valueText(value, range: range),
         disabled: disabled,
         readonly: true,
         label: labelText,
@@ -295,7 +304,7 @@ public struct TimeInputView: HTMLContent {
       end = parts.end
       // The server drew the times in the zone the request named; the
       // browser's is the reader's own, so they are shown again in it.
-      field?.value = TimeInputView.fieldText(start: start, end: end, range: isRange)
+      field?.value = TimeInputView.valueText(valueInput?.value ?? "", range: isRange)
 
       root.setAttribute(data("hydrated"), true)
       if let field {
