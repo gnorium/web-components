@@ -62,6 +62,8 @@
             .placeholder(placeholder)
             .disabled(disabled)
             .ariaInvalid(status == .error)
+            // A long query fades at rest (`fadeInputOverflow`).
+            .data("edge-fade", true)
 
           if clearable {
             // Clear button
@@ -116,11 +118,20 @@
         }
         selector("&.search-input-has-button") { flexGrow(1) }
         selector("&:not(.search-input-has-button)") { flex(1) }
+        // The box the input is drawn in, and its fades at rest: the input's
+        // ground, and its border and padding at each side (EdgeFade.swift).
         descendant(".search-input-wrapper") {
           position(.relative)
           display(.flex)
           alignItems(.center)
+          customProperty("--edge-fade-ground", backgroundColorBase)
+          customProperty("--edge-fade-inset-start", "calc(\(borderWidthBase.value) + 16px)")
+          customProperty("--edge-fade-inset-end", "calc(\(borderWidthBase.value) + 132px)")
         }
+        selector("& .search-input-wrapper:has(> .search-input:disabled)") {
+          customProperty("--edge-fade-ground", backgroundColorDisabled)
+        }
+        fadeInputOverflow(control: "& .search-input-wrapper", input: ".search-input")
         selector("&.search-input-has-button .search-input-wrapper") { flexGrow(1) }
         selector("&:not(.search-input-has-button) .search-input-wrapper") { width(perc(100)) }
         descendant(".search-input") {

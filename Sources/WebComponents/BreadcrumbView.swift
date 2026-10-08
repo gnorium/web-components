@@ -96,7 +96,7 @@
           padding(0)
           minWidth(0)
         }
-        descendant(".breadcrumb-item:has([aria-expanded='true'])") {
+        descendant(".breadcrumb-item:has([data-edge-fade-expanded='true'])") {
           flexShrink(0)
           maxWidth(.none)
         }
@@ -125,7 +125,7 @@
           maxWidth(px(240))
         }
         fadeOverflow("& .breadcrumb-label")
-        descendant(".breadcrumb-label[aria-expanded='true']") {
+        descendant(".breadcrumb-label[data-edge-fade-expanded='true']") {
           whiteSpace(.nowrap).important()
           width(.maxContent)
           maxWidth(.none)

@@ -36,14 +36,17 @@ import WebTypes
 // its click: a click on its words follows it, and only a click in a fade
 // itself (the `sizeEdgeFade` of the box at an edge that hides some of it)
 // opens the box. Any other box opens on a click anywhere in it. Open, the box
-// folds on a click off its link, or anywhere off it. An expandable box of its
-// own (in no control) is a button, a tab stop: focused, Enter or Space opens
-// and folds it; Enter on its link follows the link.
+// folds on a click off its link, or anywhere off it. Focused (by a click),
+// Enter or Space opens and folds it; Enter on its link follows the link.
 //
-// Any other scrolling box is not made a tab stop: where a browser would make
-// a scrollable box focusable on its own (Chrome), it is given
-// `tabindex="-1"`, so Tab passes it by while a click still focuses it and the
-// arrow keys scroll it.
+// No box is made a tab stop, on any device (user, 2026-10-08): a table of
+// them would be dozens of stops, and dozens of buttons to a screen reader.
+// Where a browser would make a scrollable box focusable on its own (Chrome),
+// it is given `tabindex="-1"`, so Tab passes it by while a click still
+// focuses it, the arrow keys scroll it, and Enter or Space opens it. Nor is
+// it given a role: its open state is `data-edge-fade-expanded`, not
+// `aria-expanded`, which ARIA allows on no generic element. Opening is for
+// the eye alone: a clipped line is read whole by a screen reader already.
 //
 // An editable one-line input (`fadeInputOverflow`) keeps its own native
 // scroll and caret; it is marked as any box is, from its own scroll, and
@@ -58,7 +61,7 @@ import WebTypes
 ///
 /// The fades follow the reading direction: the start is the left in
 /// left-to-right text, the right under `:dir(rtl)`. Each is `sizeEdgeFade`
-/// long. An expanded box (`aria-expanded="true"`) wraps instead.
+/// long. An expanded box (`data-edge-fade-expanded="true"`) wraps instead.
 @CSSBuilder
 public func fadeOverflow(_ selectors: String...) -> [CSSOM.CSSRule] {
   selector(edgeFadeSelectors(selectors, "")) {
@@ -81,20 +84,20 @@ public func fadeOverflow(_ selectors: String...) -> [CSSOM.CSSRule] {
   selector(edgeFadeSelectors(selectors, "[data-overflowing-end='false']")) {
     customProperty("--edge-fade-end", "0px")
   }
-  selector(edgeFadeSelectors(selectors, "[data-overflowing='true']:not([aria-expanded='true'])")) {
+  selector(edgeFadeSelectors(selectors, "[data-overflowing='true']:not([data-edge-fade-expanded='true'])")) {
     maskImage(.custom(edgeFadeGradient(.right)))
     webkitMaskImage(.custom(edgeFadeGradient(.right)))
   }
-  selector(edgeFadeSelectors(selectors, "[data-overflowing='true']:not([aria-expanded='true']):dir(rtl)")) {
+  selector(edgeFadeSelectors(selectors, "[data-overflowing='true']:not([data-edge-fade-expanded='true']):dir(rtl)")) {
     maskImage(.custom(edgeFadeGradient(.left)))
     webkitMaskImage(.custom(edgeFadeGradient(.left)))
   }
-  selector(edgeFadeSelectors(selectors, "[role='button']")) {
+  selector(edgeFadeSelectors(selectors, "[data-edge-fade-expanded]")) {
     cursor(.pointer)
   }
   // Wrapped where it must, anywhere at all: an ID or a URL has no spaces. A
   // box that lays its value out as a row wraps the row as well.
-  selector(edgeFadeSelectors(selectors, "[aria-expanded='true']")) {
+  selector(edgeFadeSelectors(selectors, "[data-edge-fade-expanded='true']")) {
     whiteSpace(.normal).important()
     overflowWrap(.anywhere).important()
     flexWrap(.wrap).important()
@@ -173,7 +176,7 @@ private func edgeFadeGradient(_ toward: CSS.GradientDirection) -> String {
 #if CLIENT
   /// Keeps every `[data-edge-fade]` box on the page marked: `data-overflowing`
   /// on each whose line runs past it, so `fadeOverflow` fades it, and on an
-  /// expandable one the button it becomes.
+  /// expandable one whether it is open.
   ///
   /// One watcher for the page, not one per box: the boxes are re-read
   /// whenever the page changes in a way that could change a line's fit—a
@@ -186,8 +189,7 @@ private func edgeFadeGradient(_ toward: CSS.GradientDirection) -> String {
     public static nonisolated(unsafe) var instance: EdgeFadeHydration?
     nonisolated(unsafe) static var refreshQueued = false
     /// What a tap already means something on: a box in one, or holding one,
-    /// opens only on a tap in its fade, and one inside one is not a button
-    /// of its own (a button in a button is none).
+    /// opens only on a tap in its fade.
     static let controls =
       "a, button, label, summary, select, [role='link'], [role='option'], [role='menuitem'], [role='tab'], "
       + "[role='combobox'], [role='checkbox'], [role='radio'], [role='switch'], [role='button']:not([data-edge-fade])"
@@ -292,24 +294,17 @@ private func edgeFadeGradient(_ toward: CSS.GradientDirection) -> String {
           box.removeAttribute(data("overflowing"))
         }
       }
-      // An input's role, focus and `aria-expanded` (a combobox's) are its
-      // own: it is only marked.
+      // An input's focus and attributes (a combobox's role) are its own: it
+      // is only marked.
       if isInput(box) { return }
       let expandable = isExpandable(box) && (overflowing || isExpanded(box))
       if expandable {
-        if !box.hasAttribute("aria-expanded") { _ = box.setAttribute("aria-expanded", "false") }
-        let nested = box.parentElement?.closest(controls) != nil
-        if !nested && !box.hasAttribute("role") {
-          _ = box.setAttribute("role", "button")
-          _ = box.setAttribute("tabindex", "0")
-        }
-      } else if box.hasAttribute("aria-expanded") {
-        box.removeAttribute("role")
-        box.removeAttribute("tabindex")
-        box.removeAttribute("aria-expanded")
+        if !box.hasAttribute(data("edge-fade-expanded")) { _ = box.setAttribute(data("edge-fade-expanded"), "false") }
+      } else if box.hasAttribute(data("edge-fade-expanded")) {
+        box.removeAttribute(data("edge-fade-expanded"))
       }
-      // A box that scrolls is no tab stop of its own: Chrome would make a
-      // scrollable box one. A click still focuses it, for the arrow keys.
+      // No tab stop: Chrome would make a scrollable box one. A click still
+      // focuses it, for the arrow keys, and Enter or Space.
       if overflowing && !box.hasAttribute("tabindex") {
         _ = box.setAttribute("tabindex", "-1")
       }
@@ -327,8 +322,8 @@ private func edgeFadeGradient(_ toward: CSS.GradientDirection) -> String {
     /// the link is in sight, and a click anywhere off the box folds it.
     static func click(_ event: Event) {
       let target = event.target
-      let box = target?.closest("[data-edge-fade='expand'][aria-expanded]")
-      for open in document.querySelectorAll("[data-edge-fade='expand'][aria-expanded='true']") {
+      let box = target?.closest("[data-edge-fade='expand'][data-edge-fade-expanded]")
+      for open in document.querySelectorAll("[data-edge-fade='expand'][data-edge-fade-expanded='true']") {
         if let box, box.id == open.id { continue }
         setExpanded(open, false)
       }
@@ -350,7 +345,7 @@ private func edgeFadeGradient(_ toward: CSS.GradientDirection) -> String {
     static func keydown(_ event: Event) {
       guard let target = event.target else { return }
       guard stringEquals(target.getAttribute(data("edge-fade")) ?? "", "expand"),
-        target.hasAttribute("aria-expanded"), target.hasAttribute("tabindex")
+        target.hasAttribute(data("edge-fade-expanded"))
       else { return }
       let key = event.key
       guard stringEquals(key, "Enter") || stringEquals(key, " ") else { return }
@@ -360,7 +355,7 @@ private func edgeFadeGradient(_ toward: CSS.GradientDirection) -> String {
     }
 
     static func setExpanded(_ box: DOM.Element, _ expanded: Bool) {
-      _ = box.setAttribute("aria-expanded", expanded ? "true" : "false")
+      _ = box.setAttribute(data("edge-fade-expanded"), expanded ? "true" : "false")
       if !expanded {
         mark(box, overflowing: box.scrollWidth > box.clientWidth)
         markEdges(box, hiddenEdges(box))
@@ -371,10 +366,9 @@ private func edgeFadeGradient(_ toward: CSS.GradientDirection) -> String {
       stringEquals(box.getAttribute(data("edge-fade")) ?? "", "expand")
     }
 
-    /// Whether an expandable box is open: a combobox input's own
-    /// `aria-expanded` is not this.
+    /// Whether an expandable box is open.
     static func isExpanded(_ box: DOM.Element) -> Bool {
-      isExpandable(box) && stringEquals(box.getAttribute("aria-expanded") ?? "", "true")
+      isExpandable(box) && stringEquals(box.getAttribute(data("edge-fade-expanded")) ?? "", "true")
     }
 
     static func isOverflowing(_ box: DOM.Element) -> Bool {
