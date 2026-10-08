@@ -163,6 +163,8 @@ public struct TextInputView: HTMLContent {
       .readonly(readonly)
       .required(required)
       .class("text-input-input")
+      // A long value fades at rest (`fadeInputOverflow`).
+      .data("edge-fade", true)
 
     if let minValue = min {
       inputEl = inputEl.min(minValue)
@@ -267,7 +269,29 @@ public struct TextInputView: HTMLContent {
         gap(spacing8)
       }
       selector("&.text-input-full-width") { width(perc(100)) }
-      descendant(".text-input-control") { position(.relative) }
+      // The box the input is drawn in, and its fades at rest: the input's
+      // ground, and its border and padding at each side (EdgeFade.swift).
+      descendant(".text-input-control") {
+        position(.relative)
+        customProperty("--edge-fade-ground", backgroundColorBase)
+        customProperty("--edge-fade-inset-start", "calc(\(borderWidthBase.value) + 15px)")
+        customProperty("--edge-fade-inset-end", "calc(\(borderWidthBase.value) + 15px)")
+      }
+      selector("&.text-input-disabled .text-input-control") {
+        customProperty("--edge-fade-ground", backgroundColorDisabled)
+      }
+      selector("&.text-input-read-only .text-input-control") {
+        customProperty("--edge-fade-ground", backgroundColorNeutralSubtle)
+      }
+      selector("&.text-input-has-start-icon .text-input-control") {
+        customProperty(
+          "--edge-fade-inset-start", "calc(\(borderWidthBase.value) + 15px + \(sizeIconMedium.value) + \(spacing8.value))")
+      }
+      selector("&.text-input-has-end-icon .text-input-control", "&.text-input-clearable .text-input-control") {
+        customProperty(
+          "--edge-fade-inset-end", "calc(\(borderWidthBase.value) + 15px + \(sizeIconMedium.value) + \(spacing8.value))")
+      }
+      fadeInputOverflow(control: "& .text-input-control", input: ".text-input-input")
       descendant(".text-input-input") {
         width(perc(100))
         // Fields and medium buttons share the standard control height.
