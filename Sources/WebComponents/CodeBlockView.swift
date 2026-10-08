@@ -64,6 +64,9 @@
         descendant(".code-block-lang") {
           fontFamily(typographyFontMono)
           fontSize(fontSizeXSmall12)
+          // Its own leading, never the prose's around the fence: a unitless
+          // one set it at 19.5px under 16px Markdown.
+          lineHeight(lineHeightSmall22)
           fontWeight(fontWeightSemiBold)
           color(colorSubtle)
           textTransform(.lowercase)
