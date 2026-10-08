@@ -124,7 +124,7 @@ public struct DiffView: HTMLContent {
               .class("diff-gap")
               .ariaHidden(true)
           }
-          for line in hunk {
+          for (position, line) in hunk.enumerated() {
             div {
               span {
                 switch line.kind {
@@ -149,6 +149,7 @@ public struct DiffView: HTMLContent {
                 case .inserted: return "inserted"
                 }
               }())
+            .data("diff-at", Self.at(position, in: hunk))
           }
         }
       }
@@ -520,6 +521,26 @@ public struct DiffView: HTMLContent {
 }
 
 extension DiffView {
+  /// The line of the new text a row stands at, from 1: a kept or inserted
+  /// line's own; a removed line's, the line it stands before—what came
+  /// after it in the old text, now—or, at the end, after the last. So a
+  /// client finds the row for a line of the text being edited, gaps between
+  /// runs included (`ReviseHydration` scrolls the box to the caret's).
+  static func at<C: Sendable>(_ position: Int, in hunk: [DiffEngine.Line<C>]) -> Int {
+    if let number = hunk[position].newNumber { return number }
+    var index = position + 1
+    while index < hunk.count {
+      if let number = hunk[index].newNumber { return number }
+      index += 1
+    }
+    index = position - 1
+    while index >= 0 {
+      if let number = hunk[index].newNumber { return number + 1 }
+      index -= 1
+    }
+    return 1
+  }
+
   /// White space that changed, made visible: a space is drawn as a middle
   /// dot, since a changed space is otherwise a change nobody can see.
   static func visible(_ text: String) -> String {
