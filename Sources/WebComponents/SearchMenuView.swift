@@ -146,7 +146,7 @@
     public func build() -> DOM.Node {
       // Its results are drawn on the client, each named by a
       // BreadcrumbLabelView: built here so the page links its style sheet.
-      _ = BreadcrumbLabelView(context: "", text: "").build()
+      _ = RecordLabelView(context: "—", text: "", meta: "").build()
       // Full-screen search menu - iOS-style
       return div {
         // Backdrop with blur effect
@@ -415,44 +415,28 @@
           alignItems(.stretch)
           minHeight(0)
         }
-        descendant(".search-menu-result-label") {
-          wordWrap(.breakWord)
-        }
-        descendant(".search-menu-result-meta") {
-          fontFamily(typographyFontSans)
-          fontSize(fontSizeXSmall12)
-          fontWeight(fontWeightNormal)
-          lineHeight(lineHeightSmall22)
+        // Its two rows are a RecordLabelView's; the meta row keeps its
+        // subtle color whatever the typeahead's active row sets.
+        descendant(".search-menu-result .record-label-meta") {
           color(colorSubtle).important()
-        }
-        descendant(".search-menu-result-label") {
-          fontFamily(typographyFontSans)
-          fontSize(fontSizeSmall14)
-          fontWeight(fontWeightNormal)
-          lineHeight(lineHeightSmall22)
-          opacity(1)
         }
         // The title in the link's colors (LinkView's): its color, its hover
         // color under the pointer, its active color pressed.
-        descendant(".search-menu-result[data-color='blue'] .search-menu-result-label") { color(colorLink) }
-        descendant(".search-menu-result[data-color='green'] .search-menu-result-label") { color(colorGreen) }
-        descendant(".search-menu-result[data-color='red'] .search-menu-result-label") { color(colorRed) }
-        descendant(".search-menu-result[data-color='blue']:hover .search-menu-result-label") {
+        descendant(".search-menu-result[data-color='blue'] .record-label-title") { color(colorLink) }
+        descendant(".search-menu-result[data-color='green'] .record-label-title") { color(colorGreen) }
+        descendant(".search-menu-result[data-color='red'] .record-label-title") { color(colorRed) }
+        descendant(".search-menu-result[data-color='blue']:hover .record-label-title") {
           color(colorLinkHover)
         }
-        descendant(".search-menu-result[data-color='blue']:active .search-menu-result-label") {
+        descendant(".search-menu-result[data-color='blue']:active .record-label-title") {
           color(colorLinkActive)
         }
         // Outranks the typeahead's aria-selected label blue.
-        descendant(".search-menu-result[data-color='blue'][aria-selected='true'] .search-menu-result-label") {
+        descendant(".search-menu-result[data-color='blue'][aria-selected='true'] .record-label-title") {
           color(colorLink)
         }
-        descendant(".search-menu-result[data-color='blue'][aria-selected='true']:hover .search-menu-result-label") {
+        descendant(".search-menu-result[data-color='blue'][aria-selected='true']:hover .record-label-title") {
           color(colorLinkHover)
-        }
-        // Inside the detail line: its size and color, raised.
-        descendant(".search-menu-result-sup") {
-          fontSize(perc(75))
         }
         selector("&[data-state='open'] [data-search-menu-backdrop='true']") {
           opacity(1)
@@ -919,36 +903,21 @@
         }
         item.setAttribute(data("url"), href)
 
-        // DOM.Text Content Wrapper
-        let textContent = document.createElement(.span)
-        textContent.className = "menu-item-text search-menu-result-text"
-
         // Two rows, the same for both kinds, as every record is offered
-        // (DropdownView's record options too): its language › what the
-        // result IS (its title), as a breadcrumb; then a work's voices
-        // ("—" when unknown) and its type (with its homograph number, "—"
-        // when unknown). A word has no voices part.
-        let label = document.createElement(.span)
-        label.className = "menu-item-label search-menu-result-label"
-        label.innerHTML = BreadcrumbLabelView(
-          context: stringIsEmpty(result.subtext) ? "—" : result.subtext, text: result.text
-        ).render()
-        textContent.appendChild(label)
-
-        let detail = document.createElement(.span)
-        detail.className = "search-menu-result-meta search-menu-result-detail"
+        // (DropdownView's record options too, a gloss's heading): its
+        // language › what the result IS (its title), as a breadcrumb; then
+        // a work's voices ("—" when unknown) and its type (with its
+        // homograph number, "—" when unknown). A word has no voices part.
         var parts: [String] = []
         if !stringIsEmpty(result.pos) { parts.append(result.pos) }
         parts.append(stringIsEmpty(result.type) ? "—" : result.type)
-        detail.textContent = stringJoin(parts, separator: " · ")
-        if !isBiblioResult && result.homograph > 1 {
-          let sup = document.createElement(.sup)
-          sup.className = "search-menu-result-sup"
-          sup.textContent = "\(result.homograph)"
-          detail.appendChild(sup)
-        }
-        textContent.appendChild(detail)
-
+        let holder = document.createElement(.span)
+        holder.innerHTML = RecordLabelView(
+          context: stringIsEmpty(result.subtext) ? "—" : result.subtext, text: result.text,
+          meta: stringJoin(parts, separator: " · "), homograph: isBiblioResult ? 0 : result.homograph,
+          class: "menu-item-text search-menu-result-text"
+        ).render()
+        guard let textContent = holder.firstElementChild else { continue }
         item.appendChild(textContent)
 
         _ = item.addEventListener(.click) { _ in

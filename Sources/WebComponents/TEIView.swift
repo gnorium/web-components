@@ -42,12 +42,15 @@
     /// inside an image is marked: for pages read one after another in one
     /// column rather than paged beside their images.
     let labelsPages: Bool
-    /// Where a word's details are read, when the transcript's words can be
-    /// opened: each word of the transcript (a `<w>`, as an anchor counts
-    /// the page) is then a control that opens them, and the client asks this
-    /// address for them (`?semblance=…&line=…&word=…`). Nil: the transcript
+    /// Where a gloss is read (user, 2026-10-08), when what the transcript
+    /// encodes can be opened: each word of the transcript (a `<w>`, as an
+    /// anchor counts the page) is then a control that opens its gloss, and
+    /// so is what is no word but encoded (a gap, a side mark, a figure, a
+    /// running head's page number, a date: `data-gloss-element`, its place
+    /// among the page's elements); the client asks this address for it
+    /// (`?semblance=…&line=…&word=…`, or `&element=…`). Nil: the transcript
     /// is read whole.
-    let wordDetailsURL: String?
+    let glossURL: String?
 
     /// A translation of the transcript, page by page, in its own language:
     /// the translation's own TEI, read by the same reader as the transcript,
@@ -78,18 +81,18 @@
 
     public init(
       teiXml: String, editable: Bool = false, translation: Translation? = nil,
-      highlights: [String: [TEIHighlight]] = [:], labelsPages: Bool = false, wordDetailsURL: String? = nil
+      highlights: [String: [TEIHighlight]] = [:], labelsPages: Bool = false, glossURL: String? = nil
     ) {
       self.teiXml = teiXml
       self.editable = editable
       self.translation = translation
       self.highlights = highlights
       self.labelsPages = labelsPages
-      self.wordDetailsURL = wordDetailsURL
+      self.glossURL = glossURL
     }
 
     public var pages: [TEIPage] {
-      TEIRenderer.pages(in: teiXml, highlights: highlights, marksWords: wordDetailsURL != nil)
+      TEIRenderer.pages(in: teiXml, highlights: highlights, marksWords: glossURL != nil)
     }
 
     /// The image service a semblance reads, which is what pairs it with a
@@ -328,7 +331,29 @@
       }
       return words.flatMap { group -> [DOM.Node] in
         guard let word = group.word else {
-          return group.runs.map { runContent($0, facsimileURL: facsimileURL, tabStop: tabStop) }
+          // What is no word but encoded (a number, a date, a page number)
+          // opens its element's gloss: its runs together as one control.
+          var elements: [(element: Int?, runs: [TEILine.Run])] = []
+          for run in group.runs {
+            if let element = run.element, glossURL != nil, let last = elements.last, last.element == element {
+              elements[elements.count - 1].runs.append(run)
+            } else {
+              elements.append((glossURL == nil ? nil : run.element, [run]))
+            }
+          }
+          return elements.flatMap { part -> [DOM.Node] in
+            guard let element = part.element else {
+              return part.runs.map { runContent($0, facsimileURL: facsimileURL, tabStop: tabStop) }
+            }
+            return [
+              glossable(
+                span {
+                  for run in part.runs { runContent(run, facsimileURL: facsimileURL, tabStop: tabStop) }
+                }
+                .class("tei-gloss-element"), element
+              ).build()
+            ]
+          }
         }
         return [
           span {
@@ -343,6 +368,16 @@
           .build()
         ]
       }
+    }
+
+    /// What is opened as a whole—a line that is an element (a gap, a side
+    /// mark, a figure) or the runs of one that is no word—as a control
+    /// that opens its gloss, as a word is; as it is where the transcript is
+    /// read whole.
+    private func glossable<Element: HTMLElementBuildable>(_ node: Element, _ element: Int?) -> Element {
+      guard let element, glossURL != nil else { return node }
+      return node.setAttribute("role", "button").setAttribute("tabindex", "-1")
+        .setAttribute("aria-haspopup", "dialog").setAttribute("data-gloss-element", "\(element)")
     }
 
     private func runContent(_ run: TEILine.Run, facsimileURL: String, tabStop: TEIWordPlace?) -> DOM.Node {
@@ -428,9 +463,9 @@
         return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line tei-line-stage").data("rend", line.rend)
           .build()
       case .mark:
-        return span { line.text }.class("tei-line tei-line-mark").build()
+        return glossable(span { line.text }.class("tei-line tei-line-mark"), line.element).build()
       case .gap(let reason):
-        return span { "[\(reason.isEmpty ? "gap" : reason)]" }.class("tei-line tei-line-gap")
+        return glossable(span { "[\(reason.isEmpty ? "gap" : reason)]" }.class("tei-line tei-line-gap"), line.element)
           .build()
       case .documentBoundary:
         return hr().class("tei-document-boundary").build()
@@ -445,11 +480,13 @@
         guard let zone, let region = TEIRenderer.regionURL(ofFacsimile: facsimileURL, zone: zone) else {
           return DOM.Node.fragment([])
         }
-        return figure {
-          img().src(region).alt(line.text.isEmpty ? "Figure on \(label)" : line.text)
-            .loading(.lazy).class("tei-figure-image")
-          if !line.text.isEmpty { figcaption { line.text }.class("tei-figure-caption") }
-        }.class("tei-line tei-figure").data("figure-type", type.isEmpty ? "figure" : type).build()
+        return glossable(
+          figure {
+            img().src(region).alt(line.text.isEmpty ? "Figure on \(label)" : line.text)
+              .loading(.lazy).class("tei-figure-image")
+            if !line.text.isEmpty { figcaption { line.text }.class("tei-figure-caption") }
+          }.class("tei-line tei-figure").data("figure-type", type.isEmpty ? "figure" : type), line.element
+        ).build()
       case .table(let source):
         return div {
           table {
@@ -502,7 +539,7 @@
             .class("tei-empty")
         }
         for (index, page) in pages.enumerated() {
-          let tabStop = wordDetailsURL == nil ? nil : Self.firstWord(of: page.lines)
+          let tabStop = glossURL == nil ? nil : Self.firstWord(of: page.lines)
           div {
             div {
               if labelsPages {
@@ -612,7 +649,7 @@
       }
       .class("tei-view")
       .data("editable", editable)
-      .data("word-details", wordDetailsURL ?? "")
+      .data("gloss", glossURL ?? "")
       .style {
         selector("&") {
           display(.flex)
@@ -960,16 +997,21 @@
         // its details are open (user, 2026-09-29). The focus ring every
         // control has, from the keyboard only (:focus-visible), never for a
         // click or a tap.
-        descendant(".tei-word") {
+        // What is no word but encoded opens its gloss the same way.
+        selector("& .tei-word", "& [data-gloss-element]") {
           cursor(.pointer)
           borderRadius(borderRadiusMinimal)
           outline(.none)
         }
-        selector("& .tei-word:focus-visible") {
+        selector("& .tei-word:focus-visible", "& [data-gloss-element]:focus-visible") {
           outline(borderWidthThick, .solid, borderColorBlueFocus)
           outlineOffset(borderWidthBase)
         }
-        selector("& .tei-word:hover", "& .tei-word:focus-visible", "& .tei-word[aria-expanded='true']") {
+        selector(
+          "& .tei-word:hover", "& .tei-word:focus-visible", "& .tei-word[aria-expanded='true']",
+          "& [data-gloss-element]:hover", "& [data-gloss-element]:focus-visible",
+          "& [data-gloss-element][aria-expanded='true']"
+        ) {
           color(colorBlue)
         }
         selector(".tei-empty") {
