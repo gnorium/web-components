@@ -14,7 +14,7 @@ import WebTypes
 /// - ``Size/normal``—table / list footers (44px targets, spaced layout)
 /// - ``Size/mini``—chrome pagers (session, artifact, attempt switcher)
 ///
-/// URL mode (`previousUrl` / `nextUrl` / `pageNumbers`) is hydrated by
+/// URL mode (`previousUrl` / `nextUrl`) is hydrated by
 /// ``PaginationHydration``. Query / custom mode sets `kind` and prev/next
 /// `data` attributes; the host page binds those (e.g. SessionHydration).
 public struct PaginationView: HTMLContent {
@@ -27,7 +27,6 @@ public struct PaginationView: HTMLContent {
   public let totalPages: Int
   public let previousUrl: String?
   public let nextUrl: String?
-  public let pageNumbers: [PageNumber]?
   public let size: Size
   public let showControls: Bool
   public let kind: String
@@ -44,24 +43,11 @@ public struct PaginationView: HTMLContent {
   public let nextData: [(String, String)]
   let `class`: String
 
-  public struct PageNumber: Sendable {
-    public let label: String
-    public let url: String
-    public let isActive: Bool
-
-    public init(label: String, url: String, isActive: Bool = false) {
-      self.label = label
-      self.url = url
-      self.isActive = isActive
-    }
-  }
-
   public init(
     currentPage: Int? = nil,
     totalPages: Int = 0,
     previousUrl: String? = nil,
     nextUrl: String? = nil,
-    pageNumbers: [PageNumber]? = nil,
     size: Size = .normal,
     showControls: Bool = true,
     kind: String = "",
@@ -78,14 +64,10 @@ public struct PaginationView: HTMLContent {
     nextData: [(String, String)] = [],
     class: String = ""
   ) {
-    let resolvedTotal = totalPages > 0 ? totalPages : (pageNumbers?.count ?? 0)
-    let fromActive = pageNumbers?.first(where: { $0.isActive }).flatMap { Int($0.label) }
-    let resolvedCurrent = currentPage ?? fromActive ?? 1
-    self.totalPages = max(0, resolvedTotal)
-    self.currentPage = max(1, resolvedCurrent)
+    self.totalPages = max(0, totalPages)
+    self.currentPage = max(1, currentPage ?? 1)
     self.previousUrl = previousUrl
     self.nextUrl = nextUrl
-    self.pageNumbers = pageNumbers
     self.size = size
     self.showControls = showControls
     self.kind = kind
@@ -196,17 +178,6 @@ public struct PaginationView: HTMLContent {
         } else {
           span { "of \(totalPagesStr)" }
             .class("pagination-total")
-        }
-
-        if let pageNumbers, !pageNumbers.isEmpty {
-          div {
-            for pageNumber in pageNumbers {
-              a { pageNumber.label }
-                .href(pageNumber.url)
-                .data("page", pageNumber.label)
-            }
-          }
-          .class("pagination-page-map")
         }
       }
       .class("pagination-indicator")
@@ -351,12 +322,14 @@ public struct PaginationView: HTMLContent {
         webkitAppearance(.none)
         margin(0)
       }
+      // A field's 16px text (user, 2026-10-08)—under 16px iOS Safari zooms
+      // the page as the box is focused—in the mini row's 24.
       selector("&.pagination-size-mini .page-box") {
         fontFamily(typographyFontMono)
-        fontSize(fontSizeXSmall12)
+        fontSize(fontSizeMedium16)
         padding(0, spacing2)
         borderColor(borderColorBase)
-        height(px(20))
+        height(ButtonView.ButtonSize.mini.minSize)
         transition(.none)
       }
       descendant(".page-box[data-input-width='\(inputWidth.value)']") { width(inputWidth) }
@@ -392,7 +365,6 @@ public struct PaginationView: HTMLContent {
         fontSize(fontSizeXSmall12)
         color(colorBase)
       }
-      descendant(".pagination-page-map") { display(.none) }
     }
   }
 }
@@ -470,9 +442,8 @@ public struct PaginationView: HTMLContent {
         _ = inputEl?.addEventListener(.blur) { (event: Event) in
           guard let input = (inputEl as? HTML.HTMLInputElement) else { return }
           if stringIsEmpty(input.value) {
-            let currentPageLink = view.querySelector("a[data-current=\"true\"]")
-            let page = currentPageLink?.getAttribute("data-page") ?? "1"
-            input.value = page
+            // Back to the page it stands on, as the server wrote it.
+            input.value = input.getAttribute("value") ?? "1"
           }
         }
       }
@@ -480,18 +451,6 @@ public struct PaginationView: HTMLContent {
 
     private func navigateToPage(_ page: String, in view: DOM.Element) {
       guard !stringIsEmpty(page) else { return }
-
-      let allLinks = view.querySelectorAll("a[data-page]")
-      for link in allLinks {
-        let dataPage = link.getAttribute("data-page") ?? ""
-        if stringEquals(dataPage, page) {
-          let href = link.getAttribute("href") ?? ""
-          if !stringIsEmpty(href) {
-            window.location.href = href
-            return
-          }
-        }
-      }
 
       let currentUrl = window.location.href
 
