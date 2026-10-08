@@ -28,6 +28,15 @@
       repeatable: Bool = false)
     /// A day, as `yyyy-mm-dd`, picked with the date picker.
     case date(name: String, label: String)
+    /// Typed text with suggestions (`ComboboxView`): its own `options` while
+    /// nothing is typed, then, as it is typed, the ones `searchURL` answers
+    /// (`searchURL?q=…`, debounced, its answer a ComboboxView's options).
+    /// A suggestion chosen posts its value; text naming none posts as typed.
+    /// For a field whose values are too many to list and often typed: a
+    /// records list's Voice names.
+    case combobox(
+      name: String, label: String, options: [(value: String, label: String)], searchURL: String,
+      repeatable: Bool = false)
     /// A range of days (`DateRangeValue`), picked with the date picker's
     /// range: presets beside a calendar.
     case dateRange(name: String, label: String)
@@ -40,6 +49,7 @@
       switch self {
       case .text(let name, _, _, _): return name
       case .select(let name, _, _, _): return name
+      case .combobox(let name, _, _, _, _): return name
       case .date(let name, _): return name
       case .dateRange(let name, _): return name
       case .timeRange(let name, _): return name
@@ -60,6 +70,7 @@
       switch self {
       case .text(_, let label, _, _): return label
       case .select(_, let label, _, _): return label
+      case .combobox(_, let label, _, _, _): return label
       case .date(_, let label): return label
       case .dateRange(_, let label): return label
       case .timeRange(_, let label): return label
@@ -71,6 +82,7 @@
       case .date, .dateRange, .timeRange: return false
       case .text(_, _, _, let repeatable): return repeatable
       case .select(_, _, _, let repeatable): return repeatable
+      case .combobox(_, _, _, _, let repeatable): return repeatable
       }
     }
 
@@ -78,7 +90,7 @@
     /// from a list.
     public var takesInput: Bool {
       switch self {
-      case .text, .date, .dateRange, .timeRange: return true
+      case .text, .combobox, .date, .dateRange, .timeRange: return true
       case .select: return false
       }
     }
@@ -87,7 +99,7 @@
     /// options, a date a day, a text anything.
     public func holds(_ value: String) -> Bool {
       switch self {
-      case .text: return true
+      case .text, .combobox: return true
       case .select(_, _, let options, _): return options.contains { $0.value == value }
       case .date:
         let parts = value.split(separator: "-")
@@ -153,6 +165,9 @@
       // build one here, discarded, or the input arrives unstyled.
       if schema.contains(where: \.takesInput) {
         _ = TextInputView(id: "filter-bar-preload", name: "", value: "", fullWidth: true).build()
+      }
+      if schema.contains(where: { if case .combobox = $0 { return true } else { return false } }) {
+        _ = ComboboxView(id: "filter-bar-combobox-preload", name: "").build()
       }
       if schema.contains(where: {
         switch $0 {
@@ -314,6 +329,18 @@
           fullWidth: true
         )
 
+      case .combobox(let name, let label, let options, let searchURL, _):
+        ComboboxView(
+          id: "filter-\(name)-\(rowIndex)",
+          name: name,
+          ariaLabel: label,
+          options: options.map { ComboboxView.Option(value: $0.value, display: $0.label) },
+          selectedValue: value,
+          placeholder: label,
+          searchURL: searchURL,
+          class: "filter-bar-value-input"
+        )
+
       case .date(let name, _):
         DatePickerView(
           id: "filter-\(name)-\(rowIndex)",
@@ -361,6 +388,12 @@
           parts.append(
             "{\"key\":\"\(field.key)\",\"name\":\"\(name)\",\"label\":\"\(label)\",\"type\":\"select\",\"repeatable\":\"\(repeatable)\",\"options\":[\(opts)]}"
           )
+        case .combobox(let name, let label, let options, let searchURL, let repeatable):
+          let opts = options.map { "{\"\(Self.escaped($0.value))\":\"\(Self.escaped($0.label))\"}" }
+            .joined(separator: ",")
+          parts.append(
+            "{\"key\":\"\(field.key)\",\"name\":\"\(name)\",\"label\":\"\(label)\",\"type\":\"combobox\",\"repeatable\":\"\(repeatable)\",\"searchURL\":\"\(Self.escaped(searchURL))\",\"options\":[\(opts)]}"
+          )
         case .date(let name, let label):
           parts.append(
             "{\"key\":\"\(field.key)\",\"name\":\"\(name)\",\"label\":\"\(label)\",\"type\":\"date\"}"
@@ -376,6 +409,12 @@
         }
       }
       return "[\(parts.joined(separator: ","))]"
+    }
+
+    /// A value as the schema's JSON carries it: its quotes and backslashes
+    /// escaped, which the client reads back (`unescaped`).
+    static func escaped(_ value: String) -> String {
+      value.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
     }
   }
 #endif
@@ -423,6 +462,9 @@
     let name: String
     let label: String
     let isText: Bool
+    let isCombobox: Bool
+    /// Where a combobox asks for suggestions.
+    let searchURL: String
     let isDate: Bool
     let isDateRange: Bool
     let isTimeRange: Bool
@@ -465,13 +507,16 @@
         let label = extractJSONString(obj, key: "label") ?? name
         let placeholder = extractJSONString(obj, key: "placeholder") ?? ""
         let isText = stringEquals(typeStr, "text")
+        let isCombobox = stringEquals(typeStr, "combobox")
+        let searchURL = extractJSONString(obj, key: "searchURL").map(unescaped) ?? ""
         let isDate = stringEquals(typeStr, "date")
         let isDateRange = stringEquals(typeStr, "daterange")
         let isTimeRange = stringEquals(typeStr, "timerange")
         let repeatable = extractJSONString(obj, key: "repeatable").map { stringEquals($0, "true") } ?? false
         schema.append(
           SchemaEntry(
-            key: key, name: name, label: label, isText: isText, isDate: isDate, isDateRange: isDateRange,
+            key: key, name: name, label: label, isText: isText, isCombobox: isCombobox, searchURL: searchURL,
+            isDate: isDate, isDateRange: isDateRange,
             isTimeRange: isTimeRange, placeholder: placeholder, repeatable: repeatable))
       }
     }
@@ -558,6 +603,11 @@
           hydrator: timeInputHydration
         )
         row.insertBefore(input, addOrRemoveBtn)
+      } else if entry.isCombobox {
+        let input = ComboboxFactory.createElement(
+          id: "filter-\(fieldName)-swap", name: fieldName, label: entry.label, options: optionsForField(entry.key),
+          value: value, searchURL: entry.searchURL, class: "filter-bar-value-input")
+        row.insertBefore(input, addOrRemoveBtn)
       } else if entry.isText {
         let input = TextInputFactory.createElement(
           id: "filter-\(fieldName)-swap",
@@ -600,7 +650,7 @@
         guard let optValue = extractFirstQuotedString(beforeColon),
           let optLabel = extractFirstQuotedString(afterColon)
         else { continue }
-        result.append(DropdownView.DropdownOption(value: optValue, display: optLabel))
+        result.append(DropdownView.DropdownOption(value: unescaped(optValue), display: unescaped(optLabel)))
       }
       return result
     }
@@ -669,6 +719,11 @@
           class: "filter-bar-value-input",
           hydrator: timeInputHydration
         )
+        row.appendChild(input)
+      } else if field.isCombobox {
+        let input = ComboboxFactory.createElement(
+          id: "filter-\(field.name)-\(rowIndex)", name: field.name, label: field.label,
+          options: optionsForField(field.key), value: "", searchURL: field.searchURL, class: "filter-bar-value-input")
         row.appendChild(input)
       } else if field.isText {
         let input = TextInputFactory.createElement(
@@ -779,6 +834,13 @@
       let pattern = "\"\(key)\":"
       guard let after = findAndSkip(pattern, in: obj) else { return nil }
       return extractFirstQuotedString(after)
+    }
+
+    /// A schema string as written, its escaped quotes and backslashes read
+    /// back (`FilterBarView.escaped`).
+    private func unescaped(_ s: String) -> String {
+      guard stringContains(s, "\\") else { return s }
+      return stringReplace(stringReplace(s, "\\\"", "\""), "\\\\", "\\")
     }
 
     // Extracts first "..." string. UTF-8 byte-safe—handles ASCII JSON content.

@@ -833,6 +833,24 @@ public struct ComboboxView: HTMLContent {
     }
   }
 
+  /// A combobox built on the client—a filter bar's row added or switched to
+  /// a combobox field—bound as it is made.
+  public enum ComboboxFactory {
+    public static func createElement(
+      id: String, name: String, label: String, options: [ComboboxView.Option], value: String, searchURL: String,
+      class: String = ""
+    ) -> DOM.Element {
+      let wrapper = document.createElement(.div)
+      wrapper.innerHTML = ComboboxView(
+        id: id, name: name, ariaLabel: label, options: options, selectedValue: value, placeholder: label,
+        searchURL: stringIsEmpty(searchURL) ? nil : searchURL, class: `class`
+      ).render()
+      let element = wrapper.firstElementChild ?? wrapper
+      ComboboxHydration.hydrate(element: element)
+      return element
+    }
+  }
+
   /// Every combobox on the page, and those a fragment brings in later.
   public enum ComboboxHydration {
     private static nonisolated(unsafe) var instances: [ComboboxInstance] = []
