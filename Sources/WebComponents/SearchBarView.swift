@@ -191,7 +191,7 @@
               // li.search-bar-suggestion-item
               //   a.search-bar-suggestion-link
               //     span.search-bar-suggestion-text (language › title)
-              //     span.search-bar-suggestion-detail (class › voices › homograph, by the clash rule)
+              //     span.search-bar-suggestion-detail (class › voice names › homograph, by the clash rule)
               // Styles applied directly via WebAPIs DSL in render() below
             }
             .class("search-bar-suggestions")
@@ -274,7 +274,7 @@
           display(.block)
         }
         // Two rows, as every record is offered: its language › its title,
-        // then its class, its voices and homograph number by the clash rule.
+        // then its class, its voice names and homograph number by the clash rule.
         descendant(".search-bar-suggestion-link") {
           display(.flex)
           flexDirection(.column)
@@ -567,7 +567,7 @@
       let metas = RecordLabelView.metas(
         results.map {
           RecordLabelView.Entry(
-            language: $0.language, title: $0.text, type: $0.type, voices: $0.voices, homograph: $0.homograph)
+            language: $0.language, title: $0.text, type: $0.type, voiceNames: $0.voiceNames, homograph: $0.homograph)
         })
       for (index, result) in results.enumerated() {
         // Its language › its title, as a breadcrumb, as
@@ -578,7 +578,7 @@
           context: stringIsEmpty(result.language) ? "—" : result.language, text: result.text
         ).render()
 
-        // Its class, and its voices and homograph number only where they
+        // Its class, and its voice names and homograph number only where they
         // tell it from another row.
         let detailSpan = document.createElement(.span)
         detailSpan.className = "search-bar-suggestion-detail"
@@ -608,17 +608,14 @@
       }
     }
 
-    /// Where a suggestion leads: the record's own path, as the answer gives
-    /// it (JSON writes its slashes "\/"), else one made of its segments.
-    private func href(of result: SearchBarSuggestedLemma) -> String {
-      if !stringIsEmpty(result.url) { return stringReplace(result.url, "\\/", "/") }
-      let base = stripQuery(resultUrlBase)
-      return "\(base)/\(result.languageCode)/\(result.text)/\(result.homograph)"
-    }
+  }
 
-    private func stripQuery(_ url: String) -> String {
-      let parts = stringSplit(url, separator: "?")
-      return parts.count > 0 ? parts[0] : url
+  extension SearchBarHydration {
+    /// Where a suggestion leads: the record's own path, as the answer gives
+    /// it (JSON writes its slashes "\/"). Every result carries one
+    /// (`SearchResultDTO.url`).
+    fileprivate func href(of result: SearchBarSuggestedLemma) -> String {
+      stringReplace(result.url, "\\/", "/")
     }
   }
 
@@ -626,10 +623,9 @@
     let id: Int
     let text: String
     let language: String
-    let languageCode: String
-    /// Its voices as text (`qualifier`): a work's own, a word's those of
+    /// Its voice names as text (`voiceNames`): a work's own, a word's those of
     /// the work holding its earliest attestation; "—" for none.
-    let voices: String
+    let voiceNames: String
     /// Its type (Book, Noun…); "" when it has none.
     let type: String
     let homograph: Int
@@ -705,7 +701,6 @@
       for str in exactStrs + partialStrs {
         let text = extractValue(from: str, key: "text")
         let language = extractValue(from: str, key: "language")
-        let languageCode = extractValue(from: str, key: "languageCode")
         // Its homograph number where its address is numbered; 0 for none.
         let homographStr = extractValue(from: str, key: "homograph")
         let homograph = parseInt(homographStr) ?? 0
@@ -719,8 +714,7 @@
               id: id,
               text: text,
               language: language,
-              languageCode: languageCode,
-              voices: extractValue(from: str, key: "qualifier"),
+              voiceNames: extractValue(from: str, key: "voiceNames"),
               type: extractValue(from: str, key: "type"),
               homograph: homograph,
               url: extractValue(from: str, key: "url")

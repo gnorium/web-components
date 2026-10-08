@@ -17,8 +17,7 @@
     let resultUrlBase: String
     let resultTextKey: String
     let resultSubtextKey: String
-    let resultUrlKey: String
-    let resultQualifierKey: String
+    let resultVoiceNamesKey: String
     let resultHomographKey: String
     let resultColorKey: String
     let tabs: [SearchMenuTab]
@@ -32,8 +31,7 @@
       let resultUrlBase: String
       let resultTextKey: String
       let resultSubtextKey: String
-      let resultUrlKey: String
-      let resultQualifierKey: String
+      let resultVoiceNamesKey: String
       let resultHomographKey: String
       let resultColorKey: String
 
@@ -41,8 +39,8 @@
         name: String, label: String,
         searchEndpoint: String, searchField: String,
         resultUrlBase: String,
-        resultTextKey: String, resultSubtextKey: String, resultUrlKey: String,
-        resultQualifierKey: String = "qualifier",
+        resultTextKey: String, resultSubtextKey: String,
+        resultVoiceNamesKey: String = "voiceNames",
         resultHomographKey: String = "homograph",
         resultColorKey: String = "color"
       ) {
@@ -53,8 +51,7 @@
         self.resultUrlBase = resultUrlBase
         self.resultTextKey = resultTextKey
         self.resultSubtextKey = resultSubtextKey
-        self.resultUrlKey = resultUrlKey
-        self.resultQualifierKey = resultQualifierKey
+        self.resultVoiceNamesKey = resultVoiceNamesKey
         self.resultHomographKey = resultHomographKey
         self.resultColorKey = resultColorKey
       }
@@ -96,8 +93,7 @@
       resultUrlBase: String = "/results",
       resultTextKey: String = "title",
       resultSubtextKey: String = "subtitle",
-      resultUrlKey: String = "url",
-      resultQualifierKey: String = "qualifier",
+      resultVoiceNamesKey: String = "voiceNames",
       resultHomographKey: String = "homograph",
       resultColorKey: String = "color",
       tabs: [SearchMenuTab] = [],
@@ -112,8 +108,7 @@
       self.resultUrlBase = resultUrlBase
       self.resultTextKey = resultTextKey
       self.resultSubtextKey = resultSubtextKey
-      self.resultUrlKey = resultUrlKey
-      self.resultQualifierKey = resultQualifierKey
+      self.resultVoiceNamesKey = resultVoiceNamesKey
       self.resultHomographKey = resultHomographKey
       self.resultColorKey = resultColorKey
       self.tabs = tabs
@@ -134,8 +129,7 @@
           + ",\"resultUrlBase\":\"\(esc(tab.resultUrlBase))\""
           + ",\"resultTextKey\":\"\(esc(tab.resultTextKey))\""
           + ",\"resultSubtextKey\":\"\(esc(tab.resultSubtextKey))\""
-          + ",\"resultUrlKey\":\"\(esc(tab.resultUrlKey))\""
-          + ",\"resultQualifierKey\":\"\(esc(tab.resultQualifierKey))\""
+          + ",\"resultVoiceNamesKey\":\"\(esc(tab.resultVoiceNamesKey))\""
           + ",\"resultHomographKey\":\"\(esc(tab.resultHomographKey))\""
           + ",\"resultColorKey\":\"\(esc(tab.resultColorKey))\""          + "}"
         )
@@ -231,8 +225,7 @@
         .data("result-url-base", resultUrlBase)
         .data("result-text-key", resultTextKey)
         .data("result-subtext-key", resultSubtextKey)
-        .data("result-url-key", resultUrlKey)
-        .data("result-qualifier-key", resultQualifierKey)
+        .data("result-voice-names-key", resultVoiceNamesKey)
         .data("result-homograph-key", resultHomographKey)
         .data("result-color-key", resultColorKey)
         .data("local-storage-key", localStorageKey)
@@ -514,8 +507,7 @@
     private var resultUrlBase: String = ""
     private var resultTextKey: String = "title"
     private var resultSubtextKey: String = "subtitle"
-    private var resultUrlKey: String = "url"
-    private var resultQualifierKey: String = "qualifier"
+    private var resultVoiceNamesKey: String = "voiceNames"
     private var resultHomographKey: String = "homograph"
     private var resultColorKey: String = "color"
     private var localStorageKey: String = "search-tab"
@@ -632,8 +624,7 @@
           resultUrlBase = extractJSONValue(rawTabConfigs, tabName, "resultUrlBase") ?? "/results"
           resultTextKey = extractJSONValue(rawTabConfigs, tabName, "resultTextKey") ?? "text"
           resultSubtextKey = extractJSONValue(rawTabConfigs, tabName, "resultSubtextKey") ?? "language"
-          resultUrlKey = extractJSONValue(rawTabConfigs, tabName, "resultUrlKey") ?? "id"
-          resultQualifierKey = extractJSONValue(rawTabConfigs, tabName, "resultQualifierKey") ?? "qualifier"
+          resultVoiceNamesKey = extractJSONValue(rawTabConfigs, tabName, "resultVoiceNamesKey") ?? "voiceNames"
           resultHomographKey = extractJSONValue(rawTabConfigs, tabName, "resultHomographKey") ?? "homograph"
           resultColorKey = extractJSONValue(rawTabConfigs, tabName, "resultColorKey") ?? "color"
 
@@ -643,8 +634,7 @@
           _ = container.dataset["resultUrlBase"] = resultUrlBase
           _ = container.dataset["resultTextKey"] = resultTextKey
           _ = container.dataset["resultSubtextKey"] = resultSubtextKey
-          _ = container.dataset["resultUrlKey"] = resultUrlKey
-          _ = container.dataset["resultQualifierKey"] = resultQualifierKey
+          _ = container.dataset["resultVoiceNamesKey"] = resultVoiceNamesKey
           _ = container.dataset["resultHomographKey"] = resultHomographKey
           _ = container.dataset["resultColorKey"] = resultColorKey
 
@@ -686,8 +676,7 @@
 
       resultTextKey = container.dataset["resultTextKey"] ?? "title"
       resultSubtextKey = container.dataset["resultSubtextKey"] ?? "subtitle"
-      resultUrlKey = container.dataset["resultUrlKey"] ?? "url"
-      resultQualifierKey = container.dataset["resultQualifierKey"] ?? "qualifier"
+      resultVoiceNamesKey = container.dataset["resultVoiceNamesKey"] ?? "voiceNames"
       resultHomographKey = container.dataset["resultHomographKey"] ?? "homograph"
       resultColorKey = container.dataset["resultColorKey"] ?? "color"
 
@@ -764,13 +753,13 @@
       let id: Int
       let text: String
       let subtext: String
-      /// Its voices as text (`qualifier`): a work's own, a word's those of
+      /// Its voice names as text (`voiceNames`): a work's own, a word's those of
       /// the work holding its earliest attestation; "—" for none.
-      let voices: String
+      let voiceNames: String
       /// Its type (Book, Noun…); "" when it has none.
       let type: String
-      let urlSegment: String
-      /// The record's own path, as the answer gives it; "" when it has none.
+      /// The record's own path, as the answer gives it: every result
+      /// carries one (`SearchResultDTO.url`).
       let url: String
       let homograph: Int
       let color: String
@@ -877,7 +866,7 @@
       let metas = RecordLabelView.metas(
         limitedResults.map {
           RecordLabelView.Entry(
-            language: $0.subtext, title: $0.text, type: $0.type, voices: $0.voices, homograph: $0.homograph)
+            language: $0.subtext, title: $0.text, type: $0.type, voiceNames: $0.voiceNames, homograph: $0.homograph)
         })
 
       // Create new menu items using DOM API
@@ -902,23 +891,14 @@
         item.setAttribute(.role, .option)
         item.setAttribute(.tabindex, -1)
 
-        // Construct URL for navigation
-        // Its own path when the answer gives one (JSON writes its slashes
+        // Its own path, as the answer gives it (JSON writes its slashes
         // "\/"): two records of one title differ only there.
-        let href: String
-        let base = stripQuery(resultUrlBase)
-        if !stringIsEmpty(result.url) {
-          href = stringReplace(result.url, "\\/", "/")
-        } else if stringEquals(searchField, "q") || stringContains(resultUrlBase, "/articles") {
-          href = "\(base)/\(result.urlSegment)"
-        } else {
-          href = "\(base)/\(result.urlSegment)/\(result.text)/\(result.homograph)"
-        }
+        let href = stringReplace(result.url, "\\/", "/")
         item.setAttribute(data("url"), href)
 
         // Two rows, the same for both kinds, as every record is offered
         // (a gloss's title too): its language › what the result IS (its
-        // title), as a breadcrumb; then its class, and its voices and
+        // title), as a breadcrumb; then its class, and its voice names and
         // homograph number only where they tell it from another row
         // (`RecordLabelView.metas`).
         let holder = document.createElement(.span)
@@ -1021,9 +1001,8 @@
       for str in allStrs {
         let textValue = extractValue(from: str, key: resultTextKey)
         let subtextValue = extractValue(from: str, key: resultSubtextKey)
-        let urlSegment = extractValue(from: str, key: resultUrlKey)
-        let qualifierValue = extractValue(from: str, key: resultQualifierKey)
-        
+        let voiceNamesValue = extractValue(from: str, key: resultVoiceNamesKey)
+
         // Its homograph number where its address is numbered; 0 for none.
         let homographStr = extractValue(from: str, key: resultHomographKey)
         let homograph = parseInt(homographStr) ?? 0
@@ -1039,9 +1018,8 @@
               id: id,
               text: textValue,
               subtext: subtextValue,
-              voices: qualifierValue,
+              voiceNames: voiceNamesValue,
               type: extractValue(from: str, key: "type"),
-              urlSegment: urlSegment,
               url: extractValue(from: str, key: "url"),
               homograph: homograph,
               color: color
@@ -1122,11 +1100,6 @@
           setResultsMenuOpen(resultsMenu, false)
         }
       }
-    }
-
-    private func stripQuery(_ url: String) -> String {
-      let parts = stringSplit(url, separator: "?")
-      return parts.count > 0 ? parts[0] : url
     }
   }
 #endif

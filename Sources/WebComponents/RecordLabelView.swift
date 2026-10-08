@@ -15,9 +15,10 @@ import WebTypes
 /// subordinate (12px and 8px beside the 14px title), the title the linked
 /// grain the path leads to; then, small and subtle, a path of what tells it
 /// from the records listed with it (`metas`, the clash rule), the same for
-/// works and words: its class always › its voices only where another
-/// listed record has its language, title and class › a homograph's number
-/// only where they clash still. "Middle English › anker", "Noun"; "English
+/// works and words, as its address is: Class › Voice names › Homograph—its
+/// class always › its voice names only where another listed record has its
+/// language, title and class › its homograph number only where another has
+/// its voice names too. "Middle English › anker", "Noun"; "English
 /// › bank", "Noun › Margery Kempe"; "Old English › An Anglo-Saxon
 /// Dictionary", "Dictionary". One record alone (a gloss's title) is its
 /// class alone. Only the title is ever a link.
@@ -30,7 +31,8 @@ public struct RecordLabelView: HTMLContent {
   let context: String
   let text: String
   /// The meta row's segments, a path as the first row is: class, then
-  /// voices, then a homograph's number, where the clash rule shows them.
+  /// voice names, then a homograph's number, where the clash rule shows
+  /// them.
   let meta: [String]
   let url: String
   let `class`: String
@@ -41,35 +43,40 @@ public struct RecordLabelView: HTMLContent {
     public let title: String
     /// Its class by its name ("Dictionary", "Noun"); "" when unknown.
     public let type: String
-    /// Its voices as its address is qualified by them, the same on both
-    /// sides: a work's own, a word's those of the work holding its earliest
-    /// attestation ("Margery Kempe"); "" or "—" when none is recorded.
-    public let voices: String
-    /// Its homograph number, where its address is numbered; 0 for none.
+    /// Its voice names as its address takes them, as English lists them,
+    /// the same on both sides: a work's own, a word's those of the work
+    /// holding its earliest attestation ("Margery Kempe"); "" or "—" when
+    /// none is recorded.
+    public let voiceNames: String
+    /// Its homograph number, its address's last segment where others share
+    /// its title, class and voice names (`/eng/bank/noun/margery-kempe/2`); 0
+    /// for none.
     public let homograph: Int
 
-    public init(language: String, title: String, type: String, voices: String = "", homograph: Int = 0) {
+    public init(language: String, title: String, type: String, voiceNames: String = "", homograph: Int = 0) {
       self.language = language
       self.title = title
       self.type = type
-      self.voices = voices
+      self.voiceNames = voiceNames
       self.homograph = homograph
     }
   }
 
   /// The clash rule (user, 2026-10-08), each record's meta row against the
-  /// others listed with it, down its identity—class › voices › homograph,
+  /// others listed with it, down its address—class › voice names ›
+  /// homograph,
   /// the same for works and words: its class, always ("—" when unknown);
-  /// then its voices where another has the same language, title and class
-  /// ("—" when none is recorded); then its homograph number (0 for none)
-  /// where another has the same voices too, none recorded alike.
+  /// then its voice names where another has the same language, title and
+  /// class ("—" when none is recorded, a voice-names segment like any
+  /// other); then its homograph number where another has the same voice
+  /// names too.
   /// Embedded-safe: it runs in the search menu.
   public static func metas(_ entries: [Entry]) -> [[String]] {
     func same(_ a: Entry, _ b: Entry) -> Bool {
       stringEquals(a.language, b.language) && stringEquals(a.title, b.title) && stringEquals(a.type, b.type)
     }
     // None recorded reads one way, however it was sent.
-    func voices(_ entry: Entry) -> String { stringIsEmpty(entry.voices) ? "—" : entry.voices }
+    func voiceNames(_ entry: Entry) -> String { stringIsEmpty(entry.voiceNames) ? "—" : entry.voiceNames }
     var out: [[String]] = []
     for (index, entry) in entries.enumerated() {
       let type = stringIsEmpty(entry.type) ? "—" : entry.type
@@ -77,13 +84,13 @@ public struct RecordLabelView: HTMLContent {
       var twin = false
       for (other, candidate) in entries.enumerated() where other != index && same(entry, candidate) {
         namesake = true
-        if stringEquals(voices(entry), voices(candidate)) { twin = true }
+        if stringEquals(voiceNames(entry), voiceNames(candidate)) { twin = true }
       }
       guard namesake else {
         out.append([type])
         continue
       }
-      var segments = [type, voices(entry)]
+      var segments = [type, voiceNames(entry)]
       if twin && entry.homograph > 0 { segments.append("\(entry.homograph)") }
       out.append(segments)
     }
@@ -115,7 +122,7 @@ public struct RecordLabelView: HTMLContent {
           if stringIsEmpty(context) { text } else { BreadcrumbLabelView(context: context, text: text) }
         }
       }
-      // A path as the first row is: class › voices › homograph number,
+      // A path as the first row is: class › voice names › homograph number,
       // the same small chevron between them.
       span {
         for (index, segment) in meta.enumerated() {
