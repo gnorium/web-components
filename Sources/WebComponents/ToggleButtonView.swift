@@ -94,7 +94,6 @@
                   alignItems(.center)
                   justifyContent(.center)
                 }
-                selector("&[data-size='mini']") { height(ButtonView.ButtonSize.mini.iconSize) }
                 selector("&[data-size='small']") { height(ButtonView.ButtonSize.small.iconSize) }
                 selector("&[data-size='medium']") { height(ButtonView.ButtonSize.medium.iconSize) }
                 selector("&[data-size='large']") { height(ButtonView.ButtonSize.large.iconSize) }

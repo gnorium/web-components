@@ -21,7 +21,7 @@ public struct TableView: HTMLContent {
   public let paginate: Bool
   public let paginationPosition: PaginationPosition
   public let paginationSizeDefault: Int
-  /// The size of the pagination control itself. Mini suits a dense table
+  /// The size of the pagination control itself. Small suits a dense table
   /// tucked inside a page; a table that is the page wants the normal one.
   public let paginationControlSize: PaginationView.Size
   public let totalItems: Int?

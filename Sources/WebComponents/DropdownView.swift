@@ -288,8 +288,10 @@ public struct DropdownView: HTMLContent {
           // Search input
           // The site's search box; the menu's own hydration drives it
           // (filtering, arrows, Enter, focus on open, clearing on close).
+          // Medium whatever the dropdown's size: 40 tall, its text 16px.
           div {
-            SearchInputView(placeholder: "Search", class: "dropdown-search-input", standalone: false)
+            SearchInputView(
+              size: .medium, placeholder: "Search", class: "dropdown-search-input", standalone: false)
           }
           .class("dropdown-search-input-wrapper")
           .data("dropdown-search", true)

@@ -11,8 +11,17 @@ import WebTypes
 // switch on the String-raw status, never ==).
 
 /// A SearchInput allows users to enter and submit a search query.
+///
+/// Its size is ButtonView's scale (`ButtonView.ButtonSize`), so a box sits
+/// level with the controls beside it: its height is that size's `minSize`
+/// (32, 40, 40) and its sides 12, 16 or 16px. Its text is 16px at
+/// every size (user, 2026-10-08): smaller text in a field makes iOS Safari
+/// zoom the page as it is focused. Its icons, beside that text, are 12
+/// (the text's size minus 4).
 public struct SearchInputView: HTMLContent {
   let modelValue: String
+  let size: ButtonView.ButtonSize
+  let ariaLabel: String?
   let useButton: Bool
   let clearable: Bool
   let buttonLabel: String
@@ -30,6 +39,7 @@ public struct SearchInputView: HTMLContent {
 
   public init(
     modelValue: String = "",
+    size: ButtonView.ButtonSize = .medium,
     useButton: Bool = false,
     clearable: Bool = false,
     buttonLabel: String = "",
@@ -37,10 +47,13 @@ public struct SearchInputView: HTMLContent {
     disabled: Bool = false,
     status: ValidationStatus = .default,
     placeholder: String = "",
+    ariaLabel: String? = nil,
     class: String = "",
     standalone: Bool = true
   ) {
     self.modelValue = modelValue
+    self.size = size
+    self.ariaLabel = ariaLabel
     self.useButton = useButton
     self.clearable = clearable
     self.buttonLabel = stringIsEmpty(buttonLabel) ? "Search" : buttonLabel
@@ -53,6 +66,13 @@ public struct SearchInputView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
+    // Beside the 16px text, at every size.
+    let iconSize = sizeIconXSmall
+    // The box's measures, set per size on the root (`data-size`).
+    let side: CSS.Length = `var`("--search-input-padding-inline")
+    // A control's room: its icon and its 4px padding at either side; the
+    // controls 8px apart.
+    let step = iconSize + spacing4 + spacing4 + spacing8
     let isError: Bool
     switch status {
     case .error: isError = true
@@ -71,6 +91,7 @@ public struct SearchInputView: HTMLContent {
           .class("search-input")
           .value(modelValue)
           .placeholder(placeholder)
+          .ariaLabel(ariaLabel)
           .disabled(disabled)
           .ariaInvalid(isError)
           // A long query fades at rest (`fadeInputOverflow`).
@@ -81,7 +102,7 @@ public struct SearchInputView: HTMLContent {
           button {
             IconView(
               icon: { size in DeleteIconView(size: size) },
-              size: sizeIconSmall
+              size: iconSize
             )
           }
           .type(.button)
@@ -93,7 +114,7 @@ public struct SearchInputView: HTMLContent {
           span {
             IconView(
               icon: { size in ViewDetailsIconView(size: size) },
-              size: sizeIconSmall
+              size: iconSize
             )
           }
           .class("search-input-details-icon")
@@ -102,7 +123,7 @@ public struct SearchInputView: HTMLContent {
 
         if searchIcon {
           button {
-            SearchIconView(size: sizeIconSmall)
+            SearchIconView(size: iconSize)
           }
           .type(.submit)
           .class("search-input-search-icon")
@@ -123,6 +144,7 @@ public struct SearchInputView: HTMLContent {
     // itself (DropdownView): SearchInputHydration leaves it alone, so its
     // Enter, Escape and arrows reach the holder's own listeners.
     .data("standalone", standalone)
+    .data("size", size.rawValue)
     .style {
       selector("&") {
         display(.flex)
@@ -130,6 +152,19 @@ public struct SearchInputView: HTMLContent {
         position(.relative)
         width(perc(100))
         gap(spacing8)
+      }
+      // ButtonView's scale: the height its buttons share, and the sides.
+      selector("&[data-size='small']") {
+        customProperty("--search-input-height", ButtonView.ButtonSize.small.minSize.value)
+        customProperty("--search-input-padding-inline", spacing12.value)
+      }
+      selector("&[data-size='medium']") {
+        customProperty("--search-input-height", ButtonView.ButtonSize.medium.minSize.value)
+        customProperty("--search-input-padding-inline", spacing16.value)
+      }
+      selector("&[data-size='large']") {
+        customProperty("--search-input-height", ButtonView.ButtonSize.large.minSize.value)
+        customProperty("--search-input-padding-inline", spacing16.value)
       }
       selector("&.search-input-has-button") { flexGrow(1) }
       selector("&:not(.search-input-has-button)") { flex(1) }
@@ -140,13 +175,13 @@ public struct SearchInputView: HTMLContent {
         display(.flex)
         alignItems(.center)
         customProperty("--edge-fade-ground", backgroundColorBase)
-        customProperty("--edge-fade-inset-start", "calc(\(borderWidthBase.value) + 16px)")
-        customProperty("--edge-fade-inset-end", "calc(\(borderWidthBase.value) + 16px)")
+        customProperty("--edge-fade-inset-start", (borderWidthBase + side).value)
+        customProperty("--edge-fade-inset-end", (borderWidthBase + side).value)
       }
       // Room at the end for the clear button and the icons, only when
       // they are drawn: a bare box pads its end as its start.
       selector("&.search-input-has-controls .search-input-wrapper") {
-        customProperty("--edge-fade-inset-end", "calc(\(borderWidthBase.value) + 132px)")
+        customProperty("--edge-fade-inset-end", (borderWidthBase + side + step + step + step).value)
       }
       selector("& .search-input-wrapper:has(> .search-input:disabled)") {
         customProperty("--edge-fade-ground", backgroundColorDisabled)
@@ -156,10 +191,10 @@ public struct SearchInputView: HTMLContent {
       selector("&:not(.search-input-has-button) .search-input-wrapper") { width(perc(100)) }
       descendant(".search-input") {
         width(perc(100))
-        height(minSizeInteractiveTouch)
+        height(`var`("--search-input-height") as CSS.Length)
         paddingBlock(0)
-        paddingInlineStart(px(16))
-        paddingInlineEnd(px(16))
+        paddingInlineStart(side)
+        paddingInlineEnd(side)
         fontFamily(typographyFontSans)
         fontSize(fontSizeMedium16)
         lineHeight(lineHeightSmall22)
@@ -172,7 +207,7 @@ public struct SearchInputView: HTMLContent {
         transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
         boxSizing(.borderBox)
       }
-      selector("&.search-input-has-controls .search-input") { paddingInlineEnd(px(132)) }
+      selector("&.search-input-has-controls .search-input") { paddingInlineEnd(side + step + step + step) }
       selector("&.search-input-error .search-input") { borderColor(borderColorRed) }
       selector("& .search-input::-webkit-search-cancel-button") { display(.none).important() }
       selector("& .search-input::placeholder") {
@@ -196,7 +231,7 @@ public struct SearchInputView: HTMLContent {
       }
       descendant(".search-input-details-icon") {
         position(.absolute)
-        right(px(52))
+        insetInlineEnd(side + step)
         top(perc(50))
         transform(translateY(perc(-50)))
         padding(spacing4)
@@ -206,7 +241,7 @@ public struct SearchInputView: HTMLContent {
       }
       descendant(".search-input-clear-button") {
         position(.absolute)
-        insetInlineEnd(px(88))
+        insetInlineEnd(side + step + step)
         top(perc(50))
         transform(translateY(perc(-50)))
         padding(spacing4)
@@ -242,7 +277,7 @@ public struct SearchInputView: HTMLContent {
       }
       descendant(".search-input-search-icon") {
         position(.absolute)
-        insetInlineEnd(px(16))
+        insetInlineEnd(side)
         top(perc(50))
         transform(translateY(perc(-50)))
         background(.transparent)
@@ -256,9 +291,10 @@ public struct SearchInputView: HTMLContent {
         zIndex(1)
       }
       descendant(".search-input-button") {
-        height(minSizeInteractiveTouch)
+        height(`var`("--search-input-height") as CSS.Length)
         boxSizing(.borderBox)
-        padding(0, spacing16)
+        paddingBlock(0)
+        paddingInline(side)
         fontFamily(typographyFontSans)
         fontSize(fontSizeMedium16)
         fontWeight(fontWeightSemiBold)

@@ -12,7 +12,9 @@ import WebTypes
 /// Editable page control: previous / `[n]` of `M` / next.
 ///
 /// - ``Size/normal``—table / list footers (44px targets, spaced layout)
-/// - ``Size/mini``—chrome pagers (session, artifact, attempt switcher)
+/// - ``Size/small``—chrome pagers (session, artifact, attempt switcher):
+///   ButtonView's small, 32px targets, 16px text (a field under 16px makes
+///   iOS Safari zoom the page as it is focused), 14px chevrons
 ///
 /// URL mode (`previousUrl` / `nextUrl`) is hydrated by
 /// ``PaginationHydration``. Query / custom mode sets `kind` and prev/next
@@ -20,7 +22,7 @@ import WebTypes
 public struct PaginationView: HTMLContent {
   public enum Size: String, Sendable {
     case normal
-    case mini
+    case small
   }
 
   public let currentPage: Int
@@ -91,11 +93,19 @@ public struct PaginationView: HTMLContent {
     let totalPagesStr = totalDisplay ?? (totalPages > 0 ? formatNumberWithCommas(totalPages) : "—")
     let digitSource = totalDisplay ?? "\(max(1, totalPages))"
     let digitCount = max(1, digitSource.utf8.count)
-    let inputWidth =
-      size == .mini
-      ? calc(ch(digitCount) + px(10))
-      : calc(ch(digitCount) + px(20))
-    let iconSize: CSS.Length = size == .mini ? sizeIconXSmall : sizeIconSmall
+    // The chrome size (small) sets "of" and the total apart and keeps its
+    // chevrons beside the number.
+    let chrome: Bool
+    let iconSize: CSS.Length
+    switch size {
+    case .normal:
+      chrome = false
+      iconSize = sizeIconSmall
+    case .small:
+      chrome = true
+      iconSize = ButtonView.ButtonSize.small.iconSize
+    }
+    let inputWidth = chrome ? calc(ch(digitCount) + px(10)) : calc(ch(digitCount) + px(20))
     let useButtons = stringEquals(previousUrl, nil) && stringEquals(nextUrl, nil) && showControls
 
     let sizeClass = "pagination-size-\(size.rawValue)"
@@ -164,7 +174,7 @@ public struct PaginationView: HTMLContent {
             .addingAttribute("size", "\(digitCount)")
         }
 
-        if size == .mini {
+        if chrome {
           span { "of" }
             .class("pagination-term")
           if let totalID {
@@ -234,7 +244,8 @@ public struct PaginationView: HTMLContent {
         margin(0, .auto)
         gap(spacing16)
       }
-      selector("&.pagination-size-mini") {
+      // Its text a field's 16px, as the number in its box.
+      selector("&.pagination-size-small") {
         justifyContent(.flexStart)
         maxWidth(.none)
         margin(0)
@@ -242,8 +253,8 @@ public struct PaginationView: HTMLContent {
         flexShrink(0)
         color(colorBase)
         fontFamily(typographyFontSans)
-        fontSize(fontSizeXSmall12)
-        lineHeight(1.4)
+        fontSize(fontSizeMedium16)
+        lineHeight(lineHeightSmall22)
       }
       selector(".pagination-previous-container", ".pagination-next-container") {
         flex(1)
@@ -251,7 +262,9 @@ public struct PaginationView: HTMLContent {
       }
       descendant(".pagination-previous-container") { justifyContent(.flexStart) }
       descendant(".pagination-next-container") { justifyContent(.flexEnd) }
-      selector("&.pagination-size-mini .pagination-previous-container", "&.pagination-size-mini .pagination-next-container") {
+      selector(
+        "&.pagination-size-small .pagination-previous-container", "&.pagination-size-small .pagination-next-container"
+      ) {
         flex(0)
         marginInline(px(-8))
       }
@@ -271,9 +284,9 @@ public struct PaginationView: HTMLContent {
         cursor(.pointer)
         boxSizing(.borderBox)
       }
-      selector("&.pagination-size-mini .pagination-prev", "&.pagination-size-mini .pagination-next") {
-        width(px(24))
-        height(px(24))
+      selector("&.pagination-size-small .pagination-prev", "&.pagination-size-small .pagination-next") {
+        width(ButtonView.ButtonSize.small.minSize)
+        height(ButtonView.ButtonSize.small.minSize)
         borderRadius(0)
       }
       selector(".pagination-prev.pagination-disabled", ".pagination-next.pagination-disabled") {
@@ -282,7 +295,9 @@ public struct PaginationView: HTMLContent {
         pointerEvents(.none)
         cursor(cursorNotAllowed)
       }
-      selector("&.pagination-size-mini .pagination-prev.pagination-disabled", "&.pagination-size-mini .pagination-next.pagination-disabled") {
+      selector(
+        "&.pagination-size-small .pagination-prev.pagination-disabled", "&.pagination-size-small .pagination-next.pagination-disabled"
+      ) {
         color(colorDisabled)
         opacity(1)
       }
@@ -290,7 +305,9 @@ public struct PaginationView: HTMLContent {
         outline(borderWidthBase, .solid, colorBlueFocus).important()
         outlineOffset(px(2)).important()
       }
-      selector("&.pagination-size-mini .pagination-prev:focus", "&.pagination-size-mini .pagination-next:focus") {
+      selector(
+        "&.pagination-size-small .pagination-prev:focus", "&.pagination-size-small .pagination-next:focus"
+      ) {
         outline(.none).important()
       }
       descendant(".pagination-indicator") {
@@ -300,7 +317,7 @@ public struct PaginationView: HTMLContent {
         justifyContent(.center)
         gap(spacing12)
       }
-      selector("&.pagination-size-mini .pagination-indicator") {
+      selector("&.pagination-size-small .pagination-indicator") {
         gap(spacing6)
       }
       descendant(".page-box") {
@@ -322,14 +339,12 @@ public struct PaginationView: HTMLContent {
         webkitAppearance(.none)
         margin(0)
       }
-      // A field's 16px text (user, 2026-10-08)—under 16px iOS Safari zooms
-      // the page as the box is focused—in the mini row's 24.
-      selector("&.pagination-size-mini .page-box") {
+      selector("&.pagination-size-small .page-box") {
         fontFamily(typographyFontMono)
         fontSize(fontSizeMedium16)
-        padding(0, spacing2)
+        padding(0, spacing4)
         borderColor(borderColorBase)
-        height(ButtonView.ButtonSize.mini.minSize)
+        height(ButtonView.ButtonSize.small.minSize)
         transition(.none)
       }
       descendant(".page-box[data-input-width='\(inputWidth.value)']") { width(inputWidth) }
@@ -360,9 +375,10 @@ public struct PaginationView: HTMLContent {
         fontWeight(fontWeightNormal)
         whiteSpace(.nowrap)
       }
-      selector("&.pagination-size-mini .pagination-total") {
+      selector("&.pagination-size-small .pagination-term") { fontSize(fontSizeMedium16) }
+      selector("&.pagination-size-small .pagination-total") {
         fontFamily(typographyFontMono)
-        fontSize(fontSizeXSmall12)
+        fontSize(fontSizeMedium16)
         color(colorBase)
       }
     }

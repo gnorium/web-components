@@ -58,13 +58,16 @@
         }
         // One cell, both layers in it: the block sizes the cell to the text,
         // and the textarea stretches over exactly that.
+        // Both at a field's 16px (user, 2026-10-08), the block too, so each
+        // character still sits on its twin: under 16px, iOS Safari zooms
+        // the page as the textarea is focused.
         selector("& > .code-view", "& > .code-editor-input") {
           gridArea("1 / 1")
+          fontSize(fontSizeMedium16)
+          lineHeight(lineHeightSmall22)
         }
         descendant(".code-editor-input") {
           fontFamily(typographyFontMono)
-          fontSize(fontSizeXSmall12)
-          lineHeight(lineHeightXSmall20)
           whiteSpace(.pre)
           margin(0)
           padding(0)
