@@ -870,10 +870,13 @@
           minWidth(0)
           margin(0)
         }
+        // The rendered layer at the body's 16 on its content leading, as the
+        // translation's prose and beside the code's 16: switching layers
+        // never changes the size (user, 2026-10-08).
         descendant(".tei-line") {
           fontFamily(typographyFontSerif)
-          fontSize(fontSizeSmall14)
-          lineHeight(lineHeightMedium26)
+          fontSize(fontSizeMedium16)
+          lineHeight(lineHeightContent)
           color(colorBase)
           overflowWrap(.breakWord)
         }
