@@ -110,7 +110,9 @@
               height(minSizeInteractiveTouch)
               fontWeight(fontWeightNormal)
               transition(.all, s(0.2), .easeInOut)
-              fontSize(fontSizeSmall14)
+              // A field's text is 16px (user, 2026-10-08): smaller, iOS
+              // Safari zooms the page as it is focused.
+              fontSize(fontSizeMedium16)
               boxSizing(.borderBox)
               backgroundColor(backgroundColorBase)
               if openDialog {
@@ -136,7 +138,7 @@
 
         // Button
         button {
-          SearchIconView(size: fontSizeSmall14)
+          SearchIconView(size: sizeIconXSmall)
         }
         .type(suggestions ? .button : .submit)
         .class("search-bar-button")
@@ -189,7 +191,7 @@
               // li.search-bar-suggestion-item
               //   a.search-bar-suggestion-link
               //     span.search-bar-suggestion-text (language › title)
-              //     span.search-bar-suggestion-detail (voices · type)
+              //     span.search-bar-suggestion-detail (class › voices › homograph, by the clash rule)
               // Styles applied directly via WebAPIs DSL in render() below
             }
             .class("search-bar-suggestions")
@@ -242,11 +244,10 @@
           maxWidth(.none)
           borderRadius(0)
         }
-        // Sidebar: base radius, same 14px type + spacing10 padding as main
+        // Sidebar: base radius, same 16px type + spacing10 padding as main
         selector("&.in-sidebar .search-bar-input") {
           borderRadius(borderRadiusBase)
           height(minSizeInteractiveTouch)
-          fontSize(fontSizeSmall14)
           padding(px(0), calc(spacing10 + px(28)), px(0), spacing10)
         }
         selector("&.in-sidebar .search-bar-button") {
@@ -273,7 +274,7 @@
           display(.block)
         }
         // Two rows, as every record is offered: its language › its title,
-        // then its voices and type.
+        // then its class, its voices and homograph number by the clash rule.
         descendant(".search-bar-suggestion-link") {
           display(.flex)
           flexDirection(.column)
@@ -626,7 +627,8 @@
     let text: String
     let language: String
     let languageCode: String
-    /// Its voices as text: authors and translators, or etymons.
+    /// Its voices as text (`qualifier`): a work's own, a word's those of
+    /// the work holding its earliest attestation; "—" for none.
     let voices: String
     /// Its type (Book, Noun…); "" when it has none.
     let type: String
@@ -704,8 +706,9 @@
         let text = extractValue(from: str, key: "text")
         let language = extractValue(from: str, key: "language")
         let languageCode = extractValue(from: str, key: "languageCode")
+        // Its homograph number where its address is numbered; 0 for none.
         let homographStr = extractValue(from: str, key: "homograph")
-        let homograph = parseInt(homographStr) ?? 1
+        let homograph = parseInt(homographStr) ?? 0
         let idStr = extractValue(from: str, key: "id")
         // Handle string ID to Int conversion safely, or default to 0 if alphanumeric
         let id = parseInt(idStr) ?? 0

@@ -14,11 +14,13 @@ import WebTypes
 /// language › its title (`BreadcrumbLabelView`), the language and chevron
 /// subordinate (12px and 8px beside the 14px title), the title the linked
 /// grain the path leads to; then, small and subtle, a path of what tells it
-/// from the records listed with it (`metas`, the clash rule): its class
-/// always › its voices only where another listed record has its language,
-/// title and class › a homograph's number only where they clash still. "Middle English › anker", "Noun"; "Old English › An
-/// Anglo-Saxon Dictionary", "Dictionary". One record alone (a gloss's
-/// title) is its class alone. Only the title is ever a link.
+/// from the records listed with it (`metas`, the clash rule), the same for
+/// works and words: its class always › its voices only where another
+/// listed record has its language, title and class › a homograph's number
+/// only where they clash still. "Middle English › anker", "Noun"; "English
+/// › bank", "Noun › Margery Kempe"; "Old English › An Anglo-Saxon
+/// Dictionary", "Dictionary". One record alone (a gloss's title) is its
+/// class alone. Only the title is ever a link.
 ///
 /// With a `url` the title is a link to the record, in the link's colors
 /// (a gloss's title); without, it takes its container's (a search menu
@@ -39,9 +41,11 @@ public struct RecordLabelView: HTMLContent {
     public let title: String
     /// Its class by its name ("Dictionary", "Noun"); "" when unknown.
     public let type: String
-    /// A work's voices as its record page names them; "" for none.
+    /// Its voices as its address is qualified by them, the same on both
+    /// sides: a work's own, a word's those of the work holding its earliest
+    /// attestation ("Margery Kempe"); "" or "—" when none is recorded.
     public let voices: String
-    /// A word's homograph number; 0 for none.
+    /// Its homograph number, where its address is numbered; 0 for none.
     public let homograph: Int
 
     public init(language: String, title: String, type: String, voices: String = "", homograph: Int = 0) {
@@ -54,32 +58,32 @@ public struct RecordLabelView: HTMLContent {
   }
 
   /// The clash rule (user, 2026-10-08), each record's meta row against the
-  /// others listed with it: its class, always ("—" when unknown); then its
-  /// voices where another has the same language, title and class ("—" when
-  /// unknown beside a namesake's; none for words, which have no voices); then
-  /// its homograph number (0 for none) where another has the same voices too. Embedded-safe: it runs in the search menu.
+  /// others listed with it, down its identity—class › voices › homograph,
+  /// the same for works and words: its class, always ("—" when unknown);
+  /// then its voices where another has the same language, title and class
+  /// ("—" when none is recorded); then its homograph number (0 for none)
+  /// where another has the same voices too, none recorded alike.
+  /// Embedded-safe: it runs in the search menu.
   public static func metas(_ entries: [Entry]) -> [[String]] {
     func same(_ a: Entry, _ b: Entry) -> Bool {
       stringEquals(a.language, b.language) && stringEquals(a.title, b.title) && stringEquals(a.type, b.type)
     }
+    // None recorded reads one way, however it was sent.
+    func voices(_ entry: Entry) -> String { stringIsEmpty(entry.voices) ? "—" : entry.voices }
     var out: [[String]] = []
     for (index, entry) in entries.enumerated() {
       let type = stringIsEmpty(entry.type) ? "—" : entry.type
       var namesake = false
-      var voiced = !stringIsEmpty(entry.voices)
       var twin = false
       for (other, candidate) in entries.enumerated() where other != index && same(entry, candidate) {
         namesake = true
-        if !stringIsEmpty(candidate.voices) { voiced = true }
-        if stringEquals(entry.voices, candidate.voices) { twin = true }
+        if stringEquals(voices(entry), voices(candidate)) { twin = true }
       }
       guard namesake else {
         out.append([type])
         continue
       }
-      // A word has no voices: its namesakes go straight to their numbers.
-      var segments = [type]
-      if voiced { segments.append(stringIsEmpty(entry.voices) ? "—" : entry.voices) }
+      var segments = [type, voices(entry)]
       if twin && entry.homograph > 0 { segments.append("\(entry.homograph)") }
       out.append(segments)
     }

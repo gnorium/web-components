@@ -764,7 +764,9 @@
       let id: Int
       let text: String
       let subtext: String
-      let pos: String
+      /// Its voices as text (`qualifier`): a work's own, a word's those of
+      /// the work holding its earliest attestation; "—" for none.
+      let voices: String
       /// Its type (Book, Noun…); "" when it has none.
       let type: String
       let urlSegment: String
@@ -875,7 +877,7 @@
       let metas = RecordLabelView.metas(
         limitedResults.map {
           RecordLabelView.Entry(
-            language: $0.subtext, title: $0.text, type: $0.type, voices: $0.pos, homograph: $0.homograph)
+            language: $0.subtext, title: $0.text, type: $0.type, voices: $0.voices, homograph: $0.homograph)
         })
 
       // Create new menu items using DOM API
@@ -1022,8 +1024,9 @@
         let urlSegment = extractValue(from: str, key: resultUrlKey)
         let qualifierValue = extractValue(from: str, key: resultQualifierKey)
         
+        // Its homograph number where its address is numbered; 0 for none.
         let homographStr = extractValue(from: str, key: resultHomographKey)
-        let homograph = parseInt(homographStr) ?? 1
+        let homograph = parseInt(homographStr) ?? 0
         let idStr = extractValue(from: str, key: "id")
         let id = parseInt(idStr) ?? 0
 
@@ -1036,7 +1039,7 @@
               id: id,
               text: textValue,
               subtext: subtextValue,
-              pos: qualifierValue,
+              voices: qualifierValue,
               type: extractValue(from: str, key: "type"),
               urlSegment: urlSegment,
               url: extractValue(from: str, key: "url"),
