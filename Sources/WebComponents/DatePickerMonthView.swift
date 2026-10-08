@@ -8,7 +8,8 @@ import WebTypes
 
 /// One month as a grid of days, six weeks of seven: the days of the months
 /// either side muted, today ringed, the chosen day filled (activating it again
-/// unpicks it). The ARIA grid a
+/// unpicks it)—or, for a range, its two ends filled and the days between
+/// tinted. The ARIA grid a
 /// date picker moves through with the keyboard—one day, the focused one,
 /// takes Tab (roving tabindex).
 ///
@@ -27,6 +28,11 @@ public struct DatePickerMonthView: HTMLContent {
   let weekStart: Int
   /// The id of the element naming the month, for the grid's label.
   let labelID: String
+  /// A range's first and last day, when the grid picks a range; either may
+  /// be open.
+  let rangeStart: CalendarDate?
+  let rangeEnd: CalendarDate?
+  let isRange: Bool
 
   public init(
     month: CalendarDate,
@@ -36,7 +42,10 @@ public struct DatePickerMonthView: HTMLContent {
     min: CalendarDate? = nil,
     max: CalendarDate? = nil,
     weekStart: Int = 0,
-    labelID: String
+    labelID: String,
+    isRange: Bool = false,
+    rangeStart: CalendarDate? = nil,
+    rangeEnd: CalendarDate? = nil
   ) {
     self.month = month
     self.selected = selected
@@ -46,6 +55,22 @@ public struct DatePickerMonthView: HTMLContent {
     self.max = max
     self.weekStart = weekStart
     self.labelID = labelID
+    self.isRange = isRange
+    self.rangeStart = rangeStart
+    self.rangeEnd = rangeEnd
+  }
+
+  /// How the grid marks a day of a range: an end, a day between, or neither.
+  private func rangeRole(_ date: CalendarDate) -> (isEnd: Bool, isBetween: Bool, words: String) {
+    let isStart = rangeStart.map { $0.isSameDay(as: date) } ?? false
+    let isLast = rangeEnd.map { $0.isSameDay(as: date) } ?? false
+    if isStart && isLast { return (true, false, "\(date.spoken), the range's only day") }
+    if isStart { return (true, false, "\(date.spoken), start of range") }
+    if isLast { return (true, false, "\(date.spoken), end of range") }
+    guard let first = rangeStart, let last = rangeEnd,
+      date.dayNumber > first.dayNumber, date.dayNumber < last.dayNumber
+    else { return (false, false, date.spoken) }
+    return (false, true, "\(date.spoken), in range")
   }
 
   public func build() -> DOM.Node {
@@ -70,7 +95,8 @@ public struct DatePickerMonthView: HTMLContent {
           tr {
             for column in 0..<7 {
               let date = CalendarDate(dayNumber: gridStart + week * 7 + column)
-              let isSelected = selected.map { $0.isSameDay(as: date) } ?? false
+              let role = rangeRole(date)
+              let isSelected = isRange ? role.isEnd : selected.map { $0.isSameDay(as: date) } ?? false
               let isToday = today.isSameDay(as: date)
               let isOutside = !date.isSameMonth(as: month)
               let isEnabled = date.isWithin(min: min, max: max)
@@ -85,9 +111,12 @@ public struct DatePickerMonthView: HTMLContent {
               .data("date", date.iso)
               .data("outside", isOutside)
               .data("today", isToday)
+              .data("in-range", role.isBetween)
               .ariaSelected(isSelected)
               // The chosen day clears when activated again; its name says so.
-              .ariaLabel(isSelected ? "\(date.spoken), selected. Activate to clear." : date.spoken)
+              // A range's days say where in the range they stand.
+              .ariaLabel(
+                isRange ? role.words : isSelected ? "\(date.spoken), selected. Activate to clear." : date.spoken)
               let current = isToday ? cell.ariaCurrent("date") : cell
               isEnabled ? current : current.ariaDisabled(true)
             }
@@ -150,6 +179,11 @@ public struct DatePickerMonthView: HTMLContent {
       }
       descendant(".date-picker-month-day:hover:not([aria-disabled='true']) .date-picker-month-day-label") {
         backgroundColor(backgroundColorInteractiveSubtleHover)
+      }
+      // The days between a range's ends, tinted as a selected row is.
+      descendant(".date-picker-month-day[data-in-range='true'] .date-picker-month-day-label") {
+        backgroundColor(backgroundColorBlueSubtle)
+        color(colorBlue)
       }
       descendant(".date-picker-month-day[aria-selected='true'] .date-picker-month-day-label") {
         backgroundColor(backgroundColorBlue).important()

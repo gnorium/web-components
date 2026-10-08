@@ -75,6 +75,25 @@ public struct CalendarDate: Sendable {
     "\(Self.weekdayNames[weekday]), \(Self.monthNames[month - 1]) \(day), \(year)"
   }
 
+  /// A range of days in words, Chicago style: a closed en dash, the
+  /// year and month the ends share said once—"Oct 1–8, 2026", "Sep 28–Oct 8,
+  /// 2026", "Dec 28, 2025–Jan 3, 2026"; one day, "Oct 8, 2026"; an open end,
+  /// "Since Oct 1, 2026" or "Until Oct 8, 2026". Every range of days on the
+  /// site is written by this one formatter.
+  public static func rangeText(_ first: CalendarDate?, _ last: CalendarDate?) -> String {
+    switch (first, last) {
+    case (.some(let first), .some(let last)):
+      if first.isSameDay(as: last) { return first.display }
+      if first.year != last.year { return "\(first.display)–\(last.display)" }
+      let month = monthAbbreviations[first.month - 1]
+      if first.month == last.month { return "\(month) \(first.day)–\(last.day), \(last.year)" }
+      return "\(month) \(first.day)–\(monthAbbreviations[last.month - 1]) \(last.day), \(last.year)"
+    case (.some(let first), .none): return "Since \(first.display)"
+    case (.none, .some(let last)): return "Until \(last.display)"
+    case (.none, .none): return ""
+    }
+  }
+
   /// "September 2026".
   public var monthTitle: String {
     "\(Self.monthNames[month - 1]) \(year)"
@@ -183,5 +202,19 @@ public struct CalendarDate: Sendable {
       let parts = Calendar(identifier: .gregorian).dateComponents([.year, .month, .day], from: Date())
       return CalendarDate(year: parts.year ?? 1970, month: parts.month ?? 1, day: parts.day ?? 1)
     #endif
+  }
+
+  /// Today in UTC, on either side: the day a range of UTC days (DateRangeValue)
+  /// counts from, so the client's calendar and the server's filter agree on
+  /// which day "today" is wherever the reader is.
+  public static func utcToday() -> CalendarDate {
+    #if CLIENT
+      let milliseconds = JSDate.now()
+    #else
+      let milliseconds = Date().timeIntervalSince1970 * 1000
+    #endif
+    let days = milliseconds / 86_400_000
+    let whole = Int(days)
+    return CalendarDate(dayNumber: Double(whole) > days ? whole - 1 : whole)
   }
 }

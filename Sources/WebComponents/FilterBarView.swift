@@ -14,8 +14,11 @@
   /// values of one field as alternatives (OR) and different fields as
   /// conditions that all hold (AND).
   ///
-  /// Two fields may submit one parameter—a select of set spans and a date,
-  /// both `since`—and a value in force goes to the first that can hold it.
+  /// Two fields may submit one parameter, and a value in force goes to the
+  /// first that can hold it.
+  ///
+  /// A range is one parameter holding both its ends (`2026-10-01..2026-10-08`,
+  /// `-7d..`, `09:00..17:00`), so it never repeats.
   public enum FilterField: Sendable {
     case text(name: String, label: String, placeholder: String)
     case select(
@@ -23,6 +26,12 @@
       repeatable: Bool = false)
     /// A day, as `yyyy-mm-dd`, picked with the date picker.
     case date(name: String, label: String)
+    /// A range of days (`DateRangeValue`), picked with the date picker's
+    /// range: presets beside a calendar.
+    case dateRange(name: String, label: String)
+    /// A span of the day (`TimeRangeValue`), picked with a time input's
+    /// range; `zone` names the zone its times are in ("UTC").
+    case timeRange(name: String, label: String, zone: String)
 
     /// The parameter the field submits.
     public var name: String {
@@ -30,6 +39,8 @@
       case .text(let name, _, _): return name
       case .select(let name, _, _, _): return name
       case .date(let name, _): return name
+      case .dateRange(let name, _): return name
+      case .timeRange(let name, _, _): return name
       }
     }
 
@@ -48,12 +59,14 @@
       case .text(_, let label, _): return label
       case .select(_, let label, _, _): return label
       case .date(_, let label): return label
+      case .dateRange(_, let label): return label
+      case .timeRange(_, let label, _): return label
       }
     }
 
     public var repeatable: Bool {
       switch self {
-      case .text, .date: return false
+      case .text, .date, .dateRange, .timeRange: return false
       case .select(_, _, _, let repeatable): return repeatable
       }
     }
@@ -62,7 +75,7 @@
     /// from a list.
     public var takesInput: Bool {
       switch self {
-      case .text, .date: return true
+      case .text, .date, .dateRange, .timeRange: return true
       case .select: return false
       }
     }
@@ -76,6 +89,12 @@
       case .date:
         let parts = value.split(separator: "-")
         return parts.count == 3 && parts.allSatisfy { Int($0) != nil }
+      case .dateRange:
+        if let _ = DateRangeValue.parse(value) { return true }
+        return false
+      case .timeRange:
+        if let _ = TimeRangeValue.parse(value) { return true }
+        return false
       }
     }
   }
@@ -132,8 +151,16 @@
       if schema.contains(where: \.takesInput) {
         _ = TextInputView(id: "filter-bar-preload", name: "", value: "", fullWidth: true).build()
       }
-      if schema.contains(where: { if case .date = $0 { return true } else { return false } }) {
-        _ = DatePickerView(id: "filter-bar-date-preload", name: "", fullWidth: true).build()
+      if schema.contains(where: {
+        switch $0 {
+        case .date, .dateRange: return true
+        default: return false
+        }
+      }) {
+        _ = DatePickerView(id: "filter-bar-date-preload", name: "", fullWidth: true, range: true).build()
+      }
+      if schema.contains(where: { if case .timeRange = $0 { return true } else { return false } }) {
+        _ = TimeInputView(id: "filter-bar-time-preload", name: "", range: true).build()
       }
       let rows = activeRows
       // Another row can always hold a repeatable field; otherwise one row
@@ -292,6 +319,30 @@
           fullWidth: true,
           class: "filter-bar-value-input"
         )
+
+      // A range's placeholder is its field's label, as a select's is.
+      case .dateRange(let name, let label):
+        DatePickerView(
+          id: "filter-\(name)-\(rowIndex)",
+          name: name,
+          value: value,
+          placeholder: label,
+          fullWidth: true,
+          class: "filter-bar-value-input",
+          range: true
+        )
+
+      case .timeRange(let name, let label, let zone):
+        TimeInputView(
+          id: "filter-\(name)-\(rowIndex)",
+          name: name,
+          value: value,
+          placeholder: label,
+          range: true,
+          zone: zone,
+          fullWidth: true,
+          class: "filter-bar-value-input"
+        )
       }
     }
 
@@ -311,6 +362,14 @@
         case .date(let name, let label):
           parts.append(
             "{\"key\":\"\(field.key)\",\"name\":\"\(name)\",\"label\":\"\(label)\",\"type\":\"date\"}"
+          )
+        case .dateRange(let name, let label):
+          parts.append(
+            "{\"key\":\"\(field.key)\",\"name\":\"\(name)\",\"label\":\"\(label)\",\"type\":\"daterange\"}"
+          )
+        case .timeRange(let name, let label, let zone):
+          parts.append(
+            "{\"key\":\"\(field.key)\",\"name\":\"\(name)\",\"label\":\"\(label)\",\"type\":\"timerange\",\"zone\":\"\(zone)\"}"
           )
         }
       }
@@ -334,6 +393,7 @@
     private let dropdownHydration = DropdownHydration()
     private let textInputHydration = TextInputHydration()
     private let datePickerHydration = DatePickerHydration()
+    private let timeInputHydration = TimeInputHydration()
 
     public static func hydrateIfPresent() {
       guard document.querySelector(".filter-bar-view") != nil else { return }
@@ -347,7 +407,8 @@
           grid: grid,
           dropdownHydration: dropdownHydration,
           textInputHydration: textInputHydration,
-          datePickerHydration: datePickerHydration
+          datePickerHydration: datePickerHydration,
+          timeInputHydration: timeInputHydration
         )
       }
     }
@@ -361,6 +422,10 @@
     let label: String
     let isText: Bool
     let isDate: Bool
+    let isDateRange: Bool
+    let isTimeRange: Bool
+    /// A time range's zone ("UTC").
+    let zone: String
     let placeholder: String
     let repeatable: Bool
   }
@@ -370,16 +435,18 @@
     private let dropdownHydration: DropdownHydration
     private let textInputHydration: TextInputHydration
     private let datePickerHydration: DatePickerHydration
+    private let timeInputHydration: TimeInputHydration
     private var schema: [SchemaEntry] = []
 
     init(
       grid: DOM.Element, dropdownHydration: DropdownHydration, textInputHydration: TextInputHydration,
-      datePickerHydration: DatePickerHydration
+      datePickerHydration: DatePickerHydration, timeInputHydration: TimeInputHydration
     ) {
       self.grid = grid
       self.dropdownHydration = dropdownHydration
       self.textInputHydration = textInputHydration
       self.datePickerHydration = datePickerHydration
+      self.timeInputHydration = timeInputHydration
       parseSchema()
       wireRows()
       wireAddButton()
@@ -399,11 +466,14 @@
         let placeholder = extractJSONString(obj, key: "placeholder") ?? ""
         let isText = stringEquals(typeStr, "text")
         let isDate = stringEquals(typeStr, "date")
+        let isDateRange = stringEquals(typeStr, "daterange")
+        let isTimeRange = stringEquals(typeStr, "timerange")
+        let zone = extractJSONString(obj, key: "zone") ?? ""
         let repeatable = extractJSONString(obj, key: "repeatable").map { stringEquals($0, "true") } ?? false
         schema.append(
           SchemaEntry(
-            key: key, name: name, label: label, isText: isText, isDate: isDate,
-            placeholder: placeholder, repeatable: repeatable))
+            key: key, name: name, label: label, isText: isText, isDate: isDate, isDateRange: isDateRange,
+            isTimeRange: isTimeRange, zone: zone, placeholder: placeholder, repeatable: repeatable))
       }
     }
 
@@ -465,16 +535,31 @@
       let addOrRemoveBtn =
         row.querySelector(".filter-bar-add-btn") ?? row.querySelector(".filter-bar-remove-btn")
 
-      if entry.isDate {
+      if entry.isDate || entry.isDateRange {
         let picker = DatePickerFactory.createElement(
           id: "filter-\(fieldName)-swap",
           name: fieldName,
           value: value,
+          placeholder: entry.isDateRange ? entry.label : "Select a date",
           fullWidth: true,
           class: "filter-bar-value-input",
+          range: entry.isDateRange,
           hydrator: datePickerHydration
         )
         row.insertBefore(picker, addOrRemoveBtn)
+      } else if entry.isTimeRange {
+        let input = TimeInputFactory.createElement(
+          id: "filter-\(fieldName)-swap",
+          name: fieldName,
+          value: value,
+          placeholder: entry.label,
+          range: true,
+          zone: entry.zone,
+          fullWidth: true,
+          class: "filter-bar-value-input",
+          hydrator: timeInputHydration
+        )
+        row.insertBefore(input, addOrRemoveBtn)
       } else if entry.isText {
         let input = TextInputFactory.createElement(
           id: "filter-\(fieldName)-swap",
@@ -565,15 +650,29 @@
       row.appendChild(picker)
 
       // Col 2: value input
-      if field.isDate {
+      if field.isDate || field.isDateRange {
         let picker = DatePickerFactory.createElement(
           id: "filter-\(field.name)-\(rowIndex)",
           name: field.name,
+          placeholder: field.isDateRange ? field.label : "Select a date",
           fullWidth: true,
           class: "filter-bar-value-input",
+          range: field.isDateRange,
           hydrator: datePickerHydration
         )
         row.appendChild(picker)
+      } else if field.isTimeRange {
+        let input = TimeInputFactory.createElement(
+          id: "filter-\(field.name)-\(rowIndex)",
+          name: field.name,
+          placeholder: field.label,
+          range: true,
+          zone: field.zone,
+          fullWidth: true,
+          class: "filter-bar-value-input",
+          hydrator: timeInputHydration
+        )
+        row.appendChild(input)
       } else if field.isText {
         let input = TextInputFactory.createElement(
           id: "filter-\(field.name)-\(rowIndex)",

@@ -18,6 +18,15 @@ import WebTypes
 /// The field shows the day in words ("Sep 25, 2026"); a hidden input carries
 /// it as `yyyy-mm-dd` under `name`, which is what the form submits. The field
 /// is read-only and asks for no keyboard: tapping it opens the calendar.
+///
+/// A range picker (`range: true`) holds a range of UTC days instead
+/// (`DateRangeValue`): presets on the left—Today, Last 7, 30 and 90 days—
+/// and the calendar on the right, as Google Analytics, Stripe, Grafana and
+/// Datadog lay theirs out. A preset selects its days in the calendar and
+/// stays relative in the value (`-7d..`); two days picked in the calendar
+/// make a fixed range (`2026-10-01..2026-10-08`), the first alone an open
+/// one (`2026-10-01..`). The field shows it in words ("Oct 1 – Oct 8, 2026",
+/// "Last 7 days"). On a phone the presets sit above the calendar.
 public struct DatePickerView: HTMLContent {
   let id: String
   let name: String
@@ -34,6 +43,10 @@ public struct DatePickerView: HTMLContent {
   let `class`: String
   /// The id of the form it submits with, when it sits outside that form.
   let form: String?
+  /// Whether it holds a range of days rather than one.
+  let range: Bool
+  /// A range picker's presets, each a relative `DateRangeValue`.
+  let presets: [(value: String, label: String)]
 
   /// The day a week starts on, the calendar's first column.
   public enum Weekday: Int, Sendable {
@@ -58,7 +71,9 @@ public struct DatePickerView: HTMLContent {
     fullWidth: Bool = true,
     disabled: Bool = false,
     class: String = "",
-    form: String? = nil
+    form: String? = nil,
+    range: Bool = false,
+    presets: [(value: String, label: String)] = DateRangeValue.presets
   ) {
     self.id = id
     self.name = name
@@ -72,23 +87,44 @@ public struct DatePickerView: HTMLContent {
     self.disabled = disabled
     self.`class` = `class`
     self.form = form
+    self.range = range
+    self.presets = range ? presets : []
   }
 
   public func build() -> DOM.Node {
-    let selected = CalendarDate.parse(value)
+    let selected = range ? nil : CalendarDate.parse(value)
+    let rangeValue = range ? DateRangeValue.parse(value) : nil
     let minDate = min.flatMap { CalendarDate.parse($0) }
     let maxDate = max.flatMap { CalendarDate.parse($0) }
-    let today = CalendarDate.today()
-    let focused = (selected ?? today).clamped(min: minDate, max: maxDate)
+    // A range counts its days in UTC, as the server filters them.
+    let today = range ? CalendarDate.utcToday() : CalendarDate.today()
+    let rangeDays = rangeValue.map { $0.days(today: today) }
+    let rangeStart = rangeDays.flatMap { $0.start }
+    let rangeEnd = rangeDays.flatMap { $0.end }
+    let focused = (selected ?? rangeEnd ?? rangeStart ?? today).clamped(min: minDate, max: maxDate)
     let monthLabelID = "\(id)-month"
     let rootClass = stringIsEmpty(`class`)
       ? "date-picker-view\(fullWidth ? " date-picker-full-width" : "")"
       : "date-picker-view\(fullWidth ? " date-picker-full-width" : "") \(`class`)"
+    let rangeParam = rangeValue.map { $0.param } ?? ""
+    let month = DatePickerMonthView(
+      month: focused,
+      selected: selected,
+      today: today,
+      focused: focused,
+      min: minDate,
+      max: maxDate,
+      weekStart: weekStart.rawValue,
+      labelID: monthLabelID,
+      isRange: range,
+      rangeStart: rangeStart,
+      rangeEnd: rangeEnd
+    )
 
     var valueInput = input()
       .type(.hidden)
       .name(name)
-      .value(selected?.iso ?? "")
+      .value(range ? rangeParam : selected?.iso ?? "")
       .class("date-picker-value")
     if let form {
       valueInput = valueInput.form(form)
@@ -101,7 +137,7 @@ public struct DatePickerView: HTMLContent {
         id: id,
         name: "",
         placeholder: placeholder,
-        value: selected?.display ?? "",
+        value: range ? rangeValue.map { $0.label } ?? "" : selected?.display ?? "",
         disabled: disabled,
         readonly: true,
         label: labelText,
@@ -115,47 +151,75 @@ public struct DatePickerView: HTMLContent {
         weight: .plain,
         size: .medium,
         disabled: disabled,
-        ariaLabel: "Choose date",
+        ariaLabel: range ? "Choose dates" : "Choose date",
         class: "date-picker-toggle"
       )
 
+      // One day: the month's paging is the popover's header. A range: the
+      // presets beside the calendar, the paging over the calendar alone.
       PopoverView(
         id: "\(id)-popover",
         placement: .bottomStart,
         showsArrow: false,
-        ariaLabel: "Choose date",
+        ariaLabel: range ? "Choose dates" : "Choose date",
         class: "date-picker-popover",
         header: {
-          ButtonView(
-            icon: IconView(icon: { s in PreviousIconView(size: s) }, size: sizeIconSmall),
-            weight: .quiet,
-            size: .medium,
-            ariaLabel: "Previous month",
-            class: "date-picker-previous"
-          )
-          h2 { focused.monthTitle }
-            .id(monthLabelID)
-            .class("date-picker-month-title")
-            .ariaLive(.polite)
-          ButtonView(
-            icon: IconView(icon: { s in NextIconView(size: s) }, size: sizeIconSmall),
-            weight: .quiet,
-            size: .medium,
-            ariaLabel: "Next month",
-            class: "date-picker-next"
-          )
+          if !range {
+            navigation(title: focused.monthTitle, labelID: monthLabelID)
+          }
         },
         body: {
-          DatePickerMonthView(
-            month: focused,
-            selected: selected,
-            today: today,
-            focused: focused,
-            min: minDate,
-            max: maxDate,
-            weekStart: weekStart.rawValue,
-            labelID: monthLabelID
-          )
+          if range {
+            div {
+              div {
+                for preset in presets {
+                  ButtonView(
+                    label: preset.label,
+                    buttonColor: .gray,
+                    weight: .plain,
+                    size: .medium,
+                    fullWidth: true,
+                    class: "date-picker-preset",
+                    labelFontWeight: fontWeightNormal,
+                    contentJustifyContent: .flexStart,
+                    borderRadius: borderRadiusBase,
+                    data: [("value", preset.value)]
+                  )
+                  .ariaPressed(stringEquals(preset.value, rangeParam))
+                }
+              }
+              .class("date-picker-presets")
+              .role(.group)
+              .ariaLabel("Presets")
+
+              div {
+                // The range's two ends, named as a year range's are (Year
+                // start, Year end in FormDateView): read here, picked below.
+                div {
+                  TextInputView(
+                    id: "\(id)-start", name: "", placeholder: "Date start", value: rangeStart?.display ?? "",
+                    readonly: true, label: "Date start", tooltip: "Start date of the range.",
+                    class: "date-picker-start", inputMode: HTML.InputMode.none)
+                  TextInputView(
+                    id: "\(id)-end", name: "", placeholder: "Date end", value: rangeEnd?.display ?? "",
+                    readonly: true, label: "Date end", tooltip: "End date of the range.",
+                    class: "date-picker-end", inputMode: HTML.InputMode.none)
+                }
+                .class("date-picker-ends")
+                div {
+                  navigation(title: focused.monthTitle, labelID: monthLabelID)
+                }
+                .class("date-picker-navigation")
+                div { month }
+                  .class("date-picker-grid")
+              }
+              .class("date-picker-calendar")
+            }
+            .class("date-picker-range")
+          } else {
+            div { month }
+              .class("date-picker-grid")
+          }
         },
         footer: {
           div {
@@ -180,6 +244,7 @@ public struct DatePickerView: HTMLContent {
       )
     }
     .class(rootClass)
+    .data("range", range)
     .data("week-start", "\(weekStart.rawValue)")
     .data("min", minDate?.iso ?? "")
     .data("max", maxDate?.iso ?? "")
@@ -288,7 +353,83 @@ public struct DatePickerView: HTMLContent {
         alignItems(.center)
         gap(spacing8)
       }
+
+      // A range: the presets' column, then the calendar, the popover wide
+      // enough for both while the screen allows.
+      selector("&[data-range='true'] .date-picker-popover") {
+        minWidth(calc("min(\(minSizeInteractiveTouch.value) * 10 + \(spacing8.value) * 4 + \(borderWidthBase.value) * 2, 100vw - \(spacing16.value) * 2)")).important()
+      }
+      descendant(".date-picker-range") {
+        display(.grid)
+        gridTemplateColumns("max-content minmax(0, 1fr)")
+        gap(spacing8)
+      }
+      descendant(".date-picker-presets") {
+        display(.flex)
+        flexDirection(.column)
+        gap(spacing4)
+        paddingInlineEnd(spacing8)
+        borderInlineEnd(borderWidthBase, .solid, borderColorBase)
+      }
+      descendant(".date-picker-preset[aria-pressed='true']") {
+        backgroundColor(backgroundColorBlueSubtle).important()
+        color(colorBlue).important()
+      }
+      descendant(".date-picker-calendar") {
+        display(.flex)
+        flexDirection(.column)
+        gap(spacing8)
+        minWidth(0)
+      }
+      descendant(".date-picker-ends") {
+        display(.grid)
+        gridTemplateColumns("minmax(0, 1fr) minmax(0, 1fr)")
+        gap(spacing8)
+      }
+      descendant(".date-picker-navigation") {
+        display(.flex)
+        alignItems(.center)
+        justifyContent(.spaceBetween)
+        gap(spacing8)
+      }
+      // On a phone the presets sit above the calendar, two to a row.
+      media(maxWidth(maxWidthBreakpointMobile)) {
+        descendant(".date-picker-range") {
+          gridTemplateColumns("minmax(0, 1fr)").important()
+        }
+        descendant(".date-picker-presets") {
+          display(.grid).important()
+          gridTemplateColumns("minmax(0, 1fr) minmax(0, 1fr)").important()
+          paddingInlineEnd(0).important()
+          paddingBlockEnd(spacing8).important()
+          borderInlineEnd(.none).important()
+          borderBlockEnd(borderWidthBase, .solid, borderColorBase).important()
+        }
+      }
     }
+  }
+
+  /// The month's paging: previous, the month's name, next.
+  @HTMLBuilder
+  private func navigation(title: String, labelID: String) -> [DOM.Node] {
+    ButtonView(
+      icon: IconView(icon: { s in PreviousIconView(size: s) }, size: sizeIconSmall),
+      weight: .quiet,
+      size: .medium,
+      ariaLabel: "Previous month",
+      class: "date-picker-previous"
+    )
+    h2 { title }
+      .id(labelID)
+      .class("date-picker-month-title")
+      .ariaLive(.polite)
+    ButtonView(
+      icon: IconView(icon: { s in NextIconView(size: s) }, size: sizeIconSmall),
+      weight: .quiet,
+      size: .medium,
+      ariaLabel: "Next month",
+      class: "date-picker-next"
+    )
   }
 }
 
@@ -307,6 +448,10 @@ public struct DatePickerView: HTMLContent {
     private let nextButton: DOM.Element?
     private let resetButton: DOM.Element?
     private let doneButton: DOM.Element?
+    /// A range picker's presets.
+    private let presets: [DOM.Element]
+    /// Whether it holds a range of days (`DateRangeValue`) rather than one.
+    private let isRange: Bool
     private let weekStart: Int
     private let minDate: CalendarDate?
     private let maxDate: CalendarDate?
@@ -324,16 +469,18 @@ public struct DatePickerView: HTMLContent {
       toggle = root.querySelector(".date-picker-toggle")
       popover = root.querySelector(".date-picker-popover")
       monthTitle = root.querySelector(".date-picker-month-title")
-      grid = root.querySelector(".date-picker-popover .popover-body")
+      grid = root.querySelector(".date-picker-grid")
       previousButton = root.querySelector(".date-picker-previous")
       nextButton = root.querySelector(".date-picker-next")
       resetButton = root.querySelector(".date-picker-reset")
       doneButton = root.querySelector(".date-picker-done")
+      presets = root.querySelectorAll(".date-picker-preset")
+      isRange = stringEquals(root.getAttribute(data("range")) ?? "", "true")
       weekStart = parseInt(root.getAttribute(data("week-start")) ?? "0") ?? 0
       minDate = CalendarDate.parse(root.getAttribute(data("min")) ?? "")
       maxDate = CalendarDate.parse(root.getAttribute(data("max")) ?? "")
       monthLabelID = monthTitle.map { $0.getAttribute("id") ?? "" } ?? ""
-      let start = CalendarDate.today()
+      let start = isRange ? CalendarDate.utcToday() : CalendarDate.today()
       shown = start
       focused = start
 
@@ -367,6 +514,7 @@ public struct DatePickerView: HTMLContent {
           } else if stringEquals(key, "Backspace") || stringEquals(key, "Delete") {
             event.preventDefault()
             self.setValue(nil)
+            self.setRange(nil)
           }
         }
       }
@@ -385,7 +533,8 @@ public struct DatePickerView: HTMLContent {
       if let resetButton {
         _ = resetButton.addEventListener(.click) { [self] _ in
           self.setValue(nil)
-          self.focused = CalendarDate.today().clamped(min: self.minDate, max: self.maxDate)
+          self.setRange(nil)
+          self.focused = self.today().clamped(min: self.minDate, max: self.maxDate)
           self.shown = self.focused
           self.render()
         }
@@ -393,6 +542,21 @@ public struct DatePickerView: HTMLContent {
       if let doneButton {
         _ = doneButton.addEventListener(.click) { [self] _ in
           self.close(returnFocus: true)
+        }
+      }
+      // A preset selects its days, and stays relative in the value.
+      for preset in presets {
+        _ = preset.addEventListener(.click) { [self] _ in
+          guard let param = preset.getAttribute(data("value")), let range = DateRangeValue.parse(param) else {
+            return
+          }
+          self.setRange(range)
+          let days = range.days(today: self.today())
+          if let day = days.end ?? days.start {
+            self.focused = day.clamped(min: self.minDate, max: self.maxDate)
+            self.shown = self.focused
+          }
+          self.render()
         }
       }
       if let grid {
@@ -487,13 +651,24 @@ public struct DatePickerView: HTMLContent {
     // MARK: - State
 
     private func currentValue() -> CalendarDate? {
-      CalendarDate.parse(valueInput?.value ?? "")
+      isRange ? nil : CalendarDate.parse(valueInput?.value ?? "")
+    }
+
+    private func currentRange() -> DateRangeValue? {
+      isRange ? DateRangeValue.parse(valueInput?.value ?? "") : nil
+    }
+
+    /// Today as this picker counts days: UTC for a range, as the server
+    /// filters one; the reader's own day for a single date.
+    private func today() -> CalendarDate {
+      isRange ? CalendarDate.utcToday() : CalendarDate.today()
     }
 
     private func open(fromKeyboard: Bool) {
       guard let popover else { return }
       if let _ = field?.getAttribute("disabled") { return }
-      let start = (currentValue() ?? CalendarDate.today()).clamped(min: minDate, max: maxDate)
+      let days = currentRange().map { $0.days(today: today()) }
+      let start = (currentValue() ?? days?.end ?? days?.start ?? today()).clamped(min: minDate, max: maxDate)
       focused = start
       shown = start
       render()
@@ -520,7 +695,17 @@ public struct DatePickerView: HTMLContent {
     /// Picks the day, or unpicks the day already picked. The field shows it
     /// at once and the calendar stays open until Done, Esc or a tap outside.
     private func select(_ date: CalendarDate, fromKeyboard: Bool) {
-      if let current = currentValue(), current.isSameDay(as: date) {
+      if isRange {
+        // The first day starts a range, open at its end; the second closes
+        // it, whichever comes first. A third starts again.
+        if let current = currentRange(), !current.isRelative, case .day(let first)? = current.start,
+          case .none = current.end
+        {
+          setRange(DateRangeValue.fixed(first, date))
+        } else {
+          setRange(DateRangeValue.fixed(date, nil))
+        }
+      } else if let current = currentValue(), current.isSameDay(as: date) {
         setValue(nil)
       } else {
         setValue(date)
@@ -532,10 +717,28 @@ public struct DatePickerView: HTMLContent {
     }
 
     private func setValue(_ date: CalendarDate?) {
+      guard !isRange else { return }
       valueInput?.value = date?.iso ?? ""
       field?.value = date?.display ?? ""
       valueInput?.dispatchEvent(.input)
       valueInput?.dispatchEvent(.change)
+    }
+
+    private func setRange(_ range: DateRangeValue?) {
+      guard isRange else { return }
+      valueInput?.value = range.map { $0.param } ?? ""
+      field?.value = range.map { $0.label } ?? ""
+      valueInput?.dispatchEvent(.input)
+      valueInput?.dispatchEvent(.change)
+    }
+
+    /// The preset in force pressed, the others not.
+    private func markPresets() {
+      let param = valueInput?.value ?? ""
+      for preset in presets {
+        let pressed = stringEquals(preset.getAttribute(data("value")) ?? "", param)
+        preset.setAttribute("aria-pressed", pressed ? "true" : "false")
+      }
     }
 
     private func page(byMonths months: Int) {
@@ -566,16 +769,25 @@ public struct DatePickerView: HTMLContent {
     /// Draws the month on show, and bars paging past the bounds.
     private func render() {
       monthTitle?.textContent = shown.monthTitle
+      let days = currentRange().map { $0.days(today: today()) }
       let view = DatePickerMonthView(
         month: shown,
         selected: currentValue(),
-        today: CalendarDate.today(),
+        today: today(),
         focused: focused,
         min: minDate,
         max: maxDate,
         weekStart: weekStart,
-        labelID: monthLabelID
+        labelID: monthLabelID,
+        isRange: isRange,
+        rangeStart: days?.start,
+        rangeEnd: days?.end
       )
+      markPresets()
+      (root.querySelector(".date-picker-start .text-input-input") as? HTML.HTMLInputElement)?.value =
+        days?.start?.display ?? ""
+      (root.querySelector(".date-picker-end .text-input-input") as? HTML.HTMLInputElement)?.value =
+        days?.end?.display ?? ""
       grid?.innerHTML = view.render()
       let shownIndex = shown.year * 12 + shown.month
       setDisabled(previousButton, minDate.map { $0.year * 12 + $0.month >= shownIndex } ?? false)
@@ -598,7 +810,7 @@ public struct DatePickerView: HTMLContent {
       return stringEquals(dir, "rtl")
     }
 
-    /// Under the field unless the viewport has no room there and more above;
+    /// Under the field unless the viewport has no room there and room enough above;
     /// from the start edge unless that runs off screen and the end does not;
     /// nudged back on screen when neither fits (a narrow phone).
     private func position() {
@@ -610,11 +822,16 @@ public struct DatePickerView: HTMLContent {
         let rect = popover.getBoundingClientRect()
       else { return }
       let margin = 8.0
-      let viewportWidth = window.innerWidth
+      // The page's width without its scrollbar: innerWidth counts the bar,
+      // and a popover sized to it ran under it, off a phone's edge.
+      let viewportWidth = document.querySelector("html")?.getBoundingClientRect()?.width ?? window.innerWidth
       let viewportHeight = window.innerHeight
       let roomBelow = viewportHeight - fieldRect.bottom
       let roomAbove = anchor.top
-      let vertical = roomBelow < rect.height + margin && roomAbove > roomBelow ? "top" : "bottom"
+      // Over the field only when it fits there whole: one taller than both
+      // rooms opens below, where the page scrolls on to the rest of it,
+      // never off the top.
+      let vertical = roomBelow < rect.height + margin && roomAbove >= rect.height + margin ? "top" : "bottom"
 
       let rtl = isRightToLeft()
       let startFits = rtl ? anchor.right - rect.width >= margin : anchor.left + rect.width <= viewportWidth - margin
@@ -667,6 +884,7 @@ public struct DatePickerView: HTMLContent {
       weekStart: DatePickerView.Weekday = .sunday,
       fullWidth: Bool = true,
       class: String = "",
+      range: Bool = false,
       hydrator: DatePickerHydration? = nil
     ) -> DOM.Element {
       let wrapper = document.createElement(.div)
@@ -679,7 +897,8 @@ public struct DatePickerView: HTMLContent {
         max: max,
         weekStart: weekStart,
         fullWidth: fullWidth,
-        class: `class`
+        class: `class`,
+        range: range
       )
       wrapper.innerHTML = view.render()
       let element = wrapper.firstElementChild ?? wrapper
