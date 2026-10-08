@@ -17,11 +17,15 @@
     /// Whether the block is numbered. A file is; a fragment lifted out of one
     /// is not, because its line 1 is not the document's.
     let showLineNumbers: Bool
+    /// The text's accessible name when it can be edited in place
+    /// (`CodeEditorView`); nil for a block that is only read.
+    let editableLabel: String?
 
-    public init(_ text: String, language: String = "xml", showLineNumbers: Bool = true) {
+    public init(_ text: String, language: String = "xml", showLineNumbers: Bool = true, editableLabel: String? = nil) {
       self.text = text
       self.language = language
       self.showLineNumbers = showLineNumbers
+      self.editableLabel = editableLabel
     }
 
     /// "1\n2\n3…"—as many as the text has lines.
@@ -49,8 +53,26 @@
             .ariaHidden(true)
         }
 
-        code { text }
-          .class("code-code language-\(language)")
+        if let editableLabel {
+          // The colored text is the text edited: one layer, so a selection
+          // is the browser's own over the colors, and a drag past the edge
+          // scrolls the pane as any text's does. It is colored by
+          // highlights over its text node (`CodeEditorHydration`), never
+          // by rewriting it, which would lose the caret.
+          code { text }
+            .class("code-code language-\(language)")
+            .addingAttribute("contenteditable", "plaintext-only")
+            .spellcheck(false)
+            .addingAttribute("autocapitalize", "off")
+            .addingAttribute("autocorrect", "off")
+            .role("textbox")
+            .addingAttribute("aria-multiline", "true")
+            .ariaLabel(editableLabel)
+            .data("code-editing", "true")
+        } else {
+          code { text }
+            .class("code-code language-\(language)")
+        }
       }
       .class("code-view")
       .style {
@@ -161,6 +183,11 @@
 
     public static func highlightVisible() {
       for block in document.querySelectorAll(".code-code") {
+        // An editor's text is colored by highlights, which leave it whole.
+        if block.hasAttribute("data-code-editing") {
+          CodeEditorHydration.colorIfVisible(block)
+          continue
+        }
         // highlight.js writes data-highlighted="yes" itself, which overwrote the
         // "true" this used to look for—so every block was highlighted again on
         // every click, and highlight.js warned each time that it had been handed

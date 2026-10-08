@@ -655,6 +655,9 @@
           .id("tei-transcript-\(index)")
           // What pairs this transcript with a canvas. The viewer matches on it.
           .data("service-id", Self.serviceID(ofFacsimile: page.facsimileURL))
+          // The page's own label, its `pb`'s `n`: the viewer's footer names
+          // the page by it before the manifest's label.
+          .data("label", page.label)
           .data("active", index == 0 ? "true" : "false")
         }
       }
@@ -987,6 +990,8 @@
           color(syntaxAttributes).important()
         }
         selector(".tei-page-raw .hljs-string") { color(syntaxStrings).important() }
+        // An editor's tags, colored by highlight, as the code layer's are.
+        selector(".tei-page-raw .code-code::highlight(code-tag)") { color(syntaxKeywords) }
         selector(".tei-page-raw .hljs-comment") { color(syntaxComments).important() }
         selector(".tei-page-raw .hljs-meta") { color(syntaxOtherDeclarations).important() }
         selector(".tei-page-raw .hljs-symbol", ".tei-page-raw .hljs-punctuation") {
