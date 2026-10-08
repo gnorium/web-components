@@ -286,14 +286,13 @@ public struct DropdownView: HTMLContent {
         // Dropdown menu
         div {
           // Search input
+          // The site's search box; the menu's own hydration drives it
+          // (filtering, arrows, Enter, focus on open, clearing on close).
           div {
-            input()
-              .type(.text)
-              .placeholder("Search...")
-              .class("dropdown-search-input")
-              .data("dropdown-search", true)
+            SearchInputView(placeholder: "Search", class: "dropdown-search-input", standalone: false)
           }
           .class("dropdown-search-input-wrapper")
+          .data("dropdown-search", true)
 
           // Options list
           div {
@@ -439,25 +438,6 @@ public struct DropdownView: HTMLContent {
         insetInlineStart((`var`("--dropdown-placed-start") as CSS.Length))
         insetInlineEnd(.auto)
         minWidth((`var`("--dropdown-placed-width") as CSS.Length))
-      }
-      descendant(".dropdown-search-input") {
-        width(perc(100))
-        height(minSizeInteractiveTouch)
-        padding(0, spacing12)
-        fontSize(textFontSize)
-        lineHeight(lineHeightContent)
-        color(colorBase)
-        backgroundColor(backgroundColorBase)
-        border(borderWidthBase, .solid, borderColorBase)
-        borderRadius(borderRadiusBase)
-        boxSizing(.borderBox)
-        // One ring, the text input's: a blue border and a 1px shadow
-        // around it. A thick outline on top of them drew two rings.
-        pseudoClass(.focus) {
-          outline(.none).important()
-          borderColor(borderColorBlue).important()
-          boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
-        }
       }
       // Matches LabelView, which every FieldView label uses: a dropdown in a
       // form is a form field and its label has to look like one.
@@ -700,7 +680,7 @@ public struct DropdownView: HTMLContent {
       self.container = container
       trigger = container.querySelector("[data-dropdown-trigger=\"true\"]")
       menu = container.querySelector("[data-dropdown-menu=\"true\"]")
-      searchInput = container.querySelector("[data-dropdown-search=\"true\"]")
+      searchInput = container.querySelector("[data-dropdown-search=\"true\"] .search-input")
       optionsList = container.querySelector("[data-dropdown-options-list=\"true\"]")
       selectedText = container.querySelector("[data-dropdown-selected-text=\"true\"]")
 
