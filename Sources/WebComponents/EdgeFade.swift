@@ -39,6 +39,16 @@ import WebTypes
 // folds on a click off its link, or anywhere off it. Focused (by a click),
 // Enter or Space opens and folds it; Enter on its link follows the link.
 //
+// A box that opts in with `data-edge-fade="sheet"` opens the same way, by the
+// same click or tap, but shows its value whole in a sheet instead
+// (`EdgeFadeSheetView`, a `DialogSheetView`; user, 2026-10-08): over the
+// nearest `data-sheet-host` around it, else the screen, wrapped at its spaces
+// as prose is, its links working, closed by Esc, its close button or its
+// backdrop, the focus given back to the box. For a tight box—a reader's
+// header—where its value wrapped in place would make a column a word wide.
+// Never shown whole in place, not even while its link has the keyboard's
+// focus. A page with no `EdgeFadeSheetView` opens it in place instead.
+//
 // No box is made a tab stop, on any device (user, 2026-10-08): a table of
 // them would be dozens of stops, and dozens of buttons to a screen reader.
 // Where a browser would make a scrollable box focusable on its own (Chrome),
@@ -339,12 +349,24 @@ private func edgeFadeGradient(_ toward: CSS.GradientDirection) -> String {
       stringEquals(box.tagName, "INPUT")
     }
 
-    /// A click or a tap on an expandable box opens or folds it. A link's
+    /// The sheets faded values open in, one per `EdgeFadeSheetView`.
+    nonisolated(unsafe) static var sheets: [DialogSheet] = []
+
+    /// A click or a tap on an expandable box opens or folds it, or opens its
+    /// sheet. A link's
     /// words are the link's (and a menu option's the option's): a click on
     /// them follows it. Closed, only the fade opens such a box; open, all of
     /// the link is in sight, and a click anywhere off the box folds it.
     static func click(_ event: Event) {
       let target = event.target
+      if let sheetBox = target?.closest("[data-edge-fade='sheet'][data-edge-fade-expanded]") {
+        // As a box opening in place: its link's words are the link's.
+        if target?.closest(controls) != nil && !inFade(sheetBox, event) { return }
+        event.preventDefault()
+        event.stopPropagation()
+        openSheet(sheetBox, fromKeyboard: false)
+        return
+      }
       let box = target?.closest("[data-edge-fade='expand'][data-edge-fade-expanded]")
       for open in document.querySelectorAll("[data-edge-fade='expand'][data-edge-fade-expanded='true']") {
         if let box, box.id == open.id { continue }
@@ -367,14 +389,54 @@ private func edgeFadeGradient(_ toward: CSS.GradientDirection) -> String {
     /// it follows the link.
     static func keydown(_ event: Event) {
       guard let target = event.target else { return }
-      guard stringEquals(target.getAttribute(data("edge-fade")) ?? "", "expand"),
-        target.hasAttribute(data("edge-fade-expanded"))
-      else { return }
+      guard isExpandable(target), target.hasAttribute(data("edge-fade-expanded")) else { return }
       let key = event.key
       guard stringEquals(key, "Enter") || stringEquals(key, " ") else { return }
       event.preventDefault()
       event.stopPropagation()
-      setExpanded(target, !isExpanded(target))
+      if opensSheet(target) {
+        openSheet(target, fromKeyboard: true)
+      } else {
+        setExpanded(target, !isExpanded(target))
+      }
+    }
+
+    /// Whether the box opens as a sheet (`data-edge-fade="sheet"`).
+    static func opensSheet(_ box: DOM.Element) -> Bool {
+      stringEquals(box.getAttribute(data("edge-fade")) ?? "", "sheet")
+    }
+
+    /// Shows the box's value whole in a sheet over the nearest sheet host
+    /// around it, else the screen: the sheet in that host, else the page's
+    /// first. With none on the page, the box opens in place.
+    static func openSheet(_ box: DOM.Element, fromKeyboard: Bool) {
+      let host = DialogSheet.host(of: box)
+      guard let wrapper = host?.querySelector(".edge-fade-sheet-view")
+        ?? document.querySelector(".edge-fade-sheet-view"),
+        let view = wrapper.querySelector(".dialog-sheet-view")
+      else {
+        setExpanded(box, !isExpanded(box))
+        return
+      }
+      var dialog: DialogSheet?
+      for sheet in sheets where sheet.view.id == view.id { dialog = sheet }
+      if dialog == nil, let made = DialogSheet(view: view, moving: wrapper) {
+        sheets.append(made)
+        dialog = made
+      }
+      guard let dialog, let title = dialog.title else { return }
+      // The value as the box holds it: its ids are the box's, and nothing in
+      // the sheet fades.
+      title.innerHTML = box.innerHTML
+      for element in title.querySelectorAll("[id]") { element.removeAttribute("id") }
+      for element in title.querySelectorAll("[data-edge-fade]") {
+        element.removeAttribute(data("edge-fade"))
+        element.removeAttribute(data("edge-fade-expanded"))
+        element.removeAttribute(data("overflowing"))
+      }
+      let text: String = box.textContent
+      dialog.content?.setAttribute("aria-label", stringIsEmpty(stringTrim(text)) ? "—" : stringTrim(text))
+      dialog.open(over: host, opener: box, fromKeyboard: fromKeyboard)
     }
 
     static func setExpanded(_ box: DOM.Element, _ expanded: Bool) {
@@ -385,13 +447,16 @@ private func edgeFadeGradient(_ toward: CSS.GradientDirection) -> String {
       }
     }
 
+    /// Whether the box opens, in place or as a sheet.
     static func isExpandable(_ box: DOM.Element) -> Bool {
-      stringEquals(box.getAttribute(data("edge-fade")) ?? "", "expand")
+      let mode = box.getAttribute(data("edge-fade")) ?? ""
+      return stringEquals(mode, "expand") || stringEquals(mode, "sheet")
     }
 
-    /// Whether an expandable box is open.
+    /// Whether an expandable box is open in place; one opening as a sheet
+    /// never is.
     static func isExpanded(_ box: DOM.Element) -> Bool {
-      isExpandable(box) && stringEquals(box.getAttribute(data("edge-fade-expanded")) ?? "", "true")
+      stringEquals(box.getAttribute(data("edge-fade")) ?? "", "expand") && stringEquals(box.getAttribute(data("edge-fade-expanded")) ?? "", "true")
     }
 
     static func isOverflowing(_ box: DOM.Element) -> Bool {

@@ -23,6 +23,10 @@
       /// screen): the panel fills it. The box sets where its top is when it
       /// scrolls.
       case pane
+      /// Fixed over the whole screen: the panel as tall as what it holds,
+      /// the backdrop under it. Where a sheet that would cover a pane has
+      /// none to cover (`DialogSheet`).
+      case viewport
     }
 
     let id: String
@@ -50,6 +54,9 @@
       case .pane:
         navbarHeight = 0
         placementName = "pane"
+      case .viewport:
+        navbarHeight = 0
+        placementName = "viewport"
       }
       var sheet = div {
         div {}
@@ -81,6 +88,11 @@
           position(.absolute)
           top(0)
           height(perc(100))
+        }
+        selector("&[data-placement='viewport']") {
+          position(.fixed)
+          top(0)
+          height(dvh(100))
         }
         descendant(".sheet-backdrop") {
           position(.absolute)
