@@ -36,8 +36,8 @@
     /// transcript's place.
     let translation: Translation?
     /// What to set apart in each page's transcript, by the image service the
-    /// page reads: an utterance's sentence and its word
-    /// (`TEIRenderer.utterance`), each a `<mark>`.
+    /// page reads: a quotation's sentence and its word
+    /// (`TEIRenderer.quotation`), each a `<mark>`.
     let highlights: [String: [TEIHighlight]]
     /// Whether each page's transcript begins with its label, as a page turn
     /// inside an image is marked: for pages read one after another in one
@@ -49,7 +49,7 @@
     /// so is what is no word but encoded (a gap, a side mark, a figure, a
     /// running head's page number, a date: `data-gloss-element`, its place
     /// among the page's elements); the client asks this address for it
-    /// (`?semblance=…&line=…&word=…`, or `&element=…`). Nil: the transcript
+    /// (`?canvas=…&line=…&word=…`, or `&element=…`). Nil: the transcript
     /// is read whole.
     let glossURL: String?
 
@@ -96,7 +96,7 @@
       TEIRenderer.pages(in: teiXml, highlights: highlights, marksWords: glossURL != nil)
     }
 
-    /// The image service a semblance reads, which is what pairs it with a
+    /// The image service a canvas reads, which is what pairs it with a
     /// canvas. `TEIRenderer` owns the rule; the view only passes it on.
     public static func serviceID(ofFacsimile url: String) -> String {
       TEIRenderer.serviceID(ofFacsimile: url)
@@ -270,7 +270,7 @@
       span { markedContent(line.runs, facsimileURL: facsimileURL, tabStop: tabStop) }.build()
     }
 
-    /// Runs, an utterance's sentence, or its word, marked as the page has it:
+    /// Runs, a quotation's sentence, or its word, marked as the page has it:
     /// one mark over the runs it covers.
     private func markedContent(_ runs: [TEILine.Run], facsimileURL: String, tabStop: TEIWordPlace?) -> [DOM.Node] {
       var marked: [(highlight: TEIHighlight.Kind?, runs: [TEILine.Run])] = []
@@ -562,14 +562,14 @@
             div {
               if editable {
                 // A form of its own, so the page can be sent to be read back
-                // as it is being edited—its semblance and its code.
+                // as it is being edited—its canvas and its code.
                 form {
                   input()
                     .type(.hidden)
-                    .name("semblance")
+                    .name("canvas")
                     .value(Self.serviceID(ofFacsimile: page.facsimileURL))
                   CodeEditorView(
-                    id: "tei-page-code-\(index)",
+                    id: "tei-page-raw-\(index)",
                     name: "markup",
                     value: XMLFormatter.prettified(page.markup),
                     ariaLabel: page.label.isEmpty ? "Code of this page" : "Code of \(page.label)"
@@ -581,7 +581,7 @@
               }
             }
             .class("tei-page-raw")
-            .data("transcript-layer", "code")
+            .data("transcript-layer", "raw")
 
             // The translation, set by the very reader that sets the
             // transcript above: the same lines, the same classes.
@@ -614,7 +614,7 @@
                   CodeView(XMLFormatter.prettified(translated.page.markup), showLineNumbers: false)
                 }
                 .class("tei-page-raw")
-                .data("transcript-layer", "translation-code")
+                .data("transcript-layer", "translation-raw")
               }
             }
           }
@@ -950,7 +950,7 @@
         descendant(".tei-run[data-space='preserve']") {
           whiteSpace(.preWrap)
         }
-        descendant(".tei-page-code") {
+        descendant(".tei-page-raw") {
           fontFamily(typographyFontMono)
           backgroundColor(.transparent)
           padding(0)
@@ -972,7 +972,7 @@
         selector(".tei-page-raw .hljs-symbol", ".tei-page-raw .hljs-punctuation") {
           color(syntaxPlainText).important()
         }
-        // An utterance's sentence, and, more strongly by its color alone
+        // A quotation's sentence, and, more strongly by its color alone
         // (a weight would fight the page's own bold), its word, boxed in
         // pale red as the OED sets it: the red alert's own pairing of fill
         // and border.

@@ -150,13 +150,13 @@ public enum OutlineMoves {
   ///   copy;
   /// - nothing may sit under an item of the leaf rank, the most concrete,
   ///   whose items are attested directly: a manifest by its images, a leaf
-  ///   sense by its utterances.
+  ///   sense by its quotations.
   ///
   /// A refused move is refused where it is attempted, with an alert over the
   /// outline and the same words in the live region: the caller's sentence,
   /// "A more abstract testament can't go under a more concrete one.", or,
   /// under the leaf rank, its own where it gives one ("Nothing can go under
-  /// a digitization: its semblances attest it."). An outline may also cap its depth (`maxDepth`): a
+  /// a digitization: its canvases attest it."). An outline may also cap its depth (`maxDepth`): a
   /// sentiment tree stops five levels under its title, and a move that would put an item, or one it carries,
   /// deeper is refused in the outline's own words (`depthRefusal`).
   ///

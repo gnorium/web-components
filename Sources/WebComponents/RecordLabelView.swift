@@ -123,7 +123,7 @@ public struct RecordLabelView: HTMLContent {
         }
       }
       // A path as the first row is: class › voice names › homograph number,
-      // the same small chevron between them. None: no row (an utterance's
+      // the same small chevron between them. None: no row (a quotation's
       // gloss is headed by its words alone).
       if !meta.isEmpty {
       span {
