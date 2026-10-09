@@ -121,26 +121,6 @@
           }
         }).sorted()
       }
-      func spaced(_ text: String) -> String {
-        var out = ""
-        var pending = ""
-        for character in text {
-          if character.isNewline || (character.isWhitespace && pending.contains(where: \.isNewline)) {
-            pending.append(character)
-            continue
-          }
-          if !pending.isEmpty {
-            out += pending.contains(where: \.isNewline) ? " " : pending
-            pending = ""
-          }
-          if character.isWhitespace {
-            pending.append(character)
-          } else {
-            out.append(character)
-          }
-        }
-        return out + (pending.contains(where: \.isNewline) ? " " : pending)
-      }
       func role(_ kind: TEILine.Kind) -> String {
         switch kind {
         case .text: return ""
@@ -165,23 +145,9 @@
             // compare alike, however their TeX was written.
             tokens.append(.init(kind: .formula, text: formula.markup, style: style(run.rend)))
           case .text:
-            var text = spaced(run.text)
-            // A line starts at its first character; white space running on
-            // from the last run's is one space, as a reading draws it, so a
-            // layout's line breaks between elements (`XMLFormatter.prettified`)
-            // add none.
-            if tokens.isEmpty || tokens.last?.text.last?.isWhitespace == true {
-              text = String(text.drop(while: \.isWhitespace))
-            }
-            if !text.isEmpty { tokens.append(.init(text: text, style: style(run.rend))) }
+            // Spaced as XML text is displayed already (`TEIRenderer`).
+            if !run.text.isEmpty { tokens.append(.init(text: run.text, style: style(run.rend))) }
           }
-        }
-        // And ends at its last.
-        if let last = tokens.last, case .text = last.kind, last.text.last?.isWhitespace == true {
-          var text = last.text
-          while text.last?.isWhitespace == true { text.removeLast() }
-          tokens.removeLast()
-          if !text.isEmpty { tokens.append(.init(text: text, style: last.style)) }
         }
         return tokens
       }
@@ -407,7 +373,8 @@
           }.class("tei-run tei-initial").data("rend", run.rend).build()
         }
         if run.alternative.isEmpty {
-          return span { run.text }.class("tei-run").data("rend", run.rend).build()
+          let drawn = span { run.text }.class("tei-run").data("rend", run.rend)
+          return (run.preserved ? drawn.data("space", "preserve") : drawn).build()
         }
         // A regularized spelling, an expansion or a correction the
         // transcription gives beside the reading: read on hover.
@@ -977,6 +944,11 @@
           whiteSpace(.preWrap)
           overflowWrap(.breakWord)
           margin(0)
+        }
+        // The source's own white space (`xml:space="preserve"`, a
+        // `<space/>`'s width), drawn as written.
+        descendant(".tei-run[data-space='preserve']") {
+          whiteSpace(.preWrap)
         }
         descendant(".tei-page-code") {
           fontFamily(typographyFontMono)

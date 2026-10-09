@@ -517,13 +517,10 @@ public struct DiffView: HTMLContent {
       selector("&[data-diff-mode='rendered'] .diff-row") {
         minHeight(lineHeightMedium26)
       }
-      selector("&[data-diff-mode='rendered'] .diff-content") {
-        whiteSpace(.normal)
-      }
-      // A changed space in a reading is kept, so its fill shows.
-      selector("&[data-diff-mode='rendered'] .diff-changed[data-blank='true']") {
-        whiteSpace(.preWrap)
-      }
+      // A reading's lines come spaced as XML text is displayed
+      // (`TEIRenderer`): what white space is left is the page's own—one
+      // space between words, a `<space/>`'s width, preserved white space—
+      // and is drawn as it is, a changed blank with its fill.
       selector("& [data-role='heading']", "& [data-role='speaker']") {
         fontWeight(fontWeightSemiBold)
       }
