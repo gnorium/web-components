@@ -674,7 +674,9 @@ public struct ComboboxView: HTMLContent {
       if !stringIsEmpty(searchURL) && isNarrowing && results.isEmpty {
         search(stringTrim(text))
       }
-      filter(all ? "" : text)
+      // A server's suggestions already match the text, as the server
+      // matches it (diacritics aside): none is hidden again here.
+      filter(all || !results.isEmpty ? "" : text)
       guard visibleCount() > 0 else { return }
       isOpen = true
       menu.setAttribute(data("open"), true)
