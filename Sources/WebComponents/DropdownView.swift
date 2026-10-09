@@ -85,7 +85,7 @@ public struct DropdownView: HTMLContent {
   /// its tooltip: a record page's reference marks. Not label text.
   let labelMarks: [DOM.Node]
   /// A line at the end of the menu that is not an option: what the list
-  /// leaves out ("Showing the first 50. Type to narrow the list."). A
+  /// leaves out ("Showing the first 50."). A
   /// remote search's answer brings its own.
   let note: String?
   /// Whether several options may be chosen at once (an origin step's

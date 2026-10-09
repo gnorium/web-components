@@ -62,7 +62,7 @@ public struct ComboboxView: HTMLContent {
   /// Where it asks for suggestions, when the server holds too many to send.
   let searchURL: String?
   /// A line after the suggestions that is not one: what the list leaves out
-  /// ("Showing the first 50. Type to narrow the list."). A search's answer
+  /// ("Showing the first 50."). A search's answer
   /// brings its own.
   let note: String?
   /// The id of the form its value submits with, when it sits outside it.
