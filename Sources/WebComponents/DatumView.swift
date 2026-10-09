@@ -28,23 +28,28 @@ public struct DatumView: HTMLContent {
   let labelMarks: [DOM.Node]
   let value: [DOM.Node]
   let `class`: String
+  /// Its element's id, where something links to it (a revision's
+  /// "Changed" line); none when empty.
+  let id: String
 
   public init(
-    _ label: String, labelMarks: [DOM.Node] = [], class: String = "", @HTMLBuilder value: () -> [DOM.Node]
+    _ label: String, labelMarks: [DOM.Node] = [], class: String = "", id: String = "",
+    @HTMLBuilder value: () -> [DOM.Node]
   ) {
     self.label = label
     self.labelMarks = labelMarks
     self.class = `class`
+    self.id = id
     self.value = value()
   }
 
   /// The common case: a plain value.
-  public init(_ label: String, labelMarks: [DOM.Node] = [], value: String, class: String = "") {
-    self.init(label, labelMarks: labelMarks, class: `class`) { value }
+  public init(_ label: String, labelMarks: [DOM.Node] = [], value: String, class: String = "", id: String = "") {
+    self.init(label, labelMarks: labelMarks, class: `class`, id: id) { value }
   }
 
   public func build() -> DOM.Node {
-    div {
+    let view = div {
       div {
         label
         labelMarks
@@ -58,6 +63,7 @@ public struct DatumView: HTMLContent {
       .class("datum-value")
     }
     .class(stringIsEmpty(`class`) ? "datum-view" : "datum-view \(`class`)")
+    return (stringIsEmpty(id) ? view : view.id(id))
     .style {
       selector("&") {
         display(.flex)
