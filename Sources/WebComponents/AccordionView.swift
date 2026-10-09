@@ -323,6 +323,11 @@ public struct AccordionView: HTMLContent {
               fontSize(fontSizeMedium16)
               lineHeight(lineHeightSmall22)
               color(colorBase)
+              // Its blocks a step apart (user, 2026-10-10): a section's
+              // datums keep their own 8 inside their one container.
+              display(.flex)
+              flexDirection(.column)
+              gap(spacing16)
               minWidth(0)
               minHeight(0)
               overflow(.hidden)
