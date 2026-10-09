@@ -472,44 +472,7 @@ public struct PaginationView: HTMLContent {
     private func navigateToPage(_ page: String, in view: DOM.Element) {
       guard !stringIsEmpty(page) else { return }
 
-      let currentUrl = window.location.href
-
-      if stringContains(currentUrl, "page=") {
-        window.location.href = self.replacePageNumber(in: currentUrl, with: page)
-        return
-      }
-
-      let patternLink = view.querySelector("a[href*='page=']")
-      if let firstLink = patternLink {
-        let pattern = firstLink.getAttribute("href") ?? ""
-        if stringContains(pattern, "page=") {
-          window.location.href = self.replacePageNumber(in: pattern, with: page)
-          return
-        }
-      }
-
-      if stringContains(currentUrl, "?") {
-        window.location.href = "\(currentUrl)&page=\(page)"
-      } else {
-        window.location.href = "\(currentUrl)?page=\(page)"
-      }
-    }
-
-    private func replacePageNumber(in url: String, with newPage: String) -> String {
-      let key = "page="
-      guard let idx = stringIndexOf(url, key) else { return url }
-
-      let prefix = stringSubstring(url, from: 0, to: idx + 5)
-      let suffix = stringSubstring(url, from: idx + 5)
-
-      let bytes = Array(suffix.utf8)
-      var i = 0
-      while i < bytes.count && bytes[i] >= 48 && bytes[i] <= 57 {
-        i += 1
-      }
-      let remaining = stringSubstring(suffix, from: i)
-
-      return "\(prefix)\(newPage)\(remaining)"
+      window.location.href = PaginationURL.settingPage(page, in: window.location.href)
     }
   }
 #endif

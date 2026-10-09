@@ -1,5 +1,7 @@
 import CSSBuilder
+import DesignTokens
 import Foundation
+import HTMLBuilder
 import WebComponents
 import SVGBuilder
 
@@ -21,9 +23,12 @@ struct StyleSheetEmitter {
     _ = ButtonView(icon: IconView(icon: { s in SearchIconView(size: s) }, size: sizeIconSmall), size: .medium, ariaLabel: "search").build()
     _ = ButtonView(icon: IconView(icon: { s in SearchIconView(size: s) }, size: sizeIconSmall), size: .medium, ariaLabel: "search", class: "navbar-search-btn").build()
     _ = SearchBarView(openDialog: true, class: "home", placeholder: "Search", ariaLabel: "Search", searchField: "q", searchEndpoint: "/search/suggest", resultUrlBase: "/search").build()
-    _ = UnicodeGridView().build()
     _ = TeXView("x", displayMode: true).build()
+    _ = RotatingSectorView().build()
+    _ = RotatingRingSectorView().build()
+    _ = RotatingRingSectorWithDiscView().build()
 
+    try StaticStyleSheetEmitter.emitCollected(HTMLGlobalStyle.shared.getAndResetStyleSheets())
     let paths = StaticStyleSheetEmitter.finish()
     guard !paths.isEmpty else { throw E.missing }
     for p in paths { print("Emitted /\(p)") }

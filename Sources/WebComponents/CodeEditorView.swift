@@ -121,6 +121,9 @@
         else { continue }
         let editor = Editor(code: code, input: input)
         editors.append(editor)
+        _ = code.addEventListener(.keydown) { event in
+          if KeyboardShortcuts.editorOwns(event.key) { event.stopPropagation() }
+        }
         _ = code.addEventListener(.input) { _ in
           input.value = code.textContent
           // Its listeners hear the edit as the textarea's own.

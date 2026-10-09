@@ -97,10 +97,11 @@ public struct DatePickerView: HTMLContent {
     let rangeValue = range ? DateRangeValue.parse(value) : nil
     let minDate = min.flatMap { CalendarDate.parse($0) }
     let maxDate = max.flatMap { CalendarDate.parse($0) }
+    let now = ViewerZone.nowMinutes()
     // The reader's days, both kinds (ViewerZone): a range's instants are
     // drawn as the days they bound.
-    let today = CalendarDate.today()
-    let rangeDays = rangeValue.map { $0.days() }
+    let today = ViewerZone.localDay(epochMinutes: now)
+    let rangeDays = rangeValue.map { $0.days(now: now) }
     let rangeStart = rangeDays.flatMap { $0.start }
     let rangeEnd = rangeDays.flatMap { $0.end }
     let focused = (selected ?? rangeEnd ?? rangeStart ?? today).clamped(min: minDate, max: maxDate)
@@ -180,6 +181,9 @@ public struct DatePickerView: HTMLContent {
                     buttonColor: .gray,
                     weight: .plain,
                     size: .medium,
+                    disabled: disabled || !(DateRangeValue.parse(preset.value).map {
+                      $0.isWithin(min: minDate, max: maxDate, now: now)
+                    } ?? false),
                     fullWidth: true,
                     class: "date-picker-preset",
                     labelFontWeight: fontWeightNormal,
@@ -246,6 +250,7 @@ public struct DatePickerView: HTMLContent {
       )
     }
     .class(rootClass)
+    .data("disabled", disabled)
     .data("range", range)
     .data("week-start", "\(weekStart.rawValue)")
     .data("min", minDate?.iso ?? "")
@@ -455,6 +460,7 @@ public struct DatePickerView: HTMLContent {
     private let presets: [DOM.Element]
     /// Whether it holds a range of days (`DateRangeValue`) rather than one.
     private let isRange: Bool
+    private let disabled: Bool
     private let weekStart: Int
     private let minDate: CalendarDate?
     private let maxDate: CalendarDate?
@@ -479,6 +485,7 @@ public struct DatePickerView: HTMLContent {
       doneButton = root.querySelector(".date-picker-done")
       presets = root.querySelectorAll(".date-picker-preset")
       isRange = stringEquals(root.getAttribute(data("range")) ?? "", "true")
+      disabled = stringEquals(root.getAttribute(data("disabled")) ?? "", "true")
       weekStart = parseInt(root.getAttribute(data("week-start")) ?? "0") ?? 0
       minDate = CalendarDate.parse(root.getAttribute(data("min")) ?? "")
       maxDate = CalendarDate.parse(root.getAttribute(data("max")) ?? "")
@@ -559,8 +566,10 @@ public struct DatePickerView: HTMLContent {
           guard let param = preset.getAttribute(data("value")), let range = DateRangeValue.parse(param) else {
             return
           }
+          let now = ViewerZone.nowMinutes()
+          guard !self.disabled, range.isWithin(min: self.minDate, max: self.maxDate, now: now) else { return }
           self.setRange(range)
-          let days = range.days()
+          let days = range.days(now: now)
           if let day = days.end ?? days.start {
             self.focused = day.clamped(min: self.minDate, max: self.maxDate)
             self.shown = self.focused
@@ -746,9 +755,15 @@ public struct DatePickerView: HTMLContent {
     /// The preset in force pressed, the others not.
     private func markPresets() {
       let param = valueInput?.value ?? ""
+      let now = ViewerZone.nowMinutes()
       for preset in presets {
-        let pressed = stringEquals(preset.getAttribute(data("value")) ?? "", param)
+        let value = preset.getAttribute(data("value")) ?? ""
+        let pressed = stringEquals(value, param)
         preset.setAttribute("aria-pressed", pressed ? "true" : "false")
+        let allowed = !disabled && (DateRangeValue.parse(value).map {
+          $0.isWithin(min: minDate, max: maxDate, now: now)
+        } ?? false)
+        if allowed { preset.removeAttribute("disabled") } else { preset.setAttribute("disabled", "") }
       }
     }
 

@@ -20,7 +20,7 @@ import EmbeddedSwiftUtilities
 public struct DateRangeValue: Sendable {
   public enum Bound: Sendable {
     /// A UTC moment, as minutes since the epoch.
-    case instant(Int)
+    case instant(Int64)
     /// The N days that end today, the reader's: as a start, the first
     /// moment of the day N − 1 days back; as an end, the end of that day.
     case days(Int)
@@ -88,20 +88,20 @@ public struct DateRangeValue: Sendable {
   }
 
   /// `yyyy-mm-ddTHH:MMZ` as minutes since the epoch.
-  static func parseInstant(_ string: String) -> Int? {
+  static func parseInstant(_ string: String) -> Int64? {
     let bytes = Array(string.utf8)
     guard bytes.count == 17, bytes[10] == 84, bytes[13] == 58, bytes[16] == 90 else { return nil }
     guard let day = CalendarDate.parse(stringSubstring(string, from: 0, to: 10)),
       let time = TimeOfDay.parse(stringSubstring(string, from: 11, to: 16))
     else { return nil }
-    return day.dayNumber * 1_440 + time.minutes
+    return Int64(day.dayNumber) * 1_440 + Int64(time.minutes)
   }
 
   /// `2026-09-30T18:30Z`.
-  static func instantText(_ minutes: Int) -> String {
-    let dayNumber = minutes >= 0 ? minutes / 1_440 : (minutes - 1_439) / 1_440
+  static func instantText(_ minutes: Int64) -> String {
+    let dayNumber = minutes / 1_440 - (minutes % 1_440 < 0 ? 1 : 0)
     let time = minutes - dayNumber * 1_440
-    return "\(CalendarDate(dayNumber: dayNumber).iso)T\(TimeOfDay(hour: time / 60, minute: time % 60).text)Z"
+    return "\(CalendarDate(dayNumber: Int(dayNumber)).iso)T\(TimeOfDay(hour: Int(time / 60), minute: Int(time % 60)).text)Z"
   }
 
   /// As a URL carries it.
@@ -149,14 +149,14 @@ public struct DateRangeValue: Sendable {
   /// The reader's first and last day the range covers, as a calendar marks
   /// them; nil at an open end—except that a range counting back from now
   /// runs to today, so a preset marks every day it covers.
-  public func days() -> (start: CalendarDate?, end: CalendarDate?) {
-    let today = ViewerZone.today()
+  public func days(now: Int64 = ViewerZone.nowMinutes()) -> (start: CalendarDate?, end: CalendarDate?) {
+    let today = ViewerZone.localDay(epochMinutes: now)
     let first: CalendarDate?
     switch start {
     case .none: first = nil
     case .instant(let minutes)?: first = ViewerZone.localDay(epochMinutes: minutes)
     case .days(let count)?: first = today.adding(days: -(count - 1))
-    case .hours(let count)?: first = today.adding(days: -(count / 24))
+    case .hours(let count)?: first = ViewerZone.localDay(epochMinutes: now - Int64(count) * 60)
     }
     let last: CalendarDate?
     switch end {
@@ -164,9 +164,23 @@ public struct DateRangeValue: Sendable {
     // The end is the next day's first moment: its last day is the one before.
     case .instant(let minutes)?: last = ViewerZone.localDay(epochMinutes: minutes - 1)
     case .days(let count)?: last = today.adding(days: -(count - 1))
-    case .hours: last = today
+    case .hours(let count)?: last = ViewerZone.localDay(epochMinutes: now - Int64(count) * 60 - 1)
     }
     return (first, last)
+  }
+
+  /// Whether every covered day fits the picker's inclusive limits. An
+  /// open end cannot fit a limit on that side; relative presets end today.
+  func isWithin(min: CalendarDate?, max: CalendarDate?, now: Int64 = ViewerZone.nowMinutes()) -> Bool {
+    let resolved = days(now: now)
+    if let min {
+      guard let first = resolved.start, first.dayNumber >= min.dayNumber else { return false }
+    }
+    if let max {
+      guard let last = resolved.end, last.dayNumber <= max.dayNumber else { return false }
+    }
+    if let first = resolved.start, let last = resolved.end, first.dayNumber > last.dayNumber { return false }
+    return true
   }
 
   // MARK: - Words

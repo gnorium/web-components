@@ -4,10 +4,10 @@ import DesignTokens
 import DOMBuilder
 import EmbeddedSwiftUtilities
 import HTMLBuilder
+import SVGBuilder
 import WebTypes
 
-/// Animated 120° conic sector—indeterminate activity mark (leaf).
-/// Available on SERVER + CLIENT so RotatingSectorFactory can render without replicas.
+/// A sweeping 120° disc sector, representing explication in progress.
 public struct RotatingSectorView: HTMLContent {
   let size: CSS.Length
   let showLabel: Bool
@@ -33,100 +33,63 @@ public struct RotatingSectorView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
-    let hasContent = !content.isEmpty
+    let labeled = showLabel && !content.isEmpty
     let rootClass =
       stringIsEmpty(`class`) ? "rotating-sector-view" : "rotating-sector-view \(`class`)"
-
-    let sector = span {}
-      .class(hasContent && showLabel ? "rotating-sector" : rootClass)
-      .style {
-        // Its size inline: one shared class rule would give every sector
-        // the last size the stylesheet saw.
-        width(size)
-        height(size)
-        selector("&") {
-          display(.inlineBlock)
-          borderRadius(borderRadiusCircle)
-          background(
-            conicGradient(
-              (colorBlue, deg(0)),
-              (colorBlue, deg(120)),
-              (backgroundColorTransparent, deg(120))
-            )
-          )
-          animation("rotating-sector-spin", s(0.8), .linear, .infinite)
-          flexShrink(0)
-        }
-        keyframes("rotating-sector-spin") {
-          from { transform(rotate(deg(0))) }
-          to { transform(rotate(deg(360))) }
-        }
-      }
-
-    if !(hasContent && showLabel) {
-      var leaf = sector
-        .role("progressbar")
-        .ariaHidden(ariaHidden)
-        .ariaValueMin(0)
-        .ariaValueMax(100)
-      let labelValue = ariaLabel ?? "Loading"
-      if !ariaHidden {
-        leaf = leaf.ariaLabel(labelValue)
-      }
-      return leaf
+    let sector = svg {
+      path()
+        .d(M(512, 512), L(512, 0), A(512, 512, 0, false, true, 955.405, 768), Z())
+        .class("rotating-sector-shape")
     }
+    .class(labeled ? "rotating-sector-mark" : rootClass)
+    .viewBox(0, 0, 1024, 1024)
+    .xmlns("http://www.w3.org/2000/svg")
+    .fill(.currentColor)
+    // Per-instance sizes stay inline; the shared stylesheet cannot capture one size.
+    .style { width(size); height(size) }
 
-    var wrapper = div {
-      sector
-      span {
-        content
+    if labeled {
+      return div {
+        sector.ariaHidden(true)
+        span { content }.class("rotating-sector-label")
       }
-      .class("rotating-sector-label")
+      .class(rootClass)
+      .role("progressbar")
+      .ariaHidden(ariaHidden)
+      .ariaLabel(ariaHidden ? nil : ariaLabel)
+      .style { Self.styles() }
     }
-    .class(rootClass)
-    .role("progressbar")
-    .ariaHidden(ariaHidden)
-    .ariaValueMin(0)
-    .ariaValueMax(100)
+    return sector
+      .role("progressbar")
+      .ariaHidden(ariaHidden)
+      .ariaLabel(ariaHidden ? nil : (ariaLabel ?? "Explication running"))
+      .style { Self.styles() }
+  }
 
-    if let labelValue = ariaLabel {
-      wrapper = wrapper.ariaLabel(labelValue)
+  @CSSBuilder private static func styles() -> [CSSOM.CSSRule] {
+    selector("&") {
+      display(.inlineFlex)
+      alignItems(.center)
+      gap(spacing8)
+      flexShrink(0)
     }
-
-    return
-      wrapper
-      .style {
-        selector("&") {
-          display(.inlineFlex)
-          alignItems(.center)
-          gap(spacing8)
-          fontFamily(typographyFontSans)
-          fontSize(fontSizeMedium16)
-          fontWeight(fontWeightNormal)
-          lineHeight(lineHeightSmall22)
-          color(colorSubtle)
-        }
-        descendant(".rotating-sector") {
-          display(.inlineBlock)
-          width(size)
-          height(size)
-          borderRadius(borderRadiusCircle)
-          background(
-            conicGradient(
-              (colorBlue, deg(0)),
-              (colorBlue, deg(120)),
-              (backgroundColorTransparent, deg(120))
-            )
-          )
-          animation("rotating-sector-spin", s(0.8), .linear, .infinite)
-          flexShrink(0)
-        }
-        descendant(".rotating-sector-label") { display(.inline) }
-        keyframes("rotating-sector-spin") {
-          from { transform(rotate(deg(0))) }
-          to { transform(rotate(deg(360))) }
-        }
-      }
+    descendant(".rotating-sector-mark") { display(.block); flexShrink(0) }
+    descendant(".rotating-sector-label") {
+      fontFamily(typographyFontSans)
+      fontSize(fontSizeMedium16)
+      fontWeight(fontWeightNormal)
+      lineHeight(lineHeightSmall22)
+      color(colorSubtle)
+    }
+    descendant(".rotating-sector-shape") {
+      transformOrigin(perc(50), perc(50))
+      animation("rotating-sector-spin", animationDurationFast, animationTimingFunctionBase, .infinite)
+      media(prefersReducedMotion(.reduce)) { animation("none") }
+    }
+    keyframes("rotating-sector-spin") {
+      from { transform(rotate(deg(0))) }
+      to { transform(rotate(deg(360))) }
+    }
   }
 }
 
@@ -139,16 +102,12 @@ public struct RotatingSectorView: HTMLContent {
       ariaHidden: Bool = true,
       class: String = ""
     ) -> DOM.Element {
+      StyleSheetLoader.ensure("rotating-sector-view")
       let wrapper = document.createElement(.span)
-      let view = RotatingSectorView(
-        size: size,
-        ariaHidden: ariaHidden,
-        class: `class`
-      )
-      wrapper.innerHTML = view.render()
-      if let leaf = wrapper.firstElementChild {
-        return leaf
-      }
+      wrapper.innerHTML = RotatingSectorView(
+        size: size, ariaHidden: ariaHidden, class: `class`
+      ).render()
+      if let leaf = wrapper.firstElementChild { return leaf }
       return wrapper
     }
   }

@@ -465,7 +465,7 @@ public struct ComboboxView: HTMLContent {
     private var searchTimer: Int32 = 0
     /// Which query is the latest: an answer overtaken by a later one is
     /// dropped.
-    private var searchSequence = 0
+    private var searchState = ComboboxSearch()
     private var isOpen = false
     /// The suggestion the arrow keys are on, in `shown`; -1 for none.
     private var active = -1
@@ -650,7 +650,7 @@ public struct ComboboxView: HTMLContent {
           event.preventDefault()
           (field as? HTML.HTMLInputElement)?.value = ""
           commit(value: "")
-          filter("")
+          if stringIsEmpty(searchURL) { filter("") } else { search("") }
         }
       } else if stringEquals(key, "Tab") {
         // Leaving with the keys on a suggestion takes it; the focus goes on.
@@ -671,12 +671,14 @@ public struct ComboboxView: HTMLContent {
 
     /// Opens the list: every suggestion (`all`), or those matching the text.
     private func open(all: Bool) {
-      if !stringIsEmpty(searchURL) && isNarrowing && results.isEmpty {
+      let currentQuery = stringTrim(text)
+      if !results.isEmpty && !searchState.matches(currentQuery) { showOwn() }
+      if !stringIsEmpty(searchURL) && isNarrowing && !searchState.matches(currentQuery) {
         search(stringTrim(text))
       }
       // A server's suggestions already match the text, as the server
       // matches it (diacritics aside): none is hidden again here.
-      filter(all || !results.isEmpty ? "" : text)
+      filter(all || searchState.matches(currentQuery) ? "" : text)
       guard visibleCount() > 0 else { return }
       isOpen = true
       menu.setAttribute(data("open"), true)
@@ -773,20 +775,24 @@ public struct ComboboxView: HTMLContent {
         clearTimeout(searchTimer)
         searchTimer = 0
       }
-      searchSequence += 1
+      let asked = searchState.begin()
       setActive(-1)
+      // Remove the previous query's DOM options immediately: reopening
+      // during the debounce must never make them selectable again.
+      showOwn()
       if stringIsEmpty(query) {
-        showOwn()
         return
       }
-      let asked = searchSequence
+      filter(query)
       let url = stringJoin(
         [searchURL, stringContains(searchURL, "?") ? "&q=" : "?q=", encodeURIComponent(query)], separator: "")
       searchTimer = setTimeout(250) { [self] in
         self.searchTimer = 0
         let answer = document.createElement(.div)
         answer.loadFragment(url) { [self] ok in
-          guard ok, asked == self.searchSequence else { return }
+          guard ok,
+            self.searchState.receive(query: query, sequence: asked, currentQuery: stringTrim(self.text))
+          else { return }
           self.show(answer)
         }
       }
@@ -794,6 +800,7 @@ public struct ComboboxView: HTMLContent {
 
     /// A search's suggestions, in the list in place of its own.
     private func show(_ answer: DOM.Element) {
+      setActive(-1)
       for option in shown { option.remove() }
       resultNote?.remove()
       ownNote?.remove()
@@ -823,6 +830,7 @@ public struct ComboboxView: HTMLContent {
     }
 
     private func showOwn() {
+      setActive(-1)
       for option in results { option.remove() }
       resultNote?.remove()
       resultNote = nil

@@ -25,11 +25,9 @@
   /// directions.
   public struct TEIView: HTMLContent {
     let teiXml: String
-    /// Whether each page's code can be edited. The editor opens on the code
-    /// as the Raw view lays it out (`XMLFormatter.prettified`), which keeps
-    /// every text as written and reads the same; what a person saves is
-    /// what they edited. The transcript stays a transcript—nothing in it
-    /// can be typed into.
+    /// Whether each page's code can be edited. The editor receives the
+    /// original source, including significant whitespace; saving an edit
+    /// changes only what the reader changed.
     let editable: Bool
     /// The transcript's translation, when it has one: a third layer of each
     /// page's transcript, which the viewer's Translated switch shows in the
@@ -571,7 +569,7 @@
                   CodeEditorView(
                     id: "tei-page-raw-\(index)",
                     name: "markup",
-                    value: XMLFormatter.prettified(page.markup),
+                    value: page.markup,
                     ariaLabel: page.label.isEmpty ? "Code of this page" : "Code of \(page.label)"
                   )
                 }

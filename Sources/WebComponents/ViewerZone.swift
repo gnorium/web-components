@@ -18,45 +18,47 @@ public enum ViewerZone {
     /// The request's IANA zone ("Asia/Kolkata").
     @TaskLocal public static var identifier: String = "UTC"
 
-    static var zone: TimeZone { TimeZone(identifier: identifier) ?? TimeZone(secondsFromGMT: 0)! }
-
-    static var calendar: Calendar {
-      var calendar = Calendar(identifier: .gregorian)
-      calendar.timeZone = zone
-      return calendar
-    }
   #endif
 
   /// The reader's day a moment falls on.
-  public static func localDay(epochMinutes: Int) -> CalendarDate {
+  public static func localDay(epochMinutes: Int64) -> CalendarDate {
     #if CLIENT
       let date = JSDate(time: Double(epochMinutes) * 60_000)
       return CalendarDate(year: date.fullYear, month: date.month + 1, day: date.date)
     #else
-      let parts = calendar.dateComponents(
-        [.year, .month, .day], from: Date(timeIntervalSince1970: Double(epochMinutes) * 60))
-      return CalendarDate(year: parts.year ?? 1970, month: parts.month ?? 1, day: parts.day ?? 1)
+      let local = epochMinutes + Int64(offsetMinutes(zone: identifier, epochMinutes: epochMinutes))
+      let day = local / 1_440 - (local % 1_440 < 0 ? 1 : 0)
+      return CalendarDate(dayNumber: Int(day))
     #endif
   }
 
   /// The moment the reader's day begins, as minutes since the epoch.
-  public static func epochMinutes(startOf day: CalendarDate) -> Int {
+  public static func epochMinutes(startOf day: CalendarDate) -> Int64 {
+    let wall = Int64(day.dayNumber) * 1_440
     #if CLIENT
-      let time = JSDate(localYear: day.year, month: day.month - 1, day: day.day).time
-      let minutes = time / 60_000
-      return Int(minutes)
+      // Use literal Gregorian years. JavaScript's multi-argument Date
+      // constructor silently maps years 0–99 to 1900–1999.
+      return resolveWallMinutes(wall) { instant in
+        let date = JSDate(time: Double(instant) * 60_000)
+        let localDay = CalendarDate(year: date.fullYear, month: date.month + 1, day: date.date)
+        return Int(Int64(localDay.dayNumber) * 1_440 + Int64(date.hours * 60 + date.minutes) - instant)
+      }
     #else
-      let date = calendar.date(from: DateComponents(year: day.year, month: day.month, day: day.day))
-      return Int((date?.timeIntervalSince1970 ?? 0) / 60)
+      return resolveWallMinutes(wall) { offsetMinutes(zone: identifier, epochMinutes: $0) }
     #endif
   }
 
   /// Today where the reader is.
   public static func today() -> CalendarDate {
+    localDay(epochMinutes: nowMinutes())
+  }
+
+  /// The current UTC minute, captured once when resolving a relative range.
+  public static func nowMinutes() -> Int64 {
     #if CLIENT
-      return localDay(epochMinutes: Int(JSDate.now() / 60_000))
+      return Int64(JSDate.now() / 60_000)
     #else
-      return localDay(epochMinutes: Int(Date().timeIntervalSince1970 / 60))
+      return Int64(Date().timeIntervalSince1970 / 60)
     #endif
   }
 
@@ -73,29 +75,51 @@ public enum ViewerZone {
   /// Minutes `zone` is ahead of UTC at a moment—its own offset that day,
   /// daylight saving included, from the IANA database (the browser's Intl
   /// on the client, Foundation's on the server).
-  public static func offsetMinutes(zone: String, epochMinutes: Int) -> Int {
+  public static func offsetMinutes(zone: String, epochMinutes: Int64) -> Int {
     #if CLIENT
       return JSDate.offsetMinutes(zone: zone, at: Double(epochMinutes) * 60_000)
     #else
       let timeZone = TimeZone(identifier: zone) ?? TimeZone(secondsFromGMT: 0)!
-      return timeZone.secondsFromGMT(for: Date(timeIntervalSince1970: Double(epochMinutes) * 60)) / 60
+      let seconds = timeZone.secondsFromGMT(for: Date(timeIntervalSince1970: Double(epochMinutes) * 60))
+      return seconds / 60 - (seconds % 60 < 0 ? 1 : 0)
     #endif
   }
 
   /// The moment `zone`'s clocks read `minutes` past midnight on `day`: the
-  /// offset is the one in force then, found by asking twice (a guess, then
-  /// the offset at the guess). A wall time a spring-forward skips lands an
-  /// hour on, as the clocks do.
-  public static func epochMinutes(day: CalendarDate, minutes: Int, zone: String) -> Int {
-    let wall = day.dayNumber * 1_440 + minutes
-    let first = wall - offsetMinutes(zone: zone, epochMinutes: wall)
-    return wall - offsetMinutes(zone: zone, epochMinutes: first)
+  /// earlier occurrence is used for a repeated time. A skipped wall time
+  /// moves forward by the transition's gap, including half-hour changes.
+  public static func epochMinutes(day: CalendarDate, minutes: Int, zone: String) -> Int64 {
+    resolveWallMinutes(Int64(day.dayNumber) * 1_440 + Int64(minutes)) {
+      offsetMinutes(zone: zone, epochMinutes: $0)
+    }
+  }
+
+  /// Probe both sides of a transition, then verify each possible instant
+  /// against the offset in force there. Nearby offsets cover even a full
+  /// skipped day. Exact matches win; a gap uses the nearest later wall time.
+  static func resolveWallMinutes(_ wall: Int64, offset: (Int64) -> Int) -> Int64 {
+    var exact: Int64?
+    var forward: (instant: Int64, distance: Int64)?
+    for probe in [wall - 2_880, wall, wall + 2_880] {
+      let candidate = wall - Int64(offset(probe))
+      let distance = candidate + Int64(offset(candidate)) - wall
+      if distance == 0 {
+        exact = exact.map { Swift.min($0, candidate) } ?? candidate
+      } else if distance > 0 {
+        if let previous = forward {
+          if distance < previous.distance { forward = (candidate, distance) }
+        } else {
+          forward = (candidate, distance)
+        }
+      }
+    }
+    return exact ?? forward?.instant ?? (wall - Int64(offset(wall)))
   }
 
   /// What `zone`'s clocks read at a moment, as minutes past its midnight.
-  public static func wallMinutes(epochMinutes: Int, zone: String) -> Int {
-    let local = epochMinutes + offsetMinutes(zone: zone, epochMinutes: epochMinutes)
-    return ((local % 1_440) + 1_440) % 1_440
+  public static func wallMinutes(epochMinutes: Int64, zone: String) -> Int {
+    let local = epochMinutes + Int64(offsetMinutes(zone: zone, epochMinutes: epochMinutes))
+    return Int(((local % 1_440) + 1_440) % 1_440)
   }
 }
 

@@ -542,11 +542,9 @@
         
         // Open menu with '/' shortcut
         if stringEquals(key, "/") && !self.isMenuOpen {
-          // Check if user is not already in an input/textarea
-          let activeElement = document.activeElement
-          let tagName = activeElement?.tagName ?? ""
-          
-          if !stringEquals(tagName, "INPUT") && !stringEquals(tagName, "TEXTAREA") {
+          if !KeyboardShortcuts.isEditable(event.target)
+            && !KeyboardShortcuts.isEditable(document.activeElement)
+          {
             event.preventDefault()
             self.openMenu()
           }
