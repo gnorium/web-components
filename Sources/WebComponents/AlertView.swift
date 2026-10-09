@@ -467,7 +467,9 @@
 
   /// Dynamic alert creation functions
   public enum AlertAPI {
-    private static let motionDuration = 400
+    /// The height motion's, shared with every box that comes and goes
+    /// (`RevealMotion`).
+    private static let motionDuration = RevealMotion.duration
     // Safari can paint a flex shell's first text line before resolving its
     // block padding. Keep the shell's padding at zero and animate spacing on
     // its child instead, so both the spacing and content can fade in from the
@@ -666,11 +668,11 @@
       motionContent.style.setProperty("padding-block", "0px")
       alertEl.style.setProperty("overflow", "hidden")
       alertEl.style.setProperty(
-        "transition", "height \(motionDuration)ms ease-in-out")
+        "transition", "height \(motionDuration)ms \(RevealMotion.easing)")
       motionContent.style.setProperty("opacity", "0")
       motionContent.style.setProperty(
         "transition",
-        "padding-block \(motionDuration)ms ease-in-out")
+        "padding-block \(motionDuration)ms \(RevealMotion.easing)")
       _ = alertEl.offsetHeight
       _ = motionContent.offsetHeight
       // Let the closed state paint before changing either
@@ -735,10 +737,10 @@
       element.style.setProperty("overflow", "hidden")
       _ = element.offsetHeight
       element.style.setProperty(
-        "transition", "height \(motionDuration)ms ease-in-out")
+        "transition", "height \(motionDuration)ms \(RevealMotion.easing)")
       motionContent.style.setProperty("padding-block", finishedPadding)
       motionContent.style.setProperty(
-        "transition", "padding-block \(motionDuration)ms ease-in-out, opacity \(motionDuration)ms ease")
+        "transition", "padding-block \(motionDuration)ms \(RevealMotion.easing), opacity \(motionDuration)ms ease")
       _ = window.requestAnimationFrame {
         element.style.setProperty("height", "0px")
         motionContent.style.setProperty("padding-block", "0px")

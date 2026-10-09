@@ -123,7 +123,9 @@ public struct RecordLabelView: HTMLContent {
         }
       }
       // A path as the first row is: class › voice names › homograph number,
-      // the same small chevron between them.
+      // the same small chevron between them. None: no row (an utterance's
+      // gloss is headed by its words alone).
+      if !meta.isEmpty {
       span {
         for (index, segment) in meta.enumerated() {
           if index > 0 {
@@ -135,6 +137,7 @@ public struct RecordLabelView: HTMLContent {
         }
       }
       .class("record-label-meta")
+      }
     }
     .class(stringIsEmpty(`class`) ? "record-label-view" : "record-label-view \(`class`)")
     .style {

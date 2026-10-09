@@ -381,6 +381,8 @@ public struct ConstraintMessages: Sendable {
         } else {
           control.insertAdjacentHTML(.afterend, html)
         }
+        // It grows in under the control, as an alert opens (user, 2026-10-09).
+        if let drawn = document.querySelector("#\(id)") { RevealMotion.reveal(drawn) }
       }
 
       _ = control.setAttribute("aria-invalid", "true")
@@ -401,7 +403,10 @@ public struct ConstraintMessages: Sendable {
     static func clear(_ control: DOM.Element) {
       let id = messageID(control)
       if let existing = document.querySelector("#\(id)") {
-        existing.remove()
+        // Nameless at once, so a message said again is a new one; it
+        // shrinks away as an alert closes.
+        existing.removeAttribute("id")
+        RevealMotion.conceal(existing) { existing.remove() }
       }
       control.removeAttribute("aria-invalid")
       if let describedBy = control.getAttribute("aria-describedby") {
