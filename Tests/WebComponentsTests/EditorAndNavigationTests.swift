@@ -1,6 +1,7 @@
 import DOMBuilder
 import WebTypes
 import XCTest
+import XMLUtilities
 @testable import WebComponents
 
 final class EditorAndNavigationTests: XCTestCase {
@@ -14,7 +15,7 @@ final class EditorAndNavigationTests: XCTestCase {
     return (node as? DOM.Element)?.children.map { text(in: $0) }.joined() ?? ""
   }
 
-  func testTEIEditorKeepsEverySourceCharacter() throws {
+  func testTEIEditorOpensFormattedAndKeepsSignificantWhitespace() throws {
     for attribute in ["xml:space='preserve'", "xml:space = \"preserve\"", "xml:space = 'preserve'"] {
       let source = "<p \(attribute)><hi>a</hi>  <hi>b</hi>\u{00A0}c\n</p>"
       let view = TEIView(
@@ -26,10 +27,20 @@ final class EditorAndNavigationTests: XCTestCase {
       let code = try XCTUnwrap(nodes.first { node in
         node.tag == "code" && node.attributes.contains { $0.0 == "contenteditable" }
       })
-      XCTAssertEqual(text(in: input), page.markup)
-      XCTAssertEqual(text(in: code), page.markup)
+      XCTAssertEqual(text(in: input), XMLFormatter.prettified(page.markup))
+      XCTAssertEqual(text(in: code), XMLFormatter.prettified(page.markup))
       XCTAssertTrue(text(in: input).contains(source))
     }
+  }
+
+  func testTEIEditorActuallyFormatsTheStoredOneLineMarkup() throws {
+    let view = TEIView(
+      teiXml: #"<TEI><text><body><pb n="1" facs="https://web-tests.invalid/iiif/1"/><div><p>Old line</p></div></body></text></TEI>"#,
+      editable: true)
+    let page = try XCTUnwrap(view.pages.first)
+    let input = try XCTUnwrap(elements(in: view.build()).first { $0.tag == "textarea" })
+    XCTAssertNotEqual(XMLFormatter.prettified(page.markup), page.markup)
+    XCTAssertEqual(text(in: input), "<div>\n  <p>Old line</p>\n</div>")
   }
 
   func testPaginationChangesOnlyExactPageParameters() {

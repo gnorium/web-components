@@ -569,7 +569,7 @@
                   CodeEditorView(
                     id: "tei-page-raw-\(index)",
                     name: "markup",
-                    value: page.markup,
+                    value: XMLFormatter.prettified(page.markup),
                     ariaLabel: page.label.isEmpty ? "Code of this page" : "Code of \(page.label)"
                   )
                 }
