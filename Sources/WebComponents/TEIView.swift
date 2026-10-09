@@ -630,20 +630,42 @@
       .data("editable", editable)
       .data("gloss", glossURL ?? "")
       .style {
-        // The text's inset is the view's own (user, 2026-10-10): the pane
-        // it sits in (the reader's markup pane, a quotation's frame) has
-        // none, so a ring drawn on the pane sits on the pane's own edges.
+        // The pane it sits in (the reader's markup pane, a quotation's
+        // frame) has no padding, so a ring drawn on the pane sits on its own
+        // edges; the view's 1px keeps the ring's inward outline clear of
+        // what it holds (user, 2026-10-10). The text's 16 inset is its
+        // layer's own (the rendered page, the translation, the note of a
+        // document with no pages); the code fills the view edge to edge,
+        // square, with its own inset.
         selector("&") {
           display(.flex)
           flexDirection(.column)
           minWidth(0)
-          padding(spacing16)
+          padding(px(1))
         }
         descendant(".tei-transcript") {
           display(.flex)
           flexDirection(.column)
           gap(spacing8)
           minWidth(0)
+        }
+        selector(
+          "& [data-transcript-layer='rendered']", "& [data-transcript-layer='translation']", "& .tei-empty"
+        ) {
+          padding(spacing16)
+        }
+        selector("& .tei-page-raw .code-view", "& .tei-page-raw .code-editor-view") {
+          borderRadius(0)
+        }
+        // A run with an alternative (an abbreviation's expansion, a
+        // regularized spelling) is a word of its line: the tooltip's
+        // trigger is an inline-flex box centered on the line, which set the
+        // word apart from its neighbors, so here it is plain inline text in
+        // the line's own font, on its baseline; the bubble still opens on it.
+        selector("& .tei-run-alternative", "& .tei-run-alternative .tooltip-trigger-content") {
+          display(.inline)
+          verticalAlign(.baseline)
+          CSS.Property("font", "inherit")
         }
         // A figure is set apart from the transcript around it: it is a
         // photograph of part of the surface, not a sentence on it.
