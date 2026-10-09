@@ -231,7 +231,7 @@ public struct PopoverView: HTMLContent {
         backgroundColor(backgroundColorBase)
         border(borderWidthBase, .solid, borderColorBase)
         borderRadius(borderRadiusBase)
-        boxShadow(boxShadowOutsetMediumAround)
+        boxShadow(boxShadowMedium)
         zIndex(zIndexPopover)
         minWidth(px(256))
         maxWidth(px(320))

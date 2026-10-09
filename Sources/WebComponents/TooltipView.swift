@@ -205,7 +205,7 @@ public struct TooltipView: HTMLContent {
         visibility(.hidden)
         transition(transitionPropertyFade, transitionDurationBase, transitionTimingFunctionSystem)
         zIndex(zIndexTooltip)
-        boxShadow(boxShadowOutsetSmall)
+        boxShadow(boxShadowMedium)
         textAlign(.start)
         backfaceVisibility(.hidden)
         willChange(.transform, .opacity)

@@ -925,7 +925,8 @@ public enum OutlineMoves {
         backgroundColor(backgroundColorBase)
         border(borderWidthBase, .solid, borderColorBase)
         borderRadius(borderRadiusBase)
-        boxShadow(boxShadowMedium)
+        // Lifted off the page as it is dragged: the large elevation.
+        boxShadow(boxShadowLarge)
         pointerEvents(.none)
         whiteSpace(.nowrap)
       }
