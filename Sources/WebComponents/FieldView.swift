@@ -3,6 +3,7 @@
   import CSSOMBuilder
   import DesignTokens
   import DOMBuilder
+import EmbeddedSwiftUtilities
   import Foundation
   import HTMLBuilder
   import WebTypes
@@ -130,8 +131,10 @@
               .data("disabled", disabled)
           }
 
+          // Named as the client names the message it draws for the control
+          // (`FieldValidationHydration`): "<id>-validation-message".
           if status == .error, let errorMsg = messages.error {
-            FieldValidationMessageView(status: .error, message: errorMsg)
+            FieldValidationMessageView(id: stringIsEmpty(id) ? "" : "\(id)-validation-message", status: .error, message: errorMsg)
           }
 
           if status == .warning, let warningMsg = messages.warning {
@@ -210,8 +213,10 @@
               .data("disabled", disabled)
           }
 
+          // Named as the client names the message it draws for the control
+          // (`FieldValidationHydration`): "<id>-validation-message".
           if status == .error, let errorMsg = messages.error {
-            FieldValidationMessageView(status: .error, message: errorMsg)
+            FieldValidationMessageView(id: stringIsEmpty(id) ? "" : "\(id)-validation-message", status: .error, message: errorMsg)
           }
 
           if status == .warning, let warningMsg = messages.warning {
