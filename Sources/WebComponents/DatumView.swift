@@ -20,6 +20,11 @@ import WebTypes
 /// never widens the page. It fades at each edge that hides some of it and
 /// scrolls sideways, and on touch a tap wraps it whole (`fadeOverflow`).
 ///
+/// Its box is the read-only field's gray: a fact shown to the reader. A
+/// `sent` datum—one the model itself produced, a tool call's argument—sits
+/// on white instead: white is what the model sends out, gray what it is
+/// given (user, 2026-10-10), and the datum carries that as `data-sent`.
+///
 /// Built on the server and in the client alike (a live trace card's detail
 /// shows its size as one).
 public struct DatumView: HTMLContent {
@@ -31,21 +36,27 @@ public struct DatumView: HTMLContent {
   /// Its element's id, where something links to it (a revision's
   /// "Changed" line); none when empty.
   let id: String
+  /// Whether the value is something sent out (white) rather than given
+  /// (gray).
+  let sent: Bool
 
   public init(
-    _ label: String, labelMarks: [DOM.Node] = [], class: String = "", id: String = "",
+    _ label: String, labelMarks: [DOM.Node] = [], class: String = "", id: String = "", sent: Bool = false,
     @HTMLBuilder value: () -> [DOM.Node]
   ) {
     self.label = label
     self.labelMarks = labelMarks
     self.class = `class`
     self.id = id
+    self.sent = sent
     self.value = value()
   }
 
   /// The common case: a plain value.
-  public init(_ label: String, labelMarks: [DOM.Node] = [], value: String, class: String = "", id: String = "") {
-    self.init(label, labelMarks: labelMarks, class: `class`, id: id) { value }
+  public init(
+    _ label: String, labelMarks: [DOM.Node] = [], value: String, class: String = "", id: String = "", sent: Bool = false
+  ) {
+    self.init(label, labelMarks: labelMarks, class: `class`, id: id, sent: sent) { value }
   }
 
   public func build() -> DOM.Node {
@@ -63,7 +74,8 @@ public struct DatumView: HTMLContent {
       .class("datum-value")
     }
     .class(stringIsEmpty(`class`) ? "datum-view" : "datum-view \(`class`)")
-    return (stringIsEmpty(id) ? view : view.id(id))
+    let tagged = sent ? view.data("sent", "true") : view
+    return (stringIsEmpty(id) ? tagged : tagged.id(id))
     .style {
       selector("&") {
         display(.flex)
@@ -100,6 +112,10 @@ public struct DatumView: HTMLContent {
         border(borderWidthBase, .solid, borderColorBase)
         borderRadius(borderRadiusBase)
         minWidth(0)
+      }
+      // What was sent out stands on white, the page's own ground.
+      selector("&[data-sent='true'] > .datum-value") {
+        backgroundColor(backgroundColorBase)
       }
       // The value's one line, inside the box so that the fades take its
       // letters and not the box's border or ground: past the box it fades
