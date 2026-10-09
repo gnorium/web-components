@@ -153,8 +153,6 @@
           pseudoClass(.hover) {
             backgroundColor(backgroundColorInteractiveSubtleHover).important()
             borderColor(borderColorBase).important()
-            transform(translateY(px(-1)))
-            boxShadow(px(0), px(2), px(4), boxShadowColorBase).important()
           }
           pseudoClass(.focus) {
             borderColor(borderColorBlueFocus).important()

@@ -114,7 +114,6 @@
               border(borderWidthBase, .solid, borderColorBase)
               borderRadius(borderRadiusBase)
               overflow(.hidden)
-              boxShadow(boxShadowSmall)
               transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
             }
             selector("&.card-is-link") {
@@ -123,7 +122,6 @@
             }
             selector("&.card-is-link:hover") {
               borderColor(borderColorBlueHover).important()
-              boxShadow(boxShadowMedium).important()
             }
             selector("&.card-is-link:focus") {
               borderColor(borderColorBlueFocus).important()
@@ -218,7 +216,6 @@
               border(borderWidthBase, .solid, borderColorBase)
               borderRadius(borderRadiusBase)
               overflow(.hidden)
-              boxShadow(boxShadowSmall)
               transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
             }
             selector("&.card-is-link") {
@@ -227,7 +224,6 @@
             }
             selector("&.card-is-link:hover") {
               borderColor(borderColorBlueHover).important()
-              boxShadow(boxShadowMedium).important()
             }
             selector("&.card-is-link:focus") {
               borderColor(borderColorBlueFocus).important()

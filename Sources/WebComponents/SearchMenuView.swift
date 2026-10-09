@@ -327,7 +327,6 @@
           backgroundColor(backgroundColorNeutralSubtle)
           border(borderWidthBase, .solid, borderColorBase)
           borderRadius(borderRadiusMinimal)
-          boxShadow(px(0), px(1), px(1), px(0), rgba(0, 0, 0, 0.05))
           lineHeight(1)
         }
         descendant(".keyboard-hint-label") {

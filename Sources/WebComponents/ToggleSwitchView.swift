@@ -179,7 +179,8 @@
         backgroundColor(colorInvertedFixed)
         borderRadius(borderRadiusCircle)
         transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-        boxShadow(boxShadowSmall)
+        // Its edge a border, never a shadow: only what floats casts one.
+        border(borderWidthBase, .solid, borderColorBase)
       }
     }
   }

@@ -311,7 +311,6 @@
           }
           selector("&.alert-dynamic") {
             pointerEvents(.auto)
-            boxShadow((px(0), px(2), px(8), rgba(0, 0, 0, 0.1)))
           }
           descendant(".alert-motion-content-entering") {
             animation(
