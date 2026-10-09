@@ -10,14 +10,14 @@ import WebTypes
 // page around it stays in view and does not grow with it. Both SERVER and
 // CLIENT: session cards are drawn on either side.
 
-/// Cap `selectors` at `size256` tall, scrolling what runs past it inside.
+/// Cap `selectors` at `height` (256 by default), scrolling overflow inside.
 ///
 /// Cap the scrolling body, not its shell: a capped `<details>` or accordion
 /// would clip its own summary too.
 @CSSBuilder
-public func capHeight(_ selectors: String...) -> [CSSOM.CSSRule] {
+public func capHeight(_ selectors: String..., height: CSS.Length = size256) -> [CSSOM.CSSRule] {
   selector(stringJoin(selectors, separator: ", ")) {
-    maxHeight(size256)
+    maxHeight(height)
     overflowY(.auto)
   }
 }
