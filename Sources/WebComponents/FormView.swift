@@ -208,8 +208,8 @@
         }
         selector(".form-field input:not([type='checkbox']):focus", ".form-field textarea:focus", ".form-field select:focus") {
           borderColor(borderColorBlueFocus)
-          outline(.none)
-          boxShadow(.inset, 0, 0, 0, px(1), borderColorBlueFocus)
+          outline(borderWidthBase, .solid, borderColorBlueFocus)
+          outlineOffset(px(0))
         }
         selector(".form-field input:not([type='checkbox']):disabled", ".form-field textarea:disabled", ".form-field select:disabled") {
           backgroundColor(backgroundColorDisabledSubtle)

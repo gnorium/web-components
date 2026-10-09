@@ -279,12 +279,13 @@ public struct DatePickerView: HTMLContent {
       // control, so it keeps it, and wears it while its calendar is open.
       descendant(".date-picker-field .text-input-input:focus") {
         borderColor(borderColorBlue).important()
-        outline(.none).important()
-        boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
+        outline(borderWidthBase, .solid, borderColorBlueFocus).important()
+        outlineOffset(px(0)).important()
       }
       selector("&[data-open='true'] .date-picker-field .text-input-input") {
         borderColor(borderColorBlue).important()
-        boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
+        outline(borderWidthBase, .solid, borderColorBlueFocus).important()
+        outlineOffset(px(0)).important()
       }
 
       // The calendar button sits inside the field's border, centered in its

@@ -201,7 +201,8 @@ public struct CheckboxView: HTMLContent {
             pseudoClass(.focusVisible) {
               nextSibling(".checkbox-icon") {
                 borderColor(borderColorInputBinaryFocus).important()
-                boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
+                outline(borderWidthBase, .solid, borderColorBlueFocus).important()
+                outlineOffset(px(0)).important()
               }
             }
             pseudoClass(.enabled, .hover) {

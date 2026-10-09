@@ -632,8 +632,9 @@ public struct DropdownView: HTMLContent {
           zIndex(zIndexDropdown).important()
         }
         descendant(".dropdown-trigger:focus-visible") {
-          outline(.none).important()
-          boxShadow(px(0), px(0), px(0), px(2), colorBlue).important()
+          borderColor(borderColorBlueFocus).important()
+          outline(borderWidthBase, .solid, borderColorBlueFocus).important()
+          outlineOffset(px(0)).important()
         }
       }
     }

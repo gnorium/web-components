@@ -208,12 +208,13 @@ public struct TimeInputView: HTMLContent {
       }
       descendant(".time-input-field .text-input-input:focus") {
         borderColor(borderColorBlue).important()
-        outline(.none).important()
-        boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
+        outline(borderWidthBase, .solid, borderColorBlueFocus).important()
+        outlineOffset(px(0)).important()
       }
       selector("&[data-open='true'] .time-input-field .text-input-input") {
         borderColor(borderColorBlue).important()
-        boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
+        outline(borderWidthBase, .solid, borderColorBlueFocus).important()
+        outlineOffset(px(0)).important()
       }
       descendant(".time-input-toggle") {
         position(.absolute)

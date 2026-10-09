@@ -361,7 +361,8 @@ public struct PaginationView: HTMLContent {
       }
       descendant(".page-box:focus") {
         borderColor(colorBlue).important()
-        boxShadow(0, 0, 0, px(2), colorBlueFocus)
+        outline(borderWidthBase, .solid, borderColorBlueFocus)
+        outlineOffset(px(0))
       }
       descendant(".page-box:hover") { borderColor(borderColorBase) }
       descendant(".pagination-term") {

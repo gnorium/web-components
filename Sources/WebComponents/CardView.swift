@@ -127,8 +127,8 @@
             }
             selector("&.card-is-link:focus") {
               borderColor(borderColorBlueFocus).important()
-              boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
-              outline(px(1), .solid, .transparent).important()
+              outline(borderWidthBase, .solid, borderColorBlueFocus).important()
+              outlineOffset(px(0)).important()
             }
             selector("&.card-is-link:active") { borderColor(borderColorBlueActive).important() }
             descendant(".card-content-wrapper") {
@@ -231,8 +231,8 @@
             }
             selector("&.card-is-link:focus") {
               borderColor(borderColorBlueFocus).important()
-              boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
-              outline(px(1), .solid, .transparent).important()
+              outline(borderWidthBase, .solid, borderColorBlueFocus).important()
+              outlineOffset(px(0)).important()
             }
             selector("&.card-is-link:active") { borderColor(borderColorBlueActive).important() }
             descendant(".card-content-wrapper") {

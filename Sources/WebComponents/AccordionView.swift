@@ -457,7 +457,8 @@ public struct AccordionView: HTMLContent {
         inset(-borderWidthBase)
         border(borderWidthBase, .solid, borderColorBlueFocus)
         borderRadius(borderRadiusBase)
-        boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus)
+        outline(borderWidthBase, .solid, borderColorBlueFocus)
+        outlineOffset(px(0))
         pointerEvents(.none)
       }
       pseudoClass(.hover) { zIndex(zIndexToolbar).important() }

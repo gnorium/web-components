@@ -201,8 +201,8 @@ public struct TextAreaView: HTMLContent {
       }
       selector("&:not(.text-area-disabled):not(.text-area-read-only) .text-area-input:focus") {
         borderColor(borderColorBlueFocus).important()
-        outline(.none).important()
-        boxShadow(px(0), px(0), px(0), px(1), boxShadowColorBlueFocus).important()
+        outline(borderWidthBase, .solid, borderColorBlueFocus).important()
+        outlineOffset(px(0)).important()
       }
       // No hover state: a field's border says where the field is, and focus
       // says where the keyboard is. A third state between them only makes the
