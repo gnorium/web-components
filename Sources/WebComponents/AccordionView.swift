@@ -648,6 +648,43 @@ public struct AccordionView: HTMLContent {
     public init() {
       hydrateAllAccordions()
       AccordionHydration.current = self
+      Self.followFragment()
+    }
+
+    /// Whether the fragment is already followed on every change.
+    private static nonisolated(unsafe) var followsFragment = false
+
+    /// The URL's fragment, on load and on every change of it, as a native
+    /// `<details>` answers `:target` (user, 2026-10-09): a target inside a
+    /// closed accordion, at any depth, opens every accordion on the way to
+    /// it, then scrolls into view—at once under reduced motion, smoothly
+    /// otherwise. A target in the open is left to the browser.
+    public static func followFragment() {
+      if !followsFragment {
+        followsFragment = true
+        _ = window.addEventListener("hashchange", { _ in revealFragment() }, capture: false, passive: nil)
+      }
+      revealFragment()
+    }
+
+    private static func revealFragment() {
+      let hash = location.hash
+      guard stringStartsWith(hash, "#") else { return }
+      let id = stringRemovePrefix(hash, "#")
+      guard !stringIsEmpty(id), let target = document.getElementById(id) else { return }
+      let details = target.classList.contains("accordion-details") ? target : target.closest(".accordion-details")
+      guard let details else { return }
+      var closed = false
+      var cursor: DOM.Element? = details
+      while let current = cursor, !closed {
+        closed = !current.hasAttribute(.open)
+        cursor = current.closest(".accordion-view")?.closest(".accordion-details")
+      }
+      guard closed else { return }
+      let reduced = window.matchMedia("(prefers-reduced-motion: reduce)")
+      reveal(target) {
+        target.scrollIntoView(CSSOM.ScrollIntoViewOptions(behavior: reduced ? .instant : .smooth, block: .start))
+      }
     }
 
     public static func hydrateIfPresent() {
