@@ -103,7 +103,10 @@ public struct PaginationView: HTMLContent {
       iconSize = sizeIconSmall
     case .small:
       chrome = true
-      iconSize = ButtonView.ButtonSize.small.iconSize
+      // Icon-only chevrons on par with the pager's 16px text ("of 3") take
+      // the text's size (user, 2026-10-09); minus 4 is for an icon beside
+      // a label. Their buttons stay 32.
+      iconSize = sizeIconSmall
     }
     let inputWidth = chrome ? calc(ch(digitCount) + px(10)) : calc(ch(digitCount) + px(20))
     let useButtons = stringEquals(previousUrl, nil) && stringEquals(nextUrl, nil) && showControls
