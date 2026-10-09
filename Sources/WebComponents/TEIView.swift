@@ -183,10 +183,9 @@
       return out
     }
 
-    /// A page's lines as the reader sets them: each block's lines one to a
-    /// line, as the image sets them, and the furniture at the head of the
-    /// page (page number, running head, signature) set on one line, which
-    /// is one row.
+    /// A page's lines as the reader sets them: each block's lines run on as
+    /// one paragraph, and the furniture at the head of the page (page
+    /// number, running head, signature) set on one line, which is one row.
     enum LaidOut {
       /// A line that stands alone: a page turn, a gap, a figure, a table,
       /// a piece of furniture.
@@ -529,13 +528,11 @@
                 case .line(let line):
                   readingLine(line, facsimileURL: page.facsimileURL, label: page.label, tabStop: tabStop)
                 case .block(let lines):
-                  // A block's lines, one to a line as the image sets them
-                  // (user, 2026-10-10): every `<lb/>` ends a line. Read as
-                  // text (copied, found) the lines run on, a break inside a
-                  // word joining it with no space: the block always holds
+                  // A block's lines run on as one paragraph, a break inside a
+                  // word joining it with no space. The block always holds
                   // text between its lines (empty at such a break), so its
-                  // markup is written inline, and an indented block never
-                  // puts a newline, a space as read, inside the broken word.
+                  // markup is written inline: an indented block put a
+                  // newline, a space as read, inside the broken word.
                   div {
                     for (index, line) in lines.enumerated() {
                       if index > 0 { line.joinsPrevious ? "" : " " }
@@ -792,25 +789,24 @@
             CSS.Property("padding-inline-start", "calc(\(level) * \(spacing24.value))")
           }
         }
-        // One line to a line, as the image sets them (user, 2026-10-10):
-        // every `<lb/>` ends a rendered line, in a note, on a title page,
-        // in a paragraph and in verse alike; a line too long for the pane
-        // wraps, and the next `<lb/>` still starts a line of its own. The
-        // block is set as its rend says (align, indent, hanging), each of
-        // its lines a full-width row, so a centered title centers line by
-        // line.
+        // The text is reflowed at every width (user, 2026-10-07, held to
+        // on 2026-10-10): a block's lines run on as one paragraph, still
+        // set as its block is (align, indent, hanging on the flowing
+        // block), so a printed line never wraps into a line and a half on
+        // a narrow pane. Its line breaks stay in the TEI, shown in Raw; a
+        // verse line, a heading, an item opens a block of its own and
+        // keeps its line.
         descendant(".tei-block") {
-          display(.flex)
-          flexDirection(.column)
-          gap(spacing2)
+          display(.block)
           minWidth(0)
         }
         selector("& .tei-block > *") {
-          display(.block)
+          display(.inline)
         }
-        // A hanging indent: the block's first line at its edge, the rest in.
-        selector("& .tei-block[data-rend~='hanging'] > .tei-line:not(:first-child)") {
+        // A hanging indent: the paragraph's first line at its edge, the rest in.
+        selector("& .tei-block[data-rend~='hanging']") {
           paddingInlineStart(spacing24)
+          CSS.Property("text-indent", "calc(-1 * \(spacing24.value))")
         }
         // The furniture on one line, each piece in its place on it.
         descendant(".tei-forme-row") {
