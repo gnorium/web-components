@@ -30,6 +30,9 @@
       /// The id of the form a submit button submits with, when the group
       /// sits outside that form (`ButtonView.form(_:)`).
       public let form: String?
+      /// Words over the button on hover, focus or tap (`TooltipView`): why a
+      /// disabled one is disabled, for one.
+      public let tooltip: String?
 
       public init(
         value: String,
@@ -46,7 +49,8 @@
         fullWidth: Bool = false,
         labelFontWeight: CSS.FontWeight = fontWeightSemiBold,
         contentJustifyContent: CSS.JustifyContent = .center,
-        form: String? = nil
+        form: String? = nil,
+        tooltip: String? = nil
       ) {
         self.value = value
         self.label = label
@@ -63,6 +67,7 @@
         self.labelFontWeight = labelFontWeight
         self.contentJustifyContent = contentJustifyContent
         self.form = form
+        self.tooltip = tooltip
       }
 
       /// Its button, submitting with its form when it names one.
@@ -118,8 +123,9 @@
             let itemData = [("value", item.value)]
             let itemClass = item.class.isEmpty ? "button-group-button" : "button-group-button \(item.class)"
 
+            let button: ButtonView
             if let icon = item.icon {
-              item.formed(ButtonView(
+              button = ButtonView(
                 label: item.label,
                 icon: icon,
                 buttonColor: item.buttonColor,
@@ -134,9 +140,9 @@
                 labelFontWeight: item.labelFontWeight,
                 contentJustifyContent: item.contentJustifyContent,
                 data: itemData
-              ))
+              )
             } else {
-              item.formed(ButtonView(
+              button = ButtonView(
                 label: item.label,
                 buttonColor: item.buttonColor,
                 weight: item.weight,
@@ -150,7 +156,12 @@
                 labelFontWeight: item.labelFontWeight,
                 contentJustifyContent: item.contentJustifyContent,
                 data: itemData
-              ))
+              )
+            }
+            if let tooltip = item.tooltip {
+              TooltipView(tooltip: tooltip) { item.formed(button) }
+            } else {
+              item.formed(button)
             }
           }
         }

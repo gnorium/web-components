@@ -8,15 +8,11 @@ import WebTypes
 
 /// A brief message that shows up when a user hovers over a specific part of the UI.
 ///
-/// On a touch screen, which has no hover, a long press (half a second) opens
-/// it and keeps it open until the next tap, and the click that the press
-/// would otherwise end in is not sent: a long press on a button reads it and
-/// doesn't press it.
-///
-/// With `opensOnClick` it is also a toggletip: a click or tap on the trigger
-/// opens it and keeps it open until the next click or tap, anywhere, or
-/// Escape. Use it where the words matter on a touch screen; the trigger
-/// should then be a button, so it is focusable too.
+/// Hover or focus shows it; a plain click or tap on the trigger opens it
+/// and keeps it open until the next click or tap, anywhere, or Escape
+/// (user, 2026-10-10). Tooltips sit on icons; the one button that wears
+/// one is disabled, with no press to protect, and takes no pointer events
+/// of its own, so the trigger around it takes hover, taps and the focus.
 ///
 /// The bubble is a line of text, `tooltip`, or `bubble` markup: several
 /// lines, a `LocalTimeView` the client puts in the reader's clock.
@@ -24,7 +20,6 @@ public struct TooltipView: HTMLContent {
   let bubble: [DOM.Node]
   let placement: Placement
   let font: Font
-  let opensOnClick: Bool
   let bubbleWidth: Width
   let children: [DOM.Node]
   let `class`: String
@@ -107,7 +102,6 @@ public struct TooltipView: HTMLContent {
     tooltip: String,
     placement: Placement = .bottom,
     font: Font = .sans,
-    opensOnClick: Bool = false,
     width: Width = .standard,
     class: String = "",
     @HTMLBuilder content: () -> [DOM.Node]
@@ -116,7 +110,6 @@ public struct TooltipView: HTMLContent {
     self.bubbleWidth = width
     self.placement = placement
     self.font = font
-    self.opensOnClick = opensOnClick
     self.children = content()
     self.`class` = `class`
   }
@@ -124,7 +117,6 @@ public struct TooltipView: HTMLContent {
   public init(
     placement: Placement = .bottom,
     font: Font = .sans,
-    opensOnClick: Bool = false,
     width: Width = .standard,
     class: String = "",
     @HTMLBuilder bubble: () -> [DOM.Node],
@@ -134,7 +126,6 @@ public struct TooltipView: HTMLContent {
     self.bubbleWidth = width
     self.placement = placement
     self.font = font
-    self.opensOnClick = opensOnClick
     self.children = content()
     self.`class` = `class`
   }
@@ -160,7 +151,6 @@ public struct TooltipView: HTMLContent {
     .data("tooltip", "true")
     .data("placement", placement.rawValue)
     .data("visible", false)
-    .data("opens-on-click", opensOnClick)
     .style {
       selector("&") {
         position(.relative)
@@ -221,6 +211,12 @@ public struct TooltipView: HTMLContent {
       }
       selector("& .tooltip-content[data-font='mono']") {
         fontFamily(typographyFontMono)
+      }
+      // A disabled trigger (a disabled button) takes no pointer events of
+      // its own, so hover and taps reach the tooltip around it, which is
+      // then focusable in its stead (user, 2026-10-10).
+      selector("&[data-disabled-trigger='true'] .tooltip-trigger-content :disabled", "&[data-disabled-trigger='true'] .tooltip-trigger-content [aria-disabled='true']") {
+        pointerEvents(.none)
       }
       selector("&:hover > .tooltip-content", "&:focus-within > .tooltip-content", "&[data-visible='true'] .tooltip-content") {
         opacity(1)
@@ -328,12 +324,9 @@ public struct TooltipView: HTMLContent {
     private let placement: TooltipView.Placement
     private var isVisible: Bool = false
     private var hideTimeout: Int32?
-    private var touchTimer: Int32?
-    /// Opened by a click or tap (`opensOnClick`) or a long press: leaving
-    /// the trigger or its focus doesn't close it; the next click or tap does.
+    /// Opened by a click or tap: leaving the trigger or its focus doesn't
+    /// close it; the next click or tap does.
     private var pinned: Bool = false
-    /// The touch that just ended was a long press, whose click is dropped.
-    private var longPressed: Bool = false
 
     /// Distance the bubble keeps from the viewport's edges.
     private static let edgeMargin = 8.0
@@ -352,6 +345,12 @@ public struct TooltipView: HTMLContent {
       let raw = tooltip.dataset["placement"] ?? ""
       self.placement =
         TooltipView.Placement.allCases.first { stringEquals($0.rawValue, raw) } ?? .bottom
+      // A disabled control takes no pointer events and no focus: the
+      // trigger around it takes them in its stead (user, 2026-10-10).
+      if tooltip.querySelector(".tooltip-trigger-content :disabled, .tooltip-trigger-content [aria-disabled='true']") != nil {
+        tooltip.setAttribute(data("disabled-trigger"), "true")
+        tooltip.setAttribute("tabindex", "0")
+      }
 
       portal()
       bindEvents()
@@ -512,58 +511,17 @@ public struct TooltipView: HTMLContent {
         if !self.pinned { self.hideTooltip() }
       }
 
-      if let opensOnClick = trigger.dataset["opens-on-click"], stringEquals(opensOnClick, "true") {
-        // A click or tap opens it and pins it; the next one closes it. A
-        // tap's emulated mouseenter and focus have already shown it by the
-        // time its click arrives, so the click only pins.
-        _ = trigger.addEventListener(.click) { [self] _ in
-          if self.pinned {
-            self.dismiss()
-          } else {
-            self.pinned = true
-            self.showTooltip()
-          }
-        }
-      } else {
-        // A long press opens it and pins it, and the click the press ends
-        // in is not sent: reading a button's tooltip doesn't press it.
-        _ = trigger.addEventListener(.touchstart) { [self] _ in
-          self.longPressed = false
-          self.touchTimer = setTimeout(500) {
-            self.touchTimer = nil
-            self.longPressed = true
-            self.pinned = true
-            self.showTooltip()
-          }
-        }
-
-        _ = trigger.addEventListener(.touchend) { [self] (event: Event) in
-          if let timer = self.touchTimer {
-            clearTimeout(timer)
-            self.touchTimer = nil
-          }
-          if self.longPressed {
-            // No click after it; and should a browser send one anyway, the
-            // click listener below drops it.
-            event.preventDefault()
-          } else if !self.pinned {
-            self.hideTooltip()
-          }
-        }
-
-        _ = trigger.addEventListener(.touchmove) { [self] _ in
-          if let timer = self.touchTimer {
-            clearTimeout(timer)
-            self.touchTimer = nil
-          }
-        }
-
-        _ = trigger.addEventListener(.click) { [self] (event: Event) in
-          if self.longPressed {
-            self.longPressed = false
-            event.preventDefault()
-          }
-        }
+      // A click or tap opens it and pins it; the next one closes it. A
+      // tap's emulated mouseenter and focus have already shown it by the
+      // time its click arrives, so the click only pins. iOS sends no click
+      // for a tap on something that isn't clickable, hence touchend too,
+      // which then takes the tap whole.
+      _ = trigger.addEventListener(.touchend) { [self] (event: Event) in
+        event.preventDefault()
+        self.togglePinned()
+      }
+      _ = trigger.addEventListener(.click) { [self] _ in
+        self.togglePinned()
       }
 
       // A pinned one closes on a click or tap anywhere else. iOS sends no
@@ -591,6 +549,15 @@ public struct TooltipView: HTMLContent {
       }
       _ = window.addEventListener(.resize) { [self] _ in
         if self.isVisible { self.dismiss() }
+      }
+    }
+
+    private func togglePinned() {
+      if pinned {
+        dismiss()
+      } else {
+        pinned = true
+        showTooltip()
       }
     }
 
