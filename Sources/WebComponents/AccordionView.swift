@@ -497,6 +497,18 @@ public struct AccordionView: HTMLContent {
         isOpen = false
       }
 
+      // A native click can arrive before deferred hydration. Adopt its state
+      // before binding so the open panel and its controls remain visible.
+      let expanded = isOpen ? "true" : "false"
+      details?.setAttribute(data("expanded"), expanded)
+      details?.setAttribute(data("open-finished"), expanded)
+      details?.setAttribute(data("motion"), "idle")
+      chevronEl?.setAttribute(data("expanded"), expanded)
+      if let actionButton {
+        let visible = isOpen || stringEquals(actionButton.dataset["always-visible"] ?? "false", "true")
+        actionButton.setAttribute(data("visible"), visible ? "true" : "false")
+      }
+
       bindEvents()
     }
 

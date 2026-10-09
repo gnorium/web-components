@@ -468,12 +468,47 @@ public enum OutlineMoves {
       return false
     }
 
-    /// An item and every item under it. The nesting is data, so the markup
-    /// recurses.
+    private struct ItemFrame {
+      let node: Node
+      let number: String
+      let origin: Origin
+      let isMoved: Bool
+      let collapsed: Bool
+      let row: DOM.Node
+      var nextChild = 0
+      var children: [DOM.Node] = []
+    }
+
+    /// Build nested markup without keeping a result-builder call on the
+    /// stack for every level. Deep origins also render on small worker stacks.
     static func item(
       _ node: Node, parent: String, position: Int, prefix: String, treeID: String, arranges: Bool,
       moved: Set<String>, touched: [String]
     ) -> DOM.Node {
+      var frames = [prepareItem(node, parent: parent, position: position, prefix: prefix,
+        treeID: treeID, arranges: arranges, moved: moved)]
+      while let frame = frames.last {
+        if frame.nextChild < frame.node.children.count {
+          let index = frame.nextChild
+          frames[frames.count - 1].nextChild += 1
+          frames.append(prepareItem(frame.node.children[index], parent: frame.node.id, position: index,
+            prefix: frame.number, treeID: treeID, arranges: arranges, moved: moved))
+        } else {
+          frames.removeLast()
+          let rendered = finishItem(frame, arranges: arranges, touched: touched)
+          if frames.isEmpty { return rendered }
+          frames[frames.count - 1].children.append(rendered)
+        }
+      }
+      preconditionFailure("An outliner item always has a root")
+    }
+
+    /// Prepare the row before its children, keeping stylesheet registration
+    /// in document order; the footer is built after the children finish.
+    private static func prepareItem(
+      _ node: Node, parent: String, position: Int, prefix: String, treeID: String, arranges: Bool,
+      moved: Set<String>
+    ) -> ItemFrame {
       let number = prefix.isEmpty ? "\(position + 1)" : "\(prefix).\(position + 1)"
       let origin = node.origin ?? Origin(parent: parent, position: position, number: number)
       let isMoved = moved.contains(node.id)
@@ -505,23 +540,23 @@ public enum OutlineMoves {
       // An accordion item starts collapsed where its accordion starts closed.
       let collapsed = node.accordion && accordionIsOpen(content) == false
       if node.accordion { _ = markOwnAccordion(content) }
+      let row = div {
+        if !node.accordion {
+          toggle(node, treeID: treeID)
+        }
+        div { content }
+          .class("outliner-node")
+      }
+      .class("outliner-row")
+      .build()
+      return ItemFrame(node: node, number: number, origin: origin, isMoved: isMoved, collapsed: collapsed, row: row)
+    }
+
+    private static func finishItem(_ frame: ItemFrame, arranges: Bool, touched: [String]) -> DOM.Node {
+      let node = frame.node
       var element = li {
-        div {
-          if !node.accordion {
-            toggle(node, treeID: treeID)
-          }
-          div { content }
-            .class("outliner-node")
-        }
-        .class("outliner-row")
-        ol {
-          for (index, child) in node.children.enumerated() {
-            item(
-              child, parent: node.id, position: index, prefix: number, treeID: treeID, arranges: arranges,
-              moved: moved, touched: touched)
-          }
-        }
-        .class("outliner-list")
+        frame.row
+        ol { frame.children }.class("outliner-list")
         let footer = node.footer()
         if !footer.isEmpty {
           div { footer }
@@ -531,18 +566,18 @@ public enum OutlineMoves {
       .class("outliner-item")
       .data("outliner-id", node.id)
       .data("outliner-label", node.label)
-      .data("outliner-collapsed", collapsed)
+      .data("outliner-collapsed", frame.collapsed)
       .data("outliner-accordion", node.accordion)
       if arranges {
         element =
           element
           .data("outliner-rank", node.rank)
-          .data("outliner-original-parent", origin.parent)
-          .data("outliner-original-position", origin.position)
-          .data("outliner-original-number", origin.number)
-          .data("outliner-moved", isMoved)
+          .data("outliner-original-parent", frame.origin.parent)
+          .data("outliner-original-position", frame.origin.position)
+          .data("outliner-original-number", frame.origin.number)
+          .data("outliner-moved", frame.isMoved)
           .data("outliner-touched", touched.contains(node.id))
-          .data("outline-state", isMoved ? "moved" : "none")
+          .data("outline-state", frame.isMoved ? "moved" : "none")
       }
       for (key, value) in node.data {
         element = element.data(key, value)
@@ -1019,6 +1054,9 @@ public enum OutlineMoves {
           let accordion = ownAccordion(of: item)
         else { continue }
         item.setAttribute(data("outliner-accordion-bound"), "true")
+        if let details = accordion.querySelector(":scope > .accordion-details") {
+          item.setAttribute(data("outliner-collapsed"), details.hasAttribute(.open) ? "false" : "true")
+        }
         _ = accordion.addEventListener("accordion-toggle") { (event: Event) in
           item.setAttribute(data("outliner-collapsed"), stringEquals(event.detail, "true") ? "false" : "true")
         }
