@@ -128,7 +128,9 @@
         }
         // Over a pane, the panel is the pane: it fills it and what it holds
         // lays itself out in it.
+        // Its inset 16 at every width, as the content's at its sides.
         selector("&[data-placement='pane'] .sheet-panel") {
+          paddingBlock(spacing16)
           height(perc(100))
           display(.flex)
           flexDirection(.column)

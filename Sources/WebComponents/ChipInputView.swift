@@ -194,8 +194,9 @@
             color(colorDisabled)
           }
         }
+        // A field's inset: 16 inside the border on every side.
         selector(".chip-input-chips", ".chip-input-input-wrapper", ".chip-input-items") {
-          padding(spacing8)
+          padding(spacing16)
           backgroundColor(backgroundColorBase)
           border(borderWidthBase, .solid, borderColorInputBinary)
           borderRadius(borderRadiusBase)
@@ -224,7 +225,6 @@
           flexWrap(.wrap)
           alignItems(.center)
           gap(spacing8)
-          minHeight(minSizeInteractivePointer)
           transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
           pseudoClass(.focusWithin) {
             borderColor(borderColorBlueFocus).important()

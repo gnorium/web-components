@@ -264,14 +264,12 @@ public struct DatePickerView: HTMLContent {
       }
       selector("&.date-picker-full-width") { width(perc(100)) }
 
-      // The field is a button in an input's clothes: the selects' 40px, no
-      // caret, no text selection, the base background rather than the
-      // read-only grey, and room at the end for the calendar button.
+      // The field is a button in an input's clothes: a text input's inset and
+      // height, no caret, no text selection, the base background rather than
+      // the read-only grey, and room at the end for the calendar button, as
+      // a text input's end icon has.
       descendant(".date-picker-field .text-input-input") {
-        height(minSizeInteractiveTouch).important()
-        minHeight(minSizeInteractiveTouch).important()
-        paddingBlock(0).important()
-        paddingInlineEnd(calc("\(spacing8.value) + \(size32.value) + \(spacing4.value)")).important()
+        paddingInlineEnd(calc(spacing16 + sizeIconMedium + spacing8)).important()
         backgroundColor(backgroundColorBase).important()
         cursor(.pointer).important()
         userSelect(.none)
@@ -294,11 +292,12 @@ public struct DatePickerView: HTMLContent {
       }
 
       // The calendar button sits inside the field's border, centered in its
-      // 40px, where a text input's end icon sits: a plain button, with no fill
+      // height, where a text input's end icon sits: a plain button, with no fill
       // and no hover disc to cross the border or the focus ring.
       descendant(".date-picker-toggle") {
         position(.absolute)
-        insetBlockEnd(spacing4)
+        // Centered in the field's 56: (56 − 32) / 2.
+        insetBlockEnd(spacing12)
         insetInlineEnd(spacing8)
         width(size32).important()
         height(size32).important()
@@ -352,7 +351,7 @@ public struct DatePickerView: HTMLContent {
         padding(spacing8).important()
       }
       descendant(".date-picker-popover .popover-footer") {
-        padding(spacing4, spacing8).important()
+        padding(spacing8).important()
       }
       descendant(".date-picker-footer") {
         display(.flex)

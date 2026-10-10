@@ -142,7 +142,8 @@ public struct TextAreaView: HTMLContent {
       }
       descendant(".text-area-input") {
         width(perc(100))
-        padding(spacing8, px(15))
+        // Inset 16 inside the border on every side, as TextInputView's.
+        padding(spacing16)
         fontFamily(typographyFontSans)
         fontSize(fontSizeMedium16)
         lineHeight(lineHeightSmall22)
@@ -176,17 +177,16 @@ public struct TextAreaView: HTMLContent {
       selector("&.text-area-autosize .text-area-input") {
         resize(.none)
         fieldSizing(.content)
-        minHeight(em(2.5))
         maxHeight(rem(18))
       }
       selector("&.text-area-autosize.text-area-disabled .text-area-input") {
         overflowY(.hidden)
       }
       selector("&.text-area-has-start-icon .text-area-input") {
-        paddingInlineStart(calc(px(15) + sizeIconMedium + spacing8)).important()
+        paddingInlineStart(calc(spacing16 + sizeIconMedium + spacing8)).important()
       }
       selector("&.text-area-has-end-icon .text-area-input") {
-        paddingInlineEnd(calc(px(15) + sizeIconMedium + spacing8)).important()
+        paddingInlineEnd(calc(spacing16 + sizeIconMedium + spacing8)).important()
       }
       // The same rule as TextInputView's: color only. An opacity on top of
       // the color made a textarea's placeholder read as a different grey
@@ -210,7 +210,9 @@ public struct TextAreaView: HTMLContent {
       // bar has none either.
       selector("& .text-area-start-icon", "& .text-area-end-icon") {
         position(.absolute)
-        top(spacing12)
+        // Centered on the first line: the border, the inset, and half the
+        // line's room beyond the icon.
+        top(calc("\(borderWidthBase.value) + \(spacing16.value) + (\(lineHeightSmall22.value) - \(sizeIconMedium.value)) / 2"))
         display(.inlineFlex)
         alignItems(.center)
         justifyContent(.center)
@@ -219,8 +221,8 @@ public struct TextAreaView: HTMLContent {
         color(colorSubtle)
         pointerEvents(.none)
       }
-      descendant(".text-area-start-icon") { left(px(15)) }
-      descendant(".text-area-end-icon") { right(px(15)) }
+      descendant(".text-area-start-icon") { left(calc(borderWidthBase + spacing16)) }
+      descendant(".text-area-end-icon") { right(calc(borderWidthBase + spacing16)) }
     }
 
     if stringIsEmpty(labelText) { return styledContainer }

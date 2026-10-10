@@ -153,17 +153,17 @@ public struct SearchInputView: HTMLContent {
         width(perc(100))
         gap(spacing8)
       }
-      // ButtonView's scale: the height its buttons share, and the sides.
+      // Small is on ButtonView's scale: the 32px its small buttons share,
+      // and 12 at the sides. Medium and large are fields: inset 16 inside
+      // the border on every side, their height the line and that inset.
       selector("&[data-size='small']") {
         customProperty("--search-input-height", ButtonView.ButtonSize.small.minSize.value)
+        customProperty("--search-input-padding-block", "0")
         customProperty("--search-input-padding-inline", spacing12.value)
       }
-      selector("&[data-size='medium']") {
-        customProperty("--search-input-height", ButtonView.ButtonSize.medium.minSize.value)
-        customProperty("--search-input-padding-inline", spacing16.value)
-      }
-      selector("&[data-size='large']") {
-        customProperty("--search-input-height", ButtonView.ButtonSize.large.minSize.value)
+      selector("&[data-size='medium']", "&[data-size='large']") {
+        customProperty("--search-input-height", "auto")
+        customProperty("--search-input-padding-block", spacing16.value)
         customProperty("--search-input-padding-inline", spacing16.value)
       }
       selector("&.search-input-has-button") { flexGrow(1) }
@@ -192,7 +192,7 @@ public struct SearchInputView: HTMLContent {
       descendant(".search-input") {
         width(perc(100))
         height(`var`("--search-input-height") as CSS.Length)
-        paddingBlock(0)
+        paddingBlock(`var`("--search-input-padding-block") as CSS.Length)
         paddingInlineStart(side)
         paddingInlineEnd(side)
         fontFamily(typographyFontSans)
@@ -290,7 +290,9 @@ public struct SearchInputView: HTMLContent {
         justifyContent(.center)
         zIndex(1)
       }
+      // As tall as the field beside it.
       descendant(".search-input-button") {
+        alignSelf(.stretch)
         height(`var`("--search-input-height") as CSS.Length)
         boxSizing(.borderBox)
         paddingBlock(0)

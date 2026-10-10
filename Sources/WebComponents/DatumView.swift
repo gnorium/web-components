@@ -96,16 +96,15 @@ public struct DatumView: HTMLContent {
         fontWeight(fontWeightSemiBold)
         color(colorBase)
       }
-      // A read-only field's box, to the pixel: the control height, its
-      // padding, border, corner and ground.
+      // A read-only field's box, to the pixel: its inset of 16 on every
+      // side, its line, border, corner and ground.
       descendant(".datum-value") {
         display(.flex)
         alignItems(.center)
-        minHeight(minSizeInteractiveTouch)
-        paddingBlock(spacing8)
-        paddingInline(px(15))
+        padding(spacing16)
         fontFamily(typographyFontSans)
         fontSize(fontSizeMedium16)
+        lineHeight(lineHeightSmall22)
         color(colorBase)
         // Read-only values share the disabled field ground at every depth.
         backgroundColor(backgroundColorDisabled)

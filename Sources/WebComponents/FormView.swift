@@ -119,7 +119,7 @@
         selector("&") {
           maxWidth(px(800))
           margin(0, .auto)
-          padding(spacing48, spacing24)
+          padding(spacing24)
           display(.flex)
           flexDirection(.column)
           gap(spacing32)
@@ -198,9 +198,10 @@
         }
         selector(".form-field input:not([type='checkbox'])", ".form-field textarea", ".form-field select") {
           width(perc(100))
-          padding(spacing12, spacing16)
+          padding(spacing16)
           fontFamily(typographyFontSans)
           fontSize(fontSizeMedium16)
+          lineHeight(lineHeightSmall22)
           color(colorBase)
           backgroundColor(backgroundColorBase)
           border(borderWidthBase, borderStyleBase, borderColorBase)

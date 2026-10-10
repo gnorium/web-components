@@ -72,7 +72,7 @@ public struct FieldValidationMessageView: HTMLContent {
       // 12px words below a 14px label, and an 8px icon: 12px letters stand
       // well short of their font size, so an icon of 12 looked too big (user,
       // 2026-10-01). The words start where a field's text starts—the
-      // control's border and its 15px inline padding in (TextInputView)—and
+      // control's border and its 16px inset in (TextInputView)—and
       // the icon stands inside that inset at the field's edge, leaving an
       // 8px gap before the words; it centers on the first line.
       selector("&") {
@@ -85,7 +85,7 @@ public struct FieldValidationMessageView: HTMLContent {
         display(.inlineFlex)
         alignItems(.center)
         flexShrink(0)
-        width(calc(px(15) + borderWidthBase))
+        width(calc(spacing16 + borderWidthBase))
         minHeight(lineHeightXSmall20)
       }
       selector("&[data-status='error']") { color(colorRed) }

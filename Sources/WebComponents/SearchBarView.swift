@@ -100,14 +100,17 @@
           .data("edge-fade", true)
           .style {
             selector("&") {
-              border(px(1), .solid, borderColorBase)
+              border(borderWidthBase, .solid, borderColorBase)
               color(colorBase)
               fontFamily(typographyFontSans)
               borderRadius(borderRadiusBase)
-              padding(px(0), calc(spacing10 + px(32)), px(0), spacing10)
+              // A field's inset, 16 inside the border on every side, and at
+              // the end the search button's room, as a text input's end icon.
+              padding(spacing16)
+              paddingInlineEnd(calc(spacing16 + sizeIconXSmall + spacing8))
               width(perc(100))
               maxWidth(perc(100))
-              height(minSizeInteractiveTouch)
+              lineHeight(lineHeightSmall22)
               fontWeight(fontWeightNormal)
               transition(.all, s(0.2), .easeInOut)
               // A field's text is 16px (user, 2026-10-08): smaller, iOS
@@ -153,7 +156,9 @@
             background(.transparent)
             border(.none)
             color(colorBase)
-            marginInlineEnd(spacing10)
+            // Its icon 16 inside the field's border: the 24px box's 4px
+            // around the icon taken from the border and the inset.
+            marginInlineEnd(calc(borderWidthBase + spacing16 - spacing4))
             paddingInlineStart(0)
             display(.flex)
             alignItems(.center)
@@ -219,18 +224,16 @@
           position(.relative)
           width(perc(100))
           maxWidth(perc(100))
-          height(minSizeInteractiveTouch)
           flex(1)
           boxSizing(.borderBox)
           // Its fades at rest, as SearchInputView's: the input's ground,
           // inside its border and its padding at each side, the search
           // button's room at the end (EdgeFade.swift).
           customProperty("--edge-fade-ground", backgroundColorBase)
-          customProperty("--edge-fade-inset-start", "calc(\(borderWidthBase.value) + \(spacing10.value))")
-          customProperty("--edge-fade-inset-end", "calc(\(borderWidthBase.value) + \(spacing10.value) + 32px)")
-        }
-        selector("&.in-sidebar") {
-          customProperty("--edge-fade-inset-end", "calc(\(borderWidthBase.value) + \(spacing10.value) + 28px)")
+          customProperty("--edge-fade-inset-start", "calc(\(borderWidthBase.value) + \(spacing16.value))")
+          customProperty(
+            "--edge-fade-inset-end",
+            "calc(\(borderWidthBase.value) + \(spacing16.value) + \(sizeIconXSmall.value) + \(spacing8.value))")
         }
         selector("&:has(> .search-bar-input:disabled)") {
           customProperty("--edge-fade-ground", backgroundColorDisabled)
@@ -244,14 +247,9 @@
           maxWidth(.none)
           borderRadius(0)
         }
-        // Sidebar: base radius, same 16px type + spacing10 padding as main
+        // Sidebar: base radius; its type and inset are the main bar's.
         selector("&.in-sidebar .search-bar-input") {
           borderRadius(borderRadiusBase)
-          height(minSizeInteractiveTouch)
-          padding(px(0), calc(spacing10 + px(28)), px(0), spacing10)
-        }
-        selector("&.in-sidebar .search-bar-button") {
-          marginInlineEnd(spacing10)
         }
         // Under the input, over what follows, as DropdownView's menu is: in
         // the row beside the input it squeezed the input to a sliver.

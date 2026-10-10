@@ -443,12 +443,13 @@ public struct DropdownView: HTMLContent {
       }
       // Matches LabelView, which every FieldView label uses: a dropdown in a
       // form is a form field and its label has to look like one.
-      // A trigger is a form FIELD, so its text must start where a text
-      // input's does: the input pads 15px inside a 1px border, the button it
-      // is built on pads a button's 11px. Three classes and an attribute to
-      // outrank ButtonView's size rule without an important.
+      // A medium trigger is a form FIELD, so it is inset as a text input
+      // is—16 inside its border on every side, on a 22px line—where the
+      // button it is built on pads a button's 11px. Three classes and an
+      // attribute to outrank ButtonView's size rule without an important.
       selector("&.dropdown-view .dropdown-trigger.button-view[data-size='medium']") {
-        paddingInline(px(15))
+        padding(spacing16)
+        lineHeight(lineHeightSmall22)
       }
       // Set by the submit guard when a required dropdown has no value.
       // The field's ring in red: its 1px border and a 1px outline, two

@@ -38,7 +38,7 @@
           display(.flex)
           flexDirection(.column)
           gap(spacing12)
-          padding(spacing12, spacing16)
+          padding(spacing16)
           border(borderWidthBase, .solid, borderColorBase)
           borderRadius(borderRadiusBase)
           backgroundColor(backgroundColorNeutralSubtle)

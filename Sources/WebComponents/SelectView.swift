@@ -142,8 +142,8 @@
           alignItems(.center)
           justifyContent(.spaceBetween)
           gap(spacing8)
-          minHeight(minSizeInteractivePointer)
-          padding(spacing8, spacing12)
+          // A field's inset: 16 inside the border on every side.
+          padding(spacing16)
           backgroundColor(backgroundColorBase)
           border(borderWidthBase, .solid, borderColorInputBinary)
           borderRadius(borderRadiusBase)

@@ -190,13 +190,11 @@ public struct TimeInputView: HTMLContent {
       }
       selector("&.time-input-full-width") { width(perc(100)) }
 
-      // The field is the date picker's: a button in an input's clothes, 40px,
-      // no caret, the base background, room at the end for the clock.
+      // The field is the date picker's: a button in an input's clothes, a
+      // text input's inset and height, no caret, the base background, room
+      // at the end for the clock, as a text input's end icon has.
       descendant(".time-input-field .text-input-input") {
-        height(minSizeInteractiveTouch).important()
-        minHeight(minSizeInteractiveTouch).important()
-        paddingBlock(0).important()
-        paddingInlineEnd(calc("\(spacing8.value) + \(size32.value) + \(spacing4.value)")).important()
+        paddingInlineEnd(calc(spacing16 + sizeIconMedium + spacing8)).important()
         backgroundColor(backgroundColorBase).important()
         cursor(.pointer).important()
         userSelect(.none)
@@ -218,7 +216,8 @@ public struct TimeInputView: HTMLContent {
       }
       descendant(".time-input-toggle") {
         position(.absolute)
-        insetBlockEnd(spacing4)
+        // Centered in the field's 56: (56 − 32) / 2.
+        insetBlockEnd(spacing12)
         insetInlineEnd(spacing8)
         width(size32).important()
         height(size32).important()
@@ -257,7 +256,7 @@ public struct TimeInputView: HTMLContent {
         padding(spacing8).important()
       }
       descendant(".time-input-popover .popover-footer") {
-        padding(spacing4, spacing8).important()
+        padding(spacing8).important()
       }
       descendant(".time-input-parts") {
         display(.flex)

@@ -57,7 +57,7 @@
           alignItems(.center)
           justifyContent(.spaceBetween)
           gap(spacing8)
-          padding(spacing8, spacing12)
+          padding(spacing16)
           backgroundColor(backgroundColorNeutralSubtle)
           borderBottom(borderWidthBase, .solid, borderColorBase)
         }
@@ -108,7 +108,7 @@
           margin(0).important()
           border(.none).important()
           borderRadius(0).important()
-          padding(spacing16, spacing24, spacing24).important()
+          padding(spacing16).important()
           backgroundColor(.transparent).important()
           maxWidth(perc(100))
           overflow(.visible)
