@@ -13,12 +13,16 @@ public struct IconView: HTMLContent {
   let iconLabel: String?
   let size: CSS.Length
   let iconColor: CSS.Color?
+  /// A slot as wide as it is tall, the glyph centered in it at its own
+  /// tight shape: a list of icons of different widths (a column of links)
+  /// starts every label at the same x.
+  let square: Bool
   let `class`: String
 
   /// An icon beside text is that text's font size (user, 2026-10-10): 16px
   /// beside 16px text, 18 beside 18—a label's icon, a legend's, a status
-  /// mark. Rows center it on the label's capitals and digits (the label's
-  /// `text-box: trim-both cap alphabetic`), never by a nudge.
+  /// mark. It centers on the capitals and digits beside it by the font's
+  /// cap height (`centerOnCapitals`), never by a nudge.
   public static func size(beside fontSize: CSS.Length) -> CSS.Length {
     fontSize
   }
@@ -28,12 +32,14 @@ public struct IconView: HTMLContent {
     iconLabel: String? = nil,
     size: CSS.Length,
     iconColor: CSS.Color? = nil,
+    square: Bool = false,
     class: String = ""
   ) {
     self.icon = icon.map { $0.build() }
     self.iconLabel = iconLabel
     self.size = size
     self.iconColor = iconColor
+    self.square = square
     self.`class` = `class`
   }
 
@@ -43,12 +49,14 @@ public struct IconView: HTMLContent {
     iconLabel: String? = nil,
     size: CSS.Length,
     iconColor: CSS.Color? = nil,
+    square: Bool = false,
     class: String = ""
   ) {
     self.icon = icon().map { $0.build() }
     self.iconLabel = iconLabel
     self.size = size
     self.iconColor = iconColor
+    self.square = square
     self.`class` = `class`
   }
 
@@ -58,12 +66,14 @@ public struct IconView: HTMLContent {
     iconLabel: String? = nil,
     size: CSS.Length,
     iconColor: CSS.Color? = nil,
+    square: Bool = false,
     class: String = ""
   ) {
     self.icon = icon(size).map { $0.build() }
     self.iconLabel = iconLabel
     self.size = size
     self.iconColor = iconColor
+    self.square = square
     self.`class` = `class`
   }
 
@@ -89,6 +99,7 @@ public struct IconView: HTMLContent {
       // The icon's box is as tall as its size, set inline so every size
       // token resolves; its width follows the icon.
       height(size)
+      if square { width(size) }
       selector("&") {
         display(.flex)
         alignItems(.center)

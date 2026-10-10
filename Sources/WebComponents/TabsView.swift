@@ -195,7 +195,9 @@
           justifyContent(.center)
           whiteSpace(.nowrap)
           textAlign(.center)
-          border(.none)
+          // A transparent 1px border on every side puts both variants on the
+          // control heights: both 48, the large control height.
+          border(borderWidthBase, .solid, borderColorTransparent)
           cursor(cursorBaseHover)
           transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
           // Reduced motion: the selection switches at once, its label with
@@ -209,7 +211,7 @@
         }
         selector("&.tabs-full-width [role='tab']") { flex(1) }
         selector("&.tabs-quiet [role='tab']") {
-          // 12 on every side of 16px type's 22px line: 46.
+          // 12 on every side of 16px type's 22px line, inside the 1px border: 48.
           padding(spacing12)
           boxSizing(.borderBox)
           fontSize(fontSizeMedium16)
@@ -217,8 +219,8 @@
           lineHeight(lineHeightSmall22)
         }
         selector("&.tabs-solid [role='tab']") {
-          // 8 on every side of 16px type's 22px line: 38.
-          padding(spacing8)
+          // 12 on every side of 16px type's 22px line, inside the 1px border: 48.
+          padding(spacing12)
           fontSize(fontSizeMedium16)
           lineHeight(lineHeightSmall22)
         }

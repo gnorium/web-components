@@ -4,24 +4,35 @@ import DesignTokens
 import EmbeddedSwiftUtilities
 import WebTypes
 
-/// Trims each matched label's box to its capitals and digits, with the
-/// standard `text-box: trim-both cap alphabetic` (user, 2026-10-10): in a
-/// flex row with `align-items: center`, a status mark or an icon beside the
-/// label then centers on the middle of its capitals and digits, not on the
-/// middle of its line box—no nudge, no offset.
+/// How far a mark `size` tall rises so its middle stands half a cap height
+/// above the baseline: on the middle of the capitals and digits beside it,
+/// by the font's own metrics (`cap`), whatever the font.
+public func capCenterOffset(_ size: CSS.Length) -> CSS.Length {
+  cap(0.5) - size / 2
+}
+
+/// Centers each matched mark—an icon, a status dot, `size` tall—on the
+/// capitals of the text it sits in (user, 2026-10-10). The text keeps its
+/// own line box: nothing is trimmed, wrapped lines keep their leading, and
+/// the words beside the mark stay on one baseline.
 ///
-/// A label that clips its overflow (an edge-faded one, `fadeOverflow`)
-/// would clip the ink the trim leaves outside its box—ascenders above the
-/// capitals, descenders below the baseline—so `clipsOverflow` gives it one
-/// inset (4) of room on both block sides, equal, so the centering holds.
+/// An inline mark (inline-block, inline-flex) in a line of text takes
+/// `vertical-align: calc(0.5cap - size / 2)`. A flex item ignores
+/// `vertical-align`, so with `flexItem` the mark aligns on the row's
+/// baseline—a box without text sits its bottom edge there—and moves by the
+/// same distance relatively, which leaves the row's layout as it is. Its
+/// row aligns its items on their baseline.
 @CSSBuilder
-public func trimToCapitals(_ selectors: String..., clipsOverflow: Bool = false) -> [CSSOM.CSSRule] {
-  selector(stringJoin(selectors, separator: ", ")) {
-    textBox(.trimBoth, .edges(.cap, .alphabetic))
-  }
-  if clipsOverflow {
+public func centerOnCapitals(_ selectors: String..., size: CSS.Length, flexItem: Bool = false) -> [CSSOM.CSSRule] {
+  if flexItem {
     selector(stringJoin(selectors, separator: ", ")) {
-      paddingBlock(spacing4)
+      alignSelf(.baseline)
+      position(.relative)
+      insetBlockStart(-capCenterOffset(size))
+    }
+  } else {
+    selector(stringJoin(selectors, separator: ", ")) {
+      verticalAlign(capCenterOffset(size))
     }
   }
 }

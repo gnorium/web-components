@@ -1198,6 +1198,14 @@ public struct TableView: HTMLContent {
         flexDirection(.column)
         flex(1)
       }
+      // An empty table is a flex column, its header a block the width of
+      // the box, and the header row inside it as wide as its columns: wider
+      // than the box, the row ran past the header's bottom border, which
+      // stopped short under the last column. The header is never narrower
+      // than its row (user, 2026-10-10).
+      selector("&.table-empty .table-thead") {
+        minWidth(.minContent)
+      }
       selector("& .table-row:nth-child(even)", "& .table-row-view:nth-child(even)", "& .table-tbody tr:nth-child(even)") { backgroundColor(backgroundColorNeutralSubtle) }
       selector("& .table-row:nth-child(odd)", "& .table-row-view:nth-child(odd)", "& .table-tbody tr:nth-child(odd)") { backgroundColor(backgroundColorBase) }
       descendant(".table-row-even") { backgroundColor(backgroundColorNeutralSubtle).important() }
