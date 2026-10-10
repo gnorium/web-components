@@ -73,7 +73,7 @@
           flexWrap(.wrap)
           gap(spacing8)
           fontFamily(typographyFontSans)
-          fontSize(fontSizeSmall14)
+          fontSize(fontSizeMedium16)
           lineHeight(lineHeightContent)
           color(colorSubtle)
           // The width of where it is put, in a flex row as in a block: sized

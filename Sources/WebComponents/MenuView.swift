@@ -248,7 +248,7 @@
         }
         descendant(".menu-group-title") {
           fontFamily(typographyFontSans)
-          fontSize(fontSizeSmall14)
+          fontSize(fontSizeMedium16)
           fontWeight(fontWeightSemiBold)
           lineHeight(lineHeightSmall22)
           color(colorSubtle)
@@ -267,7 +267,7 @@
         }
         descendant(".menu-group-description") {
           fontFamily(typographyFontSans)
-          fontSize(fontSizeXSmall12)
+          fontSize(fontSizeMedium16)
           lineHeight(lineHeightSmall22)
           color(colorSubtle)
           margin(0)

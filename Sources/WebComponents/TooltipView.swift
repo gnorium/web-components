@@ -185,7 +185,7 @@ public struct TooltipView: HTMLContent {
         backgroundColor(backgroundColorInverted)
         color(colorInverted)
         fontFamily(typographyFontSans)
-        fontSize(fontSizeSmall14)
+        fontSize(fontSizeMedium16)
         fontWeight(fontWeightNormal)
         lineHeight(lineHeightSmall22)
         borderRadius(borderRadiusBase)
@@ -203,7 +203,7 @@ public struct TooltipView: HTMLContent {
       // A stamp in the bubble (`LocalTimeView`) reads as the bubble's text.
       selector("& .tooltip-content time") {
         color(colorInverted).important()
-        fontSize(fontSizeSmall14).important()
+        fontSize(fontSizeMedium16).important()
       }
       selector("& .tooltip-content[data-width='wide']") {
         maxWidth(calc("100vw - \(spacing16.value)"))
@@ -652,10 +652,10 @@ public struct TooltipView: HTMLContent {
       font: TooltipView.Font = .sans
     ) -> DOM.Element {
       let wrapper = document.createElement(.span)
-      // Beside 14px text (a session card's title): an info icon is the
+      // Beside 16px text (a session card's title): an info icon is the
       // tooltip's control, as large as its text.
       let view = TooltipView(tooltip: text, placement: placement, font: font) {
-        InfoIconView(size: fontSizeSmall14)
+        InfoIconView(size: sizeIconSmall)
       }
       wrapper.innerHTML = view.render()
       let element = wrapper.firstElementChild ?? wrapper

@@ -173,7 +173,7 @@ import EmbeddedSwiftUtilities
           descendant(".field-input-wrapper") { display(.block) }
           descendant(".field-help-text") {
             display(.block)
-            fontSize(fontSizeSmall14)
+            fontSize(fontSizeMedium16)
             lineHeight(lineHeightSmall22)
             color(colorSubtle)
           }
@@ -239,7 +239,7 @@ import EmbeddedSwiftUtilities
           descendant(".field-input-wrapper") { display(.block) }
           descendant(".field-help-text") {
             display(.block)
-            fontSize(fontSizeSmall14)
+            fontSize(fontSizeMedium16)
             lineHeight(lineHeightSmall22)
             color(colorSubtle)
           }

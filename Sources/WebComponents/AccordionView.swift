@@ -205,7 +205,7 @@ public struct AccordionView: HTMLContent {
           selector("&[data-title-font-size='\(titleFontSize.value)'] .accordion-title") { fontSize(titleFontSize) }
           selector("&[data-title-font-weight='\(titleFontWeight.value)'] .accordion-title") { fontWeight(titleFontWeight) }
           descendant(".accordion-description") {
-            fontSize(fontSizeSmall14)
+            fontSize(fontSizeMedium16)
             lineHeight(lineHeightSmall22)
             color(colorSubtle)
             fontWeight(fontWeightNormal)
@@ -260,7 +260,7 @@ public struct AccordionView: HTMLContent {
           AnimatedRightDownChevronView(
             id: "accordion-\(id)",
             expanded: isOpen,
-            // Beside the title: its text size minus 4px.
+            // Beside the title: its text size.
             size: IconView.size(beside: titleFontSize)
           )
         }
@@ -783,7 +783,7 @@ public struct AccordionView: HTMLContent {
       isOpen: Bool = false,
       separation: Separation = .outline,
       title: String,
-      titleFontSize: CSS.Length = fontSizeSmall14,
+      titleFontSize: CSS.Length = fontSizeMedium16,
       titleFontWeight: CSS.FontWeight = fontWeightNormal,
       headingLevel: HeadingLevel = .h3,
       headerDirection: HeaderDirection = .column,
@@ -821,7 +821,7 @@ public struct AccordionView: HTMLContent {
       separation: Separation = .outline,
       headingLevel: HeadingLevel = .h3,
       headerDirection: HeaderDirection = .column,
-      titleFontSize: CSS.Length = fontSizeSmall14,
+      titleFontSize: CSS.Length = fontSizeMedium16,
       titleFontWeight: CSS.FontWeight = fontWeightNormal,
       class: String = "",
       @HTMLBuilder title: () -> [DOM.Node],

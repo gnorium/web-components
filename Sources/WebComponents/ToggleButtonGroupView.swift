@@ -198,7 +198,7 @@
           // the pill (user, 2026-10-08).
           media(prefersReducedMotion(.reduce)) { transition(.none).important() }
         }
-        for buttonSize in [ButtonView.ButtonSize.small, .medium, .large] {
+        for buttonSize in [ButtonView.ButtonSize.medium, .large] {
           selector("&[data-mode='slider'] .toggle-button-group-button[data-size='\(buttonSize.rawValue)']") {
             minHeight(calc("\(buttonSize.minSize.value) - 2 * \(borderWidthBase.value)"))
           }

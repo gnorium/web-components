@@ -184,7 +184,8 @@ public struct PopoverView: HTMLContent {
                 ButtonView(
                   label: defAction.label,
                   buttonColor: .gray,
-                  weight: .subtle
+                  weight: .subtle,
+                  size: .large
                 )
               }
               .class("popover-default-button")
@@ -200,7 +201,8 @@ public struct PopoverView: HTMLContent {
                     case .red: return ButtonView.ButtonColor.red
                     }
                   }(),
-                  weight: .solid
+                  weight: .solid,
+                  size: .large
                 )
               }
               .class("popover-primary-button")

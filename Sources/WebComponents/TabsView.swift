@@ -62,7 +62,7 @@
         div {
           // Scroll buttons only for quiet variant (solid wraps instead)
           if variant == .quiet {
-            button { PreviousIconView(size: fontSizeSmall14) }
+            button { PreviousIconView(size: sizeIconSmall) }
               .type(.button)
               .class("tabs-scroll-button tabs-scroll-prev")
               .ariaLabel("Scroll to previous tabs")
@@ -104,7 +104,7 @@
           .role("tablist")
 
           if variant == .quiet {
-            button { NextIconView(size: fontSizeSmall14) }
+            button { NextIconView(size: sizeIconSmall) }
               .type(.button)
               .class("tabs-scroll-button tabs-scroll-next")
               .ariaLabel("Scroll to next tabs")
@@ -209,19 +209,18 @@
         }
         selector("&.tabs-full-width [role='tab']") { flex(1) }
         selector("&.tabs-quiet [role='tab']") {
-          // 12 on every side of 14px type's 20px line: 44.
-          height(px(44))
+          // 12 on every side of 16px type's 22px line: 46.
           padding(spacing12)
           boxSizing(.borderBox)
-          fontSize(fontSizeSmall14)
+          fontSize(fontSizeMedium16)
           fontWeight(fontWeightNormal)
-          lineHeight(lineHeightXSmall20)
+          lineHeight(lineHeightSmall22)
         }
         selector("&.tabs-solid [role='tab']") {
-          // 8 on every side of 14px type's 20px line: 36.
+          // 8 on every side of 16px type's 22px line: 38.
           padding(spacing8)
-          fontSize(fontSizeSmall14)
-          lineHeight(lineHeightXSmall20)
+          fontSize(fontSizeMedium16)
+          lineHeight(lineHeightSmall22)
         }
         selector("&.tabs-quiet [role='tab'][aria-selected='true']") {
           cursor(.default)

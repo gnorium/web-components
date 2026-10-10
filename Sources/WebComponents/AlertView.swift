@@ -158,7 +158,7 @@
         div {
           span {
             // The alert's mark, not a word of its message: as large as the
-            // close button's × across from it, not its text's size minus 4.
+            // close button's × across from it.
             // A state rather than a verdict (a session waiting or running)
             // shows its own mark: the ring, the rotating sector.
             if let mark { mark } else { StatusIconView(displayIcon, size: sizeIconSmall) }

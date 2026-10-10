@@ -728,7 +728,7 @@
         }
         descendant(".tei-figure-caption") {
           fontFamily(typographyFontSans)
-          fontSize(fontSizeXSmall12)
+          fontSize(fontSizeMedium16)
           fontStyle(.italic)
           color(colorSubtle)
         }
@@ -772,7 +772,7 @@
         descendant(".tei-table") {
           borderCollapse(.collapse)
           fontFamily(typographyFontSerif)
-          fontSize(fontSizeSmall14)
+          fontSize(fontSizeMedium16)
           color(colorBase)
         }
         selector("& .tei-table td", "& .tei-table th") {
@@ -931,14 +931,14 @@
         // Not a word on the page: a statement that there is none.
         descendant(".tei-line-gap") {
           fontFamily(typographyFontSans)
-          fontSize(fontSizeXSmall12)
+          fontSize(fontSizeMedium16)
           fontStyle(.italic)
           color(colorSubtle)
         }
         // A side of the leaf, inside an image that carries two of them.
         descendant(".tei-line-mark") {
           fontFamily(typographyFontMono)
-          fontSize(fontSizeXSmall12)
+          fontSize(fontSizeMedium16)
           color(colorSubtle)
           marginBlockStart(spacing8)
         }
@@ -962,14 +962,14 @@
         }
         descendant(".tei-page-translation-note") {
           fontFamily(typographyFontSans)
-          fontSize(fontSizeSmall14)
+          fontSize(fontSizeMedium16)
           color(colorOrange)
           margin(0)
         }
         // A side of the leaf, inside an image that carries two of them.
         descendant(".tei-line-mark") {
           fontFamily(typographyFontMono)
-          fontSize(fontSizeXSmall12)
+          fontSize(fontSizeMedium16)
           color(colorSubtle)
           marginBlockStart(spacing8)
         }
@@ -1050,7 +1050,7 @@
         }
         selector(".tei-empty") {
           fontFamily(typographyFontSans)
-          fontSize(fontSizeSmall14)
+          fontSize(fontSizeMedium16)
           color(colorSubtle)
           margin(0)
         }

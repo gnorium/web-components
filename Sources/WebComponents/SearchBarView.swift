@@ -107,7 +107,7 @@
               // A field's inset, 8 inside the border on every side, and at
               // the end the search button's room, as a text input's end icon.
               padding(spacing8)
-              paddingInlineEnd(calc(spacing8 + sizeIconXSmall + spacing8))
+              paddingInlineEnd(calc(spacing8 + sizeIconSmall + spacing8))
               width(perc(100))
               maxWidth(perc(100))
               lineHeight(lineHeightSmall22)
@@ -141,7 +141,7 @@
 
         // Button
         button {
-          SearchIconView(size: sizeIconXSmall)
+          SearchIconView(size: sizeIconSmall)
         }
         .type(suggestions ? .button : .submit)
         .class("search-bar-button")
@@ -233,7 +233,7 @@
           customProperty("--edge-fade-inset-start", "calc(\(borderWidthBase.value) + \(spacing8.value))")
           customProperty(
             "--edge-fade-inset-end",
-            "calc(\(borderWidthBase.value) + \(spacing8.value) + \(sizeIconXSmall.value) + \(spacing8.value))")
+            "calc(\(borderWidthBase.value) + \(spacing8.value) + \(sizeIconSmall.value) + \(spacing8.value))")
         }
         selector("&:has(> .search-bar-input:disabled)") {
           customProperty("--edge-fade-ground", backgroundColorDisabled)
@@ -298,7 +298,7 @@
         descendant(".search-bar-suggestion-text") {
           width(perc(100))
           color(colorLink)
-          fontSize(fontSizeSmall14)
+          fontSize(fontSizeMedium16)
           fontWeight(fontWeightSemiBold)
           overflowWrap(.breakWord)
         }
@@ -306,7 +306,7 @@
         descendant(".search-bar-suggestion-link:active .search-bar-suggestion-text") { color(colorLinkActive) }
         descendant(".search-bar-suggestion-detail") {
           width(perc(100))
-          fontSize(fontSizeXSmall12)
+          fontSize(fontSizeMedium16)
           fontWeight(fontWeightNormal)
           color(colorSubtle)
           overflowWrap(.breakWord)

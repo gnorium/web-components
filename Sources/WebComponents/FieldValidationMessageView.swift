@@ -54,7 +54,7 @@ public struct FieldValidationMessageView: HTMLContent {
     }
 
     var message = div {
-      span { IconView(icon: { s in StatusIconView(iconStatus, size: s) }, size: size8) }
+      span { IconView(icon: { s in StatusIconView(iconStatus, size: s) }, size: sizeIconSmall) }
         .class("field-validation-message-icon")
         .ariaHidden(true)
 
@@ -69,24 +69,21 @@ public struct FieldValidationMessageView: HTMLContent {
     }
 
     return message.style {
-      // 12px words below a 14px label, and an 8px icon: 12px letters stand
-      // well short of their font size, so an icon of 12 looked too big (user,
-      // 2026-10-01). The words start where a field's text starts—the
-      // control's border and its 16px inset in (TextInputView)—and
-      // the icon stands inside that inset at the field's edge, leaving an
-      // 8px gap before the words; it centers on the first line.
+      // 16px words below a 16px label, and a 16px icon, the words' own size
+      // (user, 2026-10-10), 8 before the words; it centers on the first
+      // line.
       selector("&") {
         display(.flex)
         alignItems(.flexStart)
-        fontSize(fontSizeXSmall12)
-        lineHeight(lineHeightXSmall20)
+        gap(spacing8)
+        fontSize(fontSizeMedium16)
+        lineHeight(lineHeightSmall22)
       }
       selector("& .field-validation-message-icon") {
         display(.inlineFlex)
         alignItems(.center)
         flexShrink(0)
-        width(calc(spacing8 + borderWidthBase))
-        minHeight(lineHeightXSmall20)
+        minHeight(lineHeightSmall22)
       }
       selector("&[data-status='error']") { color(colorRed) }
       selector("&[data-status='warning']") { color(colorOrange) }
@@ -98,7 +95,7 @@ public struct FieldValidationMessageView: HTMLContent {
         alignItems(.center)
         justifyContent(.flexStart)
         flexShrink(0)
-        height(lineHeightXSmall20)
+        height(lineHeightSmall22)
       }
       descendant(".field-validation-message-text") { flex(1) }
     }

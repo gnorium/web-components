@@ -146,7 +146,7 @@
                 ButtonView(
                   label: defAction.label,
                   buttonColor: .gray,
-                  weight: .subtle,
+                  weight: .subtle, size: .large,
                   disabled: defAction.disabled
                 )
               }
@@ -159,7 +159,7 @@
                 ButtonView(
                   label: primAction.label,
                   buttonColor: primAction.color == .blue ? .blue : .red,
-                  weight: .solid,
+                  weight: .solid, size: .large,
                   disabled: primAction.disabled
                 )
               }
@@ -260,7 +260,7 @@
         }
         descendant(".dialog-header-subtitle") {
           fontFamily(typographyFontSans)
-          fontSize(fontSizeSmall14)
+          fontSize(fontSizeMedium16)
           fontWeight(fontWeightNormal)
           lineHeight(lineHeightSmall22)
           color(colorSubtle)
@@ -294,7 +294,7 @@
         }
         descendant(".dialog-footer-text") {
           fontFamily(typographyFontSans)
-          fontSize(fontSizeSmall14)
+          fontSize(fontSizeMedium16)
           lineHeight(lineHeightSmall22)
           color(colorSubtle)
           margin(0)

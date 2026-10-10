@@ -12,7 +12,7 @@ import WebTypes
 
 /// A record as the records search menu offers one, in two rows: its
 /// language › its title (`BreadcrumbLabelView`), the language and chevron
-/// subordinate (12px and 8px beside the 14px title), the title the linked
+/// subordinate by color (16px, as the title), the title the linked
 /// grain the path leads to; then, small and subtle, a path of what tells it
 /// from the records listed with it (`metas`, the clash rule), the same for
 /// works and words, as its address is: Class › Voice names › Homograph—its
@@ -149,15 +149,15 @@ public struct RecordLabelView: HTMLContent {
         lineHeight(lineHeightSmall22)
       }
       descendant(".record-label-title") {
-        fontSize(fontSizeSmall14)
+        fontSize(fontSizeMedium16)
         fontWeight(fontWeightNormal)
         overflowWrap(.breakWord)
       }
       // The language and its chevron are subordinate to the title: the
-      // language at the meta line's size, the chevron at that size minus 4
-      // (the icon rule). Here only: every other breadcrumb keeps its own.
+      // language at the meta line's size, the chevron at that size (the
+      // icon rule). Here only: every other breadcrumb keeps its own.
       descendant(".breadcrumb-label-context") {
-        fontSize(fontSizeXSmall12)
+        fontSize(fontSizeMedium16)
         color(colorSubtle)
       }
       // The meta row's chevrons as its first row's: quiet, on the baseline.
@@ -166,10 +166,10 @@ public struct RecordLabelView: HTMLContent {
         verticalAlign(.baseline)
       }
       descendant(".breadcrumb-separator-view .next-icon-view") {
-        height(size8).important()
+        height(sizeIconSmall).important()
       }
       descendant(".record-label-meta") {
-        fontSize(fontSizeXSmall12)
+        fontSize(fontSizeMedium16)
         fontWeight(fontWeightNormal)
         color(colorSubtle)
       }

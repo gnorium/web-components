@@ -15,21 +15,12 @@ public struct IconView: HTMLContent {
   let iconColor: CSS.Color?
   let `class`: String
 
-  /// An icon beside text is that text's font size minus 4px: icons are
-  /// tight (their ink fills the 1024 grid box), so at the full font size
-  /// one looks larger than the letters, whose capitals are about 0.7em;
-  /// minus 4 lands near the cap height. 12px text takes size8, 14 size10,
-  /// 16 sizeIconXSmall, 18 size14, 20 sizeIconSmall, 24 sizeIconMedium,
-  /// 28 size24; any other size, its font size less 4px.
+  /// An icon beside text is that text's font size (user, 2026-10-10): 16px
+  /// beside 16px text, 18 beside 18—a label's icon, a legend's, a status
+  /// mark. Rows center it on the label's capitals and digits (the label's
+  /// `text-box: trim-both cap alphabetic`), never by a nudge.
   public static func size(beside fontSize: CSS.Length) -> CSS.Length {
-    if stringEquals(fontSize.value, fontSizeXSmall12.value) { return size8 }
-    if stringEquals(fontSize.value, fontSizeSmall14.value) { return size10 }
-    if stringEquals(fontSize.value, fontSizeMedium16.value) { return sizeIconXSmall }
-    if stringEquals(fontSize.value, fontSizeLarge18.value) { return size14 }
-    if stringEquals(fontSize.value, fontSizeXLarge20.value) { return sizeIconSmall }
-    if stringEquals(fontSize.value, fontSizeXXLarge24.value) { return sizeIconMedium }
-    if stringEquals(fontSize.value, fontSizeXXXLarge28.value) { return size24 }
-    return fontSize - px(4)
+    fontSize
   }
 
   public init<T: HTMLContent>(

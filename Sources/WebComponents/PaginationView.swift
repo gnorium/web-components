@@ -14,7 +14,7 @@ import WebTypes
 /// - ``Size/normal``—table / list footers (44px targets, spaced layout)
 /// - ``Size/medium``—chrome pagers (session, artifact, attempt switcher,
 ///   legends): ButtonView's medium, 40px targets, 16px text (a field under 16px makes
-///   iOS Safari zoom the page as it is focused), 14px chevrons
+///   iOS Safari zoom the page as it is focused), 16px chevrons
 ///
 /// URL mode (`previousUrl` / `nextUrl`) is hydrated by
 /// ``PaginationHydration``. Query / custom mode sets `kind` and prev/next
@@ -104,8 +104,7 @@ public struct PaginationView: HTMLContent {
     case .medium:
       chrome = true
       // Icon-only chevrons on par with the pager's 16px text ("of 3") take
-      // the text's size (user, 2026-10-09); minus 4 is for an icon beside
-      // a label.
+      // the text's size (user, 2026-10-09), as every icon beside text.
       iconSize = sizeIconSmall
     }
     // The number, the box's inset at both sides (a medium control's 8)
@@ -375,7 +374,7 @@ public struct PaginationView: HTMLContent {
       descendant(".page-box:hover") { borderColor(borderColorBase) }
       descendant(".pagination-term") {
         fontFamily(typographyFontSans)
-        fontSize(fontSizeXSmall12)
+        fontSize(fontSizeMedium16)
         color(colorBase)
         fontWeight(fontWeightNormal)
         whiteSpace(.nowrap)

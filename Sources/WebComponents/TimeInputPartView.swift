@@ -32,7 +32,7 @@ public struct TimeInputPartView: HTMLContent {
     let prefix = hasCaption ? "\(caption) " : ""
     return div {
       if hasCaption {
-        LabelView(labelFontSize: fontSizeSmall14, tooltip: tooltip, class: "time-input-part-caption") { caption }
+        LabelView(labelFontSize: fontSizeMedium16, tooltip: tooltip, class: "time-input-part-caption") { caption }
       }
       div {
         column(
@@ -87,7 +87,7 @@ public struct TimeInputPartView: HTMLContent {
         justifyContent(.center)
         blockSize(minSizeInteractiveTouch)
         borderRadius(borderRadiusBase)
-        fontSize(fontSizeSmall14)
+        fontSize(fontSizeMedium16)
         fontVariantNumeric(.tabularNums)
         color(colorBase)
         cursor(.pointer)

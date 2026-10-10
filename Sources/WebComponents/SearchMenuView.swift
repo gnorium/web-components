@@ -317,23 +317,24 @@
           display(.inlineFlex)
           alignItems(.center)
           justifyContent(.center)
-          // A key cap, 4 on every side of its 14px line and its border: 24.
-          minWidth(size24)
-          height(size24)
+          // A key cap, 4 on every side of its 16px type's 22px line and its
+          // border: 32.
+          minWidth(calc(spacing4 * 2 + lineHeightSmall22 + borderWidthBase * 2))
+          height(calc(spacing4 * 2 + lineHeightSmall22 + borderWidthBase * 2))
           padding(spacing4)
           boxSizing(.borderBox)
           fontFamily(typographyFontMono)
-          fontSize(fontSizeXSmall12)
+          fontSize(fontSizeMedium16)
           fontWeight(fontWeightSemiBold)
           color(colorBase)
           backgroundColor(backgroundColorNeutralSubtle)
           border(borderWidthBase, .solid, borderColorBase)
           borderRadius(borderRadiusMinimal)
-          lineHeight(size14)
+          lineHeight(lineHeightSmall22)
         }
         descendant(".keyboard-hint-label") {
           fontFamily(typographyFontSans)
-          fontSize(fontSizeXSmall12)
+          fontSize(fontSizeMedium16)
           color(colorSubtle)
         }
         selector("&[data-state='opening']", "&[data-state='open']", "&[data-state='closing']") {

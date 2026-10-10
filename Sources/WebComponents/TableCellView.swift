@@ -85,7 +85,7 @@ public struct TableCellView: HTMLContent {
       selector("&") {
         padding(spacing8)
         fontFamily(typographyFontSans)
-        fontSize(fontSizeSmall14)
+        fontSize(fontSizeMedium16)
         color(colorBase)
       }
       // A value too long for its column fades out at its end (EdgeFade.swift).
@@ -113,9 +113,9 @@ public struct TableCellView: HTMLContent {
         height(px(22))
         borderRadius(borderRadiusCircle)
         color(colorInvertedFixed)
-        fontSize(fontSizeXSmall12)
+        fontSize(fontSizeMedium16)
         fontWeight(fontWeightSemiBold)
-        lineHeight(lineHeightXSmall20)
+        lineHeight(lineHeightSmall22)
       }
       if case .status(_, let bgColor) = type {
         selector(".table-cell-status-icon") { backgroundColor(bgColor) }

@@ -17,7 +17,7 @@ public struct RotatingSectorView: HTMLContent {
   let `class`: String
 
   public init(
-    size: CSS.Length = spacing8,
+    size: CSS.Length = sizeIconSmall,
     showLabel: Bool = false,
     ariaHidden: Bool = false,
     ariaLabel: String? = nil,
@@ -98,7 +98,7 @@ public struct RotatingSectorView: HTMLContent {
 
   public enum RotatingSectorFactory {
     public static func createElement(
-      size: CSS.Length = spacing8,
+      size: CSS.Length = sizeIconSmall,
       ariaHidden: Bool = true,
       class: String = ""
     ) -> DOM.Element {

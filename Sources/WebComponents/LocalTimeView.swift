@@ -21,14 +21,10 @@
     /// Arbitrary values cannot. That is the whole difference, and it is why a
     /// component's styling varies over named variants and never over values.
     public enum Size: String, Sendable, CaseIterable {
-      case xSmall12 = "x-small-12"
-      case small14 = "small-14"
       case medium16 = "medium-16"
 
       var length: CSS.Length {
         switch self {
-        case .xSmall12: return fontSizeXSmall12
-        case .small14: return fontSizeSmall14
         case .medium16: return fontSizeMedium16
         }
       }
@@ -64,7 +60,7 @@
 
     public init(
       date: Date,
-      size: Size = .xSmall12,
+      size: Size = .medium16,
       tone: Tone = .base,
       format: Format = .dateTime,
       fallbackSuffix: String = "UTC"

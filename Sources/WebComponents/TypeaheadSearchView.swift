@@ -192,12 +192,12 @@
         descendant(".typeahead-search-pending") {
           padding(spacing12)
           color(colorSubtle)
-          fontSize(fontSizeSmall14)
+          fontSize(fontSizeMedium16)
         }
         descendant(".typeahead-search-no-results") {
           padding(spacing12)
           color(colorSubtle)
-          fontSize(fontSizeSmall14)
+          fontSize(fontSizeMedium16)
           textAlign(.center)
         }
         descendant(".menu-item-view[aria-selected='true']") {

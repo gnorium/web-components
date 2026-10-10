@@ -137,14 +137,14 @@ public struct DatePickerMonthView: HTMLContent {
         // a day (user, 2026-10-10).
         minWidth(calc("\(size32.value) * 7"))
         fontFamily(typographyFontSans)
-        fontSize(fontSizeSmall14)
+        fontSize(fontSizeMedium16)
         color(colorBase)
       }
       descendant(".date-picker-month-weekday") {
         blockSize(minSizeInteractivePointer)
         padding(0)
         fontWeight(fontWeightSemiBold)
-        fontSize(fontSizeXSmall12)
+        fontSize(fontSizeMedium16)
         color(colorSubtle)
         textAlign(.center)
       }
@@ -169,7 +169,7 @@ public struct DatePickerMonthView: HTMLContent {
         border(borderWidthBase, .solid, borderColorTransparent)
         borderRadius(borderRadiusCircle)
         fontVariantNumeric(.tabularNums)
-        lineHeight(lineHeightXSmall20)
+        lineHeight(lineHeightSmall22)
         transition("background-color 0.1s ease, color 0.1s ease")
       }
       descendant(".date-picker-month-day[data-outside='true'] .date-picker-month-day-label") {

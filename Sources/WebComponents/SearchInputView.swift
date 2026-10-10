@@ -14,11 +14,10 @@ import WebTypes
 ///
 /// Its size is ButtonView's scale (`ButtonView.ButtonSize`), so a box sits
 /// level with the controls beside it: its inset is that size's `padding`
-/// on every side (4, 8 or 12) and its height that size's `minSize`
-/// (32, 40 or 48). Its text is 16px at
-/// every size (user, 2026-10-08): smaller text in a field makes iOS Safari
-/// zoom the page as it is focused. Its icons, beside that text, are 12
-/// (the text's size minus 4).
+/// on every side (8 or 12) and its height that size's `minSize` (40 or
+/// 48). Its text is 16px at every size (user, 2026-10-08): smaller text in
+/// a field makes iOS Safari zoom the page as it is focused. Its icons,
+/// beside that text, are 16 (the text's size).
 public struct SearchInputView: HTMLContent {
   let modelValue: String
   let size: ButtonView.ButtonSize
@@ -68,7 +67,7 @@ public struct SearchInputView: HTMLContent {
 
   public func build() -> DOM.Node {
     // Beside the 16px text, at every size.
-    let iconSize = sizeIconXSmall
+    let iconSize = sizeIconSmall
     // The box's measures, set per size on the root (`data-size`).
     let side: CSS.Length = `var`("--search-input-padding")
     // A control's room: its icon and its 4px padding at either side; the
@@ -154,11 +153,8 @@ public struct SearchInputView: HTMLContent {
         width(perc(100))
         gap(spacing8)
       }
-      // ButtonView's scale: one inset on every side, 4, 8 or 12, on the
-      // 22px line, so a box is 32, 40 or 48 as the buttons beside it.
-      selector("&[data-size='small']") {
-        customProperty("--search-input-padding", ButtonView.ButtonSize.small.padding.value)
-      }
+      // ButtonView's scale: one inset on every side, 8 or 12, on the 22px
+      // line, so a box is 40 or 48 as the buttons beside it.
       selector("&[data-size='medium']") {
         customProperty("--search-input-padding", ButtonView.ButtonSize.medium.padding.value)
       }

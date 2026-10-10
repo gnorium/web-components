@@ -135,11 +135,11 @@ public struct LinkView: HTMLContent {
         }
         descendant(".link-external-icon") {
           display(.inlineBlock)
-          width(sizeIconXSmall)
-          height(sizeIconXSmall)
+          width(sizeIconSmall)
+          height(sizeIconSmall)
           marginInlineStart(spacing4)
           verticalAlign(.middle)
-          fontSize(sizeIconXSmall)
+          fontSize(sizeIconSmall)
         }
       }
   }

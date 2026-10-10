@@ -80,7 +80,7 @@
         // in the text says it.
         descendant(".tei-math-gap") {
           fontFamily(typographyFontSans)
-          fontSize(fontSizeXSmall12)
+          fontSize(fontSizeMedium16)
           fontStyle(.italic)
           color(colorSubtle)
         }

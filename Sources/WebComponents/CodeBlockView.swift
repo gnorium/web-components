@@ -26,9 +26,9 @@
           span { language }
             .class("code-block-lang")
           button {
-            span { CopyIconView(size: sizeIconXSmall) }
+            span { CopyIconView(size: sizeIconSmall) }
               .class("copy-icon")
-            span { CheckIconView(size: sizeIconXSmall) }
+            span { CheckIconView(size: sizeIconSmall) }
               .class("success-icon")
           }
           .type(.button)
@@ -63,7 +63,7 @@
         }
         descendant(".code-block-lang") {
           fontFamily(typographyFontMono)
-          fontSize(fontSizeXSmall12)
+          fontSize(fontSizeMedium16)
           // Its own leading, never the prose's around the fence: a unitless
           // one set it at 19.5px under 16px Markdown.
           lineHeight(lineHeightSmall22)
@@ -78,9 +78,9 @@
           alignItems(.center)
           justifyContent(.center)
           flexShrink(0)
-          // An icon-only small control, as ButtonView's: a 32 square.
-          width(ButtonView.ButtonSize.small.minSize)
-          height(ButtonView.ButtonSize.small.minSize)
+          // An icon-only medium control, as ButtonView's: a 40 square.
+          width(ButtonView.ButtonSize.medium.minSize)
+          height(ButtonView.ButtonSize.medium.minSize)
           padding(0)
           boxSizing(.borderBox)
           backgroundColor(.transparent)
@@ -211,11 +211,11 @@
 
         let copyIcon = document.createElement(.span)
         copyIcon.classList.add("copy-icon")
-        copyIcon.appendChild(CopyIconFactory.createElement(size: sizeIconXSmall))
+        copyIcon.appendChild(CopyIconFactory.createElement(size: sizeIconSmall))
 
         let successIcon = document.createElement(.span)
         successIcon.classList.add("success-icon")
-        successIcon.appendChild(CheckIconFactory.createElement(size: sizeIconXSmall))
+        successIcon.appendChild(CheckIconFactory.createElement(size: sizeIconSmall))
 
         button.appendChild(copyIcon)
         button.appendChild(successIcon)

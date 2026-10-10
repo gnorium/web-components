@@ -92,7 +92,7 @@ public struct DatumView: HTMLContent {
         alignItems(.center)
         gap(spacing4)
         fontFamily(typographyFontSans)
-        fontSize(fontSizeSmall14)
+        fontSize(fontSizeMedium16)
         fontWeight(fontWeightSemiBold)
         color(colorBase)
       }

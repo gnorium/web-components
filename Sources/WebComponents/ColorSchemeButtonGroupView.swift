@@ -20,13 +20,13 @@
         buttons: [
           .init(
             value: "light", label: "Light",
-            icon: IconView(icon: { s in LightModeIconView(size: s) }, size: sizeIconXSmall).build(),
+            icon: IconView(icon: { s in LightModeIconView(size: s) }, size: sizeIconSmall).build(),
             weight: .static,
             class: "", fullWidth: true,
             labelFontWeight: fontWeightNormal, contentJustifyContent: .flexStart),
           .init(
             value: "dark", label: "Dark",
-            icon: IconView(icon: { s in DarkModeIconView(size: s) }, size: sizeIconXSmall).build(),
+            icon: IconView(icon: { s in DarkModeIconView(size: s) }, size: sizeIconSmall).build(),
             weight: .static,
             class: "", fullWidth: true,
             labelFontWeight: fontWeightNormal, contentJustifyContent: .flexStart),

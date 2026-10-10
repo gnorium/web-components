@@ -177,7 +177,7 @@
           items.append(
             span {
               if selected {
-                span { CheckIconView(size: sizeIconXSmall) }
+                span { CheckIconView(size: sizeIconSmall) }
                   .class("menu-item-checkmark")
                   .ariaHidden(true)
               }
@@ -344,8 +344,8 @@
             }
             descendant(".menu-item-checkmark") {
               display(.flex)
-              width(sizeIconXSmall)
-              height(sizeIconXSmall)
+              width(sizeIconSmall)
+              height(sizeIconSmall)
               color(colorInvertedFixed)
             }
             selector("& .menu-item-checkmark svg") {
@@ -425,7 +425,7 @@
             }
             descendant(".menu-item-description") {
               fontFamily(typographyFontSans)
-              fontSize(fontSizeSmall14)
+              fontSize(fontSizeMedium16)
               fontWeight(fontWeightNormal)
               lineHeight(lineHeightSmall22)
               color(colorSubtle)
@@ -522,8 +522,8 @@
             }
             descendant(".menu-item-checkmark") {
               display(.flex)
-              width(sizeIconXSmall)
-              height(sizeIconXSmall)
+              width(sizeIconSmall)
+              height(sizeIconSmall)
               color(colorInvertedFixed)
             }
             selector("& .menu-item-checkmark svg") {
@@ -603,7 +603,7 @@
             }
             descendant(".menu-item-description") {
               fontFamily(typographyFontSans)
-              fontSize(fontSizeSmall14)
+              fontSize(fontSizeMedium16)
               fontWeight(fontWeightNormal)
               lineHeight(lineHeightSmall22)
               color(colorSubtle)

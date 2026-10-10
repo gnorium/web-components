@@ -162,10 +162,10 @@
             display(.flex)
             alignItems(.center)
             gap(spacing12)
-            // A row: 8 on every side of 14px type's 20px line, 36.
+            // A row: 8 on every side of 16px type's 22px line, 38.
             padding(spacing8)
-            fontSize(fontSizeSmall14)
-            lineHeight(lineHeightXSmall20)
+            fontSize(fontSizeMedium16)
+            lineHeight(lineHeightSmall22)
             cursor(.pointer)
             userSelect(.none)
             boxSizing(.borderBox)
@@ -220,9 +220,9 @@
               display(.flex)
               alignItems(.center)
               justifyContent(.center)
-              // Beside the item's 14px text: its size minus 4px.
-              width(size10)
-              height(size10)
+              // Beside the item's 16px text: its size.
+              width(sizeIconSmall)
+              height(sizeIconSmall)
               flexShrink(0)
             }
           }

@@ -37,10 +37,9 @@ public struct SubtractIconView: HTMLContent {
 
 extension IconView {
   /// The subtract icon as a medium button wears it before its 16px words:
-  /// sizeIconXSmall, the text's size minus 4px, so "− Genre" reads like
-  /// its words (IconView.size(beside:)).
+  /// sizeIconSmall, the text's own size (IconView.size(beside:)).
   public static var subtract: IconView {
-    IconView(icon: { size in SubtractIconView(size: size) }, size: sizeIconXSmall)
+    IconView(icon: { size in SubtractIconView(size: size) }, size: sizeIconSmall)
   }
 
   /// The subtract icon alone in a medium icon-only button (a filter bar's

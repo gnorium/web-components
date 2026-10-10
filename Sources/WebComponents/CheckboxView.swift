@@ -56,7 +56,7 @@ public struct CheckboxView: HTMLContent {
     messages: ConstraintMessages = ConstraintMessages(),
     class: String = "",
     labelFontWeight: CSS.FontWeight = fontWeightNormal,
-    labelFontSize: CSS.Length = fontSizeSmall14,
+    labelFontSize: CSS.Length = fontSizeMedium16,
     @HTMLBuilder label: () -> [DOM.Node],
     @HTMLBuilder description: () -> [DOM.Node] = { [] },
     @HTMLBuilder afterLabel: () -> [DOM.Node] = { [] }
@@ -96,7 +96,7 @@ public struct CheckboxView: HTMLContent {
   messages: ConstraintMessages = ConstraintMessages(),
   class: String = "",
   labelFontWeight: CSS.FontWeight = fontWeightNormal,
-  labelFontSize: CSS.Length = fontSizeSmall14,
+  labelFontSize: CSS.Length = fontSizeMedium16,
   @HTMLBuilder label: () -> [DOM.Node],
   @HTMLBuilder description: () -> [DOM.Node] = { [] },
   @HTMLBuilder afterLabel: () -> [DOM.Node] = { [] }
@@ -355,7 +355,7 @@ public struct CheckboxView: HTMLContent {
       status: CheckboxView.ValidationStatus = .default,
       class: String = "",
       labelFontWeight: CSS.FontWeight = fontWeightNormal,
-      labelFontSize: CSS.Length = fontSizeSmall14,
+      labelFontSize: CSS.Length = fontSizeMedium16,
       title: String = ""
     ) -> DOM.Element {
       let wrapper = document.createElement(.div)

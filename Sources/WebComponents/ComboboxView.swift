@@ -159,7 +159,7 @@ public struct ComboboxView: HTMLContent {
           labelMarks
           if let tooltip {
             TooltipView(tooltip: tooltip, placement: .bottom) {
-              IconView(icon: { size in InfoIconView(size: size) }, size: fontSizeSmall14)
+              IconView(icon: { size in InfoIconView(size: size) }, size: sizeIconSmall)
             }
           }
         }
@@ -247,13 +247,13 @@ public struct ComboboxView: HTMLContent {
       }
       descendant(".combobox-label-text") {
         fontFamily(typographyFontSans)
-        fontSize(fontSizeSmall14)
+        fontSize(fontSizeMedium16)
         fontWeight(fontWeightSemiBold)
         color(colorBase)
       }
       descendant(".combobox-optional-flag") {
         fontFamily(typographyFontSans)
-        fontSize(fontSizeSmall14)
+        fontSize(fontSizeMedium16)
         fontWeight(fontWeightNormal)
         color(colorSubtle)
       }
@@ -324,7 +324,7 @@ public struct ComboboxView: HTMLContent {
         minHeight(minSizeInteractiveTouch)
         padding(spacing8)
         fontFamily(typographyFontSans)
-        fontSize(fontSizeSmall14)
+        fontSize(fontSizeMedium16)
         lineHeight(lineHeightSmall22)
         color(colorBase)
         backgroundColor(backgroundColorTransparent)
@@ -339,7 +339,7 @@ public struct ComboboxView: HTMLContent {
         overflowWrap(.anywhere)
       }
       descendant(".combobox-option-alt-text") {
-        fontSize(fontSizeXSmall12)
+        fontSize(fontSizeMedium16)
         color(colorSubtle)
         whiteSpace(.normal)
         overflowWrap(.anywhere)
@@ -373,7 +373,7 @@ public struct ComboboxView: HTMLContent {
         minHeight(minSizeInteractiveTouch)
         boxSizing(.borderBox)
         fontFamily(typographyFontSans)
-        fontSize(fontSizeXSmall12)
+        fontSize(fontSizeMedium16)
         lineHeight(lineHeightSmall22)
         color(colorSubtle)
         borderBlockStart(borderWidthBase, .solid, borderColorBase)

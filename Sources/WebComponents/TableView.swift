@@ -97,7 +97,7 @@ public struct TableView: HTMLContent {
 
     /// A table's declared width is its preferred data width. A heading needs
     /// its own floor: `Suggested At` must be able to name the column it heads.
-    /// The 8px glyph allowance is deliberately generous for the 14px semibold
+    /// The 8px glyph allowance is deliberately generous for the 16px semibold
     /// header type, and the 24px accounts for the cell's horizontal padding.
     /// A column that fits its heading starts at that floor; the client then
     /// measures the heading exactly.
@@ -612,8 +612,8 @@ public struct TableView: HTMLContent {
                                 }
                                 return false
                               }(),
-                              // Beside the 14px header: its size minus 4px.
-                              size: size10
+                              // Beside the 16px header: its size.
+                              size: sizeIconSmall
                             )
                           }
                           .class("table-sort-icon")
@@ -797,8 +797,8 @@ public struct TableView: HTMLContent {
                                 AnimatedRightDownChevronView(
                                   id: "table-group-\(gid)",
                                   expanded: false,
-                                  // Beside the 14px header: its size minus 4px.
-                                  size: size10
+                                  // Beside the 16px header: its size.
+                                  size: sizeIconSmall
                                 )
                               }
                               // Child rows get indentation
@@ -1068,7 +1068,7 @@ public struct TableView: HTMLContent {
       }
       descendant(".pagination-info") {
         fontFamily(typographyFontSans)
-        fontSize(fontSizeSmall14)
+        fontSize(fontSizeMedium16)
         lineHeight(lineHeightSmall22)
         color(colorBase)
       }
@@ -1267,7 +1267,7 @@ public struct TableView: HTMLContent {
         // A cell: 8 on every side, the row 44 (user, 2026-10-10).
         padding(spacing8)
         fontFamily(typographyFontSans)
-        fontSize(fontSizeSmall14)
+        fontSize(fontSizeMedium16)
         fontWeight(fontWeightSemiBold)
         lineHeight(lineHeightSmall22)
         color(colorEmphasized)
@@ -1361,9 +1361,9 @@ public struct TableView: HTMLContent {
         display(.inlineFlex)
         alignItems(.center)
         justifyContent(.center)
-        width(size10)
-        height(size10)
-        fontSize(fontSizeXSmall12)
+        width(sizeIconSmall)
+        height(sizeIconSmall)
+        fontSize(fontSizeMedium16)
         flexShrink(0)
       }
       descendant(".table-sort-button") {

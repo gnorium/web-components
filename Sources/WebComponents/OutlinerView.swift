@@ -1000,7 +1000,7 @@ public enum OutlineMoves {
       }
       descendant(".outliner-toolbar-label") {
         fontFamily(typographyFontSans)
-        fontSize(fontSizeSmall14)
+        fontSize(fontSizeMedium16)
         color(colorSubtle)
         whiteSpace(.nowrap)
         overflow(.hidden)

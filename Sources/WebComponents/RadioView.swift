@@ -220,7 +220,7 @@ public struct RadioView: HTMLContent {
           color(colorDisabled)
         }
         descendant(".radio-description") {
-          fontSize(fontSizeSmall14)
+          fontSize(fontSizeMedium16)
           lineHeight(lineHeightSmall22)
           color(colorSubtle)
         }

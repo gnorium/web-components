@@ -348,8 +348,8 @@ public struct DiffView: HTMLContent {
     .style {
       selector("&") {
         fontFamily(typographyFontSans)
-        fontSize(fontSizeXSmall12)
-        lineHeight(lineHeightXSmall20)
+        fontSize(fontSizeMedium16)
+        lineHeight(lineHeightSmall22)
         color(colorSubtle)
         minWidth(0)
       }
@@ -395,7 +395,7 @@ public struct DiffView: HTMLContent {
         display(.flex)
         alignItems(.baseline)
         gap(spacing8)
-        minHeight(lineHeightXSmall20)
+        minHeight(lineHeightSmall22)
       }
       // A box of lines gives its sides' inset to each line, so a changed
       // line's tint runs from edge to edge, and has none above or below
@@ -513,7 +513,7 @@ public struct DiffView: HTMLContent {
       // Rendered: the reading's own type, each line set as it reads.
       selector("&[data-diff-mode='rendered'] .diff-box") {
         fontFamily(typographyFontSerif)
-        fontSize(fontSizeSmall14)
+        fontSize(fontSizeMedium16)
         lineHeight(lineHeightMedium26)
       }
       selector("&[data-diff-mode='rendered'] .diff-row") {
@@ -531,7 +531,7 @@ public struct DiffView: HTMLContent {
       }
       selector("& [data-role^='forme']", "& [data-role='page']", "& .diff-figure", "& .diff-break") {
         fontFamily(typographyFontSans)
-        fontSize(fontSizeXSmall12)
+        fontSize(fontSizeMedium16)
       }
       descendant(".diff-figure") {
         fontStyle(.italic)

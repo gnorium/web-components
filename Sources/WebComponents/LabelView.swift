@@ -62,7 +62,7 @@ public struct LabelView: HTMLContent {
   }
 
   /// The info icon beside the label: a tooltip's control, as large as the
-  /// label's text (not its size minus 4px, which marks only decoration).
+  /// label's text.
   private var infoIconSize: CSS.Length { labelFontSize }
 
   public func build() -> DOM.Node {
@@ -217,7 +217,7 @@ public struct LabelView: HTMLContent {
         }
         descendant(".label-description") {
           display(.block)
-          fontSize(fontSizeSmall14)
+          fontSize(fontSizeMedium16)
           lineHeight(lineHeightSmall22)
           color(colorSubtle)
           fontWeight(fontWeightNormal)

@@ -192,14 +192,14 @@
             }
             descendant(".card-description") {
               fontFamily(typographyFontSans)
-              fontSize(fontSizeSmall14)
+              fontSize(fontSizeMedium16)
               lineHeight(lineHeightSmall22)
               color(colorBase)
               margin(0)
             }
             descendant(".card-supporting-text") {
               fontFamily(typographyFontSans)
-              fontSize(fontSizeXSmall12)
+              fontSize(fontSizeMedium16)
               lineHeight(lineHeightSmall22)
               color(colorSubtle)
               margin(0)
@@ -294,14 +294,14 @@
             }
             descendant(".card-description") {
               fontFamily(typographyFontSans)
-              fontSize(fontSizeSmall14)
+              fontSize(fontSizeMedium16)
               lineHeight(lineHeightSmall22)
               color(colorBase)
               margin(0)
             }
             descendant(".card-supporting-text") {
               fontFamily(typographyFontSans)
-              fontSize(fontSizeXSmall12)
+              fontSize(fontSizeMedium16)
               lineHeight(lineHeightSmall22)
               color(colorSubtle)
               margin(0)

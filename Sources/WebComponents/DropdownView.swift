@@ -115,7 +115,7 @@ public struct DropdownView: HTMLContent {
     fullWidth: Bool = true,
     width: CSS.Length? = nil,
     menuWidth: CSS.Length? = nil,
-    fontSize: CSS.Length = fontSizeSmall14,
+    fontSize: CSS.Length = fontSizeMedium16,
     contentJustifyContent: CSS.JustifyContent = .spaceBetween,
     optionLayout: OptionLayout = .inline,
     buttonBorderRadius: CSS.Length = borderRadiusBase,
@@ -185,7 +185,7 @@ public struct DropdownView: HTMLContent {
 
           if let tooltipText = tooltip {
             TooltipView(tooltip: tooltipText, placement: .bottom) {
-              IconView(icon: { size in InfoIconView(size: size) }, size: fontSizeSmall14)
+              IconView(icon: { size in InfoIconView(size: size) }, size: sizeIconSmall)
             }
           }
         }
@@ -259,8 +259,7 @@ public struct DropdownView: HTMLContent {
               .data("stacked", optionLayout == .stacked)
               .title(options.first { stringEquals($0.value, selectedValue ?? "") }?.altDisplay ?? displayText)
 
-            // Animated chevron icon, beside the value's text: its size
-            // minus 4px.
+            // Animated chevron icon, beside the value's text: its size.
             let chevronDim = buttonSize.labelIconSize
             AnimatedUpDownChevronView(
               id: "dropdown-\(id)",
@@ -467,7 +466,7 @@ public struct DropdownView: HTMLContent {
       }
       descendant(".dropdown-label-text") {
         fontFamily(typographyFontSans)
-        fontSize(fontSizeSmall14)
+        fontSize(fontSizeMedium16)
         fontWeight(fontWeightSemiBold)
         color(colorBase)
       }
@@ -475,7 +474,7 @@ public struct DropdownView: HTMLContent {
       // `.label-optional-flag`.
       descendant(".dropdown-optional-flag") {
         fontFamily(typographyFontSans)
-        fontSize(fontSizeSmall14)
+        fontSize(fontSizeMedium16)
         fontWeight(fontWeightNormal)
         color(colorSubtle)
       }
@@ -485,7 +484,7 @@ public struct DropdownView: HTMLContent {
         minHeight(minSizeInteractiveTouch)
         boxSizing(.borderBox)
         fontFamily(typographyFontSans)
-        fontSize(fontSizeXSmall12)
+        fontSize(fontSizeMedium16)
         lineHeight(lineHeightSmall22)
         color(colorSubtle)
         borderBlockStart(borderWidthBase, .solid, borderColorBase)
@@ -576,13 +575,13 @@ public struct DropdownView: HTMLContent {
       // whole—the trigger above it is the one that ellipses.
       descendant(".dropdown-option-display-text[data-stacked='true']") {
         fontWeight(fontWeightSemiBold)
-        fontSize(fontSizeSmall14)
+        fontSize(fontSizeMedium16)
         color(colorBase)
         overflowWrap(.breakWord)
         width(perc(100))
       }
       descendant(".dropdown-option-alt-text[data-stacked='true']") {
-        fontSize(fontSizeXSmall12)
+        fontSize(fontSizeMedium16)
         color(colorSubtle)
         overflowWrap(.breakWord)
         width(perc(100))
@@ -1338,7 +1337,7 @@ public struct DropdownView: HTMLContent {
       class: String = "",
       buttonSize: ButtonView.ButtonSize = .medium,
       fullWidth: Bool = true,
-      fontSize: CSS.Length = fontSizeSmall14,
+      fontSize: CSS.Length = fontSizeMedium16,
       hydrator: DropdownHydration? = nil
     ) -> DOM.Element {
       let wrapper = document.createElement(.div)

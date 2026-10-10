@@ -187,7 +187,7 @@
           display(.flex)
           alignItems(.center)
           gap(spacing4)
-          fontSize(fontSizeSmall14)
+          fontSize(fontSizeMedium16)
           fontWeight(500)
           color(colorBase)
         }
@@ -198,7 +198,7 @@
           color(colorSubtle)
         }
         descendant(".form-help-text") {
-          fontSize(fontSizeSmall14)
+          fontSize(fontSizeMedium16)
           color(colorSubtle)
         }
         selector(".form-field input:not([type='checkbox'])", ".form-field textarea", ".form-field select") {

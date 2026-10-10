@@ -146,7 +146,7 @@
           backgroundColor(backgroundColorInteractiveSubtle)
           border(borderWidthBase, .solid, borderColorBase)
           borderRadius(borderRadiusBase)
-          fontSize(fontSizeSmall14)
+          fontSize(fontSizeMedium16)
           fontWeight(fontWeightNormal)
           color(colorBase)
           cursor(cursorBase)
