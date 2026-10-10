@@ -16,6 +16,7 @@ public struct LinkView: HTMLContent {
   let url: String
   let underlined: Bool
   let redLink: Bool
+  let redHover: Bool
   let external: Bool
   let weight: LinkWeight
   let linkHeight: CSS.Length?
@@ -27,6 +28,7 @@ public struct LinkView: HTMLContent {
     url: String,
     underlined: Bool = false,
     redLink: Bool = false,
+    redHover: Bool = false,
     external: Bool = false,
     weight: LinkWeight = .default,
     linkHeight: CSS.Length? = nil,
@@ -37,6 +39,7 @@ public struct LinkView: HTMLContent {
     self.url = url
     self.underlined = underlined
     self.redLink = redLink
+    self.redHover = redHover
     self.external = external
     self.weight = weight
     self.linkHeight = linkHeight
@@ -56,6 +59,9 @@ public struct LinkView: HTMLContent {
       }
       if redLink {
         classes += " link-red"
+      }
+      if redHover {
+        classes += " link-red-hover"
       }
       if external {
         classes += " link-external"
@@ -104,6 +110,13 @@ public struct LinkView: HTMLContent {
         selector("&.link-red:not(.link-plain):hover") { color(colorRedHover).important() }
         selector("&.link-red:not(.link-plain):active") { color(colorRedActive).important() }
         selector("&.link-red:not(.link-plain):visited") { color(colorRed).important() }
+        // A link to a destructive action's page: the link color at rest, red
+        // (icon too, through currentColor) once hovered or focused, so it says
+        // where it leads. The action itself is the red button on that page.
+        selector("&.link-red-hover:not(.link-plain):hover", "&.link-red-hover:not(.link-plain):focus-visible") {
+          color(colorRed).important()
+        }
+        selector("&.link-red-hover:not(.link-plain):active") { color(colorRedActive).important() }
         selector("&.link-plain") {
           display(.flex)
           alignItems(.center)
