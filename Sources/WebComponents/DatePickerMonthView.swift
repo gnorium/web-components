@@ -133,6 +133,9 @@ public struct DatePickerMonthView: HTMLContent {
         borderSpacing(0)
         tableLayout(.fixed)
         width(perc(100))
+        // The seven columns shrink to the popover's width, never under 32
+        // a day (user, 2026-10-10).
+        minWidth(calc("\(size32.value) * 7"))
         fontFamily(typographyFontSans)
         fontSize(fontSizeSmall14)
         color(colorBase)

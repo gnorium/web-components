@@ -377,11 +377,11 @@ public struct DiffView: HTMLContent {
         gap(spacing4)
       }
       // A field's own frame, as tall as a reader's pane at most, then
-      // scrolled.
+      // scrolled; inset 16 on every side, as every box is.
       descendant(".diff-box") {
         border(borderWidthBase, .solid, borderColorBase)
         borderRadius(borderRadiusBase)
-        padding(spacing8, spacing12)
+        padding(spacing16)
         maxHeight(size256)
         overflow(.auto)
         minWidth(0)
@@ -398,12 +398,14 @@ public struct DiffView: HTMLContent {
         minHeight(lineHeightXSmall20)
       }
       // A box of lines gives its sides' inset to each line, so a changed
-      // line's tint runs from edge to edge.
+      // line's tint runs from edge to edge, and has none above or below
+      // its lines (user, 2026-10-10): the first and last line meet the
+      // border, as a code view's do.
       selector("& .diff-box:has(> .diff-lines)") {
-        paddingInline(0)
+        padding(0)
       }
       selector("& .diff-box > .diff-lines > .diff-row") {
-        paddingInline(spacing12)
+        paddingInline(spacing16)
       }
       descendant(".diff-sign") {
         flexShrink(0)

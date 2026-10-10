@@ -308,31 +308,26 @@ public struct DatePickerView: HTMLContent {
         borderColor(borderColorTransparent).important()
       }
 
-      // As wide as the field, like a dropdown's menu, the grid's columns
-      // sharing the width; never narrower than seven 40px days while the
-      // screen allows. Border only, no shadow. Under the field, or over it
-      // when the viewport has no room below; the client picks on opening,
-      // and anchors a popover wider than its field at whichever edge keeps
-      // it on screen.
+      // Exactly the field's width, as a dropdown's menu is (user,
+      // 2026-10-10): the grid's seven columns share it, never under 32 a
+      // day. Border only, no shadow. Under the field, or over it when the
+      // viewport has no room below. A container, so its contents lay out
+      // by its own width.
       descendant(".date-picker-popover") {
-        minWidth(calc("min(\(minSizeInteractiveTouch.value) * 7 + \(spacing8.value) * 2 + \(borderWidthBase.value) * 2, 100vw - \(spacing16.value) * 2)")).important()
+        insetInlineStart(0).important()
+        insetInlineEnd(0).important()
+        width(perc(100)).important()
+        minWidth(0).important()
         maxWidth(.none).important()
         boxShadow(.none).important()
         boxSizing(.borderBox)
+        containerType(.inlineSize)
       }
       descendant(".date-picker-popover[data-placement^='bottom']") {
         top(calc("100% + \(spacing4.value)"))
       }
       descendant(".date-picker-popover[data-placement^='top']") {
         bottom(calc("100% + \(spacing4.value)"))
-      }
-      descendant(".date-picker-popover[data-placement$='start']") {
-        insetInlineStart(0)
-        insetInlineEnd(0)
-      }
-      descendant(".date-picker-popover[data-placement$='end']") {
-        insetInlineStart(.auto)
-        insetInlineEnd(0)
       }
 
       descendant(".date-picker-popover .popover-header") {
@@ -361,11 +356,8 @@ public struct DatePickerView: HTMLContent {
         gap(spacing8)
       }
 
-      // A range: the presets' column, then the calendar, the popover wide
-      // enough for both while the screen allows.
-      selector("&[data-range='true'] .date-picker-popover") {
-        minWidth(calc("min(\(minSizeInteractiveTouch.value) * 10 + \(spacing8.value) * 4 + \(borderWidthBase.value) * 2, 100vw - \(spacing16.value) * 2)")).important()
-      }
+      // A range: the presets' column, then the calendar, while the field is
+      // wide enough for both.
       descendant(".date-picker-range") {
         display(.grid)
         gridTemplateColumns("max-content minmax(0, 1fr)")
@@ -407,9 +399,10 @@ public struct DatePickerView: HTMLContent {
         justifyContent(.spaceBetween)
         gap(spacing8)
       }
-      // On a phone the presets sit above the calendar, one to a row (user,
-      // 2026-10-10).
-      media(maxWidth(maxWidthBreakpointMobile)) {
+      // A popover narrower than the presets and the calendar side by side
+      // sets the presets above the calendar, one to a row (user,
+      // 2026-10-10): a sidebar's field as a phone's.
+      container(maxWidth(maxWidthBreakpointPhoneNarrow)) {
         descendant(".date-picker-range") {
           gridTemplateColumns("minmax(0, 1fr)").important()
         }
@@ -842,39 +835,12 @@ public struct DatePickerView: HTMLContent {
       return stringEquals(dir, "rtl")
     }
 
-    /// Always under the field, as a dropdown opens;
-    /// from the start edge unless that runs off screen and the end does not;
-    /// nudged back on screen when neither fits (a narrow phone).
+    /// Always under the field, as a dropdown opens, and exactly its width
+    /// (user, 2026-10-10): the page scrolls on to whatever does not fit.
     private func position() {
       guard let popover else { return }
       popover.setAttribute(data("placement"), "bottom-start")
       popover.style.setProperty("translate", "")
-      guard let anchor = root.getBoundingClientRect(),
-        let rect = popover.getBoundingClientRect()
-      else { return }
-      let margin = 8.0
-      // The page's width without its scrollbar: innerWidth counts the bar,
-      // and a popover sized to it ran under it, off a phone's edge.
-      let viewportWidth = document.querySelector("html")?.getBoundingClientRect()?.width ?? window.innerWidth
-      // Always under the field, as a dropdown opens (user, 2026-10-10):
-      // the page scrolls on to whatever does not fit.
-      let vertical = "bottom"
-
-      let rtl = isRightToLeft()
-      let startFits = rtl ? anchor.right - rect.width >= margin : anchor.left + rect.width <= viewportWidth - margin
-      let endFits = rtl ? anchor.left + rect.width <= viewportWidth - margin : anchor.right - rect.width >= margin
-      let horizontal = !startFits && endFits ? "end" : "start"
-      popover.setAttribute(data("placement"), "\(vertical)-\(horizontal)")
-
-      guard !startFits && !endFits, let placed = popover.getBoundingClientRect() else { return }
-      var shift = 0.0
-      if placed.right > viewportWidth - margin {
-        shift = viewportWidth - margin - placed.right
-      }
-      if placed.left + shift < margin {
-        shift = margin - placed.left
-      }
-      popover.style.setProperty("translate", "\(Int(shift))px 0")
     }
   }
 

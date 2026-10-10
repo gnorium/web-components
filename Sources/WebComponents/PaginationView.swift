@@ -12,8 +12,8 @@ import WebTypes
 /// Editable page control: previous / `[n]` of `M` / next.
 ///
 /// - ``Size/normal``—table / list footers (44px targets, spaced layout)
-/// - ``Size/small``—chrome pagers (session, artifact, attempt switcher):
-///   ButtonView's small, 32px targets, 16px text (a field under 16px makes
+/// - ``Size/medium``—chrome pagers (session, artifact, attempt switcher,
+///   legends): ButtonView's medium, 40px targets, 16px text (a field under 16px makes
 ///   iOS Safari zoom the page as it is focused), 14px chevrons
 ///
 /// URL mode (`previousUrl` / `nextUrl`) is hydrated by
@@ -22,7 +22,7 @@ import WebTypes
 public struct PaginationView: HTMLContent {
   public enum Size: String, Sendable {
     case normal
-    case small
+    case medium
   }
 
   public let currentPage: Int
@@ -93,7 +93,7 @@ public struct PaginationView: HTMLContent {
     let totalPagesStr = totalDisplay ?? (totalPages > 0 ? formatNumberWithCommas(totalPages) : "—")
     let digitSource = totalDisplay ?? "\(max(1, totalPages))"
     let digitCount = max(1, digitSource.utf8.count)
-    // The chrome size (small) sets "of" and the total apart and keeps its
+    // The chrome size (medium) sets "of" and the total apart and keeps its
     // chevrons beside the number.
     let chrome: Bool
     let iconSize: CSS.Length
@@ -101,18 +101,18 @@ public struct PaginationView: HTMLContent {
     case .normal:
       chrome = false
       iconSize = sizeIconSmall
-    case .small:
+    case .medium:
       chrome = true
-      // Icon-only chevrons on par with the pager's 14px text ("of 3") take
+      // Icon-only chevrons on par with the pager's 16px text ("of 3") take
       // the text's size (user, 2026-10-09); minus 4 is for an icon beside
       // a label.
-      iconSize = size14
+      iconSize = sizeIconSmall
     }
-    // The number, the box's inset at both sides (a small control's 4, a
-    // medium one's 8) and its border; a sans number's figures run a
-    // little wider than a mono `ch`.
+    // The number, the box's inset at both sides (a medium control's 8)
+    // and its border; a sans number's figures run a little wider than a
+    // mono `ch`.
     let inputWidth = chrome
-      ? calc("\(ch(digitCount).value) + \(spacing4.value) * 2 + \(borderWidthBase.value) * 2")
+      ? calc("\(ch(digitCount).value) + \(spacing8.value) * 2 + \(borderWidthBase.value) * 2")
       : calc("\(ch(digitCount).value) + \(spacing8.value) * 2 + \(borderWidthBase.value) * 2 + \(spacing4.value)")
     let useButtons = stringEquals(previousUrl, nil) && stringEquals(nextUrl, nil) && showControls
 
@@ -252,17 +252,17 @@ public struct PaginationView: HTMLContent {
         margin(0, .auto)
         gap(spacing16)
       }
-      // Its text a small control's 14px, as a small button's (user,
-      // 2026-10-10); the number in its box stays 16 (below).
-      selector("&.pagination-size-small") {
+      // Every pager medium (user, 2026-10-10): its text a medium
+      // control's 16px, its targets and number box 40.
+      selector("&.pagination-size-medium") {
         justifyContent(.flexStart)
         maxWidth(.none)
         margin(0)
-        gap(spacing6)
+        gap(spacing4)
         flexShrink(0)
         color(colorBase)
         fontFamily(typographyFontSans)
-        fontSize(fontSizeSmall14)
+        fontSize(fontSizeMedium16)
         lineHeight(lineHeightSmall22)
       }
       selector(".pagination-previous-container", ".pagination-next-container") {
@@ -272,10 +272,9 @@ public struct PaginationView: HTMLContent {
       descendant(".pagination-previous-container") { justifyContent(.flexStart) }
       descendant(".pagination-next-container") { justifyContent(.flexEnd) }
       selector(
-        "&.pagination-size-small .pagination-previous-container", "&.pagination-size-small .pagination-next-container"
+        "&.pagination-size-medium .pagination-previous-container", "&.pagination-size-medium .pagination-next-container"
       ) {
         flex(0)
-        marginInline(px(-8))
       }
       selector(".pagination-prev", ".pagination-next") {
         display(.flex)
@@ -293,9 +292,9 @@ public struct PaginationView: HTMLContent {
         cursor(.pointer)
         boxSizing(.borderBox)
       }
-      selector("&.pagination-size-small .pagination-prev", "&.pagination-size-small .pagination-next") {
-        width(ButtonView.ButtonSize.small.minSize)
-        height(ButtonView.ButtonSize.small.minSize)
+      selector("&.pagination-size-medium .pagination-prev", "&.pagination-size-medium .pagination-next") {
+        width(ButtonView.ButtonSize.medium.minSize)
+        height(ButtonView.ButtonSize.medium.minSize)
         borderRadius(0)
       }
       selector(".pagination-prev.pagination-disabled", ".pagination-next.pagination-disabled") {
@@ -305,7 +304,7 @@ public struct PaginationView: HTMLContent {
         cursor(cursorNotAllowed)
       }
       selector(
-        "&.pagination-size-small .pagination-prev.pagination-disabled", "&.pagination-size-small .pagination-next.pagination-disabled"
+        "&.pagination-size-medium .pagination-prev.pagination-disabled", "&.pagination-size-medium .pagination-next.pagination-disabled"
       ) {
         color(colorDisabled)
         opacity(1)
@@ -315,7 +314,7 @@ public struct PaginationView: HTMLContent {
         outlineOffset(px(2)).important()
       }
       selector(
-        "&.pagination-size-small .pagination-prev:focus", "&.pagination-size-small .pagination-next:focus"
+        "&.pagination-size-medium .pagination-prev:focus", "&.pagination-size-medium .pagination-next:focus"
       ) {
         outline(.none).important()
       }
@@ -326,8 +325,8 @@ public struct PaginationView: HTMLContent {
         justifyContent(.center)
         gap(spacing12)
       }
-      selector("&.pagination-size-small .pagination-indicator") {
-        gap(spacing6)
+      selector("&.pagination-size-medium .pagination-indicator") {
+        gap(spacing8)
       }
       descendant(".page-box") {
         fontFamily(typographyFontSans)
@@ -349,14 +348,13 @@ public struct PaginationView: HTMLContent {
         webkitAppearance(.none)
         margin(0)
       }
-      // 16 though the pager is 14: iOS Safari zooms the page into an input
-      // under 16 when it takes focus (user, 2026-10-10). Still 32 tall:
-      // 4 + 22 + 4 + the border.
-      selector("&.pagination-size-small .page-box") {
+      // 16, as the pager's text (and iOS Safari zooms the page into an
+      // input under 16 as it takes focus): 8 + 22 + 8 + the border, 40.
+      selector("&.pagination-size-medium .page-box") {
         fontFamily(typographyFontMono)
         fontSize(fontSizeMedium16)
-        // A small control: 4 on every side, 32.
-        padding(ButtonView.ButtonSize.small.padding)
+        // A medium control: 8 on every side, 40.
+        padding(ButtonView.ButtonSize.medium.padding)
         borderColor(borderColorBase)
         transition(.none)
       }
@@ -389,10 +387,10 @@ public struct PaginationView: HTMLContent {
         fontWeight(fontWeightNormal)
         whiteSpace(.nowrap)
       }
-      selector("&.pagination-size-small .pagination-term") { fontSize(fontSizeSmall14) }
-      selector("&.pagination-size-small .pagination-total") {
+      selector("&.pagination-size-medium .pagination-term") { fontSize(fontSizeMedium16) }
+      selector("&.pagination-size-medium .pagination-total") {
         fontFamily(typographyFontMono)
-        fontSize(fontSizeSmall14)
+        fontSize(fontSizeMedium16)
         color(colorBase)
       }
     }

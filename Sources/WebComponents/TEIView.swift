@@ -47,7 +47,7 @@
     /// so is what is no word but encoded (a gap, a side mark, a figure, a
     /// running head's page number, a date: `data-gloss-element`, its place
     /// among the page's elements); the client asks this address for it
-    /// (`?canvas=…&line=…&word=…`, or `&element=…`). Nil: the markup
+    /// (`?resemblance=…&line=…&word=…`, or `&element=…`). Nil: the markup
     /// is read whole.
     let glossURL: String?
 
@@ -573,11 +573,11 @@
             div {
               if editable {
                 // A form of its own, so the page can be sent to be read back
-                // as it is being edited—its canvas and its code.
+                // as it is being edited—its resemblance and its code.
                 form {
                   input()
                     .type(.hidden)
-                    .name("canvas")
+                    .name("resemblance")
                     .value(Self.serviceID(ofFacsimile: page.facsimileURL))
                   CodeEditorView(
                     id: "tei-page-raw-\(index)",

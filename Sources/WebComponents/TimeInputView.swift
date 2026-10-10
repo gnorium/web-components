@@ -228,9 +228,13 @@ public struct TimeInputView: HTMLContent {
         borderColor(borderColorTransparent).important()
       }
 
-      // As wide as the field, like the date picker's calendar; border only.
+      // Exactly the field's width, as the date picker's calendar is (user,
+      // 2026-10-10); border only. Its columns share the width.
       descendant(".time-input-popover") {
-        minWidth(calc("min(\(minSizeInteractiveTouch.value) * 5 + \(spacing8.value) * 3 + \(borderWidthBase.value) * 2, 100vw - \(spacing16.value) * 2)")).important()
+        insetInlineStart(0).important()
+        insetInlineEnd(0).important()
+        width(perc(100)).important()
+        minWidth(0).important()
         maxWidth(.none).important()
         boxShadow(.none).important()
         boxSizing(.borderBox)
@@ -245,14 +249,6 @@ public struct TimeInputView: HTMLContent {
       }
       descendant(".time-input-popover[data-placement^='top']") {
         bottom(calc("100% + \(spacing4.value)"))
-      }
-      descendant(".time-input-popover[data-placement$='start']") {
-        insetInlineStart(0)
-        insetInlineEnd(0)
-      }
-      descendant(".time-input-popover[data-placement$='end']") {
-        insetInlineStart(.auto)
-        insetInlineEnd(0)
       }
       descendant(".time-input-popover .popover-body") {
         padding(spacing8).important()
@@ -520,44 +516,12 @@ public struct TimeInputView: HTMLContent {
 
     // MARK: - Placement
 
-    private func isRightToLeft() -> Bool {
-      guard let holder = root.closest("[dir]"), let dir = holder.getAttribute("dir") else { return false }
-      return stringEquals(dir, "rtl")
-    }
-
-    /// As the date picker's: always under the field, as a dropdown opens;
-    /// from the start edge unless that runs off screen and the end does not;
-    /// nudged back on screen when neither fits.
+    /// Always under the field, as a dropdown opens, and exactly its width
+    /// (user, 2026-10-10): the page scrolls on to whatever does not fit.
     private func position() {
       guard let popover else { return }
       popover.setAttribute(data("placement"), "bottom-start")
       popover.style.setProperty("translate", "")
-      guard let anchor = root.getBoundingClientRect(),
-        let rect = popover.getBoundingClientRect()
-      else { return }
-      let margin = 8.0
-      // The page's width without its scrollbar: innerWidth counts the bar,
-      // and a popover sized to it ran under it, off a phone's edge.
-      let viewportWidth = document.querySelector("html")?.getBoundingClientRect()?.width ?? window.innerWidth
-      // Always under the field, as a dropdown opens (user, 2026-10-10):
-      // the page scrolls on to whatever does not fit.
-      let vertical = "bottom"
-
-      let rtl = isRightToLeft()
-      let startFits = rtl ? anchor.right - rect.width >= margin : anchor.left + rect.width <= viewportWidth - margin
-      let endFits = rtl ? anchor.left + rect.width <= viewportWidth - margin : anchor.right - rect.width >= margin
-      let horizontal = !startFits && endFits ? "end" : "start"
-      popover.setAttribute(data("placement"), "\(vertical)-\(horizontal)")
-
-      guard !startFits && !endFits, let placed = popover.getBoundingClientRect() else { return }
-      var shift = 0.0
-      if placed.right > viewportWidth - margin {
-        shift = viewportWidth - margin - placed.right
-      }
-      if placed.left + shift < margin {
-        shift = margin - placed.left
-      }
-      popover.style.setProperty("translate", "\(Int(shift))px 0")
     }
   }
 
