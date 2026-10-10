@@ -100,6 +100,19 @@
       TEIRenderer.serviceID(ofFacsimile: url)
     }
 
+    /// The zones a page's markup names (`facs="#…"`), each "id x y w h" in
+    /// the 0–1000 space over its image (x y its top-left corner, w h its
+    /// size, rounded), one a ";".
+    static func zoneData(of page: TEIPage) -> String {
+      var seen: Set<String> = []
+      return TEIFacsimile.references(in: page.markup).compactMap { id -> String? in
+        guard seen.insert(id).inserted, let zone = page.zones[id] else { return nil }
+        let box = zone.percent
+        let numbers = [box.x, box.y, box.width, box.height].map { String(Int(($0 * 10).rounded())) }
+        return ([id] + numbers).joined(separator: " ")
+      }.joined(separator: ";")
+    }
+
     /// A page's transcript as the lines a diff compares: each line's runs with
     /// their setting, a formula whole, a figure by its caption and region, a
     /// page turn inside the image as a line of its own. White space that only
@@ -623,6 +636,9 @@
           // The page's own label, its `pb`'s `n`: the viewer's footer names
           // the page by it before the manifest's label.
           .data("label", page.label)
+          // The zones its markup names, for the reader to draw on its
+          // canvas as the caret or the pointer comes to them in Raw.
+          .data("zones", Self.zoneData(of: page))
           .data("active", index == 0 ? "true" : "false")
         }
       }
