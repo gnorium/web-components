@@ -16,7 +16,7 @@
   /// service it reads. That name is what pairs a page with a canvas inside
   /// ``ArtifactView``: this view draws the readings, the viewer shows the one
   /// belonging to the canvas on screen, and paging moves both at once. Each
-  /// page is one `.tei-transcript` (its text, its code, its translation), paired
+  /// page is one `.tei-page` (its text, its code, its translation), paired
   /// with its canvas by `data-service-id`; the page's image is not drawn here.
   ///
   /// Line breaks are kept because they are evidence—a diplomatic transcript
@@ -29,30 +29,30 @@
     /// original source, including significant whitespace; saving an edit
     /// changes only what the reader changed.
     let editable: Bool
-    /// The transcript's translation, when it has one: a third layer of each
-    /// page's transcript, which the viewer's Translated switch shows in the
-    /// transcript's place.
+    /// The markup's translation, when it has one: a third layer of each
+    /// page's markup, which the viewer's Translated switch shows in the
+    /// markup's place.
     let translation: Translation?
-    /// What to set apart in each page's transcript, by the image service the
+    /// What to set apart in each page's markup, by the image service the
     /// page reads: a quotation's sentence and its word
     /// (`TEIRenderer.quotation`), each a `<mark>`.
     let highlights: [String: [TEIHighlight]]
-    /// Whether each page's transcript begins with its label, as a page turn
+    /// Whether each page's markup begins with its label, as a page turn
     /// inside an image is marked: for pages read one after another in one
     /// column rather than paged beside their images.
     let labelsPages: Bool
-    /// Where a gloss is read (user, 2026-10-08), when what the transcript
-    /// encodes can be opened: each word of the transcript (a `<w>`, as an
+    /// Where a gloss is read (user, 2026-10-08), when what the markup
+    /// encodes can be opened: each word of the markup (a `<w>`, as an
     /// anchor counts the page) is then a control that opens its gloss, and
     /// so is what is no word but encoded (a gap, a side mark, a figure, a
     /// running head's page number, a date: `data-gloss-element`, its place
     /// among the page's elements); the client asks this address for it
-    /// (`?canvas=…&line=…&word=…`, or `&element=…`). Nil: the transcript
+    /// (`?canvas=…&line=…&word=…`, or `&element=…`). Nil: the markup
     /// is read whole.
     let glossURL: String?
 
-    /// A translation of the transcript, page by page, in its own language:
-    /// the translation's own TEI, read by the same reader as the transcript,
+    /// A translation of the markup, page by page, in its own language:
+    /// the translation's own TEI, read by the same reader as the markup,
     /// so the two are set alike line for line.
     public struct Translation: Sendable {
       /// One page's translation, read, and a note on it—that its text has
@@ -113,11 +113,11 @@
       }.joined(separator: ";")
     }
 
-    /// A page's transcript as the lines a diff compares: each line's runs with
+    /// A page's markup as the lines a diff compares: each line's runs with
     /// their setting, a formula whole, a figure by its caption and region, a
     /// page turn inside the image as a line of its own. White space that only
     /// lays the code out—a line end and its indent—reads as the one
-    /// space a transcript shows; spaces the transcription set are kept.
+    /// space markup shows; spaces the transcription set are kept.
     public static func renderedLines(of lines: [TEILine]) -> [DiffEngine.RenderedLine] {
       func style(_ rend: String) -> [String] {
         Set(rend.split(whereSeparator: \.isWhitespace).map { name -> String in
@@ -360,7 +360,7 @@
 
     /// What is opened as a whole—a line that is an element (a gap, a side
     /// mark, a figure) or the runs of one that is no word—as a control
-    /// that opens its gloss, as a word is; as it is where the transcript is
+    /// that opens its gloss, as a word is; as it is where the markup is
     /// read whole.
     private func glossable<Element: HTMLElementBuildable>(_ node: Element, _ element: Int?) -> Element {
       guard let element, glossURL != nil else { return node }
@@ -437,7 +437,7 @@
       return nil
     }
 
-    private func readingLine(
+    private func renderingLine(
       _ line: TEILine, facsimileURL: String, label: String, tabStop: TEIWordPlace? = nil
     ) -> DOM.Node {
       switch line.kind {
@@ -482,7 +482,7 @@
             if !source.caption.isEmpty {
               caption {
                 for line in source.caption {
-                  readingLine(line, facsimileURL: facsimileURL, label: label, tabStop: tabStop)
+                  renderingLine(line, facsimileURL: facsimileURL, label: label, tabStop: tabStop)
                 }
               }
             }
@@ -493,13 +493,13 @@
                     if cell.isLabel {
                       th {
                         for line in cell.lines {
-                          readingLine(line, facsimileURL: facsimileURL, label: label, tabStop: tabStop)
+                          renderingLine(line, facsimileURL: facsimileURL, label: label, tabStop: tabStop)
                         }
                       }.rowspan(cell.rows).colspan(cell.columns)
                     } else {
                       td {
                         for line in cell.lines {
-                          readingLine(line, facsimileURL: facsimileURL, label: label, tabStop: tabStop)
+                          renderingLine(line, facsimileURL: facsimileURL, label: label, tabStop: tabStop)
                         }
                       }.rowspan(cell.rows).colspan(cell.columns)
                     }
@@ -532,14 +532,14 @@
           div {
             div {
               if labelsPages {
-                readingLine(
+                renderingLine(
                   .init(kind: .mark, text: page.label.isEmpty ? "—" : page.label), facsimileURL: page.facsimileURL,
                   label: page.label)
               }
               for item in Self.layout(of: page.lines) {
                 switch item {
                 case .line(let line):
-                  readingLine(line, facsimileURL: page.facsimileURL, label: page.label, tabStop: tabStop)
+                  renderingLine(line, facsimileURL: page.facsimileURL, label: page.label, tabStop: tabStop)
                 case .block(let lines):
                   // A block's lines run on as one paragraph, a break inside a
                   // word joining it with no space. The block always holds
@@ -549,7 +549,7 @@
                   div {
                     for (index, line) in lines.enumerated() {
                       if index > 0 { line.joinsPrevious ? "" : " " }
-                      readingLine(line, facsimileURL: page.facsimileURL, label: page.label, tabStop: tabStop)
+                      renderingLine(line, facsimileURL: page.facsimileURL, label: page.label, tabStop: tabStop)
                     }
                   }.class("tei-block").data("rend", lines[0].rend)
                 case .furniture(let pieces):
@@ -559,7 +559,7 @@
                     for place in FurniturePlace.allCases {
                       div {
                         for piece in pieces where FurniturePlace.of(piece) == place {
-                          readingLine(piece, facsimileURL: page.facsimileURL, label: page.label, tabStop: tabStop)
+                          renderingLine(piece, facsimileURL: page.facsimileURL, label: page.label, tabStop: tabStop)
                         }
                       }.class("tei-forme-row-\(place.rawValue)")
                     }
@@ -568,7 +568,7 @@
               }
             }
             .class("tei-page-text")
-            .data("transcript-layer", "rendered")
+            .data("layer", "rendering")
 
             div {
               if editable {
@@ -592,10 +592,10 @@
               }
             }
             .class("tei-page-raw")
-            .data("transcript-layer", "raw")
+            .data("layer", "markup")
 
             // The translation, set by the very reader that sets the
-            // transcript above: the same lines, the same classes.
+            // markup above: the same lines, the same classes.
             if let translation {
               let translated = translation.pages[Self.serviceID(ofFacsimile: page.facsimileURL)]
               div {
@@ -608,14 +608,14 @@
                 div {
                   if let translated {
                     for line in translated.page.lines {
-                      readingLine(line, facsimileURL: translated.page.facsimileURL, label: translated.page.label)
+                      renderingLine(line, facsimileURL: translated.page.facsimileURL, label: translated.page.label)
                     }
                   }
                 }
                 .class("tei-page-text")
               }
               .class("tei-page-translation")
-              .data("transcript-layer", "translation")
+              .data("layer", "translated-rendering")
               .lang(translation.language)
               .dir("auto")
               // The translation's own code, under Raw while its language
@@ -625,13 +625,13 @@
                   CodeView(XMLFormatter.prettified(translated.page.markup), showLineNumbers: false)
                 }
                 .class("tei-page-raw")
-                .data("transcript-layer", "translation-raw")
+                .data("layer", "translated-markup")
               }
             }
           }
-          .class("tei-transcript")
-          .id("tei-transcript-\(index)")
-          // What pairs this transcript with a canvas. The viewer matches on it.
+          .class("tei-page")
+          .id("tei-page-\(index)")
+          // What pairs this markup with a canvas. The viewer matches on it.
           .data("service-id", Self.serviceID(ofFacsimile: page.facsimileURL))
           // The page's own label, its `pb`'s `n`: the viewer's footer names
           // the page by it before the manifest's label.
@@ -659,14 +659,14 @@
           minWidth(0)
           padding(px(1))
         }
-        descendant(".tei-transcript") {
+        descendant(".tei-page") {
           display(.flex)
           flexDirection(.column)
           gap(spacing8)
           minWidth(0)
         }
         selector(
-          "& [data-transcript-layer='rendered']", "& [data-transcript-layer='translation']", "& .tei-empty"
+          "& [data-layer='rendering']", "& [data-layer='translated-rendering']", "& .tei-empty"
         ) {
           padding(spacing16)
         }
@@ -683,7 +683,7 @@
           verticalAlign(.baseline)
           CSS.Property("font", "inherit")
         }
-        // A figure is set apart from the transcript around it: it is a
+        // A figure is set apart from the markup around it: it is a
         // photograph of part of the surface, not a sentence on it.
         descendant(".tei-figure") {
           display(.flex)
@@ -697,7 +697,7 @@
         descendant(".tei-figure-image") {
           maxWidth(perc(100))
           // However the region is shaped, it is an illustration inside a
-          // transcript and cannot be taller than what it illustrates.
+          // markup and cannot be taller than what it illustrates.
           maxHeight(px(320))
           width(.auto)
           height(.auto)
@@ -734,7 +734,7 @@
         }
         // `<hi rend="…">` on the run it applies to. Small caps mark an author
         // statement; italic marks a speaker prefix or an emphasis the
-        // compositor set—both are on the page, so both are in the transcript.
+        // compositor set—both are on the page, so both are in the markup.
         selector("& .tei-run[data-rend~='smallcaps']", "& .tei-run[data-rend~='small-caps']") {
           // No typed helper for this one; the builder takes a raw property.
           CSS.Property("font-variant-caps", "small-caps")
@@ -868,7 +868,7 @@
         selector("& .tei-page-text > :first-child", "& .tei-page-text > :first-child > .tei-line:first-child") {
           marginBlockStart(0).important()
         }
-        // Editable only in Raw: the transcript is for reading, and nothing in it
+        // Editable only in Raw: the markup is for reading, and nothing in it
         // looks as if it could be typed into.
         selector("&[data-editable='true'] .tei-page-text") {
           cursor(.default)
@@ -889,7 +889,7 @@
           color(colorBase)
           overflowWrap(.breakWord)
         }
-        // The transcript looks as the printed page does (user, 2026-09-29):
+        // The markup looks as the printed page does (user, 2026-09-29):
         // only what the TEI encodes as typography (`<hi rend>`) is styled; a
         // tag (a heading, a speaker, a stage direction, a note, the forme
         // work) keeps its place on the page and no face or color of its own.
@@ -942,9 +942,9 @@
           color(colorSubtle)
           marginBlockStart(spacing8)
         }
-        // The markup takes the transcript's place rather than adding a block to
+        // The markup takes the markup's place rather than adding a block to
         // scroll past: the viewer's Raw switch swaps the two layers.
-        // The markup takes the transcript's place rather than adding a block to
+        // The markup takes the markup's place rather than adding a block to
         // scroll past: the viewer's Raw switch swaps the two layers, and the
         // block itself is a CodeView like any other.
         descendant(".tei-page-raw") {
@@ -952,7 +952,7 @@
           margin(0)
           minWidth(0)
         }
-        // The translation takes the transcript's place too, under the language
+        // The translation takes the markup's place too, under the language
         // switch on the page's record rule.
         descendant(".tei-page-translation") {
           display(.none)
@@ -973,7 +973,7 @@
           color(colorSubtle)
           marginBlockStart(spacing8)
         }
-        // The markup takes the transcript's place rather than adding a block to
+        // The markup takes the markup's place rather than adding a block to
         // scroll past: the viewer's Raw switch swaps the two layers.
         descendant(".tei-page-raw") {
           display(.none)
