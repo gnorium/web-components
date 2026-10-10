@@ -88,17 +88,16 @@ public struct ButtonView: HTMLContent {
     /// Public so adjacent controls can share the same height. Every control
     /// is its inset on every side, the standard 22px line and a 1px border:
     /// small 32, medium 40, large 48—a medium button, a field, a select
-    /// and a date picker align in a row. Small and medium set 16px type,
-    /// large 18px, all on the 22px line.
+    /// and a date picker align in a row. Each size sets its own type (user,
+    /// 2026-10-10): small 14px, medium 16px, large 18px, all on the 22px
+    /// line.
     public var minSize: CSS.Length {
       padding * 2 + lineHeightSmall22 + borderWidthBase * 2
     }
 
     /// The size of an icon-only button's icon: 14, 16, 18px, as an icon
-    /// token where one matches. Small labels are 16px like medium's, but a
-    /// small icon alone stays 14px, so the 32px square keeps its smaller
-    /// glyph. An icon alone sets its own size; beside a label, see
-    /// labelIconSize.
+    /// token where one matches—the size's own type size. An icon alone sets
+    /// its own size; beside a label, see labelIconSize.
     public var iconSize: CSS.Length {
       switch self {
       case .small: return fontSizeSmall14
@@ -108,10 +107,10 @@ public struct ButtonView: HTMLContent {
     }
 
     /// The size of an icon beside this button's label: its text's font
-    /// size minus 4px (IconView.size(beside:))—12, 12, 14px.
+    /// size minus 4px (IconView.size(beside:))—10, 12, 14px.
     public var labelIconSize: CSS.Length {
       switch self {
-      case .small: return sizeIconXSmall
+      case .small: return size10
       case .medium: return sizeIconXSmall
       case .large: return size14
       }
@@ -485,6 +484,7 @@ public struct ButtonView: HTMLContent {
           }
           selector("&[data-size='small']") {
             minHeight(ButtonSize.small.minSize)
+            fontSize(fontSizeSmall14)
           }
           selector("&[data-size='medium']") { minHeight(ButtonSize.medium.minSize) }
           selector("&[data-size='large']") {
@@ -1316,6 +1316,7 @@ public struct ButtonView: HTMLContent {
           }
           selector("&[data-size='small']") {
             minHeight(ButtonSize.small.minSize)
+            fontSize(fontSizeSmall14)
           }
           selector("&[data-size='medium']") { minHeight(ButtonSize.medium.minSize) }
           selector("&[data-size='large']") {

@@ -166,7 +166,7 @@ public struct DatePickerMonthView: HTMLContent {
         border(borderWidthBase, .solid, borderColorTransparent)
         borderRadius(borderRadiusCircle)
         fontVariantNumeric(.tabularNums)
-        lineHeight(1)
+        lineHeight(lineHeightXSmall20)
         transition("background-color 0.1s ease, color 0.1s ease")
       }
       descendant(".date-picker-month-day[data-outside='true'] .date-picker-month-day-label") {

@@ -382,15 +382,23 @@ public struct DatePickerView: HTMLContent {
         backgroundColor(backgroundColorBlueSubtle).important()
         color(colorBlue).important()
       }
+      // The preset in force keeps its blue under the pointer too: the
+      // button's hover recolors its label, so the label is held here.
+      descendant(".date-picker-preset[aria-pressed='true'] *") {
+        color(colorBlue).important()
+      }
       descendant(".date-picker-calendar") {
         display(.flex)
         flexDirection(.column)
         gap(spacing8)
         minWidth(0)
       }
+      // Date start over Date end, one field a row as every form has it
+      // (user, 2026-10-10): side by side, a start could read as the right
+      // end of the span.
       descendant(".date-picker-ends") {
-        display(.grid)
-        gridTemplateColumns("minmax(0, 1fr) minmax(0, 1fr)")
+        display(.flex)
+        flexDirection(.column)
         gap(spacing8)
       }
       descendant(".date-picker-navigation") {
@@ -399,14 +407,13 @@ public struct DatePickerView: HTMLContent {
         justifyContent(.spaceBetween)
         gap(spacing8)
       }
-      // On a phone the presets sit above the calendar, two to a row.
+      // On a phone the presets sit above the calendar, one to a row (user,
+      // 2026-10-10).
       media(maxWidth(maxWidthBreakpointMobile)) {
         descendant(".date-picker-range") {
           gridTemplateColumns("minmax(0, 1fr)").important()
         }
         descendant(".date-picker-presets") {
-          display(.grid).important()
-          gridTemplateColumns("minmax(0, 1fr) minmax(0, 1fr)").important()
           paddingInlineEnd(0).important()
           paddingBlockEnd(spacing8).important()
           borderInlineEnd(.none).important()
@@ -835,7 +842,7 @@ public struct DatePickerView: HTMLContent {
       return stringEquals(dir, "rtl")
     }
 
-    /// Under the field unless the viewport has no room there and room enough above;
+    /// Always under the field, as a dropdown opens;
     /// from the start edge unless that runs off screen and the end does not;
     /// nudged back on screen when neither fits (a narrow phone).
     private func position() {
@@ -843,20 +850,15 @@ public struct DatePickerView: HTMLContent {
       popover.setAttribute(data("placement"), "bottom-start")
       popover.style.setProperty("translate", "")
       guard let anchor = root.getBoundingClientRect(),
-        let fieldRect = field?.getBoundingClientRect(),
         let rect = popover.getBoundingClientRect()
       else { return }
       let margin = 8.0
       // The page's width without its scrollbar: innerWidth counts the bar,
       // and a popover sized to it ran under it, off a phone's edge.
       let viewportWidth = document.querySelector("html")?.getBoundingClientRect()?.width ?? window.innerWidth
-      let viewportHeight = window.innerHeight
-      let roomBelow = viewportHeight - fieldRect.bottom
-      let roomAbove = anchor.top
-      // Over the field only when it fits there whole: one taller than both
-      // rooms opens below, where the page scrolls on to the rest of it,
-      // never off the top.
-      let vertical = roomBelow < rect.height + margin && roomAbove >= rect.height + margin ? "top" : "bottom"
+      // Always under the field, as a dropdown opens (user, 2026-10-10):
+      // the page scrolls on to whatever does not fit.
+      let vertical = "bottom"
 
       let rtl = isRightToLeft()
       let startFits = rtl ? anchor.right - rect.width >= margin : anchor.left + rect.width <= viewportWidth - margin

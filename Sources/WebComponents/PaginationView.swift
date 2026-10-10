@@ -103,10 +103,10 @@ public struct PaginationView: HTMLContent {
       iconSize = sizeIconSmall
     case .small:
       chrome = true
-      // Icon-only chevrons on par with the pager's 16px text ("of 3") take
+      // Icon-only chevrons on par with the pager's 14px text ("of 3") take
       // the text's size (user, 2026-10-09); minus 4 is for an icon beside
       // a label.
-      iconSize = sizeIconSmall
+      iconSize = size14
     }
     // The number, the box's inset at both sides (a small control's 4, a
     // medium one's 8) and its border; a sans number's figures run a
@@ -252,7 +252,8 @@ public struct PaginationView: HTMLContent {
         margin(0, .auto)
         gap(spacing16)
       }
-      // Its text a field's 16px, as the number in its box.
+      // Its text a small control's 14px, as a small button's (user,
+      // 2026-10-10); the number in its box stays 16 (below).
       selector("&.pagination-size-small") {
         justifyContent(.flexStart)
         maxWidth(.none)
@@ -261,7 +262,7 @@ public struct PaginationView: HTMLContent {
         flexShrink(0)
         color(colorBase)
         fontFamily(typographyFontSans)
-        fontSize(fontSizeMedium16)
+        fontSize(fontSizeSmall14)
         lineHeight(lineHeightSmall22)
       }
       selector(".pagination-previous-container", ".pagination-next-container") {
@@ -348,6 +349,9 @@ public struct PaginationView: HTMLContent {
         webkitAppearance(.none)
         margin(0)
       }
+      // 16 though the pager is 14: iOS Safari zooms the page into an input
+      // under 16 when it takes focus (user, 2026-10-10). Still 32 tall:
+      // 4 + 22 + 4 + the border.
       selector("&.pagination-size-small .page-box") {
         fontFamily(typographyFontMono)
         fontSize(fontSizeMedium16)
@@ -385,10 +389,10 @@ public struct PaginationView: HTMLContent {
         fontWeight(fontWeightNormal)
         whiteSpace(.nowrap)
       }
-      selector("&.pagination-size-small .pagination-term") { fontSize(fontSizeMedium16) }
+      selector("&.pagination-size-small .pagination-term") { fontSize(fontSizeSmall14) }
       selector("&.pagination-size-small .pagination-total") {
         fontFamily(typographyFontMono)
-        fontSize(fontSizeMedium16)
+        fontSize(fontSizeSmall14)
         color(colorBase)
       }
     }

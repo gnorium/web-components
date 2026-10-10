@@ -115,7 +115,7 @@ public struct TableCellView: HTMLContent {
         color(colorInvertedFixed)
         fontSize(fontSizeXSmall12)
         fontWeight(fontWeightSemiBold)
-        lineHeight(1)
+        lineHeight(lineHeightXSmall20)
       }
       if case .status(_, let bgColor) = type {
         selector(".table-cell-status-icon") { backgroundColor(bgColor) }

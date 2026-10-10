@@ -8,8 +8,20 @@ import WebTypes
 // side. When that legend holds a button-size control—a Raw switch, an info
 // button, a pager—half the control hangs inside the box, so the box takes
 // 24 (16 + 8) at its bottom instead; a legend of text alone keeps the even
-// 16 (user, 2026-10-10). Both SERVER and CLIENT: session cards are drawn on
-// either side.
+// 16 (user, 2026-10-10). Every such box, control or not, keeps 16 below it,
+// so its hanging legend never crowds the next box (user, 2026-10-10). Both
+// SERVER and CLIENT: session cards are drawn on either side.
+
+/// Keep 16 below `selectors`—boxes whose legend hangs on their bottom
+/// border—so the legend clears the next box.
+///
+/// Call it after the box's own `margin`, which it overrides.
+@CSSBuilder
+public func bottomLegendSpacing(_ selectors: String...) -> [CSSOM.CSSRule] {
+  selector(stringJoin(selectors, separator: ", ")) {
+    marginBlockEnd(spacing16)
+  }
+}
 
 /// Inset the bottom of `selectors`—boxes whose bottom legend holds a
 /// button-size control—by 24 instead of 16.

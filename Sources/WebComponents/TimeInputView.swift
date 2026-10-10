@@ -21,7 +21,7 @@ import WebTypes
 /// IANA zone (`TimeRangeValue`, `09:00..17:30[Asia/Kolkata]`); one set in
 /// another zone reads converted to the reader's clock: Time start and Time
 /// end—as a year range's are Year start and Year end (FormDateView)—each its
-/// columns, side by side in one popover, as a date range is one popover.
+/// columns, one over the other in one popover, as a date range is one popover.
 /// Either end may stay open. The field is read-only and asks for no
 /// keyboard: a tap opens the columns, and a tap on an hour or a minute sets
 /// it. With the keyboard, Enter, Space or ↓ opens them; ↑ and ↓ move through
@@ -235,8 +235,10 @@ public struct TimeInputView: HTMLContent {
         boxShadow(.none).important()
         boxSizing(.borderBox)
       }
-      selector("&[data-range='true'] .time-input-popover") {
-        minWidth(calc("min(\(minSizeInteractiveTouch.value) * 10 + \(spacing8.value) * 6 + \(spacing16.value) + \(borderWidthBase.value) * 2, 100vw - \(spacing16.value) * 2)")).important()
+      // Time start over Time end, one a row as every form has it (user,
+      // 2026-10-10), so the popover is one end's width.
+      selector("&[data-range='true'] .time-input-parts") {
+        flexDirection(.column)
       }
       descendant(".time-input-popover[data-placement^='bottom']") {
         top(calc("100% + \(spacing4.value)"))
@@ -523,7 +525,7 @@ public struct TimeInputView: HTMLContent {
       return stringEquals(dir, "rtl")
     }
 
-    /// As the date picker's: under the field unless only above has room;
+    /// As the date picker's: always under the field, as a dropdown opens;
     /// from the start edge unless that runs off screen and the end does not;
     /// nudged back on screen when neither fits.
     private func position() {
@@ -531,20 +533,15 @@ public struct TimeInputView: HTMLContent {
       popover.setAttribute(data("placement"), "bottom-start")
       popover.style.setProperty("translate", "")
       guard let anchor = root.getBoundingClientRect(),
-        let fieldRect = field?.getBoundingClientRect(),
         let rect = popover.getBoundingClientRect()
       else { return }
       let margin = 8.0
       // The page's width without its scrollbar: innerWidth counts the bar,
       // and a popover sized to it ran under it, off a phone's edge.
       let viewportWidth = document.querySelector("html")?.getBoundingClientRect()?.width ?? window.innerWidth
-      let viewportHeight = window.innerHeight
-      let roomBelow = viewportHeight - fieldRect.bottom
-      let roomAbove = anchor.top
-      // Over the field only when it fits there whole: one taller than both
-      // rooms opens below, where the page scrolls on to the rest of it,
-      // never off the top.
-      let vertical = roomBelow < rect.height + margin && roomAbove >= rect.height + margin ? "top" : "bottom"
+      // Always under the field, as a dropdown opens (user, 2026-10-10):
+      // the page scrolls on to whatever does not fit.
+      let vertical = "bottom"
 
       let rtl = isRightToLeft()
       let startFits = rtl ? anchor.right - rect.width >= margin : anchor.left + rect.width <= viewportWidth - margin
