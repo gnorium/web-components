@@ -63,9 +63,9 @@
           // quick start and a gentle settle—the tabs' and every segmented
           // control's alike.
           transition(
-            "transform \(transitionDurationMedium.value) \(transitionTimingFunctionDecelerate.value), "
-              + "width \(transitionDurationMedium.value) \(transitionTimingFunctionDecelerate.value), "
-              + "height \(transitionDurationMedium.value) \(transitionTimingFunctionDecelerate.value)")
+            "transform \(transitionDurationMedium.value) \(transitionTimingFunctionUser.value), "
+              + "width \(transitionDurationMedium.value) \(transitionTimingFunctionUser.value), "
+              + "height \(transitionDurationMedium.value) \(transitionTimingFunctionUser.value)")
           // Reduced motion: no slide, the thumb at its item at once.
           media(prefersReducedMotion(.reduce)) { transition(.none).important() }
         }
