@@ -20,9 +20,9 @@
         ButtonView(
           icon: IconView(
             icon: { size in SearchIconView(size: size) },
-            size: sizeIconSmall),
+            size: ButtonView.ButtonSize.large.iconSize),
           weight: weight,
-          size: .medium,
+          size: .large,
           ariaLabel: "Search",
           class: "navbar-search-btn"
         )

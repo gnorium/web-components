@@ -21,9 +21,9 @@
           icon: IconView(
             icon: { size in
               EllipsisIconView(size: size)
-            }, size: sizeIconSmall),
+            }, size: ButtonView.ButtonSize.large.iconSize),
           weight: weight,
-          size: .medium,
+          size: .large,
           ariaLabel: "Settings",
           class: "navbar-ellipsis-btn"
         )

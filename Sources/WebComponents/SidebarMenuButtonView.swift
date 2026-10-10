@@ -22,9 +22,9 @@
           icon: IconView(
             icon: { size in
               MenuIconView(size: size)
-            }, size: sizeIconSmall),
+            }, size: ButtonView.ButtonSize.large.iconSize),
           weight: .plain,
-          size: .medium,
+          size: .large,
           ariaLabel: "Open menu",
           class: "navbar-sidebar-btn sidebar-menu-btn",
           data: [("sidebar-menu", "true")]

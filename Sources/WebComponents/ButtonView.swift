@@ -70,14 +70,15 @@ public struct ButtonView: HTMLContent {
   public enum ButtonSize: String, Sendable {
     /// Medium: furniture only (user, 2026-10-10)—the markup pane's header
     /// and footer bars (and its find bar's field), legends, pagers, the
-    /// apparatus rule's switches, menus, picker popovers, the navbar's icon
-    /// buttons and inline row controls (a comment's Edit/Delete/Hide).
+    /// apparatus rule's switches, menus, picker popovers and inline row
+    /// controls (a comment's Edit/Delete/Hide).
     /// There is no small.
     case medium
     /// Large: everything else (user, 2026-10-10)—page, card and accordion
     /// headers, a page's standalone and row actions, a form's buttons and
     /// its "+ Genre"/"− Testament" controls, filter and query bars (their
-    /// fields 48 too), empty-state and dialog actions.
+    /// fields 48 too), empty-state and dialog actions, and the navbar's
+    /// icon buttons (large tap targets on a phone).
     case large
 
     /// A control's one inset, inside its 1px border on every side (user,
