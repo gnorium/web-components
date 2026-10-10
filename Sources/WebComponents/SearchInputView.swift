@@ -13,8 +13,9 @@ import WebTypes
 /// A SearchInput allows users to enter and submit a search query.
 ///
 /// Its size is ButtonView's scale (`ButtonView.ButtonSize`), so a box sits
-/// level with the controls beside it: its height is that size's `minSize`
-/// (32, 40, 40) and its sides 12, 16 or 16px. Its text is 16px at
+/// level with the controls beside it: its inset is that size's `padding`
+/// on every side (4, 8 or 12) and its height that size's `minSize`
+/// (32, 40 or 48). Its text is 16px at
 /// every size (user, 2026-10-08): smaller text in a field makes iOS Safari
 /// zoom the page as it is focused. Its icons, beside that text, are 12
 /// (the text's size minus 4).
@@ -69,7 +70,7 @@ public struct SearchInputView: HTMLContent {
     // Beside the 16px text, at every size.
     let iconSize = sizeIconXSmall
     // The box's measures, set per size on the root (`data-size`).
-    let side: CSS.Length = `var`("--search-input-padding-inline")
+    let side: CSS.Length = `var`("--search-input-padding")
     // A control's room: its icon and its 4px padding at either side; the
     // controls 8px apart.
     let step = iconSize + spacing4 + spacing4 + spacing8
@@ -153,18 +154,16 @@ public struct SearchInputView: HTMLContent {
         width(perc(100))
         gap(spacing8)
       }
-      // Small is on ButtonView's scale: the 32px its small buttons share,
-      // and 12 at the sides. Medium and large are fields: inset 16 inside
-      // the border on every side, their height the line and that inset.
+      // ButtonView's scale: one inset on every side, 4, 8 or 12, on the
+      // 22px line, so a box is 32, 40 or 48 as the buttons beside it.
       selector("&[data-size='small']") {
-        customProperty("--search-input-height", ButtonView.ButtonSize.small.minSize.value)
-        customProperty("--search-input-padding-block", "0")
-        customProperty("--search-input-padding-inline", spacing12.value)
+        customProperty("--search-input-padding", ButtonView.ButtonSize.small.padding.value)
       }
-      selector("&[data-size='medium']", "&[data-size='large']") {
-        customProperty("--search-input-height", "auto")
-        customProperty("--search-input-padding-block", spacing16.value)
-        customProperty("--search-input-padding-inline", spacing16.value)
+      selector("&[data-size='medium']") {
+        customProperty("--search-input-padding", ButtonView.ButtonSize.medium.padding.value)
+      }
+      selector("&[data-size='large']") {
+        customProperty("--search-input-padding", ButtonView.ButtonSize.large.padding.value)
       }
       selector("&.search-input-has-button") { flexGrow(1) }
       selector("&:not(.search-input-has-button)") { flex(1) }
@@ -191,10 +190,7 @@ public struct SearchInputView: HTMLContent {
       selector("&:not(.search-input-has-button) .search-input-wrapper") { width(perc(100)) }
       descendant(".search-input") {
         width(perc(100))
-        height(`var`("--search-input-height") as CSS.Length)
-        paddingBlock(`var`("--search-input-padding-block") as CSS.Length)
-        paddingInlineStart(side)
-        paddingInlineEnd(side)
+        padding(side)
         fontFamily(typographyFontSans)
         fontSize(fontSizeMedium16)
         lineHeight(lineHeightSmall22)
@@ -293,10 +289,8 @@ public struct SearchInputView: HTMLContent {
       // As tall as the field beside it.
       descendant(".search-input-button") {
         alignSelf(.stretch)
-        height(`var`("--search-input-height") as CSS.Length)
         boxSizing(.borderBox)
-        paddingBlock(0)
-        paddingInline(side)
+        padding(side)
         fontFamily(typographyFontSans)
         fontSize(fontSizeMedium16)
         fontWeight(fontWeightSemiBold)

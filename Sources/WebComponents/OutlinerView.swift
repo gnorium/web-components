@@ -956,7 +956,7 @@ public enum OutlineMoves {
         display(.flex)
         alignItems(.center)
         gap(spacing8)
-        padding(spacing8, spacing12)
+        padding(spacing8)
         backgroundColor(backgroundColorBase)
         border(borderWidthBase, .solid, borderColorBase)
         borderRadius(borderRadiusBase)

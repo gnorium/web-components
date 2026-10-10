@@ -75,15 +75,23 @@ public struct ButtonView: HTMLContent {
     /// Larger text at the standard control height.
     case large
 
-    /// Public so adjacent controls can share the same minimum size.
-    /// Small is the 32px pointer height; medium and large use the standard
-    /// interactive height. Small and medium set 16px type, large 18px.
-    public var minSize: CSS.Length {
+    /// A control's one inset, inside its 1px border on every side (user,
+    /// 2026-10-10): small 4, medium 8, large 12.
+    public var padding: CSS.Length {
       switch self {
-      case .small: return minSizeInteractivePointer
-      case .medium: return minSizeInteractiveTouch
-      case .large: return minSizeInteractiveTouch
+      case .small: return spacing4
+      case .medium: return spacing8
+      case .large: return spacing12
       }
+    }
+
+    /// Public so adjacent controls can share the same height. Every control
+    /// is its inset on every side, the standard 22px line and a 1px border:
+    /// small 32, medium 40, large 48—a medium button, a field, a select
+    /// and a date picker align in a row. Small and medium set 16px type,
+    /// large 18px, all on the 22px line.
+    public var minSize: CSS.Length {
+      padding * 2 + lineHeightSmall22 + borderWidthBase * 2
     }
 
     /// The size of an icon-only button's icon: 14, 16, 18px, as an icon
@@ -391,6 +399,9 @@ public struct ButtonView: HTMLContent {
             gap(spacing8)
             fontFamily(labelFontFamily)
             fontSize(fontSizeMedium16)
+            // The standard line at every size: the height is the inset,
+            // this line and the border (ButtonSize.minSize).
+            lineHeight(lineHeightSmall22)
             textDecoration(.none)
             textAlign(.center)
             verticalAlign(.middle)
@@ -496,9 +507,9 @@ public struct ButtonView: HTMLContent {
             width(ButtonSize.large.minSize)
             height(ButtonSize.large.minSize)
           }
-          selector("&[data-icon-only='false'][data-size='small']") { padding(0, spacingHorizontalButtonSmall) }
-          selector("&[data-icon-only='false'][data-size='medium']") { padding(0, spacingHorizontalButton) }
-          selector("&[data-icon-only='false'][data-size='large']") { padding(0, spacingHorizontalButtonLarge) }
+          selector("&[data-icon-only='false'][data-size='small']") { padding(ButtonSize.small.padding) }
+          selector("&[data-icon-only='false'][data-size='medium']") { padding(ButtonSize.medium.padding) }
+          selector("&[data-icon-only='false'][data-size='large']") { padding(ButtonSize.large.padding) }
 
           // Quiet/Plain—opaque base bg + transparent border (not see-through on borders/surfaces)
           selector("&[data-weight='quiet'], &[data-weight='plain']") {
@@ -1219,6 +1230,9 @@ public struct ButtonView: HTMLContent {
             gap(spacing8)
             fontFamily(labelFontFamily)
             fontSize(fontSizeMedium16)
+            // The standard line at every size: the height is the inset,
+            // this line and the border (ButtonSize.minSize).
+            lineHeight(lineHeightSmall22)
             textDecoration(.none)
             textAlign(.center)
             verticalAlign(.middle)
@@ -1324,9 +1338,9 @@ public struct ButtonView: HTMLContent {
             width(ButtonSize.large.minSize)
             height(ButtonSize.large.minSize)
           }
-          selector("&[data-icon-only='false'][data-size='small']") { padding(0, spacingHorizontalButtonSmall) }
-          selector("&[data-icon-only='false'][data-size='medium']") { padding(0, spacingHorizontalButton) }
-          selector("&[data-icon-only='false'][data-size='large']") { padding(0, spacingHorizontalButtonLarge) }
+          selector("&[data-icon-only='false'][data-size='small']") { padding(ButtonSize.small.padding) }
+          selector("&[data-icon-only='false'][data-size='medium']") { padding(ButtonSize.medium.padding) }
+          selector("&[data-icon-only='false'][data-size='large']") { padding(ButtonSize.large.padding) }
 
           descendant(".button-label") {
             padding(0)

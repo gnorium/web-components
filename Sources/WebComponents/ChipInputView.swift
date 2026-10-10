@@ -140,7 +140,9 @@
           display(.inlineFlex)
           alignItems(.center)
           maxWidth(perc(100))
-          padding(spacing4, spacing8)
+          // 4 on every side of its 22px line and its border: 32.
+          padding(spacing4)
+          lineHeight(lineHeightSmall22)
           backgroundColor(backgroundColorInteractiveSubtle)
           border(borderWidthBase, .solid, borderColorBase)
           borderRadius(borderRadiusBase)
@@ -165,8 +167,9 @@
           display(.inlineFlex)
           alignItems(.center)
           justifyContent(.center)
-          width(minSizeInteractivePointer)
-          height(minSizeInteractivePointer)
+          // On the chip's line, so the chip stays 32.
+          width(lineHeightSmall22)
+          height(lineHeightSmall22)
           padding(0)
           backgroundColor(.transparent)
           border(.none)
@@ -194,9 +197,9 @@
             color(colorDisabled)
           }
         }
-        // A field's inset: 16 inside the border on every side.
+        // A field's inset: 8 inside the border on every side.
         selector(".chip-input-chips", ".chip-input-input-wrapper", ".chip-input-items") {
-          padding(spacing16)
+          padding(spacing8)
           backgroundColor(backgroundColorBase)
           border(borderWidthBase, .solid, borderColorInputBinary)
           borderRadius(borderRadiusBase)

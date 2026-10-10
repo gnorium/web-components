@@ -142,8 +142,8 @@ public struct TextAreaView: HTMLContent {
       }
       descendant(".text-area-input") {
         width(perc(100))
-        // Inset 16 inside the border on every side, as TextInputView's.
-        padding(spacing16)
+        // Inset 12 inside the border on every side, as TextInputView's.
+        padding(spacing8)
         fontFamily(typographyFontSans)
         fontSize(fontSizeMedium16)
         lineHeight(lineHeightSmall22)
@@ -183,10 +183,10 @@ public struct TextAreaView: HTMLContent {
         overflowY(.hidden)
       }
       selector("&.text-area-has-start-icon .text-area-input") {
-        paddingInlineStart(calc(spacing16 + sizeIconMedium + spacing8)).important()
+        paddingInlineStart(calc(spacing8 + sizeIconMedium + spacing8)).important()
       }
       selector("&.text-area-has-end-icon .text-area-input") {
-        paddingInlineEnd(calc(spacing16 + sizeIconMedium + spacing8)).important()
+        paddingInlineEnd(calc(spacing8 + sizeIconMedium + spacing8)).important()
       }
       // The same rule as TextInputView's: color only. An opacity on top of
       // the color made a textarea's placeholder read as a different grey
@@ -212,7 +212,7 @@ public struct TextAreaView: HTMLContent {
         position(.absolute)
         // Centered on the first line: the border, the inset, and half the
         // line's room beyond the icon.
-        top(calc("\(borderWidthBase.value) + \(spacing16.value) + (\(lineHeightSmall22.value) - \(sizeIconMedium.value)) / 2"))
+        top(calc("\(borderWidthBase.value) + \(spacing8.value) + (\(lineHeightSmall22.value) - \(sizeIconMedium.value)) / 2"))
         display(.inlineFlex)
         alignItems(.center)
         justifyContent(.center)
@@ -221,8 +221,8 @@ public struct TextAreaView: HTMLContent {
         color(colorSubtle)
         pointerEvents(.none)
       }
-      descendant(".text-area-start-icon") { left(calc(borderWidthBase + spacing16)) }
-      descendant(".text-area-end-icon") { right(calc(borderWidthBase + spacing16)) }
+      descendant(".text-area-start-icon") { left(calc(borderWidthBase + spacing8)) }
+      descendant(".text-area-end-icon") { right(calc(borderWidthBase + spacing8)) }
     }
 
     if stringIsEmpty(labelText) { return styledContainer }

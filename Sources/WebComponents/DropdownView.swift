@@ -443,14 +443,8 @@ public struct DropdownView: HTMLContent {
       }
       // Matches LabelView, which every FieldView label uses: a dropdown in a
       // form is a form field and its label has to look like one.
-      // A medium trigger is a form FIELD, so it is inset as a text input
-      // is—16 inside its border on every side, on a 22px line—where the
-      // button it is built on pads a button's 11px. Three classes and an
-      // attribute to outrank ButtonView's size rule without an important.
-      selector("&.dropdown-view .dropdown-trigger.button-view[data-size='medium']") {
-        padding(spacing16)
-        lineHeight(lineHeightSmall22)
-      }
+      // A medium trigger is a form FIELD, and a medium button already is
+      // one: inset 8 inside its border on every side, on a 22px line, 40.
       // Set by the submit guard when a required dropdown has no value.
       // The field's ring in red: its 1px border and a 1px outline, two
       // pixels in all without the border growing and moving the text.
@@ -487,7 +481,9 @@ public struct DropdownView: HTMLContent {
       }
       // Not an option: no hover, no pointer, never chosen.
       descendant(".dropdown-note") {
-        padding(spacing8, spacing12)
+        padding(spacing8)
+        minHeight(minSizeInteractiveTouch)
+        boxSizing(.borderBox)
         fontFamily(typographyFontSans)
         fontSize(fontSizeXSmall12)
         lineHeight(lineHeightSmall22)
@@ -503,7 +499,11 @@ public struct DropdownView: HTMLContent {
         display(.flex)
         alignItems(.center)
         gap(spacing8)
-        padding(spacing8, spacing12)
+        // A row: 8 on every side of its 22px line, at least 40.
+        padding(spacing8)
+        minHeight(minSizeInteractiveTouch)
+        lineHeight(lineHeightSmall22)
+        boxSizing(.borderBox)
         fontSize(textFontSize)
         color(colorBase)
         backgroundColor(backgroundColorTransparent)

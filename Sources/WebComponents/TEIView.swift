@@ -777,7 +777,7 @@
         }
         selector("& .tei-table td", "& .tei-table th") {
           border(borderWidthBase, .solid, borderColorBase)
-          padding(spacing4, spacing8)
+          padding(spacing8)
           verticalAlign(.middle)
           textAlign(.start)
         }

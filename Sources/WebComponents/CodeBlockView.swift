@@ -78,7 +78,11 @@
           alignItems(.center)
           justifyContent(.center)
           flexShrink(0)
-          padding(spacing6)
+          // An icon-only small control, as ButtonView's: a 32 square.
+          width(ButtonView.ButtonSize.small.minSize)
+          height(ButtonView.ButtonSize.small.minSize)
+          padding(0)
+          boxSizing(.borderBox)
           backgroundColor(.transparent)
           border(borderWidthBase, .solid, borderColorBase)
           borderRadius(borderRadiusBase)

@@ -283,8 +283,9 @@
               display(.flex)
               alignItems(.center)
               gap(spacing12)
-              padding(spacing12, spacing16)
-              minHeight(px(40))
+              // A medium control: 8 on every side of the 22px line and
+              // the border, 40.
+              padding(spacing8)
               width(perc(100))
               fontFamily(typographyFontSans)
               fontSize(fontSizeMedium16)
@@ -460,8 +461,9 @@
               display(.flex)
               alignItems(.center)
               gap(spacing12)
-              padding(spacing12, spacing16)
-              minHeight(px(40))
+              // A medium control: 8 on every side of the 22px line and
+              // the border, 40.
+              padding(spacing8)
               width(perc(100))
               fontFamily(typographyFontSans)
               fontSize(fontSizeMedium16)

@@ -96,12 +96,12 @@ public struct DatumView: HTMLContent {
         fontWeight(fontWeightSemiBold)
         color(colorBase)
       }
-      // A read-only field's box, to the pixel: its inset of 16 on every
+      // A read-only field's box, to the pixel: its inset of 8 on every
       // side, its line, border, corner and ground.
       descendant(".datum-value") {
         display(.flex)
         alignItems(.center)
-        padding(spacing16)
+        padding(spacing8)
         fontFamily(typographyFontSans)
         fontSize(fontSizeMedium16)
         lineHeight(lineHeightSmall22)

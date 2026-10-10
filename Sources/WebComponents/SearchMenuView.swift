@@ -317,9 +317,11 @@
           display(.inlineFlex)
           alignItems(.center)
           justifyContent(.center)
-          minWidth(px(20))
-          height(px(20))
-          padding(0, spacing8)
+          // A key cap, 4 on every side of its 14px line and its border: 24.
+          minWidth(size24)
+          height(size24)
+          padding(spacing4)
+          boxSizing(.borderBox)
           fontFamily(typographyFontMono)
           fontSize(fontSizeXSmall12)
           fontWeight(fontWeightSemiBold)
@@ -327,7 +329,7 @@
           backgroundColor(backgroundColorNeutralSubtle)
           border(borderWidthBase, .solid, borderColorBase)
           borderRadius(borderRadiusMinimal)
-          lineHeight(1)
+          lineHeight(size14)
         }
         descendant(".keyboard-hint-label") {
           fontFamily(typographyFontSans)
@@ -372,7 +374,7 @@
           display(.flex)
           alignItems(.center)
           gap(spacing12)
-          padding(spacing8, spacing12)
+          padding(spacing8)
           minHeight(spacing64)
           fontFamily(typographyFontSans)
           fontSize(fontSizeMedium16)

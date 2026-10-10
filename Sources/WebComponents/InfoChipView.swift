@@ -200,14 +200,18 @@ public struct InfoChipView: HTMLContent {
         alignItems(.center)
         justifyContent(.center)
         gap(spacing8)
+        // A medium control's measure (user, 2026-10-10): 8 on every side,
+        // the 22px line and a 1px border, 40. A solid chip's border is
+        // its fill's, unseen, so both kinds are one height.
         height(size40)
         maxHeight(size40)
         minHeight(size40)
-        padding(0, spacing8)
+        padding(spacing8)
+        border(borderWidthBase, .solid, borderColorTransparent)
         fontFamily(typographyFontSans)
         fontSize(fontSizeMedium16)
         fontWeight(fontWeightNormal)
-        lineHeight(lineHeightXSmall20)
+        lineHeight(lineHeightSmall22)
         borderRadius(borderRadiusPill)
         whiteSpace(.nowrap)
         overflow(.hidden)
@@ -221,11 +225,12 @@ public struct InfoChipView: HTMLContent {
         fontWeight(fontWeightSemiBold)
       }
       selector("&.info-chip-large") {
-        height(size44)
-        maxHeight(size44)
-        minHeight(size44)
-        // Match the evidence/hallmark header mark: 44×44 optical block, pill ends.
-        padding(0, spacing12)
+        // 8 on every side of its 30px line and the border: 48, a large
+        // control's height.
+        height(size48)
+        maxHeight(size48)
+        minHeight(size48)
+        padding(spacing8)
         gap(spacing8)
         fontSize(fontSizeXLarge20)
         lineHeight(lineHeightXLarge30)

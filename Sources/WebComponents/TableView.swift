@@ -1264,7 +1264,8 @@ public struct TableView: HTMLContent {
       }
       selector("& .table-thead th", "& .table-tbody th") {
         backgroundColor(.inherit)
-        padding(spacing8, spacing12)
+        // A cell: 8 on every side, the row 44 (user, 2026-10-10).
+        padding(spacing8)
         fontFamily(typographyFontSans)
         fontSize(fontSizeSmall14)
         fontWeight(fontWeightSemiBold)
@@ -1285,7 +1286,8 @@ public struct TableView: HTMLContent {
       }
       selector("& .table-tbody td", "& .table-tfoot td") {
         backgroundColor(.inherit)
-        padding(spacing8, spacing12)
+        // A cell: 8 on every side, the row 44 (user, 2026-10-10).
+        padding(spacing8)
         height(px(44))
         minHeight(px(44))
         maxHeight(px(44))

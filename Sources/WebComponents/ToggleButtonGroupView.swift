@@ -187,7 +187,10 @@
           borderRadius(borderRadiusPill)
           backgroundColor(backgroundColorBase)
         }
+        // Borderless, the track's border theirs: a button's inset on every
+        // side of the 22px line inside it, the group a button's height.
         selector("&[data-mode='slider'] .toggle-button-group-button") {
+          borderWidth(0).important()
           borderColor(borderColorTransparent).important()
           backgroundColor(backgroundColorTransparent).important()
           transition("background-color \(transitionDurationBase.value) \(transitionTimingFunctionSystem.value), color \(transitionDurationBase.value) \(transitionTimingFunctionSystem.value)")

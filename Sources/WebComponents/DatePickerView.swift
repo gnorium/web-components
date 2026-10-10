@@ -269,7 +269,7 @@ public struct DatePickerView: HTMLContent {
       // the read-only grey, and room at the end for the calendar button, as
       // a text input's end icon has.
       descendant(".date-picker-field .text-input-input") {
-        paddingInlineEnd(calc(spacing16 + sizeIconMedium + spacing8)).important()
+        paddingInlineEnd(calc(spacing8 + sizeIconMedium + spacing8)).important()
         backgroundColor(backgroundColorBase).important()
         cursor(.pointer).important()
         userSelect(.none)
@@ -296,8 +296,8 @@ public struct DatePickerView: HTMLContent {
       // and no hover disc to cross the border or the focus ring.
       descendant(".date-picker-toggle") {
         position(.absolute)
-        // Centered in the field's 56: (56 − 32) / 2.
-        insetBlockEnd(spacing12)
+        // Centered in the field's 40: (40 − 32) / 2.
+        insetBlockEnd(spacing4)
         insetInlineEnd(spacing8)
         width(size32).important()
         height(size32).important()

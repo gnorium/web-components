@@ -85,7 +85,7 @@ public struct FieldValidationMessageView: HTMLContent {
         display(.inlineFlex)
         alignItems(.center)
         flexShrink(0)
-        width(calc(spacing16 + borderWidthBase))
+        width(calc(spacing8 + borderWidthBase))
         minHeight(lineHeightXSmall20)
       }
       selector("&[data-status='error']") { color(colorRed) }

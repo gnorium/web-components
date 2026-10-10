@@ -105,10 +105,15 @@ public struct PaginationView: HTMLContent {
       chrome = true
       // Icon-only chevrons on par with the pager's 16px text ("of 3") take
       // the text's size (user, 2026-10-09); minus 4 is for an icon beside
-      // a label. Their buttons stay 32.
+      // a label.
       iconSize = sizeIconSmall
     }
-    let inputWidth = chrome ? calc(ch(digitCount) + px(10)) : calc(ch(digitCount) + px(20))
+    // The number, the box's inset at both sides (a small control's 4, a
+    // medium one's 8) and its border; a sans number's figures run a
+    // little wider than a mono `ch`.
+    let inputWidth = chrome
+      ? calc("\(ch(digitCount).value) + \(spacing4.value) * 2 + \(borderWidthBase.value) * 2")
+      : calc("\(ch(digitCount).value) + \(spacing8.value) * 2 + \(borderWidthBase.value) * 2 + \(spacing4.value)")
     let useButtons = stringEquals(previousUrl, nil) && stringEquals(nextUrl, nil) && showControls
 
     let sizeClass = "pagination-size-\(size.rawValue)"
@@ -275,8 +280,8 @@ public struct PaginationView: HTMLContent {
         display(.flex)
         alignItems(.center)
         justifyContent(.center)
-        width(minSizeInteractiveTouch)
-        height(minSizeInteractiveTouch)
+        width(ButtonView.ButtonSize.medium.minSize)
+        height(ButtonView.ButtonSize.medium.minSize)
         padding(0)
         margin(0)
         color(colorBase)
@@ -328,11 +333,12 @@ public struct PaginationView: HTMLContent {
         fontSize(fontSizeMedium16)
         color(colorBase)
         fontWeight(fontWeightNormal)
-        padding(spacing0, spacing8)
+        // A medium control: 8 on every side of the 22px line, 40.
+        padding(ButtonView.ButtonSize.medium.padding)
+        lineHeight(lineHeightSmall22)
         border(borderWidthBase, .solid, borderColorBase)
         borderRadius(borderRadiusBase)
         backgroundColor(backgroundColorBase)
-        height(minSizeInteractiveTouch)
         textAlign(.center)
         display(.inlineBlock)
         transition(.borderColor, s(0.2), .ease)
@@ -345,9 +351,9 @@ public struct PaginationView: HTMLContent {
       selector("&.pagination-size-small .page-box") {
         fontFamily(typographyFontMono)
         fontSize(fontSizeMedium16)
-        padding(0, spacing4)
+        // A small control: 4 on every side, 32.
+        padding(ButtonView.ButtonSize.small.padding)
         borderColor(borderColorBase)
-        height(ButtonView.ButtonSize.small.minSize)
         transition(.none)
       }
       descendant(".page-box[data-input-width='\(inputWidth.value)']") { width(inputWidth) }

@@ -83,7 +83,7 @@ public struct TableCellView: HTMLContent {
     .data("edge-fade", "expand")
     .style {
       selector("&") {
-        padding(spacing8, spacing12)
+        padding(spacing8)
         fontFamily(typographyFontSans)
         fontSize(fontSizeSmall14)
         color(colorBase)

@@ -175,7 +175,7 @@ public struct TooltipView: HTMLContent {
       }
       selector("& .tooltip-content") {
         position(.absolute)
-        padding(spacing8, spacing12)
+        padding(spacing8)
         // Sized to its text, not to its containing block: an absolutely
         // positioned box otherwise shrinks to the 20px trigger (or the 0px
         // portal host) and a one-sentence byline wrapped to five lines.

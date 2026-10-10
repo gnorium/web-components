@@ -190,12 +190,12 @@
           display(.none)
         }
         descendant(".typeahead-search-pending") {
-          padding(spacing12, spacing16)
+          padding(spacing12)
           color(colorSubtle)
           fontSize(fontSizeSmall14)
         }
         descendant(".typeahead-search-no-results") {
-          padding(spacing12, spacing16)
+          padding(spacing12)
           color(colorSubtle)
           fontSize(fontSizeSmall14)
           textAlign(.center)

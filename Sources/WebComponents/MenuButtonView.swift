@@ -162,9 +162,10 @@
             display(.flex)
             alignItems(.center)
             gap(spacing12)
-            padding(spacing8, spacing12)
+            // A row: 8 on every side of 14px type's 20px line, 36.
+            padding(spacing8)
             fontSize(fontSizeSmall14)
-            lineHeight(1.5)
+            lineHeight(lineHeightXSmall20)
             cursor(.pointer)
             userSelect(.none)
             boxSizing(.borderBox)

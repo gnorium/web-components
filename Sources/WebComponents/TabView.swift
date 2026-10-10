@@ -59,7 +59,9 @@
             alignItems(.center)
             justifyContent(.center)
             minWidth(px(64))
-            padding(spacing12, spacing16)
+            // A medium control: 8 on every side of the 22px line, its 2px
+            // underline the border, 40.
+            padding(spacing8)
             fontSize(fontSizeMedium16)
             fontWeight(fontWeightNormal)
             lineHeight(lineHeightSmall22)

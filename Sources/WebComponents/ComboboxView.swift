@@ -263,10 +263,10 @@ public struct ComboboxView: HTMLContent {
       }
       // Room for the toggle at the field's end.
       descendant(".combobox-input-wrapper .text-input-input") {
-        paddingInlineEnd(calc(spacing16 + sizeIconMedium + spacing8))
+        paddingInlineEnd(calc(spacing8 + sizeIconMedium + spacing8))
       }
       // The toggle the field's full height, its icon where a field's end
-      // icon sits: 16 inside the border.
+      // icon sits: 8 inside the border.
       descendant(".combobox-toggle") {
         position(.absolute)
         insetBlockStart(0)
@@ -275,7 +275,7 @@ public struct ComboboxView: HTMLContent {
         display(.flex)
         alignItems(.center)
         justifyContent(.center)
-        width(calc(borderWidthBase + spacing16 + sizeIconMedium + spacing16))
+        width(calc(borderWidthBase + spacing8 + sizeIconMedium + spacing8))
         padding(0)
         color(colorSubtle)
         backgroundColor(backgroundColorTransparent)
@@ -320,8 +320,9 @@ public struct ComboboxView: HTMLContent {
         flexDirection(.column)
         justifyContent(.center)
         gap(spacing2)
+        // A row: 8 on every side, at least 40.
         minHeight(minSizeInteractiveTouch)
-        padding(spacing8, spacing12)
+        padding(spacing8)
         fontFamily(typographyFontSans)
         fontSize(fontSizeSmall14)
         lineHeight(lineHeightSmall22)
@@ -368,7 +369,9 @@ public struct ComboboxView: HTMLContent {
         color(colorInvertedFixed).important()
       }
       descendant(".combobox-note") {
-        padding(spacing8, spacing12)
+        padding(spacing8)
+        minHeight(minSizeInteractiveTouch)
+        boxSizing(.borderBox)
         fontFamily(typographyFontSans)
         fontSize(fontSizeXSmall12)
         lineHeight(lineHeightSmall22)

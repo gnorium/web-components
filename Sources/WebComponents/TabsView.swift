@@ -209,14 +209,17 @@
         }
         selector("&.tabs-full-width [role='tab']") { flex(1) }
         selector("&.tabs-quiet [role='tab']") {
+          // 12 on every side of 14px type's 20px line: 44.
           height(px(44))
-          padding(0, spacing12)
+          padding(spacing12)
+          boxSizing(.borderBox)
           fontSize(fontSizeSmall14)
           fontWeight(fontWeightNormal)
-          lineHeight(lineHeightSmall22)
+          lineHeight(lineHeightXSmall20)
         }
         selector("&.tabs-solid [role='tab']") {
-          padding(spacing8, spacing16)
+          // 8 on every side of 14px type's 20px line: 36.
+          padding(spacing8)
           fontSize(fontSizeSmall14)
           lineHeight(lineHeightXSmall20)
         }

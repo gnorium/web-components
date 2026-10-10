@@ -241,7 +241,10 @@
           display(.flex)
           alignItems(.center)
           gap(spacing8)
-          padding(spacing12, spacing12, spacing4, spacing12)
+          // A row: 8 on every side, at least 40.
+          padding(spacing8)
+          minHeight(minSizeInteractiveTouch)
+          boxSizing(.borderBox)
         }
         descendant(".menu-group-title") {
           fontFamily(typographyFontSans)
