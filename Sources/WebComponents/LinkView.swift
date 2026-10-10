@@ -132,6 +132,12 @@ public struct LinkView: HTMLContent {
         }
         selector("&.link-plain:hover") { color(colorBlue).important() }
         selector("&.link-plain:active") { color(colorBlue).important() }
+        // A plain link to a destructive action's page: base color at rest,
+        // red once hovered or focused (user, 2026-10-10).
+        selector("&.link-plain.link-red-hover:hover", "&.link-plain.link-red-hover:focus-visible") {
+          color(colorRed).important()
+        }
+        selector("&.link-plain.link-red-hover:active") { color(colorRedActive).important() }
         selector("&.scroll-spy-view[data-active='true']") { fontWeight(fontWeightSemiBold) }
         if let linkHeight {
           selector("&.link-plain[data-height='\(linkHeight.value)']") { height(linkHeight) }
