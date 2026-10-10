@@ -26,9 +26,9 @@
           span { language }
             .class("code-block-lang")
           button {
-            span { CopyIconView(size: sizeIconSmall) }
+            span { CopyIconView(size: ButtonView.ButtonSize.large.iconSize) }
               .class("copy-icon")
-            span { CheckIconView(size: sizeIconSmall) }
+            span { CheckIconView(size: ButtonView.ButtonSize.large.iconSize) }
               .class("success-icon")
           }
           .type(.button)
@@ -78,9 +78,10 @@
           alignItems(.center)
           justifyContent(.center)
           flexShrink(0)
-          // An icon-only medium control, as ButtonView's: a 40 square.
-          width(ButtonView.ButtonSize.medium.minSize)
-          height(ButtonView.ButtonSize.medium.minSize)
+          // An icon-only large control, as ButtonView's: a 48 square, a card
+          // header's (user, 2026-10-10).
+          width(ButtonView.ButtonSize.large.minSize)
+          height(ButtonView.ButtonSize.large.minSize)
           padding(0)
           boxSizing(.borderBox)
           backgroundColor(.transparent)

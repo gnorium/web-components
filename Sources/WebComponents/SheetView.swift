@@ -79,10 +79,15 @@
           pointerEvents(.none)
           overflow(.hidden)
         }
-        selector("&[data-placement='navbar']") {
-          position(.fixed)
-          top(px(navbarHeight))
-          height(calc(dvh(100) - px(navbarHeight)))
+        // Only a sheet below the navbar sets this rule: a pane or viewport
+        // sheet's zero height would otherwise override it in the shared
+        // style sheet and put the ellipsis menu flush with the screen's top.
+        if case .belowNavbar = placement {
+          selector("&[data-placement='navbar']") {
+            position(.fixed)
+            top(px(navbarHeight))
+            height(calc(dvh(100) - px(navbarHeight)))
+          }
         }
         selector("&[data-placement='pane']") {
           position(.absolute)

@@ -263,10 +263,10 @@ public struct ComboboxView: HTMLContent {
       }
       // Room for the toggle at the field's end.
       descendant(".combobox-input-wrapper .text-input-input") {
-        paddingInlineEnd(calc(spacing8 + sizeIconMedium + spacing8))
+        paddingInlineEnd(calc(spacing12 + sizeIconMedium + spacing8))
       }
       // The toggle the field's full height, its icon where a field's end
-      // icon sits: 8 inside the border.
+      // icon sits: 12 inside the border.
       descendant(".combobox-toggle") {
         position(.absolute)
         insetBlockStart(0)
@@ -275,7 +275,7 @@ public struct ComboboxView: HTMLContent {
         display(.flex)
         alignItems(.center)
         justifyContent(.center)
-        width(calc(borderWidthBase + spacing8 + sizeIconMedium + spacing8))
+        width(calc(borderWidthBase + spacing12 + sizeIconMedium + spacing12))
         padding(0)
         color(colorSubtle)
         backgroundColor(backgroundColorTransparent)

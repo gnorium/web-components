@@ -36,15 +36,16 @@ public struct SubtractIconView: HTMLContent {
 }
 
 extension IconView {
-  /// The subtract icon as a medium button wears it before its 16px words:
-  /// sizeIconSmall, the text's own size (IconView.size(beside:)).
+  /// The subtract icon as a large button wears it before its 18px words
+  /// (a form's "+ Genre", "− Testament"): the text's own size (user,
+  /// 2026-10-10).
   public static var subtract: IconView {
-    IconView(icon: { size in SubtractIconView(size: size) }, size: sizeIconSmall)
+    IconView(icon: { size in SubtractIconView(size: size) }, size: ButtonView.ButtonSize.large.labelIconSize)
   }
 
-  /// The subtract icon alone in a medium icon-only button (a filter bar's
-  /// bare −): sizeIconSmall, the button's own icon size.
+  /// The subtract icon alone in a large icon-only button (a filter bar's
+  /// bare −): the button's own icon size, 18.
   public static var subtractAlone: IconView {
-    IconView(icon: { size in SubtractIconView(size: size) }, size: sizeIconSmall)
+    IconView(icon: { size in SubtractIconView(size: size) }, size: ButtonView.ButtonSize.large.iconSize)
   }
 }

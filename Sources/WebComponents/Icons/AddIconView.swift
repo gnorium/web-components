@@ -39,15 +39,16 @@ public struct AddIconView: HTMLContent {
 }
 
 extension IconView {
-  /// The add icon as a medium button wears it before its 16px words:
-  /// sizeIconSmall, the text's own size (IconView.size(beside:)).
+  /// The add icon as a large button wears it before its 18px words
+  /// (a form's "+ Genre", "− Testament"): the text's own size (user,
+  /// 2026-10-10).
   public static var add: IconView {
-    IconView(icon: { size in AddIconView(size: size) }, size: sizeIconSmall)
+    IconView(icon: { size in AddIconView(size: size) }, size: ButtonView.ButtonSize.large.labelIconSize)
   }
 
-  /// The add icon alone in a medium icon-only button (a filter bar's
-  /// bare +): sizeIconSmall, the button's own icon size.
+  /// The add icon alone in a large icon-only button (a filter bar's
+  /// bare +): the button's own icon size, 18.
   public static var addAlone: IconView {
-    IconView(icon: { size in AddIconView(size: size) }, size: sizeIconSmall)
+    IconView(icon: { size in AddIconView(size: size) }, size: ButtonView.ButtonSize.large.iconSize)
   }
 }

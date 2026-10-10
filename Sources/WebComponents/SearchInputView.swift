@@ -39,7 +39,7 @@ public struct SearchInputView: HTMLContent {
 
   public init(
     modelValue: String = "",
-    size: ButtonView.ButtonSize = .medium,
+    size: ButtonView.ButtonSize = .large,
     useButton: Bool = false,
     clearable: Bool = false,
     buttonLabel: String = "",

@@ -249,7 +249,7 @@
             icon: IconView.addAlone,
             buttonColor: .gray,
             weight: .subtle,
-            size: .medium,
+            size: .large,
             disabled: addExhausted,
             type: .button,
             ariaLabel: "Add filter",
@@ -262,7 +262,7 @@
             icon: IconView.subtractAlone,
             buttonColor: .gray,
             weight: .subtle,
-            size: .medium,
+            size: .large,
             type: .button,
             ariaLabel: "Remove filter",
             class: "filter-bar-remove-btn",
@@ -276,7 +276,7 @@
             label: "Apply",
             buttonColor: .blue,
             weight: .solid,
-            size: .medium,
+            size: .large,
             type: .submit,
             class: "filter-bar-apply",
             labelFontWeight: fontWeightSemiBold
@@ -298,7 +298,6 @@
         placeholder: "Field",
         selectedValue: activeField.key,
         class: "filter-bar-field-picker",
-        buttonSize: .medium,
         fullWidth: true
       )
     }
@@ -325,7 +324,6 @@
           placeholder: label,
           selectedValue: value.isEmpty ? nil : value,
           class: "filter-bar-value-select",
-          buttonSize: .medium,
           fullWidth: true
         )
 
@@ -628,7 +626,6 @@
           placeholder: entry.label,
           selectedValue: value.isEmpty ? nil : value,
           class: "filter-bar-value-select",
-          buttonSize: .medium,
           fullWidth: true,
           hydrator: dropdownHydration
         )
@@ -691,7 +688,6 @@
         placeholder: "Field",
         selectedValue: field.key,
         class: "filter-bar-field-picker",
-        buttonSize: .medium,
         fullWidth: true,
         hydrator: dropdownHydration
       )
@@ -743,7 +739,6 @@
           options: options,
           placeholder: field.label,
           class: "filter-bar-value-select",
-          buttonSize: .medium,
           fullWidth: true,
           hydrator: dropdownHydration
         )
@@ -756,7 +751,7 @@
         icon: IconView.subtractAlone,
         buttonColor: .gray,
         weight: .subtle,
-        size: .medium,
+        size: .large,
         type: .button,
         ariaLabel: "Remove filter",
         class: "filter-bar-remove-btn"

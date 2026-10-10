@@ -197,9 +197,9 @@
             color(colorDisabled)
           }
         }
-        // A field's inset: 8 inside the border on every side.
+        // A field's inset: 12 inside the border on every side.
         selector(".chip-input-chips", ".chip-input-input-wrapper", ".chip-input-items") {
-          padding(spacing8)
+          padding(spacing12)
           backgroundColor(backgroundColorBase)
           border(borderWidthBase, .solid, borderColorInputBinary)
           borderRadius(borderRadiusBase)

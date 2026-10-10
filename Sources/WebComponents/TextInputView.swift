@@ -274,8 +274,8 @@ public struct TextInputView: HTMLContent {
       descendant(".text-input-control") {
         position(.relative)
         customProperty("--edge-fade-ground", backgroundColorBase)
-        customProperty("--edge-fade-inset-start", "calc(\(borderWidthBase.value) + \(spacing8.value))")
-        customProperty("--edge-fade-inset-end", "calc(\(borderWidthBase.value) + \(spacing8.value))")
+        customProperty("--edge-fade-inset-start", "calc(\(borderWidthBase.value) + \(spacing12.value))")
+        customProperty("--edge-fade-inset-end", "calc(\(borderWidthBase.value) + \(spacing12.value))")
       }
       selector("&.text-input-disabled .text-input-control") {
         customProperty("--edge-fade-ground", backgroundColorDisabled)
@@ -285,18 +285,19 @@ public struct TextInputView: HTMLContent {
       }
       selector("&.text-input-has-start-icon .text-input-control") {
         customProperty(
-          "--edge-fade-inset-start", "calc(\(borderWidthBase.value) + \(spacing8.value) + \(sizeIconMedium.value) + \(spacing8.value))")
+          "--edge-fade-inset-start", "calc(\(borderWidthBase.value) + \(spacing12.value) + \(sizeIconMedium.value) + \(spacing8.value))")
       }
       selector("&.text-input-has-end-icon .text-input-control", "&.text-input-clearable .text-input-control") {
         customProperty(
-          "--edge-fade-inset-end", "calc(\(borderWidthBase.value) + \(spacing8.value) + \(sizeIconMedium.value) + \(spacing8.value))")
+          "--edge-fade-inset-end", "calc(\(borderWidthBase.value) + \(spacing12.value) + \(sizeIconMedium.value) + \(spacing8.value))")
       }
       fadeInputOverflow(control: "& .text-input-control", input: ".text-input-input")
       descendant(".text-input-input") {
         width(perc(100))
-        // A field is inset 8 inside its border on every side, its height
-        // its line and that inset: 22 + 16 + 2 = 40 at 16px, a medium button's.
-        padding(spacing8)
+        // A field is inset 12 inside its border on every side, its height
+        // its line and that inset: 22 + 24 + 2 = 48, a large button's (user,
+        // 2026-10-10).
+        padding(spacing12)
         fontFamily(typographyFontSans)
         fontSize(inputFontSize)
         lineHeight(lineHeightSmall22)
@@ -330,10 +331,10 @@ public struct TextInputView: HTMLContent {
         outlineOffset(px(0))
       }
       selector("&.text-input-has-start-icon .text-input-input") {
-        paddingInlineStart(calc(spacing8 + sizeIconMedium + spacing8)).important()
+        paddingInlineStart(calc(spacing12 + sizeIconMedium + spacing8)).important()
       }
       selector("&.text-input-has-end-icon .text-input-input", "&.text-input-clearable .text-input-input") {
-        paddingInlineEnd(calc(spacing8 + sizeIconMedium + spacing8)).important()
+        paddingInlineEnd(calc(spacing12 + sizeIconMedium + spacing8)).important()
       }
       selector("& .text-input-input::placeholder") {
         color(colorPlaceholder).important()
@@ -365,12 +366,12 @@ public struct TextInputView: HTMLContent {
         color(colorSubtle)
         pointerEvents(.none)
       }
-      descendant(".text-input-start-icon") { left(calc(borderWidthBase + spacing8)) }
-      descendant(".text-input-end-icon") { right(calc(borderWidthBase + spacing8)) }
+      descendant(".text-input-start-icon") { left(calc(borderWidthBase + spacing12)) }
+      descendant(".text-input-end-icon") { right(calc(borderWidthBase + spacing12)) }
       descendant(".text-input-clear-button") {
         position(.absolute)
         top(perc(50))
-        right(calc(borderWidthBase + spacing8))
+        right(calc(borderWidthBase + spacing12))
         transform(translateY(perc(-50)))
         display(.none)
         alignItems(.center)

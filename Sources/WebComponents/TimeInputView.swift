@@ -194,7 +194,7 @@ public struct TimeInputView: HTMLContent {
       // text input's inset and height, no caret, the base background, room
       // at the end for the clock, as a text input's end icon has.
       descendant(".time-input-field .text-input-input") {
-        paddingInlineEnd(calc(spacing8 + sizeIconMedium + spacing8)).important()
+        paddingInlineEnd(calc(spacing12 + sizeIconMedium + spacing8)).important()
         backgroundColor(backgroundColorBase).important()
         cursor(.pointer).important()
         userSelect(.none)
@@ -216,9 +216,10 @@ public struct TimeInputView: HTMLContent {
       }
       descendant(".time-input-toggle") {
         position(.absolute)
-        // Centered in the field's 40: (40 − 32) / 2.
-        insetBlockEnd(spacing4)
-        insetInlineEnd(spacing8)
+        // Centered in the field's 48: (48 − 32) / 2; its 16 icon 12 inside
+        // the border, as a text input's end icon.
+        insetBlockEnd(spacing8)
+        insetInlineEnd(calc(borderWidthBase + spacing4))
         width(size32).important()
         height(size32).important()
         minWidth(size32).important()

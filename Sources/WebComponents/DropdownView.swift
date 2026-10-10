@@ -111,7 +111,7 @@ public struct DropdownView: HTMLContent {
     tooltip: String? = nil,
     class: String = "",
     buttonWeight: ButtonView.ButtonWeight = .`static`,
-    buttonSize: ButtonView.ButtonSize = .medium,
+    buttonSize: ButtonView.ButtonSize = .large,
     fullWidth: Bool = true,
     width: CSS.Length? = nil,
     menuWidth: CSS.Length? = nil,
@@ -260,7 +260,7 @@ public struct DropdownView: HTMLContent {
               .title(options.first { stringEquals($0.value, selectedValue ?? "") }?.altDisplay ?? displayText)
 
             // Animated chevron icon, beside the value's text: its size.
-            let chevronDim = buttonSize.labelIconSize
+            let chevronDim = textFontSize
             AnimatedUpDownChevronView(
               id: "dropdown-\(id)",
               expanded: false,
@@ -378,7 +378,10 @@ public struct DropdownView: HTMLContent {
       // One line, held inside the trigger, fading out at its end when it
       // runs past it (`fadeOverflow`): no tap-to-expand, no ellipsis—the
       // open list shows the whole value.
+      // A field's text at every size: a large trigger's 18px is a
+      // button's, not a field's.
       descendant(".dropdown-selected-text") {
+        fontSize(textFontSize)
         textAlign(.start)
         color(colorPlaceholder)
         minWidth(0)
@@ -1335,7 +1338,7 @@ public struct DropdownView: HTMLContent {
       required: Bool = false,
       tooltip: String? = nil,
       class: String = "",
-      buttonSize: ButtonView.ButtonSize = .medium,
+      buttonSize: ButtonView.ButtonSize = .large,
       fullWidth: Bool = true,
       fontSize: CSS.Length = fontSizeMedium16,
       hydrator: DropdownHydration? = nil

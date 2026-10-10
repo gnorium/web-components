@@ -21,7 +21,7 @@
   /// selected item itself, so the page reads right before any script runs;
   /// once placed (`data-sliding-pill="ready"` on the host) the host leaves
   /// the fill to the thumb. Placed on load and on resize without moving;
-  /// moved by a selection with the base transition. A reader who prefers
+  /// moved by a selection with the slide transition. A reader who prefers
   /// reduced motion gets the thumb too, never moving: it jumps to the new
   /// item at once, the item's label with it (user, 2026-10-08).
   public struct SlidingPillView: HTMLContent {
@@ -59,10 +59,15 @@
           opacity(1)
         }
         descendant(".sliding-pill-thumb[data-animate='true']") {
+          // The slide (user, 2026-10-10): 300ms on the decelerate curve, a
+          // quick start and a gentle settle—the tabs' and every segmented
+          // control's alike.
           transition(
-            "transform \(transitionDurationBase.value) \(transitionTimingFunctionSystem.value), "
-              + "width \(transitionDurationBase.value) \(transitionTimingFunctionSystem.value), "
-              + "height \(transitionDurationBase.value) \(transitionTimingFunctionSystem.value)")
+            "transform \(transitionDurationSlide.value) \(transitionTimingFunctionDecelerate.value), "
+              + "width \(transitionDurationSlide.value) \(transitionTimingFunctionDecelerate.value), "
+              + "height \(transitionDurationSlide.value) \(transitionTimingFunctionDecelerate.value)")
+          // Reduced motion: no slide, the thumb at its item at once.
+          media(prefersReducedMotion(.reduce)) { transition(.none).important() }
         }
       }
       .build()

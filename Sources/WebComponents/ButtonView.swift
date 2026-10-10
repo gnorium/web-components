@@ -68,13 +68,16 @@ public struct ButtonView: HTMLContent {
 
   /// Button sizes
   public enum ButtonSize: String, Sendable {
-    /// Medium: a button in a row with 40px fields (a filter bar, a query
-    /// bar, a search field's button), and every toggle and secondary
-    /// control—sharing its height with the fields. There is no small (user,
-    /// 2026-10-10).
+    /// Medium: furniture only (user, 2026-10-10)—the markup pane's header
+    /// and footer bars (and its find bar's field), legends, pagers, the
+    /// apparatus rule's switches, menus, picker popovers, the navbar's icon
+    /// buttons and inline row controls (a comment's Edit/Delete/Hide).
+    /// There is no small.
     case medium
-    /// Large: a main action not in a row with fields—Submit, Commit,
-    /// Permit, Save, a form's submit and cancel, a dialog's actions.
+    /// Large: everything else (user, 2026-10-10)—page, card and accordion
+    /// headers, a page's standalone and row actions, a form's buttons and
+    /// its "+ Genre"/"− Testament" controls, filter and query bars (their
+    /// fields 48 too), empty-state and dialog actions.
     case large
 
     /// A control's one inset, inside its 1px border on every side (user,
@@ -88,7 +91,7 @@ public struct ButtonView: HTMLContent {
 
     /// Public so adjacent controls can share the same height. Every control
     /// is its inset on every side, the standard 22px line and a 1px border:
-    /// medium 40, large 48—a medium button, a field, a select and a date
+    /// medium 40, large 48—a large button, a field, a select and a date
     /// picker align in a row. Each size sets its own type (user,
     /// 2026-10-10): medium 16px, large 18px, both on the 22px line.
     public var minSize: CSS.Length {

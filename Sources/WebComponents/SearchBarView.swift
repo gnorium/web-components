@@ -104,10 +104,10 @@
               color(colorBase)
               fontFamily(typographyFontSans)
               borderRadius(borderRadiusBase)
-              // A field's inset, 8 inside the border on every side, and at
+              // A field's inset, 12 inside the border on every side, and at
               // the end the search button's room, as a text input's end icon.
-              padding(spacing8)
-              paddingInlineEnd(calc(spacing8 + sizeIconSmall + spacing8))
+              padding(spacing12)
+              paddingInlineEnd(calc(spacing12 + sizeIconSmall + spacing8))
               width(perc(100))
               maxWidth(perc(100))
               lineHeight(lineHeightSmall22)
@@ -156,9 +156,9 @@
             background(.transparent)
             border(.none)
             color(colorBase)
-            // Its icon 8 inside the field's border: the 24px box's 4px
+            // Its icon 12 inside the field's border: the 24px box's 4px
             // around the icon taken from the border and the inset.
-            marginInlineEnd(calc(borderWidthBase + spacing8 - spacing4))
+            marginInlineEnd(calc(borderWidthBase + spacing12 - spacing4))
             paddingInlineStart(0)
             display(.flex)
             alignItems(.center)
@@ -230,10 +230,10 @@
           // inside its border and its padding at each side, the search
           // button's room at the end (EdgeFade.swift).
           customProperty("--edge-fade-ground", backgroundColorBase)
-          customProperty("--edge-fade-inset-start", "calc(\(borderWidthBase.value) + \(spacing8.value))")
+          customProperty("--edge-fade-inset-start", "calc(\(borderWidthBase.value) + \(spacing12.value))")
           customProperty(
             "--edge-fade-inset-end",
-            "calc(\(borderWidthBase.value) + \(spacing8.value) + \(sizeIconSmall.value) + \(spacing8.value))")
+            "calc(\(borderWidthBase.value) + \(spacing12.value) + \(sizeIconSmall.value) + \(spacing8.value))")
         }
         selector("&:has(> .search-bar-input:disabled)") {
           customProperty("--edge-fade-ground", backgroundColorDisabled)

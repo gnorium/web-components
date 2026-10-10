@@ -140,13 +140,13 @@
           display(.flex)
           gap(spacing16)
         }
-        // Medium controls, as the fields above them: 8 on every side of
-        // the 22px line and a 1px border, 40. The submit's border is its
-        // fill, seen through.
+        // Large controls, as the fields above them: 12 on every side of
+        // the 22px line and a 1px border, 48, their type 18. The submit's
+        // border is its fill, seen through.
         descendant(".form-submit") {
-          padding(spacing8)
+          padding(spacing12)
           fontFamily(typographyFontSans)
-          fontSize(fontSizeMedium16)
+          fontSize(fontSizeLarge18)
           lineHeight(lineHeightSmall22)
           fontWeight(500)
           color(colorInverted)
@@ -158,9 +158,9 @@
         }
         descendant(".form-submit:hover") { backgroundColor(backgroundColorBlueHover) }
         descendant(".form-cancel") {
-          padding(spacing8)
+          padding(spacing12)
           fontFamily(typographyFontSans)
-          fontSize(fontSizeMedium16)
+          fontSize(fontSizeLarge18)
           lineHeight(lineHeightSmall22)
           color(colorBase)
           backgroundColor(backgroundColorInteractive)
@@ -203,7 +203,7 @@
         }
         selector(".form-field input:not([type='checkbox'])", ".form-field textarea", ".form-field select") {
           width(perc(100))
-          padding(spacing8)
+          padding(spacing12)
           fontFamily(typographyFontSans)
           fontSize(fontSizeMedium16)
           lineHeight(lineHeightSmall22)

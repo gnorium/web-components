@@ -10,7 +10,7 @@
     let `class`: String
     let weight: ButtonView.ButtonWeight
 
-    public init(class: String = "", weight: ButtonView.ButtonWeight = .quiet) {
+    public init(class: String = "", weight: ButtonView.ButtonWeight = .plain) {
       self.class = `class`
       self.weight = weight
     }
