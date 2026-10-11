@@ -54,6 +54,10 @@
     /// reader draws a page at a time and fetches the others as they are
     /// turned to (`TestamentView.pagesURL`); nil draws every page.
     let page: Int?
+    /// The place in its whole document of this document's first page: a
+    /// page read alone from a long book's stored pages (`TestamentView`'s
+    /// `page(_:service:firstIndex:)`) is drawn at its place in the book.
+    let firstIndex: Int
 
     /// A translation of the markup, page by page, in its own language:
     /// the translation's own TEI, read by the same reader as the markup,
@@ -85,9 +89,10 @@
     public init(
       teiXml: String, editable: Bool = false, translation: Translation? = nil,
       highlights: [String: [TEIHighlight]] = [:], labelsPages: Bool = false, glossURL: String? = nil,
-      page: Int? = nil
+      page: Int? = nil, firstIndex: Int = 0
     ) {
       self.page = page
+      self.firstIndex = firstIndex
       self.teiXml = teiXml
       self.editable = editable
       self.translation = translation
@@ -586,7 +591,7 @@
                     .name("resemblance")
                     .value(Self.serviceID(ofFacsimile: page.facsimileURL))
                   CodeEditorView(
-                    id: "tei-page-raw-\(index)",
+                    id: "tei-page-raw-\(index + firstIndex)",
                     name: "markup",
                     value: XMLFormatter.prettified(page.markup),
                     ariaLabel: page.label.isEmpty ? "Code of this page" : "Code of \(page.label)"
@@ -636,7 +641,7 @@
             }
           }
           .class("tei-page")
-          .id("tei-page-\(index)")
+          .id("tei-page-\(index + firstIndex)")
           // What pairs this markup with a canvas. The viewer matches on it.
           .data("service-id", Self.serviceID(ofFacsimile: page.facsimileURL))
           // The page's own label, its `pb`'s `n`: the viewer's footer names
@@ -647,7 +652,7 @@
           .data("zones", Self.zoneData(of: page))
           // Its place in the document, from 0: what the reader turns to and
           // a roster names it by, where not every page is drawn.
-          .data("page-index", index)
+          .data("page-index", index + firstIndex)
           .data("active", index == (self.page ?? 0) ? "true" : "false")
         }
       }
