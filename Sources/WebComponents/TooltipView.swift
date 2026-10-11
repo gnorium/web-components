@@ -310,7 +310,36 @@ public struct TooltipView: HTMLContent {
       selector("&[data-placement='left-end'] .tooltip-content::after", "&[data-placement='right-end'] .tooltip-content::after") {
         bottom(spacing12)
       }
+      // Opened from dimmed content (a hidden locution, to the few who still
+      // see it), the bubble is dimmed with it: as if at opacity medium, but
+      // over the page's own background rather than over the words beneath
+      // it, which would otherwise show through (user, 2026-10-11).
+      selector("&[data-dimmed='true'] .tooltip-content") {
+        CSS.Property("background-color", Self.dimmed(backgroundColorInverted))
+        CSS.Property("color", Self.dimmed(colorInverted))
+      }
+      selector("&[data-dimmed='true'] .tooltip-content time") {
+        CSS.Property("color", Self.dimmed(colorInverted), isImportant: true)
+      }
+      selector("&[data-dimmed='true'][data-placement^='bottom'] .tooltip-content::after") {
+        CSS.Property("border-bottom-color", Self.dimmed(backgroundColorInverted))
+      }
+      selector("&[data-dimmed='true'][data-placement^='top'] .tooltip-content::after") {
+        CSS.Property("border-top-color", Self.dimmed(backgroundColorInverted))
+      }
+      selector("&[data-dimmed='true'][data-placement^='left'] .tooltip-content::after") {
+        CSS.Property("border-left-color", Self.dimmed(backgroundColorInverted))
+      }
+      selector("&[data-dimmed='true'][data-placement^='right'] .tooltip-content::after") {
+        CSS.Property("border-right-color", Self.dimmed(backgroundColorInverted))
+      }
     }
+  }
+
+  /// `color` as it reads at opacity medium over the page's background:
+  /// opaque, so nothing under the bubble shows through it.
+  private static func dimmed(_ color: CSS.Color) -> String {
+    "color-mix(in srgb, \(color.value) calc(\(opacityMedium.value) * 100%), \(backgroundColorBase.value))"
   }
 }
 
@@ -366,6 +395,9 @@ public struct TooltipView: HTMLContent {
       _ = host.dataset["portal"] = "true"
       _ = host.dataset["placement"] = placement.rawValue
       _ = host.dataset["visible"] = "false"
+      // Out of the trigger, the bubble no longer inherits a dimmed
+      // ancestor's opacity: it carries the dimming itself.
+      if trigger.closest("[data-dimmed='true']") != nil { _ = host.dataset["dimmed"] = "true" }
       host.appendChild(content)
       document.body.appendChild(host)
       self.host = host
