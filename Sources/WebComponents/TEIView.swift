@@ -1,6 +1,5 @@
 #if SERVER
   import CSSBuilder
-  import CSSOMBuilder
   import DesignTokens
   import DiffEngine
   import DOMBuilder
@@ -101,21 +100,6 @@
       self.labelsPages = labelsPages
       self.glossURL = glossURL
     }
-
-    /// How the rendered layers set a block's lines—a prototype until the
-    /// user picks (2026-10-12), one code path for all three: `data-lines`
-    /// on each page's text, which the CSS and `TEILineationHydration` read.
-    /// A reader's Reflow switch (`data-reflow` on the viewer) sets it for
-    /// its pages. The text keeps its size either way.
-    public enum Lineation: String, Sendable {
-      /// A block's lines run on as one paragraph, wrapped to the pane.
-      case flow
-      /// Each `<lb/>` a line, as the scan has it, never wrapped: the page
-      /// scrolls sideways, its edges fading.
-      case scroll
-    }
-
-    public static let lineation: Lineation = .scroll
 
     public var pages: [TEIPage] {
       TEIRenderer.pages(in: teiXml, highlights: highlights, marksWords: glossURL != nil)
@@ -659,7 +643,6 @@
             }
             .class("tei-page-text")
             .data("layer", "rendering")
-            .data("lines", Self.lineation.rawValue)
 
             div {
               if editable {
@@ -705,7 +688,6 @@
                   }
                 }
                 .class("tei-page-text")
-                .data("lines", Self.lineation.rawValue)
                   }
               .class("tei-page-translation")
               .data("layer", "translated-rendering")
@@ -965,35 +947,27 @@
         selector("& .tei-block > *") {
           display(.inline)
         }
-        // Lineated (`Lineation`): each `<lb/>` a line, as the scan has it,
-        // and no line wraps; a hanging indent hangs the block's first line
-        // alone.
-        selector("& .tei-page-text[data-lines='scroll']") {
+        // A page's lines as the scan breaks them (user, 2026-10-12): each
+        // `<lb/>` a line and no line wrapped, the page scrolling sideways
+        // under them, its bar shown and no edge faded (a fade is for one
+        // truncated line, never a scrollport); a hanging indent hangs the
+        // block's first line alone. Under a reader's Reflow
+        // (`[data-reflow='true']`, ArtifactView) its lines run on instead.
+        selector("& .tei-page-text:not([data-reflow='true'] *)") {
           whiteSpace(.nowrap)
+          overflowX(.auto)
         }
-        selector("& .tei-page-text[data-lines='scroll'] .tei-block > *") {
+        selector("& .tei-page-text:not([data-reflow='true'] *) .tei-block > *") {
           display(.block)
           CSS.Property("text-indent", "0")
         }
-        selector("& .tei-page-text[data-lines='scroll'] .tei-block > :first-child") {
+        selector("& .tei-page-text:not([data-reflow='true'] *) .tei-block > :first-child") {
           CSS.Property("text-indent", "inherit")
         }
-        // Scrolled: the page scrolls sideways under its lines, each edge
-        // that hides some of them fading (marked `data-edge-fade` by
-        // `TEILineationHydration`).
-        fadeOverflow("& .tei-page-text[data-lines='scroll']")
-        // Its bar shown, as the outliner's scrollport shows one (user,
-        // 2026-10-12): the fades stay, the bar says it scrolls.
-        selector("& .tei-page-text[data-lines='scroll'][data-lines]") {
-          scrollbarWidth("auto").important()
-        }
-        selector("& .tei-page-text[data-lines='scroll'][data-lines]::-webkit-scrollbar") {
-          display(.block).important()
-        }
         selector(
-          "& .tei-page-text[data-lines='scroll']::-webkit-scrollbar-track",
-          "& .tei-page-text[data-lines='scroll']::-webkit-scrollbar-track-piece",
-          "& .tei-page-text[data-lines='scroll']::-webkit-scrollbar-corner"
+          "& .tei-page-text:not([data-reflow='true'] *)::-webkit-scrollbar-track",
+          "& .tei-page-text:not([data-reflow='true'] *)::-webkit-scrollbar-track-piece",
+          "& .tei-page-text:not([data-reflow='true'] *)::-webkit-scrollbar-corner"
         ) {
           backgroundColor(.transparent).important()
         }
@@ -1263,55 +1237,6 @@
         }
       }
       .build()
-    }
-  }
-#endif
-
-#if CLIENT
-  import DOMBuilder
-  import EmbeddedSwiftUtilities
-  import WebAPIs
-  import WebTypes
-
-  /// Sets each rendered page's lines as its reader's Reflow says
-  /// (`data-reflow` on the viewer: on, `flow`; off, `scroll`), else as it
-  /// was drawn (`TEIView.lineation`), and marks a page set by its lines for
-  /// its edge fades. Pages fetched later are set as they arrive.
-  public final class TEILineationHydration: @unchecked Sendable {
-    nonisolated(unsafe) static var started = false
-    nonisolated(unsafe) static var queued = false
-
-    public static func hydrateIfPresent() {
-      guard !started, document.querySelector(".tei-view") != nil else { return }
-      started = true
-      document.body.observeMutations(childList: true, subtree: true) { TEILineationHydration.refresh() }
-      apply()
-    }
-
-    /// Sets every page again at the next frame, however many ask.
-    public static func refresh() {
-      if queued { return }
-      queued = true
-      _ = window.requestAnimationFrame {
-        TEILineationHydration.queued = false
-        TEILineationHydration.apply()
-      }
-    }
-
-    static func apply() {
-      var marked = false
-      for text in document.querySelectorAll(".tei-view .tei-page-text") {
-        if let reader = text.closest("[data-reflow]") {
-          let lines = stringEquals(reader.getAttribute(data("reflow")) ?? "", "true") ? "flow" : "scroll"
-          if !stringEquals(text.getAttribute(data("lines")) ?? "", lines) { text.setAttribute(data("lines"), lines) }
-        }
-        let scrolls = stringEquals(text.getAttribute(data("lines")) ?? "", "scroll")
-        if scrolls != text.hasAttribute(data("edge-fade")) {
-          if scrolls { text.setAttribute(data("edge-fade"), "scroll") } else { text.removeAttribute(data("edge-fade")) }
-          marked = true
-        }
-      }
-      if marked { EdgeFadeHydration.scheduleRefresh() }
     }
   }
 #endif
