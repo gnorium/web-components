@@ -2,30 +2,30 @@ import DesignTokens
 import Foundation
 import XCTest
 
-/// The named colors (user, 2026-10-11): the RGB wheel's twelve pure hues, HSV at
-/// full saturation and value, the same in light and dark; the
+/// The named colors (user, 2026-10-11): the sRGB cusp at twelve OKLCH hues
+/// 30° apart from pure red's, the same in light and dark; the
 /// increased-contrast schemes moving only lightness to 7:1.
 final class NamedColorsTests: XCTestCase {
-  func testEachColorIsItsWheelHue() {
+  func testEachColorIsTheCuspEveryThirtyDegreesFromRed() {
     let expected = [
-      "red": "#FF0000", "orange": "#FF8000", "yellow": "#FFFF00", "chartreuse": "#80FF00", "green": "#00FF00",
-      "spring-green": "#00FF80", "cyan": "#00FFFF", "azure": "#0080FF", "blue": "#0000FF", "violet": "#8000FF",
-      "magenta": "#FF00FF", "rose": "#FF0080",
+      "red": "#FF0000", "orange": "#FF8E00", "yellow": "#FFCA00", "lime": "#DCFF00", "green": "#00FF73",
+      "mint": "#00FFDF", "cyan": "#00E5FF", "blue": "#00B0FF", "indigo": "#2C00FF", "violet": "#9000FF",
+      "magenta": "#FF00FB", "pink": "#FF008A",
     ]
     XCTAssertEqual(
       NamedColors.names,
-      ["red", "orange", "yellow", "chartreuse", "green", "spring-green", "cyan", "azure", "blue", "violet", "magenta",
-       "rose", "gray"])
-    for (name, hex) in expected {
+      ["red", "orange", "yellow", "lime", "green", "mint", "cyan", "blue", "indigo", "violet", "magenta", "pink",
+       "gray"])
+    XCTAssertEqual(NamedColors.redHue, 29.23, accuracy: 0.005)
+    for (index, name) in NamedColors.hueNames.enumerated() {
+      XCTAssertEqual(NamedColors.hue(name), (NamedColors.redHue + 30 * Double(index)).truncatingRemainder(dividingBy: 360))
       for scheme in [NamedColors.Scheme.light, .dark] {
-        XCTAssertEqual(NamedColors.hex(name, scheme), hex, "\(name) \(scheme)")
+        XCTAssertEqual(NamedColors.hex(name, scheme), expected[name], "\(name) \(scheme)")
       }
-      // On the gamut's edge: one channel full, one empty.
-      let (r, g, b) = NamedColors.wheel(NamedColors.hues.first { $0.name == name }!.hsv)
-      XCTAssertEqual(max(r, g, b), 255, name)
-      XCTAssertEqual(min(r, g, b), 0, name)
-      // Its OKLCH form writes back to the same bytes.
-      XCTAssertEqual(NamedColors.hex(NamedColors.color(name, .light)), hex, "\(name) round trip")
+      let cusp = NamedColors.color(name, .light)
+      XCTAssertEqual(cusp.c, NamedColors.maxChroma(l: cusp.l, h: cusp.h), accuracy: 1e-9)
+      XCTAssertGreaterThanOrEqual(cusp.c, NamedColors.maxChroma(l: cusp.l + 0.01, h: cusp.h))
+      XCTAssertGreaterThanOrEqual(cusp.c, NamedColors.maxChroma(l: cusp.l - 0.01, h: cusp.h))
     }
   }
 

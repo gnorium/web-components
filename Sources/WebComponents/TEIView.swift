@@ -990,13 +990,12 @@
         selector("& .tei-frame[data-rend~='align(left)']") { alignSelf(.flexStart) }
         // Ink (user, 2026-10-11): a rend's color(NAME), one of the 13
         // ISCC–NBS basic color names (`TEIRenderer.inks`), on a run, a block
-        // or a frame, drawn in one of the wheel's tokens (`NamedColors`):
-        // pink as rose, brown as orange, olive as yellow, yellow-green as
-        // chartreuse, purple as magenta; black the text's own color, white
-        // below.
+        // or a frame, drawn in one of the twelve named colors
+        // (`NamedColors`): brown as orange, olive as yellow, yellow-green as
+        // lime, purple as magenta; black the text's own color, white below.
         for (name, ink) in [
-          ("pink", colorRose), ("red", colorRed), ("orange", colorOrange), ("brown", colorOrange),
-          ("yellow", colorYellow), ("olive", colorYellow), ("yellow-green", colorChartreuse), ("green", colorGreen),
+          ("pink", colorPink), ("red", colorRed), ("orange", colorOrange), ("brown", colorOrange),
+          ("yellow", colorYellow), ("olive", colorYellow), ("yellow-green", colorLime), ("green", colorGreen),
           ("blue", colorBlue), ("purple", colorMagenta), ("gray", colorGray), ("black", colorBase),
         ] {
           selector(

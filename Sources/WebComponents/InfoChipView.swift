@@ -25,9 +25,7 @@ public struct InfoChipView: HTMLContent {
 
   /// One of the named colors (`NamedColors`) for the chip
   public enum InfoChipColor: String, Sendable {
-    case red, orange, yellow, chartreuse, green
-    case springGreen = "spring-green"
-    case cyan, azure, blue, violet, magenta, rose, gray
+    case red, orange, yellow, lime, green, mint, cyan, blue, indigo, violet, magenta, pink, gray
 
     // Legacy aliases
     public static let notice = InfoChipColor.gray
@@ -139,7 +137,7 @@ public struct InfoChipView: HTMLContent {
       case .red: return .cross
       case .orange: return .warning
       case .gray: return .hidden
-      case .yellow, .chartreuse, .springGreen, .cyan, .azure, .blue, .violet, .magenta, .rose: return .disc
+      case .yellow, .lime, .mint, .cyan, .blue, .indigo, .violet, .magenta, .pink: return .disc
       }
     }()
 
@@ -255,23 +253,23 @@ public struct InfoChipView: HTMLContent {
       selector("&.info-chip-yellow.info-chip-subtle") {
         color(colorYellow)
       }
-      selector("&.info-chip-chartreuse.info-chip-subtle") {
-        color(colorChartreuse)
+      selector("&.info-chip-lime.info-chip-subtle") {
+        color(colorLime)
       }
       selector("&.info-chip-green.info-chip-subtle") {
         color(colorGreen)
       }
-      selector("&.info-chip-spring-green.info-chip-subtle") {
-        color(colorSpringGreen)
+      selector("&.info-chip-mint.info-chip-subtle") {
+        color(colorMint)
       }
       selector("&.info-chip-cyan.info-chip-subtle") {
         color(colorCyan)
       }
-      selector("&.info-chip-azure.info-chip-subtle") {
-        color(colorAzure)
-      }
       selector("&.info-chip-blue.info-chip-subtle") {
         color(colorBlue)
+      }
+      selector("&.info-chip-indigo.info-chip-subtle") {
+        color(colorIndigo)
       }
       selector("&.info-chip-violet.info-chip-subtle") {
         color(colorViolet)
@@ -279,8 +277,8 @@ public struct InfoChipView: HTMLContent {
       selector("&.info-chip-magenta.info-chip-subtle") {
         color(colorMagenta)
       }
-      selector("&.info-chip-rose.info-chip-subtle") {
-        color(colorRose)
+      selector("&.info-chip-pink.info-chip-subtle") {
+        color(colorPink)
       }
       selector("&.info-chip-gray.info-chip-subtle") {
         color(colorGray)
@@ -288,15 +286,15 @@ public struct InfoChipView: HTMLContent {
       selector("&.info-chip-red.info-chip-solid") { backgroundColor(colorRed) }
       selector("&.info-chip-orange.info-chip-solid") { backgroundColor(colorOrange) }
       selector("&.info-chip-yellow.info-chip-solid") { backgroundColor(colorYellow) }
-      selector("&.info-chip-chartreuse.info-chip-solid") { backgroundColor(colorChartreuse) }
+      selector("&.info-chip-lime.info-chip-solid") { backgroundColor(colorLime) }
       selector("&.info-chip-green.info-chip-solid") { backgroundColor(colorGreen) }
-      selector("&.info-chip-spring-green.info-chip-solid") { backgroundColor(colorSpringGreen) }
+      selector("&.info-chip-mint.info-chip-solid") { backgroundColor(colorMint) }
       selector("&.info-chip-cyan.info-chip-solid") { backgroundColor(colorCyan) }
-      selector("&.info-chip-azure.info-chip-solid") { backgroundColor(colorAzure) }
       selector("&.info-chip-blue.info-chip-solid") { backgroundColor(colorBlue) }
+      selector("&.info-chip-indigo.info-chip-solid") { backgroundColor(colorIndigo) }
       selector("&.info-chip-violet.info-chip-solid") { backgroundColor(colorViolet) }
       selector("&.info-chip-magenta.info-chip-solid") { backgroundColor(colorMagenta) }
-      selector("&.info-chip-rose.info-chip-solid") { backgroundColor(colorRose) }
+      selector("&.info-chip-pink.info-chip-solid") { backgroundColor(colorPink) }
       selector("&.info-chip-gray.info-chip-solid") { backgroundColor(colorGray) }
       descendant(".info-chip-icon") {
         display(.inlineFlex)
