@@ -85,12 +85,10 @@
   /// Moves a `SlidingPillView`'s thumb under its host's selected item.
   ///
   /// A move ends placed exactly, however it was interrupted (user,
-  /// 2026-10-12): when the slide's transition ends or is cancelled, the
-  /// thumb is measured again under the selected item and set there without
-  /// a transition, so it never stays half over its item with the label
-  /// clipped. Only the latest move settles: a move that retargets a slide
-  /// still running cancels it, and that cancel (counted in
-  /// `data-stale-cancels`) is the old move's, not a reason to settle.
+  /// 2026-10-12): when a slide's transition ends or is cancelled and no
+  /// newer slide is running, the thumb is measured again under the selected
+  /// item and set there without a transition, so it never stays half over
+  /// its item with the label clipped.
   public enum SlidingPill {
     /// Place the thumb under `current()` now, without moving, mark the host
     /// ready, and place it again whenever the host changes size or a slide
@@ -103,25 +101,19 @@
         place(layer, in: host, under: current(), animate: false)
       }
       guard let thumb = layer.querySelector(".sliding-pill-thumb") else { return }
-      // A slide is its transform's transition: a move always changes the
-      // position, not always the size.
-      _ = thumb.addEventListener(.transitionend) { event in
+      // A slide is its transform's transition (a move always changes the
+      // position, not always the size). A slide still running is a newer
+      // move's, which settles when it ends; else the pill is settled now.
+      let settle: @Sendable (Event) -> Void = { event in
         guard stringEquals(event.propertyName, "transform") else { return }
-        // The latest move's slide is over: every stale cancel came before.
-        thumb.setAttribute(data("stale-cancels"), "0")
-        thumb.setAttribute(data("in-flight"), "false")
-        place(layer, in: host, under: current(), animate: false)
-      }
-      _ = thumb.addEventListener(.transitioncancel) { event in
-        guard stringEquals(event.propertyName, "transform") else { return }
-        let stale = Int(thumb.getAttribute(data("stale-cancels")) ?? "0") ?? 0
-        if stale > 0 {
-          thumb.setAttribute(data("stale-cancels"), intToString(stale - 1))
+        for animation in thumb.getAnimations()
+        where stringEquals(animation.transitionProperty, "transform") && stringEquals(animation.playState, "running") {
           return
         }
-        thumb.setAttribute(data("in-flight"), "false")
         place(layer, in: host, under: current(), animate: false)
       }
+      _ = thumb.addEventListener(.transitionend, settle)
+      _ = thumb.addEventListener(.transitioncancel, settle)
     }
 
     /// The thumb under `item`, gliding there when `animate`; hidden, and
@@ -139,24 +131,9 @@
       // Reduced motion: never a move, the thumb jumps (user, 2026-10-08).
       let wasPlaced = stringEquals(thumb.getAttribute(data("placed")) ?? "", "true")
       let moves = animate && wasPlaced && !window.matchMedia("(prefers-reduced-motion: reduce)")
-      let x = doubleToString(box.left - origin.left) + "px"
-      let y = doubleToString(box.top - origin.top) + "px"
-      // A slide still running is cancelled by a move to somewhere else, and
-      // by a placement without a transition: its cancel is stale.
-      let inFlight = stringEquals(thumb.getAttribute(data("in-flight")) ?? "", "true")
-      let changes =
-        !stringEquals(thumb.getAttribute(data("x")) ?? "", x) || !stringEquals(thumb.getAttribute(data("y")) ?? "", y)
-      if inFlight && (!moves || changes) {
-        let stale = Int(thumb.getAttribute(data("stale-cancels")) ?? "0") ?? 0
-        thumb.setAttribute(data("stale-cancels"), intToString(stale + 1))
-        thumb.setAttribute(data("in-flight"), "false")
-      }
-      if moves && changes { thumb.setAttribute(data("in-flight"), "true") }
-      thumb.setAttribute(data("x"), x)
-      thumb.setAttribute(data("y"), y)
       thumb.setAttribute(data("animate"), moves ? "true" : "false")
-      thumb.style.setProperty("--sliding-pill-x", x)
-      thumb.style.setProperty("--sliding-pill-y", y)
+      thumb.style.setProperty("--sliding-pill-x", doubleToString(box.left - origin.left) + "px")
+      thumb.style.setProperty("--sliding-pill-y", doubleToString(box.top - origin.top) + "px")
       thumb.style.setProperty("--sliding-pill-width", doubleToString(box.width) + "px")
       thumb.style.setProperty("--sliding-pill-height", doubleToString(box.height) + "px")
       thumb.setAttribute(data("placed"), "true")
