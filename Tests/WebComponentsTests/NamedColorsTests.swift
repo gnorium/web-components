@@ -3,8 +3,8 @@ import Foundation
 import XCTest
 
 /// The named colors (user, 2026-10-11): the sRGB cusp at twelve OKLCH hues
-/// 30° apart from pure red's, the same in light and dark; the
-/// increased-contrast schemes moving only lightness to 7:1.
+/// 30° apart from pure red's in light, mirrored in dark to the same contrast
+/// against black; the increased-contrast schemes moving only lightness to 7:1.
 final class NamedColorsTests: XCTestCase {
   func testEachColorIsTheCuspEveryThirtyDegreesFromRed() {
     let expected = [
@@ -19,13 +19,28 @@ final class NamedColorsTests: XCTestCase {
     XCTAssertEqual(NamedColors.redHue, 29.23, accuracy: 0.005)
     for (index, name) in NamedColors.hueNames.enumerated() {
       XCTAssertEqual(NamedColors.hue(name), (NamedColors.redHue + 30 * Double(index)).truncatingRemainder(dividingBy: 360))
-      for scheme in [NamedColors.Scheme.light, .dark] {
-        XCTAssertEqual(NamedColors.hex(name, scheme), expected[name], "\(name) \(scheme)")
-      }
+      XCTAssertEqual(NamedColors.hex(name, .light), expected[name], name)
       let cusp = NamedColors.color(name, .light)
       XCTAssertEqual(cusp.c, NamedColors.maxChroma(l: cusp.l, h: cusp.h), accuracy: 1e-9)
       XCTAssertGreaterThanOrEqual(cusp.c, NamedColors.maxChroma(l: cusp.l + 0.01, h: cusp.h))
       XCTAssertGreaterThanOrEqual(cusp.c, NamedColors.maxChroma(l: cusp.l - 0.01, h: cusp.h))
+    }
+  }
+
+  /// Dark mirrors light: the same hue, its contrast with black that of
+  /// light's with white, within what 8-bit writing allows.
+  func testDarkMirrorsLightsContrast() {
+    for name in NamedColors.names {
+      let light = NamedColors.color(name, .light), dark = NamedColors.color(name, .dark)
+      let lightRatio = NamedColors.contrast(light, NamedColors.Scheme.light.page)
+      let darkRatio = NamedColors.contrast(dark, NamedColors.Scheme.dark.page)
+      XCTAssertEqual(darkRatio, lightRatio, accuracy: max(0.02, lightRatio * 0.01), name)
+      XCTAssertEqual(dark.h, light.h, accuracy: 1e-9, "\(name) keeps its hue")
+      if name != "gray" {
+        XCTAssertEqual(dark.c, NamedColors.maxChroma(l: dark.l, h: dark.h), accuracy: 1e-9, "\(name) most chroma")
+      }
+      print(
+        "\(name): light \(NamedColors.hex(name, .light)) \(String(format: "%.2f", lightRatio)):1, dark \(NamedColors.hex(name, .dark)) \(String(format: "%.2f", darkRatio)):1, light more \(NamedColors.hex(name, .lightMoreContrast)), dark more \(NamedColors.hex(name, .darkMoreContrast))")
     }
   }
 

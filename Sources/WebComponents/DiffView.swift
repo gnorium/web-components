@@ -463,7 +463,8 @@ public struct DiffView: HTMLContent {
       }
       // A changed line reads in the base color on its subtle tint, red
       // where it was, green where it is; the characters that changed in it
-      // stand out on the solid red or green, inverted (user, 2026-10-08).
+      // stand out on the solid red or green, in black in both themes, as
+      // diffs are conventionally marked (user, 2026-10-11).
       // The same tokens as everywhere: no colors of the diff's own.
       selector("& .diff-row[data-diff-line='removed']") {
         backgroundColor(backgroundColorRedSubtle)
@@ -475,14 +476,14 @@ public struct DiffView: HTMLContent {
       }
       selector("& .diff-row[data-diff-line='removed'] .diff-changed") {
         backgroundColor(backgroundColorRed)
-        color(colorInvertedFixed)
+        color(colorBaseFixed)
         borderRadius(borderRadiusMinimal)
         webkitBoxDecorationBreak(.clone)
         boxDecorationBreak(.clone)
       }
       selector("& .diff-row[data-diff-line='inserted'] .diff-changed") {
         backgroundColor(backgroundColorGreen)
-        color(colorInvertedFixed)
+        color(colorBaseFixed)
         borderRadius(borderRadiusMinimal)
         webkitBoxDecorationBreak(.clone)
         boxDecorationBreak(.clone)
