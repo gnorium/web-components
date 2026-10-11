@@ -123,6 +123,22 @@ public struct DatePickerView: HTMLContent {
       rangeStart: rangeStart,
       rangeEnd: rangeEnd
     )
+    // The months of the year on show, hidden until the caption opens them;
+    // the client redraws it, as months or years, as the reader goes.
+    let periods = div {
+      DatePickerPeriodView(
+        kind: .months,
+        shown: focused,
+        selected: range ? [rangeStart, rangeEnd].compactMap { $0 } : selected.map { [$0] } ?? [],
+        today: today,
+        focused: focused,
+        min: minDate,
+        max: maxDate,
+        labelID: monthLabelID
+      )
+    }
+    .class("date-picker-periods")
+    .hidden()
 
     var valueInput = input()
       .type(.hidden)
@@ -218,6 +234,7 @@ public struct DatePickerView: HTMLContent {
                 .class("date-picker-navigation")
                 div { month }
                   .class("date-picker-grid")
+                periods
               }
               .class("date-picker-calendar")
             }
@@ -225,6 +242,7 @@ public struct DatePickerView: HTMLContent {
           } else {
             div { month }
               .class("date-picker-grid")
+            periods
           }
         },
         footer: {
@@ -334,14 +352,22 @@ public struct DatePickerView: HTMLContent {
       descendant(".date-picker-popover .popover-header") {
         padding(spacing8).important()
       }
-      descendant(".date-picker-month-title") {
+      // The caption names the month, and opens its year's months; there,
+      // the year, and opens its decade's years.
+      descendant(".date-picker-heading") {
+        display(.flex)
         flex(1)
+        justifyContent(.center)
+        minWidth(0)
         margin(0)
         fontSize(fontSizeMedium16)
         fontWeight(fontWeightSemiBold)
         lineHeight(lineHeightSmall22)
-        textAlign(.center)
         color(colorBase)
+      }
+      // The decade is the top: its caption names it and opens nothing.
+      descendant(".date-picker-caption[aria-disabled='true']") {
+        pointerEvents(.none)
       }
       descendant(".date-picker-popover .popover-body") {
         padding(spacing8).important()
@@ -417,7 +443,8 @@ public struct DatePickerView: HTMLContent {
     }
   }
 
-  /// The month's paging: previous, the month's name, next.
+  /// The month's paging: previous, the month's name—the caption that opens
+  /// the year's months—next.
   @HTMLBuilder
   private func navigation(title: String, labelID: String) -> [DOM.Node] {
     ButtonView(
@@ -427,10 +454,20 @@ public struct DatePickerView: HTMLContent {
       ariaLabel: "Previous month",
       class: "date-picker-previous"
     )
-    h2 { title }
-      .id(labelID)
-      .class("date-picker-month-title")
-      .ariaLive(.polite)
+    h2 {
+      ButtonView(
+        weight: .plain,
+        size: .medium,
+        ariaLabel: "\(title), choose month",
+        class: "date-picker-caption"
+      ) {
+        span { title }
+          .id(labelID)
+          .class("date-picker-month-title")
+      }
+    }
+    .class("date-picker-heading")
+    .ariaLive(.polite)
     ButtonView(
       icon: IconView(icon: { s in NextIconView(size: s) }, size: sizeIconSmall),
       weight: .plain,
@@ -445,6 +482,14 @@ public struct DatePickerView: HTMLContent {
   import WebAPIs
 
   private final class DatePickerInstance: @unchecked Sendable {
+    /// What the calendar shows: a month's days, a year's months, a decade's
+    /// years.
+    private enum Pane {
+      case days
+      case months
+      case years
+    }
+
     private let root: DOM.Element
     private let valueInput: HTML.HTMLInputElement?
     private let field: HTML.HTMLInputElement?
@@ -452,6 +497,9 @@ public struct DatePickerView: HTMLContent {
     private let popover: DOM.Element?
     private let monthTitle: DOM.Element?
     private let grid: DOM.Element?
+    /// The months or years grid, the caption's shortcuts.
+    private let periods: DOM.Element?
+    private let caption: DOM.Element?
     private let previousButton: DOM.Element?
     private let nextButton: DOM.Element?
     private let resetButton: DOM.Element?
@@ -469,6 +517,7 @@ public struct DatePickerView: HTMLContent {
     private var shown: CalendarDate
     /// The day that holds the grid's focus.
     private var focused: CalendarDate
+    private var pane: Pane = .days
     private var isOpen = false
 
     init(root: DOM.Element) {
@@ -479,6 +528,8 @@ public struct DatePickerView: HTMLContent {
       popover = root.querySelector(".date-picker-popover")
       monthTitle = root.querySelector(".date-picker-month-title")
       grid = root.querySelector(".date-picker-grid")
+      periods = root.querySelector(".date-picker-periods")
+      caption = root.querySelector(".date-picker-caption")
       previousButton = root.querySelector(".date-picker-previous")
       nextButton = root.querySelector(".date-picker-next")
       resetButton = root.querySelector(".date-picker-reset")
@@ -540,10 +591,22 @@ public struct DatePickerView: HTMLContent {
         }
       }
       if let previousButton {
-        _ = previousButton.addEventListener(.click) { [self] _ in self.page(byMonths: -1) }
+        _ = previousButton.addEventListener(.click) { [self] _ in self.page(by: -1) }
       }
       if let nextButton {
-        _ = nextButton.addEventListener(.click) { [self] _ in self.page(byMonths: 1) }
+        _ = nextButton.addEventListener(.click) { [self] _ in self.page(by: 1) }
+      }
+      // The caption opens the year's months, and from there the decade's
+      // years; focus stays on it, so a second press goes up again.
+      if let caption {
+        _ = caption.addEventListener(.click) { [self] _ in
+          switch self.pane {
+          case .days: self.pane = .months
+          case .months: self.pane = .years
+          case .years: return
+          }
+          self.render()
+        }
       }
       // Reset empties the field and brings the calendar back to today.
       if let resetButton {
@@ -552,6 +615,7 @@ public struct DatePickerView: HTMLContent {
           self.setRange(nil)
           self.focused = self.today().clamped(min: self.minDate, max: self.maxDate)
           self.shown = self.focused
+          self.pane = .days
           self.render()
         }
       }
@@ -589,6 +653,37 @@ public struct DatePickerView: HTMLContent {
         }
         _ = grid.addEventListener(.keydown) { [self] event in
           self.handleGridKey(event)
+        }
+      }
+      if let periods {
+        _ = periods.addEventListener(.click) { [self] event in
+          guard let target = event.target,
+            let cell = target.closest(".date-picker-period-cell"),
+            let value = parseInt(cell.getAttribute(data("value")) ?? "")
+          else { return }
+          if let disabled = cell.getAttribute("aria-disabled"), stringEquals(disabled, "true") { return }
+          self.pick(value, fromKeyboard: false)
+        }
+        _ = periods.addEventListener(.keydown) { [self] event in
+          self.handlePeriodKey(event)
+        }
+      }
+      // Esc in the months or years steps back a level, before the popover's
+      // own Esc (which closes it) hears it; in the days it closes, as ever.
+      if let popover {
+        for section in popover.querySelectorAll(".popover-header, .popover-body, .popover-footer") {
+          _ = section.addEventListener(.keydown) { [self] event in
+            guard stringEquals(event.key, "Escape") else { return }
+            switch self.pane {
+            case .days: return
+            case .months: self.pane = .days
+            case .years: self.pane = .months
+            }
+            event.preventDefault()
+            event.stopPropagation()
+            self.render()
+            self.focusActive(visible: true)
+          }
         }
       }
       if let popover {
@@ -647,6 +742,109 @@ public struct DatePickerView: HTMLContent {
       moveFocus(to: target)
     }
 
+    private func handlePeriodKey(_ event: Event) {
+      let key = event.key
+      let forward = isRightToLeft() ? -1 : 1
+      let isMonths: Bool
+      switch pane {
+      case .days: return
+      case .months: isMonths = true
+      case .years: isMonths = false
+      }
+      // The cell's place in its row of three.
+      let column: Int
+      if isMonths {
+        column = (focused.month - 1) % 3
+      } else {
+        column = (focused.year - DatePickerPeriodView.decadeStart(shown.year) + 1) % 3
+      }
+      var step: Int?
+      if stringEquals(key, "ArrowLeft") {
+        step = -forward
+      } else if stringEquals(key, "ArrowRight") {
+        step = forward
+      } else if stringEquals(key, "ArrowUp") {
+        step = -3
+      } else if stringEquals(key, "ArrowDown") {
+        step = 3
+      } else if stringEquals(key, "Home") {
+        step = -column
+      } else if stringEquals(key, "End") {
+        step = 2 - column
+      } else if stringEquals(key, "PageUp") {
+        step = isMonths ? -12 : -10
+      } else if stringEquals(key, "PageDown") {
+        step = isMonths ? 12 : 10
+      } else if stringEquals(key, "Enter") || stringEquals(key, " ") {
+        event.preventDefault()
+        let value = isMonths ? focused.month : focused.year
+        let allowed =
+          isMonths
+          ? DatePickerPeriodView.isMonthWithin(year: focused.year, month: focused.month, min: minDate, max: maxDate)
+          : DatePickerPeriodView.isYearWithin(focused.year, min: minDate, max: maxDate)
+        if allowed { pick(value, fromKeyboard: true) }
+        return
+      }
+      guard let step else { return }
+      event.preventDefault()
+      movePeriodFocus(by: step, isMonths: isMonths)
+    }
+
+    /// Moves the months' or years' focus a number of cells on, held within
+    /// the bounds; past the grid's edge the next year or decade is drawn.
+    private func movePeriodFocus(by step: Int, isMonths: Bool) {
+      let previous = focused
+      if isMonths {
+        var index = DatePickerPeriodView.monthIndex(focused) + step
+        if let minDate { index = Swift.max(index, DatePickerPeriodView.monthIndex(minDate)) }
+        if let maxDate { index = Swift.min(index, DatePickerPeriodView.monthIndex(maxDate)) }
+        let year = index >= 0 ? index / 12 : (index - 11) / 12
+        focused = day(year: year, month: index - year * 12 + 1)
+      } else {
+        var year = focused.year + step
+        if let minDate { year = Swift.max(year, minDate.year) }
+        if let maxDate { year = Swift.min(year, maxDate.year) }
+        focused = day(year: year, month: focused.month)
+      }
+      let start = DatePickerPeriodView.decadeStart(shown.year)
+      let onPage = isMonths ? focused.year == shown.year : focused.year >= start - 1 && focused.year <= start + 10
+      if onPage {
+        let oldValue = isMonths ? previous.month : previous.year
+        periods?.querySelector("[data-value=\"\(oldValue)\"]")?.setAttribute("tabindex", "-1")
+        periods?.querySelector("[data-value=\"\(isMonths ? focused.month : focused.year)\"]")?
+          .setAttribute("tabindex", "0")
+      } else {
+        shown = focused
+        render()
+      }
+      focusActive(visible: true)
+    }
+
+    /// The focused day carried to another month: its day of the month where
+    /// that month has it, else the month's last, then held within the bounds.
+    private func day(year: Int, month: Int) -> CalendarDate {
+      CalendarDate(
+        year: year, month: month, day: Swift.min(focused.day, CalendarDate.daysInMonth(year: year, month: month))
+      ).clamped(min: minDate, max: maxDate)
+    }
+
+    /// A month picked goes back to its days; a year, to its months.
+    private func pick(_ value: Int, fromKeyboard: Bool) {
+      switch pane {
+      case .days:
+        return
+      case .months:
+        focused = day(year: shown.year, month: value)
+        pane = .days
+      case .years:
+        focused = day(year: value, month: focused.month)
+        pane = .months
+      }
+      shown = focused
+      render()
+      focusActive(visible: fromKeyboard)
+    }
+
     /// Tab stays in the calendar while it is open, coming round at either end.
     private func trapTab(_ event: Event) {
       guard let popover else { return }
@@ -688,6 +886,7 @@ public struct DatePickerView: HTMLContent {
       let start = (currentValue() ?? days?.end ?? days?.start ?? today()).clamped(min: minDate, max: maxDate)
       focused = start
       shown = start
+      pane = .days
       render()
       isOpen = true
       popover.setAttribute(data("open"), true)
@@ -767,7 +966,15 @@ public struct DatePickerView: HTMLContent {
       }
     }
 
-    private func page(byMonths months: Int) {
+    /// Pages a month in the days, a year in the months, a decade in the
+    /// years.
+    private func page(by direction: Int) {
+      let months: Int
+      switch pane {
+      case .days: months = direction
+      case .months: months = direction * 12
+      case .years: months = direction * 120
+      }
       focused = focused.adding(months: months).clamped(min: minDate, max: maxDate)
       shown = focused
       render()
@@ -792,9 +999,23 @@ public struct DatePickerView: HTMLContent {
         .focus(DOM.FocusOptions(preventScroll: true, focusVisible: visible))
     }
 
-    /// Draws the month on show, and bars paging past the bounds.
+    /// Focuses the active cell of the grid on show.
+    private func focusActive(visible: Bool) {
+      switch pane {
+      case .days:
+        focusDay(visible: visible)
+      case .months:
+        periods?.querySelector("[data-value=\"\(focused.month)\"]")?
+          .focus(DOM.FocusOptions(preventScroll: true, focusVisible: visible))
+      case .years:
+        periods?.querySelector("[data-value=\"\(focused.year)\"]")?
+          .focus(DOM.FocusOptions(preventScroll: true, focusVisible: visible))
+      }
+    }
+
+    /// Draws the month, year or decade on show, and bars paging past the
+    /// bounds.
     private func render() {
-      monthTitle?.textContent = shown.monthTitle
       let days = currentRange().map { $0.days() }
       let view = DatePickerMonthView(
         month: shown,
@@ -814,10 +1035,58 @@ public struct DatePickerView: HTMLContent {
         days?.start?.display ?? ""
       (root.querySelector(".date-picker-end .text-input-input") as? HTML.HTMLInputElement)?.value =
         days?.end?.display ?? ""
-      grid?.innerHTML = view.render()
-      let shownIndex = shown.year * 12 + shown.month
-      setDisabled(previousButton, minDate.map { $0.year * 12 + $0.month >= shownIndex } ?? false)
-      setDisabled(nextButton, maxDate.map { $0.year * 12 + $0.month <= shownIndex } ?? false)
+      let kind: DatePickerPeriodView.Kind
+      switch pane {
+      case .days:
+        monthTitle?.textContent = shown.monthTitle
+        caption?.setAttribute("aria-label", "\(shown.monthTitle), choose month")
+        caption?.removeAttribute("aria-disabled")
+        previousButton?.setAttribute("aria-label", "Previous month")
+        nextButton?.setAttribute("aria-label", "Next month")
+        grid?.innerHTML = view.render()
+        grid?.removeAttribute("hidden")
+        periods?.setAttribute("hidden", "")
+        let shownIndex = shown.year * 12 + shown.month
+        setDisabled(previousButton, minDate.map { $0.year * 12 + $0.month >= shownIndex } ?? false)
+        setDisabled(nextButton, maxDate.map { $0.year * 12 + $0.month <= shownIndex } ?? false)
+        return
+      case .months:
+        kind = .months
+        caption?.setAttribute("aria-label", "\(shown.year), choose year")
+        caption?.removeAttribute("aria-disabled")
+        previousButton?.setAttribute("aria-label", "Previous year")
+        nextButton?.setAttribute("aria-label", "Next year")
+        setDisabled(previousButton, minDate.map { $0.year >= shown.year } ?? false)
+        setDisabled(nextButton, maxDate.map { $0.year <= shown.year } ?? false)
+      case .years:
+        kind = .years
+        let start = DatePickerPeriodView.decadeStart(shown.year)
+        caption?.setAttribute("aria-label", DatePickerPeriodView.title(kind: .years, shown: shown))
+        caption?.setAttribute("aria-disabled", "true")
+        previousButton?.setAttribute("aria-label", "Previous decade")
+        nextButton?.setAttribute("aria-label", "Next decade")
+        setDisabled(previousButton, minDate.map { $0.year >= start } ?? false)
+        setDisabled(nextButton, maxDate.map { $0.year <= start + 9 } ?? false)
+      }
+      monthTitle?.textContent = DatePickerPeriodView.title(kind: kind, shown: shown)
+      let selected: [CalendarDate]
+      if isRange {
+        selected = [days?.start, days?.end].compactMap { $0 }
+      } else {
+        selected = currentValue().map { [$0] } ?? []
+      }
+      periods?.innerHTML = DatePickerPeriodView(
+        kind: kind,
+        shown: shown,
+        selected: selected,
+        today: today(),
+        focused: focused,
+        min: minDate,
+        max: maxDate,
+        labelID: monthLabelID
+      ).render()
+      periods?.removeAttribute("hidden")
+      grid?.setAttribute("hidden", "")
     }
 
     private func setDisabled(_ button: DOM.Element?, _ disabled: Bool) {
