@@ -156,6 +156,7 @@
         case .table: return "table"
         case .documentBoundary: return "boundary"
         case .note: return "note"
+        case .space: return "space"
         }
       }
       func runs(_ line: TEILine) -> [DiffEngine.Token] {
@@ -186,6 +187,8 @@
           out.append(.init(tokens: [.init(text: "[\(reason.isEmpty ? "gap" : reason)]")], role: role(line.kind)))
         case .mark, .documentBoundary:
           out.append(.init(tokens: [.init(text: line.text)], role: role(line.kind)))
+        case .space(let quantity, let unit):
+          out.append(.init(tokens: [.init(text: "[space: \(quantity) \(unit)]")], role: role(line.kind)))
         case .table(let table):
           // A table reads as its caption, then row by row, a cell's lines run
           // together.
@@ -448,6 +451,71 @@
       return nil
     }
 
+    /// A page's lines as the reader sets them (`layout(of:)`), in sections
+    /// a paragraph's space apart: a section opens at a line that opens a
+    /// paragraph (`TEILine.opensParagraph`), as a TEI reader sets a `<p>`
+    /// (user, 2026-10-11). The markup's own layer and its translation's
+    /// alike.
+    private func laidOut(_ lines: [TEILine], facsimileURL: String, label: String, tabStop: TEIWordPlace? = nil)
+      -> [DOM.Node]
+    {
+      var sections: [[LaidOut]] = []
+      for item in Self.layout(of: lines) {
+        let first: TEILine
+        switch item {
+        case .line(let line): first = line
+        case .block(let lines), .furniture(let lines): first = lines[0]
+        }
+        if sections.isEmpty || first.opensParagraph { sections.append([]) }
+        sections[sections.count - 1].append(item)
+      }
+      return sections.map { items in
+        div {
+          for item in items {
+            switch item {
+            case .line(let line):
+              renderingLine(line, facsimileURL: facsimileURL, label: label, tabStop: tabStop)
+            case .block(let lines):
+              // A block's lines run on as one paragraph, a break inside a
+              // word joining it with no space. The block always holds
+              // text between its lines (empty at such a break), so its
+              // markup is written inline: an indented block put a
+              // newline, a space as read, inside the broken word.
+              div {
+                for (index, line) in lines.enumerated() {
+                  if index > 0 { line.joinsPrevious ? "" : " " }
+                  renderingLine(line, facsimileURL: facsimileURL, label: label, tabStop: tabStop)
+                }
+              }.class("tei-block").data("rend", lines[0].rend)
+            case .furniture(let pieces):
+              // A page number and a running head set on one line keep
+              // their places on it, as the image has them.
+              div {
+                for place in FurniturePlace.allCases {
+                  div {
+                    for piece in pieces where FurniturePlace.of(piece) == place {
+                      renderingLine(piece, facsimileURL: facsimileURL, label: label, tabStop: tabStop)
+                    }
+                  }.class("tei-forme-row-\(place.rawValue)")
+                }
+              }.class("tei-forme-row")
+            }
+          }
+        }.class("tei-section").build()
+      }
+    }
+
+    /// The height a vertical `<space/>` leaves: so many of the text's
+    /// lines (`lh`, its leading); a length in its own unit where CSS has
+    /// it; a character's height as an em.
+    static func spaceHeight(quantity: Int, unit: String) -> String {
+      switch unit {
+      case "mm", "cm", "in", "pt", "pc", "px", "em": return "\(quantity)\(unit)"
+      case "chars", "char", "ems": return "\(quantity)em"
+      default: return "\(quantity)lh"
+      }
+    }
+
     private func renderingLine(
       _ line: TEILine, facsimileURL: String, label: String, tabStop: TEIWordPlace? = nil
     ) -> DOM.Node {
@@ -469,6 +537,12 @@
           .build()
       case .documentBoundary:
         return hr().class("tei-document-boundary").build()
+      case .space(let quantity, let unit):
+        // Blank height the source leaves, as much as it says (user,
+        // 2026-10-11): never a line of text.
+        return div {}.class("tei-space").ariaHidden(true)
+          .data("quantity", quantity).data("unit", unit)
+          .style { CSS.Property("height", Self.spaceHeight(quantity: quantity, unit: unit)) }.build()
       case .note(let place):
         return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line tei-line-note")
           .data("place", place.isEmpty ? "inline" : place).build()
@@ -547,36 +621,7 @@
                   .init(kind: .mark, text: page.label.isEmpty ? "—" : page.label), facsimileURL: page.facsimileURL,
                   label: page.label)
               }
-              for item in Self.layout(of: page.lines) {
-                switch item {
-                case .line(let line):
-                  renderingLine(line, facsimileURL: page.facsimileURL, label: page.label, tabStop: tabStop)
-                case .block(let lines):
-                  // A block's lines run on as one paragraph, a break inside a
-                  // word joining it with no space. The block always holds
-                  // text between its lines (empty at such a break), so its
-                  // markup is written inline: an indented block put a
-                  // newline, a space as read, inside the broken word.
-                  div {
-                    for (index, line) in lines.enumerated() {
-                      if index > 0 { line.joinsPrevious ? "" : " " }
-                      renderingLine(line, facsimileURL: page.facsimileURL, label: page.label, tabStop: tabStop)
-                    }
-                  }.class("tei-block").data("rend", lines[0].rend)
-                case .furniture(let pieces):
-                  // A page number and a running head set on one line keep
-                  // their places on it, as the image has them.
-                  div {
-                    for place in FurniturePlace.allCases {
-                      div {
-                        for piece in pieces where FurniturePlace.of(piece) == place {
-                          renderingLine(piece, facsimileURL: page.facsimileURL, label: page.label, tabStop: tabStop)
-                        }
-                      }.class("tei-forme-row-\(place.rawValue)")
-                    }
-                  }.class("tei-forme-row")
-                }
-              }
+              laidOut(page.lines, facsimileURL: page.facsimileURL, label: page.label, tabStop: tabStop)
             }
             .class("tei-page-text")
             .data("layer", "rendering")
@@ -618,9 +663,7 @@
                 // text would read as the page's (user, 2026-10-07).
                 div {
                   if let translated {
-                    for line in translated.page.lines {
-                      renderingLine(line, facsimileURL: translated.page.facsimileURL, label: translated.page.label)
-                    }
+                    laidOut(translated.page.lines, facsimileURL: translated.page.facsimileURL, label: translated.page.label)
                   }
                 }
                 .class("tei-page-text")
@@ -810,33 +853,33 @@
         // alone), in logical terms, so that a right-aligned catchword sits
         // at the right however the text runs.
         selector(
-          "& .tei-block[data-rend~='align(center)']", "& .tei-page-text > .tei-line[data-rend~='align(center)']"
+          "& .tei-block[data-rend~='align(center)']", "& .tei-section > .tei-line[data-rend~='align(center)']"
         ) {
           textAlign(.center)
         }
         selector(
-          "& .tei-block[data-rend~='align(justify)']", "& .tei-page-text > .tei-line[data-rend~='align(justify)']"
+          "& .tei-block[data-rend~='align(justify)']", "& .tei-section > .tei-line[data-rend~='align(justify)']"
         ) {
           textAlign(.justify)
         }
         selector(
-          "& .tei-block[data-rend~='align(left)']", "& .tei-page-text > .tei-line[data-rend~='align(left)']",
+          "& .tei-block[data-rend~='align(left)']", "& .tei-section > .tei-line[data-rend~='align(left)']",
           "& .tei-block[data-rend~='align(right)']:dir(rtl)",
-          "& .tei-page-text > .tei-line[data-rend~='align(right)']:dir(rtl)"
+          "& .tei-section > .tei-line[data-rend~='align(right)']:dir(rtl)"
         ) {
           textAlign(.start)
         }
         selector(
-          "& .tei-block[data-rend~='align(right)']", "& .tei-page-text > .tei-line[data-rend~='align(right)']",
+          "& .tei-block[data-rend~='align(right)']", "& .tei-section > .tei-line[data-rend~='align(right)']",
           "& .tei-block[data-rend~='align(left)']:dir(rtl)",
-          "& .tei-page-text > .tei-line[data-rend~='align(left)']:dir(rtl)"
+          "& .tei-section > .tei-line[data-rend~='align(left)']:dir(rtl)"
         ) {
           textAlign(.end)
         }
         for level in 1...6 {
           selector(
             "& .tei-block[data-rend~='indent(\(level))']",
-            "& .tei-page-text > .tei-line[data-rend~='indent(\(level))']"
+            "& .tei-section > .tei-line[data-rend~='indent(\(level))']"
           ) {
             CSS.Property("padding-inline-start", "calc(\(level) * \(spacing24.value))")
           }
@@ -870,17 +913,31 @@
         descendant(".tei-forme-row-start") { justifySelf("start") }
         descendant(".tei-forme-row-center") { justifySelf("center") }
         descendant(".tei-forme-row-end") { justifySelf("end") }
+        // Paragraphs a paragraph's space apart, as a TEI reader sets a
+        // `<p>` (user, 2026-10-11); a section's lines close together.
         descendant(".tei-page-text") {
+          display(.flex)
+          flexDirection(.column)
+          gap(spacing16)
+          minWidth(0)
+        }
+        descendant(".tei-section") {
           display(.flex)
           flexDirection(.column)
           gap(spacing2)
           minWidth(0)
         }
-        // The page's first line starts where its pane's padding ends: a
+        // A section's first line starts where the space before it ends: a
         // heading's or a speaker's space above it is space from the line
         // before, and at the top of the page there is none (user, 2026-09-29).
-        selector("& .tei-page-text > :first-child", "& .tei-page-text > :first-child > .tei-line:first-child") {
+        selector("& .tei-section > :first-child", "& .tei-section > :first-child > .tei-line:first-child") {
           marginBlockStart(0).important()
+        }
+        // Vertical space measured in the text's own lines.
+        descendant(".tei-space") {
+          flexShrink(0)
+          fontSize(fontSizeMedium16)
+          lineHeight(lineHeightContent)
         }
         // Editable only in Raw: the markup is for reading, and nothing in it
         // looks as if it could be typed into.

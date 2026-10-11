@@ -10,10 +10,12 @@
   public struct SidebarMenuButtonView: HTMLContent {
     let `class`: String
     let show: Bool
+    let weight: ButtonView.ButtonWeight
 
-    public init(class: String = "", show: Bool = false) {
+    public init(class: String = "", show: Bool = false, weight: ButtonView.ButtonWeight = .plain) {
       self.class = `class`
       self.show = show
+      self.weight = weight
     }
 
     public func build() -> DOM.Node {
@@ -23,7 +25,7 @@
             icon: { size in
               MenuIconView(size: size)
             }, size: ButtonView.ButtonSize.large.iconSize),
-          weight: .plain,
+          weight: weight,
           size: .large,
           ariaLabel: "Open menu",
           class: "navbar-sidebar-btn sidebar-menu-btn",

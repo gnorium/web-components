@@ -422,7 +422,7 @@ public struct DatePickerView: HTMLContent {
   private func navigation(title: String, labelID: String) -> [DOM.Node] {
     ButtonView(
       icon: IconView(icon: { s in PreviousIconView(size: s) }, size: sizeIconSmall),
-      weight: .quiet,
+      weight: .plain,
       size: .medium,
       ariaLabel: "Previous month",
       class: "date-picker-previous"
@@ -433,7 +433,7 @@ public struct DatePickerView: HTMLContent {
       .ariaLive(.polite)
     ButtonView(
       icon: IconView(icon: { s in NextIconView(size: s) }, size: sizeIconSmall),
-      weight: .quiet,
+      weight: .plain,
       size: .medium,
       ariaLabel: "Next month",
       class: "date-picker-next"
