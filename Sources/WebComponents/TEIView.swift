@@ -990,9 +990,9 @@
         selector("& .tei-frame[data-rend~='align(left)']") { alignSelf(.flexStart) }
         // Ink (user, 2026-10-11): a rend's color(NAME), one of Apple's HIG
         // colors or black or white, in its glyph token, on a run, a block or
-        // a frame; black the text's own color, white the inverted text's.
+        // a frame; black the text's own color.
         for (name, ink) in [
-          ("black", colorBase), ("white", colorInverted), ("gray", colorGray), ("red", colorRed),
+          ("black", colorBase), ("gray", colorGray), ("red", colorRed),
           ("orange", colorOrange), ("yellow", colorYellow), ("green", colorGreen), ("mint", colorMint),
           ("teal", colorTeal), ("cyan", colorCyan), ("blue", colorBlue), ("indigo", colorIndigo),
           ("purple", colorPurple), ("pink", colorPink), ("brown", colorBrown),
@@ -1004,6 +1004,17 @@
           ) {
             color(ink)
           }
+        }
+        // White ink, as on the dark paper it is printed on: white text on
+        // the gray fill, in both themes, so it can be seen (user,
+        // 2026-10-11).
+        selector(
+          "& .tei-run[data-rend~='color(white)']", "& .tei-block[data-rend~='color(white)'] > .tei-line",
+          "& .tei-section > .tei-line[data-rend~='color(white)']",
+          "& .tei-frame[data-rend~='color(white)'] .tei-line"
+        ) {
+          color(colorInvertedFixed)
+          backgroundColor(backgroundColorGray)
         }
         // Type a step larger or smaller than the text's, on a run, a block,
         // or a frame's lines (user, 2026-10-11).
