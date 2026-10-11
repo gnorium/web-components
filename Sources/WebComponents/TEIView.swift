@@ -988,14 +988,17 @@
         selector("& .tei-frame[data-rend~='align(center)']") { alignSelf(.center) }
         selector("& .tei-frame[data-rend~='align(right)']") { alignSelf(.flexEnd) }
         selector("& .tei-frame[data-rend~='align(left)']") { alignSelf(.flexStart) }
-        // Ink (user, 2026-10-11): a rend's color(NAME), one of Apple's HIG
-        // colors or black or white, in its glyph token, on a run, a block or
-        // a frame; black the text's own color.
+        // Ink (user, 2026-10-11): a rend's color(NAME), an ISCC–NBS basic
+        // color name or violet (`TEIRenderer.inks`), on a run, a block or a
+        // frame, drawn in one of the named colors (`NamedColors`): brown as
+        // orange, olive and yellow-green as yellow (yellow green's vivid
+        // cusp, 122°, is nearer yellow's 93° than green's 171°); black the
+        // text's own color.
         for (name, ink) in [
-          ("black", colorBase), ("gray", colorGray), ("red", colorRed),
-          ("orange", colorOrange), ("yellow", colorYellow), ("green", colorGreen), ("mint", colorMint),
-          ("teal", colorTeal), ("cyan", colorCyan), ("blue", colorBlue), ("indigo", colorIndigo),
-          ("purple", colorPurple), ("pink", colorPink), ("brown", colorBrown),
+          ("black", colorBase), ("gray", colorGray), ("pink", colorPink), ("red", colorRed),
+          ("orange", colorOrange), ("brown", colorOrange), ("yellow", colorYellow), ("olive", colorYellow),
+          ("yellow-green", colorYellow), ("green", colorGreen), ("blue", colorBlue), ("violet", colorViolet),
+          ("purple", colorPurple),
         ] {
           selector(
             "& .tei-run[data-rend~='color(\(name))']", "& .tei-block[data-rend~='color(\(name))'] > .tei-line",

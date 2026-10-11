@@ -23,9 +23,9 @@ public struct InfoChipView: HTMLContent {
   let content: [DOM.Node]
   let `class`: String
 
-  /// Apple HIG color for the chip
+  /// One of the named colors (`NamedColors`) for the chip
   public enum InfoChipColor: String, Sendable {
-    case red, orange, yellow, green, mint, teal, cyan, blue, indigo, purple, pink, brown, gray
+    case pink, red, orange, yellow, green, blue, violet, purple, gray
 
     // Legacy aliases
     public static let notice = InfoChipColor.gray
@@ -36,7 +36,7 @@ public struct InfoChipView: HTMLContent {
 
   /// Visual weight of the chip
   public enum Weight: String, Sendable {
-    /// Light background, colored text, border (default)
+    /// Colored text and border on a transparent ground (default)
     case subtle
     /// Filled background, inverted text, no border
     case solid
@@ -137,7 +137,7 @@ public struct InfoChipView: HTMLContent {
       case .red: return .cross
       case .orange: return .warning
       case .gray: return .hidden
-      case .mint, .yellow, .teal, .cyan, .blue, .indigo, .purple, .pink, .brown: return .disc
+      case .yellow, .blue, .violet, .purple, .pink: return .disc
       }
     }()
 
@@ -235,76 +235,50 @@ public struct InfoChipView: HTMLContent {
         fontSize(fontSizeXLarge20)
         lineHeight(lineHeightXLarge30)
       }
+      // A chip is its color's text and border alone, on whatever it sits
+      // on (user, 2026-10-11).
       selector("&.info-chip-subtle") {
         border(borderWidthBase, .solid, .currentColor)
+        backgroundColor(backgroundColorTransparent)
       }
       selector("&.info-chip-solid") {
         color(colorInvertedFixed)
       }
       selector("&.info-chip-red.info-chip-subtle") {
         color(colorRed)
-        backgroundColor(backgroundColorRedSubtle)
       }
       selector("&.info-chip-orange.info-chip-subtle") {
         color(colorOrange)
-        backgroundColor(backgroundColorOrangeSubtle)
       }
       selector("&.info-chip-yellow.info-chip-subtle") {
         color(colorYellow)
-        backgroundColor(backgroundColorYellowSubtle)
       }
       selector("&.info-chip-green.info-chip-subtle") {
         color(colorGreen)
-        backgroundColor(backgroundColorGreenSubtle)
-      }
-      selector("&.info-chip-mint.info-chip-subtle") {
-        color(colorMint)
-        backgroundColor(backgroundColorMintSubtle)
-      }
-      selector("&.info-chip-teal.info-chip-subtle") {
-        color(colorTeal)
-        backgroundColor(backgroundColorTealSubtle)
-      }
-      selector("&.info-chip-cyan.info-chip-subtle") {
-        color(colorCyan)
-        backgroundColor(backgroundColorCyanSubtle)
       }
       selector("&.info-chip-blue.info-chip-subtle") {
         color(colorBlue)
-        backgroundColor(backgroundColorBlueSubtle)
       }
-      selector("&.info-chip-indigo.info-chip-subtle") {
-        color(colorIndigo)
-        backgroundColor(backgroundColorIndigoSubtle)
+      selector("&.info-chip-violet.info-chip-subtle") {
+        color(colorViolet)
       }
       selector("&.info-chip-purple.info-chip-subtle") {
         color(colorPurple)
-        backgroundColor(backgroundColorPurpleSubtle)
       }
       selector("&.info-chip-pink.info-chip-subtle") {
         color(colorPink)
-        backgroundColor(backgroundColorPinkSubtle)
-      }
-      selector("&.info-chip-brown.info-chip-subtle") {
-        color(colorBrown)
-        backgroundColor(backgroundColorBrownSubtle)
       }
       selector("&.info-chip-gray.info-chip-subtle") {
         color(colorGray)
-        backgroundColor(backgroundColorGraySubtle)
       }
       selector("&.info-chip-red.info-chip-solid") { backgroundColor(colorRed) }
       selector("&.info-chip-orange.info-chip-solid") { backgroundColor(colorOrange) }
       selector("&.info-chip-yellow.info-chip-solid") { backgroundColor(colorYellow) }
       selector("&.info-chip-green.info-chip-solid") { backgroundColor(colorGreen) }
-      selector("&.info-chip-mint.info-chip-solid") { backgroundColor(colorMint) }
-      selector("&.info-chip-teal.info-chip-solid") { backgroundColor(colorTeal) }
-      selector("&.info-chip-cyan.info-chip-solid") { backgroundColor(colorCyan) }
       selector("&.info-chip-blue.info-chip-solid") { backgroundColor(colorBlue) }
-      selector("&.info-chip-indigo.info-chip-solid") { backgroundColor(colorIndigo) }
+      selector("&.info-chip-violet.info-chip-solid") { backgroundColor(colorViolet) }
       selector("&.info-chip-purple.info-chip-solid") { backgroundColor(colorPurple) }
       selector("&.info-chip-pink.info-chip-solid") { backgroundColor(colorPink) }
-      selector("&.info-chip-brown.info-chip-solid") { backgroundColor(colorBrown) }
       selector("&.info-chip-gray.info-chip-solid") { backgroundColor(colorGray) }
       descendant(".info-chip-icon") {
         display(.inlineFlex)

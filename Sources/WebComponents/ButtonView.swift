@@ -49,7 +49,7 @@ public struct ButtonView: HTMLContent {
 
   /// Button color—Apple HIG color for the button's action identity
   public enum ButtonColor: String, Sendable, CaseIterable {
-    case gray, red, orange, yellow, green, mint, teal, cyan, blue, indigo, purple, pink, brown
+    case gray, pink, red, orange, yellow, green, blue, violet, purple
   }
 
   /// Button weight (visual prominence)
@@ -512,14 +512,10 @@ public struct ButtonView: HTMLContent {
           selector("&[data-weight='quiet'][data-color='orange'], &[data-weight='plain'][data-color='orange']") { color(`var`("--color-orange")).important() }
           selector("&[data-weight='quiet'][data-color='yellow'], &[data-weight='plain'][data-color='yellow']") { color(`var`("--color-yellow")).important() }
           selector("&[data-weight='quiet'][data-color='green'], &[data-weight='plain'][data-color='green']") { color(`var`("--color-green")).important() }
-          selector("&[data-weight='quiet'][data-color='mint'], &[data-weight='plain'][data-color='mint']") { color(`var`("--color-mint")).important() }
-          selector("&[data-weight='quiet'][data-color='teal'], &[data-weight='plain'][data-color='teal']") { color(`var`("--color-teal")).important() }
-          selector("&[data-weight='quiet'][data-color='cyan'], &[data-weight='plain'][data-color='cyan']") { color(`var`("--color-cyan")).important() }
           selector("&[data-weight='quiet'][data-color='blue'], &[data-weight='plain'][data-color='blue']") { color(`var`("--color-blue")).important() }
-          selector("&[data-weight='quiet'][data-color='indigo'], &[data-weight='plain'][data-color='indigo']") { color(`var`("--color-indigo")).important() }
+          selector("&[data-weight='quiet'][data-color='violet'], &[data-weight='plain'][data-color='violet']") { color(`var`("--color-violet")).important() }
           selector("&[data-weight='quiet'][data-color='purple'], &[data-weight='plain'][data-color='purple']") { color(`var`("--color-purple")).important() }
           selector("&[data-weight='quiet'][data-color='pink'], &[data-weight='plain'][data-color='pink']") { color(`var`("--color-pink")).important() }
-          selector("&[data-weight='quiet'][data-color='brown'], &[data-weight='plain'][data-color='brown']") { color(`var`("--color-brown")).important() }
           // A link can't be `disabled`; a disabled link-button is marked
           // `aria-disabled` and looks as a disabled button does. It still
           // follows its link, for a page that explains why it can't be used.
@@ -619,51 +615,6 @@ public struct ButtonView: HTMLContent {
             color(colorBase)
             borderColor(`var`("--border-color-green"))
           }
-          selector("&[data-weight='subtle'][data-color='mint']") {
-            backgroundColor(`var`("--background-color-mint-subtle"))
-            color(`var`("--color-mint"))
-            borderColor(`var`("--border-color-mint"))
-          }
-          selector("&[data-weight='solid'][data-color='mint']") {
-            backgroundColor(`var`("--background-color-mint"))
-            color(colorInvertedFixed)
-            borderColor(`var`("--background-color-mint"))
-          }
-          selector("&[data-weight='static'][data-color='mint']") {
-            backgroundColor(backgroundColorBase)
-            color(colorBase)
-            borderColor(`var`("--border-color-mint"))
-          }
-          selector("&[data-weight='subtle'][data-color='teal']") {
-            backgroundColor(`var`("--background-color-teal-subtle"))
-            color(`var`("--color-teal"))
-            borderColor(`var`("--border-color-teal"))
-          }
-          selector("&[data-weight='solid'][data-color='teal']") {
-            backgroundColor(`var`("--background-color-teal"))
-            color(colorInvertedFixed)
-            borderColor(`var`("--background-color-teal"))
-          }
-          selector("&[data-weight='static'][data-color='teal']") {
-            backgroundColor(backgroundColorBase)
-            color(colorBase)
-            borderColor(`var`("--border-color-teal"))
-          }
-          selector("&[data-weight='subtle'][data-color='cyan']") {
-            backgroundColor(`var`("--background-color-cyan-subtle"))
-            color(`var`("--color-cyan"))
-            borderColor(`var`("--border-color-cyan"))
-          }
-          selector("&[data-weight='solid'][data-color='cyan']") {
-            backgroundColor(`var`("--background-color-cyan"))
-            color(colorInvertedFixed)
-            borderColor(`var`("--background-color-cyan"))
-          }
-          selector("&[data-weight='static'][data-color='cyan']") {
-            backgroundColor(backgroundColorBase)
-            color(colorBase)
-            borderColor(`var`("--border-color-cyan"))
-          }
           selector("&[data-weight='subtle'][data-color='blue']") {
             backgroundColor(`var`("--background-color-blue-subtle"))
             color(`var`("--color-blue"))
@@ -679,30 +630,30 @@ public struct ButtonView: HTMLContent {
             color(colorBase)
             borderColor(`var`("--border-color-blue"))
           }
-          selector("&[data-weight='subtle'][data-color='indigo']") {
-            backgroundColor(`var`("--background-color-indigo-subtle"))
-            color(`var`("--color-indigo"))
-            borderColor(`var`("--border-color-indigo"))
-          }
-          selector("&[data-weight='solid'][data-color='indigo']") {
-            backgroundColor(`var`("--background-color-indigo"))
-            color(colorInvertedFixed)
-            borderColor(`var`("--background-color-indigo"))
-          }
-          selector("&[data-weight='static'][data-color='indigo']") {
-            backgroundColor(backgroundColorBase)
-            color(colorBase)
-            borderColor(`var`("--border-color-indigo"))
+          selector("&[data-weight='subtle'][data-color='violet']") {
+            backgroundColor(`var`("--background-color-violet-subtle"))
+            color(`var`("--color-violet"))
+            borderColor(`var`("--border-color-violet"))
           }
           selector("&[data-weight='subtle'][data-color='purple']") {
             backgroundColor(`var`("--background-color-purple-subtle"))
             color(`var`("--color-purple"))
             borderColor(`var`("--border-color-purple"))
           }
+          selector("&[data-weight='solid'][data-color='violet']") {
+            backgroundColor(`var`("--background-color-violet"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-violet"))
+          }
           selector("&[data-weight='solid'][data-color='purple']") {
             backgroundColor(`var`("--background-color-purple"))
             color(colorInvertedFixed)
             borderColor(`var`("--background-color-purple"))
+          }
+          selector("&[data-weight='static'][data-color='violet']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-violet"))
           }
           selector("&[data-weight='static'][data-color='purple']") {
             backgroundColor(backgroundColorBase)
@@ -723,21 +674,6 @@ public struct ButtonView: HTMLContent {
             backgroundColor(backgroundColorBase)
             color(colorBase)
             borderColor(`var`("--border-color-pink"))
-          }
-          selector("&[data-weight='subtle'][data-color='brown']") {
-            backgroundColor(`var`("--background-color-brown-subtle"))
-            color(`var`("--color-brown"))
-            borderColor(`var`("--border-color-brown"))
-          }
-          selector("&[data-weight='solid'][data-color='brown']") {
-            backgroundColor(`var`("--background-color-brown"))
-            color(colorInvertedFixed)
-            borderColor(`var`("--background-color-brown"))
-          }
-          selector("&[data-weight='static'][data-color='brown']") {
-            backgroundColor(backgroundColorBase)
-            color(colorBase)
-            borderColor(`var`("--border-color-brown"))
           }
 
           // Hover / Active—cacheable via data-attributes (covers all solid/subtle/quiet/plain)
@@ -899,98 +835,8 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-green-active")).important()
           }
 
-          selector("&[data-weight='subtle'][data-color='mint']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-mint-subtle-hover")).important()
-            borderColor(`var`("--border-color-mint-hover")).important()
-          }
-          selector("&[data-weight='subtle'][data-color='mint']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-mint-subtle-active")).important()
-            borderColor(`var`("--border-color-mint-active")).important()
-            color(`var`("--color-mint-active")).important()
-          }
-          selector("&[data-weight='solid'][data-color='mint']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-mint-hover")).important()
-            borderColor(`var`("--border-color-mint-hover")).important()
-          }
-          selector("&[data-weight='solid'][data-color='mint']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-mint-active")).important()
-            borderColor(`var`("--border-color-mint-active")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='mint']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-mint-subtle")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='mint']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-mint-subtle-active")).important()
-            color(`var`("--color-mint-active")).important()
-          }
-          selector("&[data-weight='plain'][data-color='mint']:hover:not(:disabled)") {
-            color(colorMintHover).important()
-          }
-          selector("&[data-weight='plain'][data-color='mint']:active:not(:disabled)") {
-            color(`var`("--color-mint-active")).important()
-          }
 
-          selector("&[data-weight='subtle'][data-color='teal']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-teal-subtle-hover")).important()
-            borderColor(`var`("--border-color-teal-hover")).important()
-          }
-          selector("&[data-weight='subtle'][data-color='teal']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-teal-subtle-active")).important()
-            borderColor(`var`("--border-color-teal-active")).important()
-            color(`var`("--color-teal-active")).important()
-          }
-          selector("&[data-weight='solid'][data-color='teal']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-teal-hover")).important()
-            borderColor(`var`("--border-color-teal-hover")).important()
-          }
-          selector("&[data-weight='solid'][data-color='teal']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-teal-active")).important()
-            borderColor(`var`("--border-color-teal-active")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='teal']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-teal-subtle")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='teal']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-teal-subtle-active")).important()
-            color(`var`("--color-teal-active")).important()
-          }
-          selector("&[data-weight='plain'][data-color='teal']:hover:not(:disabled)") {
-            color(colorTealHover).important()
-          }
-          selector("&[data-weight='plain'][data-color='teal']:active:not(:disabled)") {
-            color(`var`("--color-teal-active")).important()
-          }
 
-          selector("&[data-weight='subtle'][data-color='cyan']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-cyan-subtle-hover")).important()
-            borderColor(`var`("--border-color-cyan-hover")).important()
-          }
-          selector("&[data-weight='subtle'][data-color='cyan']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-cyan-subtle-active")).important()
-            borderColor(`var`("--border-color-cyan-active")).important()
-            color(`var`("--color-cyan-active")).important()
-          }
-          selector("&[data-weight='solid'][data-color='cyan']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-cyan-hover")).important()
-            borderColor(`var`("--border-color-cyan-hover")).important()
-          }
-          selector("&[data-weight='solid'][data-color='cyan']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-cyan-active")).important()
-            borderColor(`var`("--border-color-cyan-active")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='cyan']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-cyan-subtle")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='cyan']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-cyan-subtle-active")).important()
-            color(`var`("--color-cyan-active")).important()
-          }
-          selector("&[data-weight='plain'][data-color='cyan']:hover:not(:disabled)") {
-            color(colorCyanHover).important()
-          }
-          selector("&[data-weight='plain'][data-color='cyan']:active:not(:disabled)") {
-            color(`var`("--color-cyan-active")).important()
-          }
 
           selector("&[data-weight='subtle'][data-color='blue']:hover:not(:disabled)") {
             backgroundColor(`var`("--background-color-blue-subtle-hover")).important()
@@ -1023,63 +869,63 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-blue-active")).important()
           }
 
-          selector("&[data-weight='subtle'][data-color='indigo']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-indigo-subtle-hover")).important()
-            borderColor(`var`("--border-color-indigo-hover")).important()
-          }
-          selector("&[data-weight='subtle'][data-color='indigo']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-indigo-subtle-active")).important()
-            borderColor(`var`("--border-color-indigo-active")).important()
-            color(`var`("--color-indigo-active")).important()
-          }
-          selector("&[data-weight='solid'][data-color='indigo']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-indigo-hover")).important()
-            borderColor(`var`("--border-color-indigo-hover")).important()
-          }
-          selector("&[data-weight='solid'][data-color='indigo']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-indigo-active")).important()
-            borderColor(`var`("--border-color-indigo-active")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='indigo']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-indigo-subtle")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='indigo']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-indigo-subtle-active")).important()
-            color(`var`("--color-indigo-active")).important()
-          }
-          selector("&[data-weight='plain'][data-color='indigo']:hover:not(:disabled)") {
-            color(colorIndigoHover).important()
-          }
-          selector("&[data-weight='plain'][data-color='indigo']:active:not(:disabled)") {
-            color(`var`("--color-indigo-active")).important()
-          }
 
+          selector("&[data-weight='subtle'][data-color='violet']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-violet-subtle-hover")).important()
+            borderColor(`var`("--border-color-violet-hover")).important()
+          }
           selector("&[data-weight='subtle'][data-color='purple']:hover:not(:disabled)") {
             backgroundColor(`var`("--background-color-purple-subtle-hover")).important()
             borderColor(`var`("--border-color-purple-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='violet']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-violet-subtle-active")).important()
+            borderColor(`var`("--border-color-violet-active")).important()
+            color(`var`("--color-violet-active")).important()
           }
           selector("&[data-weight='subtle'][data-color='purple']:active:not(:disabled)") {
             backgroundColor(`var`("--background-color-purple-subtle-active")).important()
             borderColor(`var`("--border-color-purple-active")).important()
             color(`var`("--color-purple-active")).important()
           }
+          selector("&[data-weight='solid'][data-color='violet']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-violet-hover")).important()
+            borderColor(`var`("--border-color-violet-hover")).important()
+          }
           selector("&[data-weight='solid'][data-color='purple']:hover:not(:disabled)") {
             backgroundColor(`var`("--background-color-purple-hover")).important()
             borderColor(`var`("--border-color-purple-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='violet']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-violet-active")).important()
+            borderColor(`var`("--border-color-violet-active")).important()
           }
           selector("&[data-weight='solid'][data-color='purple']:active:not(:disabled)") {
             backgroundColor(`var`("--background-color-purple-active")).important()
             borderColor(`var`("--border-color-purple-active")).important()
           }
+          selector("&[data-weight='quiet'][data-color='violet']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-violet-subtle")).important()
+          }
           selector("&[data-weight='quiet'][data-color='purple']:hover:not(:disabled)") {
             backgroundColor(`var`("--background-color-purple-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='violet']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-violet-subtle-active")).important()
+            color(`var`("--color-violet-active")).important()
           }
           selector("&[data-weight='quiet'][data-color='purple']:active:not(:disabled)") {
             backgroundColor(`var`("--background-color-purple-subtle-active")).important()
             color(`var`("--color-purple-active")).important()
           }
+          selector("&[data-weight='plain'][data-color='violet']:hover:not(:disabled)") {
+            color(colorVioletHover).important()
+          }
           selector("&[data-weight='plain'][data-color='purple']:hover:not(:disabled)") {
             color(colorPurpleHover).important()
+          }
+          selector("&[data-weight='plain'][data-color='violet']:active:not(:disabled)") {
+            color(`var`("--color-violet-active")).important()
           }
           selector("&[data-weight='plain'][data-color='purple']:active:not(:disabled)") {
             color(`var`("--color-purple-active")).important()
@@ -1116,36 +962,6 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-pink-active")).important()
           }
 
-          selector("&[data-weight='subtle'][data-color='brown']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-brown-subtle-hover")).important()
-            borderColor(`var`("--border-color-brown-hover")).important()
-          }
-          selector("&[data-weight='subtle'][data-color='brown']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-brown-subtle-active")).important()
-            borderColor(`var`("--border-color-brown-active")).important()
-            color(`var`("--color-brown-active")).important()
-          }
-          selector("&[data-weight='solid'][data-color='brown']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-brown-hover")).important()
-            borderColor(`var`("--border-color-brown-hover")).important()
-          }
-          selector("&[data-weight='solid'][data-color='brown']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-brown-active")).important()
-            borderColor(`var`("--border-color-brown-active")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='brown']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-brown-subtle")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='brown']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-brown-subtle-active")).important()
-            color(`var`("--color-brown-active")).important()
-          }
-          selector("&[data-weight='plain'][data-color='brown']:hover:not(:disabled)") {
-            color(colorBrownHover).important()
-          }
-          selector("&[data-weight='plain'][data-color='brown']:active:not(:disabled)") {
-            color(`var`("--color-brown-active")).important()
-          }
 
           selector("&[data-weight='quiet']:focus") {
             borderColor(.transparent).important()
@@ -1350,14 +1166,10 @@ public struct ButtonView: HTMLContent {
           selector("&[data-weight='quiet'][data-color='orange'], &[data-weight='plain'][data-color='orange']") { color(`var`("--color-orange")).important() }
           selector("&[data-weight='quiet'][data-color='yellow'], &[data-weight='plain'][data-color='yellow']") { color(`var`("--color-yellow")).important() }
           selector("&[data-weight='quiet'][data-color='green'], &[data-weight='plain'][data-color='green']") { color(`var`("--color-green")).important() }
-          selector("&[data-weight='quiet'][data-color='mint'], &[data-weight='plain'][data-color='mint']") { color(`var`("--color-mint")).important() }
-          selector("&[data-weight='quiet'][data-color='teal'], &[data-weight='plain'][data-color='teal']") { color(`var`("--color-teal")).important() }
-          selector("&[data-weight='quiet'][data-color='cyan'], &[data-weight='plain'][data-color='cyan']") { color(`var`("--color-cyan")).important() }
           selector("&[data-weight='quiet'][data-color='blue'], &[data-weight='plain'][data-color='blue']") { color(`var`("--color-blue")).important() }
-          selector("&[data-weight='quiet'][data-color='indigo'], &[data-weight='plain'][data-color='indigo']") { color(`var`("--color-indigo")).important() }
+          selector("&[data-weight='quiet'][data-color='violet'], &[data-weight='plain'][data-color='violet']") { color(`var`("--color-violet")).important() }
           selector("&[data-weight='quiet'][data-color='purple'], &[data-weight='plain'][data-color='purple']") { color(`var`("--color-purple")).important() }
           selector("&[data-weight='quiet'][data-color='pink'], &[data-weight='plain'][data-color='pink']") { color(`var`("--color-pink")).important() }
-          selector("&[data-weight='quiet'][data-color='brown'], &[data-weight='plain'][data-color='brown']") { color(`var`("--color-brown")).important() }
           selector("&[data-weight='quiet']:disabled, &[data-weight='plain']:disabled") {
             backgroundColor(backgroundColorBase).important()
             borderColor(.transparent).important()
@@ -1442,51 +1254,6 @@ public struct ButtonView: HTMLContent {
             color(colorBase)
             borderColor(`var`("--border-color-green"))
           }
-          selector("&[data-weight='subtle'][data-color='mint']") {
-            backgroundColor(`var`("--background-color-mint-subtle"))
-            color(`var`("--color-mint"))
-            borderColor(`var`("--border-color-mint"))
-          }
-          selector("&[data-weight='solid'][data-color='mint']") {
-            backgroundColor(`var`("--background-color-mint"))
-            color(colorInvertedFixed)
-            borderColor(`var`("--background-color-mint"))
-          }
-          selector("&[data-weight='static'][data-color='mint']") {
-            backgroundColor(backgroundColorBase)
-            color(colorBase)
-            borderColor(`var`("--border-color-mint"))
-          }
-          selector("&[data-weight='subtle'][data-color='teal']") {
-            backgroundColor(`var`("--background-color-teal-subtle"))
-            color(`var`("--color-teal"))
-            borderColor(`var`("--border-color-teal"))
-          }
-          selector("&[data-weight='solid'][data-color='teal']") {
-            backgroundColor(`var`("--background-color-teal"))
-            color(colorInvertedFixed)
-            borderColor(`var`("--background-color-teal"))
-          }
-          selector("&[data-weight='static'][data-color='teal']") {
-            backgroundColor(backgroundColorBase)
-            color(colorBase)
-            borderColor(`var`("--border-color-teal"))
-          }
-          selector("&[data-weight='subtle'][data-color='cyan']") {
-            backgroundColor(`var`("--background-color-cyan-subtle"))
-            color(`var`("--color-cyan"))
-            borderColor(`var`("--border-color-cyan"))
-          }
-          selector("&[data-weight='solid'][data-color='cyan']") {
-            backgroundColor(`var`("--background-color-cyan"))
-            color(colorInvertedFixed)
-            borderColor(`var`("--background-color-cyan"))
-          }
-          selector("&[data-weight='static'][data-color='cyan']") {
-            backgroundColor(backgroundColorBase)
-            color(colorBase)
-            borderColor(`var`("--border-color-cyan"))
-          }
           selector("&[data-weight='subtle'][data-color='blue']") {
             backgroundColor(`var`("--background-color-blue-subtle"))
             color(`var`("--color-blue"))
@@ -1502,30 +1269,30 @@ public struct ButtonView: HTMLContent {
             color(colorBase)
             borderColor(`var`("--border-color-blue"))
           }
-          selector("&[data-weight='subtle'][data-color='indigo']") {
-            backgroundColor(`var`("--background-color-indigo-subtle"))
-            color(`var`("--color-indigo"))
-            borderColor(`var`("--border-color-indigo"))
-          }
-          selector("&[data-weight='solid'][data-color='indigo']") {
-            backgroundColor(`var`("--background-color-indigo"))
-            color(colorInvertedFixed)
-            borderColor(`var`("--background-color-indigo"))
-          }
-          selector("&[data-weight='static'][data-color='indigo']") {
-            backgroundColor(backgroundColorBase)
-            color(colorBase)
-            borderColor(`var`("--border-color-indigo"))
+          selector("&[data-weight='subtle'][data-color='violet']") {
+            backgroundColor(`var`("--background-color-violet-subtle"))
+            color(`var`("--color-violet"))
+            borderColor(`var`("--border-color-violet"))
           }
           selector("&[data-weight='subtle'][data-color='purple']") {
             backgroundColor(`var`("--background-color-purple-subtle"))
             color(`var`("--color-purple"))
             borderColor(`var`("--border-color-purple"))
           }
+          selector("&[data-weight='solid'][data-color='violet']") {
+            backgroundColor(`var`("--background-color-violet"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-violet"))
+          }
           selector("&[data-weight='solid'][data-color='purple']") {
             backgroundColor(`var`("--background-color-purple"))
             color(colorInvertedFixed)
             borderColor(`var`("--background-color-purple"))
+          }
+          selector("&[data-weight='static'][data-color='violet']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-violet"))
           }
           selector("&[data-weight='static'][data-color='purple']") {
             backgroundColor(backgroundColorBase)
@@ -1546,21 +1313,6 @@ public struct ButtonView: HTMLContent {
             backgroundColor(backgroundColorBase)
             color(colorBase)
             borderColor(`var`("--border-color-pink"))
-          }
-          selector("&[data-weight='subtle'][data-color='brown']") {
-            backgroundColor(`var`("--background-color-brown-subtle"))
-            color(`var`("--color-brown"))
-            borderColor(`var`("--border-color-brown"))
-          }
-          selector("&[data-weight='solid'][data-color='brown']") {
-            backgroundColor(`var`("--background-color-brown"))
-            color(colorInvertedFixed)
-            borderColor(`var`("--background-color-brown"))
-          }
-          selector("&[data-weight='static'][data-color='brown']") {
-            backgroundColor(backgroundColorBase)
-            color(colorBase)
-            borderColor(`var`("--border-color-brown"))
           }
 
           // Hover / Active—cacheable via data-attributes (covers all solid/subtle/quiet/plain)
@@ -1722,98 +1474,8 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-green-active")).important()
           }
 
-          selector("&[data-weight='subtle'][data-color='mint']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-mint-subtle-hover")).important()
-            borderColor(`var`("--border-color-mint-hover")).important()
-          }
-          selector("&[data-weight='subtle'][data-color='mint']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-mint-subtle-active")).important()
-            borderColor(`var`("--border-color-mint-active")).important()
-            color(`var`("--color-mint-active")).important()
-          }
-          selector("&[data-weight='solid'][data-color='mint']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-mint-hover")).important()
-            borderColor(`var`("--border-color-mint-hover")).important()
-          }
-          selector("&[data-weight='solid'][data-color='mint']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-mint-active")).important()
-            borderColor(`var`("--border-color-mint-active")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='mint']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-mint-subtle")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='mint']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-mint-subtle-active")).important()
-            color(`var`("--color-mint-active")).important()
-          }
-          selector("&[data-weight='plain'][data-color='mint']:hover:not(:disabled)") {
-            color(colorMintHover).important()
-          }
-          selector("&[data-weight='plain'][data-color='mint']:active:not(:disabled)") {
-            color(`var`("--color-mint-active")).important()
-          }
 
-          selector("&[data-weight='subtle'][data-color='teal']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-teal-subtle-hover")).important()
-            borderColor(`var`("--border-color-teal-hover")).important()
-          }
-          selector("&[data-weight='subtle'][data-color='teal']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-teal-subtle-active")).important()
-            borderColor(`var`("--border-color-teal-active")).important()
-            color(`var`("--color-teal-active")).important()
-          }
-          selector("&[data-weight='solid'][data-color='teal']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-teal-hover")).important()
-            borderColor(`var`("--border-color-teal-hover")).important()
-          }
-          selector("&[data-weight='solid'][data-color='teal']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-teal-active")).important()
-            borderColor(`var`("--border-color-teal-active")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='teal']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-teal-subtle")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='teal']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-teal-subtle-active")).important()
-            color(`var`("--color-teal-active")).important()
-          }
-          selector("&[data-weight='plain'][data-color='teal']:hover:not(:disabled)") {
-            color(colorTealHover).important()
-          }
-          selector("&[data-weight='plain'][data-color='teal']:active:not(:disabled)") {
-            color(`var`("--color-teal-active")).important()
-          }
 
-          selector("&[data-weight='subtle'][data-color='cyan']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-cyan-subtle-hover")).important()
-            borderColor(`var`("--border-color-cyan-hover")).important()
-          }
-          selector("&[data-weight='subtle'][data-color='cyan']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-cyan-subtle-active")).important()
-            borderColor(`var`("--border-color-cyan-active")).important()
-            color(`var`("--color-cyan-active")).important()
-          }
-          selector("&[data-weight='solid'][data-color='cyan']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-cyan-hover")).important()
-            borderColor(`var`("--border-color-cyan-hover")).important()
-          }
-          selector("&[data-weight='solid'][data-color='cyan']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-cyan-active")).important()
-            borderColor(`var`("--border-color-cyan-active")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='cyan']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-cyan-subtle")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='cyan']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-cyan-subtle-active")).important()
-            color(`var`("--color-cyan-active")).important()
-          }
-          selector("&[data-weight='plain'][data-color='cyan']:hover:not(:disabled)") {
-            color(colorCyanHover).important()
-          }
-          selector("&[data-weight='plain'][data-color='cyan']:active:not(:disabled)") {
-            color(`var`("--color-cyan-active")).important()
-          }
 
           selector("&[data-weight='subtle'][data-color='blue']:hover:not(:disabled)") {
             backgroundColor(`var`("--background-color-blue-subtle-hover")).important()
@@ -1846,63 +1508,63 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-blue-active")).important()
           }
 
-          selector("&[data-weight='subtle'][data-color='indigo']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-indigo-subtle-hover")).important()
-            borderColor(`var`("--border-color-indigo-hover")).important()
-          }
-          selector("&[data-weight='subtle'][data-color='indigo']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-indigo-subtle-active")).important()
-            borderColor(`var`("--border-color-indigo-active")).important()
-            color(`var`("--color-indigo-active")).important()
-          }
-          selector("&[data-weight='solid'][data-color='indigo']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-indigo-hover")).important()
-            borderColor(`var`("--border-color-indigo-hover")).important()
-          }
-          selector("&[data-weight='solid'][data-color='indigo']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-indigo-active")).important()
-            borderColor(`var`("--border-color-indigo-active")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='indigo']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-indigo-subtle")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='indigo']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-indigo-subtle-active")).important()
-            color(`var`("--color-indigo-active")).important()
-          }
-          selector("&[data-weight='plain'][data-color='indigo']:hover:not(:disabled)") {
-            color(colorIndigoHover).important()
-          }
-          selector("&[data-weight='plain'][data-color='indigo']:active:not(:disabled)") {
-            color(`var`("--color-indigo-active")).important()
-          }
 
+          selector("&[data-weight='subtle'][data-color='violet']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-violet-subtle-hover")).important()
+            borderColor(`var`("--border-color-violet-hover")).important()
+          }
           selector("&[data-weight='subtle'][data-color='purple']:hover:not(:disabled)") {
             backgroundColor(`var`("--background-color-purple-subtle-hover")).important()
             borderColor(`var`("--border-color-purple-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='violet']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-violet-subtle-active")).important()
+            borderColor(`var`("--border-color-violet-active")).important()
+            color(`var`("--color-violet-active")).important()
           }
           selector("&[data-weight='subtle'][data-color='purple']:active:not(:disabled)") {
             backgroundColor(`var`("--background-color-purple-subtle-active")).important()
             borderColor(`var`("--border-color-purple-active")).important()
             color(`var`("--color-purple-active")).important()
           }
+          selector("&[data-weight='solid'][data-color='violet']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-violet-hover")).important()
+            borderColor(`var`("--border-color-violet-hover")).important()
+          }
           selector("&[data-weight='solid'][data-color='purple']:hover:not(:disabled)") {
             backgroundColor(`var`("--background-color-purple-hover")).important()
             borderColor(`var`("--border-color-purple-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='violet']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-violet-active")).important()
+            borderColor(`var`("--border-color-violet-active")).important()
           }
           selector("&[data-weight='solid'][data-color='purple']:active:not(:disabled)") {
             backgroundColor(`var`("--background-color-purple-active")).important()
             borderColor(`var`("--border-color-purple-active")).important()
           }
+          selector("&[data-weight='quiet'][data-color='violet']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-violet-subtle")).important()
+          }
           selector("&[data-weight='quiet'][data-color='purple']:hover:not(:disabled)") {
             backgroundColor(`var`("--background-color-purple-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='violet']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-violet-subtle-active")).important()
+            color(`var`("--color-violet-active")).important()
           }
           selector("&[data-weight='quiet'][data-color='purple']:active:not(:disabled)") {
             backgroundColor(`var`("--background-color-purple-subtle-active")).important()
             color(`var`("--color-purple-active")).important()
           }
+          selector("&[data-weight='plain'][data-color='violet']:hover:not(:disabled)") {
+            color(colorVioletHover).important()
+          }
           selector("&[data-weight='plain'][data-color='purple']:hover:not(:disabled)") {
             color(colorPurpleHover).important()
+          }
+          selector("&[data-weight='plain'][data-color='violet']:active:not(:disabled)") {
+            color(`var`("--color-violet-active")).important()
           }
           selector("&[data-weight='plain'][data-color='purple']:active:not(:disabled)") {
             color(`var`("--color-purple-active")).important()
@@ -1939,36 +1601,6 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-pink-active")).important()
           }
 
-          selector("&[data-weight='subtle'][data-color='brown']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-brown-subtle-hover")).important()
-            borderColor(`var`("--border-color-brown-hover")).important()
-          }
-          selector("&[data-weight='subtle'][data-color='brown']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-brown-subtle-active")).important()
-            borderColor(`var`("--border-color-brown-active")).important()
-            color(`var`("--color-brown-active")).important()
-          }
-          selector("&[data-weight='solid'][data-color='brown']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-brown-hover")).important()
-            borderColor(`var`("--border-color-brown-hover")).important()
-          }
-          selector("&[data-weight='solid'][data-color='brown']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-brown-active")).important()
-            borderColor(`var`("--border-color-brown-active")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='brown']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-brown-subtle")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='brown']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-brown-subtle-active")).important()
-            color(`var`("--color-brown-active")).important()
-          }
-          selector("&[data-weight='plain'][data-color='brown']:hover:not(:disabled)") {
-            color(colorBrownHover).important()
-          }
-          selector("&[data-weight='plain'][data-color='brown']:active:not(:disabled)") {
-            color(`var`("--color-brown-active")).important()
-          }
 
           selector("&[data-weight='quiet']:focus") {
             borderColor(.transparent).important()
