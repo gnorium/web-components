@@ -50,6 +50,10 @@
     /// (`?resemblance=…&line=…&word=…`, or `&element=…`). Nil: the markup
     /// is read whole.
     let glossURL: String?
+    /// The one page drawn, by its place in the document from 0, where a
+    /// reader draws a page at a time and fetches the others as they are
+    /// turned to (`TestamentView.pagesURL`); nil draws every page.
+    let page: Int?
 
     /// A translation of the markup, page by page, in its own language:
     /// the translation's own TEI, read by the same reader as the markup,
@@ -80,8 +84,10 @@
 
     public init(
       teiXml: String, editable: Bool = false, translation: Translation? = nil,
-      highlights: [String: [TEIHighlight]] = [:], labelsPages: Bool = false, glossURL: String? = nil
+      highlights: [String: [TEIHighlight]] = [:], labelsPages: Bool = false, glossURL: String? = nil,
+      page: Int? = nil
     ) {
+      self.page = page
       self.teiXml = teiXml
       self.editable = editable
       self.translation = translation
@@ -527,7 +533,7 @@
           p { "This document has no page breaks to read by. The raw XML is below." }
             .class("tei-empty")
         }
-        for (index, page) in pages.enumerated() {
+        for (index, page) in pages.enumerated() where self.page == nil || self.page == index {
           let tabStop = glossURL == nil ? nil : Self.firstWord(of: page.lines)
           div {
             div {
@@ -639,7 +645,10 @@
           // The zones its markup names, for the reader to draw on its
           // canvas as the caret or the pointer comes to them in Raw.
           .data("zones", Self.zoneData(of: page))
-          .data("active", index == 0 ? "true" : "false")
+          // Its place in the document, from 0: what the reader turns to and
+          // a roster names it by, where not every page is drawn.
+          .data("page-index", index)
+          .data("active", index == (self.page ?? 0) ? "true" : "false")
         }
       }
       .class("tei-view")

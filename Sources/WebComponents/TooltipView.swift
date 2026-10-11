@@ -313,24 +313,39 @@ public struct TooltipView: HTMLContent {
       // Opened from dimmed content (a hidden locution, to the few who still
       // see it), the bubble is dimmed with it: as if at opacity medium, but
       // over the page's own background rather than over the words beneath
-      // it, which would otherwise show through (user, 2026-10-11).
-      selector("&[data-dimmed='true'] .tooltip-content") {
+      // it, which would otherwise show through (user, 2026-10-11). Inside
+      // the content as the server sends it, or moved out to its portal
+      // host, which carries the mark (`data-dimmed`). The content must dim
+      // its parts, not a box holding the tooltip (`LocutionView`).
+      selector("&[data-dimmed='true'] .tooltip-content", "[data-dimmed='true'] & .tooltip-content") {
         CSS.Property("background-color", Self.dimmed(backgroundColorInverted))
         CSS.Property("color", Self.dimmed(colorInverted))
       }
-      selector("&[data-dimmed='true'] .tooltip-content time") {
+      selector("&[data-dimmed='true'] .tooltip-content time", "[data-dimmed='true'] & .tooltip-content time") {
         CSS.Property("color", Self.dimmed(colorInverted), isImportant: true)
       }
-      selector("&[data-dimmed='true'][data-placement^='bottom'] .tooltip-content::after") {
+      selector(
+        "&[data-dimmed='true'][data-placement^='bottom'] .tooltip-content::after",
+        "[data-dimmed='true'] &[data-placement^='bottom'] .tooltip-content::after"
+      ) {
         CSS.Property("border-bottom-color", Self.dimmed(backgroundColorInverted))
       }
-      selector("&[data-dimmed='true'][data-placement^='top'] .tooltip-content::after") {
+      selector(
+        "&[data-dimmed='true'][data-placement^='top'] .tooltip-content::after",
+        "[data-dimmed='true'] &[data-placement^='top'] .tooltip-content::after"
+      ) {
         CSS.Property("border-top-color", Self.dimmed(backgroundColorInverted))
       }
-      selector("&[data-dimmed='true'][data-placement^='left'] .tooltip-content::after") {
+      selector(
+        "&[data-dimmed='true'][data-placement^='left'] .tooltip-content::after",
+        "[data-dimmed='true'] &[data-placement^='left'] .tooltip-content::after"
+      ) {
         CSS.Property("border-left-color", Self.dimmed(backgroundColorInverted))
       }
-      selector("&[data-dimmed='true'][data-placement^='right'] .tooltip-content::after") {
+      selector(
+        "&[data-dimmed='true'][data-placement^='right'] .tooltip-content::after",
+        "[data-dimmed='true'] &[data-placement^='right'] .tooltip-content::after"
+      ) {
         CSS.Property("border-right-color", Self.dimmed(backgroundColorInverted))
       }
     }

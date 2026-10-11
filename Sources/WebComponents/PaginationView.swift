@@ -25,6 +25,10 @@ public struct PaginationView: HTMLContent {
     case medium
   }
 
+  /// Rows a page, every paged list and table on the site alike (user,
+  /// 2026-10-11): the one number each pages by.
+  public static let perPage = 100
+
   public let currentPage: Int
   public let totalPages: Int
   public let previousUrl: String?

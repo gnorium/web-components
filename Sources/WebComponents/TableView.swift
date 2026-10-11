@@ -390,7 +390,7 @@ public struct TableView: HTMLContent {
     pending: Bool = false,
     paginate: Bool = false,
     paginationPosition: PaginationPosition = .bottom,
-    paginationSizeDefault: Int = 10,
+    paginationSizeDefault: Int = PaginationView.perPage,
     paginationControlSize: PaginationView.Size = .normal,
     totalItems: Int? = nil,
     totalPages: Int? = nil,
@@ -2442,8 +2442,8 @@ public struct TableView: HTMLContent {
 
     private func goToPage(_ page: Int) {
       let isPaginated = stringEquals(table.getAttribute(data("paginate")) ?? "false", "true")
-      let sizeStr = table.getAttribute(data("pagination-size")) ?? "10"
-      let pageSize = parseInt(sizeStr) ?? 10
+      let sizeStr = table.getAttribute(data("pagination-size")) ?? ""
+      let pageSize = parseInt(sizeStr) ?? PaginationView.perPage
 
       let rows = table.querySelectorAll(".table-tbody tr")
       let allDataRows = Array(rows).filter {
@@ -2542,7 +2542,7 @@ public struct TableView: HTMLContent {
       pending: Bool = false,
       paginate: Bool = false,
       paginationPosition: TableView.PaginationPosition = .bottom,
-      paginationSizeDefault: Int = 10,
+      paginationSizeDefault: Int = PaginationView.perPage,
       customClass: String = "",
       @HTMLBuilder header: () -> [DOM.Node] = { [] },
       @HTMLBuilder thead: () -> [DOM.Node] = { [] },
