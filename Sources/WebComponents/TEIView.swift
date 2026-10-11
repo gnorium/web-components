@@ -523,6 +523,24 @@
       }
     }
 
+    /// Whether every word of a page is set in white ink (`color(white)`, on
+    /// its runs, its line or its frame).
+    static func allWhiteInk(_ lines: [TEILine]) -> Bool {
+      func white(_ rend: String) -> Bool { rend.split(separator: " ").contains("color(white)") }
+      var any = false
+      for line in lines where !line.text.trimmingCharacters(in: .whitespaces).isEmpty {
+        if case .text = line.kind {} else if case .heading = line.kind {} else if case .note = line.kind {} else {
+          continue
+        }
+        any = true
+        if white(line.rend) || white(line.frame) { continue }
+        for run in line.runs where !run.text.trimmingCharacters(in: .whitespaces).isEmpty {
+          if !white(run.rend) { return false }
+        }
+      }
+      return any
+    }
+
     /// The height a vertical `<space/>` leaves: so many of the text's
     /// lines (`lh`, its leading); a length in its own unit where CSS has
     /// it; a character's height as an em.
@@ -643,6 +661,9 @@
             }
             .class("tei-page-text")
             .data("layer", "rendering")
+            // A page all in white ink is read as the page's own text: no
+            // backing (user, 2026-10-11).
+            .data("all-white-ink", Self.allWhiteInk(page.lines))
 
             div {
               if editable {
@@ -1005,9 +1026,10 @@
             color(ink)
           }
         }
-        // White ink, as on the dark paper it is printed on: white text on
-        // the gray fill, in both themes, so it can be seen (user,
-        // 2026-10-11).
+        // White ink, as on the dark paper it is printed on: where only part
+        // of a page is white, white text on the gray fill, in both themes,
+        // so it can be seen; a page all in white is read in the text's own
+        // color, with no backing (user, 2026-10-11).
         selector(
           "& .tei-run[data-rend~='color(white)']", "& .tei-block[data-rend~='color(white)'] > .tei-line",
           "& .tei-section > .tei-line[data-rend~='color(white)']",
@@ -1015,6 +1037,13 @@
         ) {
           color(colorInvertedFixed)
           backgroundColor(backgroundColorGray)
+        }
+        selector(
+          "& .tei-page-text[data-all-white-ink='true'] .tei-run[data-rend~='color(white)']",
+          "& .tei-page-text[data-all-white-ink='true'] .tei-line"
+        ) {
+          color(colorBase).important()
+          backgroundColor(.transparent).important()
         }
         // Type a step larger or smaller than the text's, on a run, a block,
         // or a frame's lines (user, 2026-10-11).

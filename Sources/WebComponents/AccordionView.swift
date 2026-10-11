@@ -694,7 +694,7 @@ public struct AccordionView: HTMLContent {
       var closed = false
       var cursor: DOM.Element? = details
       while let current = cursor, !closed {
-        closed = !stringEquals(current.dataset["expanded"] ?? "", "true")
+        closed = Self.isClosed(current)
         cursor = current.closest(".accordion-view")?.closest(".accordion-details")
       }
       guard closed else { return }
@@ -741,9 +741,10 @@ public struct AccordionView: HTMLContent {
       var cursor: DOM.Element? =
         element.classList.contains("accordion-details") ? element : element.closest(".accordion-details")
       while let details = cursor {
-        // Closed by the accordion's own state: the browser opens a <details>
-        // around a fragment's target itself, which the accordion never hears.
-        if !stringEquals(details.dataset["expanded"] ?? "", "true") { closed.append(details) }
+        // Closed, or an accordion that says it is collapsed: the browser
+        // opens a <details> around a fragment's target itself, which the
+        // accordion never hears.
+        if Self.isClosed(details) { closed.append(details) }
         // Up past this accordion's own root to the one around it.
         cursor = details.closest(".accordion-view")?.closest(".accordion-details")
       }
@@ -753,6 +754,11 @@ public struct AccordionView: HTMLContent {
       openInTurn(Array(closed.reversed()), then: then)
     }
 
+    /// Closed: no `open`, or an accordion whose own state is collapsed.
+    static func isClosed(_ details: DOM.Element) -> Bool {
+      !details.hasAttribute(.open) || stringEquals(details.dataset["expanded"] ?? "", "false")
+    }
+
     private static func openInTurn(_ chain: [DOM.Element], then: @escaping @Sendable () -> Void) {
       guard let first = chain.first else {
         then()
@@ -760,8 +766,12 @@ public struct AccordionView: HTMLContent {
       }
       // Opened by the browser behind the accordion's back: closed again
       // first, so the accordion opens it as it opens any.
+      guard let summary = first.querySelector(".accordion-summary") else {
+        openInTurn(Array(chain.dropFirst()), then: then)
+        return
+      }
       if first.hasAttribute(.open) { first.removeAttribute(.open) }
-      first.querySelector(".accordion-summary")?.dispatchEvent(.click)
+      summary.dispatchEvent(.click)
       settle([first], tries: 0) { openInTurn(Array(chain.dropFirst()), then: then) }
     }
 
