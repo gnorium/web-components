@@ -988,17 +988,16 @@
         selector("& .tei-frame[data-rend~='align(center)']") { alignSelf(.center) }
         selector("& .tei-frame[data-rend~='align(right)']") { alignSelf(.flexEnd) }
         selector("& .tei-frame[data-rend~='align(left)']") { alignSelf(.flexStart) }
-        // Ink (user, 2026-10-11): a rend's color(NAME), an ISCC–NBS basic
-        // color name or violet (`TEIRenderer.inks`), on a run, a block or a
-        // frame, drawn in one of the named colors (`NamedColors`): brown as
-        // orange, olive and yellow-green as yellow (yellow green's vivid
-        // cusp, 122°, is nearer yellow's 93° than green's 171°); black the
-        // text's own color.
+        // Ink (user, 2026-10-11): a rend's color(NAME), one of the 13
+        // ISCC–NBS basic color names (`TEIRenderer.inks`), on a run, a block
+        // or a frame, drawn in one of the wheel's tokens (`NamedColors`):
+        // pink as rose, brown as orange, olive as yellow, yellow-green as
+        // chartreuse, purple as magenta; black the text's own color, white
+        // below.
         for (name, ink) in [
-          ("black", colorBase), ("gray", colorGray), ("pink", colorPink), ("red", colorRed),
-          ("orange", colorOrange), ("brown", colorOrange), ("yellow", colorYellow), ("olive", colorYellow),
-          ("yellow-green", colorYellow), ("green", colorGreen), ("blue", colorBlue), ("violet", colorViolet),
-          ("purple", colorPurple),
+          ("pink", colorRose), ("red", colorRed), ("orange", colorOrange), ("brown", colorOrange),
+          ("yellow", colorYellow), ("olive", colorYellow), ("yellow-green", colorChartreuse), ("green", colorGreen),
+          ("blue", colorBlue), ("purple", colorMagenta), ("gray", colorGray), ("black", colorBase),
         ] {
           selector(
             "& .tei-run[data-rend~='color(\(name))']", "& .tei-block[data-rend~='color(\(name))'] > .tei-line",

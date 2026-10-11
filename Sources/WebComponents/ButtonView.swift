@@ -49,7 +49,9 @@ public struct ButtonView: HTMLContent {
 
   /// Button color—Apple HIG color for the button's action identity
   public enum ButtonColor: String, Sendable, CaseIterable {
-    case gray, pink, red, orange, yellow, green, blue, violet, purple
+    case gray, red, orange, yellow, chartreuse, green
+    case springGreen = "spring-green"
+    case cyan, azure, blue, violet, magenta, rose
   }
 
   /// Button weight (visual prominence)
@@ -511,11 +513,15 @@ public struct ButtonView: HTMLContent {
           selector("&[data-weight='quiet'][data-color='red'], &[data-weight='plain'][data-color='red']") { color(`var`("--color-red")).important() }
           selector("&[data-weight='quiet'][data-color='orange'], &[data-weight='plain'][data-color='orange']") { color(`var`("--color-orange")).important() }
           selector("&[data-weight='quiet'][data-color='yellow'], &[data-weight='plain'][data-color='yellow']") { color(`var`("--color-yellow")).important() }
+          selector("&[data-weight='quiet'][data-color='chartreuse'], &[data-weight='plain'][data-color='chartreuse']") { color(`var`("--color-chartreuse")).important() }
           selector("&[data-weight='quiet'][data-color='green'], &[data-weight='plain'][data-color='green']") { color(`var`("--color-green")).important() }
+          selector("&[data-weight='quiet'][data-color='spring-green'], &[data-weight='plain'][data-color='spring-green']") { color(`var`("--color-spring-green")).important() }
+          selector("&[data-weight='quiet'][data-color='cyan'], &[data-weight='plain'][data-color='cyan']") { color(`var`("--color-cyan")).important() }
+          selector("&[data-weight='quiet'][data-color='azure'], &[data-weight='plain'][data-color='azure']") { color(`var`("--color-azure")).important() }
           selector("&[data-weight='quiet'][data-color='blue'], &[data-weight='plain'][data-color='blue']") { color(`var`("--color-blue")).important() }
           selector("&[data-weight='quiet'][data-color='violet'], &[data-weight='plain'][data-color='violet']") { color(`var`("--color-violet")).important() }
-          selector("&[data-weight='quiet'][data-color='purple'], &[data-weight='plain'][data-color='purple']") { color(`var`("--color-purple")).important() }
-          selector("&[data-weight='quiet'][data-color='pink'], &[data-weight='plain'][data-color='pink']") { color(`var`("--color-pink")).important() }
+          selector("&[data-weight='quiet'][data-color='magenta'], &[data-weight='plain'][data-color='magenta']") { color(`var`("--color-magenta")).important() }
+          selector("&[data-weight='quiet'][data-color='rose'], &[data-weight='plain'][data-color='rose']") { color(`var`("--color-rose")).important() }
           // A link can't be `disabled`; a disabled link-button is marked
           // `aria-disabled` and looks as a disabled button does. It still
           // follows its link, for a page that explains why it can't be used.
@@ -560,29 +566,9 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-red"))
             borderColor(`var`("--border-color-red"))
           }
-          selector("&[data-weight='solid'][data-color='red']") {
-            backgroundColor(`var`("--background-color-red"))
-            color(colorInvertedFixed)
-            borderColor(`var`("--background-color-red"))
-          }
-          selector("&[data-weight='static'][data-color='red']") {
-            backgroundColor(backgroundColorBase)
-            color(colorBase)
-            borderColor(`var`("--border-color-red"))
-          }
           selector("&[data-weight='subtle'][data-color='orange']") {
             backgroundColor(`var`("--background-color-orange-subtle"))
             color(`var`("--color-orange"))
-            borderColor(`var`("--border-color-orange"))
-          }
-          selector("&[data-weight='solid'][data-color='orange']") {
-            backgroundColor(`var`("--background-color-orange"))
-            color(colorInvertedFixed)
-            borderColor(`var`("--background-color-orange"))
-          }
-          selector("&[data-weight='static'][data-color='orange']") {
-            backgroundColor(backgroundColorBase)
-            color(colorBase)
             borderColor(`var`("--border-color-orange"))
           }
           selector("&[data-weight='subtle'][data-color='yellow']") {
@@ -590,44 +576,34 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-yellow"))
             borderColor(`var`("--border-color-yellow"))
           }
-          selector("&[data-weight='solid'][data-color='yellow']") {
-            backgroundColor(`var`("--background-color-yellow"))
-            color(colorInvertedFixed)
-            borderColor(`var`("--background-color-yellow"))
-          }
-          selector("&[data-weight='static'][data-color='yellow']") {
-            backgroundColor(backgroundColorBase)
-            color(colorBase)
-            borderColor(`var`("--border-color-yellow"))
+          selector("&[data-weight='subtle'][data-color='chartreuse']") {
+            backgroundColor(`var`("--background-color-chartreuse-subtle"))
+            color(`var`("--color-chartreuse"))
+            borderColor(`var`("--border-color-chartreuse"))
           }
           selector("&[data-weight='subtle'][data-color='green']") {
             backgroundColor(`var`("--background-color-green-subtle"))
             color(`var`("--color-green"))
             borderColor(`var`("--border-color-green"))
           }
-          selector("&[data-weight='solid'][data-color='green']") {
-            backgroundColor(`var`("--background-color-green"))
-            color(colorInvertedFixed)
-            borderColor(`var`("--background-color-green"))
+          selector("&[data-weight='subtle'][data-color='spring-green']") {
+            backgroundColor(`var`("--background-color-spring-green-subtle"))
+            color(`var`("--color-spring-green"))
+            borderColor(`var`("--border-color-spring-green"))
           }
-          selector("&[data-weight='static'][data-color='green']") {
-            backgroundColor(backgroundColorBase)
-            color(colorBase)
-            borderColor(`var`("--border-color-green"))
+          selector("&[data-weight='subtle'][data-color='cyan']") {
+            backgroundColor(`var`("--background-color-cyan-subtle"))
+            color(`var`("--color-cyan"))
+            borderColor(`var`("--border-color-cyan"))
+          }
+          selector("&[data-weight='subtle'][data-color='azure']") {
+            backgroundColor(`var`("--background-color-azure-subtle"))
+            color(`var`("--color-azure"))
+            borderColor(`var`("--border-color-azure"))
           }
           selector("&[data-weight='subtle'][data-color='blue']") {
             backgroundColor(`var`("--background-color-blue-subtle"))
             color(`var`("--color-blue"))
-            borderColor(`var`("--border-color-blue"))
-          }
-          selector("&[data-weight='solid'][data-color='blue']") {
-            backgroundColor(`var`("--background-color-blue"))
-            color(colorInvertedFixed)
-            borderColor(`var`("--background-color-blue"))
-          }
-          selector("&[data-weight='static'][data-color='blue']") {
-            backgroundColor(backgroundColorBase)
-            color(colorBase)
             borderColor(`var`("--border-color-blue"))
           }
           selector("&[data-weight='subtle'][data-color='violet']") {
@@ -635,45 +611,135 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-violet"))
             borderColor(`var`("--border-color-violet"))
           }
-          selector("&[data-weight='subtle'][data-color='purple']") {
-            backgroundColor(`var`("--background-color-purple-subtle"))
-            color(`var`("--color-purple"))
-            borderColor(`var`("--border-color-purple"))
+          selector("&[data-weight='subtle'][data-color='magenta']") {
+            backgroundColor(`var`("--background-color-magenta-subtle"))
+            color(`var`("--color-magenta"))
+            borderColor(`var`("--border-color-magenta"))
+          }
+          selector("&[data-weight='subtle'][data-color='rose']") {
+            backgroundColor(`var`("--background-color-rose-subtle"))
+            color(`var`("--color-rose"))
+            borderColor(`var`("--border-color-rose"))
+          }
+          selector("&[data-weight='solid'][data-color='red']") {
+            backgroundColor(`var`("--background-color-red"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-red"))
+          }
+          selector("&[data-weight='solid'][data-color='orange']") {
+            backgroundColor(`var`("--background-color-orange"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-orange"))
+          }
+          selector("&[data-weight='solid'][data-color='yellow']") {
+            backgroundColor(`var`("--background-color-yellow"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-yellow"))
+          }
+          selector("&[data-weight='solid'][data-color='chartreuse']") {
+            backgroundColor(`var`("--background-color-chartreuse"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-chartreuse"))
+          }
+          selector("&[data-weight='solid'][data-color='green']") {
+            backgroundColor(`var`("--background-color-green"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-green"))
+          }
+          selector("&[data-weight='solid'][data-color='spring-green']") {
+            backgroundColor(`var`("--background-color-spring-green"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-spring-green"))
+          }
+          selector("&[data-weight='solid'][data-color='cyan']") {
+            backgroundColor(`var`("--background-color-cyan"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-cyan"))
+          }
+          selector("&[data-weight='solid'][data-color='azure']") {
+            backgroundColor(`var`("--background-color-azure"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-azure"))
+          }
+          selector("&[data-weight='solid'][data-color='blue']") {
+            backgroundColor(`var`("--background-color-blue"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-blue"))
           }
           selector("&[data-weight='solid'][data-color='violet']") {
             backgroundColor(`var`("--background-color-violet"))
             color(colorInvertedFixed)
             borderColor(`var`("--background-color-violet"))
           }
-          selector("&[data-weight='solid'][data-color='purple']") {
-            backgroundColor(`var`("--background-color-purple"))
+          selector("&[data-weight='solid'][data-color='magenta']") {
+            backgroundColor(`var`("--background-color-magenta"))
             color(colorInvertedFixed)
-            borderColor(`var`("--background-color-purple"))
+            borderColor(`var`("--background-color-magenta"))
+          }
+          selector("&[data-weight='solid'][data-color='rose']") {
+            backgroundColor(`var`("--background-color-rose"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-rose"))
+          }
+          selector("&[data-weight='static'][data-color='red']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-red"))
+          }
+          selector("&[data-weight='static'][data-color='orange']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-orange"))
+          }
+          selector("&[data-weight='static'][data-color='yellow']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-yellow"))
+          }
+          selector("&[data-weight='static'][data-color='chartreuse']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-chartreuse"))
+          }
+          selector("&[data-weight='static'][data-color='green']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-green"))
+          }
+          selector("&[data-weight='static'][data-color='spring-green']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-spring-green"))
+          }
+          selector("&[data-weight='static'][data-color='cyan']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-cyan"))
+          }
+          selector("&[data-weight='static'][data-color='azure']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-azure"))
+          }
+          selector("&[data-weight='static'][data-color='blue']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-blue"))
           }
           selector("&[data-weight='static'][data-color='violet']") {
             backgroundColor(backgroundColorBase)
             color(colorBase)
             borderColor(`var`("--border-color-violet"))
           }
-          selector("&[data-weight='static'][data-color='purple']") {
+          selector("&[data-weight='static'][data-color='magenta']") {
             backgroundColor(backgroundColorBase)
             color(colorBase)
-            borderColor(`var`("--border-color-purple"))
+            borderColor(`var`("--border-color-magenta"))
           }
-          selector("&[data-weight='subtle'][data-color='pink']") {
-            backgroundColor(`var`("--background-color-pink-subtle"))
-            color(`var`("--color-pink"))
-            borderColor(`var`("--border-color-pink"))
-          }
-          selector("&[data-weight='solid'][data-color='pink']") {
-            backgroundColor(`var`("--background-color-pink"))
-            color(colorInvertedFixed)
-            borderColor(`var`("--background-color-pink"))
-          }
-          selector("&[data-weight='static'][data-color='pink']") {
+          selector("&[data-weight='static'][data-color='rose']") {
             backgroundColor(backgroundColorBase)
             color(colorBase)
-            borderColor(`var`("--border-color-pink"))
+            borderColor(`var`("--border-color-rose"))
           }
 
           // Hover / Active—cacheable via data-attributes (covers all solid/subtle/quiet/plain)
@@ -715,252 +781,372 @@ public struct ButtonView: HTMLContent {
             backgroundColor(`var`("--background-color-red-subtle-hover")).important()
             borderColor(`var`("--border-color-red-hover")).important()
           }
+          selector("&[data-weight='subtle'][data-color='orange']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-orange-subtle-hover")).important()
+            borderColor(`var`("--border-color-orange-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='yellow']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-yellow-subtle-hover")).important()
+            borderColor(`var`("--border-color-yellow-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='chartreuse']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-chartreuse-subtle-hover")).important()
+            borderColor(`var`("--border-color-chartreuse-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='green']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-green-subtle-hover")).important()
+            borderColor(`var`("--border-color-green-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='spring-green']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-spring-green-subtle-hover")).important()
+            borderColor(`var`("--border-color-spring-green-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='cyan']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-cyan-subtle-hover")).important()
+            borderColor(`var`("--border-color-cyan-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='azure']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-azure-subtle-hover")).important()
+            borderColor(`var`("--border-color-azure-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='blue']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-blue-subtle-hover")).important()
+            borderColor(`var`("--border-color-blue-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='violet']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-violet-subtle-hover")).important()
+            borderColor(`var`("--border-color-violet-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='magenta']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-magenta-subtle-hover")).important()
+            borderColor(`var`("--border-color-magenta-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='rose']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-rose-subtle-hover")).important()
+            borderColor(`var`("--border-color-rose-hover")).important()
+          }
           selector("&[data-weight='subtle'][data-color='red']:active:not(:disabled)") {
             backgroundColor(`var`("--background-color-red-subtle-active")).important()
             borderColor(`var`("--border-color-red-active")).important()
             color(`var`("--color-red-active")).important()
-          }
-          selector("&[data-weight='solid'][data-color='red']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-red-hover")).important()
-            borderColor(`var`("--border-color-red-hover")).important()
-          }
-          selector("&[data-weight='solid'][data-color='red']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-red-active")).important()
-            borderColor(`var`("--border-color-red-active")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='red']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-red-subtle")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='red']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-red-subtle-active")).important()
-            color(`var`("--color-red-active")).important()
-          }
-          selector("&[data-weight='plain'][data-color='red']:hover:not(:disabled)") {
-            color(colorRedHover).important()
-          }
-          selector("&[data-weight='plain'][data-color='red']:active:not(:disabled)") {
-            color(`var`("--color-red-active")).important()
-          }
-
-          selector("&[data-weight='subtle'][data-color='orange']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-orange-subtle-hover")).important()
-            borderColor(`var`("--border-color-orange-hover")).important()
           }
           selector("&[data-weight='subtle'][data-color='orange']:active:not(:disabled)") {
             backgroundColor(`var`("--background-color-orange-subtle-active")).important()
             borderColor(`var`("--border-color-orange-active")).important()
             color(`var`("--color-orange-active")).important()
           }
-          selector("&[data-weight='solid'][data-color='orange']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-orange-hover")).important()
-            borderColor(`var`("--border-color-orange-hover")).important()
-          }
-          selector("&[data-weight='solid'][data-color='orange']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-orange-active")).important()
-            borderColor(`var`("--border-color-orange-active")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='orange']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-orange-subtle")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='orange']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-orange-subtle-active")).important()
-            color(`var`("--color-orange-active")).important()
-          }
-          selector("&[data-weight='plain'][data-color='orange']:hover:not(:disabled)") {
-            color(colorOrangeHover).important()
-          }
-          selector("&[data-weight='plain'][data-color='orange']:active:not(:disabled)") {
-            color(`var`("--color-orange-active")).important()
-          }
-
-          selector("&[data-weight='subtle'][data-color='yellow']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-yellow-subtle-hover")).important()
-            borderColor(`var`("--border-color-yellow-hover")).important()
-          }
           selector("&[data-weight='subtle'][data-color='yellow']:active:not(:disabled)") {
             backgroundColor(`var`("--background-color-yellow-subtle-active")).important()
             borderColor(`var`("--border-color-yellow-active")).important()
             color(`var`("--color-yellow-active")).important()
           }
-          selector("&[data-weight='solid'][data-color='yellow']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-yellow-hover")).important()
-            borderColor(`var`("--border-color-yellow-hover")).important()
-          }
-          selector("&[data-weight='solid'][data-color='yellow']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-yellow-active")).important()
-            borderColor(`var`("--border-color-yellow-active")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='yellow']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-yellow-subtle")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='yellow']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-yellow-subtle-active")).important()
-            color(`var`("--color-yellow-active")).important()
-          }
-          selector("&[data-weight='plain'][data-color='yellow']:hover:not(:disabled)") {
-            color(colorYellowHover).important()
-          }
-          selector("&[data-weight='plain'][data-color='yellow']:active:not(:disabled)") {
-            color(`var`("--color-yellow-active")).important()
-          }
-
-          selector("&[data-weight='subtle'][data-color='green']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-green-subtle-hover")).important()
-            borderColor(`var`("--border-color-green-hover")).important()
+          selector("&[data-weight='subtle'][data-color='chartreuse']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-chartreuse-subtle-active")).important()
+            borderColor(`var`("--border-color-chartreuse-active")).important()
+            color(`var`("--color-chartreuse-active")).important()
           }
           selector("&[data-weight='subtle'][data-color='green']:active:not(:disabled)") {
             backgroundColor(`var`("--background-color-green-subtle-active")).important()
             borderColor(`var`("--border-color-green-active")).important()
             color(`var`("--color-green-active")).important()
           }
-          selector("&[data-weight='solid'][data-color='green']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-green-hover")).important()
-            borderColor(`var`("--border-color-green-hover")).important()
+          selector("&[data-weight='subtle'][data-color='spring-green']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-spring-green-subtle-active")).important()
+            borderColor(`var`("--border-color-spring-green-active")).important()
+            color(`var`("--color-spring-green-active")).important()
           }
-          selector("&[data-weight='solid'][data-color='green']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-green-active")).important()
-            borderColor(`var`("--border-color-green-active")).important()
+          selector("&[data-weight='subtle'][data-color='cyan']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-cyan-subtle-active")).important()
+            borderColor(`var`("--border-color-cyan-active")).important()
+            color(`var`("--color-cyan-active")).important()
           }
-          selector("&[data-weight='quiet'][data-color='green']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-green-subtle")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='green']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-green-subtle-active")).important()
-            color(`var`("--color-green-active")).important()
-          }
-          selector("&[data-weight='plain'][data-color='green']:hover:not(:disabled)") {
-            color(colorGreenHover).important()
-          }
-          selector("&[data-weight='plain'][data-color='green']:active:not(:disabled)") {
-            color(`var`("--color-green-active")).important()
-          }
-
-
-
-
-          selector("&[data-weight='subtle'][data-color='blue']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-blue-subtle-hover")).important()
-            borderColor(`var`("--border-color-blue-hover")).important()
+          selector("&[data-weight='subtle'][data-color='azure']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-azure-subtle-active")).important()
+            borderColor(`var`("--border-color-azure-active")).important()
+            color(`var`("--color-azure-active")).important()
           }
           selector("&[data-weight='subtle'][data-color='blue']:active:not(:disabled)") {
             backgroundColor(`var`("--background-color-blue-subtle-active")).important()
             borderColor(`var`("--border-color-blue-active")).important()
             color(`var`("--color-blue-active")).important()
           }
-          selector("&[data-weight='solid'][data-color='blue']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-blue-hover")).important()
-            borderColor(`var`("--border-color-blue-hover")).important()
-          }
-          selector("&[data-weight='solid'][data-color='blue']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-blue-active")).important()
-            borderColor(`var`("--border-color-blue-active")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='blue']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-blue-subtle")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='blue']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-blue-subtle-active")).important()
-            color(`var`("--color-blue-active")).important()
-          }
-          selector("&[data-weight='plain'][data-color='blue']:hover:not(:disabled)") {
-            color(colorBlueHover).important()
-          }
-          selector("&[data-weight='plain'][data-color='blue']:active:not(:disabled)") {
-            color(`var`("--color-blue-active")).important()
-          }
-
-
-          selector("&[data-weight='subtle'][data-color='violet']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-violet-subtle-hover")).important()
-            borderColor(`var`("--border-color-violet-hover")).important()
-          }
-          selector("&[data-weight='subtle'][data-color='purple']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-purple-subtle-hover")).important()
-            borderColor(`var`("--border-color-purple-hover")).important()
-          }
           selector("&[data-weight='subtle'][data-color='violet']:active:not(:disabled)") {
             backgroundColor(`var`("--background-color-violet-subtle-active")).important()
             borderColor(`var`("--border-color-violet-active")).important()
             color(`var`("--color-violet-active")).important()
           }
-          selector("&[data-weight='subtle'][data-color='purple']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-purple-subtle-active")).important()
-            borderColor(`var`("--border-color-purple-active")).important()
-            color(`var`("--color-purple-active")).important()
+          selector("&[data-weight='subtle'][data-color='magenta']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-magenta-subtle-active")).important()
+            borderColor(`var`("--border-color-magenta-active")).important()
+            color(`var`("--color-magenta-active")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='rose']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-rose-subtle-active")).important()
+            borderColor(`var`("--border-color-rose-active")).important()
+            color(`var`("--color-rose-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='red']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-red-hover")).important()
+            borderColor(`var`("--border-color-red-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='orange']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-orange-hover")).important()
+            borderColor(`var`("--border-color-orange-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='yellow']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-yellow-hover")).important()
+            borderColor(`var`("--border-color-yellow-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='chartreuse']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-chartreuse-hover")).important()
+            borderColor(`var`("--border-color-chartreuse-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='green']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-green-hover")).important()
+            borderColor(`var`("--border-color-green-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='spring-green']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-spring-green-hover")).important()
+            borderColor(`var`("--border-color-spring-green-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='cyan']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-cyan-hover")).important()
+            borderColor(`var`("--border-color-cyan-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='azure']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-azure-hover")).important()
+            borderColor(`var`("--border-color-azure-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='blue']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-blue-hover")).important()
+            borderColor(`var`("--border-color-blue-hover")).important()
           }
           selector("&[data-weight='solid'][data-color='violet']:hover:not(:disabled)") {
             backgroundColor(`var`("--background-color-violet-hover")).important()
             borderColor(`var`("--border-color-violet-hover")).important()
           }
-          selector("&[data-weight='solid'][data-color='purple']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-purple-hover")).important()
-            borderColor(`var`("--border-color-purple-hover")).important()
+          selector("&[data-weight='solid'][data-color='magenta']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-magenta-hover")).important()
+            borderColor(`var`("--border-color-magenta-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='rose']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-rose-hover")).important()
+            borderColor(`var`("--border-color-rose-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='red']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-red-active")).important()
+            borderColor(`var`("--border-color-red-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='orange']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-orange-active")).important()
+            borderColor(`var`("--border-color-orange-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='yellow']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-yellow-active")).important()
+            borderColor(`var`("--border-color-yellow-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='chartreuse']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-chartreuse-active")).important()
+            borderColor(`var`("--border-color-chartreuse-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='green']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-green-active")).important()
+            borderColor(`var`("--border-color-green-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='spring-green']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-spring-green-active")).important()
+            borderColor(`var`("--border-color-spring-green-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='cyan']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-cyan-active")).important()
+            borderColor(`var`("--border-color-cyan-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='azure']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-azure-active")).important()
+            borderColor(`var`("--border-color-azure-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='blue']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-blue-active")).important()
+            borderColor(`var`("--border-color-blue-active")).important()
           }
           selector("&[data-weight='solid'][data-color='violet']:active:not(:disabled)") {
             backgroundColor(`var`("--background-color-violet-active")).important()
             borderColor(`var`("--border-color-violet-active")).important()
           }
-          selector("&[data-weight='solid'][data-color='purple']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-purple-active")).important()
-            borderColor(`var`("--border-color-purple-active")).important()
+          selector("&[data-weight='solid'][data-color='magenta']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-magenta-active")).important()
+            borderColor(`var`("--border-color-magenta-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='rose']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-rose-active")).important()
+            borderColor(`var`("--border-color-rose-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='red']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-red-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='orange']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-orange-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='yellow']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-yellow-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='chartreuse']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-chartreuse-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='green']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-green-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='spring-green']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-spring-green-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='cyan']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-cyan-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='azure']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-azure-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='blue']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-blue-subtle")).important()
           }
           selector("&[data-weight='quiet'][data-color='violet']:hover:not(:disabled)") {
             backgroundColor(`var`("--background-color-violet-subtle")).important()
           }
-          selector("&[data-weight='quiet'][data-color='purple']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-purple-subtle")).important()
+          selector("&[data-weight='quiet'][data-color='magenta']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-magenta-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='rose']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-rose-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='red']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-red-subtle-active")).important()
+            color(`var`("--color-red-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='orange']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-orange-subtle-active")).important()
+            color(`var`("--color-orange-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='yellow']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-yellow-subtle-active")).important()
+            color(`var`("--color-yellow-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='chartreuse']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-chartreuse-subtle-active")).important()
+            color(`var`("--color-chartreuse-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='green']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-green-subtle-active")).important()
+            color(`var`("--color-green-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='spring-green']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-spring-green-subtle-active")).important()
+            color(`var`("--color-spring-green-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='cyan']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-cyan-subtle-active")).important()
+            color(`var`("--color-cyan-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='azure']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-azure-subtle-active")).important()
+            color(`var`("--color-azure-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='blue']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-blue-subtle-active")).important()
+            color(`var`("--color-blue-active")).important()
           }
           selector("&[data-weight='quiet'][data-color='violet']:active:not(:disabled)") {
             backgroundColor(`var`("--background-color-violet-subtle-active")).important()
             color(`var`("--color-violet-active")).important()
           }
-          selector("&[data-weight='quiet'][data-color='purple']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-purple-subtle-active")).important()
-            color(`var`("--color-purple-active")).important()
+          selector("&[data-weight='quiet'][data-color='magenta']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-magenta-subtle-active")).important()
+            color(`var`("--color-magenta-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='rose']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-rose-subtle-active")).important()
+            color(`var`("--color-rose-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='red']:hover:not(:disabled)") {
+            color(colorRedHover).important()
+          }
+          selector("&[data-weight='plain'][data-color='orange']:hover:not(:disabled)") {
+            color(colorOrangeHover).important()
+          }
+          selector("&[data-weight='plain'][data-color='yellow']:hover:not(:disabled)") {
+            color(colorYellowHover).important()
+          }
+          selector("&[data-weight='plain'][data-color='chartreuse']:hover:not(:disabled)") {
+            color(colorChartreuseHover).important()
+          }
+          selector("&[data-weight='plain'][data-color='green']:hover:not(:disabled)") {
+            color(colorGreenHover).important()
+          }
+          selector("&[data-weight='plain'][data-color='spring-green']:hover:not(:disabled)") {
+            color(colorSpringGreenHover).important()
+          }
+          selector("&[data-weight='plain'][data-color='cyan']:hover:not(:disabled)") {
+            color(colorCyanHover).important()
+          }
+          selector("&[data-weight='plain'][data-color='azure']:hover:not(:disabled)") {
+            color(colorAzureHover).important()
+          }
+          selector("&[data-weight='plain'][data-color='blue']:hover:not(:disabled)") {
+            color(colorBlueHover).important()
           }
           selector("&[data-weight='plain'][data-color='violet']:hover:not(:disabled)") {
             color(colorVioletHover).important()
           }
-          selector("&[data-weight='plain'][data-color='purple']:hover:not(:disabled)") {
-            color(colorPurpleHover).important()
+          selector("&[data-weight='plain'][data-color='magenta']:hover:not(:disabled)") {
+            color(colorMagentaHover).important()
+          }
+          selector("&[data-weight='plain'][data-color='rose']:hover:not(:disabled)") {
+            color(colorRoseHover).important()
+          }
+          selector("&[data-weight='plain'][data-color='red']:active:not(:disabled)") {
+            color(`var`("--color-red-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='orange']:active:not(:disabled)") {
+            color(`var`("--color-orange-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='yellow']:active:not(:disabled)") {
+            color(`var`("--color-yellow-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='chartreuse']:active:not(:disabled)") {
+            color(`var`("--color-chartreuse-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='green']:active:not(:disabled)") {
+            color(`var`("--color-green-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='spring-green']:active:not(:disabled)") {
+            color(`var`("--color-spring-green-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='cyan']:active:not(:disabled)") {
+            color(`var`("--color-cyan-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='azure']:active:not(:disabled)") {
+            color(`var`("--color-azure-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='blue']:active:not(:disabled)") {
+            color(`var`("--color-blue-active")).important()
           }
           selector("&[data-weight='plain'][data-color='violet']:active:not(:disabled)") {
             color(`var`("--color-violet-active")).important()
           }
-          selector("&[data-weight='plain'][data-color='purple']:active:not(:disabled)") {
-            color(`var`("--color-purple-active")).important()
+          selector("&[data-weight='plain'][data-color='magenta']:active:not(:disabled)") {
+            color(`var`("--color-magenta-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='rose']:active:not(:disabled)") {
+            color(`var`("--color-rose-active")).important()
           }
 
-          selector("&[data-weight='subtle'][data-color='pink']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-pink-subtle-hover")).important()
-            borderColor(`var`("--border-color-pink-hover")).important()
-          }
-          selector("&[data-weight='subtle'][data-color='pink']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-pink-subtle-active")).important()
-            borderColor(`var`("--border-color-pink-active")).important()
-            color(`var`("--color-pink-active")).important()
-          }
-          selector("&[data-weight='solid'][data-color='pink']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-pink-hover")).important()
-            borderColor(`var`("--border-color-pink-hover")).important()
-          }
-          selector("&[data-weight='solid'][data-color='pink']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-pink-active")).important()
-            borderColor(`var`("--border-color-pink-active")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='pink']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-pink-subtle")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='pink']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-pink-subtle-active")).important()
-            color(`var`("--color-pink-active")).important()
-          }
-          selector("&[data-weight='plain'][data-color='pink']:hover:not(:disabled)") {
-            color(colorPinkHover).important()
-          }
-          selector("&[data-weight='plain'][data-color='pink']:active:not(:disabled)") {
-            color(`var`("--color-pink-active")).important()
-          }
+
+
+
+
+
+
+
+
+
 
 
           selector("&[data-weight='quiet']:focus") {
@@ -1165,11 +1351,15 @@ public struct ButtonView: HTMLContent {
           selector("&[data-weight='quiet'][data-color='red'], &[data-weight='plain'][data-color='red']") { color(`var`("--color-red")).important() }
           selector("&[data-weight='quiet'][data-color='orange'], &[data-weight='plain'][data-color='orange']") { color(`var`("--color-orange")).important() }
           selector("&[data-weight='quiet'][data-color='yellow'], &[data-weight='plain'][data-color='yellow']") { color(`var`("--color-yellow")).important() }
+          selector("&[data-weight='quiet'][data-color='chartreuse'], &[data-weight='plain'][data-color='chartreuse']") { color(`var`("--color-chartreuse")).important() }
           selector("&[data-weight='quiet'][data-color='green'], &[data-weight='plain'][data-color='green']") { color(`var`("--color-green")).important() }
+          selector("&[data-weight='quiet'][data-color='spring-green'], &[data-weight='plain'][data-color='spring-green']") { color(`var`("--color-spring-green")).important() }
+          selector("&[data-weight='quiet'][data-color='cyan'], &[data-weight='plain'][data-color='cyan']") { color(`var`("--color-cyan")).important() }
+          selector("&[data-weight='quiet'][data-color='azure'], &[data-weight='plain'][data-color='azure']") { color(`var`("--color-azure")).important() }
           selector("&[data-weight='quiet'][data-color='blue'], &[data-weight='plain'][data-color='blue']") { color(`var`("--color-blue")).important() }
           selector("&[data-weight='quiet'][data-color='violet'], &[data-weight='plain'][data-color='violet']") { color(`var`("--color-violet")).important() }
-          selector("&[data-weight='quiet'][data-color='purple'], &[data-weight='plain'][data-color='purple']") { color(`var`("--color-purple")).important() }
-          selector("&[data-weight='quiet'][data-color='pink'], &[data-weight='plain'][data-color='pink']") { color(`var`("--color-pink")).important() }
+          selector("&[data-weight='quiet'][data-color='magenta'], &[data-weight='plain'][data-color='magenta']") { color(`var`("--color-magenta")).important() }
+          selector("&[data-weight='quiet'][data-color='rose'], &[data-weight='plain'][data-color='rose']") { color(`var`("--color-rose")).important() }
           selector("&[data-weight='quiet']:disabled, &[data-weight='plain']:disabled") {
             backgroundColor(backgroundColorBase).important()
             borderColor(.transparent).important()
@@ -1199,29 +1389,9 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-red"))
             borderColor(`var`("--border-color-red"))
           }
-          selector("&[data-weight='solid'][data-color='red']") {
-            backgroundColor(`var`("--background-color-red"))
-            color(colorInvertedFixed)
-            borderColor(`var`("--background-color-red"))
-          }
-          selector("&[data-weight='static'][data-color='red']") {
-            backgroundColor(backgroundColorBase)
-            color(colorBase)
-            borderColor(`var`("--border-color-red"))
-          }
           selector("&[data-weight='subtle'][data-color='orange']") {
             backgroundColor(`var`("--background-color-orange-subtle"))
             color(`var`("--color-orange"))
-            borderColor(`var`("--border-color-orange"))
-          }
-          selector("&[data-weight='solid'][data-color='orange']") {
-            backgroundColor(`var`("--background-color-orange"))
-            color(colorInvertedFixed)
-            borderColor(`var`("--background-color-orange"))
-          }
-          selector("&[data-weight='static'][data-color='orange']") {
-            backgroundColor(backgroundColorBase)
-            color(colorBase)
             borderColor(`var`("--border-color-orange"))
           }
           selector("&[data-weight='subtle'][data-color='yellow']") {
@@ -1229,44 +1399,34 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-yellow"))
             borderColor(`var`("--border-color-yellow"))
           }
-          selector("&[data-weight='solid'][data-color='yellow']") {
-            backgroundColor(`var`("--background-color-yellow"))
-            color(colorInvertedFixed)
-            borderColor(`var`("--background-color-yellow"))
-          }
-          selector("&[data-weight='static'][data-color='yellow']") {
-            backgroundColor(backgroundColorBase)
-            color(colorBase)
-            borderColor(`var`("--border-color-yellow"))
+          selector("&[data-weight='subtle'][data-color='chartreuse']") {
+            backgroundColor(`var`("--background-color-chartreuse-subtle"))
+            color(`var`("--color-chartreuse"))
+            borderColor(`var`("--border-color-chartreuse"))
           }
           selector("&[data-weight='subtle'][data-color='green']") {
             backgroundColor(`var`("--background-color-green-subtle"))
             color(`var`("--color-green"))
             borderColor(`var`("--border-color-green"))
           }
-          selector("&[data-weight='solid'][data-color='green']") {
-            backgroundColor(`var`("--background-color-green"))
-            color(colorInvertedFixed)
-            borderColor(`var`("--background-color-green"))
+          selector("&[data-weight='subtle'][data-color='spring-green']") {
+            backgroundColor(`var`("--background-color-spring-green-subtle"))
+            color(`var`("--color-spring-green"))
+            borderColor(`var`("--border-color-spring-green"))
           }
-          selector("&[data-weight='static'][data-color='green']") {
-            backgroundColor(backgroundColorBase)
-            color(colorBase)
-            borderColor(`var`("--border-color-green"))
+          selector("&[data-weight='subtle'][data-color='cyan']") {
+            backgroundColor(`var`("--background-color-cyan-subtle"))
+            color(`var`("--color-cyan"))
+            borderColor(`var`("--border-color-cyan"))
+          }
+          selector("&[data-weight='subtle'][data-color='azure']") {
+            backgroundColor(`var`("--background-color-azure-subtle"))
+            color(`var`("--color-azure"))
+            borderColor(`var`("--border-color-azure"))
           }
           selector("&[data-weight='subtle'][data-color='blue']") {
             backgroundColor(`var`("--background-color-blue-subtle"))
             color(`var`("--color-blue"))
-            borderColor(`var`("--border-color-blue"))
-          }
-          selector("&[data-weight='solid'][data-color='blue']") {
-            backgroundColor(`var`("--background-color-blue"))
-            color(colorInvertedFixed)
-            borderColor(`var`("--background-color-blue"))
-          }
-          selector("&[data-weight='static'][data-color='blue']") {
-            backgroundColor(backgroundColorBase)
-            color(colorBase)
             borderColor(`var`("--border-color-blue"))
           }
           selector("&[data-weight='subtle'][data-color='violet']") {
@@ -1274,45 +1434,135 @@ public struct ButtonView: HTMLContent {
             color(`var`("--color-violet"))
             borderColor(`var`("--border-color-violet"))
           }
-          selector("&[data-weight='subtle'][data-color='purple']") {
-            backgroundColor(`var`("--background-color-purple-subtle"))
-            color(`var`("--color-purple"))
-            borderColor(`var`("--border-color-purple"))
+          selector("&[data-weight='subtle'][data-color='magenta']") {
+            backgroundColor(`var`("--background-color-magenta-subtle"))
+            color(`var`("--color-magenta"))
+            borderColor(`var`("--border-color-magenta"))
+          }
+          selector("&[data-weight='subtle'][data-color='rose']") {
+            backgroundColor(`var`("--background-color-rose-subtle"))
+            color(`var`("--color-rose"))
+            borderColor(`var`("--border-color-rose"))
+          }
+          selector("&[data-weight='solid'][data-color='red']") {
+            backgroundColor(`var`("--background-color-red"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-red"))
+          }
+          selector("&[data-weight='solid'][data-color='orange']") {
+            backgroundColor(`var`("--background-color-orange"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-orange"))
+          }
+          selector("&[data-weight='solid'][data-color='yellow']") {
+            backgroundColor(`var`("--background-color-yellow"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-yellow"))
+          }
+          selector("&[data-weight='solid'][data-color='chartreuse']") {
+            backgroundColor(`var`("--background-color-chartreuse"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-chartreuse"))
+          }
+          selector("&[data-weight='solid'][data-color='green']") {
+            backgroundColor(`var`("--background-color-green"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-green"))
+          }
+          selector("&[data-weight='solid'][data-color='spring-green']") {
+            backgroundColor(`var`("--background-color-spring-green"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-spring-green"))
+          }
+          selector("&[data-weight='solid'][data-color='cyan']") {
+            backgroundColor(`var`("--background-color-cyan"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-cyan"))
+          }
+          selector("&[data-weight='solid'][data-color='azure']") {
+            backgroundColor(`var`("--background-color-azure"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-azure"))
+          }
+          selector("&[data-weight='solid'][data-color='blue']") {
+            backgroundColor(`var`("--background-color-blue"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-blue"))
           }
           selector("&[data-weight='solid'][data-color='violet']") {
             backgroundColor(`var`("--background-color-violet"))
             color(colorInvertedFixed)
             borderColor(`var`("--background-color-violet"))
           }
-          selector("&[data-weight='solid'][data-color='purple']") {
-            backgroundColor(`var`("--background-color-purple"))
+          selector("&[data-weight='solid'][data-color='magenta']") {
+            backgroundColor(`var`("--background-color-magenta"))
             color(colorInvertedFixed)
-            borderColor(`var`("--background-color-purple"))
+            borderColor(`var`("--background-color-magenta"))
+          }
+          selector("&[data-weight='solid'][data-color='rose']") {
+            backgroundColor(`var`("--background-color-rose"))
+            color(colorInvertedFixed)
+            borderColor(`var`("--background-color-rose"))
+          }
+          selector("&[data-weight='static'][data-color='red']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-red"))
+          }
+          selector("&[data-weight='static'][data-color='orange']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-orange"))
+          }
+          selector("&[data-weight='static'][data-color='yellow']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-yellow"))
+          }
+          selector("&[data-weight='static'][data-color='chartreuse']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-chartreuse"))
+          }
+          selector("&[data-weight='static'][data-color='green']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-green"))
+          }
+          selector("&[data-weight='static'][data-color='spring-green']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-spring-green"))
+          }
+          selector("&[data-weight='static'][data-color='cyan']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-cyan"))
+          }
+          selector("&[data-weight='static'][data-color='azure']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-azure"))
+          }
+          selector("&[data-weight='static'][data-color='blue']") {
+            backgroundColor(backgroundColorBase)
+            color(colorBase)
+            borderColor(`var`("--border-color-blue"))
           }
           selector("&[data-weight='static'][data-color='violet']") {
             backgroundColor(backgroundColorBase)
             color(colorBase)
             borderColor(`var`("--border-color-violet"))
           }
-          selector("&[data-weight='static'][data-color='purple']") {
+          selector("&[data-weight='static'][data-color='magenta']") {
             backgroundColor(backgroundColorBase)
             color(colorBase)
-            borderColor(`var`("--border-color-purple"))
+            borderColor(`var`("--border-color-magenta"))
           }
-          selector("&[data-weight='subtle'][data-color='pink']") {
-            backgroundColor(`var`("--background-color-pink-subtle"))
-            color(`var`("--color-pink"))
-            borderColor(`var`("--border-color-pink"))
-          }
-          selector("&[data-weight='solid'][data-color='pink']") {
-            backgroundColor(`var`("--background-color-pink"))
-            color(colorInvertedFixed)
-            borderColor(`var`("--background-color-pink"))
-          }
-          selector("&[data-weight='static'][data-color='pink']") {
+          selector("&[data-weight='static'][data-color='rose']") {
             backgroundColor(backgroundColorBase)
             color(colorBase)
-            borderColor(`var`("--border-color-pink"))
+            borderColor(`var`("--border-color-rose"))
           }
 
           // Hover / Active—cacheable via data-attributes (covers all solid/subtle/quiet/plain)
@@ -1354,252 +1604,372 @@ public struct ButtonView: HTMLContent {
             backgroundColor(`var`("--background-color-red-subtle-hover")).important()
             borderColor(`var`("--border-color-red-hover")).important()
           }
+          selector("&[data-weight='subtle'][data-color='orange']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-orange-subtle-hover")).important()
+            borderColor(`var`("--border-color-orange-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='yellow']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-yellow-subtle-hover")).important()
+            borderColor(`var`("--border-color-yellow-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='chartreuse']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-chartreuse-subtle-hover")).important()
+            borderColor(`var`("--border-color-chartreuse-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='green']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-green-subtle-hover")).important()
+            borderColor(`var`("--border-color-green-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='spring-green']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-spring-green-subtle-hover")).important()
+            borderColor(`var`("--border-color-spring-green-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='cyan']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-cyan-subtle-hover")).important()
+            borderColor(`var`("--border-color-cyan-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='azure']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-azure-subtle-hover")).important()
+            borderColor(`var`("--border-color-azure-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='blue']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-blue-subtle-hover")).important()
+            borderColor(`var`("--border-color-blue-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='violet']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-violet-subtle-hover")).important()
+            borderColor(`var`("--border-color-violet-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='magenta']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-magenta-subtle-hover")).important()
+            borderColor(`var`("--border-color-magenta-hover")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='rose']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-rose-subtle-hover")).important()
+            borderColor(`var`("--border-color-rose-hover")).important()
+          }
           selector("&[data-weight='subtle'][data-color='red']:active:not(:disabled)") {
             backgroundColor(`var`("--background-color-red-subtle-active")).important()
             borderColor(`var`("--border-color-red-active")).important()
             color(`var`("--color-red-active")).important()
-          }
-          selector("&[data-weight='solid'][data-color='red']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-red-hover")).important()
-            borderColor(`var`("--border-color-red-hover")).important()
-          }
-          selector("&[data-weight='solid'][data-color='red']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-red-active")).important()
-            borderColor(`var`("--border-color-red-active")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='red']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-red-subtle")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='red']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-red-subtle-active")).important()
-            color(`var`("--color-red-active")).important()
-          }
-          selector("&[data-weight='plain'][data-color='red']:hover:not(:disabled)") {
-            color(colorRedHover).important()
-          }
-          selector("&[data-weight='plain'][data-color='red']:active:not(:disabled)") {
-            color(`var`("--color-red-active")).important()
-          }
-
-          selector("&[data-weight='subtle'][data-color='orange']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-orange-subtle-hover")).important()
-            borderColor(`var`("--border-color-orange-hover")).important()
           }
           selector("&[data-weight='subtle'][data-color='orange']:active:not(:disabled)") {
             backgroundColor(`var`("--background-color-orange-subtle-active")).important()
             borderColor(`var`("--border-color-orange-active")).important()
             color(`var`("--color-orange-active")).important()
           }
-          selector("&[data-weight='solid'][data-color='orange']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-orange-hover")).important()
-            borderColor(`var`("--border-color-orange-hover")).important()
-          }
-          selector("&[data-weight='solid'][data-color='orange']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-orange-active")).important()
-            borderColor(`var`("--border-color-orange-active")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='orange']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-orange-subtle")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='orange']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-orange-subtle-active")).important()
-            color(`var`("--color-orange-active")).important()
-          }
-          selector("&[data-weight='plain'][data-color='orange']:hover:not(:disabled)") {
-            color(colorOrangeHover).important()
-          }
-          selector("&[data-weight='plain'][data-color='orange']:active:not(:disabled)") {
-            color(`var`("--color-orange-active")).important()
-          }
-
-          selector("&[data-weight='subtle'][data-color='yellow']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-yellow-subtle-hover")).important()
-            borderColor(`var`("--border-color-yellow-hover")).important()
-          }
           selector("&[data-weight='subtle'][data-color='yellow']:active:not(:disabled)") {
             backgroundColor(`var`("--background-color-yellow-subtle-active")).important()
             borderColor(`var`("--border-color-yellow-active")).important()
             color(`var`("--color-yellow-active")).important()
           }
-          selector("&[data-weight='solid'][data-color='yellow']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-yellow-hover")).important()
-            borderColor(`var`("--border-color-yellow-hover")).important()
-          }
-          selector("&[data-weight='solid'][data-color='yellow']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-yellow-active")).important()
-            borderColor(`var`("--border-color-yellow-active")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='yellow']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-yellow-subtle")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='yellow']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-yellow-subtle-active")).important()
-            color(`var`("--color-yellow-active")).important()
-          }
-          selector("&[data-weight='plain'][data-color='yellow']:hover:not(:disabled)") {
-            color(colorYellowHover).important()
-          }
-          selector("&[data-weight='plain'][data-color='yellow']:active:not(:disabled)") {
-            color(`var`("--color-yellow-active")).important()
-          }
-
-          selector("&[data-weight='subtle'][data-color='green']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-green-subtle-hover")).important()
-            borderColor(`var`("--border-color-green-hover")).important()
+          selector("&[data-weight='subtle'][data-color='chartreuse']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-chartreuse-subtle-active")).important()
+            borderColor(`var`("--border-color-chartreuse-active")).important()
+            color(`var`("--color-chartreuse-active")).important()
           }
           selector("&[data-weight='subtle'][data-color='green']:active:not(:disabled)") {
             backgroundColor(`var`("--background-color-green-subtle-active")).important()
             borderColor(`var`("--border-color-green-active")).important()
             color(`var`("--color-green-active")).important()
           }
-          selector("&[data-weight='solid'][data-color='green']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-green-hover")).important()
-            borderColor(`var`("--border-color-green-hover")).important()
+          selector("&[data-weight='subtle'][data-color='spring-green']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-spring-green-subtle-active")).important()
+            borderColor(`var`("--border-color-spring-green-active")).important()
+            color(`var`("--color-spring-green-active")).important()
           }
-          selector("&[data-weight='solid'][data-color='green']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-green-active")).important()
-            borderColor(`var`("--border-color-green-active")).important()
+          selector("&[data-weight='subtle'][data-color='cyan']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-cyan-subtle-active")).important()
+            borderColor(`var`("--border-color-cyan-active")).important()
+            color(`var`("--color-cyan-active")).important()
           }
-          selector("&[data-weight='quiet'][data-color='green']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-green-subtle")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='green']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-green-subtle-active")).important()
-            color(`var`("--color-green-active")).important()
-          }
-          selector("&[data-weight='plain'][data-color='green']:hover:not(:disabled)") {
-            color(colorGreenHover).important()
-          }
-          selector("&[data-weight='plain'][data-color='green']:active:not(:disabled)") {
-            color(`var`("--color-green-active")).important()
-          }
-
-
-
-
-          selector("&[data-weight='subtle'][data-color='blue']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-blue-subtle-hover")).important()
-            borderColor(`var`("--border-color-blue-hover")).important()
+          selector("&[data-weight='subtle'][data-color='azure']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-azure-subtle-active")).important()
+            borderColor(`var`("--border-color-azure-active")).important()
+            color(`var`("--color-azure-active")).important()
           }
           selector("&[data-weight='subtle'][data-color='blue']:active:not(:disabled)") {
             backgroundColor(`var`("--background-color-blue-subtle-active")).important()
             borderColor(`var`("--border-color-blue-active")).important()
             color(`var`("--color-blue-active")).important()
           }
-          selector("&[data-weight='solid'][data-color='blue']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-blue-hover")).important()
-            borderColor(`var`("--border-color-blue-hover")).important()
-          }
-          selector("&[data-weight='solid'][data-color='blue']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-blue-active")).important()
-            borderColor(`var`("--border-color-blue-active")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='blue']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-blue-subtle")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='blue']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-blue-subtle-active")).important()
-            color(`var`("--color-blue-active")).important()
-          }
-          selector("&[data-weight='plain'][data-color='blue']:hover:not(:disabled)") {
-            color(colorBlueHover).important()
-          }
-          selector("&[data-weight='plain'][data-color='blue']:active:not(:disabled)") {
-            color(`var`("--color-blue-active")).important()
-          }
-
-
-          selector("&[data-weight='subtle'][data-color='violet']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-violet-subtle-hover")).important()
-            borderColor(`var`("--border-color-violet-hover")).important()
-          }
-          selector("&[data-weight='subtle'][data-color='purple']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-purple-subtle-hover")).important()
-            borderColor(`var`("--border-color-purple-hover")).important()
-          }
           selector("&[data-weight='subtle'][data-color='violet']:active:not(:disabled)") {
             backgroundColor(`var`("--background-color-violet-subtle-active")).important()
             borderColor(`var`("--border-color-violet-active")).important()
             color(`var`("--color-violet-active")).important()
           }
-          selector("&[data-weight='subtle'][data-color='purple']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-purple-subtle-active")).important()
-            borderColor(`var`("--border-color-purple-active")).important()
-            color(`var`("--color-purple-active")).important()
+          selector("&[data-weight='subtle'][data-color='magenta']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-magenta-subtle-active")).important()
+            borderColor(`var`("--border-color-magenta-active")).important()
+            color(`var`("--color-magenta-active")).important()
+          }
+          selector("&[data-weight='subtle'][data-color='rose']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-rose-subtle-active")).important()
+            borderColor(`var`("--border-color-rose-active")).important()
+            color(`var`("--color-rose-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='red']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-red-hover")).important()
+            borderColor(`var`("--border-color-red-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='orange']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-orange-hover")).important()
+            borderColor(`var`("--border-color-orange-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='yellow']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-yellow-hover")).important()
+            borderColor(`var`("--border-color-yellow-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='chartreuse']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-chartreuse-hover")).important()
+            borderColor(`var`("--border-color-chartreuse-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='green']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-green-hover")).important()
+            borderColor(`var`("--border-color-green-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='spring-green']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-spring-green-hover")).important()
+            borderColor(`var`("--border-color-spring-green-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='cyan']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-cyan-hover")).important()
+            borderColor(`var`("--border-color-cyan-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='azure']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-azure-hover")).important()
+            borderColor(`var`("--border-color-azure-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='blue']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-blue-hover")).important()
+            borderColor(`var`("--border-color-blue-hover")).important()
           }
           selector("&[data-weight='solid'][data-color='violet']:hover:not(:disabled)") {
             backgroundColor(`var`("--background-color-violet-hover")).important()
             borderColor(`var`("--border-color-violet-hover")).important()
           }
-          selector("&[data-weight='solid'][data-color='purple']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-purple-hover")).important()
-            borderColor(`var`("--border-color-purple-hover")).important()
+          selector("&[data-weight='solid'][data-color='magenta']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-magenta-hover")).important()
+            borderColor(`var`("--border-color-magenta-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='rose']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-rose-hover")).important()
+            borderColor(`var`("--border-color-rose-hover")).important()
+          }
+          selector("&[data-weight='solid'][data-color='red']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-red-active")).important()
+            borderColor(`var`("--border-color-red-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='orange']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-orange-active")).important()
+            borderColor(`var`("--border-color-orange-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='yellow']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-yellow-active")).important()
+            borderColor(`var`("--border-color-yellow-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='chartreuse']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-chartreuse-active")).important()
+            borderColor(`var`("--border-color-chartreuse-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='green']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-green-active")).important()
+            borderColor(`var`("--border-color-green-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='spring-green']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-spring-green-active")).important()
+            borderColor(`var`("--border-color-spring-green-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='cyan']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-cyan-active")).important()
+            borderColor(`var`("--border-color-cyan-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='azure']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-azure-active")).important()
+            borderColor(`var`("--border-color-azure-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='blue']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-blue-active")).important()
+            borderColor(`var`("--border-color-blue-active")).important()
           }
           selector("&[data-weight='solid'][data-color='violet']:active:not(:disabled)") {
             backgroundColor(`var`("--background-color-violet-active")).important()
             borderColor(`var`("--border-color-violet-active")).important()
           }
-          selector("&[data-weight='solid'][data-color='purple']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-purple-active")).important()
-            borderColor(`var`("--border-color-purple-active")).important()
+          selector("&[data-weight='solid'][data-color='magenta']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-magenta-active")).important()
+            borderColor(`var`("--border-color-magenta-active")).important()
+          }
+          selector("&[data-weight='solid'][data-color='rose']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-rose-active")).important()
+            borderColor(`var`("--border-color-rose-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='red']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-red-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='orange']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-orange-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='yellow']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-yellow-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='chartreuse']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-chartreuse-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='green']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-green-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='spring-green']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-spring-green-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='cyan']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-cyan-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='azure']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-azure-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='blue']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-blue-subtle")).important()
           }
           selector("&[data-weight='quiet'][data-color='violet']:hover:not(:disabled)") {
             backgroundColor(`var`("--background-color-violet-subtle")).important()
           }
-          selector("&[data-weight='quiet'][data-color='purple']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-purple-subtle")).important()
+          selector("&[data-weight='quiet'][data-color='magenta']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-magenta-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='rose']:hover:not(:disabled)") {
+            backgroundColor(`var`("--background-color-rose-subtle")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='red']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-red-subtle-active")).important()
+            color(`var`("--color-red-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='orange']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-orange-subtle-active")).important()
+            color(`var`("--color-orange-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='yellow']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-yellow-subtle-active")).important()
+            color(`var`("--color-yellow-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='chartreuse']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-chartreuse-subtle-active")).important()
+            color(`var`("--color-chartreuse-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='green']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-green-subtle-active")).important()
+            color(`var`("--color-green-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='spring-green']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-spring-green-subtle-active")).important()
+            color(`var`("--color-spring-green-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='cyan']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-cyan-subtle-active")).important()
+            color(`var`("--color-cyan-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='azure']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-azure-subtle-active")).important()
+            color(`var`("--color-azure-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='blue']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-blue-subtle-active")).important()
+            color(`var`("--color-blue-active")).important()
           }
           selector("&[data-weight='quiet'][data-color='violet']:active:not(:disabled)") {
             backgroundColor(`var`("--background-color-violet-subtle-active")).important()
             color(`var`("--color-violet-active")).important()
           }
-          selector("&[data-weight='quiet'][data-color='purple']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-purple-subtle-active")).important()
-            color(`var`("--color-purple-active")).important()
+          selector("&[data-weight='quiet'][data-color='magenta']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-magenta-subtle-active")).important()
+            color(`var`("--color-magenta-active")).important()
+          }
+          selector("&[data-weight='quiet'][data-color='rose']:active:not(:disabled)") {
+            backgroundColor(`var`("--background-color-rose-subtle-active")).important()
+            color(`var`("--color-rose-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='red']:hover:not(:disabled)") {
+            color(colorRedHover).important()
+          }
+          selector("&[data-weight='plain'][data-color='orange']:hover:not(:disabled)") {
+            color(colorOrangeHover).important()
+          }
+          selector("&[data-weight='plain'][data-color='yellow']:hover:not(:disabled)") {
+            color(colorYellowHover).important()
+          }
+          selector("&[data-weight='plain'][data-color='chartreuse']:hover:not(:disabled)") {
+            color(colorChartreuseHover).important()
+          }
+          selector("&[data-weight='plain'][data-color='green']:hover:not(:disabled)") {
+            color(colorGreenHover).important()
+          }
+          selector("&[data-weight='plain'][data-color='spring-green']:hover:not(:disabled)") {
+            color(colorSpringGreenHover).important()
+          }
+          selector("&[data-weight='plain'][data-color='cyan']:hover:not(:disabled)") {
+            color(colorCyanHover).important()
+          }
+          selector("&[data-weight='plain'][data-color='azure']:hover:not(:disabled)") {
+            color(colorAzureHover).important()
+          }
+          selector("&[data-weight='plain'][data-color='blue']:hover:not(:disabled)") {
+            color(colorBlueHover).important()
           }
           selector("&[data-weight='plain'][data-color='violet']:hover:not(:disabled)") {
             color(colorVioletHover).important()
           }
-          selector("&[data-weight='plain'][data-color='purple']:hover:not(:disabled)") {
-            color(colorPurpleHover).important()
+          selector("&[data-weight='plain'][data-color='magenta']:hover:not(:disabled)") {
+            color(colorMagentaHover).important()
+          }
+          selector("&[data-weight='plain'][data-color='rose']:hover:not(:disabled)") {
+            color(colorRoseHover).important()
+          }
+          selector("&[data-weight='plain'][data-color='red']:active:not(:disabled)") {
+            color(`var`("--color-red-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='orange']:active:not(:disabled)") {
+            color(`var`("--color-orange-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='yellow']:active:not(:disabled)") {
+            color(`var`("--color-yellow-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='chartreuse']:active:not(:disabled)") {
+            color(`var`("--color-chartreuse-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='green']:active:not(:disabled)") {
+            color(`var`("--color-green-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='spring-green']:active:not(:disabled)") {
+            color(`var`("--color-spring-green-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='cyan']:active:not(:disabled)") {
+            color(`var`("--color-cyan-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='azure']:active:not(:disabled)") {
+            color(`var`("--color-azure-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='blue']:active:not(:disabled)") {
+            color(`var`("--color-blue-active")).important()
           }
           selector("&[data-weight='plain'][data-color='violet']:active:not(:disabled)") {
             color(`var`("--color-violet-active")).important()
           }
-          selector("&[data-weight='plain'][data-color='purple']:active:not(:disabled)") {
-            color(`var`("--color-purple-active")).important()
+          selector("&[data-weight='plain'][data-color='magenta']:active:not(:disabled)") {
+            color(`var`("--color-magenta-active")).important()
+          }
+          selector("&[data-weight='plain'][data-color='rose']:active:not(:disabled)") {
+            color(`var`("--color-rose-active")).important()
           }
 
-          selector("&[data-weight='subtle'][data-color='pink']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-pink-subtle-hover")).important()
-            borderColor(`var`("--border-color-pink-hover")).important()
-          }
-          selector("&[data-weight='subtle'][data-color='pink']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-pink-subtle-active")).important()
-            borderColor(`var`("--border-color-pink-active")).important()
-            color(`var`("--color-pink-active")).important()
-          }
-          selector("&[data-weight='solid'][data-color='pink']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-pink-hover")).important()
-            borderColor(`var`("--border-color-pink-hover")).important()
-          }
-          selector("&[data-weight='solid'][data-color='pink']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-pink-active")).important()
-            borderColor(`var`("--border-color-pink-active")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='pink']:hover:not(:disabled)") {
-            backgroundColor(`var`("--background-color-pink-subtle")).important()
-          }
-          selector("&[data-weight='quiet'][data-color='pink']:active:not(:disabled)") {
-            backgroundColor(`var`("--background-color-pink-subtle-active")).important()
-            color(`var`("--color-pink-active")).important()
-          }
-          selector("&[data-weight='plain'][data-color='pink']:hover:not(:disabled)") {
-            color(colorPinkHover).important()
-          }
-          selector("&[data-weight='plain'][data-color='pink']:active:not(:disabled)") {
-            color(`var`("--color-pink-active")).important()
-          }
+
+
+
+
+
+
+
+
+
 
 
           selector("&[data-weight='quiet']:focus") {
