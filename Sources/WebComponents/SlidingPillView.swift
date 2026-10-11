@@ -84,6 +84,10 @@
 
   /// Moves a `SlidingPillView`'s thumb under its host's selected item.
   public enum SlidingPill {
+    /// Counts moves, so a settle (`place`) knows whether a later move
+    /// superseded it.
+    nonisolated(unsafe) static var moveCount = 0
+
     /// Place the thumb under `current()` now, without moving, mark the host
     /// ready, and place it again whenever the host changes size.
     public static func attach(
@@ -117,6 +121,29 @@
       thumb.style.setProperty("--sliding-pill-height", doubleToString(box.height) + "px")
       thumb.setAttribute(data("placed"), "true")
       host.setAttribute(data("sliding-pill"), "ready")
+      // A move ends placed exactly, whatever interrupted it: once the slide
+      // is over, the thumb is measured again under the item and set there
+      // without a transition, which also ends any slide a burst of clicks
+      // or keys left unfinished—so the pill never stays half over its item
+      // with the label clipped (user, 2026-10-12). A later move supersedes
+      // this one's settle.
+      guard moves else { return }
+      Self.moveCount &+= 1
+      let move = intToString(Self.moveCount)
+      thumb.setAttribute(data("move"), move)
+      _ = window.setTimeout(slideMilliseconds(host) + 50) {
+        guard stringEquals(thumb.getAttribute(data("move")) ?? "", move) else { return }
+        place(layer, in: host, under: item, animate: false)
+      }
+    }
+
+    /// The slide's length, from the token the thumb's transition uses
+    /// (`--transition-duration-medium`, "250ms" or "0.25s").
+    static func slideMilliseconds(_ host: DOM.Element) -> Double {
+      let text = stringTrim(window.getComputedStyle(host).getPropertyValue("--transition-duration-medium"))
+      if stringEndsWith(text, "ms"), let value = parseDouble(stringRemoveSuffix(text, "ms")) { return value }
+      if stringEndsWith(text, "s"), let value = parseDouble(stringRemoveSuffix(text, "s")) { return value * 1000 }
+      return 250
     }
   }
 #endif
