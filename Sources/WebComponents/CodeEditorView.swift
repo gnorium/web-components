@@ -26,18 +26,23 @@
     let value: String
     let language: String
     let ariaLabel: String
+    /// Numbered and soft-wrapped as Xcode's (`CodeView.lined`).
+    let lined: Bool
 
-    public init(id: String, name: String, value: String, language: String = "xml", ariaLabel: String) {
+    public init(
+      id: String, name: String, value: String, language: String = "xml", ariaLabel: String, lined: Bool = false
+    ) {
       self.id = id
       self.name = name
       self.value = value
       self.language = language
       self.ariaLabel = ariaLabel
+      self.lined = lined
     }
 
     public func build() -> DOM.Node {
       div {
-        CodeView(value, language: language, showLineNumbers: false, editableLabel: ariaLabel)
+        CodeView(value, language: language, showLineNumbers: false, editableLabel: ariaLabel, lined: lined)
         textarea(value)
           .id(id)
           .name(name)
@@ -95,12 +100,13 @@
     /// stretches, by `XMLSyntax.Kind`.
     final class Editor: @unchecked Sendable {
       let code: DOM.Element
-      let input: HTML.HTMLTextAreaElement
+      /// The form's textarea; nil for lined text that is only read.
+      let input: HTML.HTMLTextAreaElement?
       var ranges: [[DOM.Range]] = []
       var colored = false
       var timer: Int32 = 0
 
-      init(code: DOM.Element, input: HTML.HTMLTextAreaElement) {
+      init(code: DOM.Element, input: HTML.HTMLTextAreaElement?) {
         self.code = code
         self.input = input
       }
@@ -134,10 +140,95 @@
         _ = input.addEventListener(.input) { _ in
           let text = input.value
           guard !stringEquals(text, code.textContent) else { return }
-          code.textContent = text
+          if code.hasAttribute("data-code-lined") {
+            reline(code, text: text)
+          } else {
+            code.textContent = text
+          }
           schedule(editor)
         }
         colorIfVisible(code)
+      }
+    }
+
+    /// Colors lined text that is only read, once, when it has a box on
+    /// screen.
+    public static func colorLinedIfVisible(_ code: DOM.Element) {
+      guard !code.hasAttribute("data-code-colored"), let rect = code.getBoundingClientRect(), rect.height > 0
+      else { return }
+      code.setAttribute(data("code-colored"), "true")
+      let viewer = Editor(code: code, input: nil)
+      editors.append(viewer)
+      color(viewer)
+    }
+
+    /// Lined text laid out again as `text`'s lines (`CodeView.lines`), the
+    /// caret kept where it stood in the text.
+    static func reline(_ code: DOM.Element, text: String) {
+      var caret = -1
+      if let selection = window.getSelection(), selection.rangeCount > 0, let focus = selection.focusNode,
+        code.contains(focus)
+      {
+        let before = document.createRange()
+        before.setStart(code, 0)
+        before.setEnd(focus, selection.focusOffset)
+        caret = before.toString().utf16.count
+      }
+      let all = CodeLines.lines(of: text)
+      var spans: [DOM.Element] = []
+      for (index, line) in all.enumerated() {
+        let span = document.createElement(.span)
+        span.className = "code-line"
+        span.setAttribute(.style, "--indent: " + intToString(line.indent))
+        span.textContent = line.text + (index < all.count - 1 ? "\n" : "")
+        spans.append(span)
+      }
+      code.replaceChildren(spans)
+      code.setAttribute(.style, "--gutter: " + CodeLines.gutter(lines: all.count))
+      guard caret >= 0, let selection = window.getSelection() else { return }
+      var start = 0
+      let walker = document.createTreeWalker(code, DOM.NodeFilter.SHOW_TEXT)
+      while let next = walker.nextNode() {
+        guard let node = next as? DOM.Text else { continue }
+        let length = node.data.utf16.count
+        if caret <= start + length {
+          selection.collapse(node, caret - start)
+          return
+        }
+        start += length
+      }
+    }
+
+    /// Lined text after an edit: its blocks' indents set again; relined
+    /// where a block no longer holds exactly one line.
+    static func follow(_ code: DOM.Element) {
+      let spans = code.querySelectorAll(".code-line")
+      var matches = spans.count > 0
+      var inSpans = 0
+      if matches {
+        for (index, span) in spans.enumerated() {
+          let text = span.textContent
+          inSpans += text.utf8.count
+          var feeds = 0
+          for byte in text.utf8 where byte == 0x0A { feeds += 1 }
+          let last = index == spans.count - 1
+          let endsInFeed = text.utf8.last == 0x0A
+          if feeds != (last ? 0 : 1) || (!last && !endsInFeed) {
+            matches = false
+            break
+          }
+        }
+      }
+      // Text typed outside every line's block is a line out of place too.
+      let all = code.textContent
+      guard matches, inSpans == all.utf8.count else {
+        reline(code, text: all)
+        return
+      }
+      for span in spans {
+        let line = CodeLines.lines(of: span.textContent)
+        let indent = line.isEmpty ? 0 : line[0].indent
+        span.setAttribute(.style, "--indent: " + intToString(indent))
       }
     }
 
@@ -153,6 +244,11 @@
       if editor.timer != 0 { window.clearTimeout(editor.timer) }
       editor.timer = window.setTimeout(150) {
         editor.timer = 0
+        // Lined text typed into: each line's indent read again in place;
+        // laid out again only where its lines no longer match its blocks (a
+        // line broken or joined), so the editor's own undo keeps every
+        // edit within a line.
+        if editor.code.hasAttribute("data-code-lined") { follow(editor.code) }
         color(editor)
       }
     }

@@ -459,17 +459,35 @@
     private func laidOut(_ lines: [TEILine], facsimileURL: String, label: String, tabStop: TEIWordPlace? = nil)
       -> [DOM.Node]
     {
-      var sections: [[LaidOut]] = []
+      // Runs of lines one frame sets (an epigraph's), each its sections.
+      var frames: [(frame: String, sections: [[LaidOut]])] = []
       for item in Self.layout(of: lines) {
         let first: TEILine
         switch item {
         case .line(let line): first = line
         case .block(let lines), .furniture(let lines): first = lines[0]
         }
-        if sections.isEmpty || first.opensParagraph { sections.append([]) }
-        sections[sections.count - 1].append(item)
+        if frames.isEmpty || frames[frames.count - 1].frame != first.frame {
+          frames.append((first.frame, [[item]]))
+        } else if first.opensParagraph {
+          frames[frames.count - 1].sections.append([item])
+        } else {
+          let last = frames[frames.count - 1].sections.count - 1
+          frames[frames.count - 1].sections[last].append(item)
+        }
       }
-      return sections.map { items in
+      return frames.flatMap { run -> [DOM.Node] in
+        let sections = sectioned(run.sections, facsimileURL: facsimileURL, label: label, tabStop: tabStop)
+        guard !run.frame.isEmpty else { return sections }
+        return [div { sections }.class("tei-frame").data("rend", run.frame).build()]
+      }
+    }
+
+    /// Sections of laid-out lines, each its own block (`laidOut`).
+    private func sectioned(_ sections: [[LaidOut]], facsimileURL: String, label: String, tabStop: TEIWordPlace?)
+      -> [DOM.Node]
+    {
+      sections.map { items in
         div {
           for item in items {
             switch item {
@@ -638,13 +656,16 @@
                   CodeEditorView(
                     id: "tei-page-raw-\(index + firstIndex)",
                     name: "markup",
-                    value: XMLFormatter.prettified(page.markup),
-                    ariaLabel: page.label.isEmpty ? "Code of this page" : "Code of \(page.label)"
+                    value: page.markup,
+                    ariaLabel: page.label.isEmpty ? "Code of this page" : "Code of \(page.label)",
+                    lined: true
                   )
                 }
                 .class("tei-page-edit")
               } else {
-                CodeView(XMLFormatter.prettified(page.markup), showLineNumbers: false)
+                // The stored text as it is (a document is stored formatted),
+                // numbered and soft-wrapped (user, 2026-10-11).
+                CodeView(page.markup, showLineNumbers: false, lined: true)
               }
             }
             .class("tei-page-raw")
@@ -676,7 +697,7 @@
               // switch is on (user, 2026-10-07): two switches, four layers.
               if let translated {
                 div {
-                  CodeView(XMLFormatter.prettified(translated.page.markup), showLineNumbers: false)
+                  CodeView(translated.page.markup, showLineNumbers: false, lined: true)
                 }
                 .class("tei-page-raw")
                 .data("layer", "translated-markup")
@@ -926,6 +947,48 @@
           flexDirection(.column)
           gap(spacing2)
           minWidth(0)
+        }
+        // An epigraph set as a whole (user, 2026-10-11): as wide as its
+        // lines, placed as its rend says, its lines set within it.
+        descendant(".tei-frame") {
+          display(.flex)
+          flexDirection(.column)
+          gap(spacing16)
+          minWidth(0)
+          maxWidth(perc(100))
+        }
+        selector("& .tei-frame[data-rend~='align(center)']") { alignSelf(.center) }
+        selector("& .tei-frame[data-rend~='align(right)']") { alignSelf(.flexEnd) }
+        selector("& .tei-frame[data-rend~='align(left)']") { alignSelf(.flexStart) }
+        // Ink (user, 2026-10-11): a rend's color(NAME), one of the eleven
+        // basic color terms, in its palette token, on a run, a block or a
+        // frame; black the text's own color, white the inverted text's.
+        for (name, ink) in [
+          ("black", colorBase), ("white", colorInverted), ("red", colorRed), ("green", colorGreen),
+          ("yellow", colorYellow), ("blue", colorBlue), ("brown", colorBrown), ("purple", colorPurple),
+          ("pink", colorPink), ("orange", colorOrange), ("gray", colorGray),
+        ] {
+          selector(
+            "& .tei-run[data-rend~='color(\(name))']", "& .tei-block[data-rend~='color(\(name))'] > .tei-line",
+            "& .tei-section > .tei-line[data-rend~='color(\(name))']",
+            "& .tei-frame[data-rend~='color(\(name))'] .tei-line"
+          ) {
+            color(ink)
+          }
+        }
+        // Type a step larger or smaller than the text's, on a run, a block,
+        // or a frame's lines (user, 2026-10-11).
+        selector(
+          "& .tei-run[data-rend~='larger']", "& .tei-block[data-rend~='larger'] > .tei-line",
+          "& .tei-section > .tei-line[data-rend~='larger']", "& .tei-frame[data-rend~='larger'] .tei-line"
+        ) {
+          fontSize(fontSizeLarge18)
+        }
+        selector(
+          "& .tei-run[data-rend~='smaller']", "& .tei-block[data-rend~='smaller'] > .tei-line",
+          "& .tei-section > .tei-line[data-rend~='smaller']", "& .tei-frame[data-rend~='smaller'] .tei-line"
+        ) {
+          fontSize(fontSizeSmall14)
         }
         // A section's first line starts where the space before it ends: a
         // heading's or a speaker's space above it is space from the line

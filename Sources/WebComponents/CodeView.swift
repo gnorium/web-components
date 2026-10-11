@@ -20,12 +20,32 @@
     /// The text's accessible name when it can be edited in place
     /// (`CodeEditorView`); nil for a block that is only read.
     let editableLabel: String?
+    /// Soft-wrapped as Xcode wraps code (user, 2026-10-11): each line its
+    /// own, numbered; a long one wraps with no sideways scroll, its
+    /// continuation unnumbered and indented to the line's own indent + 4.
+    let lined: Bool
 
-    public init(_ text: String, language: String = "xml", showLineNumbers: Bool = true, editableLabel: String? = nil) {
+    public init(
+      _ text: String, language: String = "xml", showLineNumbers: Bool = true, editableLabel: String? = nil,
+      lined: Bool = false
+    ) {
       self.text = text
       self.language = language
       self.showLineNumbers = showLineNumbers
       self.editableLabel = editableLabel
+      self.lined = lined
+    }
+
+    /// Each line its own block (`lined`), its line feed in it, so the text
+    /// reads, copies and edits as written.
+    @HTMLBuilder
+    private var linedContent: [DOM.Node] {
+      let all = CodeLines.lines(of: text)
+      for (index, line) in all.enumerated() {
+        span { line.text + (index < all.count - 1 ? "\n" : "") }
+          .class("code-line")
+          .style { customProperty("--indent", "\(line.indent)") }
+      }
     }
 
     /// "1\n2\n3…"—as many as the text has lines.
@@ -53,7 +73,25 @@
             .ariaHidden(true)
         }
 
-        if let editableLabel {
+        if lined {
+          let numbered = code { linedContent }
+            .class("code-code language-\(language)")
+            .data("code-lined", "true")
+            .style { customProperty("--gutter", CodeLines.gutter(lines: CodeLines.lines(of: text).count)) }
+          if let editableLabel {
+            numbered
+              .addingAttribute("contenteditable", "plaintext-only")
+              .spellcheck(false)
+              .addingAttribute("autocapitalize", "off")
+              .addingAttribute("autocorrect", "off")
+              .role("textbox")
+              .addingAttribute("aria-multiline", "true")
+              .ariaLabel(editableLabel)
+              .data("code-editing", "true")
+          } else {
+            numbered
+          }
+        } else if let editableLabel {
           // The colored text is the text edited: one layer, so a selection
           // is the browser's own over the colors, and a drag past the edge
           // scrolls the pane as any text's does. It is colored by
@@ -75,6 +113,7 @@
         }
       }
       .class("code-view")
+      .data("lined", lined)
       .style {
         selector("&") {
           display(.flex)
@@ -118,6 +157,39 @@
           backgroundColor(.transparent)
           color(.inherit)
           padding(0)
+        }
+        // Lined (Xcode's soft wrap): no sideways scroll; each line a block,
+        // numbered in a gutter by a counter (never part of the text), its
+        // wrapped continuation indented to its own indent + 4.
+        selector("&[data-lined='true']") {
+          whiteSpace(.preWrap)
+          overflowX(.visible)
+        }
+        selector("&[data-lined='true'] .code-code") {
+          flexShrink(1)
+          minWidth(0)
+          width(perc(100))
+          CSS.Property("counter-reset", "code-line")
+        }
+        selector("&[data-lined='true'] .code-line") {
+          display(.block)
+          position(.relative)
+          CSS.Property("counter-increment", "code-line")
+          CSS.Property("min-height", "1lh")
+          CSS.Property(
+            "padding-inline-start", "calc(var(--gutter) + \(spacing12.value) + (var(--indent) + 4) * 1ch)")
+          CSS.Property("text-indent", "calc((var(--indent) + 4) * -1ch)")
+          overflowWrap(.anywhere)
+        }
+        selector("&[data-lined='true'] .code-line::before") {
+          CSS.Property("content", "counter(code-line)")
+          position(.absolute)
+          insetInlineStart(px(0))
+          CSS.Property("width", "var(--gutter)")
+          textAlign(.end)
+          CSS.Property("text-indent", "0")
+          color(colorSubtle)
+          userSelect(.none)
         }
         // One palette for code across the site: the same tokens the session
         // trace colors a tool call's markup with.
@@ -188,6 +260,11 @@
           CodeEditorHydration.colorIfVisible(block)
           continue
         }
+        // So is lined text: highlight.js would rewrite its lines away.
+        if block.hasAttribute("data-code-lined") {
+          CodeEditorHydration.colorLinedIfVisible(block)
+          continue
+        }
         // highlight.js writes data-highlighted="yes" itself, which overwrote the
         // "true" this used to look for—so every block was highlighted again on
         // every click, and highlight.js warned each time that it had been handed
@@ -200,3 +277,40 @@
     }
   }
 #endif
+
+/// A text's lines for lined code (`CodeView.lined`), server and client
+/// alike: split by bytes, never by `Character`, which Embedded Swift
+/// cannot compare.
+public enum CodeLines {
+  /// The text's lines, each with the spaces (or tabs) it is indented by.
+  public static func lines(of text: String) -> [(text: String, indent: Int)] {
+    var out: [(text: String, indent: Int)] = []
+    var current: [UInt8] = []
+    var indent = 0
+    var leading = true
+    for byte in text.utf8 {
+      if byte == 0x0A {
+        out.append((String(decoding: current, as: UTF8.self), indent))
+        current = []
+        indent = 0
+        leading = true
+        continue
+      }
+      if leading && (byte == 0x20 || byte == 0x09) { indent += 1 } else { leading = false }
+      current.append(byte)
+    }
+    out.append((String(decoding: current, as: UTF8.self), indent))
+    return out
+  }
+
+  /// The gutter's width for so many lines: a character a digit.
+  public static func gutter(lines count: Int) -> String {
+    var digits = 1
+    var rest = count
+    while rest >= 10 {
+      digits += 1
+      rest /= 10
+    }
+    return String(decoding: [UInt8(0x30 + digits)], as: UTF8.self) + "ch"
+  }
+}
