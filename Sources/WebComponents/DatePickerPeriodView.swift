@@ -171,9 +171,11 @@ public struct DatePickerPeriodView: HTMLContent {
         color(colorBase)
       }
       // The day grid's cell: the cell the target, the pill inside it what
-      // shows, a row the 40px a finger needs.
+      // shows. Its four rows take the day grid's whole height—its weekday
+      // row and six weeks—so the popover keeps one height on every grid
+      // (user, 2026-10-12); each is taller than the 40px a finger needs.
       descendant(".date-picker-period-cell") {
-        blockSize(minSizeInteractiveTouch)
+        blockSize(calc("(\(minSizeInteractivePointer.value) + \(minSizeInteractiveTouch.value) * 6) / 4"))
         padding(0)
         textAlign(.center)
         verticalAlign(.middle)
