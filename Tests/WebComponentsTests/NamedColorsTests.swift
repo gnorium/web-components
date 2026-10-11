@@ -2,61 +2,93 @@ import DesignTokens
 import Foundation
 import XCTest
 
-/// The named colors (user, 2026-10-11): the sRGB cusp at twelve OKLCH hues
-/// 30° apart from pure red's in light, mirrored in dark to the same contrast
-/// against black; the increased-contrast schemes moving only lightness to 7:1.
+/// The named colors (user, 2026-10-11): twelve OKLCH hues 30° apart from
+/// pure red's, and gray, each at exactly its scheme's contrast with the
+/// page—3:1 by default, 7:1 for increased contrast—with the most chroma sRGB
+/// allows at that lightness. 3:1 against white is 7:1 against black, so two
+/// sets serve four schemes.
 final class NamedColorsTests: XCTestCase {
-  func testEachColorIsTheCuspEveryThirtyDegreesFromRed() {
-    let expected = [
-      "red": "#FF0000", "orange": "#FF8E00", "yellow": "#FFCA00", "lime": "#DCFF00", "green": "#00FF73",
-      "mint": "#00FFDF", "cyan": "#00E5FF", "blue": "#00B0FF", "indigo": "#2C00FF", "violet": "#9000FF",
-      "magenta": "#FF00FB", "pink": "#FF008A",
-    ]
+  static let setA = [
+    "red": "#FF5F4E", "orange": "#DF7C00", "yellow": "#B79000", "lime": "#889F00", "green": "#00AC4B",
+    "mint": "#00A892", "cyan": "#00A4B7", "blue": "#009EE5", "indigo": "#6E8EFF", "violet": "#AD7AFF",
+    "magenta": "#FF2CFA", "pink": "#FF549A",
+  ]
+  static let setB = [
+    "red": "#B60000", "orange": "#884900", "yellow": "#6F5600", "lime": "#515F00", "green": "#00682A",
+    "mint": "#006557", "cyan": "#00636F", "blue": "#005F8C", "indigo": "#2F31FF", "violet": "#7F00E2",
+    "magenta": "#A1009E", "pink": "#B0005D",
+  ]
+
+  func testTheHuesStepThirtyDegreesFromRed() {
     XCTAssertEqual(
       NamedColors.names,
       ["red", "orange", "yellow", "lime", "green", "mint", "cyan", "blue", "indigo", "violet", "magenta", "pink",
        "gray"])
-    XCTAssertEqual(NamedColors.redHue, 29.23, accuracy: 0.005)
+    XCTAssertEqual(NamedColors.redHue, 29.2339, accuracy: 0.0001)
     for (index, name) in NamedColors.hueNames.enumerated() {
       XCTAssertEqual(NamedColors.hue(name), (NamedColors.redHue + 30 * Double(index)).truncatingRemainder(dividingBy: 360))
-      XCTAssertEqual(NamedColors.hex(name, .light), expected[name], name)
-      let cusp = NamedColors.color(name, .light)
-      XCTAssertEqual(cusp.c, NamedColors.maxChroma(l: cusp.l, h: cusp.h), accuracy: 1e-9)
-      XCTAssertGreaterThanOrEqual(cusp.c, NamedColors.maxChroma(l: cusp.l + 0.01, h: cusp.h))
-      XCTAssertGreaterThanOrEqual(cusp.c, NamedColors.maxChroma(l: cusp.l - 0.01, h: cusp.h))
     }
   }
 
-  /// Dark mirrors light: the same hue, its contrast with black that of
-  /// light's with white, within what 8-bit writing allows.
-  func testDarkMirrorsLightsContrast() {
+  func testTwoSetsServeFourSchemes() {
     for name in NamedColors.names {
-      let light = NamedColors.color(name, .light), dark = NamedColors.color(name, .dark)
-      let lightRatio = NamedColors.contrast(light, NamedColors.Scheme.light.page)
-      let darkRatio = NamedColors.contrast(dark, NamedColors.Scheme.dark.page)
-      XCTAssertEqual(darkRatio, lightRatio, accuracy: max(0.02, lightRatio * 0.01), name)
-      XCTAssertEqual(dark.h, light.h, accuracy: 1e-9, "\(name) keeps its hue")
-      if name != "gray" {
-        XCTAssertEqual(dark.c, NamedColors.maxChroma(l: dark.l, h: dark.h), accuracy: 1e-9, "\(name) most chroma")
+      // Set A: light's default and dark's increased contrast; set B: dark's
+      // default and light's increased contrast.
+      XCTAssertEqual(NamedColors.hex(name, .light), NamedColors.hex(name, .darkMoreContrast), name)
+      XCTAssertEqual(NamedColors.hex(name, .dark), NamedColors.hex(name, .lightMoreContrast), name)
+      if let a = Self.setA[name], let b = Self.setB[name] {
+        XCTAssertEqual(NamedColors.hex(name, .light), a, "\(name) A")
+        XCTAssertEqual(NamedColors.hex(name, .dark), b, "\(name) B")
       }
-      print(
-        "\(name): light \(NamedColors.hex(name, .light)) \(String(format: "%.2f", lightRatio)):1, dark \(NamedColors.hex(name, .dark)) \(String(format: "%.2f", darkRatio)):1, light more \(NamedColors.hex(name, .lightMoreContrast)), dark more \(NamedColors.hex(name, .darkMoreContrast))")
+      print("\(name): A \(NamedColors.hex(name, .light)) B \(NamedColors.hex(name, .dark))")
     }
   }
 
-  func testIncreasedContrastMovesOnlyLightnessToSevenToOne() {
-    for scheme in [NamedColors.Scheme.lightMoreContrast, .darkMoreContrast] {
-      for name in NamedColors.names {
-        let color = NamedColors.color(name, scheme)
-        let base = NamedColors.color(name, scheme.isDark ? .dark : .light)
-        XCTAssertGreaterThanOrEqual(NamedColors.contrast(color, scheme.page), 7, "\(name) \(scheme)")
-        XCTAssertEqual(color.h, base.h, accuracy: 1e-9, "\(name) keeps its hue")
-        if name != "gray", color != base {
+  func testEachStandsAtExactlyItsContrast() {
+    let white = NamedColors.OKLCH(1, 0, 0), black = NamedColors.OKLCH(0, 0, 0)
+    for name in NamedColors.names {
+      let a = NamedColors.color(name, .light), b = NamedColors.color(name, .dark)
+      // Within what 8-bit writing allows.
+      XCTAssertEqual(NamedColors.contrast(a, white), 3, accuracy: 0.03, "\(name) A on white")
+      XCTAssertEqual(NamedColors.contrast(a, black), 7, accuracy: 0.07, "\(name) A on black")
+      XCTAssertEqual(NamedColors.contrast(b, white), 7, accuracy: 0.07, "\(name) B on white")
+      XCTAssertEqual(NamedColors.contrast(b, black), 3, accuracy: 0.03, "\(name) B on black")
+      if name != "gray" {
+        for color in [a, b] {
+          XCTAssertEqual(color.h, NamedColors.hue(name), accuracy: 1e-9, "\(name) keeps its hue")
           XCTAssertEqual(color.c, NamedColors.maxChroma(l: color.l, h: color.h), accuracy: 1e-9, "\(name) most chroma")
         }
+      } else {
+        XCTAssertEqual(a.c, 0)
+        XCTAssertEqual(b.c, 0)
+      }
+    }
+  }
+
+  func testIncreasedContrastSubtleFillsCarryBaseTextAtSevenToOne() {
+    for scheme in [NamedColors.Scheme.lightMoreContrast, .darkMoreContrast] {
+      for name in NamedColors.names {
         let subtle = NamedColors.moreContrastSubtle(name, scheme)
         XCTAssertGreaterThanOrEqual(NamedColors.contrast(subtle, scheme.baseText), 7, "\(name) \(scheme) subtle")
-        print("\(scheme) \(name): \(NamedColors.hex(name, scheme)) subtle \(NamedColors.hex(subtle))")
+      }
+    }
+  }
+
+  /// Written for CSS as oklch(), each value stays inside sRGB and renders
+  /// the same 8-bit color as the computed one (user, 2026-10-11).
+  func testTheOKLCHValuesRoundTripToTheSameBytes() {
+    for scheme in NamedColors.Scheme.allCases {
+      for name in NamedColors.names {
+        let css = NamedColors.css(name, scheme)
+        XCTAssertTrue(css.hasPrefix("oklch(") && css.hasSuffix(")"), css)
+        let parts = css.dropFirst(6).dropLast().split(separator: " ").compactMap { Double($0) }
+        XCTAssertEqual(parts.count, 3, css)
+        let value = NamedColors.OKLCH(parts[0], parts[1], parts[2])
+        let channels = NamedColors.linearSRGB(value)
+        for channel in [channels.r, channels.g, channels.b] {
+          XCTAssertTrue(channel >= -1e-12 && channel <= 1 + 1e-12, "\(name) \(scheme) \(css): \(channel)")
+        }
+        XCTAssertEqual(NamedColors.hex(value), NamedColors.hex(name, scheme), "\(name) \(scheme) \(css)")
       }
     }
   }
