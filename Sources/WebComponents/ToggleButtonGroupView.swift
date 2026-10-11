@@ -203,8 +203,30 @@
             minHeight(calc("\(buttonSize.minSize.value) - 2 * \(borderWidthBase.value)"))
           }
         }
-        selector("&[data-mode='slider'] .toggle-button-group-button:hover:not(:disabled)[aria-pressed='false']") {
-          backgroundColor(backgroundColorInteractiveSubtleHover).important()
+        // A button's hover fill paints on a layer under the sliding pill,
+        // its label over it: a button hovered while the pill slides past
+        // never covers the pill and clips its label (user, 2026-10-12). The
+        // track is its own stacking context, so the layer stays over it.
+        selector("&[data-mode='slider']") { CSS.Property("isolation", "isolate") }
+        // No stacking context of their own, focused or not: a button's
+        // layer would rise with it.
+        selector(
+          "&[data-mode='slider'] .toggle-button-group-button",
+          "&[data-mode='slider'] .toggle-button-group-button:focus-visible"
+        ) { zIndex("auto").important() }
+        selector("&[data-mode='slider'] .toggle-button-group-button::before") {
+          content("\"\"")
+          position(.absolute)
+          inset(0)
+          zIndex(-1)
+          borderRadius(borderRadiusPill)
+          backgroundColor(backgroundColorTransparent)
+          pointerEvents(.none)
+          transition("background-color \(transitionDurationBase.value) \(transitionTimingFunctionSystem.value)")
+          media(prefersReducedMotion(.reduce)) { transition(.none).important() }
+        }
+        selector("&[data-mode='slider'] .toggle-button-group-button:hover:not(:disabled)[aria-pressed='false']::before") {
+          backgroundColor(backgroundColorInteractiveSubtleHover)
         }
 
         // Selected: the blue fill and inverted label of a pressed

@@ -186,6 +186,9 @@
           position(.relative)
           gap(spacing8)
           flexWrap(.wrap)
+          // Its own stacking context: the tabs' fills (below) paint over the
+          // list, under the pill.
+          CSS.Property("isolation", "isolate")
         }
 
         // Tab buttons—ONE rule chain covers both <a> and <button> tags
@@ -229,7 +232,20 @@
           color(colorBase)
           fontWeight(fontWeightSemiBold)
         }
-        selector("&.tabs-solid [role='tab']") { zIndex(1) }
+        // A tab's hover and press fills paint on a layer under the sliding
+        // pill, its label over it: a tab hovered while the pill slides past
+        // never covers the pill and clips its label (user, 2026-10-12).
+        selector("&.tabs-solid [role='tab']::before") {
+          content("\"\"")
+          position(.absolute)
+          CSS.Property("inset", "calc(-1 * \(borderWidthBase.value))")
+          zIndex(-1)
+          borderRadius(borderRadiusPill)
+          backgroundColor(backgroundColorTransparent)
+          pointerEvents(.none)
+          transition("background-color \(transitionDurationBase.value) \(transitionTimingFunctionSystem.value)")
+          media(prefersReducedMotion(.reduce)) { transition(.none).important() }
+        }
         selector("&.tabs-solid [role='tab'][aria-selected='true']") {
           cursor(.default)
           color(colorInvertedFixed)
@@ -242,19 +258,19 @@
         }
         selector("&.tabs-quiet [role='tab'][aria-selected='false']") { color(colorSubtle) }
         selector("&.tabs-solid [role='tab'][aria-selected='false']") { color(colorBlue) }
-        selector("&.tabs-solid [role='tab']:hover[aria-selected='false']") {
+        selector("&.tabs-solid [role='tab']:hover[aria-selected='false']") { color(colorBase) }
+        selector("&.tabs-solid [role='tab']:hover[aria-selected='false']::before") {
           backgroundColor(backgroundColorInteractiveSubtleHover)
-          color(colorBase)
         }
         selector("& [role='tab']:focus-visible") {
           outline(borderWidthThick, .solid, borderColorBlue)
           outlineOffset(px(-2))
         }
         selector("&.tabs-solid [role='tab']:active") {
-          backgroundColor(backgroundColorBlue)
           color(colorInvertedFixed)
           outline(.none)
         }
+        selector("&.tabs-solid [role='tab']:active::before") { backgroundColor(backgroundColorBlue) }
         selector("& [role='tab'].disabled", "& [role='tab'][disabled]", "& [role='tab'][aria-disabled='true']") {
           color(colorDisabled)
           cursor(cursorNotAllowed)
