@@ -528,6 +528,12 @@ public struct AccordionView: HTMLContent {
         if let target = event.target, let link = target.closest("a"), let _ = link.closest(".accordion-summary") {
           return
         }
+        // A tooltip in the header (a node's id at its end) opens its bubble
+        // and leaves the accordion as it is: it is read, not opened.
+        if let target = event.target, let tip = target.closest(".tooltip-trigger"), let _ = tip.closest(".accordion-summary") {
+          event.preventDefault()
+          return
+        }
         // Keep <details> open for the whole motion; native toggle would
         // display:none the panel before the height transition can run.
         event.preventDefault()
