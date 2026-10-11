@@ -50,7 +50,7 @@ public struct RotatingRingSectorWithDiscView: HTMLContent {
     .style {
       width(size)
       height(size)
-      selector("&") { display(.inlineBlock); flexShrink(0) }
+      selector("&") { display(.inlineBlock); flexShrink(0); color(colorBlue) }  // Progress is always blue (user, 2026-10-11).
       child(".rotating-ring-sector-with-disc-ring") {
         transformOrigin(perc(50), perc(50))
         animation("rotating-ring-sector-with-disc-spin", animationDurationFast, animationTimingFunctionBase, .infinite)

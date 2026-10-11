@@ -72,6 +72,8 @@ public struct RotatingSectorView: HTMLContent {
       alignItems(.center)
       gap(spacing8)
       flexShrink(0)
+      // Progress is always blue (user, 2026-10-11); a label stays subtle.
+      color(colorBlue)
     }
     descendant(".rotating-sector-mark") { display(.block); flexShrink(0) }
     descendant(".rotating-sector-label") {

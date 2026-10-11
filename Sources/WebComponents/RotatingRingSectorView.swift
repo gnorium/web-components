@@ -44,7 +44,7 @@ public struct RotatingRingSectorView: HTMLContent {
     .style {
       width(size)
       height(size)
-      selector("&") { display(.inlineBlock); flexShrink(0) }
+      selector("&") { display(.inlineBlock); flexShrink(0); color(colorBlue) }  // Progress is always blue (user, 2026-10-11).
       child(".rotating-ring-sector-shape") {
         transformOrigin(perc(50), perc(50))
         animation("rotating-ring-sector-spin", animationDurationFast, animationTimingFunctionBase, .infinite)
