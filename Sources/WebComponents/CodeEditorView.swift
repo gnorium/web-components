@@ -70,13 +70,6 @@
           outline(.none)
           caretColor(colorBase)
         }
-        // The colors `CodeView`'s highlight.js classes give, by highlight.
-        selector("& .code-code::highlight(code-tag)") { color(syntaxPlainText) }
-        selector("& .code-code::highlight(code-name)") { color(syntaxKeywords) }
-        selector("& .code-code::highlight(code-attr)") { color(syntaxAttributes) }
-        selector("& .code-code::highlight(code-string)") { color(syntaxStrings) }
-        selector("& .code-code::highlight(code-comment)") { color(syntaxComments) }
-        selector("& .code-code::highlight(code-meta)") { color(syntaxOtherDeclarations) }
       }
       .build()
     }
@@ -141,6 +134,7 @@
           let text = input.value
           guard !stringEquals(text, code.textContent) else { return }
           if code.hasAttribute("data-code-lined") {
+            // Set from elsewhere, not typed: laid out as served.
             reline(code, text: text)
           } else {
             code.textContent = text
@@ -148,6 +142,15 @@
           schedule(editor)
         }
         colorIfVisible(code)
+      }
+      // A pane resized wraps lines anew: every shown editor renumbered.
+      if !listensToResize {
+        listensToResize = true
+        _ = window.addEventListener(.resize) { _ in
+          for code in document.querySelectorAll(".code-code[data-code-editing='true'][data-code-lined='true']") {
+            number(code)
+          }
+        }
       }
     }
 
@@ -199,56 +202,63 @@
       }
     }
 
-    /// Lined text after an edit: its blocks' indents set again; relined
-    /// where a block no longer holds exactly one line.
-    static func follow(_ code: DOM.Element) {
-      let spans = code.querySelectorAll(".code-line")
-      var matches = spans.count > 0
-      var inSpans = 0
-      if matches {
-        for (index, span) in spans.enumerated() {
-          let text = span.textContent
-          inSpans += text.utf8.count
-          var feeds = 0
-          for byte in text.utf8 where byte == 0x0A { feeds += 1 }
-          let last = index == spans.count - 1
-          let endsInFeed = text.utf8.last == 0x0A
-          if feeds != (last ? 0 : 1) || (!last && !endsInFeed) {
-            matches = false
-            break
-          }
+    /// A lined editor's numbers, beside its text and never in it: each
+    /// logical line's top measured where the text now lays it out (a line
+    /// the browser broke within a block is a line of its own), as
+    /// CodeMirror and Monaco draw theirs. The editable text is never
+    /// touched, so its undo is the browser's, whole.
+    static func number(_ code: DOM.Element) {
+      guard let gutter = code.parentElement?.querySelector(".code-gutter-lines"),
+        let codeRect = code.getBoundingClientRect(), codeRect.height > 0,
+        let parentRect = code.parentElement?.getBoundingClientRect()
+      else { return }
+      var starts: [(DOM.Text, Int)] = []
+      var atStart = true
+      let walker = document.createTreeWalker(code, DOM.NodeFilter.SHOW_TEXT)
+      while let next = walker.nextNode() {
+        guard let node = next as? DOM.Text else { continue }
+        var index = 0
+        for unit in node.data.utf16 {
+          if atStart { starts.append((node, index)) }
+          atStart = unit == 0x0A
+          index += 1
         }
       }
-      // Text typed outside every line's block is a line out of place too.
-      let all = code.textContent
-      guard matches, inSpans == all.utf8.count else {
-        reline(code, text: all)
-        return
+      var numbers: [DOM.Element] = []
+      for (line, start) in starts.enumerated() {
+        let range = document.createRange()
+        range.setStart(start.0, start.1)
+        range.setEnd(start.0, start.1 + 1)
+        guard let rect = range.getBoundingClientRect() else { continue }
+        let number = document.createElement(.span)
+        number.textContent = intToString(line + 1)
+        number.setAttribute(.style, "top: " + intToString(Int(rect.top - parentRect.top)) + "px; width: var(--gutter)")
+        numbers.append(number)
       }
-      for span in spans {
-        let line = CodeLines.lines(of: span.textContent)
-        let indent = line.isEmpty ? 0 : line[0].indent
-        span.setAttribute(.style, "--indent: " + intToString(indent))
-      }
+      gutter.setAttribute(
+        .style,
+        "left: " + intToString(Int(codeRect.left - parentRect.left)) + "px; --gutter: "
+          + CodeLines.gutter(lines: starts.count))
+      gutter.replaceChildren(numbers)
     }
 
     /// Colors an editor's text the first time it has a box on screen.
     public static func colorIfVisible(_ code: DOM.Element) {
-      guard let editor = editors.first(where: { $0.code.id == code.id }), !editor.colored,
-        let rect = code.getBoundingClientRect(), rect.height > 0
-      else { return }
+      guard let rect = code.getBoundingClientRect(), rect.height > 0 else { return }
+      // Its numbers as it is laid out now: shown, or the pane resized.
+      if code.hasAttribute("data-code-lined") { number(code) }
+      guard let editor = editors.first(where: { $0.code.id == code.id }), !editor.colored else { return }
       color(editor)
     }
+
+    nonisolated(unsafe) static var listensToResize = false
 
     private static func schedule(_ editor: Editor) {
       if editor.timer != 0 { window.clearTimeout(editor.timer) }
       editor.timer = window.setTimeout(150) {
         editor.timer = 0
-        // Lined text typed into: each line's indent read again in place;
-        // laid out again only where its lines no longer match its blocks (a
-        // line broken or joined), so the editor's own undo keeps every
-        // edit within a line.
-        if editor.code.hasAttribute("data-code-lined") { follow(editor.code) }
+        // Lined text typed into: its numbers measured again beside it.
+        if editor.code.hasAttribute("data-code-lined") { number(editor.code) }
         color(editor)
       }
     }

@@ -1131,23 +1131,6 @@
           backgroundColor(.transparent)
           padding(0)
         }
-        // The same token colors the session trace gives a tool call's markup:
-        // one palette for code across the site, from design tokens rather than
-        // from a highlight.js theme.
-        selector(".tei-page-raw .hljs-tag", ".tei-page-raw .hljs-name") {
-          color(syntaxKeywords).important()
-        }
-        selector(".tei-page-raw .hljs-attr", ".tei-page-raw .hljs-attribute") {
-          color(syntaxAttributes).important()
-        }
-        selector(".tei-page-raw .hljs-string") { color(syntaxStrings).important() }
-        // An editor's tags, colored by highlight, as the code layer's are.
-        selector(".tei-page-raw .code-code::highlight(code-tag)") { color(syntaxKeywords) }
-        selector(".tei-page-raw .hljs-comment") { color(syntaxComments).important() }
-        selector(".tei-page-raw .hljs-meta") { color(syntaxOtherDeclarations).important() }
-        selector(".tei-page-raw .hljs-symbol", ".tei-page-raw .hljs-punctuation") {
-          color(syntaxPlainText).important()
-        }
         // A quotation's sentence, and, more strongly by its color alone
         // (a weight would fight the page's own bold), its word, boxed in
         // pale red as the OED sets it: the red alert's own pairing of fill

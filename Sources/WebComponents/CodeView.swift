@@ -79,6 +79,10 @@
             .data("code-lined", "true")
             .style { customProperty("--gutter", CodeLines.gutter(lines: CodeLines.lines(of: text).count)) }
           if let editableLabel {
+            // Its numbers drawn beside it, never in it: the editable text
+            // is the browser's alone, so its undo is never reset
+            // (`CodeEditorHydration.number`, measured as CodeMirror does).
+            div {}.class("code-gutter-lines").ariaHidden(true)
             numbered
               .addingAttribute("contenteditable", "plaintext-only")
               .spellcheck(false)
@@ -178,8 +182,29 @@
           CSS.Property("min-height", "1lh")
           CSS.Property(
             "padding-inline-start", "calc(var(--gutter) + \(spacing12.value) + (var(--indent) + 4) * 1ch)")
-          CSS.Property("text-indent", "calc((var(--indent) + 4) * -1ch)")
+          // Each line the browser breaks within it (an edit's new line)
+          // starts at the edge too.
+          CSS.Property("text-indent", "calc((var(--indent) + 4) * -1ch) each-line")
           overflowWrap(.anywhere)
+        }
+        // An editor numbers its lines in a gutter of its own, measured: a
+        // line typed into a line's block is a line of its own.
+        selector("&[data-lined='true']:has(.code-gutter-lines)") { position(.relative) }
+        selector("&[data-lined='true'] .code-code[data-code-editing='true'] .code-line::before") {
+          CSS.Property("content", "none")
+        }
+        descendant(".code-gutter-lines") {
+          position(.absolute)
+          insetBlockStart(px(0))
+          insetInlineStart(px(0))
+          pointerEvents(.none)
+          userSelect(.none)
+          color(colorSubtle)
+        }
+        descendant(".code-gutter-lines > span") {
+          position(.absolute)
+          insetInlineStart(px(0))
+          textAlign(.end)
         }
         selector("&[data-lined='true'] .code-line::before") {
           CSS.Property("content", "counter(code-line)")
@@ -191,6 +216,19 @@
           color(colorSubtle)
           userSelect(.none)
         }
+        // Text colored by highlights (an editor, lined text), by XML's
+        // grammar (`XMLSyntax`), in the palette highlight.js's classes take
+        // below, as VS Code's and Xcode's defaults map it: a tag's marks
+        // (`<`, `</`, `>`, `/>`) plain, its name a keyword, attribute names
+        // and values their own, references as characters; text plain.
+        selector("& .code-code::highlight(code-tag)") { color(syntaxPlainText) }
+        selector("& .code-code::highlight(code-name)") { color(syntaxKeywords) }
+        selector("& .code-code::highlight(code-attr)") { color(syntaxAttributes) }
+        selector("& .code-code::highlight(code-string)") { color(syntaxStrings) }
+        selector("& .code-code::highlight(code-comment)") { color(syntaxComments) }
+        selector("& .code-code::highlight(code-meta)") { color(syntaxOtherDeclarations) }
+        selector("& .code-code::highlight(code-entity)") { color(syntaxCharacters) }
+        selector("& .code-code::highlight(code-cdata)") { color(syntaxStrings) }
         // One palette for code across the site: the same tokens the session
         // trace colors a tool call's markup with.
         // `descendant(a, b)` nests one selector inside the other, so each of

@@ -21,6 +21,11 @@ public enum XMLSyntax {
     case comment
     /// `<?xml … ?>`, `<!DOCTYPE …>`.
     case meta
+    /// An entity or character reference: `&amp;`, `&#x17F;`, in text or in
+    /// a value.
+    case entity
+    /// `<![CDATA[ … ]]>`, its text with it.
+    case cdata
 
     /// The highlight's name: what a `::highlight()` rule colors.
     public var highlightName: String {
@@ -31,6 +36,8 @@ public enum XMLSyntax {
       case .string: return "code-string"
       case .comment: return "code-comment"
       case .meta: return "code-meta"
+      case .entity: return "code-entity"
+      case .cdata: return "code-cdata"
       }
     }
   }
@@ -42,8 +49,11 @@ public enum XMLSyntax {
     public let end: Int
   }
 
-  /// The colored stretches of `text`, in order. Text outside a tag—and a
-  /// CDATA section's—is left plain.
+  /// The colored stretches of `text`, in order, by XML's grammar: a tag's
+  /// marks, its name (a prefixed one, `tei:p`, whole), its attributes'
+  /// names and values; comments, processing instructions, declarations,
+  /// CDATA sections; and entity and character references in text and in
+  /// values. Text between tags is left plain.
   public static func tokens(_ text: [UInt8]) -> [Token] {
     // Where each byte starts, in UTF-16 code units.
     var units = [Int](repeating: 0, count: text.count + 1)
@@ -78,11 +88,48 @@ public enum XMLSyntax {
       return text.count
     }
     func isSpace(_ byte: UInt8) -> Bool { byte == 0x20 || byte == 0x09 || byte == 0x0A || byte == 0x0D }
+    /// Where a reference that opens at `index` (`&`) ends, past its `;`;
+    /// nil where `&` opens none (a name or `#` digits, then `;`).
+    func reference(at index: Int) -> Int? {
+      var cursor = index + 1
+      while cursor < text.count, cursor - index <= 32 {
+        let byte = text[cursor]
+        if byte == 0x3B { return cursor > index + 1 ? cursor + 1 : nil }
+        guard byte == 0x23 || byte == 0x3A || byte == 0x5F || byte == 0x2D || byte == 0x2E
+          || (byte >= 0x30 && byte <= 0x39) || (byte >= 0x41 && byte <= 0x5A) || (byte >= 0x61 && byte <= 0x7A)
+          || byte >= 0x80
+        else { return nil }
+        cursor += 1
+      }
+      return nil
+    }
+    /// A stretch of `kind` from `from` to `to`, its references apart.
+    func addWithReferences(_ kind: Kind, _ from: Int, _ to: Int) {
+      var start = from
+      var cursor = from
+      while cursor < to {
+        if text[cursor] == 0x26, let end = reference(at: cursor), end <= to {
+          add(kind, start, cursor)
+          add(.entity, cursor, end)
+          cursor = end
+          start = end
+        } else {
+          cursor += 1
+        }
+      }
+      add(kind, start, to)
+    }
 
     var index = 0
     while index < text.count {
       guard text[index] == 0x3C else {
-        index += 1
+        // Text: plain, its references colored.
+        if text[index] == 0x26, let end = reference(at: index) {
+          add(.entity, index, end)
+          index = end
+        } else {
+          index += 1
+        }
         continue
       }
       if starts("<!--", at: index) {
@@ -90,7 +137,9 @@ public enum XMLSyntax {
         add(.comment, index, end)
         index = end
       } else if starts("<![CDATA[", at: index) {
-        index = past("]]>", from: index + 9)
+        let end = past("]]>", from: index + 9)
+        add(.cdata, index, end)
+        index = end
       } else if starts("<?", at: index) {
         let end = past("?>", from: index + 2)
         add(.meta, index, end)
@@ -129,7 +178,7 @@ public enum XMLSyntax {
             var end = cursor + 1
             while end < text.count, text[end] != byte { end += 1 }
             end = min(end + 1, text.count)
-            add(.string, cursor, end)
+            addWithReferences(.string, cursor, end)
             cursor = end
           } else if isSpace(byte) || byte == 0x3D || byte == 0x2F {
             cursor += 1
