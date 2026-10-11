@@ -817,8 +817,36 @@
           // No typed helper for this one; the builder takes a raw property.
           CSS.Property("font-variant-caps", "small-caps")
         }
-        selector("& .tei-run[data-rend~='italic']", "& .tei-run[data-rend~='ital']") {
+        // Typeface classes (user, 2026-10-11), in Noto where Noto has the
+        // face: roman the serif, italic the serif's italic, sans-serif the
+        // sans, typewriter the mono. Noto has no Latin blackletter or
+        // script: those stay in the serif.
+        selector(
+          "& .tei-run[data-rend~='italic']", "& .tei-run[data-rend~='ital']",
+          "& .tei-block[data-rend~='italic'] > .tei-line", "& .tei-section > .tei-line[data-rend~='italic']",
+          "& .tei-frame[data-rend~='italic'] .tei-line"
+        ) {
+          fontFamily(typographyFontSerifItalic)
           fontStyle(.italic)
+        }
+        selector(
+          "& .tei-run[data-rend~='roman']", "& .tei-block[data-rend~='roman'] > .tei-line",
+          "& .tei-section > .tei-line[data-rend~='roman']", "& .tei-frame[data-rend~='roman'] .tei-line"
+        ) {
+          fontFamily(typographyFontSerif)
+          fontStyle(.normal)
+        }
+        selector(
+          "& .tei-run[data-rend~='sans-serif']", "& .tei-block[data-rend~='sans-serif'] > .tei-line",
+          "& .tei-section > .tei-line[data-rend~='sans-serif']", "& .tei-frame[data-rend~='sans-serif'] .tei-line"
+        ) {
+          fontFamily(typographyFontSans)
+        }
+        selector(
+          "& .tei-run[data-rend~='typewriter']", "& .tei-block[data-rend~='typewriter'] > .tei-line",
+          "& .tei-section > .tei-line[data-rend~='typewriter']", "& .tei-frame[data-rend~='typewriter'] .tei-line"
+        ) {
+          fontFamily(typographyFontMono)
         }
         // The source's own bold, transcribed: content, not the site's
         // chrome, so it stays bold (the semibold rule is for our UI).
@@ -960,13 +988,14 @@
         selector("& .tei-frame[data-rend~='align(center)']") { alignSelf(.center) }
         selector("& .tei-frame[data-rend~='align(right)']") { alignSelf(.flexEnd) }
         selector("& .tei-frame[data-rend~='align(left)']") { alignSelf(.flexStart) }
-        // Ink (user, 2026-10-11): a rend's color(NAME), one of the eleven
-        // basic color terms, in its palette token, on a run, a block or a
-        // frame; black the text's own color, white the inverted text's.
+        // Ink (user, 2026-10-11): a rend's color(NAME), one of Apple's HIG
+        // colors or black or white, in its glyph token, on a run, a block or
+        // a frame; black the text's own color, white the inverted text's.
         for (name, ink) in [
-          ("black", colorBase), ("white", colorInverted), ("red", colorRed), ("green", colorGreen),
-          ("yellow", colorYellow), ("blue", colorBlue), ("brown", colorBrown), ("purple", colorPurple),
-          ("pink", colorPink), ("orange", colorOrange), ("gray", colorGray),
+          ("black", colorBase), ("white", colorInverted), ("gray", colorGray), ("red", colorRed),
+          ("orange", colorOrange), ("yellow", colorYellow), ("green", colorGreen), ("mint", colorMint),
+          ("teal", colorTeal), ("cyan", colorCyan), ("blue", colorBlue), ("indigo", colorIndigo),
+          ("purple", colorPurple), ("pink", colorPink), ("brown", colorBrown),
         ] {
           selector(
             "& .tei-run[data-rend~='color(\(name))']", "& .tei-block[data-rend~='color(\(name))'] > .tei-line",
