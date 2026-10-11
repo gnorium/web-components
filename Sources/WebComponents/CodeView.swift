@@ -20,9 +20,10 @@
     /// The text's accessible name when it can be edited in place
     /// (`CodeEditorView`); nil for a block that is only read.
     let editableLabel: String?
-    /// Soft-wrapped as Xcode wraps code (user, 2026-10-11): each line its
-    /// own, numbered; a long one wraps with no sideways scroll, its
-    /// continuation unnumbered and indented to the line's own indent + 4.
+    /// Each line its own, numbered (user, 2026-10-12): wide—the lines as
+    /// stored, never wrapped, scrolling sideways—unless an ancestor says
+    /// Reflow (`[data-reflow='true']`), when a long line wraps as plain
+    /// text does, its continuation at column 0 and unnumbered.
     let lined: Bool
 
     public init(
@@ -162,17 +163,10 @@
           color(.inherit)
           padding(0)
         }
-        // Lined (Xcode's soft wrap): no sideways scroll; each line a block,
-        // numbered in a gutter by a counter (never part of the text), its
-        // wrapped continuation indented to its own indent + 4.
-        selector("&[data-lined='true']") {
-          whiteSpace(.preWrap)
-          overflowX(.visible)
-        }
+        // Lined: each line a block, numbered in a gutter by a counter
+        // (never part of the text). Wide: the lines as stored, never
+        // wrapped, scrolling sideways.
         selector("&[data-lined='true'] .code-code") {
-          flexShrink(1)
-          minWidth(0)
-          width(perc(100))
           CSS.Property("counter-reset", "code-line")
         }
         selector("&[data-lined='true'] .code-line") {
@@ -180,11 +174,21 @@
           position(.relative)
           CSS.Property("counter-increment", "code-line")
           CSS.Property("min-height", "1lh")
-          CSS.Property(
-            "padding-inline-start", "calc(var(--gutter) + \(spacing12.value) + (var(--indent) + 4) * 1ch)")
-          // Each line the browser breaks within it (an edit's new line)
-          // starts at the edge too.
-          CSS.Property("text-indent", "calc((var(--indent) + 4) * -1ch) each-line")
+          CSS.Property("padding-inline-start", "calc(var(--gutter) + \(spacing12.value))")
+        }
+        // Reflowed (an ancestor's Reflow, user 2026-10-12): wrapped as plain
+        // text, no sideways scroll; a continuation starts at column 0, no
+        // indent inherited or added, and has no number.
+        selector("[data-reflow='true'] &[data-lined='true']") {
+          whiteSpace(.preWrap)
+          overflowX(.visible)
+        }
+        selector("[data-reflow='true'] &[data-lined='true'] .code-code") {
+          flexShrink(1)
+          minWidth(0)
+          width(perc(100))
+        }
+        selector("[data-reflow='true'] &[data-lined='true'] .code-line") {
           overflowWrap(.anywhere)
         }
         // An editor numbers its lines in a gutter of its own, measured: a
@@ -212,7 +216,6 @@
           insetInlineStart(px(0))
           CSS.Property("width", "var(--gutter)")
           textAlign(.end)
-          CSS.Property("text-indent", "0")
           color(colorSubtle)
           userSelect(.none)
         }

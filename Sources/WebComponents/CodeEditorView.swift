@@ -26,7 +26,7 @@
     let value: String
     let language: String
     let ariaLabel: String
-    /// Numbered and soft-wrapped as Xcode's (`CodeView.lined`).
+    /// Numbered, wide unless an ancestor reflows it (`CodeView.lined`).
     let lined: Bool
 
     public init(
