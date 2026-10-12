@@ -534,6 +534,13 @@ public struct AccordionView: HTMLContent {
           event.preventDefault()
           return
         }
+        // A button in the header (a tool call's JSON switch at its end) is
+        // its own control and leaves the accordion as it is. Not prevented:
+        // the button's own activation runs, and a native <details> never
+        // toggles on a click its button takes.
+        if let target = event.target, let button = target.closest("button"), let _ = button.closest(".accordion-summary") {
+          return
+        }
         // Keep <details> open for the whole motion; native toggle would
         // display:none the panel before the height transition can run.
         event.preventDefault()
