@@ -1,17 +1,14 @@
 #if SERVER
   import CSSBuilder
-  import CSSOMBuilder
-  import DesignTokens
   import DOMBuilder
   import HTMLBuilder
   import SVGBuilder
   import WebTypes
 
-  /// Lucide's `refresh-cw-off` (ISC; THIRD_PARTY_NOTICES.md), for detach.
-  /// TRIAL port (user, 2026-10-12): Lucide's 24 geometry (2–22 both ways,
-  /// the slash reaching past the arrows) scaled ×44.8 onto the house grid,
-  /// a 128/1024 stroke with Lucide's round caps and joins, its outer edges
-  /// tight to the box.
+  /// Lucide's `refresh-cw-off` (ISC; THIRD_PARTY_NOTICES.md), for detaching. Lucide's
+  /// own 24-grid geometry, fitted to the house box by IconStrokeFit: the
+  /// long edge 1024, `iconStrokeWidth` thick, round caps and joins, the
+  /// outer edges tight to the box (user, 2026-10-12).
   public struct LucideRefreshCwOffIconView: HTMLContent {
     let iconSize: CSS.Length
     let `class`: String
@@ -25,33 +22,26 @@
     }
 
     public func build() -> DOM.Node {
-      svg {
-        path()
-          .d(
-            M(915.2, 332.8), L(813.95, 231.55), A(436.8, 436.8, 0, false, false, 512, 108.8),
-            C(467.2, 108.8, 423.74, 115.97, 383.42, 129.86))
-        path()
-          .d(M(332.8, 691.2), H(108.8), v(224))
-        path()
-          .d(M(108.8, 512), C(108.8, 400.45, 153.6, 299.65, 227.07, 227.07))
-        path()
-          .d(
-            M(108.8, 691.2), l(101.25, 101.25), A(436.8, 436.8, 0, false, false, 512, 915.2),
-            c(111.55, 0, 212.35, -44.8, 284.93, -118.27))
-        path()
-          .d(M(915.2, 512), c(0, 44.8, -7.17, 88.26, -21.06, 128.58))
-        path()
-          .d(M(915.2, 108.8), v(224), h(-224))
-        path()
-          .d(M(960, 960), L(64, 64))
+      let fit = IconStrokeFit(minX: 2, minY: 2, maxX: 22, maxY: 22)
+      return svg {
+        g {
+          path().d(M(21, 8), L(18.74, 5.74), A(9.75, 9.75, 0, false, false, 12, 3), C(11, 3, 10.03, 3.16, 9.13, 3.47))
+          path().d(M(8, 16), H(3), v(5))
+          path().d(M(3, 12), C(3, 9.51, 4, 7.26, 5.64, 5.64))
+          path().d(M(3, 16), l(2.26, 2.26), A(9.75, 9.75, 0, false, false, 12, 21), c(2.49, 0, 4.74, -1, 6.36, -2.64))
+          path().d(M(21, 12), c(0, 1, -0.16, 1.97, -0.47, 2.87))
+          path().d(M(21, 3), v(5), h(-5))
+          path().d(M(22, 22), L(2, 2))
+        }
+        .transform(fit.transform)
+        .strokeWidth(fit.strokeWidth)
       }
       .class(`class`.isEmpty ? "lucide-refresh-cw-off-icon-view" : "lucide-refresh-cw-off-icon-view \(`class`)")
       .style { height(iconSize) }
-      .viewBox(0, 0, 1024, 1024)
+      .viewBox(0, 0, fit.width, fit.height)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.none)
       .stroke(.currentColor)
-      .strokeWidth(128)
       .strokeLinecap(.round)
       .strokeLinejoin(.round)
       .ariaHidden(true)

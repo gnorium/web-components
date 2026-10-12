@@ -26,14 +26,20 @@ public struct RotatingRingSectorView: HTMLContent {
     self.class = `class`
   }
 
+  static let ringRadius: Double = 512 - iconStrokeWidth / 2
+
   public func build() -> DOM.Node {
     svg {
       path()
-        .d(M(512, 64), A(448, 448, 0, false, true, 899.979, 736))
+        // A third of the ring: from the top, 120° clockwise, on the
+        // ring's radius (its outer edge on the box's).
+        .d(
+          M(512, 512 - Self.ringRadius),
+          A(Self.ringRadius, Self.ringRadius, 0, false, true, 512 + Self.ringRadius * 0.8660254037844386, 512 + Self.ringRadius / 2))
         .class("rotating-ring-sector-shape")
         .fill(.none)
         .stroke(.currentColor)
-        .strokeWidth(128)
+        .strokeWidth(iconStrokeWidth)
     }
     .class(stringIsEmpty(`class`) ? "rotating-ring-sector-view" : "rotating-ring-sector-view \(`class`)")
     .viewBox(0, 0, 1024, 1024)

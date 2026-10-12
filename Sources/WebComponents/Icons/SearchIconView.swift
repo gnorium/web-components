@@ -16,22 +16,26 @@ public struct SearchIconView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
-    svg {
-      path()
-        .d(
-          M(460.8, 51.2), a(409.6, 409.6, 0, true, false, 0, 819.2),
-          a(409.6, 409.6, 0, false, false, 0, -819.2), Z())
+    let fit = IconStrokeFit(minX: 51.2, minY: 51.2, maxX: 972.8, maxY: 972.8)
+    return svg {
+      g {
+        path()
+          .d(
+            M(460.8, 51.2), a(409.6, 409.6, 0, true, false, 0, 819.2),
+            a(409.6, 409.6, 0, false, false, 0, -819.2), Z())
 
-      path()
-        .d(M(972.8, 972.8), l(-222.72, -222.72))
+        path()
+          .d(M(972.8, 972.8), l(-222.72, -222.72))
+      }
+      .transform(fit.transform)
+      .strokeWidth(fit.strokeWidth)
     }
     .class("search-icon-view")
     .style { height(iconSize) }
     .xmlns("http://www.w3.org/2000/svg")
-    .viewBox(0, 0, 1024, 1024)
+    .viewBox(0, 0, fit.width, fit.height)
     .fill(.none)
     .stroke(.currentColor)
-    .strokeWidth(102.4)
     .strokeLinecap(.round)
     .strokeLinejoin(.round)
 

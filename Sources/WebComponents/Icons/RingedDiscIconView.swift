@@ -23,8 +23,8 @@ public struct RingedDiscIconView: HTMLContent {
   public func build() -> DOM.Node {
     svg {
       circle().cx(512).cy(512).r(256)
-      circle().cx(512).cy(512).r(448)
-        .fill(.none).stroke(.currentColor).strokeWidth(128)
+      circle().cx(512).cy(512).r(512 - iconStrokeWidth / 2)
+        .fill(.none).stroke(.currentColor).strokeWidth(iconStrokeWidth)
     }
     .class(
       stringIsEmpty(`class`) ? "ringed-disc-icon-view" : "ringed-disc-icon-view \(`class`)"

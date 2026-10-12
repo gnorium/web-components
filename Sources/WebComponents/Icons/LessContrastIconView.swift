@@ -20,28 +20,31 @@
     }
 
     public func build() -> DOM.Node {
-      svg {
-        // Outer circle
-        circle()
-          .cx(512)
-          .cy(512)
-          .r(465.45)
-          .fill(.none)
-          .stroke(.currentColor)
-          .strokeWidth(93.09)
+      let fit = IconStrokeFit(minX: 46.55, minY: 46.55, maxX: 977.45, maxY: 977.45)
+      return svg {
+        g {
+          // Outer circle
+          circle()
+            .cx(512)
+            .cy(512)
+            .r(465.45)
+            .fill(.none)
+            .stroke(.currentColor)
 
-        // Inner semicircle (not filled - less contrast)
-        path()
-          .d(M(512, 791.27), a(279.27, 279.27, 0, false, false, 0, -558.54), v(558.54), Z())
-          .fill(.none)
-          .stroke(.currentColor)
-          .strokeWidth(93.09)
-          .strokeLinecap(.round)
-          .strokeLinejoin(.round)
+          // Inner semicircle (not filled - less contrast)
+          path()
+            .d(M(512, 791.27), a(279.27, 279.27, 0, false, false, 0, -558.54), v(558.54), Z())
+            .fill(.none)
+            .stroke(.currentColor)
+            .strokeLinecap(.round)
+            .strokeLinejoin(.round)
+        }
+        .transform(fit.transform)
+        .strokeWidth(fit.strokeWidth)
       }
       .class(`class`.isEmpty ? "less-contrast-icon-view" : "less-contrast-icon-view \(`class`)")
       .style { height(iconSize) }
-      .viewBox(0, 0, 1024, 1024)
+      .viewBox(0, 0, fit.width, fit.height)
       .xmlns("http://www.w3.org/2000/svg")
       .ariaHidden(true)
 

@@ -25,10 +25,11 @@ public struct RingIconView: HTMLContent {
       circle()
         .cx(512)
         .cy(512)
-        .r(448)
+        // Its outer edge on the box's: the radius less half the stroke.
+        .r(512 - iconStrokeWidth / 2)
         .fill(.none)
         .stroke(.currentColor)
-        .strokeWidth(128)
+        .strokeWidth(iconStrokeWidth)
     }
     .class(
       stringIsEmpty(`class`) ? "ring-icon-view" : "ring-icon-view \(`class`)"

@@ -26,16 +26,22 @@ public struct RotatingRingSectorWithDiscView: HTMLContent {
     self.class = `class`
   }
 
+  static let ringRadius: Double = 512 - iconStrokeWidth / 2
+
   public func build() -> DOM.Node {
     svg {
       // These are siblings: neither the disc nor its ancestor ever rotates.
       circle().cx(512).cy(512).r(256).class("rotating-ring-sector-with-disc-core")
       path()
-        .d(M(512, 64), A(448, 448, 0, false, true, 899.979, 736))
+        // A third of the ring: from the top, 120° clockwise, on the
+        // ring's radius (its outer edge on the box's).
+        .d(
+          M(512, 512 - Self.ringRadius),
+          A(Self.ringRadius, Self.ringRadius, 0, false, true, 512 + Self.ringRadius * 0.8660254037844386, 512 + Self.ringRadius / 2))
         .class("rotating-ring-sector-with-disc-ring")
         .fill(.none)
         .stroke(.currentColor)
-        .strokeWidth(128)
+        .strokeWidth(iconStrokeWidth)
     }
     .class(
       stringIsEmpty(`class`)
