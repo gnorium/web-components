@@ -16,9 +16,6 @@
   /// its centerline. The original's filled M and arrow are stroked here,
   /// spaced 32 inside the frame and 64 apart, so the M keeps its V at
   /// this weight.
-  ///
-  /// Hover (its host button's, or keyboard focus): the arrow dips 32
-  /// units, its tip to the frame, and rises back, once.
   public struct MarkdownIconView: HTMLContent {
     let iconSize: CSS.Length
     let `class`: String
@@ -42,20 +39,9 @@
           .d(M(224, 480), V(224), L(336, 364.8), L(448, 224), V(480))
         path()
           .d(M(720, 224), V(480), M(640, 400), L(720, 480), L(800, 400))
-          .class("markdown-arrow")
       }
       .class(`class`.isEmpty ? "markdown-icon-view" : "markdown-icon-view \(`class`)")
-      .style {
-        width(iconSize)
-        selector(IconHoverMotion.hover(".markdown-arrow"), IconHoverMotion.focus(".markdown-arrow")) {
-          animation(
-            "markdown-arrow-dip calc(\(transitionDurationMedium.value) * 2) \(animationTimingFunctionBouncing.value)")
-          media(prefersReducedMotion(.reduce)) { animation("none").important() }
-        }
-        keyframes("markdown-arrow-dip") {
-          at(perc(50)) { CSS.Property("transform", "translateY(32px)") }
-        }
-      }
+      .style { width(iconSize) }
       .viewBox(0, 0, 1024, 704)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.none)

@@ -14,11 +14,6 @@
   /// edges tight to the box (1024 × 974.22). Lucide writes the turn as
   /// `a1 1 0 0 1 0 7`, a radius the renderer grows to the half chord;
   /// here it is that radius, 3.5, outright.
-  ///
-  /// Hover (its host button's, or keyboard focus): the arrowhead pushes
-  /// back toward the line's start by one Lucide unit and returns, once, as
-  /// a carriage returns. The animated Lucide set has no text-wrap; this
-  /// is drawn after its nudges (pqoqubbw/icons, MIT).
   public struct LucideTextWrapIconView: HTMLContent {
     let iconSize: CSS.Length
     let `class`: String
@@ -35,7 +30,6 @@
       svg {
         path()
           .d(M(711.11, 611.56), l(-149.33, 149.33), l(149.33, 149.33))
-          .class("lucide-text-wrap-head")
         path()
           .d(M(64, 412.44), h(721.78), a(174.22, 174.22, 0, false, true, 0, 348.44), H(561.78))
         path()
@@ -44,18 +38,7 @@
           .d(M(64, 64), h(896))
       }
       .class(`class`.isEmpty ? "lucide-text-wrap-icon-view" : "lucide-text-wrap-icon-view \(`class`)")
-      .style {
-        width(iconSize)
-        overflow(.visible)
-        selector(IconHoverMotion.hover(".lucide-text-wrap-head"), IconHoverMotion.focus(".lucide-text-wrap-head")) {
-          animation(
-            "lucide-text-wrap-return calc(\(transitionDurationMedium.value) * 2) \(animationTimingFunctionBouncing.value)")
-          media(prefersReducedMotion(.reduce)) { animation("none").important() }
-        }
-        keyframes("lucide-text-wrap-return") {
-          at(perc(50)) { CSS.Property("transform", "translateX(-49.78px)") }
-        }
-      }
+      .style { width(iconSize) }
       .viewBox(0, 0, 1024, 974.22)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.none)

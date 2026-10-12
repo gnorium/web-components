@@ -11,11 +11,6 @@
   /// port (user, 2026-10-12): Lucide's 24 geometry (3–21 both ways) scaled
   /// ×896/18 onto the house grid, a 128/1024 stroke with Lucide's round
   /// caps and joins, its outer edges tight to the box.
-  ///
-  /// Hover (its host button's, or keyboard focus): the whole icon turns
-  /// 50° clockwise and holds while hovered, turning back after, as the
-  /// animated Lucide set's refresh-cw does (pqoqubbw/icons, MIT; there a
-  /// spring, here the user easing).
   public struct LucideRefreshCwIconView: HTMLContent {
     let iconSize: CSS.Length
     let `class`: String
@@ -44,18 +39,7 @@
           .d(M(312.89, 711.11), H(64), v(248.89))
       }
       .class(`class`.isEmpty ? "lucide-refresh-cw-icon-view" : "lucide-refresh-cw-icon-view \(`class`)")
-      .style {
-        height(iconSize)
-        selector("&") {
-          transformOrigin(perc(50))
-          transition("transform \(transitionDurationMedium.value) \(transitionTimingFunctionUser.value)")
-          media(prefersReducedMotion(.reduce)) { transition(.none).important() }
-        }
-        selector(IconHoverMotion.hover(), IconHoverMotion.focus()) {
-          CSS.Property("transform", "rotate(50deg)")
-          media(prefersReducedMotion(.reduce)) { CSS.Property("transform", "none").important() }
-        }
-      }
+      .style { height(iconSize) }
       .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.none)

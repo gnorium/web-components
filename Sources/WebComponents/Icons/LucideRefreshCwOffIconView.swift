@@ -12,11 +12,6 @@
   /// the slash reaching past the arrows) scaled ×44.8 onto the house grid,
   /// a 128/1024 stroke with Lucide's round caps and joins, its outer edges
   /// tight to the box.
-  ///
-  /// Hover (its host button's, or keyboard focus): the icon shakes side to
-  /// side twice and settles, once, as the animated Lucide set's
-  /// refresh-cw-off does (pqoqubbw/icons, MIT; there 3px of a 28px icon,
-  /// here a subtler 6% of its width).
   public struct LucideRefreshCwOffIconView: HTMLContent {
     let iconSize: CSS.Length
     let `class`: String
@@ -51,20 +46,7 @@
           .d(M(960, 960), L(64, 64))
       }
       .class(`class`.isEmpty ? "lucide-refresh-cw-off-icon-view" : "lucide-refresh-cw-off-icon-view \(`class`)")
-      .style {
-        height(iconSize)
-        selector(IconHoverMotion.hover(), IconHoverMotion.focus()) {
-          animation(
-            "lucide-refresh-cw-off-shake calc(\(transitionDurationBase.value) * 4) \(animationTimingFunctionBouncing.value)")
-          media(prefersReducedMotion(.reduce)) { animation("none").important() }
-        }
-        keyframes("lucide-refresh-cw-off-shake") {
-          at(perc(20)) { CSS.Property("transform", "translateX(-6%)") }
-          at(perc(40)) { CSS.Property("transform", "translateX(6%)") }
-          at(perc(60)) { CSS.Property("transform", "translateX(-6%)") }
-          at(perc(80)) { CSS.Property("transform", "translateX(6%)") }
-        }
-      }
+      .style { height(iconSize) }
       .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.none)
