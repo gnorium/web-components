@@ -451,6 +451,80 @@
       return nil
     }
 
+    /// A canvas's lines by the pages it holds: a canvas photographed as an
+    /// opening carries a `<pb/>` for each of its sides (the explication
+    /// prompt's section 8), each read as a `.mark` line. A page opens at
+    /// each such mark after the lines before it; one page where there is
+    /// none.
+    static func spreadPages(of lines: [TEILine]) -> [[TEILine]] {
+      var pages: [[TEILine]] = [[]]
+      for line in lines {
+        if case .mark = line.kind, !pages[pages.count - 1].isEmpty { pages.append([]) }
+        pages[pages.count - 1].append(line)
+      }
+      return pages
+    }
+
+    /// Whether lines read right to left: the direction of the first letter
+    /// of their text that has one, a page's labels aside (a Latin "A1
+    /// verso" heads a Hebrew page as often as not). Hebrew, Arabic, Syriac,
+    /// Thaana, N'Ko, Samaritan, Mandaic and the historic scripts Unicode
+    /// sets right to left (U+10800–U+10FFF, U+1E800–U+1EFFF), their
+    /// presentation forms included.
+    static func readsRightToLeft(_ lines: [TEILine]) -> Bool {
+      for line in lines {
+        if case .mark = line.kind { continue }
+        for scalar in line.runs.lazy.flatMap(\.text.unicodeScalars) {
+          switch scalar.value {
+          case 0x0590...0x08FF, 0xFB1D...0xFDFF, 0xFE70...0xFEFF, 0x10800...0x10FFF, 0x1E800...0x1EFFF:
+            return true
+          default:
+            if scalar.properties.isAlphabetic { return false }
+          }
+        }
+      }
+      return false
+    }
+
+    /// A canvas's rendered lines, headed by `heading` (its label) where
+    /// given. A canvas holding two pages or more—an opening photographed
+    /// whole—is set as a `.tei-spread` (user, 2026-10-12), each page a
+    /// `.tei-spread-page` headed by its own label, in reading order: with
+    /// Reflow off side by side, left to right or right to left as its
+    /// script reads, so the text looks like the image beside it; with
+    /// Reflow on one after the other.
+    private func rendered(
+      _ lines: [TEILine], heading: String?, facsimileURL: String, label: String, tabStop: TEIWordPlace? = nil
+    ) -> [DOM.Node] {
+      func mark(_ text: String) -> DOM.Node {
+        renderingLine(.init(kind: .mark, text: text.isEmpty ? "—" : text), facsimileURL: facsimileURL, label: label)
+      }
+      let pages = Self.spreadPages(of: lines)
+      guard pages.count > 1 else {
+        return (heading.map { [mark($0)] } ?? []) + laidOut(lines, facsimileURL: facsimileURL, label: label, tabStop: tabStop)
+      }
+      return [
+        div {
+          for (index, page) in pages.enumerated() {
+            // The first side's own page break is the document's, outside the
+            // canvas's markup: its label is the canvas's, set as the other
+            // sides' are, so the columns' first lines stand level.
+            let headed = index > 0 || page.first.map { if case .mark = $0.kind { true } else { false } } ?? false
+            let text = heading ?? label
+            div {
+              laidOut(
+                headed ? page : [TEILine(kind: .mark, text: text.isEmpty ? "—" : text)] + page,
+                facsimileURL: facsimileURL, label: label, tabStop: tabStop)
+            }
+            .class("tei-spread-page")
+          }
+        }
+        .class("tei-spread")
+        .dir(Self.readsRightToLeft(lines) ? "rtl" : "ltr")
+        .build()
+      ]
+    }
+
     /// A page's lines as the reader sets them (`layout(of:)`), in sections
     /// a paragraph's space apart: a section opens at a line that opens a
     /// paragraph (`TEILine.opensParagraph`), as a TEI reader sets a `<p>`
@@ -634,12 +708,9 @@
           let tabStop = glossURL == nil ? nil : Self.firstWord(of: page.lines)
           div {
             div {
-              if labelsPages {
-                renderingLine(
-                  .init(kind: .mark, text: page.label.isEmpty ? "—" : page.label), facsimileURL: page.facsimileURL,
-                  label: page.label)
-              }
-              laidOut(page.lines, facsimileURL: page.facsimileURL, label: page.label, tabStop: tabStop)
+              rendered(
+                page.lines, heading: labelsPages ? page.label : nil, facsimileURL: page.facsimileURL, label: page.label,
+                tabStop: tabStop)
             }
             .class("tei-page-text")
             .data("layer", "rendering")
@@ -684,7 +755,9 @@
                 // text would read as the page's (user, 2026-10-07).
                 div {
                   if let translated {
-                    laidOut(translated.page.lines, facsimileURL: translated.page.facsimileURL, label: translated.page.label)
+                    rendered(
+                      translated.page.lines, heading: nil, facsimileURL: translated.page.facsimileURL,
+                      label: translated.page.label)
                   }
                 }
                 .class("tei-page-text")
@@ -1006,6 +1079,25 @@
           flexDirection(.column)
           gap(spacing16)
           minWidth(0)
+        }
+        // A spread's pages (`rendered`), each set as a page is; reflowed,
+        // one after the other a paragraph's space apart.
+        selector("& .tei-spread", "& .tei-spread-page") {
+          display(.flex)
+          flexDirection(.column)
+          gap(spacing16)
+          minWidth(0)
+        }
+        // Reflow off, side by side as the image has them, in its direction
+        // (the spread's `dir`): one column a page, all as wide as the widest
+        // page's lines, filling the pane where they are narrower.
+        selector("& .tei-page-text:not([data-reflow='true'] *) .tei-spread") {
+          display(.grid)
+          CSS.Property("grid-auto-flow", "column")
+          CSS.Property("grid-auto-columns", "1fr")
+          gap(spacing32)
+          width(.maxContent)
+          minWidth(perc(100))
         }
         descendant(".tei-section") {
           display(.flex)
