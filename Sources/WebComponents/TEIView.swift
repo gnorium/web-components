@@ -964,6 +964,19 @@
         selector("& .tei-page-text:not([data-reflow='true'] *) .tei-block > :first-child") {
           CSS.Property("text-indent", "inherit")
         }
+        // A printed prose line runs to both edges of its block, as the
+        // compositor set it, so its words stand near where the scan has
+        // them (user, 2026-10-12): every line of a block but its last—the
+        // paragraph's end—justified to the block's width. Not a block or a
+        // line set by its own alignment, nor a verse line, a heading, a
+        // speech prefix or a stage direction (a line of their own, or no
+        // plain text line). Reflowed, lines are justified as a paragraph's.
+        selector(
+          "& .tei-page-text:not([data-reflow='true'] *) .tei-block:not([data-rend*='align(']) > [class='tei-line']:not(:last-child):not([data-rend*='align('])"
+        ) {
+          textAlign(.justify)
+          CSS.Property("text-align-last", "justify")
+        }
         selector(
           "& .tei-page-text:not([data-reflow='true'] *)::-webkit-scrollbar-track",
           "& .tei-page-text:not([data-reflow='true'] *)::-webkit-scrollbar-track-piece",
