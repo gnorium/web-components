@@ -203,7 +203,7 @@
           selector(".button-group-button.button-group-button.button-group-button.button-group-button.button-group-button.selected") {
             backgroundColor(backgroundColorBlue).important()
             borderColor(backgroundColorBlue).important()
-            color(colorInvertedFixed).important()
+            color(colorOnSolid).important()
           }
           selector(".button-group-button.button-group-button.button-group-button.button-group-button.button-group-button.selected:not(.button-weight-static):hover:not(:disabled)") {
             backgroundColor(backgroundColorBlueHover).important()

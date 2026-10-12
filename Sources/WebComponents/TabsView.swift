@@ -248,7 +248,7 @@
         }
         selector("&.tabs-solid [role='tab'][aria-selected='true']") {
           cursor(.default)
-          color(colorInvertedFixed)
+          color(colorOnSolid)
           backgroundColor(backgroundColorBlue)
           fontWeight(fontWeightSemiBold)
         }
@@ -267,7 +267,7 @@
           outlineOffset(px(-2))
         }
         selector("&.tabs-solid [role='tab']:active") {
-          color(colorInvertedFixed)
+          color(colorOnSolid)
           outline(.none)
         }
         selector("&.tabs-solid [role='tab']:active::before") { backgroundColor(backgroundColorBlue) }

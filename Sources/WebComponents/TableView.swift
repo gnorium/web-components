@@ -1206,9 +1206,9 @@ public struct TableView: HTMLContent {
       selector("&.table-empty .table-thead") {
         minWidth(.minContent)
       }
-      selector("& .table-row:nth-child(even)", "& .table-row-view:nth-child(even)", "& .table-tbody tr:nth-child(even)") { backgroundColor(backgroundColorNeutralSubtle) }
+      selector("& .table-row:nth-child(even)", "& .table-row-view:nth-child(even)", "& .table-tbody tr:nth-child(even)") { backgroundColor(backgroundColorStripe) }
       selector("& .table-row:nth-child(odd)", "& .table-row-view:nth-child(odd)", "& .table-tbody tr:nth-child(odd)") { backgroundColor(backgroundColorBase) }
-      descendant(".table-row-even") { backgroundColor(backgroundColorNeutralSubtle).important() }
+      descendant(".table-row-even") { backgroundColor(backgroundColorStripe).important() }
       descendant(".table-row-odd") { backgroundColor(backgroundColorBase).important() }
       descendant(".table-row-last") { borderBlockEnd(.none).important() }
       descendant(".table-td-spacer") {
@@ -1223,8 +1223,8 @@ public struct TableView: HTMLContent {
         cursor(cursorBaseHover)
         transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionUser)
       }
-      selector("& .table-tbody tr[data-url]:not([data-url='']):hover", "& .table-tbody tr.table-row-link:hover") { backgroundColor(backgroundColorNeutralSubtleHover).important() }
-      selector("& .table-tbody tr[data-url]:not([data-url='']):active", "& .table-tbody tr.table-row-link:active") { backgroundColor(backgroundColorNeutralSubtleActive).important() }
+      selector("& .table-tbody tr[data-url]:not([data-url='']):hover", "& .table-tbody tr.table-row-link:hover") { backgroundColor(backgroundColorStripeHover).important() }
+      selector("& .table-tbody tr[data-url]:not([data-url='']):active", "& .table-tbody tr.table-row-link:active") { backgroundColor(backgroundColorStripeActive).important() }
       selector("& .table-tbody tr:hover:has(.table-selection-container:hover)", "& .table-tbody tr:active:has(.table-selection-container:active)", "& .table-tbody tr:hover:has(.animated-chevron-container:hover)", "& .table-tbody tr:hover:has(.animated-chevron:hover)") {
         backgroundColor(.transparent).important()
       }

@@ -242,7 +242,7 @@ public struct InfoChipView: HTMLContent {
         backgroundColor(backgroundColorTransparent)
       }
       selector("&.info-chip-solid") {
-        color(colorInvertedFixed)
+        color(colorOnSolid)
       }
       selector("&.info-chip-red.info-chip-subtle") {
         color(colorRed)

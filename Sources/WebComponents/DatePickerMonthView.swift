@@ -190,7 +190,7 @@ public struct DatePickerMonthView: HTMLContent {
       }
       descendant(".date-picker-month-day[aria-selected='true'] .date-picker-month-day-label") {
         backgroundColor(backgroundColorBlue).important()
-        color(colorInvertedFixed).important()
+        color(colorOnSolid).important()
         fontWeight(fontWeightSemiBold)
         borderColor(borderColorTransparent)
       }

@@ -209,7 +209,7 @@ public struct DatePickerPeriodView: HTMLContent {
       }
       descendant(".date-picker-period-cell[aria-selected='true'] .date-picker-period-label") {
         backgroundColor(backgroundColorBlue).important()
-        color(colorInvertedFixed).important()
+        color(colorOnSolid).important()
         fontWeight(fontWeightSemiBold)
         borderColor(borderColorTransparent)
       }

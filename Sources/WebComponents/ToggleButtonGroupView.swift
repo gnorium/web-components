@@ -235,10 +235,10 @@
         selector("& .toggle-button-group-button[aria-pressed='true']") {
           backgroundColor(backgroundColorBlue).important()
           borderColor(backgroundColorBlue).important()
-          color(colorInvertedFixed).important()
+          color(colorOnSolid).important()
         }
         selector("& .toggle-button-group-button[aria-pressed='true'] .button-label") {
-          color(colorInvertedFixed).important()
+          color(colorOnSolid).important()
         }
         selector("& .toggle-button-group-button[aria-pressed='true']:hover:not(:disabled)") {
           backgroundColor(backgroundColorBlueHover).important()

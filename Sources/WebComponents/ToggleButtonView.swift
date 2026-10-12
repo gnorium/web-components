@@ -160,13 +160,13 @@ public struct ToggleButtonView: HTMLContent {
       selector("&[data-indicate-selection='true'][aria-pressed='true'] .button-view") {
         backgroundColor(backgroundColorBlue).important()
         borderColor(backgroundColorBlue).important()
-        color(colorInvertedFixed).important()
+        color(colorOnSolid).important()
       }
       selector("&[data-indicate-selection='true'][aria-pressed='true'] .button-view .button-label") {
-        color(colorInvertedFixed).important()
+        color(colorOnSolid).important()
       }
       selector("&[data-indicate-selection='true'][aria-pressed='true'] .button-view .button-icon") {
-        color(colorInvertedFixed).important()
+        color(colorOnSolid).important()
       }
       selector(
         "&[data-indicate-selection='true'][aria-pressed='true'] .button-view:hover:not(:disabled)"

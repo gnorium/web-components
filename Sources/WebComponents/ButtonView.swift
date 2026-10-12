@@ -693,62 +693,62 @@ public struct ButtonView: HTMLContent {
           }
           selector("&[data-weight='solid'][data-color='red']") {
             backgroundColor(`var`("--background-color-red"))
-            color(colorInvertedFixed)
+            color(colorOnSolid)
             borderColor(`var`("--background-color-red"))
           }
           selector("&[data-weight='solid'][data-color='orange']") {
             backgroundColor(`var`("--background-color-orange"))
-            color(colorInvertedFixed)
+            color(colorOnSolid)
             borderColor(`var`("--background-color-orange"))
           }
           selector("&[data-weight='solid'][data-color='yellow']") {
             backgroundColor(`var`("--background-color-yellow"))
-            color(colorInvertedFixed)
+            color(colorOnSolid)
             borderColor(`var`("--background-color-yellow"))
           }
           selector("&[data-weight='solid'][data-color='lime']") {
             backgroundColor(`var`("--background-color-lime"))
-            color(colorInvertedFixed)
+            color(colorOnSolid)
             borderColor(`var`("--background-color-lime"))
           }
           selector("&[data-weight='solid'][data-color='green']") {
             backgroundColor(`var`("--background-color-green"))
-            color(colorInvertedFixed)
+            color(colorOnSolid)
             borderColor(`var`("--background-color-green"))
           }
           selector("&[data-weight='solid'][data-color='mint']") {
             backgroundColor(`var`("--background-color-mint"))
-            color(colorInvertedFixed)
+            color(colorOnSolid)
             borderColor(`var`("--background-color-mint"))
           }
           selector("&[data-weight='solid'][data-color='cyan']") {
             backgroundColor(`var`("--background-color-cyan"))
-            color(colorInvertedFixed)
+            color(colorOnSolid)
             borderColor(`var`("--background-color-cyan"))
           }
           selector("&[data-weight='solid'][data-color='blue']") {
             backgroundColor(`var`("--background-color-blue"))
-            color(colorInvertedFixed)
+            color(colorOnSolid)
             borderColor(`var`("--background-color-blue"))
           }
           selector("&[data-weight='solid'][data-color='indigo']") {
             backgroundColor(`var`("--background-color-indigo"))
-            color(colorInvertedFixed)
+            color(colorOnSolid)
             borderColor(`var`("--background-color-indigo"))
           }
           selector("&[data-weight='solid'][data-color='violet']") {
             backgroundColor(`var`("--background-color-violet"))
-            color(colorInvertedFixed)
+            color(colorOnSolid)
             borderColor(`var`("--background-color-violet"))
           }
           selector("&[data-weight='solid'][data-color='magenta']") {
             backgroundColor(`var`("--background-color-magenta"))
-            color(colorInvertedFixed)
+            color(colorOnSolid)
             borderColor(`var`("--background-color-magenta"))
           }
           selector("&[data-weight='solid'][data-color='pink']") {
             backgroundColor(`var`("--background-color-pink"))
-            color(colorInvertedFixed)
+            color(colorOnSolid)
             borderColor(`var`("--background-color-pink"))
           }
           selector("&[data-weight='static'][data-color='red']") {
@@ -1533,62 +1533,62 @@ public struct ButtonView: HTMLContent {
           }
           selector("&[data-weight='solid'][data-color='red']") {
             backgroundColor(`var`("--background-color-red"))
-            color(colorInvertedFixed)
+            color(colorOnSolid)
             borderColor(`var`("--background-color-red"))
           }
           selector("&[data-weight='solid'][data-color='orange']") {
             backgroundColor(`var`("--background-color-orange"))
-            color(colorInvertedFixed)
+            color(colorOnSolid)
             borderColor(`var`("--background-color-orange"))
           }
           selector("&[data-weight='solid'][data-color='yellow']") {
             backgroundColor(`var`("--background-color-yellow"))
-            color(colorInvertedFixed)
+            color(colorOnSolid)
             borderColor(`var`("--background-color-yellow"))
           }
           selector("&[data-weight='solid'][data-color='lime']") {
             backgroundColor(`var`("--background-color-lime"))
-            color(colorInvertedFixed)
+            color(colorOnSolid)
             borderColor(`var`("--background-color-lime"))
           }
           selector("&[data-weight='solid'][data-color='green']") {
             backgroundColor(`var`("--background-color-green"))
-            color(colorInvertedFixed)
+            color(colorOnSolid)
             borderColor(`var`("--background-color-green"))
           }
           selector("&[data-weight='solid'][data-color='mint']") {
             backgroundColor(`var`("--background-color-mint"))
-            color(colorInvertedFixed)
+            color(colorOnSolid)
             borderColor(`var`("--background-color-mint"))
           }
           selector("&[data-weight='solid'][data-color='cyan']") {
             backgroundColor(`var`("--background-color-cyan"))
-            color(colorInvertedFixed)
+            color(colorOnSolid)
             borderColor(`var`("--background-color-cyan"))
           }
           selector("&[data-weight='solid'][data-color='blue']") {
             backgroundColor(`var`("--background-color-blue"))
-            color(colorInvertedFixed)
+            color(colorOnSolid)
             borderColor(`var`("--background-color-blue"))
           }
           selector("&[data-weight='solid'][data-color='indigo']") {
             backgroundColor(`var`("--background-color-indigo"))
-            color(colorInvertedFixed)
+            color(colorOnSolid)
             borderColor(`var`("--background-color-indigo"))
           }
           selector("&[data-weight='solid'][data-color='violet']") {
             backgroundColor(`var`("--background-color-violet"))
-            color(colorInvertedFixed)
+            color(colorOnSolid)
             borderColor(`var`("--background-color-violet"))
           }
           selector("&[data-weight='solid'][data-color='magenta']") {
             backgroundColor(`var`("--background-color-magenta"))
-            color(colorInvertedFixed)
+            color(colorOnSolid)
             borderColor(`var`("--background-color-magenta"))
           }
           selector("&[data-weight='solid'][data-color='pink']") {
             backgroundColor(`var`("--background-color-pink"))
-            color(colorInvertedFixed)
+            color(colorOnSolid)
             borderColor(`var`("--background-color-pink"))
           }
           selector("&[data-weight='static'][data-color='red']") {

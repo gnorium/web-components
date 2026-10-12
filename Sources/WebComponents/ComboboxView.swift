@@ -360,13 +360,13 @@ public struct ComboboxView: HTMLContent {
         "& .combobox-option:hover"
       ) {
         backgroundColor(backgroundColorBlue)
-        color(colorInvertedFixed)
+        color(colorOnSolid)
       }
       selector(
         "& .combobox-option[data-chosen='true'] *", "& .combobox-option[aria-selected='true'] *",
         "& .combobox-option:hover *"
       ) {
-        color(colorInvertedFixed).important()
+        color(colorOnSolid).important()
       }
       descendant(".combobox-note") {
         padding(spacing8)

@@ -346,7 +346,7 @@
               display(.flex)
               width(sizeIconSmall)
               height(sizeIconSmall)
-              color(colorInvertedFixed)
+              color(colorOnSolid)
             }
             selector("& .menu-item-checkmark svg") {
               height(perc(100))
@@ -524,7 +524,7 @@
               display(.flex)
               width(sizeIconSmall)
               height(sizeIconSmall)
-              color(colorInvertedFixed)
+              color(colorOnSolid)
             }
             selector("& .menu-item-checkmark svg") {
               height(perc(100))

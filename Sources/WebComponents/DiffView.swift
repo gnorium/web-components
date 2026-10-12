@@ -479,14 +479,14 @@ public struct DiffView: HTMLContent {
       }
       selector("& .diff-row[data-diff-line='removed'] .diff-changed") {
         backgroundColor(backgroundColorRed)
-        color(colorInvertedFixed)
+        color(colorOnSolid)
         borderRadius(borderRadiusMinimal)
         webkitBoxDecorationBreak(.clone)
         boxDecorationBreak(.clone)
       }
       selector("& .diff-row[data-diff-line='inserted'] .diff-changed") {
         backgroundColor(backgroundColorGreen)
-        color(colorInvertedFixed)
+        color(colorOnSolid)
         borderRadius(borderRadiusMinimal)
         webkitBoxDecorationBreak(.clone)
         boxDecorationBreak(.clone)

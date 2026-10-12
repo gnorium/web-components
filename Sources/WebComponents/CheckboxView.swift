@@ -261,14 +261,14 @@ public struct CheckboxView: HTMLContent {
             selector("&[data-indeterminate='true']::before") {
               width(px(10))
               height(px(2))
-              backgroundColor(colorInvertedFixed)
+              backgroundColor(colorOnSolid)
               transform(translate(perc(-50), perc(-50)), scale(1))
             }
             selector("&[data-indeterminate='false']::before") {
               width(px(5))
               height(px(10))
-              borderRight(px(2), .solid, colorInvertedFixed)
-              borderBottom(px(2), .solid, colorInvertedFixed)
+              borderRight(px(2), .solid, colorOnSolid)
+              borderBottom(px(2), .solid, colorOnSolid)
               transform(translate(perc(-50), perc(-60)), rotate(deg(45)), scale(1))
             }
           }

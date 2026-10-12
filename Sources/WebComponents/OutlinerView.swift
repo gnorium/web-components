@@ -903,7 +903,7 @@ public enum OutlineMoves {
       // its own layout's to say.
       descendant(".outliner-handle[aria-pressed='true']") {
         backgroundColor(backgroundColorBlue)
-        color(colorInvertedFixed)
+        color(colorOnSolid)
         cursor(.grabbing)
       }
       // Nothing is selected by a drag that strays over text.

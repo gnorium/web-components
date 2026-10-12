@@ -8,17 +8,6 @@ import XCTest
 /// allows at that lightness. 3:1 against white is 7:1 against black, so two
 /// sets serve four schemes.
 final class NamedColorsTests: XCTestCase {
-  static let setA = [
-    "red": "#FF5F4E", "orange": "#DF7C00", "yellow": "#B79000", "lime": "#889F00", "green": "#00AC4B",
-    "mint": "#00A892", "cyan": "#00A4B7", "blue": "#009EE5", "indigo": "#6E8EFF", "violet": "#AD7AFF",
-    "magenta": "#FF2CFA", "pink": "#FF549A",
-  ]
-  static let setB = [
-    "red": "#B60000", "orange": "#884900", "yellow": "#6F5600", "lime": "#515F00", "green": "#00682A",
-    "mint": "#006557", "cyan": "#00636F", "blue": "#005F8C", "indigo": "#2F31FF", "violet": "#7F00E2",
-    "magenta": "#A1009E", "pink": "#B0005D",
-  ]
-
   func testTheHuesStepThirtyDegreesFromRed() {
     XCTAssertEqual(
       NamedColors.names,
@@ -30,38 +19,39 @@ final class NamedColorsTests: XCTestCase {
     }
   }
 
-  func testTwoSetsServeFourSchemes() {
-    for name in NamedColors.names {
-      // Set A: light's default and dark's increased contrast; set B: dark's
-      // default and light's increased contrast.
-      XCTAssertEqual(NamedColors.hex(name, .light), NamedColors.hex(name, .darkMoreContrast), name)
-      XCTAssertEqual(NamedColors.hex(name, .dark), NamedColors.hex(name, .lightMoreContrast), name)
-      if let a = Self.setA[name], let b = Self.setB[name] {
-        XCTAssertEqual(NamedColors.hex(name, .light), a, "\(name) A")
-        XCTAssertEqual(NamedColors.hex(name, .dark), b, "\(name) B")
+  /// By APCA (user, 2026-10-12): each color at the base border's APCA
+  /// against the page in its scheme, its hue kept, the most chroma.
+  func testEachStandsAtTheBordersAPCA() {
+    for scheme in NamedColors.Scheme.allCases {
+      let page = scheme.isDark ? 0 : 255
+      let target = NamedColors.apca(NamedColors.neutralRamp(scheme)[.border]!, on: page)
+      for name in NamedColors.names {
+        let color = NamedColors.color(name, scheme)
+        let value = abs(NamedColors.APCA.sapc(text: NamedColors.rgb(color), background: (page, page, page)))
+        // Within what 8-bit writing allows.
+        XCTAssertEqual(value, target, accuracy: 1, "\(name) \(scheme)")
+        if name != "gray" {
+          XCTAssertEqual(color.h, NamedColors.hue(name), accuracy: 1e-9, "\(name) keeps its hue")
+          XCTAssertEqual(color.c, NamedColors.maxChroma(l: color.l, h: color.h), accuracy: 1e-9, "\(name) most chroma")
+        } else {
+          XCTAssertEqual(color.c, 0)
+        }
       }
-      print("\(name): A \(NamedColors.hex(name, .light)) B \(NamedColors.hex(name, .dark))")
     }
   }
 
-  func testEachStandsAtExactlyItsContrast() {
-    let white = NamedColors.OKLCH(1, 0, 0), black = NamedColors.OKLCH(0, 0, 0)
-    for name in NamedColors.names {
-      let a = NamedColors.color(name, .light), b = NamedColors.color(name, .dark)
-      // Within what 8-bit writing allows.
-      XCTAssertEqual(NamedColors.contrast(a, white), 3, accuracy: 0.03, "\(name) A on white")
-      XCTAssertEqual(NamedColors.contrast(a, black), 7, accuracy: 0.07, "\(name) A on black")
-      XCTAssertEqual(NamedColors.contrast(b, white), 7, accuracy: 0.07, "\(name) B on white")
-      XCTAssertEqual(NamedColors.contrast(b, black), 3, accuracy: 0.03, "\(name) B on black")
-      if name != "gray" {
-        for color in [a, b] {
-          XCTAssertEqual(color.h, NamedColors.hue(name), accuracy: 1e-9, "\(name) keeps its hue")
-          XCTAssertEqual(color.c, NamedColors.maxChroma(l: color.l, h: color.h), accuracy: 1e-9, "\(name) most chroma")
-        }
-      } else {
-        XCTAssertEqual(a.c, 0)
-        XCTAssertEqual(b.c, 0)
-      }
+  /// The final ramp (user, 2026-10-12).
+  func testTheNeutralRampsValues() {
+    let order: [NamedColors.Neutral] = [
+      .fillSecondary, .fillTertiary, .fillGrayQuaternary, .borderSecondary, .fillGrayTertiary,
+      .border, .glyphGrayQuaternary, .glyphGrayTertiary, .glyphGraySecondary, .glyphGray,
+    ]
+    let light = NamedColors.neutralRamp(.light), dark = NamedColors.neutralRamp(.dark)
+    XCTAssertEqual(order.map { light[$0]! }, [248, 241, 234, 227, 220, 148, 127, 105, 74, 21])
+    XCTAssertEqual(order.map { dark[$0]! }, [39, 56, 68, 80, 91, 172, 190, 207, 228, 251])
+    for scheme in NamedColors.Scheme.allCases {
+      let ramp = NamedColors.neutralRamp(scheme)
+      print("RAMP \(scheme)", order.map { ramp[$0]! })
     }
   }
 

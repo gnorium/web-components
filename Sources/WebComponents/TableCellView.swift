@@ -112,7 +112,7 @@ public struct TableCellView: HTMLContent {
         width(px(22))
         height(px(22))
         borderRadius(borderRadiusCircle)
-        color(colorInvertedFixed)
+        color(colorOnSolid)
         fontSize(fontSizeMedium16)
         fontWeight(fontWeightSemiBold)
         lineHeight(lineHeightSmall22)

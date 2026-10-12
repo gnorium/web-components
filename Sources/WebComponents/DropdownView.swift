@@ -513,12 +513,12 @@ public struct DropdownView: HTMLContent {
         transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
         pseudoClass(.hover) {
           backgroundColor(backgroundColorBlue).important()
-          color(colorInvertedFixed).important()
+          color(colorOnSolid).important()
           selector(
             ".dropdown-option-display-text", ".dropdown-option-alt-text", ".breadcrumb-label-context",
             ".breadcrumb-separator-view"
           ) {
-            color(colorInvertedFixed).important()
+            color(colorOnSolid).important()
           }
         }
       }
@@ -552,7 +552,7 @@ public struct DropdownView: HTMLContent {
       descendant(".dropdown-option[data-excluded='true']") { display(.none) }
       descendant(".dropdown-option[data-selected='true']") {
         backgroundColor(backgroundColorBlue).important()
-        color(colorInvertedFixed).important()
+        color(colorOnSolid).important()
       }
       selector(
         ".dropdown-option[data-selected='true'] .dropdown-option-display-text",
@@ -560,11 +560,11 @@ public struct DropdownView: HTMLContent {
         ".dropdown-option[data-selected='true'] .breadcrumb-label-context",
         ".dropdown-option[data-selected='true'] .breadcrumb-separator-view"
       ) {
-        color(colorInvertedFixed).important()
+        color(colorOnSolid).important()
       }
       descendant(".dropdown-option[data-highlighted='true']") {
         backgroundColor(backgroundColorBlue).important()
-        color(colorInvertedFixed).important()
+        color(colorOnSolid).important()
       }
       selector(
         ".dropdown-option[data-highlighted='true'] .dropdown-option-display-text",
@@ -572,7 +572,7 @@ public struct DropdownView: HTMLContent {
         ".dropdown-option[data-highlighted='true'] .breadcrumb-label-context",
         ".dropdown-option[data-highlighted='true'] .breadcrumb-separator-view"
       ) {
-        color(colorInvertedFixed).important()
+        color(colorOnSolid).important()
       }
       // Wrapped, not cut: the menu is the one place a long title is read
       // whole—the trigger above it is the one that ellipses.

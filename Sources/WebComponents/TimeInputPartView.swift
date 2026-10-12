@@ -100,7 +100,7 @@ public struct TimeInputPartView: HTMLContent {
       }
       descendant(".time-input-option[aria-selected='true']") {
         backgroundColor(backgroundColorBlue).important()
-        color(colorInvertedFixed).important()
+        color(colorOnSolid).important()
         fontWeight(fontWeightSemiBold)
       }
       // The ring every control wears for keyboard focus.
