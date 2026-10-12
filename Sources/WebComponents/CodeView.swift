@@ -61,6 +61,23 @@
       return out
     }
 
+    /// The grammar its highlights read it by (`CodeSyntax`): XML, JSON or
+    /// Markdown; another language is left to highlight.js.
+    private var syntax: String? {
+      switch language {
+      case "xml", "tei", "html": return "xml"
+      case "json": return "json"
+      case "markdown", "md": return "markdown"
+      default: return nil
+      }
+    }
+
+    /// The code element, named its grammar when it has one of them.
+    private func syntaxed<Element: HTMLElementBuildable>(_ element: Element) -> Element {
+      guard let syntax else { return element }
+      return element.data("code-syntax", syntax)
+    }
+
     public func build() -> DOM.Node {
       pre {
         // The numbers are a column of their own rather than a counter on each
@@ -75,8 +92,7 @@
         }
 
         if lined {
-          let numbered = code { linedContent }
-            .class("code-code language-\(language)")
+          let numbered = syntaxed(code { linedContent }.class("code-code language-\(language)"))
             .data("code-lined", "true")
             .style { customProperty("--gutter", CodeLines.gutter(lines: CodeLines.lines(of: text).count)) }
           if let editableLabel {
@@ -102,8 +118,7 @@
           // scrolls the pane as any text's does. It is colored by
           // highlights over its text node (`CodeEditorHydration`), never
           // by rewriting it, which would lose the caret.
-          code { text }
-            .class("code-code language-\(language)")
+          syntaxed(code { text }.class("code-code language-\(language)"))
             .addingAttribute("contenteditable", "plaintext-only")
             .spellcheck(false)
             .addingAttribute("autocapitalize", "off")
@@ -113,8 +128,7 @@
             .ariaLabel(editableLabel)
             .data("code-editing", "true")
         } else {
-          code { text }
-            .class("code-code language-\(language)")
+          syntaxed(code { text }.class("code-code language-\(language)"))
         }
       }
       .class("code-view")
@@ -219,21 +233,12 @@
           color(colorSubtle)
           userSelect(.none)
         }
-        // Text colored by highlights (an editor, lined text), by XML's
-        // grammar (`XMLSyntax`), in the palette highlight.js's classes take
-        // below, as VS Code's and Xcode's defaults map it: a tag's marks
-        // (`<`, `</`, `>`, `/>`) plain, its name a keyword, attribute names
-        // and values their own, references as characters; text plain.
-        selector("& .code-code::highlight(code-tag)") { color(syntaxPlainText) }
-        selector("& .code-code::highlight(code-name)") { color(syntaxKeywords) }
-        selector("& .code-code::highlight(code-attr)") { color(syntaxAttributes) }
-        selector("& .code-code::highlight(code-string)") { color(syntaxStrings) }
-        selector("& .code-code::highlight(code-comment)") { color(syntaxComments) }
-        selector("& .code-code::highlight(code-meta)") { color(syntaxOtherDeclarations) }
-        selector("& .code-code::highlight(code-entity)") { color(syntaxCharacters) }
-        selector("& .code-code::highlight(code-cdata)") { color(syntaxStrings) }
-        // One palette for code across the site: the same tokens the session
-        // trace colors a tool call's markup with.
+        // Text colored by highlights (`CodeSyntax`): an editor, and every
+        // XML, JSON or Markdown block, by its grammar's roles.
+        CodeSyntax.highlightCSS("& .code-code")
+        // Another language's, by highlight.js's classes, in the same roles:
+        // a tag's marks plain, its name a keyword, attribute names and
+        // values their own, declarations as preprocessor statements.
         // `descendant(a, b)` nests one selector inside the other, so each of
         // these is its own rule: they are alternatives, not a path.
         descendant(".hljs-tag") { color(syntaxPlainText).important() }
@@ -242,7 +247,7 @@
         descendant(".hljs-attribute") { color(syntaxAttributes).important() }
         descendant(".hljs-string") { color(syntaxStrings).important() }
         descendant(".hljs-comment") { color(syntaxComments).important() }
-        descendant(".hljs-meta") { color(syntaxOtherDeclarations).important() }
+        descendant(".hljs-meta") { color(syntaxPreprocessorStatements).important() }
         descendant(".hljs-symbol") { color(syntaxPlainText).important() }
         descendant(".hljs-punctuation") { color(syntaxPlainText).important() }
       }
@@ -269,7 +274,7 @@
     public static nonisolated(unsafe) var instance: CodeHydration?
 
     public static func hydrateIfPresent() {
-      guard document.querySelector(".code-view") != nil else { return }
+      guard document.querySelector(".code-view, [data-code-syntax]") != nil else { return }
       hydrate(in: document.body)
     }
 
@@ -295,15 +300,16 @@
     }
 
     public static func highlightVisible() {
-      for block in document.querySelectorAll(".code-code") {
+      for block in document.querySelectorAll(".code-code, [data-code-syntax]") {
         // An editor's text is colored by highlights, which leave it whole.
         if block.hasAttribute("data-code-editing") {
           CodeEditorHydration.colorIfVisible(block)
           continue
         }
-        // So is lined text: highlight.js would rewrite its lines away.
-        if block.hasAttribute("data-code-lined") {
-          CodeEditorHydration.colorLinedIfVisible(block)
+        // So is every XML, JSON or Markdown block, a Raw's among them: by
+        // its grammar's roles (`CodeSyntax`), which highlight.js lacks.
+        if block.hasAttribute("data-code-syntax") {
+          CodeEditorHydration.colorTextIfVisible(block)
           continue
         }
         // highlight.js writes data-highlighted="yes" itself, which overwrote the

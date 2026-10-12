@@ -105,17 +105,18 @@
   import WebTypes
 
   /// Keeps each editor's text and its form's textarea in step, both ways,
-  /// and colors the text by highlights (`XMLSyntax`) once it can be seen,
+  /// and colors the text by highlights (`CodeSyntax`) once it can be seen,
   /// again a moment after typing stops. Highlights paint over the text node
   /// and write nothing into it, so the caret and the selection stay as the
   /// person left them.
   public enum CodeEditorHydration {
-    /// One editor: its text, its form's textarea, and its colored
-    /// stretches, by `XMLSyntax.Kind`.
+    /// One editor: its text, its form's textarea, its language, and its
+    /// colored stretches, by `CodeSyntax.Kind`.
     final class Editor: @unchecked Sendable {
       let code: DOM.Element
-      /// The form's textarea; nil for lined text that is only read.
+      /// The form's textarea; nil for text that is only read.
       let input: HTML.HTMLTextAreaElement?
+      let language: CodeSyntax.Language
       var ranges: [[DOM.Range]] = []
       var colored = false
       var timer: Int32 = 0
@@ -123,7 +124,17 @@
       init(code: DOM.Element, input: HTML.HTMLTextAreaElement?) {
         self.code = code
         self.input = input
+        self.language = CodeEditorHydration.language(of: code)
       }
+    }
+
+    /// The grammar a block is read by: its `data-code-syntax` (`xml`,
+    /// `json`, `markdown`), XML when it names none.
+    static func language(of code: DOM.Element) -> CodeSyntax.Language {
+      guard let name = code.dataset["codeSyntax"] else { return .xml }
+      if stringEquals(name, "json") { return .json }
+      if stringEquals(name, "markdown") { return .markdown }
+      return .xml
     }
 
     nonisolated(unsafe) static var editors: [Editor] = []
@@ -194,11 +205,18 @@
       }
     }
 
-    /// Colors lined text that is only read, once, when it has a box on
-    /// screen.
-    public static func colorLinedIfVisible(_ code: DOM.Element) {
-      guard !code.hasAttribute("data-code-colored"), let rect = code.getBoundingClientRect(), rect.height > 0
+    /// Colors text that is only read (lined code, an XML block, a
+    /// Markdown or JSON Raw) once, when it has a box on screen; a live
+    /// stream's (`data-live-output`) again each time, since it grows.
+    public static func colorTextIfVisible(_ code: DOM.Element) {
+      let live = code.hasAttribute("data-live-output")
+      guard live || !code.hasAttribute("data-code-colored"), let rect = code.getBoundingClientRect(),
+        rect.height > 0
       else { return }
+      if let viewer = editors.first(where: { $0.code.id == code.id }) {
+        color(viewer)
+        return
+      }
       code.setAttribute(data("code-colored"), "true")
       let viewer = Editor(code: code, input: nil)
       editors.append(viewer)
@@ -376,7 +394,7 @@
         nodes.append((node, units, units + length))
         units += length
       }
-      var ranges = [[DOM.Range]](repeating: [], count: XMLSyntax.Kind.allCases.count)
+      var ranges = [[DOM.Range]](repeating: [], count: CodeSyntax.Kind.allCases.count)
       var current = 0
       /// The node a point stands in, and its place there: a point at a
       /// node's end is in it (a stretch's end), unless it opens the next.
@@ -389,7 +407,7 @@
         guard current < nodes.count else { return nil }
         return (nodes[current].node, offset - nodes[current].start)
       }
-      for token in XMLSyntax.tokens(bytes) {
+      for token in CodeSyntax.tokens(bytes, language: editor.language) {
         guard let start = place(token.start, opening: true) else { break }
         let first = current
         guard let end = place(token.end, opening: false) else { break }
@@ -399,25 +417,29 @@
         ranges[token.kind.rawValue].append(range)
         current = first
       }
+      let old = editor.ranges
       editor.ranges = ranges
       editor.colored = true
-      paint()
+      paint(old: old, new: ranges)
     }
 
-    private static func paint() {
+    /// One block's stretches painted again: its old ranges out of each
+    /// kind's highlight and its new ones in. Every other block's stay as
+    /// they are, so coloring one more block costs only its own ranges.
+    private static func paint(old: [[DOM.Range]], new: [[DOM.Range]]) {
       if highlights.isEmpty {
-        for kind in XMLSyntax.Kind.allCases {
+        for kind in CodeSyntax.Kind.allCases {
           let highlight = Highlight()
           CSS.highlights.set(kind.highlightName, highlight)
           highlights.append(highlight)
         }
       }
-      for kind in XMLSyntax.Kind.allCases {
+      for kind in CodeSyntax.Kind.allCases {
         let highlight = highlights[kind.rawValue]
-        highlight.clear()
-        for editor in editors where editor.ranges.count > kind.rawValue {
-          for range in editor.ranges[kind.rawValue] { highlight.add(range) }
+        if old.count > kind.rawValue {
+          for range in old[kind.rawValue] { highlight.delete(range) }
         }
+        for range in new[kind.rawValue] { highlight.add(range) }
       }
     }
   }

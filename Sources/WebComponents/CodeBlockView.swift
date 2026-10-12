@@ -151,7 +151,9 @@
         selector("& .hljs-title.function_") { color(syntaxProjectFunctionAndMethodNames).important() }
         selector("& .hljs-params") { color(syntaxParamInternalName).important() }
         selector("& .hljs-meta") { color(syntaxProjectPreprocessorMacros).important() }
-        selector("& .hljs-name", "& .hljs-tag") { color(syntaxKeywords).important() }
+        // A tag's marks plain, its name a keyword, as `CodeSyntax` colors XML.
+        selector("& .hljs-tag") { color(syntaxPlainText).important() }
+        selector("& .hljs-name") { color(syntaxKeywords).important() }
         selector("& .hljs-punctuation") { color(syntaxPlainText).important() }
         selector("& .hljs-addition") { color(syntaxAddition).important() }
         selector("& .hljs-deletion") { color(syntaxDeletion).important() }

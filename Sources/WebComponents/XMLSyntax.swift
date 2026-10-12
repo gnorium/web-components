@@ -1,72 +1,35 @@
-/// XML's syntax, as a code block colors it: where each tag, name, attribute,
-/// value, comment and declaration stands in a text. The stretches are those
-/// highlight.js colors in a `CodeView` (`hljs-tag`, `-name`, `-attr`,
-/// `-string`, `-comment`, `-meta`), so an editor colored by them reads as
-/// the block does.
+/// XML's syntax, as a code block colors it (`CodeSyntax`): where each tag,
+/// name, prefix, attribute, value, reference, comment, instruction and CDATA
+/// section stands in a text.
 ///
-/// Read byte by byte, and counted in UTF-16 code units, as a DOM `Range`
-/// counts a text node: the same code runs on the server and in the browser,
-/// where Embedded Swift carries no Unicode tables.
+/// Read byte by byte in one pass, and counted in UTF-16 code units, as a DOM
+/// `Range` counts a text node: the same code runs on the server and in the
+/// browser, where Embedded Swift carries no Unicode tables.
 public enum XMLSyntax {
-  public enum Kind: Int, Sendable, CaseIterable {
-    /// `<`, `</`, `>`, `/>`.
-    case tag
-    /// An element's name.
-    case name
-    /// An attribute's name.
-    case attribute
-    /// An attribute's value, its quotes with it.
-    case string
-    /// `<!-- … -->`.
-    case comment
-    /// `<?xml … ?>`, `<!DOCTYPE …>`.
-    case meta
-    /// An entity or character reference: `&amp;`, `&#x17F;`, in text or in
-    /// a value.
-    case entity
-    /// `<![CDATA[ … ]]>`, its text with it.
-    case cdata
-
-    /// The highlight's name: what a `::highlight()` rule colors.
-    public var highlightName: String {
-      switch self {
-      case .tag: return "code-tag"
-      case .name: return "code-name"
-      case .attribute: return "code-attr"
-      case .string: return "code-string"
-      case .comment: return "code-comment"
-      case .meta: return "code-meta"
-      case .entity: return "code-entity"
-      case .cdata: return "code-cdata"
-      }
-    }
-  }
-
-  public struct Token: Sendable, Equatable {
-    public let kind: Kind
-    /// Half-open, in UTF-16 code units.
-    public let start: Int
-    public let end: Int
-  }
+  public typealias Kind = CodeSyntax.Kind
+  public typealias Token = CodeSyntax.Token
 
   /// The colored stretches of `text`, in order, by XML's grammar: a tag's
-  /// marks, its name (a prefixed one, `tei:p`, whole), its attributes'
-  /// names and values; comments, processing instructions, declarations,
-  /// CDATA sections; and entity and character references in text and in
-  /// values. Text between tags is left plain.
+  /// marks, its name, its attributes' names and values, each name's
+  /// namespace prefix apart; comments, processing instructions,
+  /// declarations, CDATA sections; and entity and character references in
+  /// text and in values. Text between tags is left plain.
   public static func tokens(_ text: [UInt8]) -> [Token] {
-    // Where each byte starts, in UTF-16 code units.
-    var units = [Int](repeating: 0, count: text.count + 1)
-    var count = 0
-    for (index, byte) in text.enumerated() {
-      units[index] = count
-      if byte & 0xC0 != 0x80 { count += byte >= 0xF0 ? 2 : 1 }
-    }
-    units[text.count] = count
-
+    var units = CodeSyntax.Units()
     var out: [Token] = []
     func add(_ kind: Kind, _ from: Int, _ to: Int) {
-      if to > from { out.append(Token(kind: kind, start: units[from], end: units[to])) }
+      if to > from { out.append(Token(kind: kind, start: units.at(from, in: text), end: units.at(to, in: text))) }
+    }
+    /// A name of `kind`, its prefix (`tei:`, `xml:`) apart.
+    func addName(_ kind: Kind, _ from: Int, _ to: Int) {
+      var colon = from
+      while colon < to, text[colon] != 0x3A { colon += 1 }
+      if colon > from, colon < to - 1 {
+        add(.prefix, from, colon + 1)
+        add(kind, colon + 1, to)
+      } else {
+        add(kind, from, to)
+      }
     }
     func starts(_ prefix: StaticString, at index: Int) -> Bool {
       let length = prefix.utf8CodeUnitCount
@@ -142,11 +105,11 @@ public enum XMLSyntax {
         index = end
       } else if starts("<?", at: index) {
         let end = past("?>", from: index + 2)
-        add(.meta, index, end)
+        add(.pi, index, end)
         index = end
       } else if starts("<!", at: index) {
         let end = past(">", from: index + 2)
-        add(.meta, index, end)
+        add(.pi, index, end)
         index = end
       } else {
         // A tag: its opening mark, its name, its attributes, its close.
@@ -159,7 +122,7 @@ public enum XMLSyntax {
         {
           cursor += 1
         }
-        add(.name, nameStart, cursor)
+        addName(.name, nameStart, cursor)
         while cursor < text.count {
           let byte = text[cursor]
           if byte == 0x3E {
@@ -178,7 +141,7 @@ public enum XMLSyntax {
             var end = cursor + 1
             while end < text.count, text[end] != byte { end += 1 }
             end = min(end + 1, text.count)
-            addWithReferences(.string, cursor, end)
+            addWithReferences(.value, cursor, end)
             cursor = end
           } else if isSpace(byte) || byte == 0x3D || byte == 0x2F {
             cursor += 1
@@ -189,7 +152,7 @@ public enum XMLSyntax {
             {
               cursor += 1
             }
-            add(.attribute, start, cursor)
+            addName(.attribute, start, cursor)
           }
         }
         index = cursor
