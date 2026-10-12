@@ -190,6 +190,10 @@ public struct TooltipView: HTMLContent {
         lineHeight(lineHeightSmall22)
         borderRadius(borderRadiusBase)
         whiteSpace(.normal)
+        // The help cursor is the trigger's alone. The bubble is text to read
+        // and select, so it takes the browser's own cursor: the text beam
+        // over its words, the arrow around them, the hand on a link.
+        cursor(.auto)
         opacity(0)
         pointerEvents(.none)
         visibility(.hidden)
