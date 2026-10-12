@@ -61,7 +61,10 @@ final class StatusMarkTests: XCTestCase {
     XCTAssertEqual(attribute("stroke", in: ring), "currentColor")
     XCTAssertEqual(attribute("fill", in: root), "currentColor")
     let path = try XCTUnwrap(attribute("d", in: ring))
-    XCTAssertTrue(path.contains("A 448,448 "), "Expected the ring's 448-radius arc; got: \(path)")
+    // The sector rides on the idle mark's ring: its radius, whatever the
+    // shared stroke (`iconStrokeWidth`) makes it.
+    let radius = try XCTUnwrap(attribute("r", in: idleRing))
+    XCTAssertTrue(path.contains("A \(radius),\(radius) "), "Expected the ring's \(radius)-radius arc; got: \(path)")
     XCTAssertNil(attribute("style", in: disc))
     XCTAssertFalse(css.contains("rotating-ring-sector-with-disc-core"))
     let animatedBlocks = css.components(separatedBy: "}").filter { $0.contains("animation:") }

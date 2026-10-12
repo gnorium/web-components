@@ -61,8 +61,10 @@ public struct DiffView: HTMLContent {
     case passage(old: String, new: String)
     #if SERVER
       /// Source text, monospaced and uncolored: it is the past, and syntax
-      /// color would compete with the live source above it.
-      case code(old: String, new: String)
+      /// color would compete with the live source above it. `markup` for
+      /// XML (TEI): its tags diffed whole, each change where it is balanced
+      /// XML (`DiffEngine.refine`).
+      case code(old: String, new: String, markup: Bool = false)
       /// Rendered text as it reads, each line drawn with its formatting, so a
       /// line that changed only how it is set shows the difference itself.
       /// `new` is nil when the new text cannot be rendered—its markup broken
@@ -246,10 +248,10 @@ public struct DiffView: HTMLContent {
         segmentNodes(line.segments)
       }
     #if SERVER
-      case .code(let old, let new):
+      case .code(let old, let new, let markup):
         isLine = false
         modeName = "code"
-        let lines = DiffEngine.lines(old: old, new: new)
+        let lines = DiffEngine.lines(old: old, new: new, markup: markup)
         body = rows([lines]) { line in
           segmentNodes(line.segments)
         }
@@ -463,8 +465,9 @@ public struct DiffView: HTMLContent {
       }
       // A changed line reads in the base color on its subtle tint, red
       // where it was, green where it is; the characters that changed in it
-      // stand out on the solid red or green, in black in both themes, as
-      // diffs are conventionally marked (user, 2026-10-11).
+      // stand out on the solid red or green, in white in both themes, as
+      // every solid fill's text is (user, 2026-10-12): the palette's
+      // solids are 3:1 against white by design.
       // The same tokens as everywhere: no colors of the diff's own.
       selector("& .diff-row[data-diff-line='removed']") {
         backgroundColor(backgroundColorRedSubtle)
@@ -476,14 +479,14 @@ public struct DiffView: HTMLContent {
       }
       selector("& .diff-row[data-diff-line='removed'] .diff-changed") {
         backgroundColor(backgroundColorRed)
-        color(colorBaseFixed)
+        color(colorInvertedFixed)
         borderRadius(borderRadiusMinimal)
         webkitBoxDecorationBreak(.clone)
         boxDecorationBreak(.clone)
       }
       selector("& .diff-row[data-diff-line='inserted'] .diff-changed") {
         backgroundColor(backgroundColorGreen)
-        color(colorBaseFixed)
+        color(colorInvertedFixed)
         borderRadius(borderRadiusMinimal)
         webkitBoxDecorationBreak(.clone)
         boxDecorationBreak(.clone)
