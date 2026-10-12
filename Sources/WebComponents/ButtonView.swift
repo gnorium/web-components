@@ -73,11 +73,15 @@ public struct ButtonView: HTMLContent {
     /// apparatus rule's switches, menus, picker popovers and inline row
     /// controls (a comment's Edit/Delete/Hide).
     case medium
-    /// Small: a locution's reaction counts (user, 2026-10-12)—the step a
+    /// Small: a locution's reaction pills (user, 2026-10-12)—the step a
     /// medium button takes on a phone (`phoneStep`), its inset 4 on every
-    /// side of the 22px line, inside its 1px border: 32; its type 14px.
-    /// On a phone it stays small: there is no step below it.
+    /// side of the 22px line, inside its 1px border: 32; its type 14px. On
+    /// a phone it steps to mini.
     case small
+    /// Mini: the step a small button takes on a phone (user, 2026-10-12),
+    /// no inset around the 22px line, inside its 1px border: 24, WCAG 2.2's
+    /// least target (2.5.8); its type 12px. The floor: nothing steps below.
+    case mini
     /// Large: everything else (user, 2026-10-10)—page, card and accordion
     /// headers, a page's standalone and row actions, a form's buttons and
     /// its "+ Genre"/"− Testament" controls, filter and query bars (their
@@ -86,9 +90,10 @@ public struct ButtonView: HTMLContent {
     case large
 
     /// A control's one inset, inside its 1px border on every side (user,
-    /// 2026-10-10): small 4, medium 8, large 12.
+    /// 2026-10-10): mini 0, small 4, medium 8, large 12.
     public var padding: CSS.Length {
       switch self {
+      case .mini: return ButtonView.miniPadding
       case .small: return ButtonView.smallPadding
       case .medium: return spacing8
       case .large: return spacing12
@@ -97,18 +102,20 @@ public struct ButtonView: HTMLContent {
 
     /// Public so adjacent controls can share the same height. Every control
     /// is its inset on every side, the standard 22px line and a 1px border:
-    /// small 32, medium 40, large 48—a large button, a field, a select and a date
+    /// mini 24, small 32, medium 40, large 48—a large button, a field, a select and a date
     /// picker align in a row. Each size sets its own type (user,
-    /// 2026-10-10): small 14px, medium 16px, large 18px, all on the 22px line.
+    /// 2026-10-10): mini 12px, small 14px, medium 16px, large 18px, all on
+    /// the 22px line.
     public var minSize: CSS.Length {
       padding * 2 + lineHeightSmall22 + borderWidthBase * 2
     }
 
-    /// The size of an icon-only button's icon: 14, 16, 18px, as an icon
+    /// The size of an icon-only button's icon: 12, 14, 16, 18px, as an icon
     /// token where one matches—the size's own type size. An icon alone sets
     /// its own size; beside a label, see labelIconSize.
     public var iconSize: CSS.Length {
       switch self {
+      case .mini: return fontSizeXSmall12
       case .small: return fontSizeSmall14
       case .medium: return sizeIconSmall
       case .large: return fontSizeLarge18
@@ -116,7 +123,7 @@ public struct ButtonView: HTMLContent {
     }
 
     /// The size of an icon beside this button's label: its text's font
-    /// size (user, 2026-10-10), as an icon alone—14, 16, 18px.
+    /// size (user, 2026-10-10), as an icon alone—12, 14, 16, 18px.
     public var labelIconSize: CSS.Length {
       iconSize
     }
@@ -124,18 +131,32 @@ public struct ButtonView: HTMLContent {
 
   /// Option B (user, 2026-10-12, under comparison): on a phone (below
   /// 480px), with `data-phone-step="down"` on the root element, every
-  /// sized control drops one step—a medium button small (its inset 4 on
-  /// every side of the 22px line, inside its 1px border: 32; its type
-  /// 14px), a large one medium, a medium pager small. One switch: the
-  /// attribute.
+  /// sized control drops one step—a large button medium, a medium one
+  /// small (its inset 4 on every side of the 22px line, inside its 1px
+  /// border: 32; its type 14px), a small one mini (no inset: 24; its type
+  /// 12px), a medium pager small. One switch: the attribute.
   public static let phoneStep = ":root[data-phone-step='down']"
   public static let smallPadding: CSS.Length = spacing4
   public static var smallMinSize: CSS.Length { smallPadding * 2 + lineHeightSmall22 + borderWidthBase * 2 }
+  public static let miniPadding: CSS.Length = spacing0
+  public static var miniMinSize: CSS.Length { miniPadding * 2 + lineHeightSmall22 + borderWidthBase * 2 }
 
   /// A button one size smaller under `phoneStep` below 480px.
   @CSSBuilder
   static func phoneStepDownCSS() -> [CSSOM.CSSRule] {
     media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
+      selector("\(phoneStep) &[data-size='small']") {
+        minHeight(miniMinSize).important()
+        fontSize(fontSizeXSmall12).important()
+        customProperty("--size-icon-small", fontSizeXSmall12.value).important()
+      }
+      selector("\(phoneStep) &[data-full-width='false'][data-size='small']") { minWidth(miniMinSize).important() }
+      selector("\(phoneStep) &[data-icon-only='true'][data-size='small']") {
+        width(miniMinSize).important()
+        height(miniMinSize).important()
+      }
+      selector("\(phoneStep) &[data-icon-only='false'][data-size='small']") { padding(miniPadding).important() }
+      selector("\(phoneStep) &[data-size='small'] .button-icon") { height(fontSizeXSmall12).important() }
       selector("\(phoneStep) &[data-size='medium']") {
         minHeight(smallMinSize).important()
         fontSize(fontSizeSmall14).important()
@@ -540,6 +561,11 @@ public struct ButtonView: HTMLContent {
             display(.inlineFlex)
             alignSelf(.flexStart)
           }
+          selector("&[data-size='mini']") {
+            minHeight(ButtonSize.mini.minSize)
+            fontSize(fontSizeXSmall12)
+            customProperty("--size-icon-small", fontSizeXSmall12.value)
+          }
           selector("&[data-size='small']") {
             minHeight(ButtonSize.small.minSize)
             fontSize(fontSizeSmall14)
@@ -552,10 +578,15 @@ public struct ButtonView: HTMLContent {
             minHeight(ButtonSize.large.minSize)
             fontSize(fontSizeLarge18)
           }
+          selector("&[data-full-width='false'][data-size='mini']") { minWidth(ButtonSize.mini.minSize) }
           selector("&[data-full-width='false'][data-size='small']") { minWidth(ButtonSize.small.minSize) }
           selector("&[data-full-width='false'][data-size='medium']") { minWidth(ButtonSize.medium.minSize) }
           selector("&[data-full-width='false'][data-size='large']") { minWidth(ButtonSize.large.minSize) }
           selector("&[data-full-width='true']") { width(perc(100)) }
+          selector("&[data-icon-only='true'][data-size='mini']") {
+            width(ButtonSize.mini.minSize)
+            height(ButtonSize.mini.minSize)
+          }
           selector("&[data-icon-only='true'][data-size='small']") {
             width(ButtonSize.small.minSize)
             height(ButtonSize.small.minSize)
@@ -568,6 +599,7 @@ public struct ButtonView: HTMLContent {
             width(ButtonSize.large.minSize)
             height(ButtonSize.large.minSize)
           }
+          selector("&[data-icon-only='false'][data-size='mini']") { padding(ButtonSize.mini.padding) }
           selector("&[data-icon-only='false'][data-size='small']") { padding(ButtonSize.small.padding) }
           selector("&[data-icon-only='false'][data-size='medium']") { padding(ButtonSize.medium.padding) }
           selector("&[data-icon-only='false'][data-size='large']") { padding(ButtonSize.large.padding) }
@@ -1243,6 +1275,7 @@ public struct ButtonView: HTMLContent {
           }
           // The box is as wide as its icon and as tall as the button's
           // text (ButtonSize.iconSize), so the icon sits on the label's line.
+          selector("&[data-size='mini'] .button-icon") { height(ButtonSize.mini.iconSize) }
           selector("&[data-size='small'] .button-icon") { height(ButtonSize.small.iconSize) }
           selector("&[data-size='medium'] .button-icon") { height(ButtonSize.medium.iconSize) }
           selector("&[data-size='large'] .button-icon") { height(ButtonSize.large.iconSize) }
@@ -1376,6 +1409,11 @@ public struct ButtonView: HTMLContent {
             display(.inlineFlex)
             alignSelf(.flexStart)
           }
+          selector("&[data-size='mini']") {
+            minHeight(ButtonSize.mini.minSize)
+            fontSize(fontSizeXSmall12)
+            customProperty("--size-icon-small", fontSizeXSmall12.value)
+          }
           selector("&[data-size='small']") {
             minHeight(ButtonSize.small.minSize)
             fontSize(fontSizeSmall14)
@@ -1388,10 +1426,15 @@ public struct ButtonView: HTMLContent {
             minHeight(ButtonSize.large.minSize)
             fontSize(fontSizeLarge18)
           }
+          selector("&[data-full-width='false'][data-size='mini']") { minWidth(ButtonSize.mini.minSize) }
           selector("&[data-full-width='false'][data-size='small']") { minWidth(ButtonSize.small.minSize) }
           selector("&[data-full-width='false'][data-size='medium']") { minWidth(ButtonSize.medium.minSize) }
           selector("&[data-full-width='false'][data-size='large']") { minWidth(ButtonSize.large.minSize) }
           selector("&[data-full-width='true']") { width(perc(100)) }
+          selector("&[data-icon-only='true'][data-size='mini']") {
+            width(ButtonSize.mini.minSize)
+            height(ButtonSize.mini.minSize)
+          }
           selector("&[data-icon-only='true'][data-size='small']") {
             width(ButtonSize.small.minSize)
             height(ButtonSize.small.minSize)
@@ -1404,6 +1447,7 @@ public struct ButtonView: HTMLContent {
             width(ButtonSize.large.minSize)
             height(ButtonSize.large.minSize)
           }
+          selector("&[data-icon-only='false'][data-size='mini']") { padding(ButtonSize.mini.padding) }
           selector("&[data-icon-only='false'][data-size='small']") { padding(ButtonSize.small.padding) }
           selector("&[data-icon-only='false'][data-size='medium']") { padding(ButtonSize.medium.padding) }
           selector("&[data-icon-only='false'][data-size='large']") { padding(ButtonSize.large.padding) }
@@ -1422,6 +1466,7 @@ public struct ButtonView: HTMLContent {
           }
           // The box is as wide as its icon and as tall as the button's
           // text (ButtonSize.iconSize), so the icon sits on the label's line.
+          selector("&[data-size='mini'] .button-icon") { height(ButtonSize.mini.iconSize) }
           selector("&[data-size='small'] .button-icon") { height(ButtonSize.small.iconSize) }
           selector("&[data-size='medium'] .button-icon") { height(ButtonSize.medium.iconSize) }
           selector("&[data-size='large'] .button-icon") { height(ButtonSize.large.iconSize) }
