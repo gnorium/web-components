@@ -1852,7 +1852,12 @@ public struct TableView: HTMLContent {
           // path and query in force included.
           let sortURL = button.getAttribute(data("sort-url")) ?? ""
           if !stringIsEmpty(sortURL) {
-            window.location.href = sortURL
+            // In a fragment host (a dialog's table), into the host.
+            if let host = button.closest("[data-fragment-host]") {
+              FragmentHost.load(host, url: sortURL)
+            } else {
+              window.location.href = sortURL
+            }
             return
           }
           guard let columnID = button.getAttribute(data("column-id")) else { return }

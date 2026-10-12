@@ -23,6 +23,10 @@ public struct PaginationView: HTMLContent {
   public enum Size: String, Sendable {
     case normal
     case medium
+    /// A dialog's table's pager (user, 2026-10-12): its text a large
+    /// control's 18px, its targets and number box 48; on a phone, medium
+    /// (`ButtonView.phoneStep`).
+    case large
   }
 
   /// Rows a page, every paged list and table on the site alike (user,
@@ -110,12 +114,21 @@ public struct PaginationView: HTMLContent {
       // Icon-only chevrons on par with the pager's 16px text ("of 3") take
       // the text's size (user, 2026-10-09), as every icon beside text.
       iconSize = sizeIconSmall
+    case .large:
+      chrome = true
+      iconSize = fontSizeLarge18
+    }
+    // The number box's inset: its control size's.
+    let inset: CSS.Length
+    switch size {
+    case .large: inset = ButtonView.ButtonSize.large.padding
+    default: inset = spacing8
     }
     // The number, the box's inset at both sides (a medium control's 8)
     // and its border; a sans number's figures run a little wider than a
     // mono `ch`.
     let inputWidth = chrome
-      ? calc("\(ch(digitCount).value) + \(spacing8.value) * 2 + \(borderWidthBase.value) * 2")
+      ? calc("\(ch(digitCount).value) + \(inset.value) * 2 + \(borderWidthBase.value) * 2")
       : calc("\(ch(digitCount).value) + \(spacing8.value) * 2 + \(borderWidthBase.value) * 2 + \(spacing4.value)")
     let useButtons = stringEquals(previousUrl, nil) && stringEquals(nextUrl, nil) && showControls
 
@@ -275,7 +288,8 @@ public struct PaginationView: HTMLContent {
       descendant(".pagination-previous-container") { justifyContent(.flexStart) }
       descendant(".pagination-next-container") { justifyContent(.flexEnd) }
       selector(
-        "&.pagination-size-medium .pagination-previous-container", "&.pagination-size-medium .pagination-next-container"
+        "&.pagination-size-medium .pagination-previous-container", "&.pagination-size-medium .pagination-next-container",
+        "&.pagination-size-large .pagination-previous-container", "&.pagination-size-large .pagination-next-container"
       ) {
         flex(0)
       }
@@ -307,7 +321,8 @@ public struct PaginationView: HTMLContent {
         cursor(cursorNotAllowed)
       }
       selector(
-        "&.pagination-size-medium .pagination-prev.pagination-disabled", "&.pagination-size-medium .pagination-next.pagination-disabled"
+        "&.pagination-size-medium .pagination-prev.pagination-disabled", "&.pagination-size-medium .pagination-next.pagination-disabled",
+        "&.pagination-size-large .pagination-prev.pagination-disabled", "&.pagination-size-large .pagination-next.pagination-disabled"
       ) {
         color(colorDisabled)
         opacity(1)
@@ -317,7 +332,8 @@ public struct PaginationView: HTMLContent {
         outlineOffset(px(2)).important()
       }
       selector(
-        "&.pagination-size-medium .pagination-prev:focus", "&.pagination-size-medium .pagination-next:focus"
+        "&.pagination-size-medium .pagination-prev:focus", "&.pagination-size-medium .pagination-next:focus",
+        "&.pagination-size-large .pagination-prev:focus", "&.pagination-size-large .pagination-next:focus"
       ) {
         outline(.none).important()
       }
@@ -328,7 +344,7 @@ public struct PaginationView: HTMLContent {
         justifyContent(.center)
         gap(spacing12)
       }
-      selector("&.pagination-size-medium .pagination-indicator") {
+      selector("&.pagination-size-medium .pagination-indicator", "&.pagination-size-large .pagination-indicator") {
         gap(spacing8)
       }
       descendant(".page-box") {
@@ -396,6 +412,36 @@ public struct PaginationView: HTMLContent {
         fontSize(fontSizeMedium16)
         color(colorBase)
       }
+      // Large: 18px text, 48 targets and number box, 12 inside it.
+      selector("&.pagination-size-large") {
+        justifyContent(.flexStart)
+        maxWidth(.none)
+        margin(0)
+        gap(spacing4)
+        flexShrink(0)
+        color(colorBase)
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeLarge18)
+        lineHeight(lineHeightSmall22)
+      }
+      selector("&.pagination-size-large .pagination-prev", "&.pagination-size-large .pagination-next") {
+        width(ButtonView.ButtonSize.large.minSize)
+        height(ButtonView.ButtonSize.large.minSize)
+        borderRadius(0)
+      }
+      selector("&.pagination-size-large .page-box") {
+        fontFamily(typographyFontMono)
+        fontSize(fontSizeLarge18)
+        padding(ButtonView.ButtonSize.large.padding)
+        borderColor(borderColorBase)
+        transition(.none)
+      }
+      selector("&.pagination-size-large .pagination-term") { fontSize(fontSizeLarge18) }
+      selector("&.pagination-size-large .pagination-total") {
+        fontFamily(typographyFontMono)
+        fontSize(fontSizeLarge18)
+        color(colorBase)
+      }
       // Option B (`ButtonView.phoneStep`): a medium pager small on a
       // phone, its number box with it (iOS Safari zooms into it as it takes
       // focus; accepted, user 2026-10-12).
@@ -423,6 +469,29 @@ public struct PaginationView: HTMLContent {
         selector("\(ButtonView.phoneStep) &.pagination-size-medium") {
           customProperty("--size-icon-small", fontSizeSmall14.value).important()
         }
+        // A large pager medium.
+        selector(
+          "\(ButtonView.phoneStep) &.pagination-size-large .pagination-prev",
+          "\(ButtonView.phoneStep) &.pagination-size-large .pagination-next"
+        ) {
+          width(ButtonView.ButtonSize.medium.minSize).important()
+          height(ButtonView.ButtonSize.medium.minSize).important()
+        }
+        selector("\(ButtonView.phoneStep) &.pagination-size-large .page-box") {
+          padding(ButtonView.ButtonSize.medium.padding).important()
+          fontSize(fontSizeMedium16).important()
+        }
+        selector(
+          "\(ButtonView.phoneStep) &.pagination-size-large .pagination-term",
+          "\(ButtonView.phoneStep) &.pagination-size-large .pagination-total"
+        ) {
+          fontSize(fontSizeMedium16).important()
+        }
+        // Its chevrons the medium type's size: the large type token, there,
+        // is the medium's.
+        selector("\(ButtonView.phoneStep) &.pagination-size-large") {
+          customProperty("--font-size-large-18", fontSizeMedium16.value).important()
+        }
       }
     }
   }
@@ -439,7 +508,7 @@ public struct PaginationView: HTMLContent {
     public static nonisolated(unsafe) var instance: PaginationHydration?
 
     public init() {
-      hydrate()
+      hydrate(in: document.body)
     }
 
     public static func hydrateIfPresent() {
@@ -447,9 +516,17 @@ public struct PaginationView: HTMLContent {
       instance = PaginationHydration()
     }
 
-    private func hydrate() {
-      let paginationViews = document.querySelectorAll(".pagination-view")
+    /// The pagers a fragment brought in after the page was hydrated
+    /// (`FragmentHost`), each bound once.
+    public static func hydrate(in root: DOM.Element) {
+      if let instance { instance.hydrate(in: root) } else { instance = PaginationHydration() }
+    }
+
+    private func hydrate(in root: DOM.Element) {
+      let paginationViews = root.querySelectorAll(".pagination-view")
       for view in paginationViews {
+        if stringEquals(view.dataset["paginationHydrated"] ?? "", "true") { continue }
+        view.dataset["paginationHydrated"] = "true"
         // Host-owned pagers (session / attempt)—skip URL navigation.
         let kind = view.getAttribute("data-pager-kind") ?? ""
         if !stringIsEmpty(kind) { continue }
@@ -511,6 +588,12 @@ public struct PaginationView: HTMLContent {
     private func navigateToPage(_ page: String, in view: DOM.Element) {
       guard !stringIsEmpty(page) else { return }
 
+      // A list held in a fragment host (a dialog's table) asks the page
+      // into the host, from the list it holds; any other, the page.
+      if let host = view.closest("[data-fragment-host]") {
+        FragmentHost.load(host, url: PaginationURL.settingPage(page, in: FragmentHost.url(of: host)))
+        return
+      }
       window.location.href = PaginationURL.settingPage(page, in: window.location.href)
     }
   }

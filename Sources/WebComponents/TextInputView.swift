@@ -543,6 +543,7 @@ public struct TextInputView: HTMLContent {
     private func hydrateAllTextInputs() {
       let allTextInputs = document.querySelectorAll(".text-input-view")
       for textInput in allTextInputs {
+        textInput.dataset["textInputHydrated"] = "true"
         let instance = TextInputInstance(textInput: textInput)
         instances.append(instance)
       }
@@ -552,6 +553,19 @@ public struct TextInputView: HTMLContent {
       let instance = TextInputInstance(textInput: element)
       instances.append(instance)
     }
+
+    /// The text inputs a fragment brought in after the page was hydrated
+    /// (`FragmentHost`), each bound once.
+    public static func hydrate(in root: DOM.Element) {
+      if instance == nil { instance = TextInputHydration(binding: false) }
+      for textInput in root.querySelectorAll(".text-input-view") {
+        if stringEquals(textInput.dataset["textInputHydrated"] ?? "", "true") { continue }
+        textInput.dataset["textInputHydrated"] = "true"
+        instance?.hydrate(element: textInput)
+      }
+    }
+
+    private init(binding: Bool) {}
   }
 
   public enum TextInputFactory {

@@ -440,8 +440,20 @@
     }
 
     public init() {
-      let grids = document.querySelectorAll(".filter-bar-grid")
+      bind(in: document.body)
+    }
+
+    /// The filter bars a fragment brought in after the page was hydrated
+    /// (`FragmentHost`), each bound once.
+    public static func hydrate(in root: DOM.Element) {
+      if let instance { instance.bind(in: root) } else { instance = FilterBarHydration() }
+    }
+
+    private func bind(in root: DOM.Element) {
+      let grids = root.querySelectorAll(".filter-bar-grid")
       for grid in grids {
+        if stringEquals(grid.dataset["filterBarHydrated"] ?? "", "true") { continue }
+        grid.dataset["filterBarHydrated"] = "true"
         _ = FilterBarInstance(
           grid: grid,
           dropdownHydration: dropdownHydration,
