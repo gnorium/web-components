@@ -92,4 +92,46 @@ final class NamedColorsTests: XCTestCase {
       }
     }
   }
+
+  /// The neutral ramp (user, 2026-10-12): achromatic grays, each at its
+  /// ratio against the page, mirrored between light and dark; increased
+  /// contrast by the log-ratio map (3:1 to 7:1, pinned at 1:1 and 21:1).
+  func testTheNeutralRampMirrorsItsRatios() {
+    XCTAssertEqual(NamedColors.subtleRatio, 1.20, accuracy: 0.01)
+    XCTAssertEqual(NamedColors.moreContrastRatio(1), 1, accuracy: 1e-9)
+    XCTAssertEqual(NamedColors.moreContrastRatio(3), 7, accuracy: 1e-9)
+    XCTAssertEqual(NamedColors.moreContrastRatio(21), 21, accuracy: 1e-9)
+    for scheme in NamedColors.Scheme.allCases {
+      for step in NamedColors.Neutral.allCases {
+        let gray = NamedColors.neutral(step, scheme)
+        let target = scheme.isMoreContrast ? NamedColors.moreContrastRatio(step.ratio) : step.ratio
+        let ratio = NamedColors.contrast(gray, scheme.page)
+        let (r, g, b) = NamedColors.rgb(gray)
+        XCTAssertTrue(r == g && g == b, "\(step) \(scheme) achromatic")
+        XCTAssertGreaterThanOrEqual(ratio, target, "\(step) \(scheme)")
+        XCTAssertLessThan(ratio, target * 1.06, "\(step) \(scheme)")
+      }
+    }
+    // The defined steps: the base border at 3:1, placeholder at 4.5:1, the
+    // subtle fill dark's 26.
+    XCTAssertEqual(NamedColors.rgb(NamedColors.neutral(.fillGrayQuaternary, .light)).0, 234)
+    XCTAssertEqual(NamedColors.rgb(NamedColors.neutral(.fillGrayQuaternary, .dark)).0, 26)
+    XCTAssertEqual(NamedColors.Neutral.border.ratio, 3)
+    XCTAssertEqual(NamedColors.Neutral.glyphGrayTertiary.ratio, 4.5)
+  }
+
+  /// Fills below their hover below their active; text base > subtle >
+  /// placeholder > disabled; in every scheme.
+  func testTheNeutralRampKeepsItsOrder() {
+    let order: [NamedColors.Neutral] = [
+      .fillSecondary, .fillTertiary, .fillGrayQuaternary, .borderSecondary, .fillGrayTertiary, .border,
+      .glyphGrayQuaternary, .glyphGrayTertiary, .glyphGraySecondary, .glyphGray,
+    ]
+    for scheme in NamedColors.Scheme.allCases {
+      let ratios = order.map { NamedColors.contrast(NamedColors.neutral($0, scheme), scheme.page) }
+      for (a, b) in zip(ratios, ratios.dropFirst()) { XCTAssertLessThan(a, b, "\(scheme) \(ratios)") }
+      // Placeholder reads at 4.5:1 on the page.
+      XCTAssertGreaterThanOrEqual(ratios[7], 4.5, "\(scheme)")
+    }
+  }
 }
