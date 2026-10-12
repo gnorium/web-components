@@ -25,7 +25,9 @@
         label: "Raw",
         icon: IconView(icon: { s in MarkupIconView(size: s) }, size: sizeIconSmall),
         modelValue: pressed,
-        weight: .plain,
+        // Subtle, its border showing, as the reactions button beside it
+        // in a locution's footer (user, 2026-10-12).
+        weight: .subtle,
         buttonColor: .gray,
         disabled: disabled,
         iconOnly: true,
