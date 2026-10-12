@@ -41,6 +41,11 @@
     /// inside an image is marked: for pages read one after another in one
     /// column rather than paged beside their images.
     let labelsPages: Bool
+    /// The direction the document is written in, `ltr` or `rtl`, from its
+    /// language as its data gives it (the caller reads it: gnorium-web
+    /// `TestamentView.direction(of:)`): a spread's pages run in it. Nil where nothing says, the pages then following the
+    /// direction around them.
+    let direction: String?
     /// Where a gloss is read (user, 2026-10-08), when what the markup
     /// encodes can be opened: each word of the markup (a `<w>`, as an
     /// anchor counts the page) is then a control that opens its gloss, and
@@ -89,8 +94,9 @@
     public init(
       teiXml: String, editable: Bool = false, translation: Translation? = nil,
       highlights: [String: [TEIHighlight]] = [:], labelsPages: Bool = false, glossURL: String? = nil,
-      page: Int? = nil, firstIndex: Int = 0
+      page: Int? = nil, firstIndex: Int = 0, direction: String? = nil
     ) {
+      self.direction = direction
       self.page = page
       self.firstIndex = firstIndex
       self.teiXml = teiXml
@@ -465,36 +471,16 @@
       return pages
     }
 
-    /// Whether lines read right to left: the direction of the first letter
-    /// of their text that has one, a page's labels aside (a Latin "A1
-    /// verso" heads a Hebrew page as often as not). Hebrew, Arabic, Syriac,
-    /// Thaana, N'Ko, Samaritan, Mandaic and the historic scripts Unicode
-    /// sets right to left (U+10800–U+10FFF, U+1E800–U+1EFFF), their
-    /// presentation forms included.
-    static func readsRightToLeft(_ lines: [TEILine]) -> Bool {
-      for line in lines {
-        if case .mark = line.kind { continue }
-        for scalar in line.runs.lazy.flatMap(\.text.unicodeScalars) {
-          switch scalar.value {
-          case 0x0590...0x08FF, 0xFB1D...0xFDFF, 0xFE70...0xFEFF, 0x10800...0x10FFF, 0x1E800...0x1EFFF:
-            return true
-          default:
-            if scalar.properties.isAlphabetic { return false }
-          }
-        }
-      }
-      return false
-    }
-
     /// A canvas's rendered lines, headed by `heading` (its label) where
     /// given. A canvas holding two pages or more—an opening photographed
     /// whole—is set as a `.tei-spread` (user, 2026-10-12), each page a
     /// `.tei-spread-page` headed by its own label, in reading order: with
-    /// Reflow off side by side, left to right or right to left as its
-    /// script reads, so the text looks like the image beside it; with
-    /// Reflow on one after the other.
+    /// Reflow off side by side, in the document's `direction`, so the
+    /// text looks like the image beside it; with Reflow on one after the
+    /// other.
     private func rendered(
-      _ lines: [TEILine], heading: String?, facsimileURL: String, label: String, tabStop: TEIWordPlace? = nil
+      _ lines: [TEILine], heading: String?, direction: String?, facsimileURL: String, label: String,
+      tabStop: TEIWordPlace? = nil
     ) -> [DOM.Node] {
       func mark(_ text: String) -> DOM.Node {
         renderingLine(.init(kind: .mark, text: text.isEmpty ? "—" : text), facsimileURL: facsimileURL, label: label)
@@ -503,26 +489,23 @@
       guard pages.count > 1 else {
         return (heading.map { [mark($0)] } ?? []) + laidOut(lines, facsimileURL: facsimileURL, label: label, tabStop: tabStop)
       }
-      return [
-        div {
-          for (index, page) in pages.enumerated() {
-            // The first side's own page break is the document's, outside the
-            // canvas's markup: its label is the canvas's, set as the other
-            // sides' are, so the columns' first lines stand level.
-            let headed = index > 0 || page.first.map { if case .mark = $0.kind { true } else { false } } ?? false
-            let text = heading ?? label
-            div {
-              laidOut(
-                headed ? page : [TEILine(kind: .mark, text: text.isEmpty ? "—" : text)] + page,
-                facsimileURL: facsimileURL, label: label, tabStop: tabStop)
-            }
-            .class("tei-spread-page")
+      let spread = div {
+        for (index, page) in pages.enumerated() {
+          // The first side's own page break is the document's, outside the
+          // canvas's markup: its label is the canvas's, set as the other
+          // sides' are, so the columns' first lines stand level.
+          let headed = index > 0 || page.first.map { if case .mark = $0.kind { true } else { false } } ?? false
+          let text = heading ?? label
+          div {
+            laidOut(
+              headed ? page : [TEILine(kind: .mark, text: text.isEmpty ? "—" : text)] + page,
+              facsimileURL: facsimileURL, label: label, tabStop: tabStop)
           }
+          .class("tei-spread-page")
         }
-        .class("tei-spread")
-        .dir(Self.readsRightToLeft(lines) ? "rtl" : "ltr")
-        .build()
-      ]
+      }
+      .class("tei-spread")
+      return [(direction.map { spread.dir($0) } ?? spread).build()]
     }
 
     /// A page's lines as the reader sets them (`layout(of:)`), in sections
@@ -709,8 +692,8 @@
           div {
             div {
               rendered(
-                page.lines, heading: labelsPages ? page.label : nil, facsimileURL: page.facsimileURL, label: page.label,
-                tabStop: tabStop)
+                page.lines, heading: labelsPages ? page.label : nil, direction: direction,
+                facsimileURL: page.facsimileURL, label: page.label, tabStop: tabStop)
             }
             .class("tei-page-text")
             .data("layer", "rendering")
@@ -755,9 +738,10 @@
                 // text would read as the page's (user, 2026-10-07).
                 div {
                   if let translated {
+                    // In the translation's own direction, the layer's.
                     rendered(
-                      translated.page.lines, heading: nil, facsimileURL: translated.page.facsimileURL,
-                      label: translated.page.label)
+                      translated.page.lines, heading: nil, direction: nil,
+                      facsimileURL: translated.page.facsimileURL, label: translated.page.label)
                   }
                 }
                 .class("tei-page-text")

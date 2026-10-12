@@ -25,15 +25,16 @@ final class SpreadLayoutTests: XCTestCase {
     nodes.filter { (attribute("class", of: $0) ?? "").split(separator: " ").contains { $0 == name } }
   }
 
-  private func view(_ body: String) -> [DOM.Element] {
+  private func view(_ body: String, direction: String? = nil) -> [DOM.Element] {
     elements(
       in: TEIView(
-        teiXml: #"<TEI><text><body><pb n="A1 verso" facs="https://web-tests.invalid/iiif/1"/>\#(body)</body></text></TEI>"#
+        teiXml: #"<TEI><text><body><pb n="A1 verso" facs="https://web-tests.invalid/iiif/1"/>\#(body)</body></text></TEI>"#,
+        direction: direction
       ).build())
   }
 
   func testTwoPagesOnOneCanvasAreTwoColumnsInReadingOrder() throws {
-    let nodes = view(#"<p>Leftward<lb/></p><pb n="A2 recto"/><p>Rightward<lb/></p>"#)
+    let nodes = view(#"<p>Leftward<lb/></p><pb n="A2 recto"/><p>Rightward<lb/></p>"#, direction: "ltr")
     let rendering = try XCTUnwrap(nodes.first { attribute("data-layer", of: $0) == "rendering" })
     let spreads = classed("tei-spread", in: elements(in: rendering))
     XCTAssertEqual(spreads.count, 1)
@@ -50,10 +51,14 @@ final class SpreadLayoutTests: XCTestCase {
     XCTAssertTrue(text(in: pages[1]).contains("Rightward"))
   }
 
-  func testARightToLeftSpreadReadsRightToLeft() throws {
-    let nodes = view(#"<p>שמאל<lb/></p><pb n="A2 recto"/><p>ימין<lb/></p>"#)
-    let spread = try XCTUnwrap(classed("tei-spread", in: nodes).first)
-    XCTAssertEqual(attribute("dir", of: spread), "rtl")
+  /// The spread runs in the direction the document's data gives, never
+  /// one read off its letters: none given, none set.
+  func testASpreadRunsInTheDirectionGiven() throws {
+    let body = #"<p>שמאל<lb/></p><pb n="A2 recto"/><p>ימין<lb/></p>"#
+    let rightToLeft = try XCTUnwrap(classed("tei-spread", in: view(body, direction: "rtl")).first)
+    XCTAssertEqual(attribute("dir", of: rightToLeft), "rtl")
+    let unsaid = try XCTUnwrap(classed("tei-spread", in: view(body)).first)
+    XCTAssertNil(attribute("dir", of: unsaid))
   }
 
   func testOnePageOnACanvasIsNoSpread() {
@@ -71,7 +76,5 @@ final class SpreadLayoutTests: XCTestCase {
       TEIView.spreadPages(of: [mark("1"), line("a"), mark("2"), line("b"), mark("3")]).map { $0.map(\.text) },
       [["1", "a"], ["2", "b"], ["3"]])
     XCTAssertEqual(TEIView.spreadPages(of: [line("a")]).map { $0.map(\.text) }, [["a"]])
-    XCTAssertFalse(TEIView.readsRightToLeft([mark("א"), line("Latin")]))
-    XCTAssertTrue(TEIView.readsRightToLeft([mark("A1 verso"), line("12 العربية")]))
   }
 }
