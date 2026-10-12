@@ -490,12 +490,12 @@ public struct DropdownView: HTMLContent {
         fontSize(fontSizeMedium16)
         lineHeight(lineHeightSmall22)
         color(colorSubtle)
-        borderBlockStart(borderWidthBase, .solid, borderColorBase)
+        borderBlockStart(borderWidthBase, .solid, borderColorSubtle)
         cursor(cursorBase)
       }
       descendant(".dropdown-search-input-wrapper") {
         padding(spacing8)
-        borderBlockEnd(borderWidthBase, .solid, borderColorBase)
+        borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
       }
       descendant(".dropdown-option") {
         display(.flex)
@@ -616,7 +616,7 @@ public struct DropdownView: HTMLContent {
         maxWidth(vw(100) - spacing16 * 2)
         marginBlockStart(spacing4)
         backgroundColor(backgroundColorBase)
-        border(borderWidthBase, .solid, borderColorBase)
+        border(borderWidthBase, .solid, borderColorSubtle)
         borderRadius(borderRadiusBase)
         boxShadow(boxShadowMedium)
         zIndex(zIndexDropdown)

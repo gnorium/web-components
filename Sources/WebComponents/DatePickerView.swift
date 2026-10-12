@@ -395,7 +395,7 @@ public struct DatePickerView: HTMLContent {
         flexDirection(.column)
         gap(spacing4)
         paddingInlineEnd(spacing8)
-        borderInlineEnd(borderWidthBase, .solid, borderColorBase)
+        borderInlineEnd(borderWidthBase, .solid, borderColorSubtle)
       }
       descendant(".date-picker-preset[aria-pressed='true']") {
         backgroundColor(backgroundColorBlueSubtle).important()
@@ -437,7 +437,7 @@ public struct DatePickerView: HTMLContent {
           paddingInlineEnd(0).important()
           paddingBlockEnd(spacing8).important()
           borderInlineEnd(.none).important()
-          borderBlockEnd(borderWidthBase, .solid, borderColorBase).important()
+          borderBlockEnd(borderWidthBase, .solid, borderColorSubtle).important()
         }
       }
     }

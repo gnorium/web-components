@@ -294,7 +294,7 @@ public struct ComboboxView: HTMLContent {
         insetInlineEnd(0)
         marginBlockStart(spacing4)
         backgroundColor(backgroundColorBase)
-        border(borderWidthBase, .solid, borderColorBase)
+        border(borderWidthBase, .solid, borderColorSubtle)
         borderRadius(borderRadiusBase)
         boxShadow(boxShadowMedium)
         zIndex(zIndexDropdown)
@@ -376,7 +376,7 @@ public struct ComboboxView: HTMLContent {
         fontSize(fontSizeMedium16)
         lineHeight(lineHeightSmall22)
         color(colorSubtle)
-        borderBlockStart(borderWidthBase, .solid, borderColorBase)
+        borderBlockStart(borderWidthBase, .solid, borderColorSubtle)
       }
     }
   }

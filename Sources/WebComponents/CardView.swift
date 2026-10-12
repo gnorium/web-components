@@ -111,7 +111,7 @@
             selector("&") {
               display(.block)
               // Frame fill follows the surrounding surface depth.
-              border(borderWidthBase, .solid, borderColorBase)
+              border(borderWidthBase, .solid, borderColorSubtle)
               borderRadius(borderRadiusBase)
               overflow(.hidden)
               transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
@@ -213,7 +213,7 @@
             selector("&") {
               display(.block)
               // Frame fill follows the surrounding surface depth.
-              border(borderWidthBase, .solid, borderColorBase)
+              border(borderWidthBase, .solid, borderColorSubtle)
               borderRadius(borderRadiusBase)
               overflow(.hidden)
               transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)

@@ -43,7 +43,7 @@ final class NamedColorsTests: XCTestCase {
   /// The final ramp (user, 2026-10-12).
   func testTheNeutralRampsValues() {
     let order: [NamedColors.Neutral] = [
-      .fillSecondary, .fillTertiary, .fillGrayQuaternary, .borderSecondary, .fillGrayTertiary,
+      .fillSecondary, .fillTertiary, .fillGrayQuaternary, .fillQuaternary, .fillGrayTertiary,
       .border, .glyphGrayQuaternary, .glyphGrayTertiary, .glyphGraySecondary, .glyphGray,
     ]
     let light = NamedColors.neutralRamp(.light), dark = NamedColors.neutralRamp(.dark)
@@ -51,7 +51,7 @@ final class NamedColorsTests: XCTestCase {
     XCTAssertEqual(order.map { dark[$0]! }, [39, 56, 68, 80, 91, 172, 190, 207, 228, 251])
     for scheme in NamedColors.Scheme.allCases {
       let ramp = NamedColors.neutralRamp(scheme)
-      print("RAMP \(scheme)", order.map { ramp[$0]! })
+      print("RAMP \(scheme)", order.map { ramp[$0]! }, "subtle border", ramp[.borderSecondary]!)
     }
   }
 
@@ -96,7 +96,7 @@ final class NamedColorsTests: XCTestCase {
   /// mirrored to dark by equal APCA; five fills evenly spaced; WCAG 2 floors.
   func testTheNeutralRampMirrorsByAPCA() {
     let light = NamedColors.neutralRamp(.light), dark = NamedColors.neutralRamp(.dark)
-    let fills: [NamedColors.Neutral] = [.fillSecondary, .fillTertiary, .fillGrayQuaternary, .borderSecondary, .fillGrayTertiary]
+    let fills: [NamedColors.Neutral] = [.fillSecondary, .fillTertiary, .fillGrayQuaternary, .fillQuaternary, .fillGrayTertiary]
     XCTAssertEqual(fills.map { light[$0]! }, [248, 241, 234, 227, 220])
     XCTAssertEqual(fills.map { dark[$0]! }, [39, 56, 68, 80, 91])
     for scheme in NamedColors.Scheme.allCases {
@@ -115,8 +115,8 @@ final class NamedColorsTests: XCTestCase {
   /// then border < disabled < placeholder < subtle < base.
   func testTheNeutralRampKeepsItsOrder() {
     let order: [NamedColors.Neutral] = [
-      .fillSecondary, .fillTertiary, .fillGrayQuaternary, .borderSecondary, .fillGrayTertiary,
-      .border, .glyphGrayQuaternary, .glyphGrayTertiary, .glyphGraySecondary, .glyphGray,
+      .fillSecondary, .fillTertiary, .fillGrayQuaternary, .fillQuaternary, .fillGrayTertiary,
+      .borderSecondary, .border, .glyphGrayQuaternary, .glyphGrayTertiary, .glyphGraySecondary, .glyphGray,
     ]
     for scheme in NamedColors.Scheme.allCases {
       let ramp = NamedColors.neutralRamp(scheme), page = scheme.isDark ? 0 : 255

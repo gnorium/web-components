@@ -381,7 +381,7 @@ public struct DiffView: HTMLContent {
       // A field's own frame, as tall as a reader's pane at most, then
       // scrolled; inset 16 on every side, as every box is.
       descendant(".diff-box") {
-        border(borderWidthBase, .solid, borderColorBase)
+        border(borderWidthBase, .solid, borderColorSubtle)
         borderRadius(borderRadiusBase)
         padding(spacing16)
         maxHeight(size256)

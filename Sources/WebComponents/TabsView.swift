@@ -151,7 +151,7 @@
           fontFamily(typographyFontSans)
         }
         selector("&.tabs-framed") {
-          border(borderWidthBase, .solid, borderColorBase)
+          border(borderWidthBase, .solid, borderColorSubtle)
           borderRadius(borderRadiusBase)
         }
         selector("&.tabs-full-width") {

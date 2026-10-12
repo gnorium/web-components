@@ -263,7 +263,7 @@
           maxHeight(px(300))
           overflowY(.auto)
           backgroundColor(backgroundColorBase)
-          border(borderWidthBase, .solid, borderColorBase)
+          border(borderWidthBase, .solid, borderColorSubtle)
           borderRadius(borderRadiusBase)
           boxShadow(boxShadowMedium)
           zIndex(zIndexDropdown)
@@ -315,7 +315,7 @@
           listStyleType(.none)
         }
         descendant(".search-bar-suggestion-item[data-last='false']") {
-          borderBlockEnd(borderWidthBase, .solid, borderColorBase)
+          borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
         }
       }
     }

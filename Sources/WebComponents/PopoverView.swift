@@ -231,7 +231,7 @@ public struct PopoverView: HTMLContent {
       selector("&") {
         position(.absolute)
         backgroundColor(backgroundColorBase)
-        border(borderWidthBase, .solid, borderColorBase)
+        border(borderWidthBase, .solid, borderColorSubtle)
         borderRadius(borderRadiusBase)
         boxShadow(boxShadowMedium)
         zIndex(zIndexPopover)
@@ -246,7 +246,7 @@ public struct PopoverView: HTMLContent {
         width(px(12))
         height(px(12))
         backgroundColor(backgroundColorBase)
-        border(borderWidthBase, .solid, borderColorBase)
+        border(borderWidthBase, .solid, borderColorSubtle)
         transform(rotate(deg(45)))
       }
       // The arrow sits on the side facing the trigger. The square is turned
@@ -298,7 +298,7 @@ public struct PopoverView: HTMLContent {
         justifyContent(.spaceBetween)
         gap(spacing8)
         padding(spacing12)
-        borderBottom(borderWidthBase, .solid, borderColorBase)
+        borderBottom(borderWidthBase, .solid, borderColorSubtle)
       }
 
       descendant(".popover-header-content") {
@@ -345,7 +345,7 @@ public struct PopoverView: HTMLContent {
         justifyContent(.flexStart)
         gap(spacing8)
         padding(spacing12)
-        borderTop(borderWidthBase, .solid, borderColorBase)
+        borderTop(borderWidthBase, .solid, borderColorSubtle)
       }
       selector("&[data-stacked-actions='true'] .popover-footer") { flexDirection(.column) }
       selector("&[data-stacked-actions='true'] .popover-primary-button") { order(-1) }

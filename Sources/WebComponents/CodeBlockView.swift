@@ -46,7 +46,7 @@
           alignSelf(.stretch)
           boxSizing(.borderBox)
           margin(0)
-          border(borderWidthBase, .solid, borderColorBase)
+          border(borderWidthBase, .solid, borderColorSubtle)
           borderRadius(borderRadiusBase)
           // Clip children to radius—otherwise a sharp `pre` fill paints over the corners.
           overflow(.hidden)
@@ -59,7 +59,7 @@
           gap(spacing8)
           padding(spacing16)
           backgroundColor(backgroundColorNeutralSubtle)
-          borderBottom(borderWidthBase, .solid, borderColorBase)
+          borderBottom(borderWidthBase, .solid, borderColorSubtle)
         }
         descendant(".code-block-lang") {
           fontFamily(typographyFontMono)

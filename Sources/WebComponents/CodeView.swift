@@ -167,7 +167,7 @@
           backgroundColor(backgroundColorNeutralSubtle)
           userSelect(.none)
           paddingInlineEnd(spacing8)
-          borderInlineEnd(borderWidthBase, .solid, borderColorBase)
+          borderInlineEnd(borderWidthBase, .solid, borderColorSubtle)
         }
         descendant(".code-code") {
           flexGrow(0)

@@ -117,7 +117,7 @@
           backgroundColor(backgroundColorBase)
           paddingBlockStart(spacing16)
           paddingBlockEnd(spacing16)
-          borderBlockEnd(borderWidthBase, .solid, borderColorBase)
+          borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
           boxSizing(.borderBox)
           overflowY(.auto)
           opacity(0)

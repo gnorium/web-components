@@ -403,7 +403,7 @@ public struct AccordionView: HTMLContent {
           .style {
             selector("&") {
               height(borderWidthBase)
-              backgroundColor(borderColorBase)
+              backgroundColor(borderColorSubtle)
               margin(spacing0)
               border(.none)
             }
@@ -422,14 +422,14 @@ public struct AccordionView: HTMLContent {
       // border, as in any accordion—the header's own radius keeps that
       // wash off the rounded corners.
       selector("&[data-separation='outline']") {
-        border(borderWidthBase, .solid, borderColorBase)
+        border(borderWidthBase, .solid, borderColorSubtle)
         borderRadius(borderRadiusBase)
         padding(0)
       }
       // Grouped: one frame round the siblings, square where they meet, the
       // line between two drawn once, by the one below.
       selector("&[data-separation='grouped']") {
-        border(borderWidthBase, .solid, borderColorBase)
+        border(borderWidthBase, .solid, borderColorSubtle)
         borderRadius(0)
         padding(0)
       }

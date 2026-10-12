@@ -879,7 +879,7 @@
           height(.auto)
           objectFit(.contain)
           borderRadius(borderRadiusBase)
-          border(borderWidthBase, .solid, borderColorBase)
+          border(borderWidthBase, .solid, borderColorSubtle)
         }
         // A decorated initial is one letter of the text; shown at the width
         // of a plate it stops being an initial and becomes a poster.
@@ -980,7 +980,7 @@
           color(colorBase)
         }
         selector("& .tei-table td", "& .tei-table th") {
-          border(borderWidthBase, .solid, borderColorBase)
+          border(borderWidthBase, .solid, borderColorSubtle)
           padding(spacing8)
           verticalAlign(.middle)
           textAlign(.start)
@@ -992,7 +992,7 @@
         descendant(".tei-document-boundary") {
           width(perc(100))
           border(.none)
-          borderTop(borderWidthBase, .solid, borderColorBase)
+          borderTop(borderWidthBase, .solid, borderColorSubtle)
           marginBlock(spacing8)
         }
         // How each block is set on the image, TEI's rendition style on its

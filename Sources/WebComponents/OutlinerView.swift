@@ -764,7 +764,7 @@ public enum OutlineMoves {
         insetBlockEnd(0)
         insetInlineStart((size24 - borderWidthBase) / 2)
         width(borderWidthBase)
-        backgroundColor(borderColorBase)
+        backgroundColor(borderColorSubtle)
         pointerEvents(.none)
       }
       // An item with nothing under it has an empty list, kept so a move
@@ -793,7 +793,7 @@ public enum OutlineMoves {
       // no guide line; the card is the nesting.
       descendant(".outliner-item[data-outliner-accordion='true']") {
         gap(0)
-        border(borderWidthBase, .solid, borderColorBase)
+        border(borderWidthBase, .solid, borderColorSubtle)
         borderRadius(borderRadiusBase)
       }
       descendant(".outliner-item[data-outliner-accordion='true'] > .outliner-row [data-outliner-own-accordion='true']") {
@@ -968,7 +968,7 @@ public enum OutlineMoves {
         gap(spacing8)
         padding(spacing8)
         backgroundColor(backgroundColorBase)
-        border(borderWidthBase, .solid, borderColorBase)
+        border(borderWidthBase, .solid, borderColorSubtle)
         borderRadius(borderRadiusBase)
         // Lifted off the page as it is dragged: the large elevation.
         boxShadow(boxShadowLarge)
@@ -994,7 +994,7 @@ public enum OutlineMoves {
         padding(spacing8)
         maxWidth(vw(100) - spacing16 * 2)
         backgroundColor(backgroundColorBase)
-        border(borderWidthBase, .solid, borderColorBase)
+        border(borderWidthBase, .solid, borderColorSubtle)
         borderRadius(borderRadiusPill)
         boxShadow(boxShadowLarge)
       }

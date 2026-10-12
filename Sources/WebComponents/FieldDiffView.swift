@@ -99,7 +99,7 @@ public struct FieldDiffView: HTMLContent {
   @CSSBuilder
   public static func stateCSS() -> [CSSOM.CSSRule] {
     descendant("[data-diff-state='unchanged']") {
-      border(borderWidthBase, .solid, borderColorBase)
+      border(borderWidthBase, .solid, borderColorSubtle)
       outline(.none)
     }
     state("added", color: borderColorGreen)

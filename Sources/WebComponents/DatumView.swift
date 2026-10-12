@@ -108,7 +108,7 @@ public struct DatumView: HTMLContent {
         color(colorBase)
         // Read-only values share the disabled field ground at every depth.
         backgroundColor(backgroundColorDisabled)
-        border(borderWidthBase, .solid, borderColorBase)
+        border(borderWidthBase, .solid, borderColorSubtle)
         borderRadius(borderRadiusBase)
         minWidth(0)
       }

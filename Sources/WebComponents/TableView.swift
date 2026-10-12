@@ -1156,7 +1156,7 @@ public struct TableView: HTMLContent {
         position(.relative)
         transform(translateZ(0))
         overflow(.hidden)
-        border(borderWidthBase, .solid, borderColorBase)
+        border(borderWidthBase, .solid, borderColorSubtle)
         borderRadius(borderRadiusBase)
         backgroundColor(backgroundColorBase)
         width(perc(100))
@@ -1260,14 +1260,14 @@ public struct TableView: HTMLContent {
       }
       descendant(".table-thead") {
         backgroundColor(backgroundColorNeutralSubtle)
-        borderBlockEnd(borderWidthBase, .solid, borderColorBase)
+        borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
         height(px(44))
         minHeight(px(44))
         maxHeight(px(44))
       }
       descendant(".table-tfoot") {
         backgroundColor(backgroundColorNeutralSubtle)
-        borderBlockStart(borderWidthBase, .solid, borderColorBase)
+        borderBlockStart(borderWidthBase, .solid, borderColorSubtle)
         fontWeight(fontWeightSemiBold)
       }
       selector("& .table-thead th", "& .table-tbody th") {
@@ -1313,7 +1313,7 @@ public struct TableView: HTMLContent {
       // column without padding the text: "2:48 PM" under "10:53 PM".
       selector("& th", "& td") { fontVariantNumeric(.tabularNums) }
       selector("& .table-table-borders-vertical th", "& .table-table-borders-vertical td") {
-        borderInlineStart(borderWidthBase, .solid, borderColorBase)
+        borderInlineStart(borderWidthBase, .solid, borderColorSubtle)
       }
       descendant(".table-selection-container") {
         display(.flex)

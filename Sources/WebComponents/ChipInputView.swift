@@ -144,7 +144,7 @@
           padding(spacing4)
           lineHeight(lineHeightSmall22)
           backgroundColor(backgroundColorInteractiveSubtle)
-          border(borderWidthBase, .solid, borderColorBase)
+          border(borderWidthBase, .solid, borderColorSubtle)
           borderRadius(borderRadiusBase)
           fontSize(fontSizeMedium16)
           fontWeight(fontWeightNormal)
