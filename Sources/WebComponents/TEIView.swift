@@ -63,20 +63,26 @@
     /// page read alone from a long book's stored pages (`TestamentView`'s
     /// `page(_:service:firstIndex:)`) is drawn at its place in the book.
     let firstIndex: Int
+    /// The translator's notes of the layer being set, by the block each
+    /// notes: none but while a page's translation is set.
+    private var notes: [String: String] = [:]
 
     /// A translation of the markup, page by page, in its own language:
     /// the translation's own TEI, read by the same reader as the markup,
     /// so the two are set alike line for line.
     public struct Translation: Sendable {
-      /// One page's translation, read, and a note on it—that its text has
-      /// changed since, say.
+      /// One page's translation, read: whether the page's text has changed
+      /// since it was translated, and the translator's notes, each by the
+      /// block it notes (`TEILine.Run.segment`), opened as a gloss is.
       public struct Page: Sendable {
         public let page: TEIPage
-        public let note: String?
+        public let stale: Bool
+        public let notes: [String: String]
 
-        public init(page: TEIPage, note: String? = nil) {
+        public init(page: TEIPage, stale: Bool = false, notes: [String: String] = [:]) {
           self.page = page
-          self.note = note
+          self.stale = stale
+          self.notes = notes
         }
       }
 
@@ -301,9 +307,44 @@
       span { markedContent(line.runs, facsimileURL: facsimileURL, tabStop: tabStop) }.build()
     }
 
+    /// This view setting a translation whose blocks carry `notes`.
+    private func noting(_ notes: [String: String]) -> TEIView {
+      var view = self
+      view.notes = notes
+      return view
+    }
+
+    /// Runs, each stretch of a block the translator noted one control that
+    /// opens the note (`GlossHydration`), as a word opens its gloss.
+    private func markedContent(_ runs: [TEILine.Run], facsimileURL: String, tabStop: TEIWordPlace?) -> [DOM.Node] {
+      guard !notes.isEmpty else { return highlighted(runs, facsimileURL: facsimileURL, tabStop: tabStop) }
+      var noted: [(note: String?, runs: [TEILine.Run])] = []
+      for run in runs {
+        let note = notes[run.segment]
+        if let last = noted.last, last.note == note {
+          noted[noted.count - 1].runs.append(run)
+        } else {
+          noted.append((note, [run]))
+        }
+      }
+      return noted.flatMap { group -> [DOM.Node] in
+        guard let note = group.note else { return highlighted(group.runs, facsimileURL: facsimileURL, tabStop: tabStop) }
+        return [
+          span { highlighted(group.runs, facsimileURL: facsimileURL, tabStop: tabStop) }
+            .class("tei-noted")
+            .role("button")
+            // Notes are few: each in the tab order.
+            .tabindex(0)
+            .ariaHaspopup("dialog")
+            .data("translator-note", note)
+            .build()
+        ]
+      }
+    }
+
     /// Runs, a quotation's sentence, or its word, marked as the page has it:
     /// one mark over the runs it covers.
-    private func markedContent(_ runs: [TEILine.Run], facsimileURL: String, tabStop: TEIWordPlace?) -> [DOM.Node] {
+    private func highlighted(_ runs: [TEILine.Run], facsimileURL: String, tabStop: TEIWordPlace?) -> [DOM.Node] {
       var marked: [(highlight: TEIHighlight.Kind?, runs: [TEILine.Run])] = []
       for run in runs {
         if let last = marked.last, last.highlight == run.highlight {
@@ -730,16 +771,13 @@
             if let translation {
               let translated = translation.pages[Self.serviceID(ofFacsimile: page.facsimileURL)]
               div {
-                if let note = translated?.note {
-                  p { note }
-                    .class("tei-page-translation-note")
-                }
                 // A page not translated is empty, never a dash: a dash in a
                 // text would read as the page's (user, 2026-10-07).
                 div {
                   if let translated {
-                    // In the translation's own direction, the layer's.
-                    rendered(
+                    // In the translation's own direction, the layer's; its
+                    // noted blocks opening their notes.
+                    noting(translated.notes).rendered(
                       translated.page.lines, heading: nil, direction: nil,
                       facsimileURL: translated.page.facsimileURL, label: translated.page.label)
                   }
@@ -748,6 +786,9 @@
                   }
               .class("tei-page-translation")
               .data("layer", "translated-rendering")
+              // Its text has changed since it was translated: the reader's
+              // pane is ringed orange while it is shown (`TestamentView`).
+              .data("stale", translated?.stale ?? false)
               .lang(translation.language)
               .dir("auto")
               // The translation's own code, under Raw while its language
@@ -1247,12 +1288,6 @@
           gap(spacing12)
           minWidth(0)
         }
-        descendant(".tei-page-translation-note") {
-          fontFamily(typographyFontSans)
-          fontSize(fontSizeMedium16)
-          color(colorOrange)
-          margin(0)
-        }
         // A side of the leaf, inside an image that carries two of them.
         descendant(".tei-line-mark") {
           fontFamily(typographyFontMono)
@@ -1301,20 +1336,22 @@
         // its details are open (user, 2026-09-29). The focus ring every
         // control has, from the keyboard only (:focus-visible), never for a
         // click or a tap.
-        // What is no word but encoded opens its gloss the same way.
-        selector("& .tei-word", "& [data-gloss-element]") {
+        // What is no word but encoded opens its gloss the same way, and a
+        // translated block the translator noted, its note.
+        selector("& .tei-word", "& [data-gloss-element]", "& .tei-noted") {
           cursor(.pointer)
           borderRadius(borderRadiusMinimal)
           outline(.none)
         }
-        selector("& .tei-word:focus-visible", "& [data-gloss-element]:focus-visible") {
+        selector("& .tei-word:focus-visible", "& [data-gloss-element]:focus-visible", "& .tei-noted:focus-visible") {
           outline(borderWidthThick, .solid, borderColorBlueFocus)
           outlineOffset(borderWidthBase)
         }
         selector(
           "& .tei-word:hover", "& .tei-word:focus-visible", "& .tei-word[aria-expanded='true']",
           "& [data-gloss-element]:hover", "& [data-gloss-element]:focus-visible",
-          "& [data-gloss-element][aria-expanded='true']"
+          "& [data-gloss-element][aria-expanded='true']", "& .tei-noted:hover", "& .tei-noted:focus-visible",
+          "& .tei-noted[aria-expanded='true']"
         ) {
           color(colorBlue)
         }
