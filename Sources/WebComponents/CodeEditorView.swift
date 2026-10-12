@@ -72,16 +72,17 @@
           // Over the caret's line band, which stands behind it.
           position(.relative)
         }
-        // The caret's line (user, 2026-10-12), as Xcode marks it: the code's
-        // gray across the whole width, gutter to edge, every row it wraps
-        // to; its number in the text's own color. Only while the editor
-        // has the focus and the selection is within one line.
+        // The caret's line (user, 2026-10-12), as Xcode marks it: the neutral
+        // fill, a step above the code's subtle gray, across the whole width,
+        // gutter to edge, every row it wraps to; its number in the text's own
+        // color. Only while the editor has the focus and the selection is
+        // within one line.
         descendant(".code-current-line") {
           display(.none)
           position(.absolute)
           insetInlineStart(px(0))
           insetInlineEnd(px(0))
-          backgroundColor(backgroundColorNeutralSubtle)
+          backgroundColor(backgroundColorNeutral)
           pointerEvents(.none)
         }
         descendant(".code-view[data-current-line='true'] .code-current-line") {
