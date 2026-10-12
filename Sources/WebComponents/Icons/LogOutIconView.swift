@@ -1,12 +1,14 @@
 #if SERVER
   import CSSBuilder
-  import CSSOMBuilder
-  import DesignTokens
   import DOMBuilder
   import HTMLBuilder
   import SVGBuilder
   import WebTypes
 
+  /// Lucide's `log-out` (ISC; THIRD_PARTY_NOTICES.md), for signing out. Lucide's
+  /// own 24-grid geometry, fitted to the house box by IconStrokeFit: the
+  /// long edge 1024, `iconStrokeWidth` thick, round caps and joins, the
+  /// outer edges tight to the box (user, 2026-10-12).
   public struct LogOutIconView: HTMLContent {
     let iconSize: CSS.Length
     let `class`: String
@@ -20,25 +22,26 @@
     }
 
     public func build() -> DOM.Node {
-      svg {
-        path()
-          .d(
-            M(113.78, 113.78), h(455.11), V(0), H(113.78),
-            a(113.78, 113.78, 0, false, false, -113.78, 113.78), v(796.44),
-            a(113.78, 113.78, 0, false, false, 113.78, 113.78), h(455.11), v(-113.78), H(113.78),
-            Z())
-
-        path()
-          .d(
-            M(682.67, 227.56), v(227.55), H(227.56), v(113.78), h(455.11), v(227.55),
-            l(341.33, -284.44), Z())
+      let fit = IconStrokeFit(minX: 3, minY: 3, maxX: 21, maxY: 21)
+      return svg {
+        g {
+          path().d("m16 17 5-5-5-5")
+          path().d("M21 12H9")
+          path().d("M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4")
+        }
+        .transform(fit.transform)
+        .strokeWidth(fit.strokeWidth)
       }
       .class(`class`.isEmpty ? "log-out-icon-view" : "log-out-icon-view \(`class`)")
       .style { height(iconSize) }
-      .viewBox(0, 0, 1024, 1024)
+      .viewBox(0, 0, fit.width, fit.height)
       .xmlns("http://www.w3.org/2000/svg")
-      .fill(.currentColor)
-
+      .fill(.none)
+      .stroke(.currentColor)
+      .strokeLinecap(.round)
+      .strokeLinejoin(.round)
+      .ariaHidden(true)
+      .build()
     }
   }
 #endif

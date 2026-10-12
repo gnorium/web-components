@@ -6,9 +6,10 @@ licenses.
 ## Lucide
 
 Icon geometry from Lucide (https://lucide.dev,
-https://github.com/lucide-icons/lucide), rescaled and restroked:
-`code-xml`, `text-wrap` (formerly `wrap-text`), `refresh-cw` and
-`refresh-cw-off`, in `Sources/WebComponents/Icons/Lucide*IconView.swift`.
+https://github.com/lucide-icons/lucide), rescaled and restroked: each
+icon view in `Sources/WebComponents/Icons/` named for a Lucide icon
+(`CodeXMLIconView` for `code-xml`, `RefreshClockwiseIconView` for
+`refresh-cw`, and so on) whose comment names the Lucide icon it ports.
 
 ```
 ISC License

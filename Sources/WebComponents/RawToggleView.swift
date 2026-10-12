@@ -35,7 +35,7 @@
       ToggleButtonView(
         label: "Raw",
         icon: source == .xml
-          ? IconView(icon: { s in LucideCodeXmlIconView(size: s) }, size: sizeIconSmall)
+          ? IconView(icon: { s in CodeXMLIconView(size: s) }, size: sizeIconSmall)
           : IconView(icon: { s in MarkdownIconView(size: s) }, size: sizeIconSmall),
         modelValue: pressed,
         // Subtle, its border showing, as the reactions button beside it

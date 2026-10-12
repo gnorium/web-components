@@ -8,9 +8,13 @@
   /// A button group for selecting contrast level (Standard / Increased).
   /// Renders two option buttons with icons. Hydrated by ContrastButtonGroupHydration.
   public struct ContrastButtonGroupView: HTMLContent {
+    let size: ButtonView.ButtonSize
     let `class`: String
 
-    public init(class: String = "") {
+    /// `size` is the buttons' (large in the navbar's menu); their icons
+    /// follow it.
+    public init(size: ButtonView.ButtonSize = .medium, class: String = "") {
+      self.size = size
       self.class = `class`
     }
 
@@ -19,14 +23,16 @@
         buttons: [
           .init(
             value: "standard", label: "Standard",
-            icon: IconView(icon: { s in LessContrastIconView(size: s) }, size: sizeIconSmall).build(),
+            icon: IconView(icon: { s in ContrastIconView(size: s) }, size: size.iconSize).build(),
             weight: .static,
+            size: size,
             class: "", fullWidth: true,
             labelFontWeight: fontWeightNormal, contentJustifyContent: .flexStart),
           .init(
             value: "increased", label: "Increased",
-            icon: IconView(icon: { s in MoreContrastIconView(size: s) }, size: sizeIconSmall).build(),
+            icon: IconView(icon: { s in ContrastIconView(size: s, filled: true) }, size: size.iconSize).build(),
             weight: .static,
+            size: size,
             class: "", fullWidth: true,
             labelFontWeight: fontWeightNormal, contentJustifyContent: .flexStart),
         ],

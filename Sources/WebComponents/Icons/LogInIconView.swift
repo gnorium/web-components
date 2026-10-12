@@ -1,12 +1,14 @@
 #if SERVER
   import CSSBuilder
-  import CSSOMBuilder
-  import DesignTokens
   import DOMBuilder
   import HTMLBuilder
   import SVGBuilder
   import WebTypes
 
+  /// Lucide's `log-in` (ISC; THIRD_PARTY_NOTICES.md), for signing in. Lucide's
+  /// own 24-grid geometry, fitted to the house box by IconStrokeFit: the
+  /// long edge 1024, `iconStrokeWidth` thick, round caps and joins, the
+  /// outer edges tight to the box (user, 2026-10-12).
   public struct LogInIconView: HTMLContent {
     let iconSize: CSS.Length
     let `class`: String
@@ -20,21 +22,26 @@
     }
 
     public func build() -> DOM.Node {
-      svg {
-        path()
-          .d(
-            M(0, 568.89), v(341.33), c(0, 62.58, 51.2, 113.78, 113.78, 113.78), h(796.44),
-            c(62.58, 0, 113.78, -51.2, 113.78, -113.78), V(113.78),
-            c(0, -62.58, -51.2, -113.78, -113.78, -113.78), H(113.78),
-            c(-62.58, 0, -113.78, 51.2, -113.78, 113.78), v(341.33), h(455.11), V(227.56),
-            l(270.22, 284.44), L(455.11, 796.44), v(-227.55), Z())
+      let fit = IconStrokeFit(minX: 3, minY: 3, maxX: 21, maxY: 21)
+      return svg {
+        g {
+          path().d("m10 17 5-5-5-5")
+          path().d("M15 12H3")
+          path().d("M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4")
+        }
+        .transform(fit.transform)
+        .strokeWidth(fit.strokeWidth)
       }
       .class(`class`.isEmpty ? "log-in-icon-view" : "log-in-icon-view \(`class`)")
       .style { height(iconSize) }
-      .viewBox(0, 0, 1024, 1024)
+      .viewBox(0, 0, fit.width, fit.height)
       .xmlns("http://www.w3.org/2000/svg")
-      .fill(.currentColor)
-
+      .fill(.none)
+      .stroke(.currentColor)
+      .strokeLinecap(.round)
+      .strokeLinejoin(.round)
+      .ariaHidden(true)
+      .build()
     }
   }
 #endif

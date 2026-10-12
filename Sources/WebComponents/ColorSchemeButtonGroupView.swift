@@ -9,9 +9,13 @@
   /// A button group for selecting color scheme (Light / Dark).
   /// Renders two option buttons with icons. Hydrated by ColorSchemeButtonGroupHydration.
   public struct ColorSchemeButtonGroupView: HTMLContent {
+    let size: ButtonView.ButtonSize
     let `class`: String
 
-    public init(class: String = "") {
+    /// `size` is the buttons' (large in the navbar's menu); their icons
+    /// follow it.
+    public init(size: ButtonView.ButtonSize = .medium, class: String = "") {
+      self.size = size
       self.class = `class`
     }
 
@@ -20,14 +24,16 @@
         buttons: [
           .init(
             value: "light", label: "Light",
-            icon: IconView(icon: { s in LightModeIconView(size: s) }, size: sizeIconSmall).build(),
+            icon: IconView(icon: { s in SunIconView(size: s) }, size: size.iconSize).build(),
             weight: .static,
+            size: size,
             class: "", fullWidth: true,
             labelFontWeight: fontWeightNormal, contentJustifyContent: .flexStart),
           .init(
             value: "dark", label: "Dark",
-            icon: IconView(icon: { s in DarkModeIconView(size: s) }, size: sizeIconSmall).build(),
+            icon: IconView(icon: { s in MoonIconView(size: s) }, size: size.iconSize).build(),
             weight: .static,
+            size: size,
             class: "", fullWidth: true,
             labelFontWeight: fontWeightNormal, contentJustifyContent: .flexStart),
         ],

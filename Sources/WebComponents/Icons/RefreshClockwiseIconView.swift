@@ -9,7 +9,7 @@
   /// own 24-grid geometry, fitted to the house box by IconStrokeFit: the
   /// long edge 1024, `iconStrokeWidth` thick, round caps and joins, the
   /// outer edges tight to the box (user, 2026-10-12).
-  public struct LucideRefreshCwIconView: HTMLContent {
+  public struct RefreshClockwiseIconView: HTMLContent {
     let iconSize: CSS.Length
     let `class`: String
 
@@ -33,7 +33,7 @@
         .transform(fit.transform)
         .strokeWidth(fit.strokeWidth)
       }
-      .class(`class`.isEmpty ? "lucide-refresh-cw-icon-view" : "lucide-refresh-cw-icon-view \(`class`)")
+      .class(`class`.isEmpty ? "refresh-clockwise-icon-view" : "refresh-clockwise-icon-view \(`class`)")
       .style { height(iconSize) }
       .viewBox(0, 0, fit.width, fit.height)
       .xmlns("http://www.w3.org/2000/svg")
