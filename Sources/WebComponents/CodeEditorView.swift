@@ -69,6 +69,26 @@
         descendant(".code-code") {
           outline(.none)
           caretColor(colorBase)
+          // Over the caret's line band, which stands behind it.
+          position(.relative)
+        }
+        // The caret's line (user, 2026-10-12), as Xcode marks it: the code's
+        // gray across the whole width, gutter to edge, every row it wraps
+        // to; its number in the text's own color. Only while the editor
+        // has the focus and the selection is within one line.
+        descendant(".code-current-line") {
+          display(.none)
+          position(.absolute)
+          insetInlineStart(px(0))
+          insetInlineEnd(px(0))
+          backgroundColor(backgroundColorNeutralSubtle)
+          pointerEvents(.none)
+        }
+        descendant(".code-view[data-current-line='true'] .code-current-line") {
+          display(.block)
+        }
+        descendant(".code-view[data-current-line='true'] .code-gutter-lines > span[data-current='true']") {
+          color(colorBase)
         }
       }
       .build()
@@ -123,6 +143,15 @@
         _ = code.addEventListener(.keydown) { event in
           if KeyboardShortcuts.editorOwns(event.key) { event.stopPropagation() }
         }
+        // The caret's line shows while the editor has the focus.
+        _ = code.addEventListener("focus") { _ in
+          code.setAttribute(data("focused"), "true")
+          if code.hasAttribute("data-code-lined") { markCurrentLine(code) }
+        }
+        _ = code.addEventListener("blur") { _ in
+          code.removeAttribute(data("focused"))
+          if code.hasAttribute("data-code-lined") { markCurrentLine(code) }
+        }
         _ = code.addEventListener(.input) { _ in
           input.value = code.textContent
           // Its listeners hear the edit as the textarea's own.
@@ -142,6 +171,16 @@
           schedule(editor)
         }
         colorIfVisible(code)
+      }
+      // The caret moved (a click, a key, typing, a script): its line marked
+      // in the editor that has it.
+      if !listensToSelection {
+        listensToSelection = true
+        _ = document.addEventListener("selectionchange") { _ in
+          for code in document.querySelectorAll(".code-code[data-code-editing='true'][data-code-lined='true'][data-focused='true']") {
+            markCurrentLine(code)
+          }
+        }
       }
       // A pane resized wraps lines anew: every shown editor renumbered.
       if !listensToResize {
@@ -233,6 +272,7 @@
         let number = document.createElement(.span)
         number.textContent = intToString(line + 1)
         number.setAttribute(.style, "top: " + intToString(Int(rect.top - parentRect.top)) + "px; width: var(--gutter)")
+        number.setAttribute(data("top"), doubleToString(rect.top - parentRect.top))
         numbers.append(number)
       }
       gutter.setAttribute(
@@ -240,6 +280,62 @@
         "left: " + intToString(Int(codeRect.left - parentRect.left)) + "px; --gutter: "
           + CodeLines.gutter(lines: starts.count))
       gutter.replaceChildren(numbers)
+      markCurrentLine(code)
+    }
+
+    nonisolated(unsafe) static var listensToSelection = false
+
+    /// The caret's logical line marked (`.code-current-line`, its gutter
+    /// number `data-current`): from the line's first character to the
+    /// next line's (or the text's end), every row it wraps to; hidden
+    /// unless the editor has the focus and the selection is within one
+    /// line. Read from the selection, as the caret moves however it moves.
+    static func markCurrentLine(_ code: DOM.Element) {
+      guard let view = code.parentElement, let gutter = view.querySelector(".code-gutter-lines") else { return }
+      func hide() {
+        if view.hasAttribute(data("current-line")) { view.removeAttribute(data("current-line")) }
+      }
+      guard stringEquals(code.getAttribute(data("focused")) ?? "", "true"), let selection = window.getSelection(),
+        selection.rangeCount > 0, let focus = selection.focusNode, let anchor = selection.anchorNode,
+        code.contains(focus), code.contains(anchor)
+      else { return hide() }
+      /// The logical line a point of the text is on: the line breaks before it.
+      func line(_ node: DOM.Node, _ offset: Int) -> Int {
+        let before = document.createRange()
+        before.setStart(code, 0)
+        before.setEnd(node, offset)
+        var breaks = 0
+        for byte in before.toString().utf8 where byte == 0x0A { breaks += 1 }
+        return breaks
+      }
+      let current = line(focus, selection.focusOffset)
+      guard selection.isCollapsed || line(anchor, selection.anchorOffset) == current else { return hide() }
+      let numbers = gutter.querySelectorAll(":scope > span")
+      guard current < numbers.count, let codeRect = code.getBoundingClientRect(),
+        let viewRect = view.getBoundingClientRect()
+      else { return hide() }
+      let top = parseDouble(numbers[current].getAttribute(data("top")) ?? "") ?? 0
+      let bottom =
+        current + 1 < numbers.count
+        ? parseDouble(numbers[current + 1].getAttribute(data("top")) ?? "") ?? top
+        : codeRect.bottom - viewRect.top
+      var band = view.querySelector(":scope > .code-current-line")
+      if band == nil, let first = view.firstChild {
+        let made = document.createElement(.div)
+        made.className = "code-current-line"
+        made.setAttribute("aria-hidden", "true")
+        view.insertBefore(made, first)
+        band = made
+      }
+      band?.setAttribute(.style, "top: " + doubleToString(top) + "px; height: " + doubleToString(bottom - top) + "px")
+      for (index, number) in numbers.enumerated() {
+        if index == current {
+          number.setAttribute(data("current"), "true")
+        } else if number.hasAttribute(data("current")) {
+          number.removeAttribute(data("current"))
+        }
+      }
+      view.setAttribute(data("current-line"), "true")
     }
 
     /// Colors an editor's text the first time it has a box on screen.
