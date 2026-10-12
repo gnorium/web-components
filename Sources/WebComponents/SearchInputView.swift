@@ -15,9 +15,11 @@ import WebTypes
 /// Its size is ButtonView's scale (`ButtonView.ButtonSize`), so a box sits
 /// level with the controls beside it: its inset is that size's `padding`
 /// on every side (8 or 12) and its height that size's `minSize` (40 or
-/// 48). Its text is 16px at every size (user, 2026-10-08): smaller text in
-/// a field makes iOS Safari zoom the page as it is focused. Its icons,
-/// beside that text, are 16 (the text's size).
+/// 48). Its text is 16px (user, 2026-10-08): smaller text in a field makes
+/// iOS Safari zoom the page as it is focused. Its icons, beside that text,
+/// are 16 (the text's size). Under the phone step a medium box drops to
+/// small, 32 with 14px text and icons, as the controls beside it (user,
+/// 2026-10-12).
 public struct SearchInputView: HTMLContent {
   let modelValue: String
   let size: ButtonView.ButtonSize
@@ -313,6 +315,22 @@ public struct SearchInputView: HTMLContent {
       selector("& .search-input-button:focus:not(:disabled)") {
         outline(borderWidthThick, .solid, borderColorBlue).important()
         outlineOffset(px(1)).important()
+      }
+      // Option B (`ButtonView.phoneStep`): a medium box small on a phone,
+      // as the buttons and the pager beside it—its inset 4, its text and
+      // icons 14px (iOS Safari zooms into it as it takes focus; accepted
+      // for small fields, user 2026-10-12).
+      media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
+        selector("\(ButtonView.phoneStep) &[data-size='medium']") {
+          customProperty("--search-input-padding", ButtonView.smallPadding.value).important()
+          customProperty("--size-icon-small", fontSizeSmall14.value).important()
+        }
+        selector(
+          "\(ButtonView.phoneStep) &[data-size='medium'] .search-input",
+          "\(ButtonView.phoneStep) &[data-size='medium'] .search-input-button"
+        ) {
+          fontSize(fontSizeSmall14).important()
+        }
       }
     }
   }
