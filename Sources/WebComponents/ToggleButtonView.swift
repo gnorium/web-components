@@ -1,199 +1,200 @@
-#if SERVER
-  import CSSBuilder
-  import CSSOMBuilder
-  import DesignTokens
-  import DOMBuilder
-  import Foundation
-  import HTMLBuilder
-  import WebTypes
+import CSSBuilder
+import CSSOMBuilder
+import DesignTokens
+import DOMBuilder
+import EmbeddedSwiftUtilities
+import HTMLBuilder
+import WebTypes
 
-  /// A button that can be toggled on and off with state persistence.
-  ///
-  /// Unselected (off): `colorBase` label + base surface / subtle border—same language
-  /// as ColorScheme “Dark”. Selected (on): solid blue fill + inverted label—same as
-  /// ColorScheme “Light”.
-  public struct ToggleButtonView: HTMLContent {
-    let label: String
-    let icon: DOM.Node?
-    let modelValue: Bool
-    let weight: ButtonView.ButtonWeight
-    let buttonColor: ButtonView.ButtonColor
-    let disabled: Bool
-    let iconOnly: Bool
-    let fullWidth: Bool
-    let ariaLabel: String?
-    let ariaExpanded: Bool?
-    let indicateSelection: Bool
-    let size: ButtonView.ButtonSize
-    var `class`: String
-    let labelFontWeight: CSS.FontWeight
-    /// An icon after the label, like the chevron of a button that opens a
-    /// menu (`MenuButtonView`).
-    let trailingIcon: DOM.Node?
+/// A button that can be toggled on and off with state persistence.
+///
+/// Unselected (off): `colorBase` label + base surface / subtle border—same language
+/// as ColorScheme “Dark”. Selected (on): solid blue fill + inverted label—same as
+/// ColorScheme “Light”.
+///
+/// SERVER + CLIENT: a card the client builds (a streamed or replayed tool
+/// call) carries the same switch as the server's.
+public struct ToggleButtonView: HTMLContent {
+  let label: String
+  let icon: DOM.Node?
+  let modelValue: Bool
+  let weight: ButtonView.ButtonWeight
+  let buttonColor: ButtonView.ButtonColor
+  let disabled: Bool
+  let iconOnly: Bool
+  let fullWidth: Bool
+  let ariaLabel: String?
+  let ariaExpanded: Bool?
+  let indicateSelection: Bool
+  let size: ButtonView.ButtonSize
+  var `class`: String
+  let labelFontWeight: CSS.FontWeight
+  /// An icon after the label, like the chevron of a button that opens a
+  /// menu (`MenuButtonView`).
+  let trailingIcon: DOM.Node?
 
-    public init<T: HTMLContent>(
-      label: String,
-      icon: T? = nil,
-      modelValue: Bool = false,
-      weight: ButtonView.ButtonWeight = .static,
-      buttonColor: ButtonView.ButtonColor = .gray,
-      disabled: Bool = false,
-      iconOnly: Bool = false,
-      fullWidth: Bool = false,
-      ariaLabel: String? = nil,
-      ariaExpanded: Bool? = nil,
-      indicateSelection: Bool = true,
-      size: ButtonView.ButtonSize = .medium,
-      class: String = "",
-      labelFontWeight: CSS.FontWeight = fontWeightNormal,
-      trailingIcon: DOM.Node? = nil
-    ) {
-      self.label = label
-      self.icon = icon.map { $0.build() }
-      self.modelValue = modelValue
-      self.weight = weight
-      self.buttonColor = buttonColor
-      self.disabled = disabled
-      self.iconOnly = iconOnly
-      self.fullWidth = fullWidth
-      self.ariaLabel = ariaLabel
-      self.ariaExpanded = ariaExpanded
-      self.indicateSelection = indicateSelection
-      self.size = size
-      self.class = `class`
-      self.labelFontWeight = labelFontWeight
-      self.trailingIcon = trailingIcon
-    }
+  public init<T: HTMLContent>(
+    label: String,
+    icon: T? = nil,
+    modelValue: Bool = false,
+    weight: ButtonView.ButtonWeight = .static,
+    buttonColor: ButtonView.ButtonColor = .gray,
+    disabled: Bool = false,
+    iconOnly: Bool = false,
+    fullWidth: Bool = false,
+    ariaLabel: String? = nil,
+    ariaExpanded: Bool? = nil,
+    indicateSelection: Bool = true,
+    size: ButtonView.ButtonSize = .medium,
+    class: String = "",
+    labelFontWeight: CSS.FontWeight = fontWeightNormal,
+    trailingIcon: DOM.Node? = nil
+  ) {
+    self.label = label
+    self.icon = icon.map { $0.build() }
+    self.modelValue = modelValue
+    self.weight = weight
+    self.buttonColor = buttonColor
+    self.disabled = disabled
+    self.iconOnly = iconOnly
+    self.fullWidth = fullWidth
+    self.ariaLabel = ariaLabel
+    self.ariaExpanded = ariaExpanded
+    self.indicateSelection = indicateSelection
+    self.size = size
+    self.class = `class`
+    self.labelFontWeight = labelFontWeight
+    self.trailingIcon = trailingIcon
+  }
 
-    public func build() -> DOM.Node {
-      let isIconOnly = iconOnly || (icon != nil && label.isEmpty)
-      let fullClass = `class`.isEmpty ? "toggle-button-view" : "toggle-button-view \(`class`)"
+  public func build() -> DOM.Node {
+    let isIconOnly = iconOnly || (icon != nil && stringIsEmpty(label))
+    let fullClass = stringIsEmpty(`class`) ? "toggle-button-view" : stringJoin(["toggle-button-view", `class`], separator: " ")
 
-      return div {
-        ButtonView(
-          label: "",
-          buttonColor: buttonColor,
-          weight: weight,
-          size: size,
-          disabled: disabled,
-          iconOnly: isIconOnly,
-          ariaLabel: ariaLabel ?? label,
-          fullWidth: fullWidth,
-          class: "",
-          labelFontWeight: self.labelFontWeight,
-          borderRadius: borderRadiusPill
-        ) {
-          if let icon = icon {
-            span { icon }
-              .class("button-icon")
-              .ariaHidden(true)
-              .data("size", size.rawValue)
-              .style {
-                selector("&") {
-                  display(.flex)
-                  alignItems(.center)
-                  justifyContent(.center)
-                }
-                selector("&[data-size='medium']") { height(ButtonView.ButtonSize.medium.iconSize) }
-                selector("&[data-size='large']") { height(ButtonView.ButtonSize.large.iconSize) }
+    return div {
+      ButtonView(
+        label: "",
+        buttonColor: buttonColor,
+        weight: weight,
+        size: size,
+        disabled: disabled,
+        iconOnly: isIconOnly,
+        ariaLabel: ariaLabel ?? label,
+        fullWidth: fullWidth,
+        class: "",
+        labelFontWeight: self.labelFontWeight,
+        borderRadius: borderRadiusPill
+      ) {
+        if let icon = icon {
+          span { icon }
+            .class("button-icon")
+            .ariaHidden(true)
+            .data("size", size.rawValue)
+            .style {
+              selector("&") {
+                display(.flex)
+                alignItems(.center)
+                justifyContent(.center)
               }
-          }
-
-          if !label.isEmpty {
-            span { label }
-              .class(isIconOnly ? "toggle-button-label-hidden" : "toggle-button-label")
-          }
-
-          if let trailingIcon {
-            span { trailingIcon }
-              .class("toggle-button-trailing-icon")
-              .ariaHidden(true)
-              .style {
-                selector("&") {
-                  display(.flex)
-                  alignItems(.center)
-                  justifyContent(.center)
-                }
-              }
-          }
+              selector("&[data-size='medium']") { height(ButtonView.ButtonSize.medium.iconSize) }
+              selector("&[data-size='large']") { height(ButtonView.ButtonSize.large.iconSize) }
+            }
         }
-        // The state on the control itself, for assistive technology; the
-        // wrapper's copy below is what the styles and hosts read.
-        .ariaPressed(modelValue)
+
+        if !stringIsEmpty(label) {
+          span { label }
+            .class(isIconOnly ? "toggle-button-label-hidden" : "toggle-button-label")
+        }
+
+        if let trailingIcon {
+          span { trailingIcon }
+            .class("toggle-button-trailing-icon")
+            .ariaHidden(true)
+            .style {
+              selector("&") {
+                display(.flex)
+                alignItems(.center)
+                justifyContent(.center)
+              }
+            }
+        }
       }
-      .class(fullClass)
-      .data("toggle-button", "true")
-      .data("full-width", fullWidth)
-      .data("indicate-selection", indicateSelection)
+      // The state on the control itself, for assistive technology; the
+      // wrapper's copy below is what the styles and hosts read.
       .ariaPressed(modelValue)
-      .ariaExpanded(ariaExpanded ?? false)
-      .style {
-        selector("&") {
-          flexShrink(0)
-        }
-        selector("&[data-full-width='true']") {
-          display(.flex)
-        }
-        selector("&[data-full-width='false']") {
-          display(.inlineFlex)
-        }
+    }
+    .class(fullClass)
+    .data("toggle-button", "true")
+    .data("full-width", fullWidth)
+    .data("indicate-selection", indicateSelection)
+    .ariaPressed(modelValue)
+    .ariaExpanded(ariaExpanded ?? false)
+    .style {
+      selector("&") {
+        flexShrink(0)
+      }
+      selector("&[data-full-width='true']") {
+        display(.flex)
+      }
+      selector("&[data-full-width='false']") {
+        display(.inlineFlex)
+      }
 
-        // Off: colorBase (ColorScheme unselected / “Dark”). Gated the same
-        // way the ON rule below is—a caller that passes `indicateSelection:
-        // false` to keep its own colored base (a permanently solid button
-        // that merely toggles WHAT it does, not how it looks) was having its
-        // white-on-blue label overridden back to colorBase regardless, which
-        // read as black text on a blue pill.
-        selector("&[data-indicate-selection='true'][aria-pressed='false'] .button-view") {
-          color(colorBase).important()
-        }
-        selector("&[data-indicate-selection='true'][aria-pressed='false'] .button-view .button-label") {
-          color(colorBase).important()
-        }
-        selector("&[data-indicate-selection='true'][aria-pressed='false'] .button-view .button-icon") {
-          color(colorBase).important()
-        }
+      // Off: colorBase (ColorScheme unselected / “Dark”). Gated the same
+      // way the ON rule below is—a caller that passes `indicateSelection:
+      // false` to keep its own colored base (a permanently solid button
+      // that merely toggles WHAT it does, not how it looks) was having its
+      // white-on-blue label overridden back to colorBase regardless, which
+      // read as black text on a blue pill.
+      selector("&[data-indicate-selection='true'][aria-pressed='false'] .button-view") {
+        color(colorBase).important()
+      }
+      selector("&[data-indicate-selection='true'][aria-pressed='false'] .button-view .button-label") {
+        color(colorBase).important()
+      }
+      selector("&[data-indicate-selection='true'][aria-pressed='false'] .button-view .button-icon") {
+        color(colorBase).important()
+      }
 
-        // On: solid blue pill (ColorScheme selected / “Light”).
-        selector("&[data-indicate-selection='true'][aria-pressed='true'] .button-view") {
-          backgroundColor(backgroundColorBlue).important()
-          borderColor(backgroundColorBlue).important()
-          color(colorInvertedFixed).important()
-        }
-        selector("&[data-indicate-selection='true'][aria-pressed='true'] .button-view .button-label") {
-          color(colorInvertedFixed).important()
-        }
-        selector("&[data-indicate-selection='true'][aria-pressed='true'] .button-view .button-icon") {
-          color(colorInvertedFixed).important()
-        }
-        selector(
-          "&[data-indicate-selection='true'][aria-pressed='true'] .button-view:hover:not(:disabled)"
-        ) {
-          backgroundColor(backgroundColorBlueHover).important()
-          borderColor(borderColorBlueHover).important()
-        }
-        selector(
-          "&[data-indicate-selection='true'][aria-pressed='true'] .button-view:active:not(:disabled)"
-        ) {
-          backgroundColor(backgroundColorBlueActive).important()
-          borderColor(borderColorBlueActive).important()
-        }
+      // On: solid blue pill (ColorScheme selected / “Light”).
+      selector("&[data-indicate-selection='true'][aria-pressed='true'] .button-view") {
+        backgroundColor(backgroundColorBlue).important()
+        borderColor(backgroundColorBlue).important()
+        color(colorInvertedFixed).important()
+      }
+      selector("&[data-indicate-selection='true'][aria-pressed='true'] .button-view .button-label") {
+        color(colorInvertedFixed).important()
+      }
+      selector("&[data-indicate-selection='true'][aria-pressed='true'] .button-view .button-icon") {
+        color(colorInvertedFixed).important()
+      }
+      selector(
+        "&[data-indicate-selection='true'][aria-pressed='true'] .button-view:hover:not(:disabled)"
+      ) {
+        backgroundColor(backgroundColorBlueHover).important()
+        borderColor(borderColorBlueHover).important()
+      }
+      selector(
+        "&[data-indicate-selection='true'][aria-pressed='true'] .button-view:active:not(:disabled)"
+      ) {
+        backgroundColor(backgroundColorBlueActive).important()
+        borderColor(borderColorBlueActive).important()
+      }
 
-        descendant(".toggle-button-label-hidden") {
-          position(.absolute)
-          width(px(1))
-          height(px(1))
-          padding(0)
-          margin(px(-1))
-          overflow(.hidden)
-          clip(rect(0, 0, 0, 0))
-          whiteSpace(.nowrap)
-          borderWidth(0)
-        }
+      descendant(".toggle-button-label-hidden") {
+        position(.absolute)
+        width(px(1))
+        height(px(1))
+        padding(0)
+        margin(px(-1))
+        overflow(.hidden)
+        clip(rect(0, 0, 0, 0))
+        whiteSpace(.nowrap)
+        borderWidth(0)
       }
     }
   }
-#endif
+}
 
 #if CLIENT
   import DesignTokens
