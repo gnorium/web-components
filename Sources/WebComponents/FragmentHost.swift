@@ -49,10 +49,11 @@
       FilterBarHydration.hydrate(in: host)
       TableHydration.hydrate(in: host)
       PaginationHydration.hydrate(in: host)
+      // Its stamps in the reader's clock before its tooltips move their
+      // bubbles away; the page's own, already written, are left as they are
+      // (the pass is idempotent).
+      LocalTimeHydration.hydrateIfPresent()
       TooltipHydration.hydrate(in: host)
-      // Its times are put in the reader's clock as it loads (the loader's
-      // `localiseTimes`): a second pass over the page would rewrite every
-      // other time's trigger with its text.
     }
 
     /// Its filter bar's GET form and its own links, into the host.

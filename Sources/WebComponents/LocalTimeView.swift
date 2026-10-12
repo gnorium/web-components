@@ -162,13 +162,23 @@
       // attributes, so the sentence is rebuilt rather than parsed. When the
       // carrier is a tooltip trigger the sentence lives in its bubble, which
       // is where the reader will see it.
+      //
+      // Idempotent (user, 2026-10-12): a later pass (a live region, a
+      // fragment) leaves a carrier it already wrote—marked with the moment it
+      // wrote—and never writes into a tooltip's trigger, whose bubble has by
+      // then moved to the page's portal: the trigger's own content (its ⓘ)
+      // stays.
       for element in document.querySelectorAll("[data-local-time-iso]") {
         guard let iso = element.getAttribute("data-local-time-iso") else { continue }
+        if stringEquals(element.dataset["localTimeWritten"] ?? "", iso) { continue }
+        let bubble = element.querySelector(".tooltip-content")
+        if stringContains(element.className, "tooltip-trigger"), bubble == nil { continue }
         guard let localString = formatLocalDate(iso) else { continue }
         let prefix = element.getAttribute("data-local-time-prefix") ?? ""
         let suffix = element.getAttribute("data-local-time-suffix") ?? ""
-        let target = element.querySelector(".tooltip-content") ?? element
+        let target = bubble ?? element
         target.textContent = stringJoin([prefix, localString, suffix], separator: "")
+        element.dataset["localTimeWritten"] = iso
       }
     }
   }
