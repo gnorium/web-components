@@ -1223,8 +1223,8 @@ public struct TableView: HTMLContent {
         cursor(cursorBaseHover)
         transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionUser)
       }
-      selector("& .table-tbody tr[data-url]:not([data-url='']):hover", "& .table-tbody tr.table-row-link:hover") { backgroundColor(backgroundColorInteractiveSubtleHover).important() }
-      selector("& .table-tbody tr[data-url]:not([data-url='']):active", "& .table-tbody tr.table-row-link:active") { backgroundColor(backgroundColorInteractiveSubtleActive).important() }
+      selector("& .table-tbody tr[data-url]:not([data-url='']):hover", "& .table-tbody tr.table-row-link:hover") { backgroundColor(backgroundColorNeutralSubtleHover).important() }
+      selector("& .table-tbody tr[data-url]:not([data-url='']):active", "& .table-tbody tr.table-row-link:active") { backgroundColor(backgroundColorNeutralSubtleActive).important() }
       selector("& .table-tbody tr:hover:has(.table-selection-container:hover)", "& .table-tbody tr:active:has(.table-selection-container:active)", "& .table-tbody tr:hover:has(.animated-chevron-container:hover)", "& .table-tbody tr:hover:has(.animated-chevron:hover)") {
         backgroundColor(.transparent).important()
       }
