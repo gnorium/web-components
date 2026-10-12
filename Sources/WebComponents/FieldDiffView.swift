@@ -85,14 +85,17 @@ public struct FieldDiffView: HTMLContent {
   }
 
   /// How a field says what an edit did to it, for every form that edits and
-  /// every page that shows an edit: green added, red removed, orange changed—the
+  /// every page that shows an edit: green added, red removed, yellow changed—the
   /// control's own border, and an outline of the same color—and its
   /// diff under it shown only once there is one.
   ///
   /// The live diff marks the control with `data-diff-state`; a saved diff
   /// wraps it in `.diff-wrap-added`, `-removed` or `-changed`. The color is
   /// forced: a dropdown's trigger is a button, and a button's own border
-  /// color otherwise wins, leaving a grey border inside an orange ring.
+  /// color otherwise wins, leaving a grey border inside a yellow ring.
+  ///
+  /// Yellow is modified everywhere (user, 2026-10-12): the midpoint of red
+  /// removed and green added; orange is stale, warnings and compaction.
   @CSSBuilder
   public static func stateCSS() -> [CSSOM.CSSRule] {
     descendant("[data-diff-state='unchanged']") {
@@ -101,7 +104,7 @@ public struct FieldDiffView: HTMLContent {
     }
     state("added", color: borderColorGreen)
     state("removed", color: borderColorRed)
-    state("changed", color: borderColorOrange)
+    state("changed", color: borderColorYellow)
     descendant("[data-diff-state='focused']") {
       borderColor(borderColorBlueFocus).important()
       outline(borderWidthBase, .solid, borderColorBlueFocus).important()

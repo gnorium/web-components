@@ -15,7 +15,7 @@ import WebTypes
 /// What changed, under the thing that changed: a field's old value against
 /// its new one, a text's or a page's old lines against its new ones.
 ///
-/// The thing edited shows its new value, clean, framed in orange. This says
+/// The thing edited shows its new value, clean, framed in yellow. This says
 /// how it changed, under the label "Diff:", in the subtle text color with
 /// the characters that changed colored—red where they were, green where
 /// they are—and nothing given a background. No mark is drawn on the text:
