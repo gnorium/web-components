@@ -708,6 +708,16 @@ public enum OutlineMoves {
         minWidth(0)
         padding(spacing4)
       }
+      // On a phone (below 480px) the tree is never narrower than the
+      // narrowest any node can be (a reader's footer row, ArtifactView,
+      // user 2026-10-12): every card widens to hold what it nests, and the
+      // scrollport scrolls the whole tree from its start edge, nothing
+      // clipped at either side.
+      media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
+        selector("& .outliner-scroll > .outliner-list") {
+          CSS.Property("min-width", "min-content").important()
+        }
+      }
       selector(
         "& .outliner-scroll::-webkit-scrollbar-track", "& .outliner-scroll::-webkit-scrollbar-track-piece",
         "& .outliner-scroll::-webkit-scrollbar-corner"

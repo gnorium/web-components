@@ -396,6 +396,34 @@ public struct PaginationView: HTMLContent {
         fontSize(fontSizeMedium16)
         color(colorBase)
       }
+      // Option B (`ButtonView.phoneStep`): a medium pager small on a
+      // phone, its number box with it (iOS Safari zooms into it as it takes
+      // focus; accepted, user 2026-10-12).
+      media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
+        selector(
+          "\(ButtonView.phoneStep) &.pagination-size-medium .pagination-prev",
+          "\(ButtonView.phoneStep) &.pagination-size-medium .pagination-next"
+        ) {
+          width(ButtonView.smallMinSize).important()
+          height(ButtonView.smallMinSize).important()
+        }
+        selector("\(ButtonView.phoneStep) &.pagination-size-medium .page-box") {
+          padding(ButtonView.smallPadding).important()
+          fontSize(fontSizeSmall14).important()
+        }
+        selector(
+          "\(ButtonView.phoneStep) &.pagination-size-medium .pagination-term",
+          "\(ButtonView.phoneStep) &.pagination-size-medium .pagination-total"
+        ) {
+          fontSize(fontSizeSmall14).important()
+        }
+        selector("\(ButtonView.phoneStep) &.pagination-size-medium .pagination-indicator") { gap(spacing4).important() }
+        // Its chevrons its words' size, as a small button's icon: the icon
+        // token, there, is the small type's.
+        selector("\(ButtonView.phoneStep) &.pagination-size-medium") {
+          customProperty("--size-icon-small", fontSizeSmall14.value).important()
+        }
+      }
     }
   }
 }

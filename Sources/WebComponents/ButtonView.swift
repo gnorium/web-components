@@ -116,6 +116,57 @@ public struct ButtonView: HTMLContent {
     }
   }
 
+  /// Option B (user, 2026-10-12, under comparison): on a phone (below
+  /// 480px), with `data-phone-step="down"` on the root element, every
+  /// sized control drops one step—a medium button small (its inset 4 on
+  /// every side of the 22px line, inside its 1px border: 32; its type
+  /// 14px), a large one medium, a medium pager small. One switch: the
+  /// attribute.
+  public static let phoneStep = ":root[data-phone-step='down']"
+  public static let smallPadding: CSS.Length = spacing4
+  public static var smallMinSize: CSS.Length { smallPadding * 2 + lineHeightSmall22 + borderWidthBase * 2 }
+
+  /// A button one size smaller under `phoneStep` below 480px.
+  @CSSBuilder
+  static func phoneStepDownCSS() -> [CSSOM.CSSRule] {
+    media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
+      selector("\(phoneStep) &[data-size='medium']") {
+        minHeight(smallMinSize).important()
+        fontSize(fontSizeSmall14).important()
+      }
+      selector("\(phoneStep) &[data-full-width='false'][data-size='medium']") { minWidth(smallMinSize).important() }
+      selector("\(phoneStep) &[data-icon-only='true'][data-size='medium']") {
+        width(smallMinSize).important()
+        height(smallMinSize).important()
+      }
+      selector("\(phoneStep) &[data-icon-only='false'][data-size='medium']") { padding(smallPadding).important() }
+      // Its icon its type's size: the icon token, there, is the small type's
+      // (an icon sizes its long edge by it).
+      selector("\(phoneStep) &[data-size='medium']") {
+        customProperty("--size-icon-small", fontSizeSmall14.value).important()
+      }
+      selector("\(phoneStep) &[data-size='large']") {
+        minHeight(ButtonSize.medium.minSize).important()
+        fontSize(fontSizeMedium16).important()
+      }
+      selector("\(phoneStep) &[data-full-width='false'][data-size='large']") {
+        minWidth(ButtonSize.medium.minSize).important()
+      }
+      selector("\(phoneStep) &[data-icon-only='true'][data-size='large']") {
+        width(ButtonSize.medium.minSize).important()
+        height(ButtonSize.medium.minSize).important()
+      }
+      selector("\(phoneStep) &[data-icon-only='false'][data-size='large']") {
+        padding(ButtonSize.medium.padding).important()
+      }
+      // Its icon the medium type's size: the large type token, there, is
+      // the medium's.
+      selector("\(phoneStep) &[data-size='large']") {
+        customProperty("--font-size-large-18", fontSizeMedium16.value).important()
+      }
+    }
+  }
+
   // MARK: - Initialization
 
   public init(
@@ -1173,6 +1224,7 @@ public struct ButtonView: HTMLContent {
           // text (ButtonSize.iconSize), so the icon sits on the label's line.
           selector("&[data-size='medium'] .button-icon") { height(ButtonSize.medium.iconSize) }
           selector("&[data-size='large'] .button-icon") { height(ButtonSize.large.iconSize) }
+          ButtonView.phoneStepDownCSS()
         }
 
       // `aria-disabled`, not a class: `.class` would replace the button's
@@ -1337,6 +1389,7 @@ public struct ButtonView: HTMLContent {
           // text (ButtonSize.iconSize), so the icon sits on the label's line.
           selector("&[data-size='medium'] .button-icon") { height(ButtonSize.medium.iconSize) }
           selector("&[data-size='large'] .button-icon") { height(ButtonSize.large.iconSize) }
+          ButtonView.phoneStepDownCSS()
 
           // Quiet/Plain—opaque base bg + transparent border (mirrors <a> branch)
           selector("&[data-weight='quiet'], &[data-weight='plain']") {
