@@ -19,23 +19,26 @@ final class NamedColorsTests: XCTestCase {
     }
   }
 
-  /// By APCA (user, 2026-10-12): each color at the base border's APCA
-  /// against the page in its scheme, its hue kept, the most chroma.
-  func testEachStandsAtTheBordersAPCA() {
+  /// By APCA (user, 2026-10-12): each color at APCA's own level against
+  /// the page—Lc 60 by default, Lc 75 in increased contrast—its hue kept,
+  /// the most chroma.
+  func testEachStandsAtItsAPCALevel() {
     for scheme in NamedColors.Scheme.allCases {
       let page = scheme.isDark ? 0 : 255
-      let target = NamedColors.apca(NamedColors.neutralRamp(scheme)[.border]!, on: page)
+      let level = scheme.isMoreContrast ? NamedColors.namedLcMoreContrast : NamedColors.namedLc
       for name in NamedColors.names {
         let color = NamedColors.color(name, scheme)
-        let value = abs(NamedColors.APCA.sapc(text: NamedColors.rgb(color), background: (page, page, page)))
+        let lc = abs(NamedColors.APCA.lc(text: NamedColors.rgb(color), background: (page, page, page)))
         // Within what 8-bit writing allows.
-        XCTAssertEqual(value, target, accuracy: 1, "\(name) \(scheme)")
+        XCTAssertEqual(lc, level, accuracy: 1, "\(name) \(scheme)")
         if name != "gray" {
           XCTAssertEqual(color.h, NamedColors.hue(name), accuracy: 1e-9, "\(name) keeps its hue")
           XCTAssertEqual(color.c, NamedColors.maxChroma(l: color.l, h: color.h), accuracy: 1e-9, "\(name) most chroma")
         } else {
           XCTAssertEqual(color.c, 0)
         }
+        let label = scheme.isDark ? (0, 0, 0) : (255, 255, 255)
+        print("HEX \(scheme) \(name) \(NamedColors.hex(color)) label Lc \(String(format: "%.1f", NamedColors.APCA.lc(text: label, background: NamedColors.rgb(color))))")
       }
     }
   }
