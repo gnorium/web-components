@@ -442,16 +442,16 @@
           return span {
             img().src(region).alt("").loading(.lazy).class("tei-figure-image tei-initial-image")
             span { run.text }.class("tei-initial-letter")
-          }.class("tei-run tei-initial").data("rend", run.rend).build()
+          }.class("tei-run tei-initial").data("rend", run.rend).addingAttribute("style", TEIRendition.css(from: run.rend)).build()
         }
         if run.alternative.isEmpty {
-          let drawn = span { run.text }.class("tei-run").data("rend", run.rend)
+          let drawn = span { run.text }.class("tei-run").data("rend", run.rend).addingAttribute("style", TEIRendition.css(from: run.rend))
           return (run.preserved ? drawn.data("space", "preserve") : drawn).build()
         }
         // A regularized spelling, an expansion or a correction the
         // transcription gives beside the reading: read on hover.
         return TooltipView(tooltip: run.alternative, placement: .top, class: "tei-run-alternative") {
-          span { run.text }.class("tei-run").data("rend", run.rend)
+          span { run.text }.class("tei-run").data("rend", run.rend).addingAttribute("style", TEIRendition.css(from: run.rend))
         }.build()
       case .math(let formula):
         return mathContent(formula, facsimileURL: facsimileURL, tabStop: tabStop)
@@ -616,9 +616,9 @@
               div {
                 for (index, line) in lines.enumerated() {
                   if index > 0 { line.joinsPrevious ? "" : " " }
-                  renderingLine(line, facsimileURL: facsimileURL, label: label, tabStop: tabStop)
+                  renderingLine(line, facsimileURL: facsimileURL, label: label, tabStop: tabStop, inStyledBlock: true)
                 }
-              }.class("tei-block").data("rend", lines[0].rend)
+              }.class("tei-block").data("rend", lines[0].rend).addingAttribute("style", TEIRendition.css(from: lines[0].rend))
             case .furniture(let pieces):
               // A page number and a running head set on one line keep
               // their places on it, as the image has them.
@@ -649,18 +649,18 @@
     }
 
     private func renderingLine(
-      _ line: TEILine, facsimileURL: String, label: String, tabStop: TEIWordPlace? = nil
+      _ line: TEILine, facsimileURL: String, label: String, tabStop: TEIWordPlace? = nil, inStyledBlock: Bool = false
     ) -> DOM.Node {
       switch line.kind {
       case .heading:
-        return h3 { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line tei-line-heading").data("rend", line.rend)
+        return h3 { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line tei-line-heading").data("rend", line.rend).addingAttribute("style", inStyledBlock ? "" : TEIRendition.css(from: line.rend))
           .build()
       case .speaker:
         return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line tei-line-speaker").data(
           "rend", line.rend
-        ).build()
+        ).addingAttribute("style", inStyledBlock ? "" : TEIRendition.css(from: line.rend)).build()
       case .stage:
-        return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line tei-line-stage").data("rend", line.rend)
+        return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line tei-line-stage").data("rend", line.rend).addingAttribute("style", inStyledBlock ? "" : TEIRendition.css(from: line.rend))
           .build()
       case .mark:
         return glossable(span { line.text }.class("tei-line tei-line-mark"), line.element).build()
@@ -677,11 +677,11 @@
           .style { CSS.Property("height", Self.spaceHeight(quantity: quantity, unit: unit)) }.build()
       case .note(let place):
         return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line tei-line-note")
-          .data("place", place.isEmpty ? "inline" : place).build()
+          .data("place", place.isEmpty ? "inline" : place).addingAttribute("style", inStyledBlock ? "" : TEIRendition.css(from: line.rend)).build()
       case .forme(let role):
         return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class(
           "tei-line tei-line-forme tei-line-forme-\(role.rawValue)"
-        ).data("rend", line.rend).build()
+        ).data("rend", line.rend).addingAttribute("style", inStyledBlock ? "" : TEIRendition.css(from: line.rend)).build()
       case .figure(let type, let zone):
         guard let zone, let region = TEIRenderer.regionURL(ofFacsimile: facsimileURL, zone: zone) else {
           return DOM.Node.fragment([])
@@ -729,7 +729,7 @@
       case .text:
         // Whether the break before it falls inside a word (`<lb
         // break="no"/>`): a reader's find reads the two lines as one word.
-        return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line").data("rend", line.rend)
+        return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line").data("rend", line.rend).addingAttribute("style", inStyledBlock ? "" : TEIRendition.css(from: line.rend))
           .data("joins-previous", line.joinsPrevious).build()
       }
     }
@@ -1217,7 +1217,7 @@
         // A section's first line starts where the space before it ends: a
         // heading's or a speaker's space above it is space from the line
         // before, and at the top of the page there is none (user, 2026-09-29).
-        selector("& .tei-section > :first-child", "& .tei-section > :first-child > .tei-line:first-child") {
+        selector("& .tei-section > :first-child:not([style*='margin-'])", "& .tei-section > :first-child:not([style*='margin-']) > .tei-line:first-child:not([style*='margin-'])") {
           marginBlockStart(0).important()
         }
         // Vertical space measured in the text's own lines.
@@ -1251,6 +1251,10 @@
         // only what the TEI encodes as typography (`<hi rend>`) is styled; a
         // tag (a heading, a speaker, a stage direction, a note, the forme
         // work) keeps its place on the page and no face or color of its own.
+        selector("& .tei-block[style*='font-size'] > .tei-line") { fontSize(.inherit) }
+        selector("& .tei-block[style*='line-height'] > .tei-line") { CSS.Property("line-height", "inherit") }
+        selector("& .tei-block[style*='letter-spacing'] > .tei-line") { CSS.Property("letter-spacing", "inherit") }
+        selector("& .tei-block[style*='word-spacing'] > .tei-line") { CSS.Property("word-spacing", "inherit") }
         descendant(".tei-line-heading") {
           fontSize(.inherit)
           fontWeight(.inherit)

@@ -57,6 +57,9 @@ public enum PassageDiffSyncHydration {
     if stringEquals(scope.getAttribute("data-passage-pair") ?? "", key) { return }
     scope.setAttribute("data-passage-pair", key)
     let pair = Pair(scope: scope, source: source, port: port, box: box, key: key)
+    pair.presentation()
+    source.observeResize { _, _ in pair.presentation() }
+    scope.observeMutations(subtree: true, attributeFilter: ["data-reflow", "style", "class"]) { pair.presentation() }
     _ = port.addEventListener(.scroll) { _ in pair.schedule(fromSource: true) }
     _ = box.addEventListener(.scroll) { _ in pair.schedule(fromSource: false) }
   }
@@ -71,9 +74,35 @@ public enum PassageDiffSyncHydration {
     var cachedWidth = 0.0
     var cachedHeight = 0.0
     var cachedPositions: [Double] = []
+    var presentationKey = ""
 
     init(scope: DOM.Element, source: DOM.Element, port: DOM.Element, box: DOM.Element, key: String) {
       self.scope = scope; self.source = source; self.port = port; self.box = box; self.key = key
+    }
+
+    /// The diff follows the source's wrapping mode and effective code size.
+    /// Its different viewport width is handled by logical-line geometry.
+    func presentation() {
+      guard stringEquals(scope.getAttribute("data-passage-pair") ?? "", key),
+        source.clientWidth > 0, let frame = source.getBoundingClientRect(),
+        let lines = box.querySelector(".diff-lines") else { return }
+      let style = window.getComputedStyle(source)
+      let scale = source.offsetWidth > 0 ? frame.width / source.offsetWidth : 1
+      let wrap = style.getPropertyValue("white-space")
+      let family = style.getPropertyValue("font-family")
+      let size = pixels(style.getPropertyValue("font-size")) * scale
+      let leading = pixels(style.getPropertyValue("line-height")) * scale
+      let signature = wrap + family + doubleToString(size) + ":" + doubleToString(leading)
+      if stringEquals(signature, presentationKey) { return }
+      presentationKey = signature
+      box.setAttribute("data-passage-linked", "true")
+      box.setAttribute("data-passage-wrap", stringEquals(wrap, "pre") || stringEquals(wrap, "nowrap") ? "false" : "true")
+      lines.style.setProperty("font-family", family)
+      lines.style.setProperty("font-size", doubleToString(size) + "px")
+      if leading > 0 {
+        lines.style.setProperty("line-height", doubleToString(leading) + "px")
+        box.style.setProperty("--passage-line-height", doubleToString(leading) + "px")
+      }
     }
 
     func schedule(fromSource: Bool) {
@@ -108,8 +137,9 @@ public enum PassageDiffSyncHydration {
       if live.count == stringSplit(text, separator: "\n").count, !live.isEmpty,
         let frame = source.getBoundingClientRect() {
         let scale = source.offsetWidth > 0 ? frame.width / source.offsetWidth : 1
-        var offsets = live.map { (($0.getBoundingClientRect()?.top ?? frame.top) - frame.top) / max(0.01, scale) }
-        if let last = live.last?.getBoundingClientRect() { offsets.append((last.bottom - frame.top) / max(0.01, scale)) }
+        let inset = pixels(window.getComputedStyle(source).getPropertyValue("padding-top"))
+        var offsets = live.map { (($0.getBoundingClientRect()?.top ?? frame.top) - frame.top) / max(0.01, scale) - inset }
+        if let last = live.last?.getBoundingClientRect() { offsets.append((last.bottom - frame.top) / max(0.01, scale) - inset) }
         return offsets
       }
       let style = window.getComputedStyle(source)
@@ -142,6 +172,7 @@ public enum PassageDiffSyncHydration {
     }
 
     func synchronize() {
+      presentation()
       guard source.clientWidth > 0, port.clientHeight > 0, box.clientHeight > 0,
         let sourceFrame = source.getBoundingClientRect(), let portFrame = port.getBoundingClientRect(),
         let boxFrame = box.getBoundingClientRect() else { return }
@@ -151,8 +182,12 @@ public enum PassageDiffSyncHydration {
       let scale = source.offsetWidth > 0 ? sourceFrame.width / source.offsetWidth : 1
       let padding = pixels(window.getComputedStyle(source).getPropertyValue("padding-top")) * scale
       let origin = source.id == port.id ? padding : port.scrollTop + sourceFrame.top - portFrame.top + padding
+      let sourceRange = max(0, port.scrollHeight - port.clientHeight)
+      let diffRange = max(0, box.scrollHeight - box.clientHeight)
       if fromSource {
-        let y = max(0, (port.scrollTop - origin) / max(0.01, scale))
+        box.scrollLeft = port.scrollLeft
+        let progress = sourceRange > 0 ? port.scrollTop / sourceRange : 0
+        let y = max(0, (port.scrollTop + progress * port.clientHeight - origin) / max(0.01, scale))
         var line = 0
         for index in 0..<(lines.count - 1) where lines[index] <= y { line = index }
         let fraction = min(1, max(0, (y - lines[line]) / max(1, lines[line + 1] - lines[line])))
@@ -166,17 +201,26 @@ public enum PassageDiffSyncHydration {
           }
         }
         guard let frame = chosen.getBoundingClientRect() else { return }
-        box.scrollTop += frame.top - boxFrame.top + fraction * frame.height
+        let focus = box.scrollTop + frame.top - boxFrame.top + fraction * frame.height
+        box.scrollTop = focus * diffRange / max(1, box.scrollHeight)
+        if sourceRange > 0, port.scrollTop >= sourceRange - 1 { box.scrollTop = diffRange }
+        else if port.scrollTop <= 1 { box.scrollTop = 0 }
         box.setAttribute("data-passage-scroll", doubleToString(box.scrollTop))
       } else {
+        port.scrollLeft = box.scrollLeft
+        let progress = diffRange > 0 ? box.scrollTop / diffRange : 0
+        let focus = boxFrame.top + progress * box.clientHeight
         var chosen = rows[0]
         for row in rows {
-          if let frame = row.getBoundingClientRect(), frame.top <= boxFrame.top + 1 { chosen = row }
+          if let frame = row.getBoundingClientRect(), frame.top <= focus + 1 { chosen = row }
         }
         guard let frame = chosen.getBoundingClientRect() else { return }
         let index = max(0, min(lines.count - 2, (parseInt(chosen.getAttribute("data-diff-at") ?? "") ?? 1) - 1))
-        let fraction = max(0, min(1, (boxFrame.top - frame.top) / max(1, frame.height)))
-        port.scrollTop = origin + (lines[index] + fraction * (lines[index + 1] - lines[index])) * scale
+        let fraction = max(0, min(1, (focus - frame.top) / max(1, frame.height)))
+        let sourceFocus = origin + (lines[index] + fraction * (lines[index + 1] - lines[index])) * scale
+        port.scrollTop = sourceFocus * sourceRange / max(1, port.scrollHeight)
+        if diffRange > 0, box.scrollTop >= diffRange - 1 { port.scrollTop = sourceRange }
+        else if box.scrollTop <= 1 { port.scrollTop = 0 }
         port.setAttribute("data-passage-scroll", doubleToString(port.scrollTop))
       }
     }

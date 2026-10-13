@@ -420,6 +420,18 @@ public struct DiffView: HTMLContent {
         whiteSpace(.preWrap)
         overflowWrap(.anywhere)
       }
+      selector("& .diff-box[data-passage-linked='true'] .diff-row") {
+        CSS.Property("min-height", "var(--passage-line-height, 0px)")
+      }
+      selector("& .diff-box[data-passage-wrap='false'] .diff-lines") {
+        width(.maxContent)
+        minWidth(perc(100))
+      }
+      selector("& .diff-box[data-passage-wrap='false'] .diff-content") {
+        whiteSpace(.pre)
+        overflowWrap(.normal)
+        flexShrink(0)
+      }
       descendant(".diff-gap") {
         paddingInlineStart(calc(ch(1) + spacing8))
         userSelect(.none)
