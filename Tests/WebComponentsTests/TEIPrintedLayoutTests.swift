@@ -63,4 +63,24 @@ final class TEIPrintedLayoutTests: XCTestCase {
     let blocks = classed("tei-block", in: nodes)
     XCTAssertEqual(blocks.compactMap { attribute("data-part", of: $0) }, ["", "I"])
   }
+
+  /// A footnote's indent is its first line's only: the block a column
+  /// break falls inside runs on into the next column (user, 2026-10-13).
+  func testAColumnBreakInsideABlockRunsItOn() throws {
+    let nodes = view(#"<note place="foot" style="text-indent:1em;column-gap:2em"><cb/>One<lb/>two<lb/><cb/>three<lb/></note>"#)
+    let blocks = classed("tei-block", in: nodes)
+    XCTAssertEqual(blocks.compactMap { attribute("data-part", of: $0) }, ["I", "F"])
+  }
+
+  /// A horizontal `<space/>` is a gap in its line as wide as it says, a
+  /// decimal too; the page still renders (user, 2026-10-13).
+  func testHorizontalSpaceIsAGapThatWide() throws {
+    let nodes = view(
+      #"<p>a<space dim="horizontal" quantity="1.5"/>b<space quantity="0.68" unit="em"/>c<lb/></p>"#)
+    let gaps = classed("tei-run-space", in: nodes)
+    XCTAssertEqual(gaps.compactMap { attribute("style", of: $0) }, ["inline-size: 1.5ch;", "inline-size: 0.68em;"])
+    XCTAssertEqual(gaps.map { text(of: $0) }, [" ", " "])
+    let layer = try XCTUnwrap(nodes.first { attribute("data-layer", of: $0) == "rendering" })
+    XCTAssertEqual(text(of: layer).filter { !$0.isWhitespace }, "abc")
+  }
 }

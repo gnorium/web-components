@@ -209,6 +209,9 @@
           case .text:
             // Spaced as XML text is displayed already (`TEIRenderer`).
             if !run.text.isEmpty { tokens.append(.init(text: run.text, style: style(run.rend))) }
+          case .space(let quantity, let unit):
+            // A gap reads as the space it is, its width a setting of it.
+            tokens.append(.init(text: run.text, style: style(run.rend) + ["space \(Self.number(quantity)) \(unit)"]))
           }
         }
         return tokens
@@ -502,6 +505,13 @@
         }.build()
       case .math(let formula):
         return mathContent(formula, facsimileURL: facsimileURL, tabStop: tabStop)
+      case .space(let quantity, let unit):
+        // Space the source leaves in the line, as wide as it says (user,
+        // 2026-10-13): a gap in the line, its one space what a reader
+        // copies.
+        return span { run.text }.class("tei-run tei-run-space").data("rend", run.rend).data("space", "preserve")
+          .data("quantity", Self.number(quantity)).data("unit", unit)
+          .style { CSS.Property("inline-size", Self.spaceWidth(quantity: quantity, unit: unit)) }.build()
       }
     }
 
@@ -719,6 +729,16 @@
       case "mm", "cm", "in", "pt", "pc", "px", "em": return "\(number(quantity))\(unit)"
       case "chars", "char", "ems": return "\(number(quantity))em"
       default: return "\(number(quantity))lh"
+      }
+    }
+
+    /// The width a horizontal `<space/>` leaves: so many of the text's
+    /// characters (`ch`); a length in its own unit where CSS has it.
+    static func spaceWidth(quantity: Double, unit: String) -> String {
+      switch unit {
+      case "mm", "cm", "in", "pt", "pc", "px", "em": return "\(number(quantity))\(unit)"
+      case "ems": return "\(number(quantity))em"
+      default: return "\(number(quantity))ch"
       }
     }
 
@@ -1357,6 +1377,12 @@
         selector("& .tei-page-text:not([data-reflow='true'] *) .tei-block > :first-child") {
           CSS.Property("text-indent", "inherit")
         }
+        // A block run on from the column or page before (`<p part="F|M">`,
+        // or a `<cb/>` inside it): its first line here is no paragraph's
+        // first, and takes no indent.
+        selector("& .tei-page-text:not([data-reflow='true'] *) .tei-block:is([data-part='F'], [data-part='M']) > :first-child") {
+          CSS.Property("text-indent", "0")
+        }
         // Only explicitly justified text expands its word spacing, and a
         // block's last line keeps its natural width, as printed: its lines
         // carry its rend, so the rule is the block's, never a line's. A
@@ -1623,6 +1649,11 @@
         // `<space/>`'s width), drawn as written.
         descendant(".tei-run[data-space='preserve']") {
           whiteSpace(.preWrap)
+        }
+        // A horizontal `<space/>`: a gap as wide as its inline size, its
+        // space (blank, never drawn past it) inside.
+        descendant(".tei-run-space") {
+          display(.inlineBlock)
         }
         descendant(".tei-page-raw") {
           fontFamily(typographyFontMono)
