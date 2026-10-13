@@ -4,7 +4,7 @@ import XCTest
 
 /// The named colors (user, 2026-10-11): twelve OKLCH hues 30° apart from
 /// pure red's, and gray, each at its scheme's APCA level against the
-/// page—Lc 45 by default, Lc 75 for increased contrast (2026-10-14)—with the
+/// page—Lc 60 by default, Lc 75 for increased contrast—with the
 /// most chroma sRGB allows at that lightness; on a Display P3 screen, the
 /// same rule in P3.
 final class NamedColorsTests: XCTestCase {
@@ -28,9 +28,9 @@ final class NamedColorsTests: XCTestCase {
     }
   }
 
-  /// By APCA (user, 2026-10-12; Lc 45 2026-10-14): each color at APCA's own
-  /// level against the page—Lc 45 by default, Lc 75 in increased
-  /// contrast—its hue kept, the most chroma.
+  /// By APCA (user, 2026-10-12): each color at APCA's own level against
+  /// the page—Lc 60 by default, Lc 75 in increased contrast—its hue kept,
+  /// the most chroma.
   func testEachStandsAtItsAPCALevel() {
     for scheme in NamedColors.Scheme.allCases {
       let page = scheme.isDark ? 0 : 255
@@ -52,13 +52,13 @@ final class NamedColorsTests: XCTestCase {
     }
   }
 
-  /// The default level is Lc 45 (user, 2026-10-14), the brand blue among
+  /// The default level stays Lc 60 (user, 2026-10-14), the brand blue among
   /// them.
-  func testTheDefaultLevelIsLc45() {
-    XCTAssertEqual(NamedColors.namedLc, 45)
+  func testTheDefaultLevelIsLc60() {
+    XCTAssertEqual(NamedColors.namedLc, 60)
     XCTAssertEqual(NamedColors.namedLcMoreContrast, 75)
-    XCTAssertEqual(NamedColors.hex("blue", .light), "#2BB4FF")
-    XCTAssertEqual(NamedColors.hex("blue", .dark), "#009CE3")
+    XCTAssertEqual(NamedColors.hex("blue", .light), "#0095D9")
+    XCTAssertEqual(NamedColors.hex("blue", .dark), "#45BAFF")
     XCTAssertEqual(NamedColors.hex("blue", .lightMoreContrast), "#0074A9")
     XCTAssertEqual(NamedColors.hex("blue", .darkMoreContrast), "#91D2FF")
   }
