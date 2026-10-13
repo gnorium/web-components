@@ -20,10 +20,10 @@ public struct XMLToggleButtonView: HTMLContent {
       icon: IconView(icon: { s in CodeXMLIconView(size: s) }, size: sizeIconSmall),
       modelValue: pressed, weight: .subtle, buttonColor: .gray,
       disabled: disabled, iconOnly: true,
-      ariaLabel: "XML mode (edit source)", size: .medium,
+      ariaLabel: "XML", size: .medium,
       class: `class`.isEmpty ? "xml-toggle-button-view" : "xml-toggle-button-view \(`class`)"
     ).build()
-    return (view as? DOM.Element)?.addingAttribute("title", "XML source — switch to this mode to edit") ?? view
+    return (view as? DOM.Element)?.addingAttribute("title", "XML") ?? view
   }
 }
 #endif

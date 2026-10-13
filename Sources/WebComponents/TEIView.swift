@@ -372,7 +372,7 @@
     private func wordContent(_ runs: [TEILine.Run], facsimileURL: String, tabStop: TEIWordPlace?) -> [DOM.Node] {
       var words: [(word: TEIWordPlace?, runs: [TEILine.Run])] = []
       for run in runs {
-        if let word = run.word, let last = words.last, last.word == word {
+        if let last = words.last, last.word == run.word {
           words[words.count - 1].runs.append(run)
         } else {
           words.append((run.word, [run]))
@@ -384,7 +384,7 @@
           // opens its element's gloss: its runs together as one control.
           var elements: [(element: Int?, runs: [TEILine.Run])] = []
           for run in group.runs {
-            if let element = run.element, glossURL != nil, let last = elements.last, last.element == element {
+            if let last = elements.last, last.element == (glossURL == nil ? nil : run.element) {
               elements[elements.count - 1].runs.append(run)
             } else {
               elements.append((glossURL == nil ? nil : run.element, [run]))
@@ -392,12 +392,12 @@
           }
           return elements.flatMap { part -> [DOM.Node] in
             guard let element = part.element else {
-              return part.runs.map { runContent($0, facsimileURL: facsimileURL, tabStop: tabStop) }
+              return runContents(part.runs, facsimileURL: facsimileURL, tabStop: tabStop)
             }
             return [
               glossable(
                 span {
-                  for run in part.runs { runContent(run, facsimileURL: facsimileURL, tabStop: tabStop) }
+                  runContents(part.runs, facsimileURL: facsimileURL, tabStop: tabStop)
                 }
                 .class("tei-gloss-element"), element
               ).build()
@@ -406,7 +406,7 @@
         }
         return [
           span {
-            for run in group.runs { runContent(run, facsimileURL: facsimileURL, tabStop: tabStop) }
+            runContents(group.runs, facsimileURL: facsimileURL, tabStop: tabStop)
           }
           .class("tei-word")
           .role(.button)
@@ -429,7 +429,25 @@
         .setAttribute("aria-haspopup", "dialog").setAttribute("data-gloss-element", "\(element)")
     }
 
-    private func runContent(_ run: TEILine.Run, facsimileURL: String, tabStop: TEIWordPlace?) -> DOM.Node {
+    /// One expansion/correction tooltip spans all its differently styled runs.
+    private func runContents(_ runs: [TEILine.Run], facsimileURL: String, tabStop: TEIWordPlace?) -> [DOM.Node] {
+      var groups: [(alternative: String, runs: [TEILine.Run])] = []
+      for run in runs {
+        if !run.alternative.isEmpty, groups.last?.alternative == run.alternative {
+          groups[groups.count - 1].runs.append(run)
+        } else { groups.append((run.alternative, [run])) }
+      }
+      return groups.flatMap { group in
+        if group.alternative.isEmpty {
+          return group.runs.map { runContent($0, facsimileURL: facsimileURL, tabStop: tabStop) }
+        }
+        return [TooltipView(tooltip: group.alternative, placement: .top, class: "tei-run-alternative") {
+          for run in group.runs { runContent(run, facsimileURL: facsimileURL, tabStop: tabStop, showAlternative: false) }
+        }.build()]
+      }
+    }
+
+    private func runContent(_ run: TEILine.Run, facsimileURL: String, tabStop: TEIWordPlace?, showAlternative: Bool = true) -> DOM.Node {
       switch run.kind {
       case .text:
         // A decorated initial with its box: the decoration cut from the
@@ -444,7 +462,7 @@
             span { run.text }.class("tei-initial-letter")
           }.class("tei-run tei-initial").data("rend", run.rend).addingAttribute("style", TEIRendition.css(from: run.rend)).build()
         }
-        if run.alternative.isEmpty {
+        if run.alternative.isEmpty || !showAlternative {
           let drawn = span { run.text }.class("tei-run").data("rend", run.rend).addingAttribute("style", TEIRendition.css(from: run.rend))
           return (run.preserved ? drawn.data("space", "preserve") : drawn).build()
         }
