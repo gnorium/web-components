@@ -115,7 +115,8 @@ public struct FieldDiffView: HTMLContent {
       "& [data-form-item-annotation][data-visible='false']"
     ) { display(.none) }
     // A diff the live edit draws inside a control's own box, under the
-    // control, spaced from it by the box's gap; hidden, it takes none.
+    // control, spaced from it by the box's gap, a field stack's (as
+    // `FieldView`'s); hidden, it takes none.
     selector(
       "& .text-input-control:has(> [data-form-item-annotation])",
       "& .dropdown-container:has(> [data-form-item-annotation])",
@@ -123,7 +124,7 @@ public struct FieldDiffView: HTMLContent {
     ) {
       display(.flex)
       flexDirection(.column)
-      gap(spacing4)
+      gap(spacing8)
     }
   }
 
@@ -204,12 +205,13 @@ public struct FieldDiffView: HTMLContent {
     }
     return wrapper
       .style {
-        // The field, then its diff line: a gap between, none once the
+        // The field, then its diff line: a field stack's gap between, as
+        // `FieldView`'s label, control and message have; none once the
         // slot is hidden.
         selector("&") {
           display(.flex)
           flexDirection(.column)
-          gap(spacing4)
+          gap(spacing8)
           minWidth(0)
         }
         selector("& > .field-diff-diff[data-visible='false']") {

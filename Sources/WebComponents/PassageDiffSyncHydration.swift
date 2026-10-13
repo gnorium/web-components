@@ -171,56 +171,88 @@ public enum PassageDiffSyncHydration {
       return result
     }
 
+    /// The pair's correspondence, as points of the two scrolled contents
+    /// (source, diff) that stand for the same place: both tops, each source
+    /// line's top with its own row's (an unchanged or inserted row, by
+    /// `data-diff-at`), the last line's end with the last row's, and both
+    /// ends. Between two points either side moves in proportion, so a
+    /// stretch only one side has—removed rows, lines outside the hunks—is
+    /// spread over its neighbors' span instead of leapt. Each point is past
+    /// the one before on both sides, so the mapping runs one way, without
+    /// steps.
+    func anchors(origin: Double, scale: Double, boxFrame: DOM.Rect) -> [(source: Double, diff: Double)] {
+      let lines = positions()
+      // Each line number's row top, -1 where it has none.
+      var rowTops = [Double](repeating: -1, count: lines.count + 1)
+      var lastBottom = 0.0
+      for row in box.querySelectorAll(".diff-row") {
+        guard let frame = row.getBoundingClientRect() else { continue }
+        lastBottom = box.scrollTop + frame.bottom - boxFrame.top
+        if stringEquals(row.getAttribute("data-diff-line") ?? "", "removed") { continue }
+        let number = parseInt(row.getAttribute("data-diff-at") ?? "") ?? 0
+        if number > 0, number < rowTops.count, rowTops[number] < 0 {
+          rowTops[number] = box.scrollTop + frame.top - boxFrame.top
+        }
+      }
+      let sourceEnd = port.scrollHeight, diffEnd = box.scrollHeight
+      var points: [(source: Double, diff: Double)] = [(0, 0)]
+      func add(_ source: Double, _ diff: Double) {
+        guard let last = points.last, source > last.source, diff > last.diff, source < sourceEnd, diff < diffEnd
+        else { return }
+        points.append((source, diff))
+      }
+      if lines.count > 1 {
+        for index in 0..<(lines.count - 1) {
+          if rowTops[index + 1] >= 0 { add(origin + lines[index] * scale, rowTops[index + 1]) }
+        }
+        add(origin + lines[lines.count - 1] * scale, lastBottom)
+      }
+      points.append((sourceEnd, diffEnd))
+      return points
+    }
+
+    /// `value` carried from one side's points to the other's: in proportion
+    /// within the span that holds it.
+    static func carry(_ value: Double, _ points: [(source: Double, diff: Double)], fromSource: Bool) -> Double {
+      guard let first = points.first, let last = points.last else { return value }
+      let from = { (point: (source: Double, diff: Double)) in fromSource ? point.source : point.diff }
+      let to = { (point: (source: Double, diff: Double)) in fromSource ? point.diff : point.source }
+      if value <= from(first) { return to(first) }
+      for index in 1..<points.count where value <= from(points[index]) {
+        let a = points[index - 1], b = points[index]
+        let span = from(b) - from(a)
+        return to(a) + (span > 0 ? (value - from(a)) / span : 1) * (to(b) - to(a))
+      }
+      return to(last)
+    }
+
+    /// The other side scrolled to the place the moved one shows. A side's
+    /// place is the point of its content at the same fraction of its
+    /// viewport as it has scrolled of its range (its top at the start, its
+    /// end at the end), so both ends meet, and carrying a place back gives
+    /// the scroll it came from.
     func synchronize() {
       presentation()
       guard source.clientWidth > 0, port.clientHeight > 0, box.clientHeight > 0,
         let sourceFrame = source.getBoundingClientRect(), let portFrame = port.getBoundingClientRect(),
-        let boxFrame = box.getBoundingClientRect() else { return }
-      let lines = positions()
-      let rows = box.querySelectorAll(".diff-row")
-      guard lines.count > 1, !rows.isEmpty else { return }
+        let boxFrame = box.getBoundingClientRect(), !box.querySelectorAll(".diff-row").isEmpty else { return }
       let scale = source.offsetWidth > 0 ? sourceFrame.width / source.offsetWidth : 1
       let padding = pixels(window.getComputedStyle(source).getPropertyValue("padding-top")) * scale
       let origin = source.id == port.id ? padding : port.scrollTop + sourceFrame.top - portFrame.top + padding
+      let points = anchors(origin: origin, scale: scale, boxFrame: boxFrame)
       let sourceRange = max(0, port.scrollHeight - port.clientHeight)
       let diffRange = max(0, box.scrollHeight - box.clientHeight)
       if fromSource {
         box.scrollLeft = port.scrollLeft
-        let progress = sourceRange > 0 ? port.scrollTop / sourceRange : 0
-        let y = max(0, (port.scrollTop + progress * port.clientHeight - origin) / max(0.01, scale))
-        var line = 0
-        for index in 0..<(lines.count - 1) where lines[index] <= y { line = index }
-        let fraction = min(1, max(0, (y - lines[line]) / max(1, lines[line + 1] - lines[line])))
-        var chosen = rows[0]
-        var distance = Int.max
-        for row in rows {
-          let number = parseInt(row.getAttribute("data-diff-at") ?? "") ?? 1
-          let delta = abs(number - line - 1)
-          if delta < distance || (delta == distance && !stringEquals(row.getAttribute("data-diff-line") ?? "", "removed")) {
-            distance = delta; chosen = row
-          }
-        }
-        guard let frame = chosen.getBoundingClientRect() else { return }
-        let focus = box.scrollTop + frame.top - boxFrame.top + fraction * frame.height
+        let place = port.scrollTop + (sourceRange > 0 ? port.scrollTop / sourceRange : 0) * port.clientHeight
+        let focus = Self.carry(place, points, fromSource: true)
         box.scrollTop = focus * diffRange / max(1, box.scrollHeight)
-        if sourceRange > 0, port.scrollTop >= sourceRange - 1 { box.scrollTop = diffRange }
-        else if port.scrollTop <= 1 { box.scrollTop = 0 }
         box.setAttribute("data-passage-scroll", doubleToString(box.scrollTop))
       } else {
         port.scrollLeft = box.scrollLeft
-        let progress = diffRange > 0 ? box.scrollTop / diffRange : 0
-        let focus = boxFrame.top + progress * box.clientHeight
-        var chosen = rows[0]
-        for row in rows {
-          if let frame = row.getBoundingClientRect(), frame.top <= focus + 1 { chosen = row }
-        }
-        guard let frame = chosen.getBoundingClientRect() else { return }
-        let index = max(0, min(lines.count - 2, (parseInt(chosen.getAttribute("data-diff-at") ?? "") ?? 1) - 1))
-        let fraction = max(0, min(1, (focus - frame.top) / max(1, frame.height)))
-        let sourceFocus = origin + (lines[index] + fraction * (lines[index + 1] - lines[index])) * scale
-        port.scrollTop = sourceFocus * sourceRange / max(1, port.scrollHeight)
-        if diffRange > 0, box.scrollTop >= diffRange - 1 { port.scrollTop = sourceRange }
-        else if box.scrollTop <= 1 { port.scrollTop = 0 }
+        let place = box.scrollTop + (diffRange > 0 ? box.scrollTop / diffRange : 0) * box.clientHeight
+        let focus = Self.carry(place, points, fromSource: false)
+        port.scrollTop = focus * sourceRange / max(1, port.scrollHeight)
         port.setAttribute("data-passage-scroll", doubleToString(port.scrollTop))
       }
     }
