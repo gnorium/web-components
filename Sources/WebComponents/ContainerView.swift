@@ -1,3 +1,10 @@
+import DesignTokens
+import WebTypes
+
+/// The page's side gutter: the inline padding `ContainerView` keeps from the
+/// viewport's edges, and the room a floating bubble (`TooltipView`) keeps too.
+public let pageGutter: CSS.LengthPercentage = clamp(spacing16, vw(5), spacing64)
+
 #if SERVER
   import CSSBuilder
   import CSSOMBuilder
@@ -45,8 +52,8 @@
           flexDirection(.column)
           flex(1)
           minHeight(0)
-          paddingInlineStart(clamp(spacing16, vw(5), spacing64))
-          paddingInlineEnd(clamp(spacing16, vw(5), spacing64))
+          paddingInlineStart(pageGutter)
+          paddingInlineEnd(pageGutter)
         }
         selector("&[data-size='medium']") { maxWidth(px(720)) }
         selector("&[data-size='large']") { maxWidth(px(960)) }

@@ -88,6 +88,23 @@ public struct TooltipView: HTMLContent {
       case .rightEnd: .leftEnd
       }
     }
+
+    /// The other alignment on the same side—start for end, end for start—
+    /// where the bubble goes when shifting it along its edge is not enough,
+    /// and what a start or end means once the line runs right to left.
+    public var mirrored: Placement {
+      switch self {
+      case .top, .bottom, .left, .right: self
+      case .topStart: .topEnd
+      case .topEnd: .topStart
+      case .bottomStart: .bottomEnd
+      case .bottomEnd: .bottomStart
+      case .leftStart: .leftEnd
+      case .leftEnd: .leftStart
+      case .rightStart: .rightEnd
+      case .rightEnd: .rightStart
+      }
+    }
   }
 
   /// How wide the bubble may grow. A sentence reads best at the standard
@@ -158,6 +175,22 @@ public struct TooltipView: HTMLContent {
         alignItems(.center)
         verticalAlign(.middle)
         cursor(.help)
+        // The room a bubble has: the viewport (less its scrollbar, which the
+        // hydration measures; `100vw` counts it) less the page's gutter on
+        // both sides.
+        CSS.Property("--tooltip-room", "calc(var(--tooltip-viewport-width, 100vw) - 2 * \(pageGutter.value))")
+      }
+      // Until the hydration moves it to <body>, the bubble sits in its
+      // trigger, where even a hidden box widens the page it runs past: it
+      // takes no box there until it shows.
+      selector("&.tooltip-trigger > .tooltip-content") {
+        display(.none)
+      }
+      selector(
+        "&.tooltip-trigger:hover > .tooltip-content", "&.tooltip-trigger:focus-within > .tooltip-content",
+        "&.tooltip-trigger[data-visible='true'] > .tooltip-content"
+      ) {
+        display(.block)
       }
       // Portal host: on hydration the bubble moves into one of these at the
       // end of <body>, a fixed point set from the trigger's rect. Inside the
@@ -172,6 +205,9 @@ public struct TooltipView: HTMLContent {
         margin(0)
         zIndex(zIndexTooltip)
         pointerEvents(.none)
+        // Inert on a box no wider than a point; the hydration reads the room
+        // back from here, resolved to pixels.
+        CSS.Property("max-width", "var(--tooltip-room)")
       }
       selector("& .tooltip-content") {
         position(.absolute)
@@ -180,8 +216,11 @@ public struct TooltipView: HTMLContent {
         // positioned box otherwise shrinks to the 20px trigger (or the 0px
         // portal host) and a one-sentence byline wrapped to five lines.
         width(.maxContent)
-        minWidth(px(256))
-        maxWidth(min(px(256), vw(100) - spacing16))
+        CSS.Property("min-width", "min(\(px(256).value), var(--tooltip-room))")
+        CSS.Property("max-width", "min(\(px(256).value), var(--tooltip-room))")
+        // A word longer than the room (a UUID on a phone) breaks rather
+        // than run past the bubble.
+        overflowWrap(.anywhere)
         backgroundColor(backgroundColorInverted)
         color(colorInverted)
         fontFamily(typographyFontSans)
@@ -210,8 +249,7 @@ public struct TooltipView: HTMLContent {
         fontSize(fontSizeMedium16).important()
       }
       selector("& .tooltip-content[data-width='wide']") {
-        maxWidth(calc("100vw - \(spacing16.value)"))
-        overflowWrap(.anywhere)
+        CSS.Property("max-width", "var(--tooltip-room)")
       }
       selector("& .tooltip-content[data-font='mono']") {
         fontFamily(typographyFontMono)
@@ -376,7 +414,8 @@ public struct TooltipView: HTMLContent {
     /// close it; the next click or tap does.
     private var pinned: Bool = false
 
-    /// Distance the bubble keeps from the viewport's edges.
+    /// Distance the bubble keeps from the viewport's top and bottom; at the
+    /// sides it keeps the page's gutter (`pageGutter`).
     private static let edgeMargin = 8.0
     /// Nearest the arrow may sit to the bubble's edge: the corner radius
     /// (16px) plus half the arrow (6px), so the corner never cuts into it.
@@ -422,13 +461,30 @@ public struct TooltipView: HTMLContent {
       self.host = host
     }
 
-    /// Anchor the host at the trigger for the requested placement, then pull
-    /// the bubble back inside the viewport: flipped to the other side when
-    /// there is no room above or below, shifted along an edge it crosses.
+    /// Anchor the host at the trigger, then keep the bubble inside the
+    /// viewport as floating-UI libraries do. Above or below: flipped to the
+    /// other side when its own has no room; shifted along its edge, clear of
+    /// the page's gutter, as far as its arrow can still point at the
+    /// trigger; failing that, flipped to the other alignment (end for
+    /// start); failing both, let into the gutter. Beside the trigger: shifted
+    /// back inside. Start and end are the trigger's line's: right to left, a
+    /// start-aligned bubble grows leftward from the trigger's right edge.
     private func place() {
       guard let host, let content, let t = trigger.getBoundingClientRect() else { return }
+      // The viewport less its scrollbar: `innerWidth` counts the bar, and a
+      // bubble run under it was cut off.
+      let root = document.documentElement
+      let viewportWidth = root.clientWidth
+      let viewportHeight = root.clientHeight
+      host.setStyleProperty("--tooltip-viewport-width", Self.px(viewportWidth))
+      let room = Self.pixels(window.getComputedStyle(host).getPropertyValue("max-width"))
+      let gutter = max(0, (viewportWidth - room) / 2)
       let margin = Self.edgeMargin
+      let rightToLeft = stringEquals(trigger.closest("[dir]")?.getAttribute("dir") ?? "", "rtl")
+      if rightToLeft { host.setAttribute("dir", "rtl") } else { host.removeAttribute("dir") }
       var placement = self.placement
+      if rightToLeft && (placement.side == .top || placement.side == .bottom) { placement = placement.mirrored }
+
       var (x, y) = Self.anchor(for: placement, trigger: t)
       _ = host.dataset["placement"] = placement.rawValue
       Self.position(host, x: x, y: y)
@@ -439,73 +495,83 @@ public struct TooltipView: HTMLContent {
         let overflows: Bool
         let roomOpposite: Bool
         if placement.side == .bottom {
-          overflows = c.bottom > window.innerHeight - margin
+          overflows = c.bottom > viewportHeight - margin
           roomOpposite = t.top - c.height - margin > 0
         } else {
           overflows = c.top < margin
-          roomOpposite = t.bottom + c.height + margin < window.innerHeight
+          roomOpposite = t.bottom + c.height + margin < viewportHeight
         }
-        if overflows && roomOpposite {
-          placement = placement.opposite
-          (x, y) = Self.anchor(for: placement, trigger: t)
-          _ = host.dataset["placement"] = placement.rawValue
-          Self.position(host, x: x, y: y)
-        }
-      case .left, .right:
-        break
-      }
+        if overflows && roomOpposite { placement = placement.opposite }
 
-      guard let placed = content.getBoundingClientRect() else { return }
-      var shiftX = 0.0
-      var shiftY = 0.0
-      if placed.left < margin {
-        shiftX = margin - placed.left
-      } else if placed.right > window.innerWidth - margin {
-        shiftX = window.innerWidth - margin - placed.right
-      }
-      switch placement.side {
-      case .left, .right:
-        if placed.top < margin {
-          shiftY = margin - placed.top
-        } else if placed.bottom > window.innerHeight - margin {
-          shiftY = window.innerHeight - margin - placed.bottom
+        // The first placement whose arrow, once shifted inside the bounds,
+        // still points at the trigger: inside the gutter, then inside the
+        // viewport itself.
+        let width = c.width
+        let center = t.left + t.width / 2
+        let inset = min(Self.arrowInset, width / 2)
+        var chosen = placement
+        var left = Self.left(of: placement, width: width, trigger: t, inset: inset, from: gutter, to: viewportWidth - gutter)
+        search: for bound in [gutter, 0.0] {
+          for candidate in [placement, placement.mirrored] {
+            let candidateLeft = Self.left(of: candidate, width: width, trigger: t, inset: inset, from: bound, to: viewportWidth - bound)
+            let arrow = center - candidateLeft
+            if arrow >= inset && arrow <= width - inset {
+              chosen = candidate
+              left = candidateLeft
+              break search
+            }
+          }
         }
-      case .top, .bottom:
-        break
-      }
-      var hostX = x + shiftX
-      let hostY = y + shiftY
-      if shiftX != 0 || shiftY != 0 {
-        Self.position(host, x: hostX, y: hostY)
-      }
-
-      // Point the arrow at the trigger's center. If that center lies inside
-      // the bubble's corner zone, slide the bubble—as far as the viewport
-      // allows—so the arrow sits just clear of the radius, over the trigger.
-      switch placement.side {
-      case .top, .bottom:
-        guard let bubble = content.getBoundingClientRect() else { return }
-        var arrowX = t.left + t.width / 2 - bubble.left
-        let inset = Self.arrowInset
-        if arrowX < inset {
-          let dx = min(inset - arrowX, max(0, bubble.left - margin))
-          hostX -= dx
-          arrowX += dx
-          Self.position(host, x: hostX, y: hostY)
-        } else if arrowX > bubble.width - inset {
-          let dx = min(arrowX - (bubble.width - inset), max(0, window.innerWidth - margin - bubble.right))
-          hostX += dx
-          arrowX -= dx
-          Self.position(host, x: hostX, y: hostY)
+        _ = host.dataset["placement"] = chosen.rawValue
+        switch chosen.alignment {
+        case .start: x = left
+        case .end: x = left + width
+        case .center: x = left + width / 2
         }
-        host.setStyleProperty("--tooltip-arrow-x", Self.px(arrowX))
+        Self.position(host, x: x, y: chosen.side == .top ? t.top : t.bottom)
+        host.setStyleProperty("--tooltip-arrow-x", Self.px(min(max(center - left, inset), width - inset)))
       case .left, .right:
-        break
+        if c.left < gutter {
+          x += gutter - c.left
+        } else if c.right > viewportWidth - gutter {
+          x += viewportWidth - gutter - c.right
+        }
+        if c.top < margin {
+          y += margin - c.top
+        } else if c.bottom > viewportHeight - margin {
+          y += viewportHeight - margin - c.bottom
+        }
+        Self.position(host, x: x, y: y)
       }
     }
 
+    /// Where a bubble `width` wide starts, above or below the trigger at
+    /// `placement`: its alignment's edge, moved as little as keeps the arrow
+    /// over the trigger's center clear of the corner radius, then shifted
+    /// inside `lower`…`upper`.
+    private static func left(
+      of placement: TooltipView.Placement, width: Double, trigger t: DOM.Rect, inset: Double,
+      from lower: Double, to upper: Double
+    ) -> Double {
+      let center = t.left + t.width / 2
+      var left: Double
+      switch placement.alignment {
+      case .start: left = t.left
+      case .end: left = t.right - width
+      case .center: left = center - width / 2
+      }
+      left = min(max(left, center - width + inset), center - inset)
+      if left + width > upper { left = upper - width }
+      if left < lower { left = lower }
+      return left
+    }
+
+    private static func pixels(_ value: String) -> Double { parseDouble(stringRemoveSuffix(value, "px")) ?? 0 }
+
+    /// Fractional, not rounded: the bubble's edge and its arrow are each
+    /// placed from it, and two roundings put the arrow a pixel off.
     private static func px(_ value: Double) -> String {
-      stringJoin([intToString(Int(value)), "px"], separator: "")
+      stringJoin([doubleToString(value), "px"], separator: "")
     }
 
     /// The point on the trigger's box that the placement CSS grows the
