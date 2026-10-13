@@ -141,6 +141,9 @@ public struct TextAreaView: HTMLContent {
         gap(spacing8)
       }
       descendant(".text-area-input") {
+        // A block: inline, it would sit on the line's baseline with a
+        // descender's gap under it.
+        display(.block)
         width(perc(100))
         // Inset 12 inside the border on every side, as TextInputView's.
         padding(spacing12)

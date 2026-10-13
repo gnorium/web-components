@@ -124,6 +124,9 @@
           overflow(.visible)
         }
         descendant("pre code") {
+          // A block, so its lines are its own 22: inline in the pre, the
+          // pre's taller strut would set every line in standards mode.
+          display(.block)
           backgroundColor(.transparent).important()
           padding(0).important()
           borderRadius(0)
