@@ -204,7 +204,7 @@ public struct DatePickerView: HTMLContent {
                     class: "date-picker-preset",
                     labelFontWeight: fontWeightNormal,
                     contentJustifyContent: .flexStart,
-                    borderRadius: borderRadiusBase,
+                    borderRadius: .base,
                     data: [("value", preset.value)]
                   )
                   .ariaPressed(stringEquals(preset.value, rangeParam))

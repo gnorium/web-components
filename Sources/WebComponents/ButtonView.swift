@@ -25,7 +25,7 @@ public struct ButtonView: HTMLContent {
   let labelFontFamily: CSS.FontFamily
   let contentJustifyContent: CSS.JustifyContent
   let style: @Sendable () -> [CSSOM.CSSRule]
-  let buttonBorderRadius: CSS.Length
+  let buttonBorderRadius: ButtonRadius
   var dataAttributes: [(String, String)]
   /// The id of the form this submits with, when it sits outside that form.
   var formID: String? = nil
@@ -64,6 +64,15 @@ public struct ButtonView: HTMLContent {
     case quiet
     /// Plain buttons—transparent, no background change on hover
     case plain
+  }
+
+  /// Button corner radius—one of the design system's radius tokens, named
+  /// after it, so the button's class reads `button-radius-base` etc.
+  public enum ButtonRadius: String, Sendable, CaseIterable {
+    case minimal, base, sharp, pill, circle
+
+    /// The semantic class keyed on this radius.
+    public var className: String { "button-radius-\(rawValue)" }
   }
 
   /// Button sizes
@@ -211,7 +220,7 @@ public struct ButtonView: HTMLContent {
     labelFontWeight: CSS.FontWeight = fontWeightSemiBold,
     labelFontFamily: CSS.FontFamily = typographyFontSans,
     contentJustifyContent: CSS.JustifyContent = .center,
-    borderRadius: CSS.Length = borderRadiusPill,
+    borderRadius: ButtonRadius = .pill,
     data: [(String, String)] = [],
     @CSSBuilder style: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] }
   ) {
@@ -252,7 +261,7 @@ public struct ButtonView: HTMLContent {
     labelFontWeight: CSS.FontWeight = fontWeightSemiBold,
     labelFontFamily: CSS.FontFamily = typographyFontSans,
     contentJustifyContent: CSS.JustifyContent = .center,
-    borderRadius: CSS.Length = borderRadiusPill,
+    borderRadius: ButtonRadius = .pill,
     data: [(String, String)] = [],
     @CSSBuilder style: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] }
   ) {
@@ -294,7 +303,7 @@ public struct ButtonView: HTMLContent {
     labelFontWeight: CSS.FontWeight = fontWeightSemiBold,
     labelFontFamily: CSS.FontFamily = typographyFontSans,
     contentJustifyContent: CSS.JustifyContent = .center,
-    borderRadius: CSS.Length = borderRadiusPill,
+    borderRadius: ButtonRadius = .pill,
     data: [(String, String)] = [],
     @CSSBuilder style: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] }
   ) {
@@ -337,7 +346,7 @@ public struct ButtonView: HTMLContent {
     labelFontWeight: CSS.FontWeight = fontWeightSemiBold,
     labelFontFamily: CSS.FontFamily = typographyFontSans,
     contentJustifyContent: CSS.JustifyContent = .center,
-    borderRadius: CSS.Length = borderRadiusPill,
+    borderRadius: ButtonRadius = .pill,
     data: [(String, String)] = [],
     @CSSBuilder style: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] },
     @HTMLBuilder content: () -> [DOM.Node]
@@ -435,7 +444,7 @@ public struct ButtonView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
-    let baseClasses = "button-view button-color-\(buttonColor.rawValue) button-weight-\(weight.rawValue) button-size-\(size.rawValue) \(borderRadiusClass)\(iconOnly ? " button-icon-only" : "")"
+    let baseClasses = "button-view button-color-\(buttonColor.rawValue) button-weight-\(weight.rawValue) button-size-\(size.rawValue) \(buttonBorderRadius.className)\(iconOnly ? " button-icon-only" : "")"
     let fullClass = stringIsEmpty(`class`) ? baseClasses : "\(baseClasses) \(`class`)"
 
     @HTMLBuilder
@@ -532,9 +541,12 @@ public struct ButtonView: HTMLContent {
           selector("&[data-font-weight='semibold']") {
             fontWeight(fontWeightSemiBold)
           }
-          if !stringEquals(buttonBorderRadius.value, borderRadiusPill.value) {
-            selector("&.\(borderRadiusClass)") { borderRadius(buttonBorderRadius) }
-          }
+          // Radius—static superset keyed on the token's class (cacheable);
+          // pill is the base rule's own.
+          selector("&.button-radius-minimal") { borderRadius(borderRadiusMinimal) }
+          selector("&.button-radius-base") { borderRadius(borderRadiusBase) }
+          selector("&.button-radius-sharp") { borderRadius(borderRadiusSharp) }
+          selector("&.button-radius-circle") { borderRadius(borderRadiusCircle) }
           // Variant—static superset via data-attributes (one instance emits all)
           selector("&[data-icon-only='true']") {
             display(.flex)
@@ -1378,9 +1390,12 @@ public struct ButtonView: HTMLContent {
           selector("&[data-font-weight='semibold']") {
             fontWeight(fontWeightSemiBold)
           }
-          if !stringEquals(buttonBorderRadius.value, borderRadiusPill.value) {
-            selector("&.\(borderRadiusClass)") { borderRadius(buttonBorderRadius) }
-          }
+          // Radius—static superset keyed on the token's class (cacheable);
+          // pill is the base rule's own.
+          selector("&.button-radius-minimal") { borderRadius(borderRadiusMinimal) }
+          selector("&.button-radius-base") { borderRadius(borderRadiusBase) }
+          selector("&.button-radius-sharp") { borderRadius(borderRadiusSharp) }
+          selector("&.button-radius-circle") { borderRadius(borderRadiusCircle) }
           // Variant—static superset via data-attributes (one instance emits all)
           selector("&[data-icon-only='true']") {
             display(.flex)
@@ -2158,17 +2173,6 @@ public struct ButtonView: HTMLContent {
   private var fontWeightKey: String {
     if stringEquals(labelFontWeight.value, fontWeightNormal.value) { return "normal" }
     return "semibold"
-  }
-
-  /// A stable CSS-safe identity lets any `CSS.Length` become a scoped,
-  /// cacheable selector instead of overwriting the shared `.button-view` rule.
-  private var borderRadiusClass: String {
-    var hash: UInt32 = 2_166_136_261
-    for byte in buttonBorderRadius.value.utf8 {
-      hash ^= UInt32(byte)
-      hash &*= 16_777_619
-    }
-    return "button-radius-\(int64ToString(Int64(hash), radix: 16))"
   }
 
   private var effectiveAriaLabel: String? {

@@ -83,7 +83,7 @@ public struct ToggleButtonView: HTMLContent {
         fullWidth: fullWidth,
         class: "",
         labelFontWeight: self.labelFontWeight,
-        borderRadius: borderRadiusPill
+        borderRadius: .pill
       ) {
         if let icon = icon {
           span { icon }

@@ -67,7 +67,7 @@ public struct DropdownView: HTMLContent {
   let textFontSize: CSS.Length
   let contentJustifyContent: CSS.JustifyContent
   let optionLayout: OptionLayout
-  let buttonBorderRadius: CSS.Length
+  let buttonBorderRadius: ButtonView.ButtonRadius
   let submitFormOnChange: Bool
   /// The id of the form its value submits with, when it sits outside that
   /// form.
@@ -118,7 +118,7 @@ public struct DropdownView: HTMLContent {
     fontSize: CSS.Length = fontSizeMedium16,
     contentJustifyContent: CSS.JustifyContent = .spaceBetween,
     optionLayout: OptionLayout = .inline,
-    buttonBorderRadius: CSS.Length = borderRadiusBase,
+    buttonBorderRadius: ButtonView.ButtonRadius = .base,
     submitFormOnChange: Bool = false,
     form: String? = nil,
     searchURL: String? = nil,
