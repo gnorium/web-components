@@ -37,15 +37,45 @@
       self.lined = lined
     }
 
+    /// Read-only syntax is included in the HTML so it does not depend on
+    /// visibility observers or the browser's Custom Highlight support.
+    private var syntaxTokens: [CodeSyntax.Token] {
+      guard let syntax else { return [] }
+      let grammar: CodeSyntax.Language = syntax == "xml" ? .xml : (syntax == "json" ? .json : .markdown)
+      return CodeSyntax.tokens(Array(text.utf8), language: grammar)
+    }
+
+    private func colored(_ range: Range<Int>, units: [UInt16], tokens: [CodeSyntax.Token]) -> [DOM.Node] {
+      guard let syntax else { return [DOM.Node.text(String(decoding: units[range], as: UTF16.self))] }
+      var nodes: [DOM.Node] = []
+      var cursor = range.lowerBound
+      for token in tokens where token.end > range.lowerBound && token.start < range.upperBound {
+        let start = max(cursor, token.start), end = min(range.upperBound, token.end)
+        if cursor < start { nodes.append(DOM.Node.text(String(decoding: units[cursor..<start], as: UTF16.self))) }
+        if start < end {
+          nodes.append(span { String(decoding: units[start..<end], as: UTF16.self) }.data("code-kind", token.kind.highlightName).build())
+          cursor = end
+        }
+      }
+      if cursor < range.upperBound { nodes.append(DOM.Node.text(String(decoding: units[cursor..<range.upperBound], as: UTF16.self))) }
+      return nodes
+    }
+
     /// Each line its own block (`lined`), its line feed in it, so the text
     /// reads, copies and edits as written.
     @HTMLBuilder
     private var linedContent: [DOM.Node] {
       let all = CodeLines.lines(of: text)
+      var offset = 0
+      let units = Array(text.utf16)
+      let tokens = syntaxTokens
       for (index, line) in all.enumerated() {
-        span { line.text + (index < all.count - 1 ? "\n" : "") }
+        let value = line.text + (index < all.count - 1 ? "\n" : "")
+        let end = offset + value.utf16.count
+        span { if editableLabel == nil { colored(offset..<end, units: units, tokens: tokens) } else { DOM.Node.text(value) } }
           .class("code-line")
           .style { customProperty("--indent", "\(line.indent)") }
+        offset = end
       }
     }
 
@@ -110,7 +140,7 @@
               .ariaLabel(editableLabel)
               .data("code-editing", "true")
           } else {
-            numbered
+            numbered.data("code-colored", "true")
           }
         } else if let editableLabel {
           // The colored text is the text edited: one layer, so a selection
@@ -128,7 +158,8 @@
             .ariaLabel(editableLabel)
             .data("code-editing", "true")
         } else {
-          syntaxed(code { text }.class("code-code language-\(language)"))
+          syntaxed(code { colored(0..<text.utf16.count, units: Array(text.utf16), tokens: syntaxTokens) }.class("code-code language-\(language)"))
+            .data("code-colored", "true")
         }
       }
       .class("code-view")

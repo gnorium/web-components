@@ -146,26 +146,26 @@ public struct ToggleButtonView: HTMLContent {
       // that merely toggles WHAT it does, not how it looks) was having its
       // white-on-blue label overridden back to colorBase regardless, which
       // read as black text on a blue pill.
-      selector("&[data-indicate-selection='true'][aria-pressed='false'] .button-view") {
+      selector("&[data-indicate-selection='true'][aria-pressed='false'] .button-view:not(:disabled)") {
         color(colorBase).important()
       }
-      selector("&[data-indicate-selection='true'][aria-pressed='false'] .button-view .button-label") {
+      selector("&[data-indicate-selection='true'][aria-pressed='false'] .button-view:not(:disabled) .button-label") {
         color(colorBase).important()
       }
-      selector("&[data-indicate-selection='true'][aria-pressed='false'] .button-view .button-icon") {
+      selector("&[data-indicate-selection='true'][aria-pressed='false'] .button-view:not(:disabled) .button-icon") {
         color(colorBase).important()
       }
 
       // On: solid blue pill (ColorScheme selected / “Light”).
-      selector("&[data-indicate-selection='true'][aria-pressed='true'] .button-view") {
+      selector("&[data-indicate-selection='true'][aria-pressed='true'] .button-view:not(:disabled)") {
         backgroundColor(backgroundColorBlue).important()
         borderColor(backgroundColorBlue).important()
         color(colorOnSolid).important()
       }
-      selector("&[data-indicate-selection='true'][aria-pressed='true'] .button-view .button-label") {
+      selector("&[data-indicate-selection='true'][aria-pressed='true'] .button-view:not(:disabled) .button-label") {
         color(colorOnSolid).important()
       }
-      selector("&[data-indicate-selection='true'][aria-pressed='true'] .button-view .button-icon") {
+      selector("&[data-indicate-selection='true'][aria-pressed='true'] .button-view:not(:disabled) .button-icon") {
         color(colorOnSolid).important()
       }
       selector(

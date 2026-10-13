@@ -8,6 +8,15 @@ import XCTest
 /// allows at that lightness. 3:1 against white is 7:1 against black, so two
 /// sets serve four schemes.
 final class NamedColorsTests: XCTestCase {
+  func testEditorLineMirrorsItsSurfaceContrast() {
+    let light = NamedColors.currentLineGray(.light)
+    let dark = NamedColors.currentLineGray(.dark)
+    XCTAssertEqual(light, 248)
+    XCTAssertEqual(dark, 10)
+    XCTAssertEqual(NamedColors.wcag(light, 255), NamedColors.wcag(dark, 0), accuracy: 0.005)
+    XCTAssertEqual(NamedColors.currentLineGray(.lightMoreContrast), light)
+    XCTAssertEqual(NamedColors.currentLineGray(.darkMoreContrast), dark)
+  }
   func testTheHuesStepThirtyDegreesFromRed() {
     XCTAssertEqual(
       NamedColors.names,

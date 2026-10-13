@@ -82,7 +82,7 @@
           position(.absolute)
           insetInlineStart(px(0))
           insetInlineEnd(px(0))
-          backgroundColor(backgroundColorNeutralSubtle)
+          backgroundColor(backgroundColorCurrentLine)
           pointerEvents(.none)
         }
         descendant(".code-view[data-current-line='true'] .code-current-line") {

@@ -515,13 +515,11 @@ public struct ButtonView: HTMLContent {
               cursor(cursorNotAllowed).important()
             }
 
-            // Icon hover color when button is disabled
-            pseudoClass(.disabled) {
-              descendant(".icon-view") {
-                pseudoClass(.hover) {
-                  color(colorDisabled).important()
-                }
-              }
+            // Disabled icons keep the same muted color under the pointer.
+            // Include the wrapper: toggle styles otherwise give it an active
+            // foreground until the pointer reaches the inner icon.
+            selector("&:disabled .button-icon", "&:disabled .button-label", "&:disabled .icon-view") {
+              color(colorDisabled).important()
             }
 
             // Apply custom styles block
@@ -1363,13 +1361,11 @@ public struct ButtonView: HTMLContent {
               cursor(cursorNotAllowed).important()
             }
 
-            // Icon hover color when button is disabled
-            pseudoClass(.disabled) {
-              descendant(".icon-view") {
-                pseudoClass(.hover) {
-                  color(colorDisabled).important()
-                }
-              }
+            // Disabled icons keep the same muted color under the pointer.
+            // Include the wrapper: toggle styles otherwise give it an active
+            // foreground until the pointer reaches the inner icon.
+            selector("&:disabled .button-icon", "&:disabled .button-label", "&:disabled .icon-view") {
+              color(colorDisabled).important()
             }
 
             // Apply custom styles block

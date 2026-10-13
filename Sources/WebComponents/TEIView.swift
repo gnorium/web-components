@@ -519,6 +519,19 @@
     /// Reflow off side by side, in the document's `direction`, so the
     /// text looks like the image beside it; with Reflow on one after the
     /// other.
+    private func columnLayout(_ lines: [TEILine], facsimileURL: String, label: String, tabStop: TEIWordPlace?) -> [DOM.Node] {
+      let columns = Array(Set(lines.map(\.column).filter { $0 > 0 })).sorted()
+      guard columns.count > 1 else { return laidOut(lines, facsimileURL: facsimileURL, label: label, tabStop: tabStop) }
+      return laidOut(lines.filter { $0.column == 0 }, facsimileURL: facsimileURL, label: label, tabStop: tabStop) + [
+        div {
+          for column in columns {
+            div { laidOut(lines.filter { $0.column == column }, facsimileURL: facsimileURL, label: label, tabStop: tabStop) }
+              .class("tei-column")
+          }
+        }.class("tei-columns").build()
+      ]
+    }
+
     private func rendered(
       _ lines: [TEILine], heading: String?, direction: String?, facsimileURL: String, label: String,
       tabStop: TEIWordPlace? = nil
@@ -528,7 +541,8 @@
       }
       let pages = Self.spreadPages(of: lines)
       guard pages.count > 1 else {
-        return (heading.map { [mark($0)] } ?? []) + laidOut(lines, facsimileURL: facsimileURL, label: label, tabStop: tabStop)
+        let content = labelsPages ? lines : lines.filter { if case .mark = $0.kind { false } else { true } }
+        return (heading.map { [mark($0)] } ?? []) + columnLayout(content, facsimileURL: facsimileURL, label: label, tabStop: tabStop)
       }
       let spread = div {
         for (index, page) in pages.enumerated() {
@@ -538,8 +552,10 @@
           let headed = index > 0 || page.first.map { if case .mark = $0.kind { true } else { false } } ?? false
           let text = heading ?? label
           div {
-            laidOut(
-              headed ? page : [TEILine(kind: .mark, text: text.isEmpty ? "—" : text)] + page,
+            columnLayout(
+              labelsPages
+                ? (headed ? page : [TEILine(kind: .mark, text: text.isEmpty ? "—" : text)] + page)
+                : page.filter { if case .mark = $0.kind { false } else { true } },
               facsimileURL: facsimileURL, label: label, tabStop: tabStop)
           }
           .class("tei-spread-page")
@@ -708,7 +724,7 @@
                 }
               }
             }
-          }.class("tei-table")
+          }.class("tei-table").data("table-type", source.type)
         }.class("tei-table-scroll").build()
       case .text:
         // Whether the break before it falls inside a word (`<lb
@@ -989,6 +1005,24 @@
           display(.block)
           whiteSpace(.nowrap)
         }
+        // A printed contents table has alignment columns, not UI grid edges.
+        selector("& .tei-table[data-table-type='contents']") {
+          width(perc(100))
+        }
+        selector("& .tei-table[data-table-type='contents'] td", "& .tei-table[data-table-type='contents'] th") {
+          border(.none)
+          padding(spacing2, spacing0)
+          fontWeight(.inherit)
+          verticalAlign(.top)
+        }
+        selector("& .tei-table[data-table-type='contents'] td:last-child", "& .tei-table[data-table-type='contents'] th:last-child") {
+          textAlign(.end)
+          whiteSpace(.nowrap)
+          paddingInlineStart(spacing16)
+        }
+        selector("& .tei-table[data-table-type='contents'] td > .tei-line", "& .tei-table[data-table-type='contents'] th > .tei-line") {
+          whiteSpace(.inherit)
+        }
         descendant(".tei-document-boundary") {
           width(perc(100))
           border(.none)
@@ -1026,7 +1060,8 @@
         for level in 1...6 {
           selector(
             "& .tei-block[data-rend~='indent(\(level))']",
-            "& .tei-section > .tei-line[data-rend~='indent(\(level))']"
+            "& .tei-section > .tei-line[data-rend~='indent(\(level))']",
+            "& .tei-table .tei-line[data-rend~='indent(\(level))']"
           ) {
             CSS.Property("padding-inline-start", "calc(\(level) * \(spacing24.value))")
           }
@@ -1062,15 +1097,10 @@
         selector("& .tei-page-text:not([data-reflow='true'] *) .tei-block > :first-child") {
           CSS.Property("text-indent", "inherit")
         }
-        // A printed prose line runs to both edges of its block, as the
-        // compositor set it, so its words stand near where the scan has
-        // them (user, 2026-10-12): every line of a block but its last—the
-        // paragraph's end—justified to the block's width. Not a block or a
-        // line set by its own alignment, nor a verse line, a heading, a
-        // speech prefix or a stage direction (a line of their own, or no
-        // plain text line). Reflowed, lines are justified as a paragraph's.
+        // Only explicitly justified text expands its word spacing.
         selector(
-          "& .tei-page-text:not([data-reflow='true'] *) .tei-block:not([data-rend*='align(']) > [class='tei-line']:not(:last-child):not([data-rend*='align('])"
+          "& .tei-page-text:not([data-reflow='true'] *) .tei-block[data-rend~='align(justify)'] > [class='tei-line']:not(:last-child)",
+          "& .tei-page-text:not([data-reflow='true'] *) .tei-line[data-rend~='align(justify)']"
         ) {
           textAlign(.justify)
           CSS.Property("text-align-last", "justify")
@@ -1107,7 +1137,7 @@
         }
         // A spread's pages (`rendered`), each set as a page is; reflowed,
         // one after the other a paragraph's space apart.
-        selector("& .tei-spread", "& .tei-spread-page") {
+        selector("& .tei-spread", "& .tei-spread-page", "& .tei-columns", "& .tei-column") {
           display(.flex)
           flexDirection(.column)
           gap(spacing16)
@@ -1116,7 +1146,7 @@
         // Reflow off, side by side as the image has them, in its direction
         // (the spread's `dir`): one column a page, all as wide as the widest
         // page's lines, filling the pane where they are narrower.
-        selector("& .tei-page-text:not([data-reflow='true'] *) .tei-spread") {
+        selector("& .tei-page-text:not([data-reflow='true'] *) .tei-spread", "& .tei-page-text:not([data-reflow='true'] *) .tei-columns") {
           display(.grid)
           CSS.Property("grid-auto-flow", "column")
           CSS.Property("grid-auto-columns", "1fr")

@@ -118,14 +118,23 @@ public enum CodeSyntax {
     @CSSBuilder
     public static func highlightCSS(_ scope: String) -> [CSSOM.CSSRule] {
       selector("\(scope)::highlight(code-tag)") { color(syntaxPlainText) }
+      selector("\(scope) [data-code-kind='code-tag']") { color(syntaxPlainText) }
       selector("\(scope)::highlight(code-name)") { color(syntaxKeywords) }
+      selector("\(scope) [data-code-kind='code-name']") { color(syntaxKeywords) }
       selector("\(scope)::highlight(code-attr)") { color(syntaxAttributes) }
+      selector("\(scope) [data-code-kind='code-attr']") { color(syntaxAttributes) }
       selector("\(scope)::highlight(code-value)") { color(syntaxStrings) }
+      selector("\(scope) [data-code-kind='code-value']") { color(syntaxStrings) }
       selector("\(scope)::highlight(code-entity)") { color(syntaxCharacters) }
+      selector("\(scope) [data-code-kind='code-entity']") { color(syntaxCharacters) }
       selector("\(scope)::highlight(code-prefix)") { color(syntaxOtherTypeNames) }
+      selector("\(scope) [data-code-kind='code-prefix']") { color(syntaxOtherTypeNames) }
       selector("\(scope)::highlight(code-pi)") { color(syntaxPreprocessorStatements) }
+      selector("\(scope) [data-code-kind='code-pi']") { color(syntaxPreprocessorStatements) }
       selector("\(scope)::highlight(code-cdata)") { color(syntaxOtherConstants) }
+      selector("\(scope) [data-code-kind='code-cdata']") { color(syntaxOtherConstants) }
       selector("\(scope)::highlight(code-comment)") { color(syntaxComments) }
+      selector("\(scope) [data-code-kind='code-comment']") { color(syntaxComments) }
     }
   #endif
 }
