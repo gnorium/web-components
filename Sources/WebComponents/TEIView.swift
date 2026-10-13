@@ -663,7 +663,7 @@
                   if index > 0 { line.joinsPrevious ? "" : " " }
                   renderingLine(line, facsimileURL: facsimileURL, label: label, tabStop: tabStop, inStyledBlock: true)
                 }
-              }.class("tei-block").data("rend", lines[0].rend).addingAttribute(
+              }.class("tei-block").data("rend", lines[0].rend).data("part", lines[0].part).addingAttribute(
                 "style",
                 TEIRendition.css(
                   from: columns.isEmpty ? lines[0].rend : TEIRendition.inColumns(lines[0].rend, of: columns)))
@@ -835,35 +835,19 @@
       return printed.count >= 2 ? (title, dots) : nil
     }
 
-    /// How many of a leader's dots are drawn: more than the widest contents
-    /// column holds; the ones before the title are cut off.
-    static let leaderLength = 160
-
-    /// A contents title line, its printed dots drawn as a leader (user,
-    /// 2026-10-13): a fill from the title to the cell's far edge, its dots
-    /// at their printed pitch—the dot run's own `letter-spacing` and
-    /// `word-spacing`, else its type's natural spacing—counted from that
-    /// edge, so the dots of every row stand in the same columns, as a
-    /// tab leader sets them. The TEI's dots stay the text (found, copied),
-    /// drawn clear beneath the fill.
+    /// A contents title line, its printed dots set as a leader (user,
+    /// 2026-10-13): exactly the dots the TEI has, at their printed pitch
+    /// (the dot run's own `letter-spacing` and `word-spacing`, else its
+    /// type's natural spacing), set from the cell's far edge, so the dots of
+    /// every row stand in the same columns, as printed. Nothing is drawn
+    /// that the page does not print, and nothing printed is dropped.
     private func leadered(
       _ line: TEILine, _ leader: (title: [TEILine.Run], dots: [TEILine.Run]), facsimileURL: String,
       tabStop: TEIWordPlace?
     ) -> DOM.Node {
-      // The space the TEI sets between its dots and a dot, repeated: the
-      // fill ends in a dot at the cell's edge, as the printed run does.
-      let printed = Array(leader.dots.map(\.text).joined())
-      let first = printed.firstIndex(where: Self.leaderDots.contains) ?? 0
-      let dot = printed.indices.contains(first) ? String(printed[first]) : "."
-      let space = printed.dropFirst(first + 1).first(where: \.isWhitespace).map(String.init) ?? ""
-      let unit = space + dot
-      let rend = leader.dots.last?.rend ?? ""
-      return span {
+      span {
         span { markedContent(leader.title, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-leader-title")
-        span { markedContent(leader.dots, facsimileURL: facsimileURL, tabStop: tabStop) }
-          .class("tei-leader")
-          .data("leader", String(repeating: unit, count: Self.leaderLength))
-          .addingAttribute("style", TEIRendition.css(from: rend))
+        span { markedContent(leader.dots, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-leader")
       }
       .class("tei-line tei-line-leadered").data("rend", line.rend)
       .addingAttribute("style", TEIRendition.css(from: line.rend))
@@ -1150,46 +1134,57 @@
           border(.none)
           padding(spacing2, spacing0)
           fontWeight(.inherit)
-          // A page reference stands on its title's last line, as printed.
-          verticalAlign(.bottom)
+          // A label, a numeral and a title stand on one first line.
+          verticalAlign(.baseline)
+        }
+        // A column that labels or numbers its entries ("APPENDIX:", "IV.")
+        // is as wide as its content; the titles' leaders take the rest.
+        selector(
+          "& .tei-table[data-table-type='contents'] td:not(:last-child):not(:has(> .tei-line-leadered))",
+          "& .tei-table[data-table-type='contents'] th:not(:last-child):not(:has(> .tei-line-leadered))"
+        ) {
+          width(0)
+        }
+
+        // A label row (PAGE over the page references) is set solid over the
+        // row it heads, as printed: no cell padding between them, and that
+        // row's half-leading above its first line trimmed (`text-box-trim`),
+        // so the label stands its own line's height above the first entry.
+        selector("& .tei-table[data-table-type='contents'] tr:not(:has(> td)) > th") {
+          paddingBlockEnd(spacing0)
+        }
+        selector("& .tei-table[data-table-type='contents'] tr:not(:has(> td)) + tr > *") {
+          paddingBlockStart(spacing0)
+        }
+        selector(
+          "& .tei-table[data-table-type='contents'] tr:not(:has(> td)) + tr > *",
+          "& .tei-table[data-table-type='contents'] tr:not(:has(> td)) + tr > * > .tei-line-leadered > *"
+        ) {
+          CSS.Property("text-box", "trim-start text")
         }
         selector("& .tei-table[data-table-type='contents'] td:last-child", "& .tei-table[data-table-type='contents'] th:last-child") {
           textAlign(.end)
           whiteSpace(.nowrap)
+          // A page reference stands on its title's last line, as printed.
+          verticalAlign(.bottom)
         }
         selector("& .tei-table[data-table-type='contents'] td > .tei-line", "& .tei-table[data-table-type='contents'] th > .tei-line") {
           whiteSpace(.inherit)
         }
-        // A contents title's printed leader (`leadered`): the title, then a
-        // fill to the cell's far edge, its dots counted from that edge, so
-        // every row's stand in the same columns.
+        // A contents title's printed leader (`leadered`): the title, then
+        // its dots set from the cell's far edge, so every row's stand in the
+        // same columns.
         selector("& .tei-table td > .tei-line.tei-line-leadered", "& .tei-table th > .tei-line.tei-line-leadered") {
           display(.flex)
           alignItems(.baseline)
         }
         descendant(".tei-leader-title") {
           flexShrink(0)
-          maxWidth(perc(100))
         }
         descendant(".tei-leader") {
-          position(.relative)
-          // A fill: no width of its own, so its dots never widen the column.
-          CSS.Property("flex", "1 1 0")
-          width(0)
-          minWidth(0)
-          overflow(.hidden)
+          CSS.Property("flex", "1 0 auto")
+          textAlign(.end)
           whiteSpace(.nowrap)
-        }
-        // The TEI's own dots: the text, drawn clear under the fill.
-        selector("& .tei-leader > *") {
-          color(.transparent)
-        }
-        selector("& .tei-leader::after") {
-          CSS.Property("content", "attr(data-leader)")
-          position(.absolute)
-          CSS.Property("inset-block-start", "0")
-          CSS.Property("inset-inline-end", "0")
-          color(colorBase)
         }
         // A printed rule, 1px in the text's ink; its measure, its margins
         // and its alignment its rend's.
@@ -1233,15 +1228,19 @@
         }
         selector(
           "& .tei-block[data-rend~='align(left)']", "& .tei-section > .tei-line[data-rend~='align(left)']",
+          "& .tei-table :is(td, th) > .tei-line[data-rend~='align(left)']",
           "& .tei-block[data-rend~='align(right)']:dir(rtl)",
-          "& .tei-section > .tei-line[data-rend~='align(right)']:dir(rtl)"
+          "& .tei-section > .tei-line[data-rend~='align(right)']:dir(rtl)",
+          "& .tei-table :is(td, th) > .tei-line[data-rend~='align(right)']:dir(rtl)"
         ) {
           textAlign(.start)
         }
         selector(
           "& .tei-block[data-rend~='align(right)']", "& .tei-section > .tei-line[data-rend~='align(right)']",
+          "& .tei-table :is(td, th) > .tei-line[data-rend~='align(right)']",
           "& .tei-block[data-rend~='align(left)']:dir(rtl)",
-          "& .tei-section > .tei-line[data-rend~='align(left)']:dir(rtl)"
+          "& .tei-section > .tei-line[data-rend~='align(left)']:dir(rtl)",
+          "& .tei-table :is(td, th) > .tei-line[data-rend~='align(left)']:dir(rtl)"
         ) {
           textAlign(.end)
         }
@@ -1278,6 +1277,14 @@
           whiteSpace(.nowrap)
           overflowX(.auto)
         }
+        // Its lines set on the page's own measure, never a narrower pane's:
+        // a page is 40em wide (`layout_measure`'s page-em, the canonical
+        // render's 640px), its margins the TEI's within it, so a pane too
+        // narrow scrolls the page whole rather than running its long lines
+        // into the margin on one side only.
+        selector("& .tei-page-text:not([data-reflow='true'] *) > *") {
+          CSS.Property("min-inline-size", "calc(\(size640.value) - 2 * \(spacing16.value))")
+        }
         selector("& .tei-page-text:not([data-reflow='true'] *) .tei-block > *") {
           display(.block)
           CSS.Property("text-indent", "0")
@@ -1287,9 +1294,12 @@
         }
         // Only explicitly justified text expands its word spacing, and a
         // block's last line keeps its natural width, as printed: its lines
-        // carry its rend, so the rule is the block's, never a line's.
+        // carry its rend, so the rule is the block's, never a line's. A
+        // paragraph that runs on to the next page (`<p part="I|M">`) sets
+        // its last line here full, as the lines before it.
         selector(
-          "& .tei-page-text:not([data-reflow='true'] *) .tei-block[data-rend~='align(justify)'] > .tei-line:not(:last-child)"
+          "& .tei-page-text:not([data-reflow='true'] *) .tei-block[data-rend~='align(justify)'] > .tei-line:not(:last-child)",
+          "& .tei-page-text:not([data-reflow='true'] *) .tei-block[data-rend~='align(justify)']:is([data-part='I'], [data-part='M']) > .tei-line"
         ) {
           textAlign(.justify)
           CSS.Property("text-align-last", "justify")
