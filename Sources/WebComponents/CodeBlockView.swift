@@ -44,6 +44,11 @@
           width(perc(100))
           maxWidth(perc(100))
           alignSelf(.stretch)
+          // Never squeezed by a capped flex column (a prompt's rendering
+          // scrolls at 256): `overflow: hidden` drops a flex item's automatic
+          // minimum height, so the frame shrank and clipped its body's
+          // bottom padding. The column scrolls instead.
+          flexShrink(0)
           boxSizing(.borderBox)
           margin(0)
           border(borderWidthBase, .solid, borderColorSubtle)
