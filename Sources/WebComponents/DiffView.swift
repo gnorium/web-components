@@ -407,7 +407,7 @@ public struct DiffView: HTMLContent {
         padding(0)
       }
       selector("& .diff-box > .diff-lines > .diff-row") {
-        paddingInline(spacing16)
+        paddingInlineStart(spacing8)
       }
       descendant(".diff-sign") {
         flexShrink(0)
