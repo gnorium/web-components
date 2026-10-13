@@ -136,6 +136,32 @@
       }.joined(separator: ";")
     }
 
+    /// A page's measured text block (`TEIPage.textBlock`): its four corners
+    /// on its scan, clockwise from the top-left, each "x,y" in the 0–1000
+    /// space over the image, one a space; "" where it was not measured.
+    static func textBlockData(of page: TEIPage) -> String {
+      guard let fractions = page.textBlock?.fractions, fractions.count == 8 else { return "" }
+      return stride(from: 0, to: 8, by: 2).map {
+        // Hundredths of the space: finer than a scan's pixel.
+        number((fractions[$0] * 100_000).rounded() / 100) + "," + number((fractions[$0 + 1] * 100_000).rounded() / 100)
+      }.joined(separator: " ")
+    }
+
+    /// A length in page-em (1em the page's width over
+    /// `TEIRenderer.pageEms`, the canonical render's 640px page's 16px).
+    static func pageEm(_ value: String) -> String {
+      "calc(\(value) * \(size640.value) / \(number(TEIRenderer.pageEms)))"
+    }
+
+    /// The frame's measure and margin in page-em, as the custom properties
+    /// its rule reads (`.tei-text-block`).
+    static func frameStyle(_ frame: (measure: Double, height: Double)) -> String {
+      // Ten-thousandths of an em: finer than a device pixel.
+      func rounded(_ value: Double) -> String { number((value * 10_000).rounded() / 10_000) }
+      return "--tei-frame-measure: \(rounded(frame.measure));"
+        + " --tei-frame-margin: \(rounded(TEIRenderer.frameMargin(measure: frame.measure)))"
+    }
+
     /// A page's markup as the lines a diff compares: each line's runs with
     /// their setting, a formula whole, a figure by its caption and region, a
     /// page turn inside the image as a line of its own. White space that only
@@ -866,14 +892,28 @@
         }
         for (index, page) in pages.enumerated() where self.page == nil || self.page == index {
           let tabStop = glossURL == nil ? nil : Self.firstWord(of: page.lines)
+          let frame = page.frame
           div {
             div {
-              rendered(
-                page.lines, heading: labelsPages ? page.label : nil, direction: direction,
-                facsimileURL: page.facsimileURL, label: page.label, tabStop: tabStop)
+              if let frame {
+                // The work's frame, its body pages' text block: the page's
+                // text set in it, an equal margin around it on every side.
+                div {
+                  rendered(
+                    page.lines, heading: labelsPages ? page.label : nil, direction: direction,
+                    facsimileURL: page.facsimileURL, label: page.label, tabStop: tabStop)
+                }
+                .class("tei-text-block")
+                .addingAttribute("style", Self.frameStyle(frame))
+              } else {
+                rendered(
+                  page.lines, heading: labelsPages ? page.label : nil, direction: direction,
+                  facsimileURL: page.facsimileURL, label: page.label, tabStop: tabStop)
+              }
             }
             .class("tei-page-text")
             .data("layer", "rendering")
+            .data("framed", frame != nil)
 
             div {
               if editable {
@@ -948,6 +988,9 @@
           // The zones its markup names, for the reader to draw on its
           // canvas as the caret or the pointer comes to them in Raw.
           .data("zones", Self.zoneData(of: page))
+          // Its text block's corners on its scan, for the reader's overlay
+          // to lay the scan under the text by.
+          .data("text-block", Self.textBlockData(of: page))
           // Its place in the document, from 0: what the reader turns to and
           // a roster names it by, where not every page is drawn.
           .data("page-index", index + firstIndex)
@@ -1276,6 +1319,28 @@
         selector("& .tei-page-text:not([data-reflow='true'] *)") {
           whiteSpace(.nowrap)
           overflowX(.auto)
+        }
+        // A page set in its work's frame (`TEIPage.frame`): the frame's
+        // measure in page-em (`TEIRenderer.pageEms` to the page), the same
+        // margin (`TEIRenderer.frameMargin`) at its sides and above it, in
+        // place of the layer's inset. Below it, what the page's own
+        // proportions leave (its canvas's aspect sets the page's height):
+        // the frame's height on a body page, so its margins are equal all
+        // round there, and never a page made taller than its canvas by a
+        // frame its text does not fill (user, 2026-10-13). Reflowed, the
+        // text runs on in the pane.
+        selector("& .tei-page-text[data-framed='true']:not([data-reflow='true'] *)") {
+          padding(0)
+        }
+        selector("& .tei-page-text:not([data-reflow='true'] *) > .tei-text-block") {
+          display(.flex)
+          flexDirection(.column)
+          flexShrink(0)
+          boxSizing(.contentBox)
+          CSS.Property("inline-size", Self.pageEm("var(--tei-frame-measure)"))
+          CSS.Property("min-inline-size", "0")
+          CSS.Property("margin", Self.pageEm("var(--tei-frame-margin)"))
+          CSS.Property("margin-block-end", "0")
         }
         // Its lines set on the page's own measure, never a narrower pane's:
         // a page is 40em wide (`layout_measure`'s page-em, the canonical
