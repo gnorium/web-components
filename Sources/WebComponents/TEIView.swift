@@ -169,6 +169,7 @@
         case .documentBoundary: return "boundary"
         case .note: return "note"
         case .space: return "space"
+        case .rule: return "rule"
         }
       }
       func runs(_ line: TEILine) -> [DiffEngine.Token] {
@@ -200,7 +201,9 @@
         case .mark, .documentBoundary:
           out.append(.init(tokens: [.init(text: line.text)], role: role(line.kind)))
         case .space(let quantity, let unit):
-          out.append(.init(tokens: [.init(text: "[space: \(quantity) \(unit)]")], role: role(line.kind)))
+          out.append(.init(tokens: [.init(text: "[space: \(Self.number(quantity)) \(unit)]")], role: role(line.kind)))
+        case .rule:
+          out.append(.init(tokens: [.init(text: "[rule]")], role: role(line.kind)))
         case .table(let table):
           // A table reads as its caption, then row by row, a cell's lines run
           // together.
@@ -540,13 +543,24 @@
     private func columnLayout(_ lines: [TEILine], facsimileURL: String, label: String, tabStop: TEIWordPlace?) -> [DOM.Node] {
       let columns = Array(Set(lines.map(\.column).filter { $0 > 0 })).sorted()
       guard columns.count > 1 else { return laidOut(lines, facsimileURL: facsimileURL, label: label, tabStop: tabStop) }
+      // The columns stand in the element holding their `<cb/>`s (a
+      // footnote, a division): its column gap between them, its inline
+      // margins around them, as CSS sets a multi-column box; its blocks'
+      // margins are then the rest of their own.
+      let container = lines.first { $0.column > 0 }?.columnRend ?? ""
+      let style = (TEIRendition.columnGap(of: container).map { "column-gap:\($0);" } ?? "")
+        + TEIRendition.columnMargins(of: container)
       return laidOut(lines.filter { $0.column == 0 }, facsimileURL: facsimileURL, label: label, tabStop: tabStop) + [
         div {
           for column in columns {
-            div { laidOut(lines.filter { $0.column == column }, facsimileURL: facsimileURL, label: label, tabStop: tabStop) }
-              .class("tei-column")
+            div {
+              laidOut(
+                lines.filter { $0.column == column }, facsimileURL: facsimileURL, label: label, tabStop: tabStop,
+                columns: container)
+            }
+            .class("tei-column")
           }
-        }.class("tei-columns").build()
+        }.class("tei-columns").addingAttribute("style", style).build()
       ]
     }
 
@@ -588,9 +602,9 @@
     /// paragraph (`TEILine.opensParagraph`), as a TEI reader sets a `<p>`
     /// (user, 2026-10-11). The markup's own layer and its translation's
     /// alike.
-    private func laidOut(_ lines: [TEILine], facsimileURL: String, label: String, tabStop: TEIWordPlace? = nil)
-      -> [DOM.Node]
-    {
+    private func laidOut(
+      _ lines: [TEILine], facsimileURL: String, label: String, tabStop: TEIWordPlace? = nil, columns: String = ""
+    ) -> [DOM.Node] {
       // Runs of lines one frame sets (an epigraph's), each its sections.
       var frames: [(frame: String, sections: [[LaidOut]])] = []
       for item in Self.layout(of: lines) {
@@ -609,16 +623,29 @@
         }
       }
       return frames.flatMap { run -> [DOM.Node] in
-        let sections = sectioned(run.sections, facsimileURL: facsimileURL, label: label, tabStop: tabStop)
+        let sections = sectioned(
+          run.sections, facsimileURL: facsimileURL, label: label, tabStop: tabStop, columns: columns)
         guard !run.frame.isEmpty else { return sections }
-        return [div { sections }.class("tei-frame").data("rend", run.frame).build()]
+        // Its own box only (a printed frame's rule, inset and measure, its
+        // margins): its lines carry the rest of their setting.
+        return [
+          div { sections }.class("tei-frame").data("rend", run.frame)
+            .addingAttribute("style", TEIRendition.css(from: run.frame, only: Self.frameBox)).build()
+        ]
       }
     }
 
-    /// Sections of laid-out lines, each its own block (`laidOut`).
-    private func sectioned(_ sections: [[LaidOut]], facsimileURL: String, label: String, tabStop: TEIWordPlace?)
-      -> [DOM.Node]
-    {
+    /// What a frame draws of its rend: its box (`TEIRendition.frame(of:)`).
+    static let frameBox = TEIRendition.frameProperties.union([
+      "margin-left", "margin-right", "margin-inline-start", "margin-inline-end", "margin-top", "margin-bottom",
+      "margin-block-start", "margin-block-end",
+    ])
+
+    /// Sections of laid-out lines, each its own block (`laidOut`); in
+    /// columns, the setting of the element they stand in (`columnLayout`).
+    private func sectioned(
+      _ sections: [[LaidOut]], facsimileURL: String, label: String, tabStop: TEIWordPlace?, columns: String = ""
+    ) -> [DOM.Node] {
       sections.map { items in
         div {
           for item in items {
@@ -636,7 +663,10 @@
                   if index > 0 { line.joinsPrevious ? "" : " " }
                   renderingLine(line, facsimileURL: facsimileURL, label: label, tabStop: tabStop, inStyledBlock: true)
                 }
-              }.class("tei-block").data("rend", lines[0].rend).addingAttribute("style", TEIRendition.css(from: lines[0].rend))
+              }.class("tei-block").data("rend", lines[0].rend).addingAttribute(
+                "style",
+                TEIRendition.css(
+                  from: columns.isEmpty ? lines[0].rend : TEIRendition.inColumns(lines[0].rend, of: columns)))
             case .furniture(let pieces):
               // A page number and a running head set on one line keep
               // their places on it, as the image has them.
@@ -658,17 +688,26 @@
     /// The height a vertical `<space/>` leaves: so many of the text's
     /// lines (`lh`, its leading); a length in its own unit where CSS has
     /// it; a character's height as an em.
-    static func spaceHeight(quantity: Int, unit: String) -> String {
+    static func spaceHeight(quantity: Double, unit: String) -> String {
       switch unit {
-      case "mm", "cm", "in", "pt", "pc", "px", "em": return "\(quantity)\(unit)"
-      case "chars", "char", "ems": return "\(quantity)em"
-      default: return "\(quantity)lh"
+      case "mm", "cm", "in", "pt", "pc", "px", "em": return "\(number(quantity))\(unit)"
+      case "chars", "char", "ems": return "\(number(quantity))em"
+      default: return "\(number(quantity))lh"
       }
     }
 
+    /// A quantity as written: a whole one with no decimal point.
+    static func number(_ value: Double) -> String {
+      value == value.rounded() && abs(value) < 1e15 ? String(Int(value)) : String(value)
+    }
+
     private func renderingLine(
-      _ line: TEILine, facsimileURL: String, label: String, tabStop: TEIWordPlace? = nil, inStyledBlock: Bool = false
+      _ line: TEILine, facsimileURL: String, label: String, tabStop: TEIWordPlace? = nil, inStyledBlock: Bool = false,
+      leads: Bool = false
     ) -> DOM.Node {
+      if leads, case .text = line.kind, let leader = Self.leader(of: line.runs) {
+        return leadered(line, leader, facsimileURL: facsimileURL, tabStop: tabStop)
+      }
       switch line.kind {
       case .heading:
         return h3 { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line tei-line-heading").data("rend", line.rend).addingAttribute("style", inStyledBlock ? "" : TEIRendition.css(from: line.rend))
@@ -687,15 +726,20 @@
           .build()
       case .documentBoundary:
         return hr().class("tei-document-boundary").build()
+      case .rule:
+        // A printed rule: a line in the text's ink, as long and placed as
+        // its rend says, the measure where it says none.
+        return hr().class("tei-rule").data("rend", line.rend)
+          .addingAttribute("style", TEIRendition.css(from: line.rend)).build()
       case .space(let quantity, let unit):
         // Blank height the source leaves, as much as it says (user,
         // 2026-10-11): never a line of text.
         return div {}.class("tei-space").ariaHidden(true)
-          .data("quantity", quantity).data("unit", unit)
+          .data("quantity", Self.number(quantity)).data("unit", unit)
           .style { CSS.Property("height", Self.spaceHeight(quantity: quantity, unit: unit)) }.build()
       case .note(let place):
         return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line tei-line-note")
-          .data("place", place.isEmpty ? "inline" : place).addingAttribute("style", inStyledBlock ? "" : TEIRendition.css(from: line.rend)).build()
+          .data("place", place.isEmpty ? "inline" : place).data("rend", line.rend).addingAttribute("style", inStyledBlock ? "" : TEIRendition.css(from: line.rend)).build()
       case .forme(let role):
         return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class(
           "tei-line tei-line-forme tei-line-forme-\(role.rawValue)"
@@ -724,17 +768,20 @@
             tbody {
               for row in source.rows {
                 tr {
-                  for cell in row.cells {
+                  for (index, cell) in row.cells.enumerated() {
+                    // A contents entry's title runs its printed dots on to
+                    // its page reference, the row's last cell.
+                    let leads = source.type == "contents" && index < row.cells.count - 1
                     if cell.isLabel {
                       th {
                         for line in cell.lines {
-                          renderingLine(line, facsimileURL: facsimileURL, label: label, tabStop: tabStop)
+                          renderingLine(line, facsimileURL: facsimileURL, label: label, tabStop: tabStop, leads: leads)
                         }
                       }.rowspan(cell.rows).colspan(cell.columns)
                     } else {
                       td {
                         for line in cell.lines {
-                          renderingLine(line, facsimileURL: facsimileURL, label: label, tabStop: tabStop)
+                          renderingLine(line, facsimileURL: facsimileURL, label: label, tabStop: tabStop, leads: leads)
                         }
                       }.rowspan(cell.rows).colspan(cell.columns)
                     }
@@ -750,6 +797,77 @@
         return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line").data("rend", line.rend).addingAttribute("style", inStyledBlock ? "" : TEIRendition.css(from: line.rend))
           .data("joins-previous", line.joinsPrevious).build()
       }
+    }
+
+    /// The dots a printed leader is set in; the space between them is any
+    /// the TEI keeps (a space, an en space, a no-break space).
+    static let leaderDots: Set<Character> = [".", "·", "…"]
+
+    static func isLeader(_ character: Character) -> Bool {
+      leaderDots.contains(character) || character.isWhitespace
+    }
+
+    /// A contents title's line split before its printed leader: the run of
+    /// dots it ends in (at least two), as the TEI keeps them, punctuation;
+    /// nil where it ends in none.
+    static func leader(of runs: [TEILine.Run]) -> (title: [TEILine.Run], dots: [TEILine.Run])? {
+      var title = runs
+      var dots: [TEILine.Run] = []
+      while let run = title.last, case .text = run.kind {
+        let tail = run.text.reversed().prefix(while: isLeader).count
+        guard tail > 0 else { break }
+        title.removeLast()
+        if tail == run.text.count {
+          dots.insert(run, at: 0)
+          continue
+        }
+        let cut = run.text.index(run.text.endIndex, offsetBy: -tail)
+        func part(_ text: String) -> TEILine.Run {
+          .init(
+            text: text, rend: run.rend, kind: run.kind, alternative: run.alternative, highlight: run.highlight,
+            word: run.word, zone: run.zone, element: run.element, preserved: run.preserved)
+        }
+        title.append(part(String(run.text[..<cut])))
+        dots.insert(part(String(run.text[cut...])), at: 0)
+        break
+      }
+      let printed = dots.map(\.text).joined().filter(leaderDots.contains)
+      return printed.count >= 2 ? (title, dots) : nil
+    }
+
+    /// How many of a leader's dots are drawn: more than the widest contents
+    /// column holds; the ones before the title are cut off.
+    static let leaderLength = 160
+
+    /// A contents title line, its printed dots drawn as a leader (user,
+    /// 2026-10-13): a fill from the title to the cell's far edge, its dots
+    /// at their printed pitch—the dot run's own `letter-spacing` and
+    /// `word-spacing`, else its type's natural spacing—counted from that
+    /// edge, so the dots of every row stand in the same columns, as a
+    /// tab leader sets them. The TEI's dots stay the text (found, copied),
+    /// drawn clear beneath the fill.
+    private func leadered(
+      _ line: TEILine, _ leader: (title: [TEILine.Run], dots: [TEILine.Run]), facsimileURL: String,
+      tabStop: TEIWordPlace?
+    ) -> DOM.Node {
+      // The space the TEI sets between its dots and a dot, repeated: the
+      // fill ends in a dot at the cell's edge, as the printed run does.
+      let printed = Array(leader.dots.map(\.text).joined())
+      let first = printed.firstIndex(where: Self.leaderDots.contains) ?? 0
+      let dot = printed.indices.contains(first) ? String(printed[first]) : "."
+      let space = printed.dropFirst(first + 1).first(where: \.isWhitespace).map(String.init) ?? ""
+      let unit = space + dot
+      let rend = leader.dots.last?.rend ?? ""
+      return span {
+        span { markedContent(leader.title, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-leader-title")
+        span { markedContent(leader.dots, facsimileURL: facsimileURL, tabStop: tabStop) }
+          .class("tei-leader")
+          .data("leader", String(repeating: unit, count: Self.leaderLength))
+          .addingAttribute("style", TEIRendition.css(from: rend))
+      }
+      .class("tei-line tei-line-leadered").data("rend", line.rend)
+      .addingAttribute("style", TEIRendition.css(from: line.rend))
+      .data("joins-previous", line.joinsPrevious).build()
     }
 
     public func build() -> DOM.Node {
@@ -1001,11 +1119,12 @@
           fontSize(em(0.75))
           lineHeight(0)
         }
+        // A table is a block of the page as a paragraph is: the space
+        // around it is the TEI's.
         descendant(".tei-table-scroll") {
           maxWidth(perc(100))
           minWidth(0)
           overflowX(.auto)
-          marginBlock(spacing8)
         }
         descendant(".tei-table") {
           borderCollapse(.collapse)
@@ -1031,15 +1150,66 @@
           border(.none)
           padding(spacing2, spacing0)
           fontWeight(.inherit)
-          verticalAlign(.top)
+          // A page reference stands on its title's last line, as printed.
+          verticalAlign(.bottom)
         }
         selector("& .tei-table[data-table-type='contents'] td:last-child", "& .tei-table[data-table-type='contents'] th:last-child") {
           textAlign(.end)
           whiteSpace(.nowrap)
-          paddingInlineStart(spacing16)
         }
         selector("& .tei-table[data-table-type='contents'] td > .tei-line", "& .tei-table[data-table-type='contents'] th > .tei-line") {
           whiteSpace(.inherit)
+        }
+        // A contents title's printed leader (`leadered`): the title, then a
+        // fill to the cell's far edge, its dots counted from that edge, so
+        // every row's stand in the same columns.
+        selector("& .tei-table td > .tei-line.tei-line-leadered", "& .tei-table th > .tei-line.tei-line-leadered") {
+          display(.flex)
+          alignItems(.baseline)
+        }
+        descendant(".tei-leader-title") {
+          flexShrink(0)
+          maxWidth(perc(100))
+        }
+        descendant(".tei-leader") {
+          position(.relative)
+          // A fill: no width of its own, so its dots never widen the column.
+          CSS.Property("flex", "1 1 0")
+          width(0)
+          minWidth(0)
+          overflow(.hidden)
+          whiteSpace(.nowrap)
+        }
+        // The TEI's own dots: the text, drawn clear under the fill.
+        selector("& .tei-leader > *") {
+          color(.transparent)
+        }
+        selector("& .tei-leader::after") {
+          CSS.Property("content", "attr(data-leader)")
+          position(.absolute)
+          CSS.Property("inset-block-start", "0")
+          CSS.Property("inset-inline-end", "0")
+          color(colorBase)
+        }
+        // A printed rule, 1px in the text's ink; its measure, its margins
+        // and its alignment its rend's.
+        descendant(".tei-rule") {
+          flexShrink(0)
+          alignSelf(.stretch)
+          height(0)
+          margin(0)
+          border(.none)
+          borderTopWidth(borderWidthBase)
+          CSS.Property("border-top-style", "solid")
+          borderTopColor("currentcolor")
+          color(colorBase)
+          fontSize(fontSizeMedium16)
+        }
+        selector("& .tei-rule[data-rend~='align(center)']") {
+          CSS.Property("margin-inline", "auto")
+        }
+        selector("& .tei-rule[data-rend~='align(right)']") {
+          marginInlineStart(.auto)
         }
         descendant(".tei-document-boundary") {
           width(perc(100))
@@ -1115,10 +1285,11 @@
         selector("& .tei-page-text:not([data-reflow='true'] *) .tei-block > :first-child") {
           CSS.Property("text-indent", "inherit")
         }
-        // Only explicitly justified text expands its word spacing.
+        // Only explicitly justified text expands its word spacing, and a
+        // block's last line keeps its natural width, as printed: its lines
+        // carry its rend, so the rule is the block's, never a line's.
         selector(
-          "& .tei-page-text:not([data-reflow='true'] *) .tei-block[data-rend~='align(justify)'] > [class='tei-line']:not(:last-child)",
-          "& .tei-page-text:not([data-reflow='true'] *) .tei-line[data-rend~='align(justify)']"
+          "& .tei-page-text:not([data-reflow='true'] *) .tei-block[data-rend~='align(justify)'] > .tei-line:not(:last-child)"
         ) {
           textAlign(.justify)
           CSS.Property("text-align-last", "justify")
@@ -1145,20 +1316,26 @@
         descendant(".tei-forme-row-start") { justifySelf("start") }
         descendant(".tei-forme-row-center") { justifySelf("center") }
         descendant(".tei-forme-row-end") { justifySelf("end") }
-        // Paragraphs a paragraph's space apart, as a TEI reader sets a
-        // `<p>` (user, 2026-10-11); a section's lines close together.
+        // Paragraphs set close, as printed: the space between them is the
+        // TEI's own (its margins, its vertical `<space/>`), never one the
+        // reader adds (user, 2026-10-13).
         descendant(".tei-page-text") {
+          display(.flex)
+          flexDirection(.column)
+          minWidth(0)
+        }
+        // A page's columns, and a spread's pages: each set as a page is;
+        // reflowed, one after the other a paragraph's space apart.
+        selector("& .tei-spread", "& .tei-columns") {
           display(.flex)
           flexDirection(.column)
           gap(spacing16)
           minWidth(0)
+          boxSizing(.borderBox)
         }
-        // A spread's pages (`rendered`), each set as a page is; reflowed,
-        // one after the other a paragraph's space apart.
-        selector("& .tei-spread", "& .tei-spread-page", "& .tei-columns", "& .tei-column") {
+        selector("& .tei-spread-page", "& .tei-column") {
           display(.flex)
           flexDirection(.column)
-          gap(spacing16)
           minWidth(0)
         }
         // Reflow off, side by side as the image has them, in its direction
@@ -1175,17 +1352,21 @@
         descendant(".tei-section") {
           display(.flex)
           flexDirection(.column)
-          gap(spacing2)
           minWidth(0)
         }
         // An epigraph set as a whole (user, 2026-10-11): as wide as its
         // lines, placed as its rend says, its lines set within it.
+        // A printed frame (`border-style`, user, 2026-10-13) is a 1px rule
+        // in its ink, its inset and measure its rend's; never its paper.
         descendant(".tei-frame") {
           display(.flex)
           flexDirection(.column)
-          gap(spacing16)
           minWidth(0)
           maxWidth(perc(100))
+          boxSizing(.borderBox)
+          borderWidth(borderWidthBase)
+          borderColor("currentcolor")
+          color(colorBase)
         }
         selector("& .tei-frame[data-rend~='align(center)']") { alignSelf(.center) }
         selector("& .tei-frame[data-rend~='align(right)']") { alignSelf(.flexEnd) }
@@ -1202,6 +1383,7 @@
         ] {
           selector(
             "& .tei-run[data-rend~='color(\(name))']", "& .tei-block[data-rend~='color(\(name))'] > .tei-line",
+            "& .tei-frame[data-rend~='color(\(name))']",
             "& .tei-section > .tei-line[data-rend~='color(\(name))']",
             "& .tei-frame[data-rend~='color(\(name))'] .tei-line"
           ) {
@@ -1273,10 +1455,11 @@
         selector("& .tei-block[style*='line-height'] > .tei-line") { CSS.Property("line-height", "inherit") }
         selector("& .tei-block[style*='letter-spacing'] > .tei-line") { CSS.Property("letter-spacing", "inherit") }
         selector("& .tei-block[style*='word-spacing'] > .tei-line") { CSS.Property("word-spacing", "inherit") }
+        // A heading's space is the TEI's, as a paragraph's is.
         descendant(".tei-line-heading") {
           fontSize(.inherit)
           fontWeight(.inherit)
-          margin(spacing8, spacing0, spacing4)
+          margin(0)
         }
         descendant(".tei-line-speaker") {
           marginBlockStart(spacing8)
