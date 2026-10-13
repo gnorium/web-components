@@ -18,7 +18,7 @@ import WebTypes
 ///
 /// One line, like the input it looks like: a long value (an id, a byline)
 /// never widens the page. It fades at each edge that hides some of it and
-/// scrolls sideways, and on touch a tap wraps it whole (`fadeOverflow`).
+/// scrolls sideways, and on touch a tap wraps it whole (`edgeFadeView`).
 ///
 /// Its box is the read-only field's gray: a fact shown to the reader. A
 /// `sent` datum—one the model itself produced, a tool call's argument—sits
@@ -69,7 +69,7 @@ public struct DatumView: HTMLContent {
       div {
         div { value }
           .class("datum-text")
-          .data("edge-fade", "expand")
+          .data("edge-fade-view", "expand")
       }
       .class("datum-value")
     }
@@ -118,7 +118,7 @@ public struct DatumView: HTMLContent {
       }
       // The value's one line, inside the box so that the fades take its
       // letters and not the box's border or ground: past the box it fades
-      // and scrolls sideways, and a tap on touch wraps it (EdgeFade.swift).
+      // and scrolls sideways, and a tap on touch wraps it (EdgeFadeView.swift).
       // A row, as the box was, so a value of several parts sits in one line.
       descendant(".datum-text") {
         display(.flex)
@@ -127,7 +127,7 @@ public struct DatumView: HTMLContent {
         flex(1)
         minWidth(0)
       }
-      fadeOverflow("& .datum-text")
+      edgeFadeView("& .datum-text")
     }
     .build()
   }

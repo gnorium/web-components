@@ -15,7 +15,7 @@ import WebTypes
 /// Cap the scrolling body, not its shell: a capped `<details>` or accordion
 /// would clip its own summary too.
 @CSSBuilder
-public func capHeight(_ selectors: String..., height: CSS.Length = size256) -> [CSSOM.CSSRule] {
+public func heightCapView(_ selectors: String..., height: CSS.Length = size256) -> [CSSOM.CSSRule] {
   selector(stringJoin(selectors, separator: ", ")) {
     maxHeight(height)
     overflowY(.auto)

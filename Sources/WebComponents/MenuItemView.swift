@@ -242,7 +242,7 @@
             if hasDescription {
               span { description! }
                 .class("menu-item-description")
-                .data("edge-fade", "expand")
+                .data("edge-fade-view", "expand")
             }
           }
           .class("menu-item-text")
@@ -431,7 +431,7 @@
               color(colorSubtle)
             }
             if hideDescriptionOverflow {
-              fadeOverflow("& .menu-item-description")
+              edgeFadeView("& .menu-item-description")
             }
           }
 
@@ -609,7 +609,7 @@
               color(colorSubtle)
             }
             if hideDescriptionOverflow {
-              fadeOverflow("& .menu-item-description")
+              edgeFadeView("& .menu-item-description")
             }
           }
 

@@ -79,7 +79,7 @@
 
         span { displayLabel }
           .class("select-label")
-          .data("edge-fade", "expand")
+          .data("edge-fade-view", "expand")
           .data("selected", hasSelection)
 
         AnimatedUpDownChevronView(
@@ -178,7 +178,7 @@
           gap(spacing8)
           flex(1)
         }
-        fadeOverflow("& .select-label")
+        edgeFadeView("& .select-label")
         descendant(".select-label[data-selected='false']") {
           color(colorPlaceholder).important()
         }

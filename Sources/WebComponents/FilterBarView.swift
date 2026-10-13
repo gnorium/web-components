@@ -444,7 +444,7 @@
     }
 
     /// The filter bars a fragment brought in after the page was hydrated
-    /// (`FragmentHost`), each bound once.
+    /// (`FragmentHostView`), each bound once.
     public static func hydrate(in root: DOM.Element) {
       if let instance { instance.bind(in: root) } else { instance = FilterBarHydration() }
     }

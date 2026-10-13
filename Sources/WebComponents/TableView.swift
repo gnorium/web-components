@@ -771,7 +771,7 @@ public struct TableView: HTMLContent {
                         let cellContent: DOM.Node = row.cells.first(where: { stringEquals($0.key, column.id) })?.value ?? DOM.Text("")
                         let isFirstCell = cellIndex == 0
                         // A cell is one line and fades out where it is clipped
-                        // (`fadeOverflow`), so the value it holds is also its
+                        // (`edgeFadeView`), so the value it holds is also its
                         // title: hovering shows the
                         // whole of it rather than leaving the reader to guess.
                         // Links carry their own text down the tree, and a title
@@ -828,7 +828,7 @@ public struct TableView: HTMLContent {
                                 }
                               }
                               .class("table-cell-content")
-                              .data("edge-fade", "expand")
+                              .data("edge-fade-view", "expand")
                             }
                             .data("align", column.align.value)
                             .data("priority", column.priority)
@@ -1237,8 +1237,8 @@ public struct TableView: HTMLContent {
       }
       // A value too long for its column fades out at each edge that hides
       // some of it and scrolls sideways, and on a phone a tap on it shows the
-      // whole of it (EdgeFade.swift).
-      fadeOverflow("& .table-table td > div:not(.table-resizer)", "& .table-table td > span")
+      // whole of it (EdgeFadeView.swift).
+      edgeFadeView("& .table-table td > div:not(.table-resizer)", "& .table-table td > span")
       // A column that fits its heading: its values ask for no width of their
       // own (a table laid out by its content sizes the column by the heading
       // alone) and fill whatever the column has.
@@ -1776,12 +1776,12 @@ public struct TableView: HTMLContent {
       // on a tap on a phone. The table's own cells are marked as it draws
       // them; a cell a page built itself (a `td` of its own) is marked here.
       let pageCells = table.querySelectorAll(
-        ".table-tbody td > div:not(.table-resizer):not(.table-selection-container):not([data-edge-fade]), "
-          + ".table-tbody td > span:not(.table-group-indent):not([data-edge-fade])")
+        ".table-tbody td > div:not(.table-resizer):not(.table-selection-container):not([data-edge-fade-view]), "
+          + ".table-tbody td > span:not(.table-group-indent):not([data-edge-fade-view])")
       for box in pageCells {
-        _ = box.setAttribute(data("edge-fade"), "expand")
+        _ = box.setAttribute(data("edge-fade-view"), "expand")
       }
-      EdgeFadeHydration.scheduleRefresh()
+      EdgeFadeViewHydration.scheduleRefresh()
       TableInstance.updateZebraStriping(for: table)
 
       let isServerPaginated = stringEquals(table.getAttribute(data("paginate-server")) ?? "false", "true")
@@ -1853,8 +1853,8 @@ public struct TableView: HTMLContent {
           let sortURL = button.getAttribute(data("sort-url")) ?? ""
           if !stringIsEmpty(sortURL) {
             // In a fragment host (a dialog's table), into the host.
-            if let host = button.closest("[data-fragment-host]") {
-              FragmentHost.load(host, url: sortURL)
+            if let host = button.closest("[data-fragment-host-view]") {
+              FragmentHostView.load(host, url: sortURL)
             } else {
               window.location.href = sortURL
             }

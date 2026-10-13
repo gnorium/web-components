@@ -8,8 +8,8 @@
   import WebTypes
 
   /// A ButtonGroup consists of a set of two or more normal buttons.
-  /// Where its buttons don't fit on one line (`detectsCrowding`, kept by
-  /// `CrowdedRowHydration`), each stretches to the row's full width, so the
+  /// Where its buttons don't fit on one line (`wrapToStackView()`, kept by
+  /// `WrapToStackViewHydration`), each stretches to the row's full width, so the
   /// group reads as a column—no hardcoded breakpoint required.
   public struct ButtonGroupView: HTMLContent {
     public struct ButtonItem: Sendable {
@@ -168,7 +168,7 @@
         .class(`class`.isEmpty ? "button-group-view" : "button-group-view \(`class`)")
         .role(.group)
         .ariaLabel(ariaLabel)
-        .detectsCrowding()
+        .wrapToStackView()
         .style {
           selector("&") {
             display(.flex)
@@ -179,8 +179,8 @@
           }
 
           // Where the buttons don't fit on one line, stretch each to fill
-          // the row, so a crowded group reads as a column.
-          selector("&[data-crowded='true'] > *") {
+          // the row, so a stacked group reads as a column.
+          selector("&[data-wrap-stacked='true'] > *") {
             flexGrow(1)
             flexBasis(perc(100))
           }

@@ -163,8 +163,8 @@ public struct TextInputView: HTMLContent {
       .readonly(readonly)
       .required(required)
       .class("text-input-input")
-      // A long value fades at rest (`fadeInputOverflow`).
-      .data("edge-fade", true)
+      // A long value fades at rest (`edgeFadeView(control:input:)`).
+      .data("edge-fade-view", true)
 
     if let minValue = min {
       inputEl = inputEl.min(minValue)
@@ -270,7 +270,7 @@ public struct TextInputView: HTMLContent {
       }
       selector("&.text-input-full-width") { width(perc(100)) }
       // The box the input is drawn in, and its fades at rest: the input's
-      // ground, and its border and padding at each side (EdgeFade.swift).
+      // ground, and its border and padding at each side (EdgeFadeView.swift).
       descendant(".text-input-control") {
         position(.relative)
         customProperty("--edge-fade-ground", backgroundColorBase)
@@ -291,7 +291,7 @@ public struct TextInputView: HTMLContent {
         customProperty(
           "--edge-fade-inset-end", "calc(\(borderWidthBase.value) + \(spacing12.value) + \(sizeIconMedium.value) + \(spacing8.value))")
       }
-      fadeInputOverflow(control: "& .text-input-control", input: ".text-input-input")
+      edgeFadeView(control: "& .text-input-control", input: ".text-input-input")
       descendant(".text-input-input") {
         width(perc(100))
         // A field is inset 12 inside its border on every side, its height
@@ -555,7 +555,7 @@ public struct TextInputView: HTMLContent {
     }
 
     /// The text inputs a fragment brought in after the page was hydrated
-    /// (`FragmentHost`), each bound once.
+    /// (`FragmentHostView`), each bound once.
     public static func hydrate(in root: DOM.Element) {
       if instance == nil { instance = TextInputHydration(binding: false) }
       for textInput in root.querySelectorAll(".text-input-view") {

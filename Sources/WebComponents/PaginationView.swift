@@ -517,7 +517,7 @@ public struct PaginationView: HTMLContent {
     }
 
     /// The pagers a fragment brought in after the page was hydrated
-    /// (`FragmentHost`), each bound once.
+    /// (`FragmentHostView`), each bound once.
     public static func hydrate(in root: DOM.Element) {
       if let instance { instance.hydrate(in: root) } else { instance = PaginationHydration() }
     }
@@ -590,8 +590,8 @@ public struct PaginationView: HTMLContent {
 
       // A list held in a fragment host (a dialog's table) asks the page
       // into the host, from the list it holds; any other, the page.
-      if let host = view.closest("[data-fragment-host]") {
-        FragmentHost.load(host, url: PaginationURL.settingPage(page, in: FragmentHost.url(of: host)))
+      if let host = view.closest("[data-fragment-host-view]") {
+        FragmentHostView.load(host, url: PaginationURL.settingPage(page, in: FragmentHostView.url(of: host)))
         return
       }
       window.location.href = PaginationURL.settingPage(page, in: window.location.href)

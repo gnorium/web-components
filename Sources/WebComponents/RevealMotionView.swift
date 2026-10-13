@@ -10,7 +10,7 @@
   /// to bottom, to its measured height, and shrinks back, its overflow
   /// clipped meanwhile, on the alert's duration and easing; with reduced
   /// motion asked for, it is instant.
-  public enum RevealMotion {
+  public enum RevealMotionView {
     /// The alert's: 400ms, ease-in-out.
     public static let duration = 400
     public static let easing = "ease-in-out"

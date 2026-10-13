@@ -19,17 +19,17 @@ import WebTypes
 // with no scrollbar drawn: the fade says it is cut off, the scroll reaches the
 // rest (user, 2026-10-08). A fade stands at each edge that hides some of it—
 // the end while more remains, the start once scrolled—and follows the scroll
-// as it moves: `EdgeFadeHydration` marks the box `data-overflowing-start` and
+// as it moves: `EdgeFadeViewHydration` marks the box `data-overflowing-start` and
 // `data-overflowing-end`, and those marks set the custom properties that are
 // the mask's two fade lengths. Every box scrolls, a closed dropdown's value
 // too (user, 2026-10-08).
 //
 // The fade is drawn only on a box whose line actually runs past it—a short
 // value right-aligned against the box's end would otherwise fade too—so the
-// box is marked `data-overflowing` by `EdgeFadeHydration`, which measures it.
+// box is marked `data-overflowing` by `EdgeFadeViewHydration`, which measures it.
 // Before hydration a long value is simply clipped.
 //
-// A box that opts in with `data-edge-fade="expand"` also expands, on every
+// A box that opts in with `data-edge-fade-view="expand"` also expands, on every
 // device, wide or narrow, by mouse or by touch (user, 2026-10-08): a click or
 // a tap wraps it to show the whole value, and another folds it back. A link
 // in the box (or the control the box is in: a menu option, a select) keeps
@@ -48,7 +48,7 @@ import WebTypes
 // `aria-expanded`, which ARIA allows on no generic element. Opening is for
 // the eye alone: a clipped line is read whole by a screen reader already.
 //
-// An editable one-line input (`fadeInputOverflow`) keeps its own native
+// An editable one-line input (`edgeFadeView(control:input:)`) keeps its own native
 // scroll and caret; it is marked as any box is, from its own scroll, and
 // fades only at rest, never while focused. Its fade is drawn over it in its
 // ground color rather than by a mask, since a mask would fade its border
@@ -63,36 +63,36 @@ import WebTypes
 /// left-to-right text, the right under `:dir(rtl)`. Each is `sizeEdgeFade`
 /// long. An expanded box (`data-edge-fade-expanded="true"`) wraps instead.
 @CSSBuilder
-public func fadeOverflow(_ selectors: String...) -> [CSSOM.CSSRule] {
-  selector(edgeFadeSelectors(selectors, "")) {
+public func edgeFadeView(_ selectors: String...) -> [CSSOM.CSSRule] {
+  selector(edgeFadeViewSelectors(selectors, "")) {
     whiteSpace(.nowrap)
     textOverflow(.clip)
     customProperty("--edge-fade-start", "0px")
     customProperty("--edge-fade-end", sizeEdgeFade.value)
   }
-  selector(edgeFadeSelectors(selectors, "")) {
+  selector(edgeFadeViewSelectors(selectors, "")) {
     overflowX(.auto)
     overflowY(.hidden)
     scrollbarWidth(.none)
   }
-  selector(edgeFadeSelectors(selectors, "::-webkit-scrollbar")) {
+  selector(edgeFadeViewSelectors(selectors, "::-webkit-scrollbar")) {
     display(.none).important()
   }
-  selector(edgeFadeSelectors(selectors, "[data-overflowing-start='true']")) {
+  selector(edgeFadeViewSelectors(selectors, "[data-overflowing-start='true']")) {
     customProperty("--edge-fade-start", sizeEdgeFade.value)
   }
-  selector(edgeFadeSelectors(selectors, "[data-overflowing-end='false']")) {
+  selector(edgeFadeViewSelectors(selectors, "[data-overflowing-end='false']")) {
     customProperty("--edge-fade-end", "0px")
   }
-  selector(edgeFadeSelectors(selectors, "[data-overflowing='true']:not([data-edge-fade-expanded='true'])")) {
-    maskImage(.custom(edgeFadeGradient(.right)))
-    webkitMaskImage(.custom(edgeFadeGradient(.right)))
+  selector(edgeFadeViewSelectors(selectors, "[data-overflowing='true']:not([data-edge-fade-expanded='true'])")) {
+    maskImage(.custom(edgeFadeViewGradient(.right)))
+    webkitMaskImage(.custom(edgeFadeViewGradient(.right)))
   }
-  selector(edgeFadeSelectors(selectors, "[data-overflowing='true']:not([data-edge-fade-expanded='true']):dir(rtl)")) {
-    maskImage(.custom(edgeFadeGradient(.left)))
-    webkitMaskImage(.custom(edgeFadeGradient(.left)))
+  selector(edgeFadeViewSelectors(selectors, "[data-overflowing='true']:not([data-edge-fade-expanded='true']):dir(rtl)")) {
+    maskImage(.custom(edgeFadeViewGradient(.left)))
+    webkitMaskImage(.custom(edgeFadeViewGradient(.left)))
   }
-  selector(edgeFadeSelectors(selectors, "[data-edge-fade-expanded]")) {
+  selector(edgeFadeViewSelectors(selectors, "[data-edge-fade-expanded]")) {
     cursor(.pointer)
   }
   // Wrapped where it must, anywhere at all: an ID or a URL has no spaces. A
@@ -101,7 +101,7 @@ public func fadeOverflow(_ selectors: String...) -> [CSSOM.CSSRule] {
   // in) has the keyboard's focus: Tab reaches the link, not the box, so the
   // whole value is in sight as it would be in an input. A click's focus is
   // no `:focus-visible`, and leaves the box as it was.
-  selector(edgeFadeSelectors(selectors, "[data-edge-fade-expanded='true']")) {
+  selector(edgeFadeViewSelectors(selectors, "[data-edge-fade-expanded='true']")) {
     whiteSpace(.normal).important()
     overflowWrap(.anywhere).important()
     flexWrap(.wrap).important()
@@ -109,7 +109,7 @@ public func fadeOverflow(_ selectors: String...) -> [CSSOM.CSSRule] {
   // A rule of its own: a browser without `:has` drops it, not the one above.
   selector(
     stringJoin(
-      [edgeFadeSelectors(selectors, edgeFadeFocusOpen[0]), edgeFadeSelectors(selectors, edgeFadeFocusOpen[1])],
+      [edgeFadeViewSelectors(selectors, edgeFadeViewFocusOpen[0]), edgeFadeViewSelectors(selectors, edgeFadeViewFocusOpen[1])],
       separator: ", ")
   ) {
     whiteSpace(.normal).important()
@@ -121,10 +121,10 @@ public func fadeOverflow(_ selectors: String...) -> [CSSOM.CSSRule] {
 }
 
 /// Fade the value of the one-line `input` at rest: an input marked
-/// `data-edge-fade` (by its component), drawn in the box `control`, which
+/// `data-edge-fade-view` (by its component), drawn in the box `control`, which
 /// holds it as a direct child and is positioned.
 ///
-/// The input scrolls as inputs do, and `EdgeFadeHydration` marks it from its
+/// The input scrolls as inputs do, and `EdgeFadeViewHydration` marks it from its
 /// own `scrollLeft` and `scrollWidth`, as it marks any box. The fades are
 /// two layers of `control` (its `::before` at the start, `::after` at the
 /// end), `sizeEdgeFade` long, from clear to the input's ground. They stand
@@ -134,7 +134,7 @@ public func fadeOverflow(_ selectors: String...) -> [CSSOM.CSSRule] {
 /// `--edge-fade-ground`, and its border and padding at each side,
 /// `--edge-fade-inset-start` and `--edge-fade-inset-end`.
 @CSSBuilder
-public func fadeInputOverflow(control: String, input: String) -> [CSSOM.CSSRule] {
+public func edgeFadeView(control: String, input: String) -> [CSSOM.CSSRule] {
   selector("\(control)::before", "\(control)::after") {
     content("\"\"")
     position(.absolute)
@@ -172,13 +172,13 @@ public func fadeInputOverflow(control: String, input: String) -> [CSSOM.CSSRule]
 
 /// An expandable box shown whole while the keyboard's focus is on a control
 /// in it, or on the control it is in: suffixes for its selectors.
-public let edgeFadeFocusOpen = [
-  "[data-edge-fade='expand']:has(:focus-visible)",
-  "[data-edge-fade='expand']:is(:focus-visible *)",
+public let edgeFadeViewFocusOpen = [
+  "[data-edge-fade-view='expand']:has(:focus-visible)",
+  "[data-edge-fade-view='expand']:is(:focus-visible *)",
 ]
 
 /// Each selector with `suffix` on it, as one selector list.
-private func edgeFadeSelectors(_ selectors: [String], _ suffix: String) -> String {
+private func edgeFadeViewSelectors(_ selectors: [String], _ suffix: String) -> String {
   var parts: [String] = []
   for selector in selectors {
     parts.append("\(selector)\(suffix)")
@@ -191,14 +191,14 @@ private func edgeFadeSelectors(_ selectors: [String], _ suffix: String) -> Strin
 /// its start, its end, or both. Each fade's length is a custom property,
 /// `--edge-fade-start` and `--edge-fade-end` (`sizeEdgeFade`, or nothing),
 /// so the marks the scroll sets move the fades under one mask.
-private func edgeFadeGradient(_ toward: CSS.GradientDirection) -> String {
+private func edgeFadeViewGradient(_ toward: CSS.GradientDirection) -> String {
   "linear-gradient(\(toward.rawValue), transparent, black var(--edge-fade-start), "
     + "black calc(100% - var(--edge-fade-end)), transparent)"
 }
 
 #if CLIENT
-  /// Keeps every `[data-edge-fade]` box on the page marked: `data-overflowing`
-  /// on each whose line runs past it, so `fadeOverflow` fades it, and on an
+  /// Keeps every `[data-edge-fade-view]` box on the page marked: `data-overflowing`
+  /// on each whose line runs past it, so `edgeFadeView` fades it, and on an
   /// expandable one whether it is open.
   ///
   /// One watcher for the page, not one per box: the boxes are re-read
@@ -208,40 +208,40 @@ private func edgeFadeGradient(_ toward: CSS.GradientDirection) -> String {
   /// resized—at most once a frame. A box a component draws on the client
   /// (a search menu's rows, a dropdown's value) is covered the moment it is
   /// in the page. Taps and keys are taken once, for the whole page.
-  public final class EdgeFadeHydration: @unchecked Sendable {
-    public static nonisolated(unsafe) var instance: EdgeFadeHydration?
+  public final class EdgeFadeViewHydration: @unchecked Sendable {
+    public static nonisolated(unsafe) var instance: EdgeFadeViewHydration?
     nonisolated(unsafe) static var refreshQueued = false
     /// What a tap already means something on: a box in one, or holding one,
     /// opens only on a tap in its fade.
     static let controls =
       "a, button, label, summary, select, [role='link'], [role='option'], [role='menuitem'], [role='tab'], "
-      + "[role='combobox'], [role='checkbox'], [role='radio'], [role='switch'], [role='button']:not([data-edge-fade])"
+      + "[role='combobox'], [role='checkbox'], [role='radio'], [role='switch'], [role='button']:not([data-edge-fade-view])"
 
     /// Starts the watcher, whether or not the page has a box yet: one may be
     /// drawn later.
     public static func hydrateIfPresent() {
       if let _ = instance { return }
-      instance = EdgeFadeHydration()
+      instance = EdgeFadeViewHydration()
       document.body.observeMutations(
         childList: true, subtree: true, characterData: true,
         attributeFilter: ["class", "style", "hidden", "open", "data-state"]
       ) {
-        EdgeFadeHydration.scheduleRefresh()
+        EdgeFadeViewHydration.scheduleRefresh()
       }
-      _ = window.addEventListener("resize", { _ in EdgeFadeHydration.scheduleRefresh() }, capture: false, passive: true)
+      _ = window.addEventListener("resize", { _ in EdgeFadeViewHydration.scheduleRefresh() }, capture: false, passive: true)
       // Web fonts widen or narrow a line after the first measure.
-      _ = window.addEventListener("load", { _ in EdgeFadeHydration.scheduleRefresh() }, capture: false, passive: true)
+      _ = window.addEventListener("load", { _ in EdgeFadeViewHydration.scheduleRefresh() }, capture: false, passive: true)
       // Capture, so a box's tap is settled before a row's own click (which
       // would follow the row's link) ever sees it.
-      _ = document.addEventListener("click", { event in EdgeFadeHydration.click(event) }, capture: true, passive: false)
-      _ = document.addEventListener("keydown", { event in EdgeFadeHydration.keydown(event) }, capture: true, passive: false)
+      _ = document.addEventListener("click", { event in EdgeFadeViewHydration.click(event) }, capture: true, passive: false)
+      _ = document.addEventListener("keydown", { event in EdgeFadeViewHydration.keydown(event) }, capture: true, passive: false)
       // A scroll does not bubble, but it is captured: one listener moves the
       // fades of every box as it scrolls.
-      _ = document.addEventListener("scroll", { event in EdgeFadeHydration.scrolled(event) }, capture: true, passive: true)
+      _ = document.addEventListener("scroll", { event in EdgeFadeViewHydration.scrolled(event) }, capture: true, passive: true)
       // An input's value is no node: typing is heard as typing. Left, an
       // input scrolls back to its start, a frame later.
-      _ = document.addEventListener("input", { event in EdgeFadeHydration.scrolled(event) }, capture: true, passive: true)
-      _ = document.addEventListener("focusout", { _ in EdgeFadeHydration.scheduleRefresh() }, capture: true, passive: true)
+      _ = document.addEventListener("input", { event in EdgeFadeViewHydration.scrolled(event) }, capture: true, passive: true)
+      _ = document.addEventListener("focusout", { _ in EdgeFadeViewHydration.scheduleRefresh() }, capture: true, passive: true)
       refresh()
     }
 
@@ -250,15 +250,15 @@ private func edgeFadeGradient(_ toward: CSS.GradientDirection) -> String {
       if refreshQueued { return }
       refreshQueued = true
       _ = window.requestAnimationFrame {
-        EdgeFadeHydration.refreshQueued = false
-        EdgeFadeHydration.refresh()
+        EdgeFadeViewHydration.refreshQueued = false
+        EdgeFadeViewHydration.refresh()
       }
     }
 
     /// Re-reads every box now: all the measures first, then the marks, so
     /// one layout serves them all.
     public static func refresh() {
-      let boxes = document.querySelectorAll("[data-edge-fade]")
+      let boxes = document.querySelectorAll("[data-edge-fade-view]")
       var overflowing: [Bool] = []
       var edges: [(start: Bool, end: Bool)] = []
       for box in boxes {
@@ -275,7 +275,7 @@ private func edgeFadeGradient(_ toward: CSS.GradientDirection) -> String {
     /// of anything else (the page, whose target is the document and no
     /// element) is passed by.
     static func scrolled(_ event: Event) {
-      guard let box = event.target, !stringIsEmpty(box.tagName), box.hasAttribute(data("edge-fade")) else {
+      guard let box = event.target, !stringIsEmpty(box.tagName), box.hasAttribute(data("edge-fade-view")) else {
         return
       }
       if !isExpanded(box) { mark(box, overflowing: box.scrollWidth > box.clientWidth) }
@@ -293,7 +293,7 @@ private func edgeFadeGradient(_ toward: CSS.GradientDirection) -> String {
     }
 
     /// Sets the box's edge marks, touching only those that change, which
-    /// set the lengths of its two fades (`fadeOverflow`).
+    /// set the lengths of its two fades (`edgeFadeView`).
     static func markEdges(_ box: DOM.Element, _ edges: (start: Bool, end: Bool)) {
       let start = edges.start ? "true" : "false"
       let end = edges.end ? "true" : "false"
@@ -333,7 +333,7 @@ private func edgeFadeGradient(_ toward: CSS.GradientDirection) -> String {
       }
     }
 
-    /// Whether the box is an input (`fadeInputOverflow`): a tab stop of
+    /// Whether the box is an input (`edgeFadeView(control:input:)`): a tab stop of
     /// its own already.
     static func isInput(_ box: DOM.Element) -> Bool {
       stringEquals(box.tagName, "INPUT")
@@ -345,8 +345,8 @@ private func edgeFadeGradient(_ toward: CSS.GradientDirection) -> String {
     /// the link is in sight, and a click anywhere off the box folds it.
     static func click(_ event: Event) {
       let target = event.target
-      let box = target?.closest("[data-edge-fade='expand'][data-edge-fade-expanded]")
-      for open in document.querySelectorAll("[data-edge-fade='expand'][data-edge-fade-expanded='true']") {
+      let box = target?.closest("[data-edge-fade-view='expand'][data-edge-fade-expanded]")
+      for open in document.querySelectorAll("[data-edge-fade-view='expand'][data-edge-fade-expanded='true']") {
         if let box, box.id == open.id { continue }
         setExpanded(open, false)
       }
@@ -367,7 +367,7 @@ private func edgeFadeGradient(_ toward: CSS.GradientDirection) -> String {
     /// it follows the link.
     static func keydown(_ event: Event) {
       guard let target = event.target else { return }
-      guard stringEquals(target.getAttribute(data("edge-fade")) ?? "", "expand"),
+      guard stringEquals(target.getAttribute(data("edge-fade-view")) ?? "", "expand"),
         target.hasAttribute(data("edge-fade-expanded"))
       else { return }
       let key = event.key
@@ -386,7 +386,7 @@ private func edgeFadeGradient(_ toward: CSS.GradientDirection) -> String {
     }
 
     static func isExpandable(_ box: DOM.Element) -> Bool {
-      stringEquals(box.getAttribute(data("edge-fade")) ?? "", "expand")
+      stringEquals(box.getAttribute(data("edge-fade-view")) ?? "", "expand")
     }
 
     /// Whether an expandable box is open.

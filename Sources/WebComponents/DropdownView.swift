@@ -246,9 +246,9 @@ public struct DropdownView: HTMLContent {
               .class("dropdown-selected-text")
               .data("dropdown-selected-text", true)
             // One line, faded at an edge that hides some of it and
-            // scrolling sideways (`fadeOverflow`); the open list shows it
+            // scrolling sideways (`edgeFadeView`); the open list shows it
             // whole.
-            .data("edge-fade", true)
+            .data("edge-fade-view", true)
               .data("placeholder", placeholder)
               .data(
                 "selected",
@@ -376,7 +376,7 @@ public struct DropdownView: HTMLContent {
         fontFamily(typographyFontSans)
       }
       // One line, held inside the trigger, fading out at its end when it
-      // runs past it (`fadeOverflow`): no tap-to-expand, no ellipsis—the
+      // runs past it (`edgeFadeView`): no tap-to-expand, no ellipsis—the
       // open list shows the whole value.
       // A field's text at every size: a large trigger's 18px is a
       // button's, not a field's.
@@ -386,7 +386,7 @@ public struct DropdownView: HTMLContent {
         color(colorPlaceholder)
         minWidth(0)
       }
-      fadeOverflow("& .dropdown-selected-text")
+      edgeFadeView("& .dropdown-selected-text")
       // The text gives way, not the chevron: beside a cut title it was
       // squeezed to a sliver.
       descendant(".dropdown-chevron") {

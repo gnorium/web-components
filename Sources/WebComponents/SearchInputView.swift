@@ -96,8 +96,8 @@ public struct SearchInputView: HTMLContent {
           .ariaLabel(ariaLabel)
           .disabled(disabled)
           .ariaInvalid(isError)
-          // A long query fades at rest (`fadeInputOverflow`).
-          .data("edge-fade", true)
+          // A long query fades at rest (`edgeFadeView(control:input:)`).
+          .data("edge-fade-view", true)
 
         if clearable {
           // Clear button
@@ -166,7 +166,7 @@ public struct SearchInputView: HTMLContent {
       selector("&.search-input-has-button") { flexGrow(1) }
       selector("&:not(.search-input-has-button)") { flex(1) }
       // The box the input is drawn in, and its fades at rest: the input's
-      // ground, and its border and padding at each side (EdgeFade.swift).
+      // ground, and its border and padding at each side (EdgeFadeView.swift).
       descendant(".search-input-wrapper") {
         position(.relative)
         display(.flex)
@@ -183,7 +183,7 @@ public struct SearchInputView: HTMLContent {
       selector("& .search-input-wrapper:has(> .search-input:disabled)") {
         customProperty("--edge-fade-ground", backgroundColorDisabled)
       }
-      fadeInputOverflow(control: "& .search-input-wrapper", input: ".search-input")
+      edgeFadeView(control: "& .search-input-wrapper", input: ".search-input")
       selector("&.search-input-has-button .search-input-wrapper") { flexGrow(1) }
       selector("&:not(.search-input-has-button) .search-input-wrapper") { width(perc(100)) }
       descendant(".search-input") {

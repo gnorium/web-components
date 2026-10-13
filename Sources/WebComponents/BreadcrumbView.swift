@@ -47,7 +47,7 @@
                 LinkView(url: url, class: "breadcrumb-link", title: item.text) {
                   span { item.label ?? DOM.Text(item.text ?? "") }
                     .class("breadcrumb-label")
-                    .data("edge-fade", "expand")
+                    .data("edge-fade-view", "expand")
                 }
               } else {
                 span { item.label ?? DOM.Text(item.text ?? "") }
@@ -99,7 +99,7 @@
         selector(
           "& .breadcrumb-item:has([data-edge-fade-expanded='true'])",
           // A label is in its link: the link's keyboard focus opens it.
-          "& .breadcrumb-item:has(.breadcrumb-label\(edgeFadeFocusOpen[1]))"
+          "& .breadcrumb-item:has(.breadcrumb-label\(edgeFadeViewFocusOpen[1]))"
         ) {
           flexShrink(0)
           maxWidth(.none)
@@ -128,11 +128,11 @@
         descendant(".breadcrumb-label") {
           maxWidth(px(240))
         }
-        fadeOverflow("& .breadcrumb-label")
+        edgeFadeView("& .breadcrumb-label")
         selector(
           "& .breadcrumb-label[data-edge-fade-expanded='true']",
-          "& .breadcrumb-label\(edgeFadeFocusOpen[0])",
-          "& .breadcrumb-label\(edgeFadeFocusOpen[1])"
+          "& .breadcrumb-label\(edgeFadeViewFocusOpen[0])",
+          "& .breadcrumb-label\(edgeFadeViewFocusOpen[1])"
         ) {
           whiteSpace(.nowrap).important()
           width(.maxContent)

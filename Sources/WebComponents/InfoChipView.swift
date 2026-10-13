@@ -185,7 +185,7 @@ public struct InfoChipView: HTMLContent {
           content
         }
         .class("info-chip-text")
-        .data("edge-fade", "expand")
+        .data("edge-fade-view", "expand")
       }
     }
     .class(
@@ -326,7 +326,7 @@ public struct InfoChipView: HTMLContent {
         flex("0 1 auto")
         minWidth(0)
       }
-      fadeOverflow("& .info-chip-text")
+      edgeFadeView("& .info-chip-text")
     }
   }
 }

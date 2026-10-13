@@ -7,7 +7,7 @@ import WebTypes
 
 /// Corresponding source lines, including wrapped portions, move together.
 /// Listen on actual scrollports; only the latest user scroll drives matching.
-public enum PassageDiffSyncHydration {
+public enum PassageDiffSyncViewHydration {
   public static func hydrate(in root: DOM.Element) {
     for field in root.querySelectorAll(".field-diff-view") {
       if let source = field.querySelector(".diff-field-input .code-code, .diff-field-input textarea, textarea") {

@@ -96,8 +96,8 @@
           .data("search-endpoint", searchEndpoint)
           .data("result-url-base", resultUrlBase)
           .readonly(openDialog)
-          // A long query fades at rest (`fadeInputOverflow`).
-          .data("edge-fade", true)
+          // A long query fades at rest (`edgeFadeView(control:input:)`).
+          .data("edge-fade-view", true)
           .style {
             selector("&") {
               border(borderWidthBase, .solid, borderColorBase)
@@ -228,7 +228,7 @@
           boxSizing(.borderBox)
           // Its fades at rest, as SearchInputView's: the input's ground,
           // inside its border and its padding at each side, the search
-          // button's room at the end (EdgeFade.swift).
+          // button's room at the end (EdgeFadeView.swift).
           customProperty("--edge-fade-ground", backgroundColorBase)
           customProperty("--edge-fade-inset-start", "calc(\(borderWidthBase.value) + \(spacing12.value))")
           customProperty(
@@ -238,7 +238,7 @@
         selector("&:has(> .search-bar-input:disabled)") {
           customProperty("--edge-fade-ground", backgroundColorDisabled)
         }
-        fadeInputOverflow(control: "&", input: ".search-bar-input")
+        edgeFadeView(control: "&", input: ".search-bar-input")
         selector("&.home") {
           // Match the full-width input in SearchMenuView while preserving the
           // same responsive inline padding from ContainerView.

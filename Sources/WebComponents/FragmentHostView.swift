@@ -9,11 +9,11 @@
   /// again—its filter bar's GET form, its pager, its sort headers, a link to
   /// another page of it—loads into the element, never navigating the page.
   ///
-  /// `data-fragment-host` marks the element; it holds the list it last
+  /// `data-fragment-host-view` marks the element; it holds the list it last
   /// loaded as `data-fragment-url`. The list's root names its own address as
   /// `data-fragment-base`, which every link of its own starts with, and its
   /// stylesheets come with it (the response's `Link` header).
-  public enum FragmentHost {
+  public enum FragmentHostView {
     /// The list a host holds, or "" before its first load.
     public static func url(of host: DOM.Element) -> String {
       host.dataset["fragmentUrl"] ?? ""
