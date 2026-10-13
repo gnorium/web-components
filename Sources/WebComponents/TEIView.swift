@@ -1342,13 +1342,16 @@
         }
         // A page set in its work's frame (`TEIPage.frame`): the frame's
         // measure in page-em (`TEIRenderer.pageEms` to the page), the same
-        // margin (`TEIRenderer.frameMargin`) at its sides and above it, in
-        // place of the layer's inset. Below it, what the page's own
-        // proportions leave (its canvas's aspect sets the page's height):
-        // the frame's height on a body page, so its margins are equal all
-        // round there, and never a page made taller than its canvas by a
-        // frame its text does not fill (user, 2026-10-13). Reflowed, the
-        // text runs on in the pane.
+        // margin (`TEIRenderer.frameMargin`) on all four sides of it, in
+        // place of the layer's inset. The margins are the edition's own and
+        // stay empty (user, 2026-10-14): everything the page holds—its
+        // text, marginalia, call numbers, stamps—is set inside the frame,
+        // which grows to hold a line wider than its measure or a page taller
+        // than its canvas rather than letting either run into a margin (a
+        // page that does is regularized in its TEI to fit). The page's own
+        // proportions (its canvas's aspect) set its height, never a frame its
+        // text does not fill (user, 2026-10-13). Reflowed, the text runs on
+        // in the pane.
         selector("& .tei-page-text[data-framed='true']:not([data-reflow='true'] *)") {
           padding(0)
         }
@@ -1358,9 +1361,8 @@
           flexShrink(0)
           boxSizing(.contentBox)
           CSS.Property("inline-size", Self.pageEm("var(--tei-frame-measure)"))
-          CSS.Property("min-inline-size", "0")
+          CSS.Property("min-inline-size", "max-content")
           CSS.Property("margin", Self.pageEm("var(--tei-frame-margin)"))
-          CSS.Property("margin-block-end", "0")
         }
         // Its lines set on the page's own measure, never a narrower pane's:
         // a page is 40em wide (`layout_measure`'s page-em, the canonical
