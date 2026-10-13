@@ -3,10 +3,10 @@ import Foundation
 import XCTest
 
 /// The named colors (user, 2026-10-11): twelve OKLCH hues 30° apart from
-/// pure red's, and gray, each at exactly its scheme's contrast with the
-/// page—3:1 by default, 7:1 for increased contrast—with the most chroma sRGB
-/// allows at that lightness. 3:1 against white is 7:1 against black, so two
-/// sets serve four schemes.
+/// pure red's, and gray, each at its scheme's APCA level against the
+/// page—Lc 45 by default, Lc 75 for increased contrast (2026-10-14)—with the
+/// most chroma sRGB allows at that lightness; on a Display P3 screen, the
+/// same rule in P3.
 final class NamedColorsTests: XCTestCase {
   func testEditorLineMirrorsItsSurfaceContrast() {
     let light = NamedColors.currentLineGray(.light)
@@ -28,9 +28,9 @@ final class NamedColorsTests: XCTestCase {
     }
   }
 
-  /// By APCA (user, 2026-10-12): each color at APCA's own level against
-  /// the page—Lc 60 by default, Lc 75 in increased contrast—its hue kept,
-  /// the most chroma.
+  /// By APCA (user, 2026-10-12; Lc 45 2026-10-14): each color at APCA's own
+  /// level against the page—Lc 45 by default, Lc 75 in increased
+  /// contrast—its hue kept, the most chroma.
   func testEachStandsAtItsAPCALevel() {
     for scheme in NamedColors.Scheme.allCases {
       let page = scheme.isDark ? 0 : 255
@@ -52,6 +52,40 @@ final class NamedColorsTests: XCTestCase {
     }
   }
 
+  /// The default level is Lc 45 (user, 2026-10-14), the brand blue among
+  /// them.
+  func testTheDefaultLevelIsLc45() {
+    XCTAssertEqual(NamedColors.namedLc, 45)
+    XCTAssertEqual(NamedColors.namedLcMoreContrast, 75)
+    XCTAssertEqual(NamedColors.hex("blue", .light), "#2BB4FF")
+    XCTAssertEqual(NamedColors.hex("blue", .dark), "#009CE3")
+    XCTAssertEqual(NamedColors.hex("blue", .lightMoreContrast), "#0074A9")
+    XCTAssertEqual(NamedColors.hex("blue", .darkMoreContrast), "#91D2FF")
+  }
+
+  /// The P3 layer (user, 2026-10-14): every hue, every scheme, written
+  /// inside Display P3, its hue kept, at least sRGB's chroma, the most P3
+  /// allows at its lightness, and at its scheme's APCA level measured in P3.
+  func testTheP3ColorsKeepTheirLevelWithTheMostP3Chroma() {
+    XCTAssertNil(NamedColors.cssP3("gray", .light))
+    for scheme in NamedColors.Scheme.allCases {
+      let page = scheme.isDark ? 0 : 255
+      let level = scheme.isMoreContrast ? NamedColors.namedLcMoreContrast : NamedColors.namedLc
+      for name in NamedColors.hueNames {
+        let css = NamedColors.cssP3(name, scheme)!
+        let parts = css.dropFirst(6).dropLast().split(separator: " ").compactMap { Double($0) }
+        XCTAssertEqual(parts.count, 3, css)
+        let written = NamedColors.OKLCH(parts[0], parts[1], parts[2])
+        XCTAssertTrue(NamedColors.inDisplayP3(written, tolerance: 1e-12), "\(name) \(scheme) \(css)")
+        XCTAssertEqual(written.h, NamedColors.hue(name), accuracy: 1e-4, "\(name) keeps its hue")
+        XCTAssertEqual(written.c, NamedColors.maxChromaP3(l: written.l, h: written.h), accuracy: 2e-4, "\(name) most P3 chroma")
+        XCTAssertGreaterThan(written.c, NamedColors.color(name, scheme).c, "\(name) \(scheme) beyond sRGB")
+        XCTAssertEqual(abs(NamedColors.lcP3(written, on: page)), level, accuracy: 0.1, "\(name) \(scheme) \(css)")
+        print("P3 \(scheme) \(name) \(css) Lc \(String(format: "%.1f", NamedColors.lcP3(written, on: page)))")
+      }
+    }
+  }
+
   /// The final ramp (user, 2026-10-12).
   func testTheNeutralRampsValues() {
     let order: [NamedColors.Neutral] = [
@@ -59,8 +93,8 @@ final class NamedColorsTests: XCTestCase {
       .border, .glyphGrayQuaternary, .glyphGrayTertiary, .glyphGraySecondary, .glyphGray,
     ]
     let light = NamedColors.neutralRamp(.light), dark = NamedColors.neutralRamp(.dark)
-    XCTAssertEqual(order.map { light[$0]! }, [248, 241, 234, 227, 220, 148, 127, 105, 74, 21])
-    XCTAssertEqual(order.map { dark[$0]! }, [39, 56, 68, 80, 91, 172, 190, 207, 228, 251])
+    XCTAssertEqual(order.map { light[$0]! }, [248, 241, 234, 227, 220, 148, 127, 105, 104, 21])
+    XCTAssertEqual(order.map { dark[$0]! }, [39, 56, 68, 80, 91, 172, 190, 207, 208, 251])
     for scheme in NamedColors.Scheme.allCases {
       let ramp = NamedColors.neutralRamp(scheme)
       print("RAMP \(scheme)", order.map { ramp[$0]! }, "subtle border", ramp[.borderSecondary]!)
