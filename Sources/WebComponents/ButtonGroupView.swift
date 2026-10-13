@@ -8,9 +8,9 @@
   import WebTypes
 
   /// A ButtonGroup consists of a set of two or more normal buttons.
-  /// Children that actually wrap to a new line (detected at runtime by
-  /// `ButtonGroupHydration` via offsetTop comparison) automatically stretch
-  /// to fill the row's full width—no hardcoded breakpoint required.
+  /// Where its buttons don't fit on one line (`detectsCrowding`, kept by
+  /// `CrowdedRowHydration`), each stretches to the row's full width, so the
+  /// group reads as a column—no hardcoded breakpoint required.
   public struct ButtonGroupView: HTMLContent {
     public struct ButtonItem: Sendable {
       public let value: String
@@ -168,6 +168,7 @@
         .class(`class`.isEmpty ? "button-group-view" : "button-group-view \(`class`)")
         .role(.group)
         .ariaLabel(ariaLabel)
+        .detectsCrowding()
         .style {
           selector("&") {
             display(.flex)
@@ -177,9 +178,9 @@
             style()
           }
 
-          // Once children have actually wrapped to multiple lines, stretch
-          // each child to fill the row so a wrapped group reads as a column.
-          selector("[data-wrapped='true'] > *") {
+          // Where the buttons don't fit on one line, stretch each to fill
+          // the row, so a crowded group reads as a column.
+          selector("&[data-crowded='true'] > *") {
             flexGrow(1)
             flexBasis(perc(100))
           }
@@ -308,7 +309,6 @@
 
     public init() {
       hydrateAllButtonGroups()
-      hydrateWrapDetection()
     }
 
     public static func hydrateIfPresent() {
@@ -322,35 +322,6 @@
       for group in allGroups {
         let instance = ButtonGroupInstance(group: group)
         instances.append(instance)
-      }
-    }
-
-    private func hydrateWrapDetection() {
-      let groups = document.querySelectorAll(".button-group-view")
-
-      for group in groups {
-        updateWrappedState(group)
-        group.observeResize { [self] _, _ in
-          self.updateWrappedState(group)
-        }
-      }
-    }
-
-    // Detects when a button group's children have actually wrapped to
-    // multiple lines (by comparing child offsetTop values) and toggles
-    // `data-wrapped` so CSS can stretch children to full width only then.
-    //
-    // Must measure with `data-wrapped` cleared first: once set, the CSS
-    // forces each child to flex-basis 100% (its own full-width row), which
-    // makes every subsequent measurement see wrapped children regardless of
-    // available width—a sticky state that would never revert on grow.
-    private func updateWrappedState(_ group: DOM.Element) {
-      group.removeAttribute("data-wrapped")
-      let children = group.querySelectorAll(":scope > *")
-      guard let firstTop = children.first?.offsetTop else { return }
-      let wrapped = children.contains { $0.offsetTop != firstTop }
-      if wrapped {
-        group.setAttribute("data-wrapped", "true")
       }
     }
   }
