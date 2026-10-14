@@ -23,7 +23,7 @@ public struct MarkdownToggleButtonView: HTMLContent {
       ariaLabel: "Markdown mode (edit source)", size: .medium,
       class: `class`.isEmpty ? "markdown-toggle-button-view" : "markdown-toggle-button-view \(`class`)"
     ).build()
-    return (view as? DOM.Element)?.addingAttribute("title", "Markdown source — switch to this mode to edit") ?? view
+    return (view as? DOM.Element)?.addingAttribute("title", "Markdown source—switch to this mode to edit") ?? view
   }
 }
 #endif

@@ -23,7 +23,7 @@ public struct JSONToggleButtonView: HTMLContent {
       ariaLabel: "JSON mode (edit source)", size: .medium,
       class: `class`.isEmpty ? "json-toggle-button-view" : "json-toggle-button-view \(`class`)"
     ).build()
-    return (view as? DOM.Element)?.addingAttribute("title", "JSON source — switch to this mode to edit") ?? view
+    return (view as? DOM.Element)?.addingAttribute("title", "JSON source—switch to this mode to edit") ?? view
   }
 }
 #endif
