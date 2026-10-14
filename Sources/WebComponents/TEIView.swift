@@ -147,6 +147,28 @@
       }.joined(separator: " ")
     }
 
+    /// The scan's measured layout on the page's surface
+    /// (`TEIFacsimile.layout(of:)`, the tools' zones): each zone its type
+    /// ("block", "line", "word"), a block's subtype ("main",
+    /// "marginalia"; "-" for the others) and its four corners in the
+    /// 0–1000 space over the image, to hundredths, all one a space; one
+    /// zone a ";", in reading order (a line the block's before it, a word
+    /// the line's); "" where none was measured. The reader's structure
+    /// overlay and its word correspondence read it.
+    static func scanLayoutData(of page: TEIPage) -> String {
+      guard let block = page.textBlock else { return "" }
+      return TEIFacsimile.layout(of: block).map { zone in
+        ([zone.type, zone.subtype.isEmpty ? "-" : zone.subtype]
+          + zone.fractions.map { number(($0 * 100_000).rounded() / 100) }).joined(separator: " ")
+      }.joined(separator: ";")
+    }
+
+    /// The body's leading in rem (`TEIRendition.bodyLeading`), "" where
+    /// the scale declares none: the structure overlay's unit.
+    static func bodyLeadingData(of page: TEIPage) -> String {
+      TEIRendition.bodyLeading(in: page.renditions).map { number($0) } ?? ""
+    }
+
     /// The page's frame as the custom properties its rules read
     /// (`.tei-page-text[data-framed]`, `.tei-text-block`), in em of the
     /// work's body type: the frame's measure and height, the margin around
@@ -1041,6 +1063,10 @@
           // the work frame placed on its scan), which the overlay lays on
           // the rendered frame itself, whole.
           .data("text-block-derived", page.textBlock?.derived == true)
+          // The scan's measured layout (blocks, lines, words) and the body's
+          // leading: the structure overlay and the word correspondence.
+          .data("scan-layout", Self.scanLayoutData(of: page))
+          .data("body-leading", Self.bodyLeadingData(of: page))
           // Its place in the document, from 0: what the reader turns to and
           // a roster names it by, where not every page is drawn.
           .data("page-index", index + firstIndex)
