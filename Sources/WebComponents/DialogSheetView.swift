@@ -13,7 +13,7 @@
   /// over the pane that holds it, or the screen.
   ///
   /// What it covers is the nearest box marked `data-sheet-host` around what
-  /// opened it, or, with none, the screen: `DialogSheet` on the client moves
+  /// opened it (a positioned box), or, with none, the screen: `DialogSheet` on the client moves
   /// it there, opens and closes it, takes Esc, the close button and the
   /// backdrop, keeps Tab inside it while it is open, and gives the focus back
   /// to what opened it.
@@ -92,9 +92,12 @@
       }
       .style(prefix: false) {
         // The pane a sheet covers holds still under it: the sheet sits over
-        // what the pane shows, from where it had scrolled to.
+        // what the pane shows, from where it had scrolled to. A host is
+        // positioned itself (relative, or absolute as a reader's pane frame
+        // is laid beside its image): forced relative here, a reader's
+        // absolute frame fell into the flow and grew over the image pane
+        // (user, 2026-10-14).
         selector("[data-sheet-covered='true']") {
-          position(.relative).important()
           overflow(.hidden).important()
         }
       }

@@ -1442,12 +1442,14 @@
         }
         // Each area against the frame: a side note from the frame's top,
         // against its side; a top note ending where the frame begins, a
-        // bottom note beginning where it ends, from the frame's left; a
-        // corner note against both.
+        // bottom note beginning where it ends, across the frame's measure
+        // (from its left, or centered over it as its rend sets it: an
+        // owner's mark regularized to the head's middle, user, 2026-10-14);
+        // a corner note against both.
         for (area, align, justify) in [
-          ("top-left", "end", "end"), ("top", "end", "start"), ("top-right", "end", "start"),
+          ("top-left", "end", "end"), ("top", "end", "stretch"), ("top-right", "end", "start"),
           ("margin-left", "start", "end"), ("margin-right", "start", "start"),
-          ("bottom-left", "start", "end"), ("bottom", "start", "start"), ("bottom-right", "start", "start"),
+          ("bottom-left", "start", "end"), ("bottom", "start", "stretch"), ("bottom-right", "start", "start"),
         ] {
           selector("& .tei-page-text[data-framed='true']:not([data-reflow='true'] *) > .tei-margin[data-place='\(area)']") {
             CSS.Property("grid-area", area)
