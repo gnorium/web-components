@@ -83,4 +83,30 @@ final class TEIPrintedLayoutTests: XCTestCase {
     let layer = try XCTUnwrap(nodes.first { attribute("data-layer", of: $0) == "rendering" })
     XCTAssertEqual(text(of: layer).filter { !$0.isWhitespace }, "abc")
   }
+
+  /// A page in its work's frame (user, 2026-10-14): its main text in the
+  /// frame, its marginalia outside it on their sides, the page's frame,
+  /// margin and size in the body type's em on the page's layer.
+  func testMarginaliaAreSetOutsideTheFrameOnTheirSides() throws {
+    let document = """
+      <TEI><teiHeader><encodingDesc><tagsDecl><rendition xml:id="text-block" scheme="css" selector="text">\
+      font-size:20px;inline-size:44em;block-size:55.9em;margin:3em</rendition></tagsDecl></encodingDesc></teiHeader>\
+      <text><body><pb n="1" facs="https://web-tests.invalid/iiif/1"/>\
+      <note type="provenance" place="top margin-left" style="margin-block-end:2em"><p>Ref PE 1580<lb/></p></note>\
+      <p>Main text<lb/></p>\
+      <note place="margin-left" style="margin-inline-end:1em"><p>Gloss<lb/></p></note>\
+      <note type="provenance" place="bottom"><p>Stamp<lb/></p></note></body></text></TEI>
+      """
+    let nodes = elements(in: TEIView(teiXml: document).build())
+    let layer = try XCTUnwrap(nodes.first { attribute("data-layer", of: $0) == "rendering" })
+    XCTAssertEqual(attribute("data-framed", of: layer), "true")
+    XCTAssertEqual(
+      attribute("style", of: layer),
+      "--tei-frame-measure: 44; --tei-frame-height: 55.9; --tei-frame-margin: 3; --tei-page-width: 0; --tei-page-height: 0")
+    let frame = try XCTUnwrap(classed("tei-text-block", in: nodes).first)
+    XCTAssertEqual(text(of: frame).trimmingCharacters(in: .whitespacesAndNewlines), "Main text")
+    let margins = classed("tei-margin", in: nodes)
+    XCTAssertEqual(margins.compactMap { attribute("data-place", of: $0) }, ["top-left", "margin-left", "bottom"])
+    XCTAssertEqual(margins.map { text(of: $0).trimmingCharacters(in: .whitespacesAndNewlines) }, ["Ref PE 1580", "Gloss", "Stamp"])
+  }
 }

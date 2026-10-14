@@ -147,19 +147,25 @@
       }.joined(separator: " ")
     }
 
-    /// A length in page-em (1em the page's width over
-    /// `TEIRenderer.pageEms`, the canonical render's 640px page's 16px).
-    static func pageEm(_ value: String) -> String {
-      "calc(\(value) * \(size640.value) / \(number(TEIRenderer.pageEms)))"
-    }
-
-    /// The frame's measure and margin in page-em, as the custom properties
-    /// its rule reads (`.tei-text-block`).
-    static func frameStyle(_ frame: (measure: Double, height: Double)) -> String {
+    /// The page's frame as the custom properties its rules read
+    /// (`.tei-page-text[data-framed]`, `.tei-text-block`), in em of the
+    /// work's body type: the frame's measure and height, the margin around
+    /// the page's content, and a genuinely larger page's own size (0 for
+    /// any other: its content and margins set its size).
+    static func frameStyle(_ frame: TEIPageFrame) -> String {
       // Ten-thousandths of an em: finer than a device pixel.
       func rounded(_ value: Double) -> String { number((value * 10_000).rounded() / 10_000) }
-      return "--tei-frame-measure: \(rounded(frame.measure));"
-        + " --tei-frame-margin: \(rounded(TEIRenderer.frameMargin(measure: frame.measure)))"
+      return "--tei-frame-measure: \(rounded(frame.measure)); --tei-frame-height: \(rounded(frame.height));"
+        + " --tei-frame-margin: \(rounded(frame.margin)); --tei-page-width: \(rounded(frame.pageWidth));"
+        + " --tei-page-height: \(rounded(frame.pageHeight))"
+    }
+
+    /// The area around the frame a line of marginalia is set in: a note's,
+    /// placed in a margin beside, above or below it or at a corner
+    /// (`TEIRenderer.marginalArea`); nil for a line of the main text.
+    static func marginalPlace(of line: TEILine) -> String? {
+      guard case .note(let place) = line.kind else { return nil }
+      return TEIRenderer.marginalArea(of: place)
     }
 
     /// A page's markup as the lines a diff compares: each line's runs with
@@ -916,15 +922,29 @@
           div {
             div {
               if let frame {
-                // The work's frame, its body pages' text block: the page's
-                // text set in it, an equal margin around it on every side.
+                // The work's frame, its body pages' main text block: the
+                // page's main text set in it; its marginalia outside it,
+                // beside, above or below it where the scan has them (user,
+                // 2026-10-14); an equal margin around them all.
+                let lines = page.lines
                 div {
                   rendered(
-                    page.lines, heading: labelsPages ? page.label : nil, direction: direction,
-                    facsimileURL: page.facsimileURL, label: page.label, tabStop: tabStop)
+                    lines.filter { Self.marginalPlace(of: $0) == nil }, heading: labelsPages ? page.label : nil,
+                    direction: direction, facsimileURL: page.facsimileURL, label: page.label, tabStop: tabStop)
                 }
                 .class("tei-text-block")
-                .addingAttribute("style", Self.frameStyle(frame))
+                for place in TEIRenderer.marginalAreas {
+                  let notes = lines.filter { Self.marginalPlace(of: $0) == place }
+                  if !notes.isEmpty {
+                    div {
+                      rendered(
+                        notes, heading: nil, direction: direction, facsimileURL: page.facsimileURL, label: page.label,
+                        tabStop: tabStop)
+                    }
+                    .class("tei-margin")
+                    .data("place", place)
+                  }
+                }
               } else {
                 rendered(
                   page.lines, heading: labelsPages ? page.label : nil, direction: direction,
@@ -934,6 +954,7 @@
             .class("tei-page-text")
             .data("layer", "rendering")
             .data("framed", frame != nil)
+            .addingAttribute("style", frame.map(Self.frameStyle) ?? "")
 
             div {
               if editable {
@@ -1340,36 +1361,70 @@
           whiteSpace(.nowrap)
           overflowX(.auto)
         }
-        // A page set in its work's frame (`TEIPage.frame`): the frame's
-        // measure in page-em (`TEIRenderer.pageEms` to the page), the same
-        // margin (`TEIRenderer.frameMargin`) on all four sides of it, in
-        // place of the layer's inset. The margins are the edition's own and
-        // stay empty (user, 2026-10-14): everything the page holds—its
-        // text, marginalia, call numbers, stamps—is set inside the frame,
-        // which grows to hold a line wider than its measure or a page taller
-        // than its canvas rather than letting either run into a margin (a
-        // page that does is regularized in its TEI to fit). The page's own
-        // proportions (its canvas's aspect) set its height, never a frame its
-        // text does not fill (user, 2026-10-13). Reflowed, the text runs on
-        // in the pane.
+        // A page set in its work's frame (`TEIPage.frame`, user,
+        // 2026-10-14): 1em the work's body type, the renderer's 16px; the
+        // frame its body pages' main text block, its measure and height in
+        // that em, holding the main text, which never squeezes (it grows to
+        // hold a line wider than its measure or a page taller than its
+        // height, and a page that does is regularized in its TEI to fit);
+        // the marginalia outside it, a side note beside it, a top or bottom
+        // note above or below it, each placed from it by its own measured
+        // margins; around the frame and its marginalia, the content box,
+        // the same margin on all four sides, empty. A page with side notes
+        // is wider, never its text narrower. A page genuinely larger than
+        // its work's (a plate, a foldout) is its scan's own size at the same
+        // scale, its content centered in it. Reflowed, the text runs on in
+        // the pane.
         selector("& .tei-page-text[data-framed='true']:not([data-reflow='true'] *)") {
-          padding(0)
+          display(.grid)
+          CSS.Property(
+            "grid-template-areas",
+            "\"top-left top top-right\" \"margin-left frame margin-right\" \"bottom-left bottom bottom-right\"")
+          CSS.Property("grid-template-columns", "auto max-content auto")
+          CSS.Property("grid-template-rows", "auto auto auto")
+          CSS.Property("justify-content", "center")
+          CSS.Property("align-content", "center")
+          boxSizing(.borderBox)
+          fontSize(fontSizeMedium16)
+          CSS.Property("padding", "calc(var(--tei-frame-margin) * 1em)")
+          CSS.Property("inline-size", "max-content")
+          CSS.Property("min-inline-size", "calc(var(--tei-page-width) * 1em)")
+          CSS.Property("min-block-size", "calc(var(--tei-page-height) * 1em)")
         }
-        selector("& .tei-page-text:not([data-reflow='true'] *) > .tei-text-block") {
+        selector("& .tei-page-text[data-framed='true']:not([data-reflow='true'] *) > .tei-text-block") {
+          CSS.Property("grid-area", "frame")
           display(.flex)
           flexDirection(.column)
-          flexShrink(0)
           boxSizing(.contentBox)
-          CSS.Property("inline-size", Self.pageEm("var(--tei-frame-measure)"))
+          CSS.Property("inline-size", "calc(var(--tei-frame-measure) * 1em)")
           CSS.Property("min-inline-size", "max-content")
-          CSS.Property("margin", Self.pageEm("var(--tei-frame-margin)"))
+          CSS.Property("min-block-size", "calc(var(--tei-frame-height) * 1em)")
         }
-        // Its lines set on the page's own measure, never a narrower pane's:
-        // a page is 40em wide (`layout_measure`'s page-em, the canonical
-        // render's 640px), its margins the TEI's within it, so a pane too
-        // narrow scrolls the page whole rather than running its long lines
-        // into the margin on one side only.
-        selector("& .tei-page-text:not([data-reflow='true'] *) > *") {
+        selector("& .tei-page-text[data-framed='true']:not([data-reflow='true'] *) > .tei-margin") {
+          display(.flex)
+          flexDirection(.column)
+          minWidth(0)
+        }
+        // Each area against the frame: a side note from the frame's top,
+        // against its side; a top note ending where the frame begins, a
+        // bottom note beginning where it ends, from the frame's left; a
+        // corner note against both.
+        for (area, align, justify) in [
+          ("top-left", "end", "end"), ("top", "end", "start"), ("top-right", "end", "start"),
+          ("margin-left", "start", "end"), ("margin-right", "start", "start"),
+          ("bottom-left", "start", "end"), ("bottom", "start", "start"), ("bottom-right", "start", "start"),
+        ] {
+          selector("& .tei-page-text[data-framed='true']:not([data-reflow='true'] *) > .tei-margin[data-place='\(area)']") {
+            CSS.Property("grid-area", area)
+            CSS.Property("align-self", align)
+            CSS.Property("justify-self", justify)
+          }
+        }
+        // A page with no frame: its lines set on the canonical render's
+        // page, never a narrower pane's, so a pane too narrow scrolls the
+        // page whole rather than running its long lines into the margin on
+        // one side only.
+        selector("& .tei-page-text:not([data-framed='true']):not([data-reflow='true'] *) > *") {
           CSS.Property("min-inline-size", "calc(\(size640.value) - 2 * \(spacing16.value))")
         }
         selector("& .tei-page-text:not([data-reflow='true'] *) .tei-block > *") {
