@@ -908,6 +908,10 @@
 
     public func build() -> DOM.Node {
       let pages = self.pages
+      // Each page's source as one TEI document (user, 2026-10-14): the
+      // document's header renditions, then the page's fragment as its body
+      // (`TEIRendition.headedPage`), read and edited alike everywhere.
+      let renditions = TEIRendition.renditions(of: teiXml)
       // Record pages register an empty reader before fetching its contents:
       // formula styles are registered then, even with no formula yet.
       _ = TEIMathView(TEIMath(display: false, content: [])).build()
@@ -968,7 +972,7 @@
                   CodeEditorView(
                     id: "tei-page-raw-\(index + firstIndex)",
                     name: "markup",
-                    value: page.markup,
+                    value: TEIRendition.headedPage(page.markup, renditions: renditions),
                     ariaLabel: page.label.isEmpty ? "Code of this page" : "Code of \(page.label)",
                     lined: true
                   )
@@ -976,8 +980,9 @@
                 .class("tei-page-edit")
               } else {
                 // The stored text as it is (a document is stored formatted),
-                // numbered and soft-wrapped (user, 2026-10-11).
-                CodeView(page.markup, showLineNumbers: false, lined: true)
+                // headed, numbered and soft-wrapped (user, 2026-10-11).
+                CodeView(
+                  TEIRendition.headedPage(page.markup, renditions: renditions), showLineNumbers: false, lined: true)
               }
             }
             .class("tei-page-raw")

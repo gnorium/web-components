@@ -326,6 +326,16 @@
         _ = viewer.addEventListener("artifact-canvas-change") { _ in
           Self.highlightVisible()
         }
+        // A page fetched into the reader after it turned (a windowed
+        // reader's, the Revise page's), and XML switched on however it was
+        // pressed: colored once it is laid out (user, 2026-10-14), not at
+        // the next click.
+        _ = viewer.addEventListener("artifact-markup-added") { _ in
+          _ = window.requestAnimationFrame { Self.highlightVisible() }
+        }
+        _ = viewer.querySelector(".artifact-xml-toggle")?.addEventListener("toggle-button-update") { _ in
+          _ = window.requestAnimationFrame { Self.highlightVisible() }
+        }
       }
       highlightVisible()
     }
