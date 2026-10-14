@@ -1037,6 +1037,10 @@
           .data("page-index", index + firstIndex)
           .data("active", index == (self.page ?? 0) ? "true" : "false")
         }
+          // Whether that text block is derived (a page with no main text:
+          // the work frame placed on its scan), which the overlay lays on
+          // the rendered frame itself, whole.
+          .data("text-block-derived", page.textBlock?.derived == true)
       }
       .class("tei-view")
       .data("editable", editable)
