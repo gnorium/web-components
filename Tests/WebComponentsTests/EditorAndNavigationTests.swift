@@ -17,7 +17,9 @@ final class EditorAndNavigationTests: XCTestCase {
 
   /// The Raw editor opens on the stored text, as Raw shows it (user,
   /// 2026-10-11): a document is stored formatted, so it is never laid out
-  /// again here, and its significant white space stands.
+  /// again here, and its significant white space stands. The page is the
+  /// headed document every single-page view shows (user, 2026-10-14:
+  /// `TEIRendition.headedPage`), its fragment the stored text.
   func testTEIEditorOpensTheStoredTextAndKeepsSignificantWhitespace() throws {
     for attribute in ["xml:space='preserve'", "xml:space = \"preserve\"", "xml:space = 'preserve'"] {
       let source = "<p \(attribute)><hi>a</hi>  <hi>b</hi>\u{00A0}c\n</p>"
@@ -25,19 +27,22 @@ final class EditorAndNavigationTests: XCTestCase {
         teiXml: "<TEI><text><body><pb n=\"1\" facs=\"https://web-tests.invalid/iiif/1\"/>\(source)</body></text></TEI>",
         editable: true)
       let page = try XCTUnwrap(view.pages.first)
+      let headed = TEIRendition.headedPage(page.markup, renditions: TEIRendition.renditions(of: view.teiXml))
       let nodes = elements(in: view.build())
       let input = try XCTUnwrap(nodes.first { $0.tag == "textarea" })
       let code = try XCTUnwrap(nodes.first { node in
         node.tag == "code" && node.attributes.contains { $0.0 == "contenteditable" }
       })
-      XCTAssertEqual(text(in: input), page.markup)
-      XCTAssertEqual(text(in: code), page.markup)
+      XCTAssertEqual(text(in: input), headed)
+      XCTAssertEqual(text(in: code), headed)
+      XCTAssertTrue(text(in: input).contains("\n" + page.markup + "\n"))
       XCTAssertTrue(text(in: input).contains(source))
     }
   }
 
   /// A page stored on one line opens as stored, not laid out: what the
-  /// editor shows is what is stored.
+  /// editor shows is what is stored, headed as every single-page view
+  /// shows it.
   func testTEIEditorOpensAOneLinePageAsStored() throws {
     let view = TEIView(
       teiXml: #"<TEI><text><body><pb n="1" facs="https://web-tests.invalid/iiif/1"/><div><p>Old line</p></div></body></text></TEI>"#,
@@ -45,7 +50,7 @@ final class EditorAndNavigationTests: XCTestCase {
     let page = try XCTUnwrap(view.pages.first)
     let input = try XCTUnwrap(elements(in: view.build()).first { $0.tag == "textarea" })
     XCTAssertNotEqual(XMLFormatter.prettified(page.markup), page.markup)
-    XCTAssertEqual(text(in: input), page.markup)
+    XCTAssertEqual(text(in: input), TEIRendition.headedPage(page.markup, renditions: TEIRendition.renditions(of: view.teiXml)))
   }
 
   func testPaginationChangesOnlyExactPageParameters() {
