@@ -59,6 +59,10 @@
     /// reader draws a page at a time and fetches the others as they are
     /// turned to (`TestamentView.pagesURL`); nil draws every page.
     let page: Int?
+    /// The pages drawn beside `page`, by place from 0, where a reader draws
+    /// some of them at first: a revision's changed pages and the page either
+    /// side of each (`TestamentView.drawn`). Ignored where `page` is nil.
+    let drawn: [Int]
     /// The place in its whole document of this document's first page: a
     /// page read alone from a long book's stored pages (`TestamentView`'s
     /// `page(_:service:firstIndex:)`) is drawn at its place in the book.
@@ -100,10 +104,11 @@
     public init(
       teiXml: String, editable: Bool = false, translation: Translation? = nil,
       highlights: [String: [TEIHighlight]] = [:], labelsPages: Bool = false, glossURL: String? = nil,
-      page: Int? = nil, firstIndex: Int = 0, direction: String? = nil
+      page: Int? = nil, drawn: [Int] = [], firstIndex: Int = 0, direction: String? = nil
     ) {
       self.direction = direction
       self.page = page
+      self.drawn = drawn
       self.firstIndex = firstIndex
       self.teiXml = teiXml
       self.editable = editable
@@ -955,7 +960,7 @@
           p { "This document has no page breaks to read by. The raw XML is below." }
             .class("tei-empty")
         }
-        for (index, page) in pages.enumerated() where self.page == nil || self.page == index {
+        for (index, page) in pages.enumerated() where self.page == nil || self.page == index || drawn.contains(index) {
           let tabStop = glossURL == nil ? nil : Self.firstWord(of: page.lines)
           let frame = page.frame
           div {
