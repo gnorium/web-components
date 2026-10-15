@@ -46,6 +46,7 @@
       TextInputHydration.hydrate(in: host)
       DatePickerHydration.hydrateIfPresent()
       TimeInputHydration.hydrateIfPresent()
+      NumberRangeInputHydration.hydrateIfPresent()
       FilterBarHydration.hydrate(in: host)
       TableHydration.hydrate(in: host)
       PaginationHydration.hydrate(in: host)

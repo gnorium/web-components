@@ -18,7 +18,7 @@
   /// first that can hold it.
   ///
   /// A range is one parameter holding both its ends (`2026-10-01..2026-10-08`,
-  /// `-7d..`, `09:00..17:00`), so it never repeats.
+  /// `-7d..`, `09:00..17:00`, `1000..5000`), so it never repeats.
   public enum FilterField: Sendable {
     /// Typed text; `repeatable` lets it fill several rows, alternatives
     /// (two IDs list both objects).
@@ -43,6 +43,9 @@
     /// A span of the day (`TimeRangeValue`), picked with a time input's
     /// range, in the reader's clock, carried in UTC.
     case timeRange(name: String, label: String)
+    /// A range of numbers (`NumberRangeValue`), typed in two number inputs,
+    /// Start and End, either left open.
+    case numberRange(name: String, label: String)
 
     /// The parameter the field submits.
     public var name: String {
@@ -53,6 +56,7 @@
       case .date(let name, _): return name
       case .dateRange(let name, _): return name
       case .timeRange(let name, _): return name
+      case .numberRange(let name, _): return name
       }
     }
 
@@ -74,12 +78,13 @@
       case .date(_, let label): return label
       case .dateRange(_, let label): return label
       case .timeRange(_, let label): return label
+      case .numberRange(_, let label): return label
       }
     }
 
     public var repeatable: Bool {
       switch self {
-      case .date, .dateRange, .timeRange: return false
+      case .date, .dateRange, .timeRange, .numberRange: return false
       case .text(_, _, _, let repeatable): return repeatable
       case .select(_, _, _, let repeatable): return repeatable
       case .combobox(_, _, _, _, let repeatable): return repeatable
@@ -90,7 +95,7 @@
     /// from a list.
     public var takesInput: Bool {
       switch self {
-      case .text, .combobox, .date, .dateRange, .timeRange: return true
+      case .text, .combobox, .date, .dateRange, .timeRange, .numberRange: return true
       case .select: return false
       }
     }
@@ -109,6 +114,9 @@
         return false
       case .timeRange:
         if let _ = TimeRangeValue.parse(value) { return true }
+        return false
+      case .numberRange:
+        if let _ = NumberRangeValue.parse(value) { return true }
         return false
       }
     }
@@ -179,6 +187,9 @@
       }
       if schema.contains(where: { if case .timeRange = $0 { return true } else { return false } }) {
         _ = TimeInputView(id: "filter-bar-time-preload", name: "", range: true).build()
+      }
+      if schema.contains(where: { if case .numberRange = $0 { return true } else { return false } }) {
+        _ = NumberRangeInputView(id: "filter-bar-number-preload", name: "").build()
       }
       let rows = activeRows
       // Another row can always hold a repeatable field; otherwise one row
@@ -370,6 +381,16 @@
           fullWidth: true,
           class: "filter-bar-value-input"
         )
+
+      case .numberRange(let name, let label):
+        NumberRangeInputView(
+          id: "filter-\(name)-\(rowIndex)",
+          name: name,
+          value: value,
+          label: label,
+          fullWidth: true,
+          class: "filter-bar-value-input"
+        )
       }
     }
 
@@ -404,6 +425,10 @@
           parts.append(
             "{\"key\":\"\(field.key)\",\"name\":\"\(name)\",\"label\":\"\(label)\",\"type\":\"timerange\"}"
           )
+        case .numberRange(let name, let label):
+          parts.append(
+            "{\"key\":\"\(field.key)\",\"name\":\"\(name)\",\"label\":\"\(label)\",\"type\":\"numberrange\"}"
+          )
         }
       }
       return "[\(parts.joined(separator: ","))]"
@@ -433,6 +458,7 @@
     private let textInputHydration = TextInputHydration()
     private let datePickerHydration = DatePickerHydration()
     private let timeInputHydration = TimeInputHydration()
+    private let numberRangeInputHydration = NumberRangeInputHydration()
 
     public static func hydrateIfPresent() {
       guard document.querySelector(".filter-bar-view") != nil else { return }
@@ -459,7 +485,8 @@
           dropdownHydration: dropdownHydration,
           textInputHydration: textInputHydration,
           datePickerHydration: datePickerHydration,
-          timeInputHydration: timeInputHydration
+          timeInputHydration: timeInputHydration,
+          numberRangeInputHydration: numberRangeInputHydration
         )
       }
     }
@@ -478,6 +505,7 @@
     let isDate: Bool
     let isDateRange: Bool
     let isTimeRange: Bool
+    let isNumberRange: Bool
     let placeholder: String
     let repeatable: Bool
   }
@@ -488,17 +516,20 @@
     private let textInputHydration: TextInputHydration
     private let datePickerHydration: DatePickerHydration
     private let timeInputHydration: TimeInputHydration
+    private let numberRangeInputHydration: NumberRangeInputHydration
     private var schema: [SchemaEntry] = []
 
     init(
       grid: DOM.Element, dropdownHydration: DropdownHydration, textInputHydration: TextInputHydration,
-      datePickerHydration: DatePickerHydration, timeInputHydration: TimeInputHydration
+      datePickerHydration: DatePickerHydration, timeInputHydration: TimeInputHydration,
+      numberRangeInputHydration: NumberRangeInputHydration
     ) {
       self.grid = grid
       self.dropdownHydration = dropdownHydration
       self.textInputHydration = textInputHydration
       self.datePickerHydration = datePickerHydration
       self.timeInputHydration = timeInputHydration
+      self.numberRangeInputHydration = numberRangeInputHydration
       parseSchema()
       wireRows()
       wireAddButton()
@@ -522,12 +553,13 @@
         let isDate = stringEquals(typeStr, "date")
         let isDateRange = stringEquals(typeStr, "daterange")
         let isTimeRange = stringEquals(typeStr, "timerange")
+        let isNumberRange = stringEquals(typeStr, "numberrange")
         let repeatable = extractJSONString(obj, key: "repeatable").map { stringEquals($0, "true") } ?? false
         schema.append(
           SchemaEntry(
             key: key, name: name, label: label, isText: isText, isCombobox: isCombobox, searchURL: searchURL,
             isDate: isDate, isDateRange: isDateRange,
-            isTimeRange: isTimeRange, placeholder: placeholder, repeatable: repeatable))
+            isTimeRange: isTimeRange, isNumberRange: isNumberRange, placeholder: placeholder, repeatable: repeatable))
       }
     }
 
@@ -612,6 +644,9 @@
           class: "filter-bar-value-input",
           hydrator: timeInputHydration
         )
+        row.insertBefore(input, addOrRemoveBtn)
+      } else if entry.isNumberRange {
+        let input = numberRangeInput(id: "filter-\(fieldName)-swap", entry: entry, value: value)
         row.insertBefore(input, addOrRemoveBtn)
       } else if entry.isCombobox {
         let input = ComboboxFactory.createElement(
@@ -728,6 +763,8 @@
           hydrator: timeInputHydration
         )
         row.appendChild(input)
+      } else if field.isNumberRange {
+        row.appendChild(numberRangeInput(id: "filter-\(field.name)-\(rowIndex)", entry: field, value: ""))
       } else if field.isCombobox {
         let input = ComboboxFactory.createElement(
           id: "filter-\(field.name)-\(rowIndex)", name: field.name, label: field.label,
@@ -771,6 +808,18 @@
       row.appendChild(btn)
 
       return row
+    }
+
+    /// A number range's two inputs, each bound as a text input is (a
+    /// number input's wheel scrolls the page, not its value).
+    private func numberRangeInput(id: String, entry: SchemaEntry, value: String) -> DOM.Element {
+      let element = NumberRangeInputFactory.createElement(
+        id: id, name: entry.name, value: value, label: entry.label, fullWidth: true,
+        class: "filter-bar-value-input", hydrator: numberRangeInputHydration)
+      for input in element.querySelectorAll(".text-input-view") {
+        textInputHydration.hydrate(element: input)
+      }
+      return element
     }
 
     // MARK: - Helpers
