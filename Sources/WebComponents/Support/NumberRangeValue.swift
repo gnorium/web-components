@@ -51,6 +51,15 @@ public struct NumberRangeValue: Sendable {
   /// As a URL carries it.
   public var param: String { "\(start ?? "")..\(end ?? "")" }
 
+  /// As its field reads: "1000–5000", "From 1000", "Up to 5000"—a closed en
+  /// dash, as a range of days is written.
+  public var label: String {
+    if let start, let end { return "\(start)–\(end)" }
+    if let start { return "From \(start)" }
+    if let end { return "Up to \(end)" }
+    return ""
+  }
+
   /// Whether `text` is a decimal: an optional minus, digits, and at most one
   /// point among them, with a digit somewhere.
   public static func isNumber(_ text: String) -> Bool {
