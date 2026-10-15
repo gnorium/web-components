@@ -16,12 +16,17 @@ import WebTypes
 ///
 /// The bubble is a line of text, `tooltip`, or `bubble` markup: several
 /// lines, a `LocalTimeView` the client puts in the reader's clock.
+///
+/// A trigger that holds controls of its own (a reaction pill's buttons)
+/// passes `pins: false`: its clicks and taps are its controls', and the
+/// tooltip shows on hover and focus alone.
 public struct TooltipView: HTMLContent {
   let bubble: [DOM.Node]
   let placement: Placement
   let font: Font
   let bubbleWidth: Width
   let children: [DOM.Node]
+  let pins: Bool
   let `class`: String
 
   /// Typeface of the bubble's text: sans for prose, mono for identifiers,
@@ -120,6 +125,7 @@ public struct TooltipView: HTMLContent {
     placement: Placement = .bottom,
     font: Font = .sans,
     width: Width = .standard,
+    pins: Bool = true,
     class: String = "",
     @HTMLBuilder content: () -> [DOM.Node]
   ) {
@@ -128,6 +134,7 @@ public struct TooltipView: HTMLContent {
     self.placement = placement
     self.font = font
     self.children = content()
+    self.pins = pins
     self.`class` = `class`
   }
 
@@ -135,6 +142,7 @@ public struct TooltipView: HTMLContent {
     placement: Placement = .bottom,
     font: Font = .sans,
     width: Width = .standard,
+    pins: Bool = true,
     class: String = "",
     @HTMLBuilder bubble: () -> [DOM.Node],
     @HTMLBuilder content: () -> [DOM.Node]
@@ -144,6 +152,7 @@ public struct TooltipView: HTMLContent {
     self.placement = placement
     self.font = font
     self.children = content()
+    self.pins = pins
     self.`class` = `class`
   }
 
@@ -167,6 +176,7 @@ public struct TooltipView: HTMLContent {
     .class(stringIsEmpty(`class`) ? "tooltip-view tooltip-trigger" : "tooltip-view tooltip-trigger \(`class`)")
     .data("tooltip", "true")
     .data("placement", placement.rawValue)
+    .data("pins", pins)
     .data("visible", false)
     .style {
       selector("&") {
@@ -632,13 +642,16 @@ public struct TooltipView: HTMLContent {
       // tap's emulated mouseenter and focus have already shown it by the
       // time its click arrives, so the click only pins. iOS sends no click
       // for a tap on something that isn't clickable, hence touchend too,
-      // which then takes the tap whole.
-      _ = trigger.addEventListener(.touchend) { [self] (event: Event) in
-        event.preventDefault()
-        self.togglePinned()
-      }
-      _ = trigger.addEventListener(.click) { [self] _ in
-        self.togglePinned()
+      // which then takes the tap whole. A trigger whose clicks are its own
+      // controls' (`pins: false`) leaves them be.
+      if !stringEquals(trigger.dataset["pins"] ?? "true", "false") {
+        _ = trigger.addEventListener(.touchend) { [self] (event: Event) in
+          event.preventDefault()
+          self.togglePinned()
+        }
+        _ = trigger.addEventListener(.click) { [self] _ in
+          self.togglePinned()
+        }
       }
 
       // A pinned one closes on a click or tap anywhere else. iOS sends no
@@ -667,6 +680,23 @@ public struct TooltipView: HTMLContent {
       _ = window.addEventListener(.resize) { [self] _ in
         if self.isVisible { self.dismiss() }
       }
+    }
+
+    /// Whether its trigger is `root` or inside it.
+    func isInside(_ root: DOM.Element) -> Bool {
+      root.contains(trigger)
+    }
+
+    /// Its bubble out of the page, for a trigger about to leave it.
+    func release() {
+      if let timer = hideTimeout {
+        clearTimeout(timer)
+        hideTimeout = nil
+      }
+      pinned = false
+      isVisible = false
+      host?.remove()
+      host = nil
     }
 
     private func togglePinned() {
@@ -758,6 +788,22 @@ public struct TooltipView: HTMLContent {
         tooltip.setAttribute(data("tooltip-hydrated"), "true")
         instances.append(TooltipInstance(tooltip: tooltip))
       }
+    }
+
+    /// The tooltips under `root`, about to be taken out of the page (a
+    /// fragment replaced in place): their bubbles, portaled to <body>, go
+    /// with them, so none is left showing for a trigger that is gone.
+    public static func release(in root: DOM.Element) {
+      guard let instance else { return }
+      var kept: [TooltipInstance] = []
+      for tooltip in instance.instances {
+        if tooltip.isInside(root) {
+          tooltip.release()
+        } else {
+          kept.append(tooltip)
+        }
+      }
+      instance.instances = kept
     }
   }
 
