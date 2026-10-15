@@ -126,8 +126,9 @@
       /// seconds), and repaints every range of a highlight that changes
       /// (Chrome, a 50 ms frame; user, 2026-10-15).
       var live: [Int: DOM.Range] = [:]
-      /// The stretches in the highlights now, by index.
-      var painted = 0..<0
+      /// One character's width, measured once (the text is monospaced):
+      /// which columns the pane shows.
+      var charWidth = 0.0
       /// Its text nodes as last read, where a stretch's range is set.
       var nodes: [(node: DOM.Text, start: Int, end: Int)] = []
       /// Its text as last colored (UTF-8) and how many text nodes held it:
@@ -544,9 +545,6 @@
             if editor.shown { paint(removing: gone, adding: []) }
             editor.tokens = tokens
             editor.live = live
-            let lower = editor.painted.lowerBound < head ? editor.painted.lowerBound : max(head, editor.painted.lowerBound + shift)
-            let upper = editor.painted.upperBound <= head ? editor.painted.upperBound : max(lower, editor.painted.upperBound + shift)
-            editor.painted = lower..<max(lower, upper)
             carried = true
           }
         }
@@ -560,7 +558,6 @@
         }
         editor.tokens = tokens
         editor.live = [:]
-        editor.painted = 0..<0
       }
       editor.bytes = bytes
       editor.nodeCount = nodes.count
@@ -587,10 +584,12 @@
     /// shows and a little either side (`paintWindow`), each given its range
     /// as it comes into view; the rest taken out, their ranges let go.
     static func repaint(_ editor: Editor) {
-      let want = editor.shown ? paintWindow(editor) : 0..<0
+      let want = editor.shown ? paintWindow(editor) : []
+      var wanted = Set<Int>()
+      for index in want { wanted.insert(index) }
       var removing: [(CodeSyntax.Token, DOM.Range)] = []
       var adding: [(CodeSyntax.Token, DOM.Range)] = []
-      for (index, range) in editor.live where !want.contains(index) {
+      for (index, range) in editor.live where !wanted.contains(index) {
         if index < editor.tokens.count { removing.append((editor.tokens[index], range)) }
         editor.live[index] = nil
       }
@@ -606,16 +605,20 @@
         adding.append((token, range))
       }
       paint(removing: removing, adding: adding)
-      editor.painted = want
     }
-    /// The stretches on and near the lines the editor's scroll pane shows:
-    /// all of them for text whose lines were never measured.
-    static func paintWindow(_ editor: Editor) -> Range<Int> {
-      let all = 0..<editor.tokens.count
+
+    /// The stretches the pane shows, and a little round them: on the lines
+    /// it shows, and of those lines the columns it shows (user,
+    /// 2026-10-15)—a page's lines run far past the pane's edge. All of them
+    /// for text whose lines were never measured; every column where lines
+    /// wrap (Reflow).
+    static func paintWindow(_ editor: Editor) -> [Int] {
+      let all = Array(0..<editor.tokens.count)
       guard !editor.lineTops.isEmpty, editor.lineTops.count == editor.lineStarts.count,
         let view = editor.code.parentElement, let viewRect = view.getBoundingClientRect()
       else { return all }
-      let pane = editor.code.closest(".artifact-markup")?.getBoundingClientRect()
+      let scroller = editor.code.closest(".artifact-markup")
+      let pane = scroller?.getBoundingClientRect()
       let height = window.innerHeight
       let top = max(pane?.top ?? 0, 0) - viewRect.top
       let bottom = min(pane?.bottom ?? height, height) - viewRect.top
@@ -641,7 +644,49 @@
         let middle = (low + high) / 2
         if editor.tokens[middle].start < to { low = middle + 1 } else { high = middle }
       }
-      return start..<max(start, low)
+      let lines = start..<max(start, low)
+      // The columns the pane shows, where lines do not wrap.
+      let wraps = editor.code.closest("[data-reflow='true']") != nil
+      guard !wraps, let codeRect = editor.code.getBoundingClientRect(), let width = charWidth(editor), width > 0
+      else { return Array(lines) }
+      let gutter = parseDouble(stringRemoveSuffix(window.getComputedStyle(editor.code).getPropertyValue("padding-inline-start"), "px")) ?? 0
+      let textLeft = codeRect.left + gutter
+      let left = max(pane?.left ?? 0, 0)
+      let right = min(pane?.right ?? window.innerWidth, window.innerWidth)
+      let margin = 20
+      let firstColumn = Int((left - textLeft) / width) - margin
+      let lastColumn = Int((right - textLeft) / width) + 1 + margin
+      var shown: [Int] = []
+      var line = first
+      for index in lines {
+        let token = editor.tokens[index]
+        while line + 1 < editor.lineStarts.count, editor.lineStarts[line + 1] <= token.start { line += 1 }
+        let column = token.start - editor.lineStarts[line]
+        let length = token.end - token.start
+        if column + length >= firstColumn && column <= lastColumn { shown.append(index) }
+      }
+      return shown
+    }
+
+    /// One character's width in the editor's text, measured once.
+    static func charWidth(_ editor: Editor) -> Double? {
+      if editor.charWidth > 0 { return editor.charWidth }
+      for (node, _, _) in editor.nodes {
+        var offset = 0
+        for unit in node.data.utf16 {
+          if unit != 0x0A && unit != 0x09 && unit != 0x20 {
+            let range = document.createRange()
+            range.setStart(node, offset)
+            range.setEnd(node, offset + 1)
+            guard let rect = range.getBoundingClientRect(), rect.width > 0 else { return nil }
+            editor.charWidth = rect.width
+            return rect.width
+          }
+          offset += 1
+          if offset > 64 { break }
+        }
+      }
+      return nil
     }
 
     /// Each colored editor painted while it has a box on screen, for the
