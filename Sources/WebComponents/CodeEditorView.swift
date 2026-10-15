@@ -117,8 +117,30 @@
       /// The form's textarea; nil for text that is only read.
       let input: HTML.HTMLTextAreaElement?
       let language: CodeSyntax.Language
-      var ranges: [[DOM.Range]] = []
+      /// Its stretches as last colored: the whole text's, read in one pass.
+      var tokens: [CodeSyntax.Token] = []
+      /// The ranges of the stretches painted now, by index: only those on
+      /// and near the lines the pane shows (`paintWindow`). A long page's
+      /// ten thousand stretches as live ranges cost every keystroke—the
+      /// browser moves each live range with every edit (WebKit took
+      /// seconds), and repaints every range of a highlight that changes
+      /// (Chrome, a 50 ms frame; user, 2026-10-15).
+      var live: [Int: DOM.Range] = [:]
+      /// The stretches in the highlights now, by index.
+      var painted = 0..<0
+      /// Its text nodes as last read, where a stretch's range is set.
+      var nodes: [(node: DOM.Text, start: Int, end: Int)] = []
+      /// Its text as last colored (UTF-8) and how many text nodes held it:
+      /// an edit is found against them (`color`).
+      var bytes: [UInt8] = []
+      var nodeCount = 0
       var colored = false
+      /// Whether it is on screen: painted only then.
+      var shown = false
+      /// Its lines' starts (UTF-16) and tops (from its view's top), as
+      /// `number` last measured them; empty for text that is not lined.
+      var lineStarts: [Int] = []
+      var lineTops: [Double] = []
       var timer: Int32 = 0
 
       init(code: DOM.Element, input: HTML.HTMLTextAreaElement?) {
@@ -165,7 +187,14 @@
           if code.hasAttribute("data-code-lined") { markCurrentLine(code) }
         }
         _ = code.addEventListener(.input) { _ in
-          input.value = code.textContent
+          let text = code.textContent
+          input.value = text
+          // A line added or removed is numbered in the same frame (user,
+          // 2026-10-15): the gutter never trails the text. A wrap changed
+          // by typing within a line waits for the pause, as coloring does.
+          if code.hasAttribute("data-code-lined"), lineCount(text) != numberedLines(code) { number(code) }
+          // Colored in the same frame, only what the edit touched (`color`).
+          color(editor)
           // Its listeners hear the edit as the textarea's own.
           input.dispatchEvent(.input)
           schedule(editor)
@@ -180,7 +209,8 @@
           } else {
             code.textContent = text
           }
-          schedule(editor)
+          if code.hasAttribute("data-code-lined") { number(code) }
+          color(editor)
         }
         colorIfVisible(code)
       }
@@ -193,6 +223,20 @@
             markCurrentLine(code)
           }
         }
+      }
+      // A pane scrolled: the stretches it now shows painted, once a frame.
+      if !listensToScroll {
+        listensToScroll = true
+        _ = document.addEventListener(
+          "scroll",
+          { _ in
+            guard !scrollPending else { return }
+            scrollPending = true
+            _ = window.requestAnimationFrame {
+              scrollPending = false
+              for editor in editors where editor.shown { repaint(editor) }
+            }
+          }, capture: true, passive: true)
       }
       // A pane resized wraps lines anew: every shown editor renumbered.
       if !listensToResize {
@@ -260,6 +304,24 @@
       }
     }
 
+    /// How many lines `text` starts, as `number` counts them: a line
+    /// begins at each character that opens the text or follows a line feed.
+    static func lineCount(_ text: String) -> Int {
+      var count = 0
+      var atStart = true
+      for byte in text.utf8 where byte & 0xC0 != 0x80 {
+        if atStart { count += 1 }
+        atStart = byte == 0x0A
+      }
+      // An empty text shows its first line's number.
+      return max(count, 1)
+    }
+
+    /// How many numbers the editor's gutter shows now.
+    static func numberedLines(_ code: DOM.Element) -> Int {
+      code.parentElement?.querySelector(".code-gutter-lines")?.childElementCount ?? 0
+    }
+
     /// A lined editor's numbers, beside its text and never in it: each
     /// logical line's top measured where the text now lays it out (a line
     /// the browser broke within a block is a line of its own), as
@@ -271,35 +333,61 @@
         let parentRect = code.parentElement?.getBoundingClientRect()
       else { return }
       var starts: [(DOM.Text, Int)] = []
+      var offsets: [Int] = []
       var atStart = true
+      var total = 0
       let walker = document.createTreeWalker(code, DOM.NodeFilter.SHOW_TEXT)
       while let next = walker.nextNode() {
         guard let node = next as? DOM.Text else { continue }
         var index = 0
         for unit in node.data.utf16 {
-          if atStart { starts.append((node, index)) }
+          if atStart {
+            starts.append((node, index))
+            offsets.append(total)
+          }
           atStart = unit == 0x0A
           index += 1
+          total += 1
         }
       }
+      var tops: [Double] = []
       var numbers: [DOM.Element] = []
+      // An empty editor still has its first line (user, 2026-10-15).
+      if starts.isEmpty {
+        let number = document.createElement(.span)
+        number.textContent = "1"
+        number.setAttribute(.style, "top: " + intToString(Int(codeRect.top - parentRect.top)) + "px")
+        number.setAttribute(data("top"), doubleToString(codeRect.top - parentRect.top))
+        numbers.append(number)
+      }
       for (line, start) in starts.enumerated() {
         let range = document.createRange()
         range.setStart(start.0, start.1)
         range.setEnd(start.0, start.1 + 1)
         guard let rect = range.getBoundingClientRect() else { continue }
+        tops.append(rect.top - parentRect.top)
         let number = document.createElement(.span)
         number.textContent = intToString(line + 1)
         number.setAttribute(.style, "top: " + intToString(Int(rect.top - parentRect.top)) + "px")
         number.setAttribute(data("top"), doubleToString(rect.top - parentRect.top))
         numbers.append(number)
       }
+      // The column as wide as the widest number, never narrower than one
+      // digit; the code is set off by it (its own `--gutter`), so a line
+      // the browser wrote outside a line's block—typed into an emptied
+      // editor, pasted—is never under the numbers (user, 2026-10-15).
+      let width = CodeLines.gutter(lines: max(starts.count, 1))
+      code.style.setProperty("--gutter", width)
       gutter.setAttribute(
-        .style,
-        "left: " + intToString(Int(codeRect.left - parentRect.left)) + "px; --gutter: "
-          + CodeLines.gutter(lines: starts.count))
+        .style, "left: " + intToString(Int(codeRect.left - parentRect.left)) + "px; --gutter: " + width)
       gutter.replaceChildren(numbers)
       markCurrentLine(code)
+      // Where its lines stand, for the stretches painted (`paintWindow`).
+      if let editor = editors.first(where: { $0.code.id == code.id }) {
+        editor.lineStarts = tops.count == offsets.count ? offsets : []
+        editor.lineTops = tops.count == offsets.count ? tops : []
+        repaint(editor)
+      }
     }
 
     nonisolated(unsafe) static var listensToSelection = false
@@ -367,20 +455,31 @@
     }
 
     nonisolated(unsafe) static var listensToResize = false
+    nonisolated(unsafe) static var listensToScroll = false
+    nonisolated(unsafe) static var scrollPending = false
 
+    /// Lined text typed into: its numbers measured again beside it once
+    /// typing pauses, for a line the typing wrapped anew. A line added or
+    /// removed is numbered at once (the input's own listener).
     private static func schedule(_ editor: Editor) {
+      guard editor.code.hasAttribute("data-code-lined") else { return }
       if editor.timer != 0 { window.clearTimeout(editor.timer) }
       editor.timer = window.setTimeout(150) {
         editor.timer = 0
-        // Lined text typed into: its numbers measured again beside it.
-        if editor.code.hasAttribute("data-code-lined") { number(editor.code) }
-        color(editor)
+        number(editor.code)
       }
     }
 
     /// The editor's stretches found again over its text nodes as they now
-    /// stand, and every highlight painted again.
-    private static func color(_ editor: Editor) {
+    /// stand. The whole text is read again—a comment or CDATA opened or
+    /// closed recolors all it reaches—but only the stretches on and near
+    /// the lines on screen have ranges and are painted, and of those only
+    /// the ones an edit touched are set anew: those before it keep their
+    /// ranges, and those after it too, which the browser moved with the
+    /// text as it was typed into. An edit across text nodes (a paste over
+    /// lines, a selection deleted), or a range the browser did not carry,
+    /// sets the painted ones anew.
+    static func color(_ editor: Editor) {
       var nodes: [(node: DOM.Text, start: Int, end: Int)] = []
       var bytes: [UInt8] = []
       var units = 0
@@ -394,39 +493,194 @@
         nodes.append((node, units, units + length))
         units += length
       }
-      var ranges = [[DOM.Range]](repeating: [], count: CodeSyntax.Kind.allCases.count)
-      var current = 0
-      /// The node a point stands in, and its place there: a point at a
-      /// node's end is in it (a stretch's end), unless it opens the next.
-      func place(_ offset: Int, opening: Bool) -> (DOM.Text, Int)? {
-        while current < nodes.count,
-          opening ? offset >= nodes[current].end : offset > nodes[current].end
+      let tokens = CodeSyntax.tokens(bytes, language: editor.language)
+      editor.nodes = nodes
+
+      var carried = false
+      if editor.colored, nodes.count == editor.nodeCount, let edit = edited(old: editor.bytes, new: bytes) {
+        let start = unitCount(in: bytes, upTo: edit.prefix)
+        let oldEnd = unitCount(in: editor.bytes, upTo: editor.bytes.count - edit.suffix)
+        let newEnd = unitCount(in: bytes, upTo: bytes.count - edit.suffix)
+        let delta = newEnd - oldEnd
+        // Within one text node, before and after.
+        if let first = place(start, opening: true, in: nodes), let last = place(newEnd, opening: false, in: nodes),
+          first.0.id == last.0.id
         {
-          current += 1
+          let old = editor.tokens
+          var head = 0
+          while head < old.count, head < tokens.count, old[head] == tokens[head], old[head].end <= start { head += 1 }
+          var oldTail = old.count
+          var newTail = tokens.count
+          while oldTail > head, newTail > head {
+            let a = old[oldTail - 1]
+            let b = tokens[newTail - 1]
+            guard a.start >= oldEnd, a.kind == b.kind, a.start + delta == b.start, a.end + delta == b.end else { break }
+            oldTail -= 1
+            newTail -= 1
+          }
+          let shift = (newTail - head) - (oldTail - head)
+          // The painted ranges carried: those before the edit as they are,
+          // those after it under their new places, the edit's own out.
+          var live: [Int: DOM.Range] = [:]
+          var gone: [(CodeSyntax.Token, DOM.Range)] = []
+          var check: (index: Int, range: DOM.Range)?
+          for (index, range) in editor.live {
+            if index < head {
+              live[index] = range
+            } else if index >= oldTail {
+              live[index + shift] = range
+              if check == nil || index + shift < check!.index { check = (index + shift, range) }
+            } else {
+              gone.append((old[index], range))
+            }
+          }
+          // The first range kept after the edit still covers its token.
+          var sound = true
+          if let check, check.index < tokens.count {
+            let token = tokens[check.index]
+            sound = Array(check.range.toString().utf16).count == token.end - token.start
+          }
+          if sound {
+            if editor.shown { paint(removing: gone, adding: []) }
+            editor.tokens = tokens
+            editor.live = live
+            let lower = editor.painted.lowerBound < head ? editor.painted.lowerBound : max(head, editor.painted.lowerBound + shift)
+            let upper = editor.painted.upperBound <= head ? editor.painted.upperBound : max(lower, editor.painted.upperBound + shift)
+            editor.painted = lower..<max(lower, upper)
+            carried = true
+          }
         }
-        guard current < nodes.count else { return nil }
-        return (nodes[current].node, offset - nodes[current].start)
       }
-      for token in CodeSyntax.tokens(bytes, language: editor.language) {
-        guard let start = place(token.start, opening: true) else { break }
-        let first = current
-        guard let end = place(token.end, opening: false) else { break }
+      if !carried {
+        // Every painted range set anew.
+        if editor.shown {
+          var gone: [(CodeSyntax.Token, DOM.Range)] = []
+          for (index, range) in editor.live where index < editor.tokens.count { gone.append((editor.tokens[index], range)) }
+          paint(removing: gone, adding: [])
+        }
+        editor.tokens = tokens
+        editor.live = [:]
+        editor.painted = 0..<0
+      }
+      editor.bytes = bytes
+      editor.nodeCount = nodes.count
+      editor.colored = true
+      // Colored because it is on screen: painted.
+      editor.shown = true
+      repaint(editor)
+    }
+
+    /// The node a point stands in, and its place there: a point at a
+    /// node's end is in it (a stretch's end), unless it opens the next.
+    static func place(_ offset: Int, opening: Bool, in nodes: [(node: DOM.Text, start: Int, end: Int)]) -> (DOM.Text, Int)? {
+      var low = 0
+      var high = nodes.count
+      while low < high {
+        let middle = (low + high) / 2
+        if opening ? offset >= nodes[middle].end : offset > nodes[middle].end { low = middle + 1 } else { high = middle }
+      }
+      guard low < nodes.count else { return nil }
+      return (nodes[low].node, offset - nodes[low].start)
+    }
+
+    /// The stretches of an editor on screen painted for the lines the pane
+    /// shows and a little either side (`paintWindow`), each given its range
+    /// as it comes into view; the rest taken out, their ranges let go.
+    static func repaint(_ editor: Editor) {
+      let want = editor.shown ? paintWindow(editor) : 0..<0
+      var removing: [(CodeSyntax.Token, DOM.Range)] = []
+      var adding: [(CodeSyntax.Token, DOM.Range)] = []
+      for (index, range) in editor.live where !want.contains(index) {
+        if index < editor.tokens.count { removing.append((editor.tokens[index], range)) }
+        editor.live[index] = nil
+      }
+      for index in want where editor.live[index] == nil {
+        let token = editor.tokens[index]
+        guard let start = place(token.start, opening: true, in: editor.nodes),
+          let end = place(token.end, opening: false, in: editor.nodes)
+        else { continue }
         let range = document.createRange()
         range.setStart(start.0, start.1)
         range.setEnd(end.0, end.1)
-        ranges[token.kind.rawValue].append(range)
-        current = first
+        editor.live[index] = range
+        adding.append((token, range))
       }
-      let old = editor.ranges
-      editor.ranges = ranges
-      editor.colored = true
-      paint(old: old, new: ranges)
+      paint(removing: removing, adding: adding)
+      editor.painted = want
+    }
+    /// The stretches on and near the lines the editor's scroll pane shows:
+    /// all of them for text whose lines were never measured.
+    static func paintWindow(_ editor: Editor) -> Range<Int> {
+      let all = 0..<editor.tokens.count
+      guard !editor.lineTops.isEmpty, editor.lineTops.count == editor.lineStarts.count,
+        let view = editor.code.parentElement, let viewRect = view.getBoundingClientRect()
+      else { return all }
+      let pane = editor.code.closest(".artifact-markup")?.getBoundingClientRect()
+      let height = window.innerHeight
+      let top = max(pane?.top ?? 0, 0) - viewRect.top
+      let bottom = min(pane?.bottom ?? height, height) - viewRect.top
+      // A little either side, so a scroll shows color before it is
+      // repainted the next frame.
+      let reach = 120.0
+      var first = 0
+      while first + 1 < editor.lineTops.count, editor.lineTops[first + 1] < top - reach { first += 1 }
+      var last = first
+      while last + 1 < editor.lineTops.count, editor.lineTops[last + 1] <= bottom + reach { last += 1 }
+      let from = editor.lineStarts[first]
+      let to = last + 1 < editor.lineStarts.count ? editor.lineStarts[last + 1] : Int.max
+      // The first stretch ending after `from`, and the first starting at or after `to`.
+      var low = 0
+      var high = editor.tokens.count
+      while low < high {
+        let middle = (low + high) / 2
+        if editor.tokens[middle].end <= from { low = middle + 1 } else { high = middle }
+      }
+      let start = low
+      high = editor.tokens.count
+      while low < high {
+        let middle = (low + high) / 2
+        if editor.tokens[middle].start < to { low = middle + 1 } else { high = middle }
+      }
+      return start..<max(start, low)
     }
 
-    /// One block's stretches painted again: its old ranges out of each
-    /// kind's highlight and its new ones in. Every other block's stay as
-    /// they are, so coloring one more block costs only its own ranges.
-    private static func paint(old: [[DOM.Range]], new: [[DOM.Range]]) {
+    /// Each colored editor painted while it has a box on screen, for the
+    /// lines its pane shows, and taken out of the highlights while it has
+    /// none (a page turned away, Raw put away).
+    public static func paintVisible() {
+      for editor in editors where editor.colored {
+        editor.shown = (editor.code.getBoundingClientRect()?.height ?? 0) > 0
+        repaint(editor)
+      }
+    }
+
+    /// Where two texts differ: how many bytes they share at the start and,
+    /// apart from those, at the end. Nil when they are the same.
+    static func edited(old: [UInt8], new: [UInt8]) -> (prefix: Int, suffix: Int)? {
+      guard old != new else { return nil }
+      let shortest = min(old.count, new.count)
+      var prefix = 0
+      while prefix < shortest, old[prefix] == new[prefix] { prefix += 1 }
+      // Never inside a character: back to its first byte.
+      while prefix > 0, prefix < new.count, new[prefix] & 0xC0 == 0x80 { prefix -= 1 }
+      var suffix = 0
+      while suffix < shortest - prefix, old[old.count - 1 - suffix] == new[new.count - 1 - suffix] { suffix += 1 }
+      while suffix > 0, new.count - suffix < new.count, new[new.count - suffix] & 0xC0 == 0x80 { suffix -= 1 }
+      return (prefix, suffix)
+    }
+
+    /// The UTF-16 units of `bytes`' first `count` bytes.
+    static func unitCount(in bytes: [UInt8], upTo count: Int) -> Int {
+      var units = 0
+      for byte in bytes[0..<count] where byte & 0xC0 != 0x80 { units += byte >= 0xF0 ? 2 : 1 }
+      return units
+    }
+
+    /// Stretches out of their kinds' highlights and stretches into them;
+    /// every other block's stay as they are.
+    private static func paint(
+      removing old: [(CodeSyntax.Token, DOM.Range)], adding new: [(CodeSyntax.Token, DOM.Range)]
+    ) {
       if highlights.isEmpty {
         for kind in CodeSyntax.Kind.allCases {
           let highlight = Highlight()
@@ -434,13 +688,8 @@
           highlights.append(highlight)
         }
       }
-      for kind in CodeSyntax.Kind.allCases {
-        let highlight = highlights[kind.rawValue]
-        if old.count > kind.rawValue {
-          for range in old[kind.rawValue] { highlight.delete(range) }
-        }
-        for range in new[kind.rawValue] { highlight.add(range) }
-      }
+      for (token, range) in old { highlights[token.kind.rawValue].delete(range) }
+      for (token, range) in new { highlights[token.kind.rawValue].add(range) }
     }
   }
 #endif

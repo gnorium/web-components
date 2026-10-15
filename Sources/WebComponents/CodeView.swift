@@ -211,18 +211,22 @@
         // Lined: each line a block, numbered in a gutter by a counter
         // (never part of the text). Wide: the lines as stored, never
         // wrapped, scrolling sideways.
+        // The number's column: its digits (`--gutter`, the widest number's
+        // in ch) with the same inset either side (user, 2026-10-15), so no
+        // number touches the edge or the code. The code itself is set off
+        // by it, not each line's block: text an editor holds outside a
+        // line's block (typed into it emptied, pasted) is set off as well.
         selector("&[data-lined='true'] .code-code") {
           CSS.Property("counter-reset", "code-line")
+          CSS.Property("padding-inline-start", "calc(var(--gutter) + 2 * \(spacing8.value))")
+          CSS.Property("min-height", "1lh")
+          boxSizing(.borderBox)
         }
         selector("&[data-lined='true'] .code-line") {
           display(.block)
           position(.relative)
           CSS.Property("counter-increment", "code-line")
           CSS.Property("min-height", "1lh")
-          // The number's column: its digits (`--gutter`, the widest
-          // number's in ch) with the same inset either side (user,
-          // 2026-10-15), so no number touches the edge or the code.
-          CSS.Property("padding-inline-start", "calc(var(--gutter) + 2 * \(spacing8.value))")
         }
         // Reflowed (an ancestor's Reflow, user 2026-10-12): wrapped as plain
         // text, no sideways scroll; a continuation starts at column 0, no
@@ -265,7 +269,7 @@
         selector("&[data-lined='true'] .code-line::before") {
           CSS.Property("content", "counter(code-line)")
           position(.absolute)
-          insetInlineStart(px(0))
+          CSS.Property("inset-inline-start", "calc(-1 * (var(--gutter) + 2 * \(spacing8.value)))")
           CSS.Property("width", "calc(var(--gutter) + 2 * \(spacing8.value))")
           paddingInlineStart(spacing8)
           paddingInlineEnd(spacing8)
@@ -351,6 +355,8 @@
     }
 
     public static func highlightVisible() {
+      // The highlights hold the blocks on screen alone.
+      CodeEditorHydration.paintVisible()
       for block in document.querySelectorAll(".code-code, [data-code-syntax]") {
         // An editor's text is colored by highlights, which leave it whole.
         if block.hasAttribute("data-code-editing") {
