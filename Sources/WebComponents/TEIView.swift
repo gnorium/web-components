@@ -150,16 +150,29 @@
     /// The scan's measured layout on the page's surface
     /// (`TEIFacsimile.layout(of:)`, the tools' zones): each zone its type
     /// ("block", "line", "word"), a block's subtype ("main",
-    /// "marginalia"; "-" for the others) and its four corners in the
-    /// 0–1000 space over the image, to hundredths, all one a space; one
-    /// zone a ";", in reading order (a line the block's before it, a word
-    /// the line's); "" where none was measured. The reader's structure
-    /// overlay and its word correspondence read it.
+    /// "marginalia"; "-" for the others), a word's id ("-" for the others)
+    /// and its four corners in the 0–1000 space over the image, to
+    /// hundredths, all one a space; one zone a ";", in reading order (a
+    /// line the block's before it, a word the line's); "" where none was
+    /// measured. The reader's structure overlay and its word
+    /// correspondence read it.
     static func scanLayoutData(of page: TEIPage) -> String {
       guard let block = page.textBlock else { return "" }
       return TEIFacsimile.layout(of: block).map { zone in
-        ([zone.type, zone.subtype.isEmpty ? "-" : zone.subtype]
+        ([zone.type, zone.subtype.isEmpty ? "-" : zone.subtype, zone.id.isEmpty ? "-" : zone.id]
           + zone.fractions.map { number(($0 * 100_000).rounded() / 100) }).joined(separator: " ")
+      }.joined(separator: ";")
+    }
+
+    /// Each word of the page and the scan's word zones it is in, as its
+    /// `@facs` names them (`TEIWord.zones`, the tools' links: gnorium-python
+    /// `facsimile.with_word_links`): "line:word" (its place, a `.tei-word`'s
+    /// `data-line` and `data-word`) and its zones' ids, one a space; one
+    /// word a ";"; words naming none left out. The reader's word
+    /// correspondence reads it.
+    static func wordZonesData(of page: TEIPage) -> String {
+      TEIRenderer.words(of: page).filter { !$0.zones.isEmpty }.map { word in
+        (["\(word.place.line):\(word.place.word)"] + word.zones).joined(separator: " ")
       }.joined(separator: ";")
     }
 
@@ -1064,8 +1077,10 @@
           // the rendered frame itself, whole.
           .data("text-block-derived", page.textBlock?.derived == true)
           // The scan's measured layout (blocks, lines, words) and the body's
-          // leading: the structure overlay and the word correspondence.
+          // leading: the structure overlay and the word correspondence; each
+          // word's zones, which the correspondence reads.
           .data("scan-layout", Self.scanLayoutData(of: page))
+          .data("word-zones", Self.wordZonesData(of: page))
           .data("body-leading", Self.bodyLeadingData(of: page))
           // Its place in the document, from 0: what the reader turns to and
           // a roster names it by, where not every page is drawn.
