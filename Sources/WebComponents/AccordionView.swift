@@ -541,6 +541,14 @@ public struct AccordionView: HTMLContent {
         if let target = event.target, let button = target.closest("button"), let _ = button.closest(".accordion-summary") {
           return
         }
+        // So is a checkbox and its label (a call's tick on a Metadata
+        // accordion, user, 2026-10-16): interactive content, which a
+        // native <details> never toggles on either (HTML, the summary
+        // element's activation behavior).
+        if let target = event.target, let control = target.closest("input, label"),
+          let _ = control.closest(".accordion-summary") {
+          return
+        }
         // Keep <details> open for the whole motion; native toggle would
         // display:none the panel before the height transition can run.
         event.preventDefault()
