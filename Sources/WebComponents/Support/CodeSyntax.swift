@@ -114,26 +114,30 @@ public enum CodeSyntax {
   #if SERVER
     /// Each role's `::highlight()` rule on the text under `scope` (a
     /// selector from the styled view, `&` its root): the role's syntax
-    /// token, the same in every view and language.
+    /// token, the same in every view and language. On the scope and on
+    /// every element in it: a highlight is styled by the rule of the
+    /// element whose text it covers, and WebKit carries no `::highlight()`
+    /// down to a child—an editor's text, in its `.code-line` spans, read
+    /// black in Safari (user, 2026-10-15).
     @CSSBuilder
     public static func highlightCSS(_ scope: String) -> [CSSOM.CSSRule] {
-      selector("\(scope)::highlight(code-tag)") { color(syntaxPlainText) }
+      selector("\(scope)::highlight(code-tag)", "\(scope) *::highlight(code-tag)") { color(syntaxPlainText) }
       selector("\(scope) [data-code-kind='code-tag']") { color(syntaxPlainText) }
-      selector("\(scope)::highlight(code-name)") { color(syntaxKeywords) }
+      selector("\(scope)::highlight(code-name)", "\(scope) *::highlight(code-name)") { color(syntaxKeywords) }
       selector("\(scope) [data-code-kind='code-name']") { color(syntaxKeywords) }
-      selector("\(scope)::highlight(code-attr)") { color(syntaxAttributes) }
+      selector("\(scope)::highlight(code-attr)", "\(scope) *::highlight(code-attr)") { color(syntaxAttributes) }
       selector("\(scope) [data-code-kind='code-attr']") { color(syntaxAttributes) }
-      selector("\(scope)::highlight(code-value)") { color(syntaxStrings) }
+      selector("\(scope)::highlight(code-value)", "\(scope) *::highlight(code-value)") { color(syntaxStrings) }
       selector("\(scope) [data-code-kind='code-value']") { color(syntaxStrings) }
-      selector("\(scope)::highlight(code-entity)") { color(syntaxCharacters) }
+      selector("\(scope)::highlight(code-entity)", "\(scope) *::highlight(code-entity)") { color(syntaxCharacters) }
       selector("\(scope) [data-code-kind='code-entity']") { color(syntaxCharacters) }
-      selector("\(scope)::highlight(code-prefix)") { color(syntaxOtherTypeNames) }
+      selector("\(scope)::highlight(code-prefix)", "\(scope) *::highlight(code-prefix)") { color(syntaxOtherTypeNames) }
       selector("\(scope) [data-code-kind='code-prefix']") { color(syntaxOtherTypeNames) }
-      selector("\(scope)::highlight(code-pi)") { color(syntaxPreprocessorStatements) }
+      selector("\(scope)::highlight(code-pi)", "\(scope) *::highlight(code-pi)") { color(syntaxPreprocessorStatements) }
       selector("\(scope) [data-code-kind='code-pi']") { color(syntaxPreprocessorStatements) }
-      selector("\(scope)::highlight(code-cdata)") { color(syntaxOtherConstants) }
+      selector("\(scope)::highlight(code-cdata)", "\(scope) *::highlight(code-cdata)") { color(syntaxOtherConstants) }
       selector("\(scope) [data-code-kind='code-cdata']") { color(syntaxOtherConstants) }
-      selector("\(scope)::highlight(code-comment)") { color(syntaxComments) }
+      selector("\(scope)::highlight(code-comment)", "\(scope) *::highlight(code-comment)") { color(syntaxComments) }
       selector("\(scope) [data-code-kind='code-comment']") { color(syntaxComments) }
     }
   #endif

@@ -290,7 +290,7 @@
         guard let rect = range.getBoundingClientRect() else { continue }
         let number = document.createElement(.span)
         number.textContent = intToString(line + 1)
-        number.setAttribute(.style, "top: " + intToString(Int(rect.top - parentRect.top)) + "px; width: var(--gutter)")
+        number.setAttribute(.style, "top: " + intToString(Int(rect.top - parentRect.top)) + "px")
         number.setAttribute(data("top"), doubleToString(rect.top - parentRect.top))
         numbers.append(number)
       }

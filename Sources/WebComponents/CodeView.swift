@@ -219,7 +219,10 @@
           position(.relative)
           CSS.Property("counter-increment", "code-line")
           CSS.Property("min-height", "1lh")
-          CSS.Property("padding-inline-start", "calc(var(--gutter) + \(spacing12.value))")
+          // The number's column: its digits (`--gutter`, the widest
+          // number's in ch) with the same inset either side (user,
+          // 2026-10-15), so no number touches the edge or the code.
+          CSS.Property("padding-inline-start", "calc(var(--gutter) + 2 * \(spacing8.value))")
         }
         // Reflowed (an ancestor's Reflow, user 2026-10-12): wrapped as plain
         // text, no sideways scroll; a continuation starts at column 0, no
@@ -253,13 +256,20 @@
         descendant(".code-gutter-lines > span") {
           position(.absolute)
           insetInlineStart(px(0))
+          CSS.Property("width", "calc(var(--gutter) + 2 * \(spacing8.value))")
+          paddingInlineStart(spacing8)
+          paddingInlineEnd(spacing8)
+          boxSizing(.borderBox)
           textAlign(.end)
         }
         selector("&[data-lined='true'] .code-line::before") {
           CSS.Property("content", "counter(code-line)")
           position(.absolute)
           insetInlineStart(px(0))
-          CSS.Property("width", "var(--gutter)")
+          CSS.Property("width", "calc(var(--gutter) + 2 * \(spacing8.value))")
+          paddingInlineStart(spacing8)
+          paddingInlineEnd(spacing8)
+          boxSizing(.borderBox)
           textAlign(.end)
           color(colorSubtle)
           userSelect(.none)

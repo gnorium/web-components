@@ -1,3 +1,5 @@
+import CSSOMBuilder
+import WebTypes
 import XCTest
 @testable import WebComponents
 
@@ -95,5 +97,20 @@ final class CodeSyntaxTests: XCTestCase {
         "cdata:```json", "attr:\"a\"", "prefix:1", "cdata:```",
         "cdata:```", "cdata:plain fence", "cdata:```",
       ])
+  }
+}
+
+/// Each role's highlight is styled on the scope and on every element in it
+/// (user, 2026-10-15): WebKit styles a highlight by the rule of the element
+/// whose text it covers and carries no `::highlight()` down to a child, so
+/// an editor's text, in its `.code-line` spans, read black in Safari.
+final class CodeSyntaxHighlightRuleTests: XCTestCase {
+  func testEachRoleIsStyledOnTheScopeAndItsDescendants() {
+    let selectors = CodeSyntax.highlightCSS("& .code-code").compactMap { ($0 as? CSSOM.CSSStyleRule)?.selectorText }
+    for kind in CodeSyntax.Kind.allCases {
+      let rule = selectors.first { $0.contains("::highlight(\(kind.highlightName))") }
+      XCTAssertNotNil(rule, kind.highlightName)
+      XCTAssertTrue(rule?.contains("& .code-code *::highlight(\(kind.highlightName))") == true, rule ?? "")
+    }
   }
 }
