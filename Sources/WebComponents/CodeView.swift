@@ -318,8 +318,12 @@
   public final class CodeHydration: @unchecked Sendable {
     public static nonisolated(unsafe) var instance: CodeHydration?
 
+    /// On every page, whether it holds code yet or not: a fragment fetched
+    /// later (a page's prompts, a session's Raw) brings its own, and the
+    /// click that reveals it (an accordion opened, Raw or Markdown source
+    /// switched on) is listened to only once this has run—an overture's
+    /// prompts, loaded after the page, were never colored.
     public static func hydrateIfPresent() {
-      guard document.querySelector(".code-view, [data-code-syntax]") != nil else { return }
       hydrate(in: document.body)
     }
 

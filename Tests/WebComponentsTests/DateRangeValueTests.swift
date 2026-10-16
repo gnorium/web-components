@@ -16,7 +16,7 @@ final class DateRangeValueTests: XCTestCase {
 
   func testEveryPresetRespectsBothInclusiveDateLimits() throws {
     let now = try XCTUnwrap(DateRangeValue.parseInstant("2026-10-09T12:00Z"))
-    try ViewerZone.$identifier.withValue("UTC") {
+    try ViewerZone.$named.withValue("UTC") {
       for preset in DateRangeValue.presets {
         let value = try XCTUnwrap(DateRangeValue.parse(preset.value))
         let days = value.days(now: now)
@@ -36,7 +36,7 @@ final class DateRangeValueTests: XCTestCase {
 
   func testHourlyBoundsResolveFromOneInstantAcrossMidnight() throws {
     let now = try XCTUnwrap(DateRangeValue.parseInstant("2026-10-09T00:30Z"))
-    try ViewerZone.$identifier.withValue("UTC") {
+    try ViewerZone.$named.withValue("UTC") {
       let hour = try XCTUnwrap(DateRangeValue.parse("-1h.."))
       XCTAssertEqual(hour.days(now: now).start?.iso, "2026-10-08")
       XCTAssertEqual(hour.days(now: now).end?.iso, "2026-10-09")
@@ -51,7 +51,7 @@ final class DateRangeValueTests: XCTestCase {
 
   func testHourlyBoundsUseTheViewersCalendarDay() throws {
     let now = try XCTUnwrap(DateRangeValue.parseInstant("2026-10-08T19:00Z"))
-    try ViewerZone.$identifier.withValue("Asia/Kolkata") {
+    try ViewerZone.$named.withValue("Asia/Kolkata") {
       let hour = try XCTUnwrap(DateRangeValue.parse("-1h.."))
       XCTAssertEqual(hour.days(now: now).start?.iso, "2026-10-08")
       XCTAssertEqual(hour.days(now: now).end?.iso, "2026-10-09")
@@ -59,7 +59,7 @@ final class DateRangeValueTests: XCTestCase {
       XCTAssertEqual(interval.days(now: now).start?.iso, "2026-10-07")
       XCTAssertEqual(interval.days(now: now).end?.iso, "2026-10-08")
     }
-    try ViewerZone.$identifier.withValue("America/New_York") {
+    try ViewerZone.$named.withValue("America/New_York") {
       let interval = try XCTUnwrap(DateRangeValue.parse("-48h..-24h"))
       XCTAssertEqual(interval.days(now: now).start?.iso, "2026-10-06")
       XCTAssertEqual(interval.days(now: now).end?.iso, "2026-10-07")

@@ -25,16 +25,17 @@ final class SpreadLayoutTests: XCTestCase {
     nodes.filter { (attribute("class", of: $0) ?? "").split(separator: " ").contains { $0 == name } }
   }
 
-  private func view(_ body: String, direction: String? = nil) -> [DOM.Element] {
+  private func view(_ body: String, direction: String? = nil, labelsPages: Bool = false) -> [DOM.Element] {
     elements(
       in: TEIView(
         teiXml: #"<TEI><text><body><pb n="A1 verso" facs="https://web-tests.invalid/iiif/1"/>\#(body)</body></text></TEI>"#,
-        direction: direction
+        labelsPages: labelsPages, direction: direction
       ).build())
   }
 
   func testTwoPagesOnOneCanvasAreTwoColumnsInReadingOrder() throws {
-    let nodes = view(#"<p>Leftward<lb/></p><pb n="A2 recto"/><p>Rightward<lb/></p>"#, direction: "ltr")
+    let body = #"<p>Leftward<lb/></p><pb n="A2 recto"/><p>Rightward<lb/></p>"#
+    let nodes = view(body, direction: "ltr", labelsPages: true)
     let rendering = try XCTUnwrap(nodes.first { attribute("data-layer", of: $0) == "rendering" })
     let spreads = classed("tei-spread", in: elements(in: rendering))
     XCTAssertEqual(spreads.count, 1)
@@ -49,6 +50,10 @@ final class SpreadLayoutTests: XCTestCase {
     XCTAssertTrue(text(in: pages[0]).contains("Leftward"))
     XCTAssertFalse(text(in: pages[0]).contains("Rightward"))
     XCTAssertTrue(text(in: pages[1]).contains("Rightward"))
+    // Pages unlabeled (the default), as a single page's are: no headings.
+    let unlabeled = try XCTUnwrap(view(body, direction: "ltr").first { attribute("data-layer", of: $0) == "rendering" })
+    XCTAssertEqual(classed("tei-spread-page", in: elements(in: unlabeled)).count, 2)
+    XCTAssertTrue(classed("tei-line-mark", in: elements(in: unlabeled)).isEmpty)
   }
 
   /// The spread runs in the direction the document's data gives, never

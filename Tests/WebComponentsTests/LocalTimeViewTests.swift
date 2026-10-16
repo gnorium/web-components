@@ -20,7 +20,7 @@ final class LocalTimeViewTests: XCTestCase {
       951_782_400, 1_234_567_890, 4_102_444_799,
     ]
     for zone in ["UTC", "Asia/Kolkata", "Asia/Calcutta", "America/New_York", "Australia/Lord_Howe", "Pacific/Chatham"] {
-      ViewerZone.$identifier.withValue(zone) {
+      ViewerZone.$named.withValue(zone) {
         for interval in instants {
           let date = Date(timeIntervalSince1970: interval)
           XCTAssertEqual(LocalTimeView.text(date, format: .date, fallbackSuffix: "UTC"), formatted(date, "MMM d, yyyy", zone: zone), "\(interval) \(zone)")
@@ -39,7 +39,7 @@ final class LocalTimeViewTests: XCTestCase {
 
   func testRendersTheReaderZone() {
     let date = Date(timeIntervalSince1970: 1_792_152_328)  // 2026-10-16T12:05:28Z
-    ViewerZone.$identifier.withValue("Asia/Calcutta") {
+    ViewerZone.$named.withValue("Asia/Calcutta") {
       let html = LocalTimeView(date: date, format: .time).build().render()
       XCTAssertTrue(html.contains(">5:35 PM<"), html)
       XCTAssertTrue(html.contains("datetime=\"2026-10-16T12:05:28Z\""), html)

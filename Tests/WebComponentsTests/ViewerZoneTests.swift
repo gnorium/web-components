@@ -6,7 +6,7 @@ final class ViewerZoneTests: XCTestCase {
     for year in [0, 1, 99, 100] {
       let day = CalendarDate(year: year, month: 10, day: 8)
       for zone in ["UTC", "Asia/Kolkata", "America/New_York"] {
-        try ViewerZone.$identifier.withValue(zone) {
+        try ViewerZone.$named.withValue(zone) {
           let fixed = DateRangeValue.fixed(day, day)
           let parsed = try XCTUnwrap(DateRangeValue.parse(fixed.param))
           XCTAssertEqual(parsed.days().start?.iso, day.iso, "\(year) in \(zone)")
@@ -14,7 +14,7 @@ final class ViewerZoneTests: XCTestCase {
           XCTAssertEqual(ViewerZone.localDay(epochMinutes: ViewerZone.epochMinutes(startOf: day)).iso, day.iso)
         }
       }
-      ViewerZone.$identifier.withValue("UTC") {
+      ViewerZone.$named.withValue("UTC") {
         XCTAssertEqual(DateRangeValue.fixed(day, day).param, "\(day.iso)T00:00Z..\(day.adding(days: 1).iso)T00:00Z")
       }
     }

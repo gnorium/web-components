@@ -43,9 +43,12 @@ final class NumberRangeValueTests: XCTestCase {
 
   func testInputDrawsStartAndEnd() {
     let html = NumberRangeInputView(id: "tokens", name: "tokens", value: "1000..", label: "Tokens").render()
-    XCTAssertTrue(html.contains("placeholder=\"Start\""))
-    XCTAssertTrue(html.contains("placeholder=\"End\""))
-    XCTAssertTrue(html.contains("aria-label=\"Tokens start\""))
+    // The ends named for what the range is of, placeholder as label.
+    XCTAssertTrue(html.contains("placeholder=\"Tokens start\""))
+    XCTAssertTrue(html.contains("placeholder=\"Tokens end\""))
+    XCTAssertTrue(html.contains("<span class=\"text-input-label\">Tokens start</span>"))
+    XCTAssertTrue(html.contains("<span class=\"text-input-label\">Tokens end</span>"))
+    XCTAssertTrue(html.contains("value=\"From 1000\""))
     XCTAssertTrue(html.contains("value=\"1000..\""))
     XCTAssertTrue(html.contains("value=\"1000\""))
     XCTAssertTrue(html.contains("step=\"any\""))

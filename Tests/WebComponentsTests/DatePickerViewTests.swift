@@ -18,7 +18,7 @@ final class DatePickerViewTests: XCTestCase {
   }
 
   func testRenderedPresetsDisableRangesOutsideEitherDateLimit() throws {
-    try ViewerZone.$identifier.withValue("UTC") {
+    try ViewerZone.$named.withValue("UTC") {
       let node = DatePickerView(
         id: "bounded", name: "dates", min: "2026-10-05", max: "2026-10-08", range: true,
         presets: [
