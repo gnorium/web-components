@@ -114,13 +114,11 @@ public struct TooltipView: HTMLContent {
 
   /// How wide the bubble may grow. A sentence reads best at the standard
   /// 256px; a list of lines ("By … on … at …") reads best a line each, as
-  /// wide as the screen allows. A bubble led by a whole UUID (`lead`) is as
-  /// wide as that UUID, its first element: what follows wraps under it at
-  /// the UUID's width, never wider (user, 2026-10-16).
+  /// wide as the screen allows. A UUID wraps at the standard width like any
+  /// other text (user, 2026-10-16).
   public enum Width: String, Sendable {
     case standard
     case wide
-    case lead
   }
 
   public init(
@@ -263,17 +261,8 @@ public struct TooltipView: HTMLContent {
         color(colorInverted).important()
         fontSize(fontSizeMedium16).important()
       }
-      selector("& .tooltip-content[data-width='wide']", "& .tooltip-content[data-width='lead']") {
+      selector("& .tooltip-content[data-width='wide']") {
         CSS.Property("max-width", "var(--tooltip-room)")
-      }
-      // Led by a UUID: the bubble's max-content is the UUID's alone, since
-      // what follows is a block that adds no width of its own (inline size
-      // 0) and stretches to the column the UUID sets (min 100%), wrapping
-      // there. A UUID wider than the room breaks at the room's edge.
-      selector("& .tooltip-content[data-width='lead'] > :not(:first-child)") {
-        display(.block)
-        width(0)
-        minWidth(perc(100))
       }
       selector("& .tooltip-content[data-font='mono']") {
         fontFamily(typographyFontMono)
