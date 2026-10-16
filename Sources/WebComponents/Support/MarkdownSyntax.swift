@@ -56,6 +56,26 @@ public enum MarkdownSyntax {
       return end
     }
 
+    /// Where a tag that opens at `index` (`<`) ends, past its `>` on the
+    /// line; nil where `<` opens none. A tag's name begins with a letter,
+    /// as CommonMark's does, or with `|` or a non-ASCII character, as a
+    /// chat template's tokens do (`<|im_start|>`, `<｜User｜>`), so `x < y`
+    /// and `a<3` stay text.
+    func markupTagEnd(_ index: Int, _ to: Int) -> Int? {
+      var cursor = index + 1
+      if cursor < to, text[cursor] == 0x2F { cursor += 1 }
+      guard cursor < to else { return nil }
+      let first = text[cursor]
+      guard (first >= 0x41 && first <= 0x5A) || (first >= 0x61 && first <= 0x7A) || first == 0x7C || first >= 0x80
+      else { return nil }
+      while cursor < to {
+        if text[cursor] == 0x3E { return cursor + 1 }
+        if text[cursor] == 0x3C { return nil }
+        cursor += 1
+      }
+      return nil
+    }
+
     /// Closing emphasis runs found ahead on the line, colored when reached.
     var closers: [(at: Int, length: Int)] = []
 
@@ -104,6 +124,15 @@ public enum MarkdownSyntax {
           while end < to, text[end] != 0x3E, !isSpace(text[end]) { end += 1 }
           if end < to, text[end] == 0x3E { add(.prefix, index + 1, end) }
           index = end
+        } else if byte == 0x3C, let close = markupTagEnd(index, to) {
+          // A tag (CommonMark's raw HTML), and a chat template's tokens
+          // with it: `<think>`, `<|im_start|>`, `<｜DSML｜ invoke name="…">`.
+          // Read by XML's grammar, as a fence that names XML.
+          let base = units.at(index, in: text)
+          for token in XMLSyntax.tokens(Array(text[index..<close])) {
+            out.append(Token(kind: token.kind, start: base + token.start, end: base + token.end))
+          }
+          index = close
         } else if byte == 0x5D, index + 1 < to, text[index + 1] == 0x28 {
           // A link's or image's destination: `](url)`, its URL indigo.
           var end = index + 2

@@ -98,6 +98,25 @@ final class CodeSyntaxTests: XCTestCase {
         "cdata:```", "cdata:plain fence", "cdata:```",
       ])
   }
+
+  /// A chat template's text (user, 2026-10-16): its tokens read as tags,
+  /// Markdown's own marks as before, and `<` before no name stays text.
+  func testMarkdownTagsAndChatTemplateTokens() {
+    let sample = """
+      <|im_start|>user
+      Zoom *here*, if x < y and a<3.<|im_end|>
+      <tool_call>
+      <function=zoom_image>
+      <｜DSML｜ invoke name="zoom">
+      """
+    XCTAssertEqual(
+      colored(sample, .markdown),
+      [
+        "tag:<", "name:|im_start|", "tag:>", "pi:*", "pi:*", "tag:<", "name:|im_end|", "tag:>",
+        "tag:<", "name:tool_call", "tag:>", "tag:<", "name:function=zoom_image", "tag:>",
+        "tag:<", "name:｜DSML｜", "attr:invoke", "attr:name", "value:\"zoom\"", "tag:>",
+      ])
+  }
 }
 
 /// Each role's highlight is styled on the scope and on every element in it
