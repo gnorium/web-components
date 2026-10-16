@@ -152,11 +152,12 @@
     }
 
     /// The grammar a block is read by: its `data-code-syntax` (`xml`,
-    /// `json`, `markdown`), XML when it names none.
+    /// `json`, `markdown`, `chat-template`), XML when it names none.
     static func language(of code: DOM.Element) -> CodeSyntax.Language {
       guard let name = code.dataset["codeSyntax"] else { return .xml }
       if stringEquals(name, "json") { return .json }
       if stringEquals(name, "markdown") { return .markdown }
+      if stringEquals(name, "chat-template") { return .chatTemplate }
       return .xml
     }
 

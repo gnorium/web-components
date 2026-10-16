@@ -81,6 +81,9 @@ public enum CodeSyntax {
     case xml
     case json
     case markdown
+    /// A chat template's rendered text: Markdown, with JSON where the
+    /// template writes it (`ChatTemplateSyntax`).
+    case chatTemplate
   }
 
   /// The colored stretches of `text` in `language`, in order.
@@ -89,6 +92,7 @@ public enum CodeSyntax {
     case .xml: return XMLSyntax.tokens(text)
     case .json: return JSONSyntax.tokens(text)
     case .markdown: return MarkdownSyntax.tokens(text)
+    case .chatTemplate: return ChatTemplateSyntax.tokens(text)
     }
   }
 

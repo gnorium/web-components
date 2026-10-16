@@ -117,6 +117,104 @@ final class CodeSyntaxTests: XCTestCase {
         "tag:<", "name:｜DSML｜", "attr:invoke", "attr:name", "value:\"zoom\"", "tag:>",
       ])
   }
+
+  /// A DeepSeek tool result (deepseek-v4.1 chat_template.jinja, line 204):
+  /// its JSON colored inside the tags; a result that is text stays Markdown.
+  func testChatTemplateToolResult() {
+    XCTAssertEqual(
+      colored(#"<｜User｜><tool_result>{"ok": true, "tool": "zoom_image", "x": [1, null]}</tool_result>"#, .chatTemplate),
+      [
+        "tag:<", "name:｜User｜", "tag:>", "tag:<", "name:tool_result", "tag:>",
+        "attr:\"ok\"", "name:true", "attr:\"tool\"", "value:\"zoom_image\"", "attr:\"x\"", "prefix:1", "name:null",
+        "tag:</", "name:tool_result", "tag:>",
+      ])
+    XCTAssertEqual(
+      colored("<tool_result>Page *5*, not found: true</tool_result>", .chatTemplate),
+      ["tag:<", "name:tool_result", "tag:>", "pi:*", "pi:*", "tag:</", "name:tool_result", "tag:>"])
+  }
+
+  /// JSON across lines, a `<!--` and backticks in its strings never read
+  /// as Markdown, and Markdown after it read as before.
+  func testChatTemplateMultilineToolResult() {
+    let sample = """
+      <tool_result>{
+        "note": "<!-- ``` -->",
+        "n": -2.5e3
+      }</tool_result>
+      **done**
+      """
+    XCTAssertEqual(
+      colored(sample, .chatTemplate),
+      [
+        "tag:<", "name:tool_result", "tag:>", "attr:\"note\"", "value:\"<!-- ``` -->\"", "attr:\"n\"",
+        "prefix:-2.5e3", "tag:</", "name:tool_result", "tag:>", "pi:**", "pi:**",
+      ])
+  }
+
+  /// DSML parameters (deepseek-v4.1 chat_template.jinja, line 227): a
+  /// `string="false"` value is JSON and colored; a `string="true"` value
+  /// is a raw string and stays plain, however JSON it looks.
+  func testChatTemplateDSMLParameters() {
+    let sample = """
+      <｜DSML｜ parameter name="x" string="false">320</｜DSML｜ parameter>
+      <｜DSML｜ parameter name="box" string="false">{"w": 2}</｜DSML｜ parameter>
+      <｜DSML｜ parameter name="q" string="true">{"w": 2}</｜DSML｜ parameter>
+      """
+    let tag = ["tag:<", "name:｜DSML｜", "attr:parameter", "attr:name"]
+    let close = ["tag:</", "name:｜DSML｜", "attr:parameter", "tag:>"]
+    XCTAssertEqual(
+      colored(sample, .chatTemplate),
+      tag + ["value:\"x\"", "attr:string", "value:\"false\"", "tag:>", "prefix:320"] + close
+        + tag + ["value:\"box\"", "attr:string", "value:\"false\"", "tag:>", "attr:\"w\"", "prefix:2"] + close
+        + tag + ["value:\"q\"", "attr:string", "value:\"true\"", "tag:>"] + close)
+  }
+
+  /// Tool schemas (deepseek-v4.1 chat_template.jinja, lines 69–71): each
+  /// line between the header and the closing instruction colored as JSON
+  /// where it is one value; a line that is not stays Markdown, and a
+  /// wrapper inside a schema's string is not read as one.
+  func testChatTemplateToolSchemas() {
+    let sample = """
+      ### Available Tool Schemas
+
+      {"name": "zoom_image", "description": "<tool_result>x</tool_result>"}
+      not *json*
+      {"name": "read_page"}
+
+      You MUST strictly follow the above defined tool name and parameter schemas to invoke tool calls.
+      {"after": 1}
+      """
+    XCTAssertEqual(
+      colored(sample, .chatTemplate),
+      [
+        "name:### Available Tool Schemas",
+        "attr:\"name\"", "value:\"zoom_image\"", "attr:\"description\"",
+        "value:\"<tool_result>x</tool_result>\"",
+        "pi:*", "pi:*",
+        "attr:\"name\"", "value:\"read_page\"",
+      ])
+  }
+
+  /// Outside a Raw, Markdown reads the same text as before: no JSON.
+  func testMarkdownOutsideRawUnchanged() {
+    let sample = #"<tool_result>{"ok": true}</tool_result>"#
+    XCTAssertEqual(
+      colored(sample, .markdown),
+      ["tag:<", "name:tool_result", "tag:>", "tag:</", "name:tool_result", "tag:>"])
+    XCTAssertEqual(
+      CodeSyntax.tokens(Array("# A\n*b* `c`".utf8), language: .chatTemplate),
+      CodeSyntax.tokens(Array("# A\n*b* `c`".utf8), language: .markdown))
+  }
+
+  /// JSON as RFC 8259 reads it: strict where the coloring forgives.
+  func testJSONAccepts() {
+    for valid in [#" {"a": [1, -0.5e+2, "\u00e9\n"], "b": {}} "#, "320", "null", #""s""#, "[]"] {
+      XCTAssertTrue(JSONSyntax.accepts(Array(valid.utf8), from: 0, to: valid.utf8.count), valid)
+    }
+    for invalid in ["", "{a: 1}", "[1,]", "01", "1.", "tru", #""a"#, "{\"a\" 1}", "1 2", "Page 5"] {
+      XCTAssertFalse(JSONSyntax.accepts(Array(invalid.utf8), from: 0, to: invalid.utf8.count), invalid)
+    }
+  }
 }
 
 /// Each role's highlight is styled on the scope and on every element in it

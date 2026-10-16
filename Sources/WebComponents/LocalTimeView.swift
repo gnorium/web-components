@@ -45,9 +45,12 @@
 
     /// What of the moment a stamp shows: the day and time ("Jun 15, 2026
     /// at 9:10 AM"), the day alone ("Jun 15, 2026"), as a table's "on"
-    /// column, or the time alone ("9:10 AM"), as its "at" column.
+    /// column, the time alone ("9:10 AM"), as its "at" column, or the exact
+    /// instant—to the second, with its zone ("Oct 16, 2026 at 12:52:22 PM
+    /// GMT+5:30"), where the second matters (a payment's time).
     public enum Format: String, Sendable {
       case dateTime = "date-time"
+      case instant
       case date
       case time
     }
@@ -73,24 +76,8 @@
     }
 
     public func build() -> DOM.Node {
-      let isoFormatter = ISO8601DateFormatter()
-      // Match client `formatLocalDate`: "Jun 15, 2026 at 9:10 AM" (+ UTC before hydrate)
-      let displayFormatter = DateFormatter()
-      displayFormatter.locale = Locale(identifier: "en_US_POSIX")
-      displayFormatter.timeZone = TimeZone(identifier: "UTC")
-      displayFormatter.dateFormat = "MMM d, yyyy 'at' h:mm a"
-
-      // A day or a time alone is drawn in the zone the request named
-      // (ViewerZone), which the client keeps or corrects; it names no zone.
-      let partFormatter = DateFormatter()
-      partFormatter.locale = Locale(identifier: "en_US_POSIX")
-      partFormatter.timeZone = TimeZone(identifier: ViewerZone.identifier) ?? TimeZone(identifier: "UTC")
-      partFormatter.dateFormat = format == .date ? "MMM d, yyyy" : "h:mm a"
-      let text = format == .dateTime
-        ? displayFormatter.string(from: date) + " " + fallbackSuffix : partFormatter.string(from: date)
-
-      return time { text }
-        .datetime(isoFormatter.string(from: date))
+      return time { Self.text(date, format: format, fallbackSuffix: fallbackSuffix) }
+        .datetime(Self.iso(date))
         .data("format", format.rawValue)
         .class("local-time-view local-time-\(size.rawValue) local-time-\(tone.rawValue)")
         .style {
@@ -107,6 +94,48 @@
             }
           }
         }
+    }
+
+    /// The stamp's words, drawn by integer arithmetic on the calendar—never
+    /// a `DateFormatter`. On Linux a formatter given the reader's zone hands
+    /// it to CoreFoundation, which loads the zone's file from the image's
+    /// tzdata and traps when that file is missing: a browser's
+    /// "Asia/Calcutta" is a zone ICU knows (so the request binds it) but one
+    /// Ubuntu's tzdata no longer ships (it moved to tzdata-legacy), and the
+    /// first table to draw a day or a time crashed the server (2026-10-16).
+    /// The offset comes from `ViewerZone`, the same as every other local day.
+    ///
+    /// "Jun 15, 2026 at 9:10 AM UTC" (the day and time, UTC until the client
+    /// hydrates), "Jun 15, 2026 at 9:10:05 AM UTC" (the instant), "Jun 15,
+    /// 2026" (the day) or "9:10 AM" (the time), the last two in the reader's
+    /// zone.
+    static func text(_ date: Date, format: Format, fallbackSuffix: String) -> String {
+      let seconds = Int64(date.timeIntervalSince1970.rounded(.down))
+      let utcMinutes = seconds / 60 - (seconds % 60 < 0 ? 1 : 0)
+      switch format {
+      case .date:
+        return ViewerZone.localDay(epochMinutes: utcMinutes).display
+      case .time:
+        return TimeOfDay(minutes: ViewerZone.wallMinutes(epochMinutes: utcMinutes, zone: ViewerZone.identifier)).text12
+      case .dateTime, .instant:
+        let day = CalendarDate(dayNumber: Int(utcMinutes / 1_440 - (utcMinutes % 1_440 < 0 ? 1 : 0)))
+        let clock = TimeOfDay(minutes: Int(utcMinutes % 1_440))
+        let second = Int(((seconds % 60) + 60) % 60)
+        let time = format == .instant
+          ? "\(clock.hour12):\(TimeOfDay.twoDigits(clock.minute)):\(TimeOfDay.twoDigits(second)) \(clock.isPM ? "PM" : "AM")"
+          : clock.text12
+        return "\(day.display) at \(time) \(fallbackSuffix)"
+      }
+    }
+
+    /// The `datetime` attribute: ISO 8601 in UTC to the second
+    /// ("2026-06-15T09:10:05Z"), as `ISO8601DateFormatter` wrote it.
+    static func iso(_ date: Date) -> String {
+      let seconds = Int64(date.timeIntervalSince1970.rounded(.down))
+      let days = seconds / 86_400 - (seconds % 86_400 < 0 ? 1 : 0)
+      let ofDay = Int(seconds - days * 86_400)
+      let day = CalendarDate(dayNumber: Int(days))
+      return "\(day.iso)T\(TimeOfDay.twoDigits(ofDay / 3_600)):\(TimeOfDay.twoDigits(ofDay / 60 % 60)):\(TimeOfDay.twoDigits(ofDay % 60))Z"
     }
   }
 #endif
@@ -141,9 +170,18 @@
       let elements = document.querySelectorAll("time.local-time-view")
       for element in elements {
         guard let iso = element.getAttribute("datetime") else { continue }
+        let format = element.getAttribute(data("format")) ?? ""
+        // The exact instant: to the second, with the reader's zone.
+        if stringEquals(format, "instant") {
+          guard let text = formatLocalInstant(iso) else { continue }
+          element.textContent = text
+          element.setAttribute("title", text)
+          element.closest("td")?.setAttribute("title", text)
+          continue
+        }
         // A table's "on" or "at" cell: the day or the time alone, in the
         // reader's clock.
-        if let format = element.getAttribute(data("format")), !stringEquals(format, "date-time") {
+        if !stringIsEmpty(format), !stringEquals(format, "date-time") {
           guard let minutes = DateRangeValue.parseInstant(stringSubstring(iso, from: 0, to: 16) + "Z") else { continue }
           let moment = JSDate(time: Double(minutes) * 60_000)
           let text = stringEquals(format, "date")
