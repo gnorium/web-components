@@ -45,9 +45,12 @@
 
     /// What of the moment a stamp shows: the day and time ("Jun 15, 2026
     /// at 9:10 AM"), the day alone ("Jun 15, 2026"), as a table's "on"
-    /// column, or the time alone ("9:10 AM"), as its "at" column.
+    /// column, the time alone ("9:10 AM"), as its "at" column, or the exact
+    /// instant—to the second, with its zone ("Oct 16, 2026 at 12:52:22 PM
+    /// GMT+5:30"), where the second matters (a payment's time).
     public enum Format: String, Sendable {
       case dateTime = "date-time"
+      case instant
       case date
       case time
     }
@@ -78,7 +81,7 @@
       let displayFormatter = DateFormatter()
       displayFormatter.locale = Locale(identifier: "en_US_POSIX")
       displayFormatter.timeZone = TimeZone(identifier: "UTC")
-      displayFormatter.dateFormat = "MMM d, yyyy 'at' h:mm a"
+      displayFormatter.dateFormat = format == .instant ? "MMM d, yyyy 'at' h:mm:ss a" : "MMM d, yyyy 'at' h:mm a"
 
       // A day or a time alone is drawn in the zone the request named
       // (ViewerZone), which the client keeps or corrects; it names no zone.
@@ -86,7 +89,7 @@
       partFormatter.locale = Locale(identifier: "en_US_POSIX")
       partFormatter.timeZone = TimeZone(identifier: ViewerZone.identifier) ?? TimeZone(identifier: "UTC")
       partFormatter.dateFormat = format == .date ? "MMM d, yyyy" : "h:mm a"
-      let text = format == .dateTime
+      let text = format == .dateTime || format == .instant
         ? displayFormatter.string(from: date) + " " + fallbackSuffix : partFormatter.string(from: date)
 
       return time { text }
@@ -141,9 +144,18 @@
       let elements = document.querySelectorAll("time.local-time-view")
       for element in elements {
         guard let iso = element.getAttribute("datetime") else { continue }
+        let format = element.getAttribute(data("format")) ?? ""
+        // The exact instant: to the second, with the reader's zone.
+        if stringEquals(format, "instant") {
+          guard let text = formatLocalInstant(iso) else { continue }
+          element.textContent = text
+          element.setAttribute("title", text)
+          element.closest("td")?.setAttribute("title", text)
+          continue
+        }
         // A table's "on" or "at" cell: the day or the time alone, in the
         // reader's clock.
-        if let format = element.getAttribute(data("format")), !stringEquals(format, "date-time") {
+        if !stringIsEmpty(format), !stringEquals(format, "date-time") {
           guard let minutes = DateRangeValue.parseInstant(stringSubstring(iso, from: 0, to: 16) + "Z") else { continue }
           let moment = JSDate(time: Double(minutes) * 60_000)
           let text = stringEquals(format, "date")
