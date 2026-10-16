@@ -27,9 +27,6 @@ public struct TextInputView: HTMLContent {
   let `class`: String
   let min: Int?
   let max: Int?
-  /// The `step` granularity: for a time or `datetime-local` input, in
-  /// seconds (1 takes seconds; the browser's default is 60).
-  let step: Int?
   /// The id of the form it submits with, when it sits outside that form.
   let form: String?
   /// The virtual keyboard it asks for; `.none` for a field filled through a
@@ -103,7 +100,6 @@ public struct TextInputView: HTMLContent {
     class: String = "",
     min: Int? = nil,
     max: Int? = nil,
-    step: Int? = nil,
     form: String? = nil,
     inputMode: HTML.InputMode? = nil,
     autocomplete: HTML.Input.Autocomplete? = nil,
@@ -133,7 +129,6 @@ public struct TextInputView: HTMLContent {
     self.`class` = `class`
     self.min = min
     self.max = max
-    self.step = step
     self.form = form
     self.inputMode = inputMode
     self.autocomplete = autocomplete
@@ -176,9 +171,6 @@ public struct TextInputView: HTMLContent {
     }
     if let maxValue = max {
       inputEl = inputEl.max(maxValue)
-    }
-    if let step {
-      inputEl = inputEl.step(step)
     }
     if let form {
       inputEl = inputEl.form(form)
