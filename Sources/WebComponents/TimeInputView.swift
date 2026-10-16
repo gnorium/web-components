@@ -456,7 +456,6 @@ public struct TimeInputView: HTMLContent {
     /// The value and the field, from the times in force.
     private func commit() {
       valueInput?.value = TimeInputView.param(start: start, end: end, range: isRange)
-      if isRange, !stringIsEmpty(valueInput?.value ?? "") { ViewerZoneHydration.remember() }
       field?.value = TimeInputView.fieldText(start: start, end: end, range: isRange)
       valueInput?.dispatchEvent(.input)
       valueInput?.dispatchEvent(.change)

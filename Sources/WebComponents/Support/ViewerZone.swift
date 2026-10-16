@@ -9,15 +9,24 @@
 #endif
 
 /// The reader's time zone, for what is shown in it: the browser's own on the
-/// client; on the server, the zone the request named (`tz` cookie, set by the
-/// client), bound for the render by the server (`ViewerZone.$identifier`),
-/// UTC where none is named. Moments travel as UTC—minutes since the epoch—
-/// and become local days and times only here.
+/// client; on the server, the zone the request named (its `tz` query
+/// parameter, which the client adds to the requests that count the reader's
+/// days—nothing is stored on the reader's device), bound for the render by
+/// the server (`ViewerZone.$named`), UTC where none is named. Moments travel
+/// as UTC—minutes since the epoch—and become local days and times only here.
 public enum ViewerZone {
   #if SERVER
-    /// The request's IANA zone ("Asia/Kolkata").
-    @TaskLocal public static var identifier: String = "UTC"
+    /// The IANA zone the request named ("Asia/Kolkata"); nil where it named
+    /// none, and a figure summed by the reader's days is not yet known.
+    @TaskLocal public static var named: String?
 
+    /// The request's IANA zone, UTC where it named none.
+    public static var identifier: String { named ?? "UTC" }
+
+    /// Whether the request named the reader's zone: a figure summed by the
+    /// reader's days ("today", "this month") is known only then; otherwise
+    /// it reads "—" until the client asks again with the zone.
+    public static var isNamed: Bool { named != nil }
   #endif
 
   /// The reader's day a moment falls on.
@@ -124,42 +133,101 @@ public enum ViewerZone {
 }
 
 #if CLIENT
-  /// Tells the server the reader's zone—the `tz` cookie, the browser's IANA
-  /// zone—only when the server counts the reader's days: the reader filters
-  /// by date or time (picks a preset, a range or a span, `remember`), opens
-  /// a link carrying a relative range or a span, or opens a page whose
-  /// figures are summed by the reader's day or month (an element marked
-  /// `data-reader-days`: the dashboard's "today" and "this month", the
-  /// spending by day and month). Any other page view never sets it: the
-  /// tables draw local times on the client (LocalTimeView).
+  extension ViewerZone {
+    /// `url` with the reader's zone as its `tz` query parameter, in place of
+    /// any it held: for a request whose answer counts the reader's days (a
+    /// live region summed by day, a relative range of days). The zone's `/`
+    /// stays as it is, as a query may hold it; a `+` (`Etc/GMT+5`) is
+    /// escaped, or it would read as a space.
+    public static func zoned(_ url: String) -> String {
+      let bytes = Array(url.utf8)
+      let end = bytes.firstIndex(of: 35) ?? bytes.count  // "#"
+      let question = bytes[..<end].firstIndex(of: 63)  // "?"
+      var out = Array(bytes[..<(question ?? end)])
+      out.append(63)
+      if let question {
+        for pair in bytes[(question + 1)..<end].split(separator: 38) {  // "&"
+          if pair.starts(with: [116, 122, 61]) { continue }  // "tz="
+          out.append(contentsOf: pair)
+          out.append(38)
+        }
+      }
+      out.append(contentsOf: [116, 122, 61])
+      for byte in Array(name().utf8) {
+        if byte == 43 { out.append(contentsOf: [37, 50, 66]) } else { out.append(byte) }  // "+" as "%2B"
+      }
+      out.append(contentsOf: bytes[end...])
+      return String(decoding: out, as: UTF8.self)
+    }
+
+    /// `url` zoned when its query counts the reader's days, as it is
+    /// otherwise: a sort header's or a pager's address.
+    public static func zonedIfCounting(_ url: String) -> String {
+      countsReaderDays(url) ? zoned(url) : url
+    }
+
+    /// Whether a URL's query (or a form's, `a=b&c=d`) counts the reader's
+    /// days: a range counting back from now, or a span of the day.
+    public static func countsReaderDays(_ url: String) -> Bool {
+      let bytes = Array(url.utf8)
+      let end = bytes.firstIndex(of: 35) ?? bytes.count
+      let start = bytes[..<end].firstIndex(of: 63).map { $0 + 1 } ?? 0
+      let query = String(decoding: bytes[start..<end], as: UTF8.self)
+      return ViewerZoneHydration.countsRelativeRange(query) || ViewerZoneHydration.carriesTimeSpan(query)
+    }
+  }
+
+  /// Sends the reader's zone—the browser's IANA zone—with the requests that
+  /// count the reader's days, and with no other; nothing is stored on the
+  /// reader's device (no cookie, no storage), so nothing needs consent:
+  ///
+  /// - a link or a GET form whose query counts the reader's days (a range
+  ///   counting back from now, `-7d..`, or a span of the day), followed or
+  ///   submitted, carries `tz` in its URL;
+  /// - a live region summed by the reader's days (`data-reader-days`)
+  ///   opens its stream with `tz` (`LiveRegionHydration`);
+  /// - an element the server drew without the zone, its figures summed by
+  ///   the reader's days not yet known (`data-reader-days` naming where they
+  ///   are read), loads them at once with `tz`.
+  ///
+  /// The page is never read again: what was drawn without the zone shows
+  /// "—", never another zone's days.
   public enum ViewerZoneHydration {
     public static func hydrateIfPresent() {
-      let query = window.location.search
-      let relative = countsRelativeRange(query) || document.querySelector("[data-reader-days]") != nil
-      guard relative || carriesTimeSpan(query) else { return }
-      guard remember() else { return }
-      // Days were counted on the server's clock: read once more, on the
-      // reader's (once a tab, so a server that cannot read the zone does not
-      // send the page back for ever).
-      let zone = JSDate.resolvedTimeZone
-      let reloaded = sessionStorage.getItem("gnorium:tz-reloaded") ?? ""
-      if relative, !stringEquals(reloaded, zone) {
-        sessionStorage.setItem("gnorium:tz-reloaded", zone)
-        window.location.reload()
+      _ = document.addEventListener(.click, { (event: Event) in zoneLink(event) }, capture: true)
+      _ = document.addEventListener("auxclick", { (event: Event) in zoneLink(event) }, capture: true)
+      _ = document.addEventListener(.submit, { (event: Event) in zoneForm(event) }, capture: true)
+      for element in document.querySelectorAll("[data-reader-days]") {
+        let source = element.getAttribute(data("reader-days")) ?? ""
+        guard !stringIsEmpty(source), element.closest(".live-region-view") == nil else { continue }
+        FragmentHostView.load(element, url: ViewerZone.zoned(source))
       }
     }
 
-    /// Sets the cookie when the zone the page was drawn in
-    /// (`<html data-time-zone>`) is not the browser's; whether it did.
-    @discardableResult
-    public static func remember() -> Bool {
-      let zone = JSDate.resolvedTimeZone
-      guard !stringIsEmpty(zone), let html = document.querySelector("html") else { return false }
-      let drawn = html.getAttribute(data("time-zone")) ?? ""
-      guard !stringEquals(zone, drawn) else { return false }
-      document.setCookie(name: "tz", value: zone, maxAge: 31_536_000)
-      html.setAttribute(data("time-zone"), zone)
-      return true
+    /// A link of the site's own, as it is followed (clicked, middle-clicked
+    /// or entered), carries the zone when its query counts the reader's days.
+    static func zoneLink(_ event: Event) {
+      guard let link = event.target?.closest("a[href]"), let href = link.getAttribute("href"),
+        !stringContains(href, "//"), ViewerZone.countsReaderDays(href)
+      else { return }
+      link.setAttribute("href", ViewerZone.zoned(href))
+    }
+
+    /// A GET form, as it is submitted (before its entries are read),
+    /// carries the zone as a hidden `tz` while what it asks counts the
+    /// reader's days; one asked again without them drops it.
+    static func zoneForm(_ event: Event) {
+      guard let form = event.target?.closest("form") else { return }
+      let method = form.getAttribute("method") ?? "get"
+      if stringEquals(method, "post") || stringEquals(method, "POST") { return }
+      form.querySelector("input.viewer-zone-input")?.remove()
+      guard ViewerZone.countsReaderDays(FormData(form).toString()) else { return }
+      let input = document.createElement("input")
+      input.setAttribute("type", "hidden")
+      input.setAttribute("name", "tz")
+      input.setAttribute("value", ViewerZone.name())
+      input.setAttribute("class", "viewer-zone-input")
+      form.appendChild(input)
     }
 
     /// Whether a query holds a range counting back from now: `=-7d..`,

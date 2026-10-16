@@ -1850,7 +1850,8 @@ public struct TableView: HTMLContent {
         _ = button.addEventListener(.click) { [self] _ in
           // A server-sorted table: the server rendered the header's link,
           // path and query in force included.
-          let sortURL = button.getAttribute(data("sort-url")) ?? ""
+          // A list counting the reader's days sorts with their zone.
+          let sortURL = ViewerZone.zonedIfCounting(button.getAttribute(data("sort-url")) ?? "")
           if !stringIsEmpty(sortURL) {
             // In a fragment host (a dialog's table), into the host.
             if let host = button.closest("[data-fragment-host-view]") {

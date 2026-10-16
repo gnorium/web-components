@@ -591,10 +591,12 @@ public struct PaginationView: HTMLContent {
       // A list held in a fragment host (a dialog's table) asks the page
       // into the host, from the list it holds; any other, the page.
       if let host = view.closest("[data-fragment-host-view]") {
-        FragmentHostView.load(host, url: PaginationURL.settingPage(page, in: FragmentHostView.url(of: host)))
+        FragmentHostView.load(
+          host, url: ViewerZone.zonedIfCounting(PaginationURL.settingPage(page, in: FragmentHostView.url(of: host))))
         return
       }
-      window.location.href = PaginationURL.settingPage(page, in: window.location.href)
+      // A list counting the reader's days asks again with their zone.
+      window.location.href = ViewerZone.zonedIfCounting(PaginationURL.settingPage(page, in: window.location.href))
     }
   }
 #endif

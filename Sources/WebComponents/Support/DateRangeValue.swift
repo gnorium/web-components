@@ -11,8 +11,9 @@ import EmbeddedSwiftUtilities
 /// - relative: `-7d..`, the seven days that end today, the reader's days;
 ///   `-1d..`, today; `-1h..`, the last hour. A relative range stays
 ///   relative: a bookmarked "Last 7 days" still means the last seven days
-///   where and when it is opened (the server reads the reader's zone from
-///   the `tz` cookie the client sets).
+///   when it is opened, counted in the zone its URL names (`tz`, which the
+///   client sets to the reader's own on every link or form it follows;
+///   UTC where none is named).
 ///
 /// The picker turns local days into instants and back (`ViewerZone`); the
 /// grammar itself is byte and integer work only, so the client reads one as
