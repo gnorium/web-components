@@ -125,20 +125,22 @@ public enum ViewerZone {
 
 #if CLIENT
   /// Tells the server the reader's zone—the `tz` cookie, the browser's IANA
-  /// zone—only when the reader filters by date or time: picks a preset, a
-  /// range or a span (`remember`), or opens a link carrying a relative range
-  /// or a span (`hydrateIfPresent`). A plain page view never sets it: the
-  /// tables draw local times on the client (LocalTimeView); only counting a
-  /// relative range's days needs the zone on the server.
+  /// zone—only when the server counts the reader's days: the reader filters
+  /// by date or time (picks a preset, a range or a span, `remember`), opens
+  /// a link carrying a relative range or a span, or opens a page whose
+  /// figures are summed by the reader's day or month (an element marked
+  /// `data-reader-days`: the dashboard's "today" and "this month", the
+  /// spending by day and month). Any other page view never sets it: the
+  /// tables draw local times on the client (LocalTimeView).
   public enum ViewerZoneHydration {
     public static func hydrateIfPresent() {
       let query = window.location.search
-      let relative = countsRelativeRange(query)
+      let relative = countsRelativeRange(query) || document.querySelector("[data-reader-days]") != nil
       guard relative || carriesTimeSpan(query) else { return }
       guard remember() else { return }
-      // A relative range was counted on the server's clock: read once more,
-      // on the reader's (once a tab, so a server that cannot read the zone
-      // does not send the page back for ever).
+      // Days were counted on the server's clock: read once more, on the
+      // reader's (once a tab, so a server that cannot read the zone does not
+      // send the page back for ever).
       let zone = JSDate.resolvedTimeZone
       let reloaded = sessionStorage.getItem("gnorium:tz-reloaded") ?? ""
       if relative, !stringEquals(reloaded, zone) {

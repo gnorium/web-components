@@ -46,8 +46,10 @@
     /// What of the moment a stamp shows: the day and time ("Jun 15, 2026
     /// at 9:10 AM"), the day alone ("Jun 15, 2026"), as a table's "on"
     /// column, the time alone ("9:10 AM"), as its "at" column, or the exact
-    /// instant—to the second, with its zone ("Oct 16, 2026 at 12:52:22 PM
-    /// GMT+5:30"), where the second matters (a payment's time).
+    /// instant—to the second ("Oct 16, 2026 at 12:52:22 PM"), where the
+    /// second matters (a payment's time). Once hydrated, no stamp names a
+    /// zone: it is the reader's own local time. Only the server's text,
+    /// before hydration, carries the "UTC" suffix, because it is not local.
     public enum Format: String, Sendable {
       case dateTime = "date-time"
       case instant

@@ -114,10 +114,13 @@ public struct TooltipView: HTMLContent {
 
   /// How wide the bubble may grow. A sentence reads best at the standard
   /// 256px; a list of lines ("By … on … at …") reads best a line each, as
-  /// wide as the screen allows.
+  /// wide as the screen allows. A bubble led by a whole UUID (`lead`) is as
+  /// wide as that UUID, its first element: what follows wraps under it at
+  /// the UUID's width, never wider (user, 2026-10-16).
   public enum Width: String, Sendable {
     case standard
     case wide
+    case lead
   }
 
   public init(
@@ -225,8 +228,10 @@ public struct TooltipView: HTMLContent {
         // Sized to its text, not to its containing block: an absolutely
         // positioned box otherwise shrinks to the 20px trigger (or the 0px
         // portal host) and a one-sentence byline wrapped to five lines.
+        // No floor: the bubble hugs its content plus its padding, a short
+        // one as narrow as its words (user, 2026-10-16), and wraps only at
+        // its cap.
         width(.maxContent)
-        CSS.Property("min-width", "min(\(px(256).value), var(--tooltip-room))")
         CSS.Property("max-width", "min(\(px(256).value), var(--tooltip-room))")
         // A word longer than the room (a UUID on a phone) breaks rather
         // than run past the bubble.
@@ -258,8 +263,17 @@ public struct TooltipView: HTMLContent {
         color(colorInverted).important()
         fontSize(fontSizeMedium16).important()
       }
-      selector("& .tooltip-content[data-width='wide']") {
+      selector("& .tooltip-content[data-width='wide']", "& .tooltip-content[data-width='lead']") {
         CSS.Property("max-width", "var(--tooltip-room)")
+      }
+      // Led by a UUID: the bubble's max-content is the UUID's alone, since
+      // what follows is a block that adds no width of its own (inline size
+      // 0) and stretches to the column the UUID sets (min 100%), wrapping
+      // there. A UUID wider than the room breaks at the room's edge.
+      selector("& .tooltip-content[data-width='lead'] > :not(:first-child)") {
+        display(.block)
+        width(0)
+        minWidth(perc(100))
       }
       selector("& .tooltip-content[data-font='mono']") {
         fontFamily(typographyFontMono)
