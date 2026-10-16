@@ -10,9 +10,9 @@ import WebTypes
 ///
 /// Hover or focus shows it; a plain click or tap on the trigger opens it
 /// and keeps it open until the next click or tap, anywhere, or Escape
-/// (user, 2026-10-10). Tooltips sit on icons; the one button that wears
-/// one is disabled, with no press to protect, and takes no pointer events
-/// of its own, so the trigger around it takes hover, taps and the focus.
+/// (user, 2026-10-10). Tooltips sit on icons, never on buttons: an action
+/// that cannot be taken now says why when pressed (gnorium-web
+/// `ActionGateView`).
 ///
 /// The bubble is a line of text, `tooltip`, or `bubble` markup: several
 /// lines, a `LocalTimeView` the client puts in the reader's clock.
@@ -267,12 +267,6 @@ public struct TooltipView: HTMLContent {
       selector("& .tooltip-content[data-font='mono']") {
         fontFamily(typographyFontMono)
       }
-      // A disabled trigger (a disabled button) takes no pointer events of
-      // its own, so hover and taps reach the tooltip around it, which is
-      // then focusable in its stead (user, 2026-10-10).
-      selector("&[data-disabled-trigger='true'] .tooltip-trigger-content :disabled", "&[data-disabled-trigger='true'] .tooltip-trigger-content [aria-disabled='true']") {
-        pointerEvents(.none)
-      }
       selector("&:hover > .tooltip-content", "&:focus-within > .tooltip-content", "&[data-visible='true'] .tooltip-content") {
         opacity(1)
         visibility(.visible)
@@ -445,13 +439,6 @@ public struct TooltipView: HTMLContent {
       let raw = tooltip.dataset["placement"] ?? ""
       self.placement =
         TooltipView.Placement.allCases.first { stringEquals($0.rawValue, raw) } ?? .bottom
-      // A disabled control takes no pointer events and no focus: the
-      // trigger around it takes them in its stead (user, 2026-10-10).
-      if tooltip.querySelector(".tooltip-trigger-content :disabled, .tooltip-trigger-content [aria-disabled='true']") != nil {
-        tooltip.setAttribute(data("disabled-trigger"), "true")
-        tooltip.setAttribute("tabindex", "0")
-      }
-
       portal()
       bindEvents()
     }

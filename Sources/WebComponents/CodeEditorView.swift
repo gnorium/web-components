@@ -585,6 +585,10 @@
     /// shows and a little either side (`paintWindow`), each given its range
     /// as it comes into view; the rest taken out, their ranges let go.
     static func repaint(_ editor: Editor) {
+      // Text whose lines were never measured is painted whole, once: a
+      // scroll over it changes nothing, and walking its every stretch each
+      // frame (a session's Raw holds tens of thousands) stalled the scroll.
+      if editor.shown, editor.lineTops.isEmpty, editor.live.count == editor.tokens.count { return }
       let want = editor.shown ? paintWindow(editor) : []
       var wanted = Set<Int>()
       for index in want { wanted.insert(index) }
