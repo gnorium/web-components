@@ -1012,7 +1012,11 @@
                   CodeEditorView(
                     id: "tei-page-raw-\(index + firstIndex)",
                     name: "markup",
-                    value: TEIRendition.headedPage(page.markup, renditions: renditions),
+                    // Its surface too, edited as any of its code (user,
+                    // 2026-10-16).
+                    value: TEIFacsimile.headed(
+                      TEIRendition.headedPage(page.markup, renditions: renditions),
+                      surface: TEIFacsimile.surface(of: page, in: teiXml)),
                     ariaLabel: page.label.isEmpty ? "Code of this page" : "Code of \(page.label)",
                     lined: true
                   )
@@ -1020,9 +1024,14 @@
                 .class("tei-page-edit")
               } else {
                 // The stored text as it is (a document is stored formatted),
-                // headed, numbered and soft-wrapped (user, 2026-10-11).
+                // headed, its surface as its <facsimile> as its diff shows
+                // it (user, 2026-10-16), numbered and soft-wrapped (user,
+                // 2026-10-11).
                 CodeView(
-                  TEIRendition.headedPage(page.markup, renditions: renditions), showLineNumbers: false, lined: true)
+                  TEIFacsimile.headed(
+                    TEIRendition.headedPage(page.markup, renditions: renditions),
+                    surface: TEIFacsimile.surface(of: page, in: teiXml)),
+                  showLineNumbers: false, lined: true)
               }
             }
             .class("tei-page-raw")
