@@ -12,7 +12,7 @@ import WebTypes
 /// Editable page control: previous / `[n]` of `M` / next.
 ///
 /// - ``Size/normal``—table / list footers (44px targets, spaced layout)
-/// - ``Size/medium``—chrome pagers (session, artifact, attempt switcher,
+/// - ``Size/medium``—chrome pagers (session, artifact, instance switcher,
 ///   legends): ButtonView's medium, 40px targets, 16px text (a field under 16px makes
 ///   iOS Safari zoom the page as it is focused), 16px chevrons
 ///
@@ -527,7 +527,7 @@ public struct PaginationView: HTMLContent {
       for view in paginationViews {
         if stringEquals(view.dataset["paginationHydrated"] ?? "", "true") { continue }
         view.dataset["paginationHydrated"] = "true"
-        // Host-owned pagers (session / attempt)—skip URL navigation.
+        // Host-owned pagers (session / instance)—skip URL navigation.
         let kind = view.getAttribute("data-pager-kind") ?? ""
         if !stringIsEmpty(kind) { continue }
 
