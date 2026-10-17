@@ -13,6 +13,16 @@ public enum MarkdownSyntax {
   public typealias Token = CodeSyntax.Token
 
   public static func tokens(_ text: [UInt8]) -> [Token] {
+    var clean: [Int] = []
+    return tokens(text, clean: &clean)
+  }
+
+  /// The same, and each line start where the read stands as it began—no
+  /// fence open, no comment running on—in order: every stretch before
+  /// such a point is final whatever follows, and a read begun there finds
+  /// the same stretches after it (`CodeSyntax.tokens(_:language:clean:)`).
+  /// The text's end is one where it ends a line in that state.
+  public static func tokens(_ text: [UInt8], clean: inout [Int]) -> [Token] {
     var units = CodeSyntax.Units()
     var out: [Token] = []
     func add(_ kind: Kind, _ from: Int, _ to: Int) {
@@ -186,6 +196,9 @@ public enum MarkdownSyntax {
 
     var index = 0
     while index < text.count {
+      // A line's start, the state the read began in: nothing before it
+      // reads otherwise for what follows (emphasis is the line's own).
+      if fence == nil { clean.append(index) }
       let end = lineEnd(index)
       var cursor = index
       var indent = 0
@@ -294,6 +307,7 @@ public enum MarkdownSyntax {
       }
       index = stop + 1
     }
+    if index == text.count, fence == nil { clean.append(index) }
     if let open = fence, let language = open.language, open.content < text.count {
       // A fence left open runs to the text's end.
       let base = units.at(open.content, in: text)

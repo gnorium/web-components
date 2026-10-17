@@ -359,8 +359,10 @@
     }
 
     public static func highlightVisible() {
-      // The highlights hold the blocks on screen alone.
+      // Read-only text keeps its paint; what the screen shows is painted
+      // now, as are the fences near it (`CodeBlockHydration`).
       CodeEditorHydration.paintVisible()
+      CodeBlockHydration.highlightNear()
       for block in document.querySelectorAll(".code-code, [data-code-syntax]") {
         // An editor's text is colored by highlights, which leave it whole.
         if block.hasAttribute("data-code-editing") {

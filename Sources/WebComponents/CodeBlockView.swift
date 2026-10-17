@@ -241,6 +241,112 @@
       }
     }
 
+    /// The blocks waiting to be highlighted, and the observer that waits
+    /// for each to come near the screen, by its code's id.
+    nonisolated(unsafe) static var waiting: [DOM.Element] = []
+    nonisolated(unsafe) static var observers: [Int32: Int32] = [:]
+    nonisolated(unsafe) static var pumping = false
+
+    /// A block's code highlighted (highlight.js) before it can be seen, and
+    /// never taken off again: now where it is on screen or within a screen
+    /// of it; else once it comes within a screen (an `IntersectionObserver`
+    /// whose margin is the screen's height) or in idle time, whichever is
+    /// first. A page of a hundred blocks, or a stream committing one after
+    /// another, never highlights them all in one task.
+    public static func highlightSoon(_ code: DOM.Element) {
+      guard !code.hasAttribute("data-highlighted") else { return }
+      if isNear(code) {
+        highlight(code)
+        return
+      }
+      waiting.append(code)
+      let margin = stringJoin([intToString(Int(window.innerHeight)), "px 0px"], separator: "")
+      observers[code.id] = code.observeIntersection(rootMargin: margin) { near in
+        if near { highlight(code) }
+      }
+      pump()
+    }
+
+    /// Whether `code` has a box on screen or within a screen of it.
+    static func isNear(_ code: DOM.Element) -> Bool {
+      guard let rect = code.getBoundingClientRect(), rect.height > 0 else { return false }
+      let height = window.innerHeight
+      return rect.bottom > -height && rect.top < 2 * height
+    }
+
+    /// The waiting blocks near the screen highlighted now: after a switch
+    /// that shows them (Raw put away), before the frame draws them.
+    public static func highlightNear() {
+      for code in waiting where isNear(code) { highlight(code) }
+    }
+
+    /// `code` highlighted, once, and no longer waited for.
+    static func highlight(_ code: DOM.Element) {
+      if let handle = observers[code.id] {
+        code.unobserveIntersection(handle)
+        observers[code.id] = nil
+      }
+      waiting.removeAll { $0.id == code.id }
+      guard !code.hasAttribute("data-highlighted") else { return }
+      HighlightJS.highlightElement(elementID: code.id)
+    }
+
+    /// The rest highlighted in idle time, a block at a time while the
+    /// period lasts.
+    static func pump() {
+      guard !pumping, !waiting.isEmpty else { return }
+      pumping = true
+      _ = window.requestIdleCallback { deadline in
+        pumping = false
+        // At least one a period, however long it takes: a block is
+        // highlighted whole (highlight.js has no step).
+        repeat {
+          guard let code = waiting.first else { break }
+          highlight(code)
+        } while deadline.timeRemaining() > 0
+        pump()
+      }
+    }
+
+    /// A fence still being written, `delta` added at its end: each line it
+    /// completes added colored (highlight.js, those lines alone), the line
+    /// still open as plain text after them until its end comes. Only what
+    /// was added is read, never the block again; what it held when it was
+    /// drawn is highlighted once, at the first. Closed, the fence is drawn
+    /// whole as a block of its own and highlighted whole.
+    public static func append(_ delta: String, to code: DOM.Element) {
+      let open = code.querySelector(":scope > .code-block-open-line")
+      if open == nil, !code.hasAttribute("data-highlighted") {
+        HighlightJS.highlightElement(elementID: code.id)
+      }
+      var pending = ""
+      if let open { pending = open.textContent }
+      let text = stringJoin([pending, delta], separator: "")
+      let bytes = Array(text.utf8)
+      var cut = bytes.count
+      while cut > 0, bytes[cut - 1] != 0x0A { cut -= 1 }
+      let rest = String(decoding: bytes[cut..<bytes.count], as: UTF8.self)
+      if cut > 0 {
+        let lines = String(decoding: bytes[0..<cut], as: UTF8.self)
+        var language = "plaintext"
+        if let pre = code.parentElement { language = fenceLanguage(of: pre) }
+        let html = HighlightJS.highlight(lines, language: language)
+        if let open {
+          open.insertAdjacentHTML(.beforebegin, html)
+        } else {
+          code.insertAdjacentHTML(.beforeend, html)
+        }
+      }
+      if let open {
+        open.textContent = rest
+      } else if !stringIsEmpty(rest) {
+        let line = document.createElement(.span)
+        line.className = "code-block-open-line"
+        line.textContent = rest
+        code.appendChild(line)
+      }
+    }
+
     /// The fence's language (`language-…` on its code), "text" for none.
     private static func fenceLanguage(of pre: DOM.Element) -> String {
       guard let code = pre.querySelector("code") else { return "text" }
@@ -253,12 +359,12 @@
       return stringIsEmpty(language) ? "text" : language
     }
 
-    /// Its copy button bound and its code highlighted, once.
+    /// Its copy button bound and its code highlighted, once (`highlightSoon`).
     private static func bind(_ button: DOM.Element, pre: DOM.Element) {
       if stringEquals(button.getAttribute(data("copy-bound")) ?? "", "true") { return }
       button.setAttribute(data("copy-bound"), true)
       if let code = pre.querySelector("code") {
-        HighlightJS.highlightElement(elementID: code.id)
+        highlightSoon(code)
       }
 
       _ = button.addEventListener(.click) { (event: Event) in

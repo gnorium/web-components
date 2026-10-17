@@ -96,6 +96,30 @@ public enum CodeSyntax {
     }
   }
 
+  /// The same, and `clean`: the last byte offset where the grammar's
+  /// state is the one it began in—every stretch before it final whatever
+  /// follows, and a read begun there afresh finding the same stretches
+  /// after it. A text that grows is read again only from there. Markdown
+  /// and a chat template keep such points (line starts outside a fence, a
+  /// comment, a wrapper); XML and JSON are read whole (0).
+  public static func tokens(_ text: [UInt8], language: Language, clean: inout Int) -> [Token] {
+    switch language {
+    case .xml:
+      clean = 0
+      return XMLSyntax.tokens(text)
+    case .json:
+      clean = 0
+      return JSONSyntax.tokens(text)
+    case .markdown:
+      var points: [Int] = []
+      let out = MarkdownSyntax.tokens(text, clean: &points)
+      clean = points.last ?? 0
+      return out
+    case .chatTemplate:
+      return ChatTemplateSyntax.tokens(text, clean: &clean)
+    }
+  }
+
   /// A text's bytes counted in UTF-16 code units as a read moves forward,
   /// as a DOM `Range` counts a text node: no table of every byte, since
   /// every stretch is found after the one before. Embedded Swift carries no
