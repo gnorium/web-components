@@ -681,7 +681,10 @@
 
     /// Where the screen and a screen either side of it stand in the text
     /// (UTF-16 units): by the caret at the screen's top and bottom where it
-    /// falls in the text, else by height. Nil where none of it is near.
+    /// falls in the text; where it falls on an element whose contents are
+    /// not laid out (`content-visibility` skipping a Raw's run that has not
+    /// been drawn yet), by height within that element's text; else by
+    /// height within the whole. Nil where none of it is near.
     static func viewWindow(_ editor: Editor) -> Swift.Range<Int>? {
       let total = editor.nodes.last?.end ?? 0
       guard total > 0, let rect = editor.code.getBoundingClientRect(), rect.height > 0 else { return nil }
@@ -696,6 +699,28 @@
           var at = 0
           while at < editor.nodes.count, editor.nodes[at].node.id != node.id { at += 1 }
           if at < editor.nodes.count { return editor.nodes[at].start + caret.offset }
+          if let element = node as? DOM.Element, element.id != editor.code.id, editor.code.contains(element),
+            let box = element.getBoundingClientRect(), box.height > 0
+          {
+            // Its text's first and last nodes, and the share of its height
+            // above the point.
+            let walker = document.createTreeWalker(element, DOM.NodeFilter.SHOW_TEXT)
+            var first = -1
+            var last = -1
+            while let next = walker.nextNode() {
+              var index = last < 0 ? 0 : last
+              while index < editor.nodes.count, editor.nodes[index].node.id != next.id { index += 1 }
+              guard index < editor.nodes.count else { break }
+              if first < 0 { first = index }
+              last = index
+            }
+            if first >= 0 {
+              let from = editor.nodes[first].start
+              let to = editor.nodes[last].end
+              let share = min(max((clamped - box.top) / box.height, 0), 1)
+              return from + Int(Double(to - from) * share)
+            }
+          }
         }
         return Int(Double(total) * (clamped - rect.top) / rect.height)
       }
