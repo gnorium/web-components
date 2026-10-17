@@ -76,4 +76,25 @@ final class TooltipGeometryTests: XCTestCase {
     XCTAssertEqual(result.placement, .rightStart)
     XCTAssertEqual(result.arrowAt, 408, accuracy: 0.001)
   }
+
+  /// The safe triangle, measured on a vignette page: the pointer leaves the
+  /// ⓘ sideways, just right of it, on a diagonal to the bubble's link; every
+  /// step of that path heads for the bubble, a turn away from it does not.
+  func testDiagonalLeaveHeadsForTheBubble() {
+    let trigger = Geometry.Box(left: 821.5, top: 219, right: 837.5, bottom: 235)
+    let bubble = Geometry.Box(left: 807.5, top: 151, right: 1063.5, bottom: 211)
+    let center = (x: 829.5, y: 227.0)
+    let link = (x: 930.7, y: 181.0)
+    let left = (x: 837.9, y: 223.2)
+    XCTAssertTrue(Geometry.aims(x: left.x, y: left.y, from: center, trigger: trigger, bubble: bubble, gap: 8))
+    for step in 1...12 {
+      let t = Double(step) / 12
+      let x = center.x + (link.x - center.x) * t
+      let y = center.y + (link.y - center.y) * t
+      XCTAssertTrue(Geometry.aims(x: x, y: y, from: left, trigger: trigger, bubble: bubble, gap: 8), "step \(step)")
+    }
+    // Along the trigger's row, below the bubble, and away to the corner.
+    XCTAssertFalse(Geometry.aims(x: 900, y: 227, from: left, trigger: trigger, bubble: bubble, gap: 8))
+    XCTAssertFalse(Geometry.aims(x: 0, y: 0, from: center, trigger: trigger, bubble: bubble, gap: 8))
+  }
 }

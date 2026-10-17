@@ -327,6 +327,39 @@ public struct TooltipView: HTMLContent {
       selector("&.tooltip-trigger[data-placement='left-end'] > .tooltip-content", "&.tooltip-trigger[data-placement='right-end'] > .tooltip-content") {
         CSS.Property("bottom", Self.inTrigger)
       }
+      // The bubble reaches back across its gap to the trigger: an unseen
+      // strip as wide (or tall) as the bubble, so the pointer on its way
+      // from the trigger to a link in the bubble never leaves both (WCAG
+      // 2.1 SC 1.4.13, hoverable). It takes the bubble's pointer events:
+      // none until it shows.
+      selector("& .tooltip-content::before") {
+        content("\"\"")
+        position(.absolute)
+      }
+      selector("&[data-placement^='bottom'] .tooltip-content::before") {
+        bottom(perc(100))
+        left(0)
+        right(0)
+        height(spacing8)
+      }
+      selector("&[data-placement^='top'] .tooltip-content::before") {
+        top(perc(100))
+        left(0)
+        right(0)
+        height(spacing8)
+      }
+      selector("&[data-placement^='left'] .tooltip-content::before") {
+        left(perc(100))
+        top(0)
+        bottom(0)
+        width(spacing8)
+      }
+      selector("&[data-placement^='right'] .tooltip-content::before") {
+        right(perc(100))
+        top(0)
+        bottom(0)
+        width(spacing8)
+      }
       selector("& .tooltip-content::after") {
         content("\"\"")
         position(.absolute)
@@ -448,6 +481,58 @@ public struct TooltipView: HTMLContent {
     /// (16px) plus half the arrow (6px).
     public static let arrowInset = 22.0
 
+    /// A box in viewport pixels: a trigger's or a bubble's.
+    public struct Box: Sendable {
+      public let left: Double
+      public let top: Double
+      public let right: Double
+      public let bottom: Double
+
+      public init(left: Double, top: Double, right: Double, bottom: Double) {
+        self.left = left
+        self.top = top
+        self.right = right
+        self.bottom = bottom
+      }
+
+      func contains(_ x: Double, _ y: Double) -> Bool { x >= left && x <= right && y >= top && y <= bottom }
+    }
+
+    /// Whether the pointer at (`x`, `y`), having left `trigger` at `from`,
+    /// is still on its way to `bubble` (the safe triangle, or menu aim):
+    /// over the trigger, over the bubble or the strip that bridges their
+    /// `gap`, or inside the triangle from where it left to the bubble's two
+    /// corners facing the trigger.
+    public static func aims(
+      x: Double, y: Double, from: (x: Double, y: Double), trigger: Box, bubble: Box, gap: Double
+    ) -> Bool {
+      if trigger.contains(x, y) { return true }
+      let reach: Box
+      let corners: ((Double, Double), (Double, Double))
+      if bubble.bottom <= trigger.top {
+        reach = Box(left: bubble.left, top: bubble.top, right: bubble.right, bottom: bubble.bottom + gap)
+        corners = ((bubble.left, bubble.bottom), (bubble.right, bubble.bottom))
+      } else if bubble.top >= trigger.bottom {
+        reach = Box(left: bubble.left, top: bubble.top - gap, right: bubble.right, bottom: bubble.bottom)
+        corners = ((bubble.left, bubble.top), (bubble.right, bubble.top))
+      } else if bubble.right <= trigger.left {
+        reach = Box(left: bubble.left, top: bubble.top, right: bubble.right + gap, bottom: bubble.bottom)
+        corners = ((bubble.right, bubble.top), (bubble.right, bubble.bottom))
+      } else {
+        reach = Box(left: bubble.left - gap, top: bubble.top, right: bubble.right, bottom: bubble.bottom)
+        corners = ((bubble.left, bubble.top), (bubble.left, bubble.bottom))
+      }
+      if reach.contains(x, y) { return true }
+      // Inside (or on an edge of) the triangle: on no side of one of its
+      // edges than of another.
+      func side(_ p: (Double, Double), _ q: (Double, Double)) -> Double {
+        (q.0 - p.0) * (y - p.1) - (q.1 - p.1) * (x - p.0)
+      }
+      let apex = (from.x, from.y)
+      let sides = [side(apex, corners.0), side(corners.0, corners.1), side(corners.1, apex)]
+      return !(sides.contains { $0 < 0 } && sides.contains { $0 > 0 })
+    }
+
     /// Slack for the arrow test: the start is computed from the trigger's
     /// center and the arrow back from the start, and the round trip may
     /// miss the inset by a rounding error.
@@ -540,7 +625,11 @@ public struct TooltipView: HTMLContent {
     private var host: DOM.Element?
     private let placement: TooltipView.Placement
     private var isVisible: Bool = false
-    private var hideTimeout: Int32?
+    /// Where the pointer left the trigger, while it is on its way to the
+    /// bubble (`Geometry.aims`), and the pointermove listener that follows
+    /// it there.
+    private var aimFrom: (x: Double, y: Double)?
+    private var aimListener: Int32?
     /// Opened by a click or tap: leaving the trigger or its focus doesn't
     /// close it; the next click or tap does.
     private var pinned: Bool = false
@@ -705,14 +794,27 @@ public struct TooltipView: HTMLContent {
     }
 
     private func bindEvents() {
-      guard let _ = content else { return }
+      guard let content else { return }
 
       // Hover for desktop
       _ = trigger.addEventListener(.mouseenter) { [self] _ in
+        self.stopAiming()
         self.showTooltip()
       }
 
-      _ = trigger.addEventListener(.mouseleave) { [self] _ in
+      // Portaled to <body>, the bubble is no longer inside its trigger.
+      // Leaving the trigger, the bubble stays while the pointer heads for
+      // it—inside the triangle from where it left to the bubble's near
+      // corners, or across the strip that bridges their gap—and hides as
+      // soon as it strays; over the bubble it stays, and leaving the
+      // bubble hides it (WCAG 2.1 SC 1.4.13, hoverable).
+      _ = trigger.addEventListener(.mouseleave) { [self] (event: Event) in
+        if !self.pinned { self.aim(from: (event.clientX, event.clientY)) }
+      }
+      _ = content.addEventListener(.mouseenter) { [self] _ in
+        self.stopAiming()
+      }
+      _ = content.addEventListener(.mouseleave) { [self] _ in
         if !self.pinned { self.hideTooltip() }
       }
 
@@ -777,10 +879,7 @@ public struct TooltipView: HTMLContent {
 
     /// Its bubble out of the page, for a trigger about to leave it.
     func release() {
-      if let timer = hideTimeout {
-        clearTimeout(timer)
-        hideTimeout = nil
-      }
+      stopAiming()
       pinned = false
       isVisible = false
       host?.remove()
@@ -802,10 +901,51 @@ public struct TooltipView: HTMLContent {
       hideTooltip()
     }
 
+    /// Follows the pointer from where it left the trigger, keeping the
+    /// bubble while it heads there (`Geometry.aims`). The leave itself
+    /// must head there from the trigger's center: a pointer that left
+    /// away from the bubble, and moves no further, hides it at once.
+    private func aim(from point: (x: Double, y: Double)) {
+      stopAiming()
+      guard isVisible, let t = trigger.getBoundingClientRect() else { return }
+      guard heads(x: point.x, y: point.y, from: (t.left + t.width / 2, t.top + t.height / 2)) else {
+        hideTooltip()
+        return
+      }
+      aimFrom = point
+      aimListener = document.addEventListener(.pointermove) { [self] (event: Event) in
+        guard let from = self.aimFrom, let t = self.trigger.getBoundingClientRect() else { return }
+        // From the leave point, or from the trigger's center: a leave
+        // reports whole pixels and the next move fractional ones, so the
+        // first move can sit a fraction off the leave point's apex.
+        let center = (t.left + t.width / 2, t.top + t.height / 2)
+        if !self.heads(x: event.clientX, y: event.clientY, from: from)
+          && !self.heads(x: event.clientX, y: event.clientY, from: center)
+        {
+          self.hideTooltip()
+        }
+      }
+    }
+
+    /// Whether the pointer at (`x`, `y`) heads for the bubble from `from`.
+    private func heads(x: Double, y: Double, from: (x: Double, y: Double)) -> Bool {
+      guard let t = trigger.getBoundingClientRect(), let b = content?.getBoundingClientRect() else { return false }
+      return TooltipView.Geometry.aims(
+        x: x, y: y, from: from,
+        trigger: .init(left: t.left, top: t.top, right: t.right, bottom: t.bottom),
+        bubble: .init(left: b.left, top: b.top, right: b.right, bottom: b.bottom), gap: Self.gap)
+    }
+
+    private func stopAiming() {
+      if let listener = aimListener { document.removeEventListener(.pointermove, listener) }
+      aimListener = nil
+      aimFrom = nil
+    }
+
     /// Closes a pinned one when `event` happened outside its trigger.
     private func dismissUnlessInside(_ event: Event) {
       guard pinned, let target = event.target else { return }
-      if !trigger.contains(target) { dismiss() }
+      if !trigger.contains(target) && !(content?.contains(target) ?? false) { dismiss() }
     }
 
     private func showTooltip() {
@@ -814,12 +954,6 @@ public struct TooltipView: HTMLContent {
       // is portaled to <body>, out of its reach) sets the trigger's
       // `data-tooltip-text`; the bubble says it as it shows.
       if let text = trigger.getAttribute("data-tooltip-text") { content.innerHTML = text }
-
-      // Cancel any pending hide
-      if let timer = hideTimeout {
-        clearTimeout(timer)
-        hideTimeout = nil
-      }
 
       place()
       host?.setAttribute(data("visible"), true)
@@ -833,17 +967,14 @@ public struct TooltipView: HTMLContent {
 
     private func hideTooltip() {
       guard content != nil else { return }
+      stopAiming()
+      host?.setAttribute(data("visible"), false)
+      trigger.setAttribute(data("visible"), false)
+      isVisible = false
 
-      // Small delay before hiding
-      hideTimeout = setTimeout(100) { [self] in
-        self.host?.setAttribute(data("visible"), false)
-        self.trigger.setAttribute(data("visible"), false)
-        self.isVisible = false
-
-        // Dispatch hide event
-        let event = CustomEvent(type: "tooltip-hide", detail: "")
-        self.trigger.dispatchEvent(event)
-      }
+      // Dispatch hide event
+      let event = CustomEvent(type: "tooltip-hide", detail: "")
+      trigger.dispatchEvent(event)
     }
   }
 
