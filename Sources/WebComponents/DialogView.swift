@@ -174,7 +174,13 @@
       .data("default", !hasCustomFooter)
       .data("has-footer-text", hasFooterText)
 
-      return div {
+      // A native dialog, opened modally (`DialogView.showModal` on the
+      // client): the top layer holds it over everything on the page,
+      // whatever the z-index or stacking context it is drawn in (a sticky
+      // sidebar or navbar, an accordion raised around it), its backdrop the
+      // scrim and the page behind inert. It is the shell's frame, without
+      // padding: a press on it and not on what it holds is on the backdrop.
+      return dialog {
         div {
           // Header
           if !hideHeader {
@@ -197,43 +203,38 @@
           }
         }
         .class("dialog-shell")
-        .role(.dialog)
-        .ariaModal(true)
-        .ariaLabelledby("dialog-title")
       }
-      .class(
-        stringIsEmpty(`class`) ? "dialog-view dialog-backdrop" : stringJoin(["dialog-view dialog-backdrop ", `class`], separator: "")
-      )
-      .data("open", open ? "true" : "false")
+      .open(open)
+      .class(stringIsEmpty(`class`) ? "dialog-view" : stringJoin(["dialog-view ", `class`], separator: ""))
+      .ariaLabelledby("dialog-title")
       .style {
+        // Centered in the screen (the platform's own auto margins, which the
+        // page's reset zeroes), 16 from every edge at most.
         selector("&") {
-          position(.fixed)
-          insetBlockStart(0)
-          insetInlineStart(0)
-          insetInlineEnd(0)
-          insetBlockEnd(0)
-          width(perc(100))
-          height(perc(100))
+          margin(.auto)
+          padding(0)
+          border(.none)
+          backgroundColor(backgroundColorTransparent)
+          color(colorBase)
+          maxWidth(calc(perc(100) - spacing32))
+          maxHeight(calc(perc(100) - spacing32))
+          overflow(.visible)
+        }
+        selector("&[open]") {
+          display(.flex)
+          flexDirection(.column)
+        }
+        selector("&::backdrop") {
           backgroundColor(backgroundColorBackdropDark)
           backdropFilter(blur(px(16)))
           webkitBackdropFilter(blur(px(16)))
-          zIndex(200)
-          display(.flex)
-          alignItems(.center)
-          justifyContent(.center)
-          padding(spacing16)
-        }
-        selector("&[data-open='false']") {
-          display(.none).important()
-        }
-        selector("body[data-dialog-open='true']") {
-          overflow(.hidden)
         }
         descendant(".dialog-shell") {
           position(.relative)
           display(.flex)
           flexDirection(.column)
           width(min(calc(vw(100) - px(60)), px(900)))
+          minHeight(0)
           backgroundColor(backgroundColorBase)
           borderRadius(borderRadiusBase)
           overflow(.hidden)
@@ -331,6 +332,13 @@
           padding(spacing8, spacing16, spacing16)
           overflowY(.auto)
           flex(1)
+          minHeight(0)
+        }
+      }
+      .style(prefix: false) {
+        // The page behind a modal holds still.
+        selector("body:has(.dialog-view:modal)") {
+          overflow(.hidden)
         }
       }
     }
@@ -342,6 +350,26 @@
   import HTMLBuilder
   import WebAPIs
   import WebTypes
+
+  /// Opening and closing a `DialogView` (`.dialog-view`, a `<dialog>`).
+  extension DialogView {
+    /// Opens `dialog` as a modal (`showModal()`): the top layer holds it
+    /// over everything on the page, whatever the z-index or stacking context
+    /// it was drawn in, its backdrop the scrim and the rest of the page inert
+    /// (no focus, click or scroll). Escape, its close button or a press on
+    /// the backdrop close it. However it closes, `opener` (what opened it)
+    /// has the focus again: the platform gives it back only to what had it,
+    /// and Safari never focuses a clicked button.
+    public static func showModal(_ dialog: DOM.Element, opener: DOM.Element? = nil) {
+      if DialogHydration.instance == nil { DialogHydration.instance = DialogHydration() }
+      DialogHydration.instance?.instance(of: dialog)?.open(opener: opener)
+    }
+
+    /// Closes `dialog` (`close()`, firing `close`).
+    public static func close(_ dialog: DOM.Element) {
+      (dialog as? HTML.HTMLDialogElement)?.close()
+    }
+  }
 
   public class DialogHydration: @unchecked Sendable {
     public static nonisolated(unsafe) var instance: DialogHydration?
@@ -358,6 +386,12 @@
     }
 
     public static func hydrateNew() { hydrateIfPresent() }
+
+    /// The bound dialog `dialog` is, binding those drawn since.
+    fileprivate func instance(of dialog: DOM.Element) -> DialogInstance? {
+      if instances[dialog.id] == nil { hydrateAllDialogs() }
+      return instances[dialog.id]
+    }
 
     private func hydrateAllDialogs() {
       let allDialogs = document.querySelectorAll(".dialog-view")
@@ -389,67 +423,60 @@
             return
           }
 
-          instance.openDialog()
+          instance.open(opener: targetElement)
         }
       }
     }
   }
 
   private class DialogInstance: @unchecked Sendable {
-    private var dialog: DOM.Element
-    private var closeButton: DOM.Element?
-    private var primaryButton: DOM.Element?
-    private var defaultButton: DOM.Element?
+    private let dialog: DOM.Element
+    /// What opened it, which has the focus again when it closes.
+    private var opener: DOM.Element?
+    /// Whether the press a click ends began on the backdrop: a drag from
+    /// inside the dialog that ends outside it (an image panned) closes
+    /// nothing.
+    private var pressedOnBackdrop = false
 
     init(dialog: DOM.Element) {
       self.dialog = dialog
-
-      closeButton = dialog.querySelector(".dialog-close-button")
-      primaryButton = dialog.querySelector(".dialog-primary-button")
-      defaultButton = dialog.querySelector(".dialog-default-button")
-
       bindEvents()
+      // Drawn open (`DialogView(open: true)`): shown as every dialog is, a
+      // modal.
+      if dialog.hasAttribute("open"), let modal = dialog as? HTML.HTMLDialogElement {
+        modal.close()
+        modal.showModal()
+      }
     }
 
     private func bindEvents() {
-      // Close button
-      if let closeButton = closeButton {
+      if let closeButton = dialog.querySelector(".dialog-close-button") {
         _ = closeButton.addEventListener(.click) { [self] event in
           event.stopPropagation()
-          self.closeDialog()
+          self.close()
         }
       }
 
-      // Backdrop click to close
+      // A press on the backdrop (`::backdrop`) is the dialog's own, never
+      // on what it holds: the dialog is the shell's frame, without padding.
+      _ = dialog.addEventListener(.pointerdown) { [self] event in
+        self.pressedOnBackdrop = event.target?.id == self.dialog.id
+      }
       _ = dialog.addEventListener(.click) { [self] event in
-        // Only close if clicking directly on backdrop (not on dialog shell)
-        if let target = event.target,
-          stringEquals(target.className, "dialog-view dialog-backdrop")
-            || stringContains(target.className, "dialog-backdrop")
-        {
-          self.closeDialog()
-        }
+        guard self.pressedOnBackdrop, event.target?.id == self.dialog.id else { return }
+        self.close()
       }
 
-      // Prevent clicks inside dialog shell from closing
-      if let shell = dialog.querySelector(".dialog-shell") {
-        _ = shell.addEventListener(.click) { event in
-          event.stopPropagation()
-        }
+      // However it closes (Escape, its close button, the backdrop, the page),
+      // what opened it has the focus again.
+      _ = dialog.addEventListener(.close) { [self] _ in
+        self.pressedOnBackdrop = false
+        guard let opener = self.opener else { return }
+        self.opener = nil
+        opener.focus(DOM.FocusOptions(preventScroll: true))
       }
 
-      // ESC key to close
-      _ = document.addEventListener(.keydown) { [self] event in
-        let key = event.key
-        if stringEquals(key, "Escape") {
-          if let isOpen = self.dialog.dataset["open"], stringEquals(isOpen, "true") {
-            self.closeDialog()
-          }
-        }
-      }
-
-      // Primary action button
-      if let primaryButton = primaryButton {
+      if let primaryButton = dialog.querySelector(".dialog-primary-button") {
         _ = primaryButton.addEventListener(.click) { [self] event in
           event.stopPropagation()
           let customEvent = CustomEvent(type: "dialog-primary", detail: "")
@@ -457,8 +484,7 @@
         }
       }
 
-      // Default action button
-      if let defaultButton = defaultButton {
+      if let defaultButton = dialog.querySelector(".dialog-default-button") {
         _ = defaultButton.addEventListener(.click) { [self] event in
           event.stopPropagation()
           let customEvent = CustomEvent(type: "dialog-default", detail: "")
@@ -467,22 +493,15 @@
       }
     }
 
-    private func closeDialog() {
-      dialog.dataset["open"] = "false"
-      document.body.dataset["dialogOpen"] = "false"
-
-      // Dispatch close event
-      let event = CustomEvent(type: "dialog-close", detail: "")
-      dialog.dispatchEvent(event)
+    private func close() {
+      (dialog as? HTML.HTMLDialogElement)?.close()
     }
 
-    public func openDialog() {
-      dialog.dataset["open"] = "true"
-      document.body.dataset["dialogOpen"] = "true"
-
-      // Dispatch open event
-      let event = CustomEvent(type: "dialog-open", detail: "")
-      dialog.dispatchEvent(event)
+    /// Opens it as a modal from `opener`; open already, it stays as it is.
+    func open(opener: DOM.Element?) {
+      guard !dialog.hasAttribute("open"), let modal = dialog as? HTML.HTMLDialogElement else { return }
+      self.opener = opener
+      modal.showModal()
     }
   }
 #endif

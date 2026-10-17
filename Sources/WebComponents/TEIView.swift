@@ -157,15 +157,16 @@
     /// ("block", "line", "word"), a block's subtype ("main",
     /// "marginalia"; "-" for the others), a word's id ("-" for the others)
     /// and its four corners in the 0–1000 space over the image, to
-    /// hundredths, all one a space; one zone a ";", in reading order (a
-    /// line the block's before it, a word the line's); "" where none was
-    /// measured. The reader's structure overlay and its word
-    /// correspondence read it.
+    /// hundredths, then a line's baseline (`TEIFacsimile.LayoutZone.baseline`:
+    /// its two ends, the same way) where it has one, all one a space; one
+    /// zone a ";", in reading order (a line the block's before it, a word
+    /// the line's); "" where none was measured. The reader's structure
+    /// overlay and its word correspondence read it.
     static func scanLayoutData(of page: TEIPage) -> String {
       guard let block = page.textBlock else { return "" }
       return TEIFacsimile.layout(of: block).map { zone in
         ([zone.type, zone.subtype.isEmpty ? "-" : zone.subtype, zone.id.isEmpty ? "-" : zone.id]
-          + zone.fractions.map { number(($0 * 100_000).rounded() / 100) }).joined(separator: " ")
+          + (zone.fractions + zone.baseline).map { number(($0 * 100_000).rounded() / 100) }).joined(separator: " ")
       }.joined(separator: ";")
     }
 
@@ -1080,6 +1081,11 @@
           // The page's own label, its `pb`'s `n`: the viewer's footer names
           // the page by it before the manifest's label.
           .data("label", page.label)
+          // Whether its markup holds anything of its own
+          // (`TEIRenderer.hasMarkup`): a page laid in blank renders nothing,
+          // and the reader's structure overlay is off and disabled on it
+          // (user, 2026-10-17).
+          .data("has-markup", TEIRenderer.hasMarkup(page.markup))
           // The zones its markup names, for the reader to draw on its
           // canvas as the caret or the pointer comes to them in Raw.
           .data("zones", Self.zoneData(of: page))

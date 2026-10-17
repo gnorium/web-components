@@ -259,10 +259,22 @@
       guard live || !code.hasAttribute("data-code-colored"), let rect = code.getBoundingClientRect(),
         rect.height > 0
       else { return }
-      if let viewer = editors.first(where: { $0.code.id == code.id }) {
+      // Only a block colored before has an editor: a new one matched by its
+      // id alone found any other id-less block's (`"" == ""`), recolored
+      // that one and left itself plain.
+      if code.hasAttribute("data-code-colored"), let viewer = editors.first(where: { $0.code.id == code.id }) {
         color(viewer)
         return
       }
+      colorText(code)
+    }
+
+    /// Colors read-only text now, whether it has a box yet or not: a
+    /// card's body drawn as the click that opens it is heard, before the
+    /// accordion has laid it out, colored in that same task rather than a
+    /// frame later.
+    public static func colorText(_ code: DOM.Element) {
+      guard !code.hasAttribute("data-code-colored") else { return }
       code.setAttribute(data("code-colored"), "true")
       let viewer = Editor(code: code, input: nil)
       editors.append(viewer)

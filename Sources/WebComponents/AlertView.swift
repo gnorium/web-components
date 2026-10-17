@@ -167,11 +167,13 @@
           .ariaHidden(true)
           .data("color", alertColor.rawValue)
           .style {
+            // A line high, so the mark stands level with the content's first
+            // line whatever the content wraps to (user, 2026-10-17).
             selector("&") {
               display(.flex)
               alignItems(.center)
               justifyContent(.center)
-              height(sizeIconSmall)
+              height(lineHeightSmall22)
               flexShrink(0)
             }
             selector("& svg") {
@@ -196,6 +198,7 @@
               display(.flex)
               flexDirection(.column)
               flexGrow(1)
+              minWidth(0)
               fontFamily(typographyFontSans)
               fontSize(fontSizeMedium16)
               fontWeight(fontWeightNormal)
@@ -229,12 +232,29 @@
       return
         alert
         .style {
+          // A boxed alert: the mark, the content and the close button in one
+          // row of columns, each at the top of it—the mark level with the
+          // content's first line, the content wrapping in its own column,
+          // however many lines it takes (user, 2026-10-17). A row shorter
+          // than the alert's minimum height is centered in it as a block, so
+          // a line of text sits where it always did. An inline alert is a
+          // line of text instead (below).
           selector("&") {
-            display(.flex)
-            alignItems(.center)
+            display(.grid)
+            CSS.Property("grid-auto-flow", "column")
+            gridTemplateColumns("auto minmax(0, 1fr)")
+            alignItems(.start)
+            alignContent(.center)
             gap(spacing8)
             boxSizing(.borderBox)
           }
+          selector("&:has(.alert-dismiss)") {
+            gridTemplateColumns("auto minmax(0, 1fr) auto")
+          }
+          // With a close button its 40px target is the row's first line: the
+          // mark and the content's first line stand level with its center.
+          selector("&:not(.alert-inline):has(.alert-dismiss) .alert-icon") { height(minSizeInteractiveTouch) }
+          selector("&:not(.alert-inline):has(.alert-dismiss) .alert-content") { minHeight(minSizeInteractiveTouch) }
           selector("&:not(.alert-inline)") {
             minHeight(px(64))
             padding(spacing16)
@@ -243,9 +263,33 @@
             borderRadius(borderRadiusBase)
           }
           selector("&.alert-inline") { padding(spacing8) }
+          // An inline alert is a line of text that wraps (user, 2026-10-17):
+          // no column of its own for the mark, which stands at the start of
+          // the first line as an inline icon does—the text's icon size,
+          // centered on the line, its own space after it—and the lines the
+          // content wraps to start at the alert's start edge, under the
+          // mark. The content is inline too, so whatever it holds inline (a
+          // link, a thumbnail a line high) stays in the flow; the alert's
+          // own type is the content's, so every line is one line high. A
+          // close button stands at the end, the text running beside it.
+          selector("&.alert-inline") {
+            display("flow-root")
+            fontFamily(typographyFontSans)
+            fontSize(fontSizeMedium16)
+            lineHeight(lineHeightSmall22)
+          }
+          selector("&.alert-inline .alert-icon") {
+            display(.inlineFlex)
+            height(sizeIconSmall)
+            verticalAlign(.middle)
+            paddingInlineEnd(spacing8)
+          }
+          selector("&.alert-inline .alert-content") { display(.inline) }
+          selector("&.alert-inline .alert-dismiss") { CSS.Property("float", "inline-end") }
           // A moving alert's padding is its panel's, so the shell can close to
           // nothing while the panel's spacing closes with it.
           selector("&.alert-motion") {
+            display(.flex)
             padding(0)
             // The panel can be taller than the animating shell. Keep its top
             // at the shell's top so overflow reveals downward, not outward
@@ -253,9 +297,11 @@
             alignItems(.flexStart)
           }
           selector("& .alert-motion-content") { display(.contents) }
+          // The panel is the row the mark, the content and the close button
+          // stand in, each at the top of it, as a static alert's.
           selector("&.alert-motion .alert-motion-content") {
             display(.flex)
-            alignItems(.center)
+            alignItems(.flexStart)
             gap(spacing8)
             width(perc(100))
             minWidth(0)
@@ -264,6 +310,9 @@
             padding(spacing16)
           }
           selector("&.alert-motion.alert-inline .alert-motion-content") { padding(spacing8) }
+          // A moving inline alert's panel is the line's block, not a row
+          // (AlertAPI sets the panel's display in its style attribute).
+          selector("&.alert-motion.alert-inline .alert-motion-content") { display("flow-root").important() }
           // A server-rendered moving alert waits closed until it hydrates, so
           // it never shows open and then snaps shut to open again. Only where
           // script runs (the layout marks <html data-js>); should hydration
@@ -332,7 +381,6 @@
             alignItems(.center).important()
             justifyContent(.center).important()
             flexShrink(0)
-            alignSelf(.center)
             minWidth(minSizeInteractiveTouch).important()
             minHeight(minSizeInteractiveTouch).important()
             width(minSizeInteractiveTouch).important()
