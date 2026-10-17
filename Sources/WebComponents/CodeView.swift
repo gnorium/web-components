@@ -336,7 +336,7 @@
     public static func hydrate(in root: DOM.Element) {
       if instance == nil {
         _ = document.addEventListener(.click) { _ in
-          _ = window.requestAnimationFrame { Self.highlightVisible() }
+          Self.highlightVisibleNextFrame()
         }
         instance = CodeHydration()
       }
@@ -349,13 +349,29 @@
         // pressed: colored once it is laid out (user, 2026-10-14), not at
         // the next click.
         _ = viewer.addEventListener("artifact-markup-added") { _ in
-          _ = window.requestAnimationFrame { Self.highlightVisible() }
+          Self.highlightVisibleNextFrame()
         }
         _ = viewer.querySelector(".artifact-xml-toggle")?.addEventListener("toggle-button-update") { _ in
-          _ = window.requestAnimationFrame { Self.highlightVisible() }
+          Self.highlightVisibleNextFrame()
         }
       }
       highlightVisible()
+    }
+
+    nonisolated(unsafe) static var frameAsked = false
+
+    /// `highlightVisible` in the next frame, once however many ask for it
+    /// before then (a click heard by the page and by the switch it pressed,
+    /// a Raw drawn): the frame's coloring done once, in its share of the
+    /// frame (`CodeEditorHydration.frameBudget`).
+    public static func highlightVisibleNextFrame() {
+      guard !frameAsked else { return }
+      frameAsked = true
+      _ = window.requestAnimationFrame(timed: { time in
+        CodeEditorHydration.frameTime = time
+        frameAsked = false
+        highlightVisible()
+      })
     }
 
     public static func highlightVisible() {

@@ -22,9 +22,7 @@ public struct ButtonView: HTMLContent {
   let fullWidth: Bool
   var `class`: String
   let labelFontWeight: CSS.FontWeight
-  let labelFontFamily: CSS.FontFamily
   let contentJustifyContent: CSS.JustifyContent
-  let style: @Sendable () -> [CSSOM.CSSRule]
   let buttonBorderRadius: ButtonRadius
   var dataAttributes: [(String, String)]
   /// The id of the form this submits with, when it sits outside that form.
@@ -218,11 +216,9 @@ public struct ButtonView: HTMLContent {
     fullWidth: Bool = false,
     class: String = "",
     labelFontWeight: CSS.FontWeight = fontWeightSemiBold,
-    labelFontFamily: CSS.FontFamily = typographyFontSans,
     contentJustifyContent: CSS.JustifyContent = .center,
     borderRadius: ButtonRadius = .pill,
-    data: [(String, String)] = [],
-    @CSSBuilder style: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] }
+    data: [(String, String)] = []
   ) {
     self.label = label
     self.buttonColor = buttonColor
@@ -238,9 +234,7 @@ public struct ButtonView: HTMLContent {
     self.fullWidth = fullWidth
     self.class = `class`
     self.labelFontWeight = labelFontWeight
-    self.labelFontFamily = labelFontFamily
     self.contentJustifyContent = contentJustifyContent
-    self.style = style
     self.buttonBorderRadius = borderRadius
     self.dataAttributes = data
   }
@@ -259,11 +253,9 @@ public struct ButtonView: HTMLContent {
     fullWidth: Bool = false,
     class: String = "",
     labelFontWeight: CSS.FontWeight = fontWeightSemiBold,
-    labelFontFamily: CSS.FontFamily = typographyFontSans,
     contentJustifyContent: CSS.JustifyContent = .center,
     borderRadius: ButtonRadius = .pill,
-    data: [(String, String)] = [],
-    @CSSBuilder style: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] }
+    data: [(String, String)] = []
   ) {
     self.label = label
     self.buttonColor = buttonColor
@@ -279,9 +271,7 @@ public struct ButtonView: HTMLContent {
     self.fullWidth = fullWidth
     self.class = `class`
     self.labelFontWeight = labelFontWeight
-    self.labelFontFamily = labelFontFamily
     self.contentJustifyContent = contentJustifyContent
-    self.style = style
     self.buttonBorderRadius = borderRadius
     self.dataAttributes = data
   }
@@ -301,11 +291,9 @@ public struct ButtonView: HTMLContent {
     fullWidth: Bool = false,
     class: String = "",
     labelFontWeight: CSS.FontWeight = fontWeightSemiBold,
-    labelFontFamily: CSS.FontFamily = typographyFontSans,
     contentJustifyContent: CSS.JustifyContent = .center,
     borderRadius: ButtonRadius = .pill,
-    data: [(String, String)] = [],
-    @CSSBuilder style: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] }
+    data: [(String, String)] = []
   ) {
     self.label = ""
     self.buttonColor = buttonColor
@@ -321,9 +309,7 @@ public struct ButtonView: HTMLContent {
     self.fullWidth = fullWidth
     self.class = `class`
     self.labelFontWeight = labelFontWeight
-    self.labelFontFamily = labelFontFamily
     self.contentJustifyContent = contentJustifyContent
-    self.style = style
     self.buttonBorderRadius = borderRadius
     self.dataAttributes = data
   }
@@ -344,11 +330,9 @@ public struct ButtonView: HTMLContent {
     fullWidth: Bool = false,
     class: String = "",
     labelFontWeight: CSS.FontWeight = fontWeightSemiBold,
-    labelFontFamily: CSS.FontFamily = typographyFontSans,
     contentJustifyContent: CSS.JustifyContent = .center,
     borderRadius: ButtonRadius = .pill,
     data: [(String, String)] = [],
-    @CSSBuilder style: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] },
     @HTMLBuilder content: () -> [DOM.Node]
   ) {
     self.label = label
@@ -366,9 +350,7 @@ public struct ButtonView: HTMLContent {
     self.fullWidth = fullWidth
     self.class = `class`
     self.labelFontWeight = labelFontWeight
-    self.labelFontFamily = labelFontFamily
     self.contentJustifyContent = contentJustifyContent
-    self.style = style
     self.buttonBorderRadius = borderRadius
     self.dataAttributes = data
   }
@@ -484,7 +466,7 @@ public struct ButtonView: HTMLContent {
             // Icon to label: icons are drawn tight, with no room of their
             // own around the glyph, so this gap is all the room between them.
             gap(spacing8)
-            fontFamily(labelFontFamily)
+            fontFamily(typographyFontSans)
             fontSize(fontSizeMedium16)
             // The standard line at every size: the height is the inset,
             // this line and the border (ButtonSize.minSize).
@@ -530,9 +512,6 @@ public struct ButtonView: HTMLContent {
             selector("&:disabled .button-icon", "&:disabled .button-label", "&:disabled .icon-view") {
               color(colorDisabled).important()
             }
-
-            // Apply custom styles block
-            style()
           }
 
           selector("&[data-font-weight='normal']") {
@@ -1333,7 +1312,7 @@ public struct ButtonView: HTMLContent {
             // Icon to label: icons are drawn tight, with no room of their
             // own around the glyph, so this gap is all the room between them.
             gap(spacing8)
-            fontFamily(labelFontFamily)
+            fontFamily(typographyFontSans)
             fontSize(fontSizeMedium16)
             // The standard line at every size: the height is the inset,
             // this line and the border (ButtonSize.minSize).
@@ -1379,9 +1358,6 @@ public struct ButtonView: HTMLContent {
             selector("&:disabled .button-icon", "&:disabled .button-label", "&:disabled .icon-view") {
               color(colorDisabled).important()
             }
-
-            // Apply custom styles block
-            style()
           }
 
           selector("&[data-font-weight='normal']") {

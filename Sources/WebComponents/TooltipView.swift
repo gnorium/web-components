@@ -877,6 +877,12 @@ public struct TooltipView: HTMLContent {
       root.contains(trigger)
     }
 
+    /// Its bubble, where `element` is its trigger: the same node by the
+    /// bridge's id (two queries of a node are never `===`).
+    func bubble(of element: DOM.Element) -> DOM.Element? {
+      element.id == trigger.id ? content : nil
+    }
+
     /// Its bubble out of the page, for a trigger about to leave it.
     func release() {
       stopAiming()
@@ -1007,6 +1013,18 @@ public struct TooltipView: HTMLContent {
         tooltip.setAttribute(data("tooltip-hydrated"), "true")
         instances.append(TooltipInstance(tooltip: tooltip))
       }
+    }
+
+    /// A trigger's bubble, wherever it is: inside its trigger until the
+    /// tooltip is bound, portaled to <body> after. For words that change
+    /// while it stands (a session's context line, live).
+    public static func bubble(of trigger: DOM.Element) -> DOM.Element? {
+      if let inside = trigger.querySelector(".tooltip-content") { return inside }
+      guard let instance else { return nil }
+      for tooltip in instance.instances {
+        if let content = tooltip.bubble(of: trigger) { return content }
+      }
+      return nil
     }
 
     /// The tooltips under `root`, about to be taken out of the page (a

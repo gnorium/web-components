@@ -348,29 +348,39 @@ public struct DropdownView: HTMLContent {
     .class(stringIsEmpty(`class`) ? "dropdown-view" : "dropdown-view \(`class`)")
     .data("submit-form-on-change", submitFormOnChange ? "true" : "false")
     .data("full-width", fullWidth ? "true" : "false")
+    .data("fixed-width", dropdownWidth != nil ? "true" : "false")
+    .data("menu-width", menuWidth != nil ? "custom" : (dropdownWidth != nil ? "beside-fixed-trigger" : "auto"))
     .data("search-url", searchURL ?? "")
     .data("multiple", multiple)
     .style {
+      // This dropdown's own sizes, per instance: the shared rules below
+      // read them, and are keyed by the data attributes on the root.
+      customProperty("--dropdown-font-size", textFontSize.value)
+      if let w = dropdownWidth {
+        customProperty("--dropdown-width", w.value)
+      }
+      if let mw = menuWidth {
+        customProperty("--dropdown-menu-width", mw.value)
+      }
+
       selector("&") {
         display(.flex)
         flexDirection(.column)
         gap(spacing8)
-        if fullWidth {
-          width(perc(100))
-        }
       }
-      if !fullWidth {
-        media(maxWidth(maxWidthBreakpointMobile)) {
-          selector("&") {
-            width(perc(100)).important()
-          }
+      selector("&[data-full-width='true']") {
+        width(perc(100))
+      }
+      media(maxWidth(maxWidthBreakpointMobile)) {
+        selector("&[data-full-width='false']") {
+          width(perc(100)).important()
         }
       }
       descendant(".field-label") {
         display(.flex)
         alignItems(.center)
         gap(spacing8)
-        fontSize(textFontSize)
+        fontSize(`var`("--dropdown-font-size") as CSS.Length)
         fontWeight(600)
         color(colorBase)
         fontFamily(typographyFontSans)
@@ -381,7 +391,7 @@ public struct DropdownView: HTMLContent {
       // A field's text at every size: a large trigger's 18px is a
       // button's, not a field's.
       descendant(".dropdown-selected-text") {
-        fontSize(textFontSize)
+        fontSize(`var`("--dropdown-font-size") as CSS.Length)
         textAlign(.start)
         color(colorPlaceholder)
         minWidth(0)
@@ -401,16 +411,17 @@ public struct DropdownView: HTMLContent {
         maxWidth(px(160))
       }
       descendant(".dropdown-trigger-wrapper") {
-        if let w = dropdownWidth {
-          width(w)
-        } else if fullWidth {
-          width(perc(100))
-        } else {
-          width(.fitContent)
-        }
+        width(.fitContent)
         display(.flex)
         flex(1)
         justifyContent(.spaceBetween)
+      }
+      selector("&[data-full-width='true'] .dropdown-trigger-wrapper") {
+        width(perc(100))
+      }
+      // After the full-width rule: a fixed width wins.
+      selector("&[data-fixed-width='true'] .dropdown-trigger-wrapper") {
+        width(`var`("--dropdown-width") as CSS.Length)
       }
       // Trigger radius comes from ButtonView(borderRadius:)—do not override here
       // (shared .dropdown-view CSS would otherwise force one radius for all instances).
@@ -506,7 +517,7 @@ public struct DropdownView: HTMLContent {
         minHeight(minSizeInteractiveTouch)
         lineHeight(lineHeightSmall22)
         boxSizing(.borderBox)
-        fontSize(textFontSize)
+        fontSize(`var`("--dropdown-font-size") as CSS.Length)
         color(colorBase)
         backgroundColor(backgroundColorTransparent)
         cursor(cursorBaseHover)
@@ -604,15 +615,8 @@ public struct DropdownView: HTMLContent {
         // trigger, or 250px beside a fixed-width trigger), never wider than
         // the viewport's page, its gutters aside: the options wrap only
         // when the viewport forces them to.
-        if let mw = menuWidth {
-          width(mw)
-        } else if dropdownWidth != nil {
-          width(.maxContent)
-          minWidth(px(250))
-        } else {
-          width(.maxContent)
-          minWidth(perc(100))
-        }
+        width(.maxContent)
+        minWidth(perc(100))
         maxWidth(vw(100) - spacing16 * 2)
         marginBlockStart(spacing4)
         backgroundColor(backgroundColorBase)
@@ -622,6 +626,14 @@ public struct DropdownView: HTMLContent {
         zIndex(zIndexDropdown)
         display(.none)
         overflow(.hidden)
+      }
+      // Beside a fixed-width trigger: 250px at least, not the trigger's width.
+      selector("&[data-menu-width='beside-fixed-trigger'] .dropdown-menu") {
+        minWidth(px(250))
+      }
+      selector("&[data-menu-width='custom'] .dropdown-menu") {
+        width(`var`("--dropdown-menu-width") as CSS.Length)
+        minWidth(0)
       }
       descendant(".dropdown-menu[data-open='true']") {
         display(.block)

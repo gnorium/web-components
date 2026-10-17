@@ -36,9 +36,6 @@ public struct TableView: HTMLContent {
   public let tfootContent: [DOM.Node]
   public let footerContent: [DOM.Node]
   public let emptyStateContent: [DOM.Node]
-  public let theadStyle: @Sendable () -> [CSSOM.CSSRule]
-  public let thStyle: @Sendable (Column.Alignment) -> [CSSOM.CSSRule]
-  public let tdStyle: @Sendable () -> [CSSOM.CSSRule]
   public let `class`: String
 
   public struct Column: Sendable {
@@ -396,9 +393,6 @@ public struct TableView: HTMLContent {
     totalPages: Int? = nil,
     currentPage: Int? = nil,
     serverQuery: ServerQuery? = nil,
-    @CSSBuilder theadStyle: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] },
-    @CSSBuilder thStyle: @escaping @Sendable (Column.Alignment) -> [CSSOM.CSSRule] = { _ in [] },
-    @CSSBuilder tdStyle: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] },
     class: String = "",
     @HTMLBuilder header: () -> [DOM.Node] = { [] },
     @HTMLBuilder thead: () -> [DOM.Node] = { [] },
@@ -425,9 +419,6 @@ public struct TableView: HTMLContent {
     self.totalPages = totalPages
     self.currentPage = currentPage
     self.serverQuery = serverQuery
-    self.theadStyle = theadStyle
-    self.thStyle = thStyle
-    self.tdStyle = tdStyle
     self.`class` = `class`
     self.headerContent = header()
     self.theadContent = thead()
@@ -583,14 +574,6 @@ public struct TableView: HTMLContent {
                     .data("table-column-id", "selection")
                     .data("align", "start")
                     .class("table-selection-header")
-                    .style {
-                      selector("&") {
-                        let styles = thStyle(.start)
-                        if !styles.isEmpty {
-                          styles
-                        }
-                      }
-                    }
                   }
 
                   // Column headers
@@ -670,12 +653,6 @@ public struct TableView: HTMLContent {
                       } else {
                         minWidth(px(150))
                       }
-                      selector("&[data-align='\(column.align.value)']") {
-                        let styles = thStyle(column.align)
-                        if !styles.isEmpty {
-                          styles
-                        }
-                      }
                     }
                   }
 
@@ -684,9 +661,6 @@ public struct TableView: HTMLContent {
                 }
               }
               .class("table-thead")
-              .style {
-                selector("&") { theadStyle() }
-              }
             }
 
             // tbody
@@ -755,14 +729,6 @@ public struct TableView: HTMLContent {
                             }
                           }
                           .class("table-selection-container")
-                        }
-                        .style {
-                          selector("&") {
-                            let styles = tdStyle()
-                            if !styles.isEmpty {
-                              styles
-                            }
-                          }
                         }
                       }
 
@@ -834,14 +800,6 @@ public struct TableView: HTMLContent {
                             .data("priority", column.priority)
                             .data("fits-header", column.fitsHeader)
                             .title(cellTitle)
-                            .style {
-                              selector("&") {
-                                let styles = tdStyle()
-                                if !styles.isEmpty {
-                                  styles
-                                }
-                              }
-                            }
                           }
                         }
                       }

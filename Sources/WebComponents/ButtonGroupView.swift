@@ -1,6 +1,5 @@
 #if SERVER
   import CSSBuilder
-  import CSSOMBuilder
   import DesignTokens
   import DOMBuilder
   import Foundation
@@ -88,7 +87,6 @@
     let direction: CSS.FlexDirection
     let data: [String: String]
     let ariaLabel: String?
-    let style: @Sendable () -> [CSSOM.CSSRule]
 
     public init(
       buttons: [ButtonItem],
@@ -97,8 +95,7 @@
       direction: CSS.FlexDirection = .row,
       class: String = "",
       data: [String: String] = [:],
-      ariaLabel: String? = nil,
-      @CSSBuilder style: @escaping @Sendable () -> [CSSOM.CSSRule] = { [] }
+      ariaLabel: String? = nil
     ) {
       self.buttons = buttons
       self.disabled = disabled
@@ -107,7 +104,6 @@
       self.`class` = `class`
       self.data = data
       self.ariaLabel = ariaLabel
-      self.style = style
     }
 
     public func build() -> DOM.Node {
@@ -159,15 +155,30 @@
         .class(`class`.isEmpty ? "button-group-view" : "button-group-view \(`class`)")
         .role(.group)
         .ariaLabel(ariaLabel)
+        .data("direction", direction.rawValue)
+        .data("shape", shape == .fused ? "fused" : "apart")
         .wrapToStackView()
         .style {
+          // Every variant's rule is written once, keyed by its data
+          // attribute: the rules are shared by all groups of this class.
           selector("&") {
             display(.flex)
-            flexDirection(direction)
             flexWrap(.wrap)
-            gap(shape == .apart ? spacingHorizontalButton : 0)
-            style()
           }
+          selector("&[data-direction='row']") { flexDirection(.row) }
+          selector("&[data-direction='row-reverse']") { flexDirection(.rowReverse) }
+          selector("&[data-direction='column']") {
+            flexDirection(.column)
+            width(perc(100))
+          }
+          selector("&[data-direction='column-reverse']") {
+            flexDirection(.columnReverse)
+            width(perc(100))
+          }
+          selector("&[data-shape='apart']") { gap(spacingHorizontalButton) }
+          selector("&[data-shape='fused']") { gap(0) }
+          // A column of buttons sits closer than a row's.
+          selector("&[data-shape='apart'][data-direction^='column']") { gap(spacing4) }
 
           // Where the buttons don't fit on one line, stretch each to fill
           // the row, so a stacked group reads as a column.
@@ -176,18 +187,16 @@
             flexBasis(perc(100))
           }
 
-          if shape == .fused {
-            selector(".button-view") {
-              borderRadius(0).important()
-            }
-            selector(".button-view:first-child") {
-              borderStartStartRadius(borderRadiusBase).important()
-              borderEndStartRadius(borderRadiusBase).important()
-            }
-            selector(".button-view:last-child") {
-              borderStartEndRadius(borderRadiusBase).important()
-              borderEndEndRadius(borderRadiusBase).important()
-            }
+          selector("&[data-shape='fused'] .button-view") {
+            borderRadius(0).important()
+          }
+          selector("&[data-shape='fused'] .button-view:first-child") {
+            borderStartStartRadius(borderRadiusBase).important()
+            borderEndStartRadius(borderRadiusBase).important()
+          }
+          selector("&[data-shape='fused'] .button-view:last-child") {
+            borderStartEndRadius(borderRadiusBase).important()
+            borderEndEndRadius(borderRadiusBase).important()
           }
 
           // The repeated class raises specificity above an individual

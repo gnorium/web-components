@@ -40,11 +40,7 @@
         direction: .column,
         class: `class`.isEmpty
           ? "contrast-button-group-view" : "contrast-button-group-view \(`class`)",
-        ariaLabel: "Contrast",
-        style: {
-          width(perc(100))
-          gap(spacing4)
-        }
+        ariaLabel: "Contrast"
       )
     }
   }

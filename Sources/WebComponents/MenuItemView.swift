@@ -251,7 +251,10 @@
         return items
       }()
 
-      // Wrapper element (a or li)
+      // Wrapper element (a or li). Every instance-dependent look is a data
+      // attribute, so the one stylesheet (`menuItemCSS`) serves all instances.
+      let labelWeight = semiboldLabel || hasSearchQuery ? "semibold" : "normal"
+
       if hasUrl {
         var link = a {
           itemContent
@@ -263,6 +266,11 @@
         .ariaSelected(selected)
         .ariaDisabled(disabled)
         .data("value", value)
+        .data("disabled", disabled ? "true" : "false")
+        .data("selected", selected ? "true" : "false")
+        .data("color", itemColor.rawValue)
+        .data("label-weight", labelWeight)
+        .data("hide-description-overflow", hideDescriptionOverflow ? "true" : "false")
 
         if highlighted {
           link = link.data("highlighted", "true")
@@ -279,160 +287,7 @@
         return
           link
           .style {
-            selector("&") {
-              display(.flex)
-              alignItems(.center)
-              gap(spacing12)
-              // A medium control: 8 on every side of the 22px line and
-              // the border, 40.
-              padding(spacing8)
-              width(perc(100))
-              fontFamily(typographyFontSans)
-              fontSize(fontSizeMedium16)
-              lineHeight(lineHeightSmall22)
-              color(disabled ? colorDisabled : (itemColor == .red ? colorRed : colorSubtle))
-              backgroundColor(backgroundColorTransparent)
-              border(borderWidthBase, .solid, disabled ? borderColorDisabled : borderColorBase)
-              borderRadius(borderRadiusBase)
-              cursor(disabled ? cursorNotAllowed : cursorBase)
-              userSelect(.none)
-              textDecoration(.none)
-              boxSizing(.borderBox)
-              transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-
-              if highlighted && !disabled {
-                color(colorBlue)
-                border(borderWidthBase, .solid, borderColorBlue)
-              }
-
-              if active && !disabled {
-                color(colorBlue)
-                border(borderWidthBase, .solid, borderColorBlue)
-              }
-
-              if !disabled {
-                pseudoClass(.hover) {
-                  color(colorBlue).important()
-                  border(borderWidthBase, .solid, borderColorBlue).important()
-                  cursor(cursorBaseHover).important()
-                }
-
-                pseudoClass(.active) {
-                  color(colorBlue).important()
-                  border(borderWidthBase, .solid, borderColorBlue).important()
-                  cursor(cursorBaseHover).important()
-                }
-
-                pseudoClass(.focus) {
-                  color(colorBlueFocus).important()
-                  outline(borderWidthBase, .solid, borderColorBlueFocus).important()
-                  outlineOffset(px(-1)).important()
-                }
-              }
-            }
-            descendant(".menu-item-checkbox") {
-              display(.inlineFlex)
-              alignItems(.center)
-              justifyContent(.center)
-              width(sizeIconMedium)
-              height(sizeIconMedium)
-              flexShrink(0)
-              border(borderWidthBase, .solid, borderColorInputBinary)
-              borderRadius(borderRadiusBase)
-              backgroundColor(selected ? backgroundColorInputBinaryChecked : backgroundColorBase)
-              transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-            }
-            descendant(".menu-item-checkmark") {
-              display(.flex)
-              width(sizeIconSmall)
-              height(sizeIconSmall)
-              color(colorOnSolid)
-            }
-            selector("& .menu-item-checkmark svg") {
-              height(perc(100))
-            }
-            descendant(".menu-item-thumbnail") {
-              display(.inlineFlex)
-              alignItems(.center)
-              justifyContent(.center)
-              width(px(40))
-              height(px(40))
-              flexShrink(0)
-              borderRadius(borderRadiusBase)
-              overflow(.hidden)
-              backgroundColor(backgroundColorNeutralSubtle)
-            }
-            descendant(".menu-item-thumbnail-image") {
-              width(perc(100))
-              height(perc(100))
-              objectFit(.cover)
-            }
-            descendant(".menu-item-thumbnail-placeholder") {
-              fontSize(fontSizeLarge18)
-              color(colorPlaceholder)
-            }
-            descendant(".menu-item-icon") {
-              display(.inlineFlex)
-              alignItems(.center)
-              justifyContent(.center)
-              width(sizeIconMedium)
-              height(sizeIconMedium)
-              flexShrink(0)
-              color(colorSubtle)
-              fontSize(fontSizeLarge18)
-            }
-            descendant(".menu-item-text") {
-              display(.flex)
-              flexDirection(.column)
-              gap(spacing4)
-              flex(1)
-              minWidth(0)
-            }
-            descendant(".menu-item-title") {
-              display(.flex)
-              alignItems(.baseline)
-              gap(spacing4)
-              flexWrap(.wrap)
-            }
-            descendant(".menu-item-label") {
-              fontFamily(typographyFontSans)
-              fontSize(fontSizeMedium16)
-              fontWeight(semiboldLabel || hasSearchQuery ? fontWeightSemiBold : fontWeightNormal)
-              lineHeight(lineHeightSmall22)
-              color(colorBase)
-              wordWrap(.breakWord)
-            }
-            descendant(".menu-item-search-query") {
-              fontFamily(typographyFontSans)
-              fontSize(fontSizeMedium16)
-              fontWeight(fontWeightNormal)
-              lineHeight(lineHeightSmall22)
-              color(colorBase)
-            }
-            descendant(".menu-item-match") {
-              fontFamily(typographyFontSans)
-              fontSize(fontSizeMedium16)
-              fontWeight(fontWeightNormal)
-              lineHeight(lineHeightSmall22)
-              color(colorSubtle)
-            }
-            descendant(".menu-item-supporting-text") {
-              fontFamily(typographyFontSans)
-              fontSize(fontSizeMedium16)
-              fontWeight(fontWeightNormal)
-              lineHeight(lineHeightSmall22)
-              color(colorSubtle)
-            }
-            descendant(".menu-item-description") {
-              fontFamily(typographyFontSans)
-              fontSize(fontSizeMedium16)
-              fontWeight(fontWeightNormal)
-              lineHeight(lineHeightSmall22)
-              color(colorSubtle)
-            }
-            if hideDescriptionOverflow {
-              edgeFadeView("& .menu-item-description")
-            }
+            MenuItemView.menuItemCSS()
           }
 
       } else {
@@ -445,6 +300,11 @@
         .ariaSelected(selected)
         .ariaDisabled(disabled)
         .data("value", value)
+        .data("disabled", disabled ? "true" : "false")
+        .data("selected", selected ? "true" : "false")
+        .data("color", itemColor.rawValue)
+        .data("label-weight", labelWeight)
+        .data("hide-description-overflow", hideDescriptionOverflow ? "true" : "false")
 
         if highlighted {
           listItem = listItem.data("highlighted", "true")
@@ -457,163 +317,176 @@
         return
           listItem
           .style {
-            selector("&") {
-              display(.flex)
-              alignItems(.center)
-              gap(spacing12)
-              // A medium control: 8 on every side of the 22px line and
-              // the border, 40.
-              padding(spacing8)
-              width(perc(100))
-              fontFamily(typographyFontSans)
-              fontSize(fontSizeMedium16)
-              lineHeight(lineHeightSmall22)
-              color(disabled ? colorDisabled : (itemColor == .red ? colorRed : colorSubtle))
-              backgroundColor(backgroundColorTransparent)
-              border(borderWidthBase, .solid, disabled ? borderColorDisabled : borderColorBase)
-              borderRadius(borderRadiusBase)
-              cursor(disabled ? cursorNotAllowed : cursorBase)
-              userSelect(.none)
-              textDecoration(.none)
-              boxSizing(.borderBox)
-              transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-
-              if highlighted && !disabled {
-                color(colorBlue)
-                border(borderWidthBase, .solid, borderColorBlue)
-              }
-
-              if active && !disabled {
-                color(colorBlue)
-                border(borderWidthBase, .solid, borderColorBlue)
-              }
-
-              if !disabled {
-                pseudoClass(.hover) {
-                  color(colorBlue).important()
-                  border(borderWidthBase, .solid, borderColorBlue).important()
-                  cursor(cursorBaseHover).important()
-                }
-
-                pseudoClass(.active) {
-                  color(colorBlue).important()
-                  border(borderWidthBase, .solid, borderColorBlue).important()
-                  cursor(cursorBaseHover).important()
-                }
-
-                pseudoClass(.focus) {
-                  color(colorBlueFocus).important()
-                  outline(borderWidthBase, .solid, borderColorBlueFocus).important()
-                  outlineOffset(px(-1)).important()
-                }
-              }
-            }
-            descendant(".menu-item-checkbox") {
-              display(.inlineFlex)
-              alignItems(.center)
-              justifyContent(.center)
-              width(sizeIconMedium)
-              height(sizeIconMedium)
-              flexShrink(0)
-              border(borderWidthBase, .solid, borderColorInputBinary)
-              borderRadius(borderRadiusBase)
-              backgroundColor(selected ? backgroundColorInputBinaryChecked : backgroundColorBase)
-              transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-            }
-            descendant(".menu-item-checkmark") {
-              display(.flex)
-              width(sizeIconSmall)
-              height(sizeIconSmall)
-              color(colorOnSolid)
-            }
-            selector("& .menu-item-checkmark svg") {
-              height(perc(100))
-            }
-            descendant(".menu-item-thumbnail") {
-              display(.inlineFlex)
-              alignItems(.center)
-              justifyContent(.center)
-              width(px(40))
-              height(px(40))
-              flexShrink(0)
-              borderRadius(borderRadiusBase)
-              overflow(.hidden)
-              backgroundColor(backgroundColorNeutralSubtle)
-            }
-            descendant(".menu-item-thumbnail-image") {
-              width(perc(100))
-              height(perc(100))
-              objectFit(.cover)
-            }
-            descendant(".menu-item-thumbnail-placeholder") {
-              fontSize(fontSizeLarge18)
-              color(colorPlaceholder)
-            }
-            descendant(".menu-item-icon") {
-              display(.inlineFlex)
-              alignItems(.center)
-              justifyContent(.center)
-              width(sizeIconMedium)
-              height(sizeIconMedium)
-              flexShrink(0)
-              color(colorSubtle)
-              fontSize(fontSizeLarge18)
-            }
-            descendant(".menu-item-text") {
-              display(.flex)
-              flexDirection(.column)
-              gap(spacing4)
-              flex(1)
-              minWidth(0)
-            }
-            descendant(".menu-item-title") {
-              display(.flex)
-              alignItems(.baseline)
-              gap(spacing4)
-              flexWrap(.wrap)
-            }
-            descendant(".menu-item-label") {
-              fontFamily(typographyFontSans)
-              fontSize(fontSizeMedium16)
-              fontWeight(semiboldLabel || hasSearchQuery ? fontWeightSemiBold : fontWeightNormal)
-              lineHeight(lineHeightSmall22)
-              color(colorBase)
-              wordWrap(.breakWord)
-            }
-            descendant(".menu-item-search-query") {
-              fontFamily(typographyFontSans)
-              fontSize(fontSizeMedium16)
-              fontWeight(fontWeightNormal)
-              lineHeight(lineHeightSmall22)
-              color(colorBase)
-            }
-            descendant(".menu-item-match") {
-              fontFamily(typographyFontSans)
-              fontSize(fontSizeMedium16)
-              fontWeight(fontWeightNormal)
-              lineHeight(lineHeightSmall22)
-              color(colorSubtle)
-            }
-            descendant(".menu-item-supporting-text") {
-              fontFamily(typographyFontSans)
-              fontSize(fontSizeMedium16)
-              fontWeight(fontWeightNormal)
-              lineHeight(lineHeightSmall22)
-              color(colorSubtle)
-            }
-            descendant(".menu-item-description") {
-              fontFamily(typographyFontSans)
-              fontSize(fontSizeMedium16)
-              fontWeight(fontWeightNormal)
-              lineHeight(lineHeightSmall22)
-              color(colorSubtle)
-            }
-            if hideDescriptionOverflow {
-              edgeFadeView("& .menu-item-description")
-            }
+            MenuItemView.menuItemCSS()
           }
-
       }
+    }
+
+    /// The item's rules, written once for every variant: disabled, color,
+    /// highlighted, active, selected, label weight and description fade are
+    /// all keyed by the data attributes the item carries.
+    @CSSBuilder
+    static func menuItemCSS() -> [CSSOM.CSSRule] {
+      selector("&") {
+        display(.flex)
+        alignItems(.center)
+        gap(spacing12)
+        // A medium control: 8 on every side of the 22px line and
+        // the border, 40.
+        padding(spacing8)
+        width(perc(100))
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeMedium16)
+        lineHeight(lineHeightSmall22)
+        color(colorSubtle)
+        backgroundColor(backgroundColorTransparent)
+        border(borderWidthBase, .solid, borderColorBase)
+        borderRadius(borderRadiusBase)
+        cursor(cursorBase)
+        userSelect(.none)
+        textDecoration(.none)
+        boxSizing(.borderBox)
+        transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+      }
+      selector("&[data-color='red']") {
+        color(colorRed)
+      }
+      // After the color: a disabled item is never red.
+      selector("&[data-disabled='true']") {
+        color(colorDisabled)
+        border(borderWidthBase, .solid, borderColorDisabled)
+        cursor(cursorNotAllowed)
+      }
+      selector("&[data-highlighted='true']:not([data-disabled='true'])") {
+        color(colorBlue)
+        border(borderWidthBase, .solid, borderColorBlue)
+      }
+      selector("&[data-active='true']:not([data-disabled='true'])") {
+        color(colorBlue)
+        border(borderWidthBase, .solid, borderColorBlue)
+      }
+      selector("&:not([data-disabled='true']):hover") {
+        color(colorBlue).important()
+        border(borderWidthBase, .solid, borderColorBlue).important()
+        cursor(cursorBaseHover).important()
+      }
+      selector("&:not([data-disabled='true']):active") {
+        color(colorBlue).important()
+        border(borderWidthBase, .solid, borderColorBlue).important()
+        cursor(cursorBaseHover).important()
+      }
+      selector("&:not([data-disabled='true']):focus") {
+        color(colorBlueFocus).important()
+        outline(borderWidthBase, .solid, borderColorBlueFocus).important()
+        outlineOffset(px(-1)).important()
+      }
+      descendant(".menu-item-checkbox") {
+        display(.inlineFlex)
+        alignItems(.center)
+        justifyContent(.center)
+        width(sizeIconMedium)
+        height(sizeIconMedium)
+        flexShrink(0)
+        border(borderWidthBase, .solid, borderColorInputBinary)
+        borderRadius(borderRadiusBase)
+        backgroundColor(backgroundColorBase)
+        transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+      }
+      selector("&[data-selected='true'] .menu-item-checkbox") {
+        backgroundColor(backgroundColorInputBinaryChecked)
+      }
+      descendant(".menu-item-checkmark") {
+        display(.flex)
+        width(sizeIconSmall)
+        height(sizeIconSmall)
+        color(colorOnSolid)
+      }
+      selector("& .menu-item-checkmark svg") {
+        height(perc(100))
+      }
+      descendant(".menu-item-thumbnail") {
+        display(.inlineFlex)
+        alignItems(.center)
+        justifyContent(.center)
+        width(px(40))
+        height(px(40))
+        flexShrink(0)
+        borderRadius(borderRadiusBase)
+        overflow(.hidden)
+        backgroundColor(backgroundColorNeutralSubtle)
+      }
+      descendant(".menu-item-thumbnail-image") {
+        width(perc(100))
+        height(perc(100))
+        objectFit(.cover)
+      }
+      descendant(".menu-item-thumbnail-placeholder") {
+        fontSize(fontSizeLarge18)
+        color(colorPlaceholder)
+      }
+      descendant(".menu-item-icon") {
+        display(.inlineFlex)
+        alignItems(.center)
+        justifyContent(.center)
+        width(sizeIconMedium)
+        height(sizeIconMedium)
+        flexShrink(0)
+        color(colorSubtle)
+        fontSize(fontSizeLarge18)
+      }
+      descendant(".menu-item-text") {
+        display(.flex)
+        flexDirection(.column)
+        gap(spacing4)
+        flex(1)
+        minWidth(0)
+      }
+      descendant(".menu-item-title") {
+        display(.flex)
+        alignItems(.baseline)
+        gap(spacing4)
+        flexWrap(.wrap)
+      }
+      descendant(".menu-item-label") {
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeMedium16)
+        fontWeight(fontWeightNormal)
+        lineHeight(lineHeightSmall22)
+        color(colorBase)
+        wordWrap(.breakWord)
+      }
+      selector("&[data-label-weight='semibold'] .menu-item-label") {
+        fontWeight(fontWeightSemiBold)
+      }
+      descendant(".menu-item-search-query") {
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeMedium16)
+        fontWeight(fontWeightNormal)
+        lineHeight(lineHeightSmall22)
+        color(colorBase)
+      }
+      descendant(".menu-item-match") {
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeMedium16)
+        fontWeight(fontWeightNormal)
+        lineHeight(lineHeightSmall22)
+        color(colorSubtle)
+      }
+      descendant(".menu-item-supporting-text") {
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeMedium16)
+        fontWeight(fontWeightNormal)
+        lineHeight(lineHeightSmall22)
+        color(colorSubtle)
+      }
+      descendant(".menu-item-description") {
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeMedium16)
+        fontWeight(fontWeightNormal)
+        lineHeight(lineHeightSmall22)
+        color(colorSubtle)
+      }
+      edgeFadeView("&[data-hide-description-overflow='true'] .menu-item-description")
     }
   }
 #endif

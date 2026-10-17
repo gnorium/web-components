@@ -67,8 +67,11 @@ public struct TableCellView: HTMLContent {
             .class("table-cell-selection-input")
         }
         .class("table-selection-container")
-      case .status(let icon, _):
-        span { icon }.class("table-cell-status-icon")
+      case .status(let icon, let bgColor):
+        // The color is per instance: inline, so the shared rules below stay one text.
+        span { icon }
+          .class("table-cell-status-icon")
+          .style { backgroundColor(bgColor) }
       case .custom(let nodes):
         div {
           for node in nodes { node }
@@ -116,9 +119,6 @@ public struct TableCellView: HTMLContent {
         fontSize(fontSizeMedium16)
         fontWeight(fontWeightSemiBold)
         lineHeight(lineHeightSmall22)
-      }
-      if case .status(_, let bgColor) = type {
-        selector(".table-cell-status-icon") { backgroundColor(bgColor) }
       }
     }
   }

@@ -21,7 +21,7 @@ final class TEIScanLayoutDataTests: XCTestCase {
     + #"<zone type="line" points="282.05,89.99 663.61,90.8 663.53,113.28 281.97,112.47"><path type="baseline" points="282.05,110 663.61,110.8"/></zone>"#
 
   static let document =
-    #"<TEI><teiHeader><encodingDesc><tagsDecl><rendition xml:id="text-block" scheme="css" selector="text">font-size:40.40px;inline-size:61.07em;block-size:83.54em;margin:4.37em</rendition><rendition xml:id="size-1" scheme="css">font-size:0.9578rem</rendition><rendition xml:id="size-2" scheme="css">font-size:2.0365rem</rendition><rendition xml:id="leading-1" scheme="css">line-height:1.6337rem</rendition></tagsDecl></encodingDesc></teiHeader><facsimile><surface n="3" ulx="0" uly="0" lrx="1000" lry="1000"><graphic url="\#(service)/full/max/0/default.jpg" width="2820px" height="3781px"/><zone xml:id="p3-textblock" type="textblock" points="141.21,385.12 897.24,386.72 896.67,536.41 140.64,534.81" style="font-size:109.89px"/>"#
+    #"<TEI><teiHeader><encodingDesc><tagsDecl><rendition xml:id="text-block" scheme="css" selector="text">font-size:40.40px;inline-size:61.07em;block-size:83.54em;margin:4.37em;max-inline-size:61.45em</rendition><rendition xml:id="size-1" scheme="css">font-size:0.9578rem</rendition><rendition xml:id="size-2" scheme="css">font-size:2.0365rem</rendition><rendition xml:id="leading-1" scheme="css">line-height:1.6337rem</rendition></tagsDecl></encodingDesc></teiHeader><facsimile><surface n="3" ulx="0" uly="0" lrx="1000" lry="1000"><graphic url="\#(service)/full/max/0/default.jpg" width="2820px" height="3781px"/><zone xml:id="p3-textblock" type="textblock" points="141.21,385.12 897.24,386.72 896.67,536.41 140.64,534.81" style="font-size:109.89px"/>"#
     + layout
     + #"</surface></facsimile><text><body><pb n="3" facs="\#(service)/full/max/0/default.jpg"/><p>AN ETYMOLOGICAL DICTIONARY<lb/></p></body></text></TEI>"#
 
@@ -53,12 +53,12 @@ final class TEIScanLayoutDataTests: XCTestCase {
     XCTAssertEqual(Array(zones[5][11...]), ["282.05", "110", "663.61", "110.8"])
   }
 
-  /// The work's em on the scan: its width over the frame's measure and two
-  /// margins (61.07 + 2 × 4.37 em), in the 0–1000 space across it—40.40 of
-  /// the scan's 2820 pixels, the frame's own body.
-  func testTheWorksEmOnTheScanIsItsWidthOverTheFramesPage() throws {
+  /// The book's em on the scan: the scans' width in em its frame declares
+  /// (61.45), whatever the scan's pixels, in the 0–1000 space across it—
+  /// 45.89 of the scan's 2820 pixels.
+  func testTheBooksEmOnTheScanIsItsWidthOverTheFramesDeclaredWidth() throws {
     let em = try XCTUnwrap(Double(attribute("data-scan-em", of: try page()) ?? ""))
-    XCTAssertEqual(em, 14.3246, accuracy: 1e-9)
-    XCTAssertEqual(em / 1000 * 2820, 40.40, accuracy: 0.01)
+    XCTAssertEqual(em, 16.2734, accuracy: 1e-9)
+    XCTAssertEqual(em / 1000 * 2820, 45.89, accuracy: 0.01)
   }
 }

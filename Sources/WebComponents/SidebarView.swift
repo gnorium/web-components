@@ -41,6 +41,9 @@
       .data("sidebar", "true")
       .class(baseClass)
       .style {
+        // This sidebar's width, per instance: the shared rules below read it.
+        customProperty("--sidebar-width", sidebarWidth.value)
+
         selector("&") {
           display(.none)
 
@@ -52,8 +55,8 @@
             position(.sticky)
             top(0)
             alignSelf(.flexStart)
-            width(sidebarWidth)
-            minWidth(sidebarWidth)
+            width(`var`("--sidebar-width") as CSS.Length)
+            minWidth(`var`("--sidebar-width") as CSS.Length)
             // Dynamic viewport units follow the usable browser viewport when
             // macOS accessibility text and browser chrome change its height.
             // The content remains the one scrollport for an enlarged sidebar.

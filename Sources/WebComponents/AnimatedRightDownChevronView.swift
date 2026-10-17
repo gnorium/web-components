@@ -15,7 +15,6 @@ public struct AnimatedRightDownChevronView: HTMLContent {
   public let size: CSS.Length
   public var `class`: String
   public var data: [TableView.AttributePair] = []
-  public var customStyleRules: [(@Sendable () -> [CSSOM.CSSRule])] = []
 
   public init(
     id: String,
@@ -43,12 +42,6 @@ public struct AnimatedRightDownChevronView: HTMLContent {
     return copy
   }
 
-  public func style(@CSSBuilder _ rules: @escaping @Sendable () -> [CSSOM.CSSRule]) -> Self {
-    var copy = self
-    copy.customStyleRules.append(rules)
-    return copy
-  }
-
   public func build() -> DOM.Node {
     var svgNode = svg {
       polyline()
@@ -72,10 +65,6 @@ public struct AnimatedRightDownChevronView: HTMLContent {
       }
       selector("&[data-expanded='true']") { transform(rotate(deg(0))) }
       selector("&[data-expanded='false']") { transform(rotate(deg(-90))) }
-
-      for sty in customStyleRules {
-        sty()
-      }
     }
 
     for pair in data {

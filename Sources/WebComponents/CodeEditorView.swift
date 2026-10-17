@@ -156,6 +156,9 @@
       var idle: Int32 = 0
       /// Every block read to its end and painted whole.
       var complete = false
+      /// Its text nodes as they are read (`readMore`), and whether all are.
+      var walker: DOM.TreeWalker? = nil
+      var walked = true
 
       init(code: DOM.Element, input: HTML.HTMLTextAreaElement?) {
         self.code = code
@@ -247,10 +250,11 @@
           { _ in
             guard !scrollPending else { return }
             scrollPending = true
-            _ = window.requestAnimationFrame {
+            _ = window.requestAnimationFrame(timed: { time in
+              frameTime = time
               scrollPending = false
               for editor in editors where editor.shown { repaint(editor) }
-            }
+            })
           }, capture: true, passive: true)
       }
       // A pane resized wraps lines anew: every shown editor renumbered.
@@ -309,7 +313,26 @@
     /// A frame's share of read-only text's work, in ms: RAIL's figure for
     /// the script a frame may run and still be drawn in time ("aim to
     /// produce a frame in 10 ms", web.dev/articles/rail, Animation).
-    static let frameBudget = 10.0
+    public static let frameBudget = 10.0
+
+    /// The timestamp of the frame whose callbacks are running, set by each
+    /// of ours as it runs (`requestAnimationFrame(timed:)`): one share of a
+    /// frame (`frameBudget`) for all the work its callbacks do—the page's
+    /// coloring pass, a Raw's own frame, a scroll's—however many there are.
+    /// Work asked for outside a frame (in a click's task) finds that share
+    /// spent and is done in the next frame, before it is drawn.
+    nonisolated(unsafe) public static var frameTime = -1.0
+    nonisolated(unsafe) static var budgetFrame = -2.0
+    nonisolated(unsafe) static var budgetEnd = 0.0
+
+    /// When the running frame's share of work ends.
+    public static func frameDeadline() -> Double {
+      if frameTime != budgetFrame {
+        budgetFrame = frameTime
+        budgetEnd = window.performance.now() + frameBudget
+      }
+      return budgetEnd
+    }
 
     /// One block of read-only text (`updateBlocks`): read by its grammar on
     /// its own, from a fresh start.
@@ -355,8 +378,7 @@
     /// Read-only text read and colored: what is on screen in this task,
     /// within a frame's share, the rest soon (`schedule`).
     static func colorWhole(_ editor: Editor) {
-      readText(editor, from: 0)
-      updateBlocks(editor)
+      startReading(editor)
       editor.colored = true
       editor.shown = true
       paintNear(editor)
@@ -386,11 +408,13 @@
     /// from where it stood, and any block begun since added. Work
     /// proportional to what was added.
     static func takeGrowth(_ editor: Editor) {
+      // Still being read: what grew is read in its turn, and a node read
+      // before it grew is read again once the whole has been.
+      guard editor.walked else { return }
       editor.grown = false
       guard let last = editor.nodes.last, editor.code.contains(last.node) else {
         // Its text set anew: read from the start.
-        readText(editor, from: 0)
-        updateBlocks(editor)
+        startReading(editor)
         return
       }
       readGrowth(editor)
@@ -404,10 +428,11 @@
     static func schedule(_ editor: Editor, near: Bool) {
       if near {
         guard editor.frame == 0 else { return }
-        editor.frame = window.requestAnimationFrame {
+        editor.frame = window.requestAnimationFrame(timed: { time in
+          frameTime = time
           editor.frame = 0
           paintNear(editor)
-        }
+        })
         return
       }
       guard editor.idle == 0 else { return }
@@ -423,7 +448,7 @@
     static func paintNear(_ editor: Editor) {
       if editor.grown { takeGrowth(editor) }
       guard !editor.complete else { return }
-      followUp(editor, work(editor, until: window.performance.now() + frameBudget))
+      followUp(editor, work(editor, until: frameDeadline()))
     }
 
     static func followUp(_ editor: Editor, _ left: Left) {
@@ -440,6 +465,14 @@
     /// (`readStep`), a stretch painted.
     static func work(_ editor: Editor, until deadline: Double) -> Left {
       func late() -> Bool { window.performance.now() >= deadline }
+      // Its text read first, a node at a time: nothing is placed on screen
+      // before the text before it is known.
+      if !editor.walked {
+        readMore(editor, until: deadline)
+        updateBlocks(editor)
+        guard editor.walked else { return .near }
+        if editor.grown { takeGrowth(editor) }
+      }
       if let near = viewWindow(editor) {
         for index in 0..<editor.blocks.count {
           let block = editor.blocks[index]
@@ -611,35 +644,40 @@
       editor.nodeCount = editor.nodes.count
     }
 
-    /// Its text nodes and bytes read again from its `index`-th text node
-    /// on; those before it kept as read (text added at its end leaves them
-    /// as they were). From the start, its blocks are begun again.
-    static func readText(_ editor: Editor, from index: Int) {
-      let walker = document.createTreeWalker(editor.code, DOM.NodeFilter.SHOW_TEXT)
-      var units = 0
-      if index > 0, index <= editor.nodes.count {
-        units = index < editor.nodes.count ? editor.nodes[index].start : editor.nodes[index - 1].end
-        let byte = index < editor.byteStarts.count ? editor.byteStarts[index] : editor.bytes.count
-        editor.bytes.removeSubrange(byte..<editor.bytes.count)
-        editor.nodes.removeSubrange(index..<editor.nodes.count)
-        editor.byteStarts.removeSubrange(index..<editor.byteStarts.count)
-        // The walk goes on after the node before it.
-        walker.currentNode = editor.nodes[index - 1].node
-      } else {
-        editor.bytes = []
-        editor.nodes = []
-        editor.byteStarts = []
-        // Its paint let go with its blocks: text set anew.
-        var gone: [(CodeSyntax.Token, DOM.StaticRange)] = []
-        for block in editor.blocks {
-          for (at, range) in block.ranges.enumerated() { if let range { gone.append((block.tokens[at], range)) } }
-        }
-        if !gone.isEmpty { paintStill(removing: gone, adding: []) }
-        editor.blocks = []
-        editor.childrenCounted = 0
-        editor.complete = false
+    /// Its text read again from the start, a node at a time (`readMore`):
+    /// its nodes, bytes and blocks begun anew, its paint let go.
+    static func startReading(_ editor: Editor) {
+      editor.bytes = []
+      editor.nodes = []
+      editor.byteStarts = []
+      var gone: [(CodeSyntax.Token, DOM.StaticRange)] = []
+      for block in editor.blocks {
+        for (at, range) in block.ranges.enumerated() { if let range { gone.append((block.tokens[at], range)) } }
       }
-      while let next = walker.nextNode() {
+      if !gone.isEmpty { paintStill(removing: gone, adding: []) }
+      editor.blocks = []
+      editor.childrenCounted = 0
+      editor.complete = false
+      editor.walker = document.createTreeWalker(editor.code, DOM.NodeFilter.SHOW_TEXT)
+      editor.walked = false
+    }
+
+    /// Its text nodes read on, the clock read after each, till `deadline`
+    /// or its last: a Raw of a thousand runs is read over frames, never in
+    /// one task. A node added meanwhile is read in its turn; one grown
+    /// after it was read waits for `readGrowth`.
+    static func readMore(_ editor: Editor, until deadline: Double) {
+      guard let walker = editor.walker else {
+        editor.walked = true
+        return
+      }
+      var units = editor.nodes.last?.end ?? 0
+      while window.performance.now() < deadline {
+        guard let next = walker.nextNode() else {
+          editor.walker = nil
+          editor.walked = true
+          break
+        }
         guard let node = next as? DOM.Text else { continue }
         let text = node.data
         let length = unitLength(text)

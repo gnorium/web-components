@@ -15,7 +15,6 @@ public struct TableRowView: HTMLContent {
   public let isGroupChild: Bool
   public var `class`: String
   public var data: [TableView.AttributePair] = []
-  public var customStyleRules: [(@Sendable () -> [CSSOM.CSSRule])] = []
 
   public init(
     id: String,
@@ -46,12 +45,6 @@ public struct TableRowView: HTMLContent {
   public func data(_ key: String, _ value: String) -> Self {
     var copy = self
     copy.data.append(TableView.AttributePair(key, value))
-    return copy
-  }
-
-  public func style(@CSSBuilder _ rules: @escaping @Sendable () -> [CSSOM.CSSRule]) -> Self {
-    var copy = self
-    copy.customStyleRules.append(rules)
     return copy
   }
 
@@ -86,10 +79,6 @@ public struct TableRowView: HTMLContent {
     // Apply extra data and styles
     for pair in data {
       rowNode = rowNode.data(pair.key, pair.value)
-    }
-
-    for s in customStyleRules {
-      rowNode = rowNode.style { selector("&") { s() } }
     }
 
     return rowNode

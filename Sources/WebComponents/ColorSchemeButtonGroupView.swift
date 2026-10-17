@@ -41,11 +41,7 @@
         direction: .column,
         class: `class`.isEmpty
           ? "color-scheme-button-group-view" : "color-scheme-button-group-view \(`class`)",
-        ariaLabel: "Color scheme",
-        style: {
-          width(perc(100))
-          gap(spacing4)
-        }
+        ariaLabel: "Color scheme"
       )
     }
   }

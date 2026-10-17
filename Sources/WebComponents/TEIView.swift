@@ -188,17 +188,18 @@
       TEIRendition.bodyLeading(in: page.renditions).map { number($0) } ?? ""
     }
 
-    /// The work's em on the page's scan, in the 0–1000 space across its
-    /// image: its width over the work frame's measure and its two margins
-    /// (`TEIRendition.frame(in:)`; gnorium-python `type_scale.canvas_em`'s
-    /// rule for a page not set in the body type), "" where the renditions
-    /// declare no frame. The reader's overlay always lays the scan at this
-    /// scale, never by the main text block's height, the edition's
-    /// typesetting (`OverlayRegistration.laid`).
+    /// The book's em on the page's scan, in the 0–1000 space across its
+    /// image (user, 2026-10-18): the book is set in one type, so every
+    /// scan of it has its em as its width over the scans' width in em its
+    /// frame declares (`TEIWorkFrame.width`, `max-inline-size`; gnorium-python
+    /// `type_scale.canvas_em`), whatever the scan's resolution; "" where
+    /// the renditions declare no frame or no width. The reader's overlay
+    /// always lays the scan at this scale, never by the main text block's
+    /// height, the edition's typesetting (`OverlayRegistration.laid`).
     static func scanEmData(of page: TEIPage) -> String {
-      guard let frame = TEIRendition.frame(in: page.renditions), frame.measure + 2 * frame.margin > 0 else { return "" }
+      guard let frame = TEIRendition.frame(in: page.renditions), frame.width > 0 else { return "" }
       // Ten-thousandths of the space: finer than a scan's pixel.
-      return number((1000 / (frame.measure + 2 * frame.margin) * 10_000).rounded() / 10_000)
+      return number((1000 / frame.width * 10_000).rounded() / 10_000)
     }
 
     /// The page's frame as the custom properties its rules read

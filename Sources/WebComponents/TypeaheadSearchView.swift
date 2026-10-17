@@ -172,9 +172,11 @@
         descendant(".typeahead-search-input-wrapper") {
           position(.relative)
           width(perc(100))
-          if autoExpandWidth && showThumbnail {
-            transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-          }
+        }
+        // Only where the width expands beside a thumbnail: both classes
+        // are on the root.
+        selector("&.typeahead-search-show-thumbnail.typeahead-search-auto-expand-width .typeahead-search-input-wrapper") {
+          transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
         }
         descendant(".typeahead-search-menu") {
           display(.none)

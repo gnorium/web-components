@@ -37,7 +37,6 @@ public struct AnimatedUpDownChevronView: HTMLContent {
   public let expanded: Bool
   public let size: CSS.Length
   public var `class`: String
-  public var customStyleRules: [(@Sendable () -> [CSSOM.CSSRule])] = []
 
   public init(
     id: String,
@@ -56,12 +55,6 @@ public struct AnimatedUpDownChevronView: HTMLContent {
   public func `class`(_ value: String) -> Self {
     var copy = self
     copy.class = value
-    return copy
-  }
-
-  public func style(@CSSBuilder _ rules: @escaping @Sendable () -> [CSSOM.CSSRule]) -> Self {
-    var copy = self
-    copy.customStyleRules.append(rules)
     return copy
   }
 
@@ -91,13 +84,6 @@ public struct AnimatedUpDownChevronView: HTMLContent {
     .strokeWidth(117.61)
     .strokeLinecap(.butt)
     .strokeLinejoin(.miter)
-    .style {
-      selector("&") {
-        for sty in customStyleRules {
-          sty()
-        }
-      }
-    }
   }
 }
 

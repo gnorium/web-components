@@ -268,6 +268,9 @@ public struct TextInputView: HTMLContent {
     }
 
     return container.style {
+      // This input's text size, per instance: the shared rule reads it.
+      customProperty("--text-input-font-size", inputFontSize.value)
+
       // The label row and the box in a column, 8px apart as every field's
       // label and control (FieldView, DropdownView, ComboboxView): the gap,
       // never a margin on the label.
@@ -307,7 +310,7 @@ public struct TextInputView: HTMLContent {
         // 2026-10-10).
         padding(spacing12)
         fontFamily(typographyFontSans)
-        fontSize(inputFontSize)
+        fontSize(`var`("--text-input-font-size") as CSS.Length)
         lineHeight(lineHeightSmall22)
         color(colorBase)
         backgroundColor(backgroundColorBase)

@@ -118,9 +118,11 @@
               fontSize(fontSizeMedium16)
               boxSizing(.borderBox)
               backgroundColor(backgroundColorBase)
-              if openDialog {
-                cursor(.pointer)
-              }
+            }
+
+            // The trigger bar (HomeView's) opens the search dialog: a pointer.
+            selector("&[data-search-trigger='true']") {
+              cursor(.pointer)
             }
 
             pseudoClass(.active) {

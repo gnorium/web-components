@@ -230,7 +230,14 @@ public struct ComboboxView: HTMLContent {
     .data("combobox", true)
     .data("search-url", searchURL ?? "")
     .data("disabled", disabled)
+    .data("has-visible-limit", visibleItemLimit != nil ? "true" : "false")
     .style {
+      // This combobox's list height, per instance: the shared rule for a
+      // limited list reads it.
+      if let visibleItemLimit {
+        customProperty("--combobox-visible-limit-height", calc(visibleItemLimit * minSizeInteractiveTouch).value)
+      }
+
       selector("&") {
         display(.flex)
         flexDirection(.column)
@@ -308,12 +315,11 @@ public struct ComboboxView: HTMLContent {
         listStyle(.none)
         margin(0)
         padding(0)
-        if let visibleItemLimit {
-          maxHeight(calc(visibleItemLimit * minSizeInteractiveTouch))
-        } else {
-          maxHeight(px(300))
-        }
+        maxHeight(px(300))
         overflowY(.auto)
+      }
+      selector("&[data-has-visible-limit='true'] .combobox-listbox") {
+        maxHeight(`var`("--combobox-visible-limit-height") as CSS.Length)
       }
       descendant(".combobox-option") {
         display(.flex)
