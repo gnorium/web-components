@@ -26,6 +26,9 @@ final class StatusMarkTests: XCTestCase {
       ("rotating-dotted-ring-sector-view", "Loading", {
         RotatingDottedRingSectorView(size: px(16), class: "roster-mark").build()
       }),
+      ("rotating-ring-sector-view", "Translation layer loading", {
+        RotatingRingSectorView(size: px(16), class: "roster-mark").build()
+      }),
       ("rotating-ring-sector-with-disc-view", "Translation running", {
         RotatingRingSectorWithDiscView(size: px(16), class: "roster-mark").build()
       }),
@@ -108,6 +111,7 @@ final class StatusMarkTests: XCTestCase {
     for build in [
       { RotatingSectorView().build() },
       { RotatingDottedRingSectorView().build() },
+      { RotatingRingSectorView().build() },
       { RotatingRingSectorWithDiscView().build() },
     ] {
       let (root, _, css) = try capture(build)
@@ -125,6 +129,7 @@ final class StatusMarkTests: XCTestCase {
     let marks = [
       RotatingSectorView(ariaHidden: true).build(),
       RotatingDottedRingSectorView(ariaHidden: true).build(),
+      RotatingRingSectorView(ariaHidden: true).build(),
       RotatingRingSectorWithDiscView(ariaHidden: true).build(),
     ]
     for mark in marks {

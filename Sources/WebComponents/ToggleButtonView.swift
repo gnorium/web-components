@@ -32,6 +32,9 @@ public struct ToggleButtonView: HTMLContent {
   /// An icon after the label, like the chevron of a button that opens a
   /// menu (`MenuButtonView`).
   let trailingIcon: DOM.Node?
+  /// The button's corner radius: a pill by default; `.circle` makes an
+  /// icon-only toggle a true circle.
+  let borderRadius: ButtonView.ButtonRadius
 
   public init<T: HTMLContent>(
     label: String,
@@ -48,7 +51,8 @@ public struct ToggleButtonView: HTMLContent {
     size: ButtonView.ButtonSize = .medium,
     class: String = "",
     labelFontWeight: CSS.FontWeight = fontWeightNormal,
-    trailingIcon: DOM.Node? = nil
+    trailingIcon: DOM.Node? = nil,
+    borderRadius: ButtonView.ButtonRadius = .pill
   ) {
     self.label = label
     self.icon = icon.map { $0.build() }
@@ -65,6 +69,7 @@ public struct ToggleButtonView: HTMLContent {
     self.class = `class`
     self.labelFontWeight = labelFontWeight
     self.trailingIcon = trailingIcon
+    self.borderRadius = borderRadius
   }
 
   public func build() -> DOM.Node {
@@ -83,7 +88,7 @@ public struct ToggleButtonView: HTMLContent {
         fullWidth: fullWidth,
         class: "",
         labelFontWeight: self.labelFontWeight,
-        borderRadius: .pill
+        borderRadius: borderRadius
       ) {
         if let icon = icon {
           span { icon }

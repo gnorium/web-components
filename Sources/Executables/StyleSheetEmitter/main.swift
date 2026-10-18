@@ -25,6 +25,7 @@ struct StyleSheetEmitter {
     _ = SearchBarView(openDialog: true, class: "home", placeholder: "Search", ariaLabel: "Search", searchField: "q", searchEndpoint: "/search/suggest", resultUrlBase: "/search").build()
     _ = TeXView("x", displayMode: true).build()
     _ = RotatingSectorView().build()
+    _ = RotatingRingSectorView().build()
     _ = RotatingDottedRingSectorView().build()
     _ = DottedRingView(size: sizeIconSmall).build()
     _ = RotatingRingSectorWithDiscView().build()
