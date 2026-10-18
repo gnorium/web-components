@@ -22,7 +22,7 @@ public enum PassageDiffSyncViewHydration {
       }
     }
     for reader in root.querySelectorAll(".testament-view") {
-      let translated = stringEquals(reader.closest("[data-translated]")?.getAttribute("data-translated") ?? "false", "true")
+      let translated = stringEquals(reader.querySelector(".artifact-view")?.getAttribute("data-translated") ?? "false", "true")
       let layer = translated ? "translated-markup" : "markup"
       if let source = reader.querySelector(".tei-page[data-active='true'] [data-layer='" + layer + "'] .code-code"),
         let slot = reader.querySelector(".testament-diff[data-active='true']") {

@@ -23,8 +23,8 @@ final class StatusMarkTests: XCTestCase {
       ("rotating-sector-view", "Explication running", {
         RotatingSectorView(size: px(16), class: "roster-mark").build()
       }),
-      ("rotating-ring-sector-view", "Translation layer loading", {
-        RotatingRingSectorView(size: px(16), class: "roster-mark").build()
+      ("rotating-dotted-ring-sector-view", "Loading", {
+        RotatingDottedRingSectorView(size: px(16), class: "roster-mark").build()
       }),
       ("rotating-ring-sector-with-disc-view", "Translation running", {
         RotatingRingSectorWithDiscView(size: px(16), class: "roster-mark").build()
@@ -76,10 +76,38 @@ final class StatusMarkTests: XCTestCase {
     }
   }
 
+  func testDottedRingsDrawTwelveAndFiveRoundDotsOnTheSameCircle() throws {
+    let still = try XCTUnwrap(DottedRingView(size: px(16)).build() as? DOM.Element)
+    XCTAssertEqual(attribute("class", in: still), "dotted-ring-view")
+    XCTAssertEqual(attribute("viewBox", in: still), "0 0 1024 1024")
+    let ring = try XCTUnwrap(still.children[0] as? DOM.Element)
+    let turning = try XCTUnwrap(RotatingDottedRingSectorView().build() as? DOM.Element)
+    let sector = try XCTUnwrap(turning.children[0] as? DOM.Element)
+    for part in [ring, sector] {
+      XCTAssertEqual(part.tag, "path")
+      XCTAssertEqual(attribute("stroke-linecap", in: part), "round")
+      XCTAssertEqual(attribute("stroke-width", in: part), attribute("stroke-width", in: ring))
+      XCTAssertEqual(attribute("stroke", in: part), "currentColor")
+      XCTAssertEqual(attribute("fill", in: part), "none")
+    }
+    // Lucide's grid in the house box: radius 9 of 24, the stroke 2 of 24.
+    XCTAssertEqual(DottedRingView.radius, 384, accuracy: 0.001)
+    XCTAssertEqual(DottedRingView.radius * 2 * Double.pi / DottedRingView.step, 12, accuracy: 0.001)
+    // The pattern repeats each step: a point of a dash, the rest a gap.
+    let pattern = try XCTUnwrap(attribute("stroke-dasharray", in: ring)).split(separator: " ").compactMap { Double($0) }
+    XCTAssertEqual(pattern.count, 2)
+    XCTAssertEqual(pattern[0] + pattern[1], DottedRingView.step, accuracy: 0.001)
+    XCTAssertEqual(attribute("stroke-dasharray", in: sector), attribute("stroke-dasharray", in: ring))
+    // The sector's 120° is four steps: five dots, both ends included.
+    XCTAssertEqual(DottedRingView.radius * 2 * Double.pi / 3 / DottedRingView.step, 4, accuracy: 0.001)
+    let d = try XCTUnwrap(attribute("d", in: sector))
+    XCTAssertTrue(d.hasPrefix("M512,128 A384,384 ") || d.hasPrefix("M 512,128 A 384,384 "), d)
+  }
+
   func testEveryMarkStopsRotationForReducedMotionWithoutHidingTheShape() throws {
     for build in [
       { RotatingSectorView().build() },
-      { RotatingRingSectorView().build() },
+      { RotatingDottedRingSectorView().build() },
       { RotatingRingSectorWithDiscView().build() },
     ] {
       let (root, _, css) = try capture(build)
@@ -96,7 +124,7 @@ final class StatusMarkTests: XCTestCase {
   func testDecorativeMarksDoNotAnnounceLabels() throws {
     let marks = [
       RotatingSectorView(ariaHidden: true).build(),
-      RotatingRingSectorView(ariaHidden: true).build(),
+      RotatingDottedRingSectorView(ariaHidden: true).build(),
       RotatingRingSectorWithDiscView(ariaHidden: true).build(),
     ]
     for mark in marks {

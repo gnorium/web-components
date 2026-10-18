@@ -7,8 +7,11 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-/// A rotating 120° ring sector, representing a translation layer loading.
-public struct RotatingRingSectorView: HTMLContent {
+/// A rotating 120° sector of the dotted ring (user, 2026-10-18): 5 dots from
+/// the top, clockwise. Every wait that is not a page's wording—a running
+/// arbitration, prompts, images, a translation layer, a gloss—turns it.
+/// Drawn as `DottedRingView` is, on the same circle.
+public struct RotatingDottedRingSectorView: HTMLContent {
   let size: CSS.Length
   let ariaHidden: Bool
   let ariaLabel: String
@@ -17,7 +20,7 @@ public struct RotatingRingSectorView: HTMLContent {
   public init(
     size: CSS.Length = sizeIconSmall,
     ariaHidden: Bool = false,
-    ariaLabel: String = "Translation layer loading",
+    ariaLabel: String = "Loading",
     class: String = ""
   ) {
     self.size = size
@@ -26,22 +29,27 @@ public struct RotatingRingSectorView: HTMLContent {
     self.class = `class`
   }
 
-  static let ringRadius: Double = 512 - iconStrokeWidth / 2
-
   public func build() -> DOM.Node {
+    let radius = DottedRingView.radius
     svg {
       path()
-        // A third of the ring: from the top, 120° clockwise, on the
-        // ring's radius (its outer edge on the box's).
+        // A third of the ring: from the top, 120° clockwise. Its length is
+        // four steps, so the 5 dots fall on both ends and between.
         .d(
-          M(512, 512 - Self.ringRadius),
-          A(Self.ringRadius, Self.ringRadius, 0, false, true, 512 + Self.ringRadius * 0.8660254037844386, 512 + Self.ringRadius / 2))
-        .class("rotating-ring-sector-shape")
+          M(512, 512 - radius),
+          A(radius, radius, 0, false, true, 512 + radius * 0.8660254037844386, 512 + radius / 2))
+        .class("rotating-dotted-ring-sector-shape")
         .fill(.none)
         .stroke(.currentColor)
         .strokeWidth(iconStrokeWidth)
+        .strokeLinecap(.round)
+        .strokeDasharray(DottedRingView.dasharray)
+        .strokeDashoffset(DottedRingView.dashoffset)
     }
-    .class(stringIsEmpty(`class`) ? "rotating-ring-sector-view" : "rotating-ring-sector-view \(`class`)")
+    .class(
+      stringIsEmpty(`class`)
+        ? "rotating-dotted-ring-sector-view" : "rotating-dotted-ring-sector-view \(`class`)"
+    )
     .viewBox(0, 0, 1024, 1024)
     .xmlns("http://www.w3.org/2000/svg")
     .role("progressbar")
@@ -51,12 +59,12 @@ public struct RotatingRingSectorView: HTMLContent {
       width(size)
       height(size)
       selector("&") { display(.inlineBlock); flexShrink(0); color(colorBlue) }  // Progress is always blue (user, 2026-10-11).
-      child(".rotating-ring-sector-shape") {
+      child(".rotating-dotted-ring-sector-shape") {
         transformOrigin(perc(50), perc(50))
-        animation("rotating-ring-sector-spin", animationDurationFast, animationTimingFunctionBase, .infinite)
+        animation("rotating-dotted-ring-sector-spin", animationDurationFast, animationTimingFunctionBase, .infinite)
         media(prefersReducedMotion(.reduce)) { animation("none") }
       }
-      keyframes("rotating-ring-sector-spin") {
+      keyframes("rotating-dotted-ring-sector-spin") {
         from { transform(rotate(deg(0))) }
         to { transform(rotate(deg(360))) }
       }
@@ -67,15 +75,15 @@ public struct RotatingRingSectorView: HTMLContent {
 #if CLIENT
   import WebAPIs
 
-  public enum RotatingRingSectorFactory {
+  public enum RotatingDottedRingSectorFactory {
     public static func createElement(
       size: CSS.Length = sizeIconSmall,
       ariaHidden: Bool = true,
       class: String = ""
     ) -> DOM.Element {
-      StyleSheetLoader.ensure("rotating-ring-sector-view")
+      StyleSheetLoader.ensure("rotating-dotted-ring-sector-view")
       let wrapper = document.createElement(.span)
-      wrapper.innerHTML = RotatingRingSectorView(
+      wrapper.innerHTML = RotatingDottedRingSectorView(
         size: size, ariaHidden: ariaHidden, class: `class`
       ).render()
       if let leaf = wrapper.firstElementChild { return leaf }
