@@ -28,7 +28,6 @@ struct StyleSheetEmitter {
     _ = RotatingRingSectorView().build()
     _ = RotatingDottedRingSectorView().build()
     _ = DottedRingView(size: sizeIconSmall).build()
-    _ = HeaderView(teiHeader: "<teiHeader/>").build()
     _ = RotatingRingSectorWithDiscView().build()
 
     try StaticStyleSheetEmitter.emitCollected(HTMLGlobalStyle.shared.getAndResetStyleSheets())

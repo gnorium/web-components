@@ -67,6 +67,13 @@
     /// page read alone from a long book's stored pages (`TestamentView`'s
     /// `page(_:service:firstIndex:)`) is drawn at its place in the book.
     let firstIndex: Int
+    /// The `<teiHeader>` its document declares (`TEIRenderer.declaredHeader`),
+    /// as written; nil where it declares none. Each page's code carries it
+    /// at its top, read-only and hidden until its viewer's Header switch is
+    /// on (`[data-header='true']`, user 2026-10-20), the page's lines
+    /// numbered on after it. A page read alone from a long book (`firstIndex`)
+    /// has no header of its own: the caller hands it the book's.
+    let header: String?
     /// The translator's notes of the layer being set, by the block each
     /// notes: none but while a page's translation is set.
     private var notes: [String: String] = [:]
@@ -104,9 +111,10 @@
     public init(
       teiXml: String, editable: Bool = false, translation: Translation? = nil,
       highlights: [String: [TEIHighlight]] = [:], labelsPages: Bool = false, glossURL: String? = nil,
-      page: Int? = nil, drawn: [Int] = [], firstIndex: Int = 0, direction: String? = nil
+      page: Int? = nil, drawn: [Int] = [], firstIndex: Int = 0, direction: String? = nil, header: String? = nil
     ) {
       self.direction = direction
+      self.header = header
       self.page = page
       self.drawn = drawn
       self.firstIndex = firstIndex
@@ -963,10 +971,6 @@
 
     public func build() -> DOM.Node {
       let pages = self.pages
-      // Each page's source as one TEI document (user, 2026-10-14): the
-      // document's header renditions, then the page's fragment as its body
-      // (`TEIRendition.headedPage`), read and edited alike everywhere.
-      let renditions = TEIRendition.renditions(of: teiXml)
       // Record pages register an empty reader before fetching its contents:
       // formula styles are registered then, even with no formula yet.
       _ = TEIMathView(TEIMath(display: false, content: [])).build()
@@ -1015,7 +1019,23 @@
             .data("framed", frame != nil)
             .addingAttribute("style", frame.map(Self.frameStyle) ?? "")
 
+            // The page's code (user, 2026-10-14; no header since 2026-10-20:
+            // the document's is drawn over it, read-only, never edited).
+            let code = TEIFacsimile.headed(
+              TEIRendition.headedPage(page.markup, renditions: ""),
+              surface: TEIFacsimile.surface(of: page, in: teiXml))
+            let headerLines = header.map { CodeLines.lines(of: $0).count } ?? 0
+            let numbered = headerLines + CodeLines.lines(of: code).count
             div {
+              // The document's header, at the code's top under the Header
+              // switch, read-only on the code's gray (user, 2026-10-20),
+              // its lines numbered 1, 2…, the page's counted on after them.
+              if let header {
+                div {
+                  CodeView(header, showLineNumbers: false, lined: true, numberedLines: numbered)
+                }
+                .class("tei-page-header")
+              }
               if editable {
                 // A form of its own, so the page can be sent to be read back
                 // as it is being edited—its resemblance and its code.
@@ -1028,10 +1048,8 @@
                     id: "tei-page-raw-\(index + firstIndex)",
                     name: "markup",
                     // Its surface too, edited as any of its code (user,
-                    // 2026-10-16).
-                    value: TEIFacsimile.headed(
-                      TEIRendition.headedPage(page.markup, renditions: renditions),
-                      surface: TEIFacsimile.surface(of: page, in: teiXml)),
+                    // 2026-10-16); never its header.
+                    value: code,
                     ariaLabel: page.label.isEmpty ? "Code of this page" : "Code of \(page.label)",
                     lined: true
                   )
@@ -1039,18 +1057,19 @@
                 .class("tei-page-edit")
               } else {
                 // The stored text as it is (a document is stored formatted),
-                // headed, its surface as its <facsimile> as its diff shows
-                // it (user, 2026-10-16), numbered and soft-wrapped (user,
-                // 2026-10-11).
-                CodeView(
-                  TEIFacsimile.headed(
-                    TEIRendition.headedPage(page.markup, renditions: renditions),
-                    surface: TEIFacsimile.surface(of: page, in: teiXml)),
-                  showLineNumbers: false, lined: true)
+                // its surface as its <facsimile> as its diff shows it (user,
+                // 2026-10-16), numbered and soft-wrapped (user, 2026-10-11).
+                CodeView(code, showLineNumbers: false, lined: true)
               }
             }
             .class("tei-page-raw")
             .data("layer", "markup")
+            // What the page's numbers start after, and their column's width,
+            // while the header shows.
+            .style {
+              customProperty("--header-lines", "\(headerLines)")
+              customProperty("--header-gutter", CodeLines.gutter(lines: numbered))
+            }
 
             // The translation, set by the very reader that sets the
             // markup above: the same lines, the same classes.
@@ -1154,6 +1173,39 @@
         }
         selector("& .tei-page-raw .code-view", "& .tei-page-raw .code-editor-view") {
           borderRadius(0)
+        }
+        // The header's lines, under the viewer's Header switch alone; on the
+        // code's subtle gray, read-only (user, 2026-10-20).
+        // A flex column, as the layer is: a block would set the white space
+        // around its code as line boxes, a gap above and below it.
+        descendant(".tei-page-header") { display(.none) }
+        selector("[data-header='true'] & .tei-page-header") {
+          display(.flex)
+          flexDirection(.column)
+          minWidth(0)
+        }
+        selector(
+          "& .tei-page-raw > .tei-page-header .code-view", "& .tei-page-raw > .tei-page-header .code-view .code-gutter"
+        ) {
+          backgroundColor(backgroundColorNeutralSubtle).important()
+        }
+        // One listing: the header's last line runs straight into the page's
+        // first, no inset between them.
+        descendant(".tei-page-raw > .tei-page-header .code-view") { paddingBlockEnd(0).important() }
+        selector(
+          "[data-header='true'] & .tei-page-raw > .code-view", "[data-header='true'] & .tei-page-raw > form .code-view"
+        ) {
+          paddingBlockStart(0).important()
+        }
+        // The page's lines counted on after the header's, in one column as
+        // wide as both need (`CodeView` `--line-offset`; an editor's numbers
+        // read it too).
+        selector(
+          "[data-header='true'] & .tei-page-raw > .code-view .code-code",
+          "[data-header='true'] & .tei-page-raw > form .code-code"
+        ) {
+          CSS.Property("--line-offset", "var(--header-lines)")
+          CSS.Property("--gutter", "var(--header-gutter)").important()
         }
         // A run with an alternative (an abbreviation's expansion, a
         // regularized spelling) is a word of its line: the tooltip's

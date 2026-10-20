@@ -25,16 +25,21 @@
     /// Reflow (`[data-reflow='true']`), when a long line wraps as plain
     /// text does, its continuation at column 0 and unnumbered.
     let lined: Bool
+    /// How many lines its number column is as wide for, where more than its
+    /// own: a block numbered on from another's (`--line-offset`), its column
+    /// as wide as theirs together. Nil: its own lines.
+    let numberedLines: Int?
 
     public init(
       _ text: String, language: String = "xml", showLineNumbers: Bool = true, editableLabel: String? = nil,
-      lined: Bool = false
+      lined: Bool = false, numberedLines: Int? = nil
     ) {
       self.text = text
       self.language = language
       self.showLineNumbers = showLineNumbers
       self.editableLabel = editableLabel
       self.lined = lined
+      self.numberedLines = numberedLines
     }
 
     /// Read-only syntax is included in the HTML so it does not depend on
@@ -124,7 +129,10 @@
         if lined {
           let numbered = syntaxed(code { linedContent }.class("code-code language-\(language)"))
             .data("code-lined", "true")
-            .style { customProperty("--gutter", CodeLines.gutter(lines: CodeLines.lines(of: text).count)) }
+            .style {
+              customProperty(
+                "--gutter", CodeLines.gutter(lines: max(CodeLines.lines(of: text).count, numberedLines ?? 0)))
+            }
           if let editableLabel {
             // Its numbers drawn beside it, never in it: the editable text
             // is the browser's alone, so its undo is never reset
@@ -217,7 +225,9 @@
         // by it, not each line's block: text an editor holds outside a
         // line's block (typed into it emptied, pasted) is set off as well.
         selector("&[data-lined='true'] .code-code") {
-          CSS.Property("counter-reset", "code-line")
+          // Counted on from `--line-offset` where a host numbers a block
+          // after another's (a document's header over its page).
+          CSS.Property("counter-reset", "code-line var(--line-offset, 0)")
           CSS.Property("padding-inline-start", "calc(var(--gutter) + 2 * \(spacing8.value))")
           CSS.Property("min-height", "1lh")
           boxSizing(.borderBox)
