@@ -34,6 +34,8 @@ public struct ButtonView: HTMLContent {
   var controlsID: String? = nil
   var submitName: String? = nil
   var submitValue: String? = nil
+  /// The standard `title` attribute: the button's native tooltip.
+  var titleText: String? = nil
   /// Whether the content is the caller's own, placed as given (never
   /// wrapped as an icon), icon-only or not.
   var customContent = false
@@ -389,6 +391,14 @@ public struct ButtonView: HTMLContent {
     var copy = self
     copy.submitName = name
     copy.submitValue = value
+    return copy
+  }
+
+  /// The standard `title` attribute: the native tooltip, which a disabled
+  /// button keeps to say why it is disabled.
+  public func title(_ text: String) -> Self {
+    var copy = self
+    copy.titleText = text
     return copy
   }
 
@@ -1292,6 +1302,11 @@ public struct ButtonView: HTMLContent {
       if let downloadFilename {
         aBtn = aBtn.download(downloadFilename)
       }
+
+      if let titleText {
+        aBtn = aBtn.title(titleText)
+      }
+
       return aBtn
     } else {
       var bBtn = button { renderContent() }
@@ -2120,6 +2135,10 @@ public struct ButtonView: HTMLContent {
 
       if let formID {
         bBtn = bBtn.form(formID)
+      }
+
+      if let titleText {
+        bBtn = bBtn.title(titleText)
       }
 
       if let popoverTargetID {

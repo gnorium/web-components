@@ -29,6 +29,9 @@
       /// The id of the form a submit button submits with, when the group
       /// sits outside that form (`ButtonView.form(_:)`).
       public let form: String?
+      /// Its native tooltip (`ButtonView.title(_:)`): why it is disabled,
+      /// where it is.
+      public let title: String?
 
       public init(
         value: String,
@@ -45,7 +48,8 @@
         fullWidth: Bool = false,
         labelFontWeight: CSS.FontWeight = fontWeightSemiBold,
         contentJustifyContent: CSS.JustifyContent = .center,
-        form: String? = nil
+        form: String? = nil,
+        title: String? = nil
       ) {
         self.value = value
         self.label = label
@@ -62,11 +66,14 @@
         self.labelFontWeight = labelFontWeight
         self.contentJustifyContent = contentJustifyContent
         self.form = form
+        self.title = title
       }
 
-      /// Its button, submitting with its form when it names one.
+      /// Its button, submitting with its form when it names one, with its
+      /// title when it has one.
       fileprivate func formed(_ button: ButtonView) -> ButtonView {
-        form.map { button.form($0) } ?? button
+        let titled = title.map { button.title($0) } ?? button
+        return form.map { titled.form($0) } ?? titled
       }
     }
 
