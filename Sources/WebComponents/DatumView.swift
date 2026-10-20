@@ -34,7 +34,7 @@ public struct DatumView: HTMLContent {
   let value: [DOM.Node]
   let `class`: String
   /// Its element's id, where something links to it (a revision's
-  /// "Changed" line); none when empty.
+  /// "Modified" line); none when empty.
   let id: String
   /// Whether the value is something sent out (white) rather than given
   /// (gray).
