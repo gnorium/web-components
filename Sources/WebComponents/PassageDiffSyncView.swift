@@ -26,7 +26,7 @@ public enum PassageDiffSyncViewHydration {
       let layer = translated ? "translated-markup" : "markup"
       if let source = reader.querySelector(".tei-page[data-active='true'] [data-layer='" + layer + "'] .code-code"),
         let slot = reader.querySelector(".testament-diff[data-active='true']") {
-        let box = translated ? slot.querySelector(".testament-translation-diff .diff-box") : slot.querySelector(".resemblance-diff-view .diff-box")
+        let box = translated ? slot.querySelector(".testament-translation-diff .diff-box") : slot.querySelector(".image-diff-view .diff-box")
         bind(reader, source: source, box: box)
       }
     }

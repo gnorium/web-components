@@ -150,7 +150,7 @@ public enum OutlineMoves {
   ///   copy;
   /// - nothing may sit under an item of the leaf rank, the most concrete,
   ///   whose items are attested directly: a manifest by its images, a leaf
-  ///   sense by its quotations.
+  ///   sense by its quotes.
   ///
   /// A refused move is refused where it is attempted, with an alert over the
   /// outline and the same words in the live region: the caller's sentence,

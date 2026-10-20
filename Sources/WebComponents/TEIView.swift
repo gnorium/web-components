@@ -34,7 +34,7 @@
     /// markup's place.
     let translation: Translation?
     /// What to set apart in each page's markup, by the image service the
-    /// page reads: a quotation's sentence and its word
+    /// page reads: a quote's sentence and its word
     /// (`TEIRenderer.quotation`), each a `<mark>`.
     let highlights: [String: [TEIHighlight]]
     /// Whether each page's markup begins with its label, as a page turn
@@ -52,7 +52,7 @@
     /// so is what is no word but encoded (a gap, a side mark, a figure, a
     /// running head's page number, a date: `data-gloss-element`, its place
     /// among the page's elements); the client asks this address for it
-    /// (`?resemblance=…&line=…&word=…`, or `&element=…`). Nil: the markup
+    /// (`?image=…&line=…&word=…`, or `&element=…`). Nil: the markup
     /// is read whole.
     let glossURL: String?
     /// The one page drawn, by its place in the document from 0, where a
@@ -443,7 +443,7 @@
       }
     }
 
-    /// Runs, a quotation's sentence, or its word, marked as the page has it:
+    /// Runs, a quote's sentence, or its word, marked as the page has it:
     /// one mark over the runs it covers.
     private func highlighted(_ runs: [TEILine.Run], facsimileURL: String, tabStop: TEIWordPlace?) -> [DOM.Node] {
       var marked: [(highlight: TEIHighlight.Kind?, runs: [TEILine.Run])] = []
@@ -1038,11 +1038,11 @@
               }
               if editable {
                 // A form of its own, so the page can be sent to be read back
-                // as it is being edited—its resemblance and its code.
+                // as it is being edited—its image and its code.
                 form {
                   input()
                     .type(.hidden)
-                    .name("resemblance")
+                    .name("image")
                     .value(Self.serviceID(ofFacsimile: page.facsimileURL))
                   CodeEditorView(
                     id: "tei-page-raw-\(index + firstIndex)",
@@ -1147,7 +1147,7 @@
       .data("editable", editable)
       .data("gloss", glossURL ?? "")
       .style {
-        // The pane it sits in (the reader's markup pane, a quotation's
+        // The pane it sits in (the reader's markup pane, a quote's
         // frame) has no padding, so a ring drawn on the pane sits on its own
         // edges; the view's 1px keeps the ring's inward outline clear of
         // what it holds (user, 2026-10-10). The text's 16 inset is its
@@ -1857,7 +1857,7 @@
           backgroundColor(.transparent)
           padding(0)
         }
-        // A quotation's sentence, and, more strongly by its color alone
+        // A quote's sentence, and, more strongly by its color alone
         // (a weight would fight the page's own bold), its word, boxed in
         // pale red as the OED sets it: the red alert's own pairing of fill
         // and border.
