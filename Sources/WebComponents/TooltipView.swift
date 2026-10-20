@@ -20,11 +20,16 @@ import WebTypes
 /// A trigger that holds controls of its own (a reaction pill's buttons)
 /// passes `pins: false`: its clicks and taps are its controls', and the
 /// tooltip shows on hover and focus alone.
+///
+/// A bubble of structured content (a session's context bar: its rows and
+/// totals) takes the `.popover` appearance: the page's surface, a subtle
+/// border and no arrow, opened and placed exactly as a tooltip is.
 public struct TooltipView: HTMLContent {
   let bubble: [DOM.Node]
   let placement: Placement
   let font: Font
   let bubbleWidth: Width
+  let appearance: Appearance
   let children: [DOM.Node]
   let pins: Bool
   let `class`: String
@@ -121,17 +126,27 @@ public struct TooltipView: HTMLContent {
     case wide
   }
 
+  /// How the bubble looks: the inverted tooltip, or a popover's surface
+  /// for rows and columns to read (no arrow, the trigger's cursor a
+  /// pointer).
+  public enum Appearance: String, Sendable {
+    case tooltip
+    case popover
+  }
+
   public init(
     tooltip: String,
     placement: Placement = .bottom,
     font: Font = .sans,
     width: Width = .standard,
+    appearance: Appearance = .tooltip,
     pins: Bool = true,
     class: String = "",
     @HTMLBuilder content: () -> [DOM.Node]
   ) {
     self.bubble = [DOM.Text(tooltip)]
     self.bubbleWidth = width
+    self.appearance = appearance
     self.placement = placement
     self.font = font
     self.children = content()
@@ -143,6 +158,7 @@ public struct TooltipView: HTMLContent {
     placement: Placement = .bottom,
     font: Font = .sans,
     width: Width = .standard,
+    appearance: Appearance = .tooltip,
     pins: Bool = true,
     class: String = "",
     @HTMLBuilder bubble: () -> [DOM.Node],
@@ -150,6 +166,7 @@ public struct TooltipView: HTMLContent {
   ) {
     self.bubble = bubble()
     self.bubbleWidth = width
+    self.appearance = appearance
     self.placement = placement
     self.font = font
     self.children = content()
@@ -173,9 +190,11 @@ public struct TooltipView: HTMLContent {
       .class("tooltip-content")
       .data("font", font.rawValue)
       .data("width", bubbleWidth.rawValue)
+      .data("appearance", appearance.rawValue)
     }
     .class(stringIsEmpty(`class`) ? "tooltip-view tooltip-trigger" : "tooltip-view tooltip-trigger \(`class`)")
     .data("tooltip", "true")
+    .data("appearance", appearance.rawValue)
     .data("placement", placement.rawValue)
     .data("pins", pins)
     .data("visible", false)
@@ -455,6 +474,31 @@ public struct TooltipView: HTMLContent {
         "[data-dimmed='true'] &[data-placement^='right'] .tooltip-content::after"
       ) {
         CSS.Property("border-right-color", Self.dimmed(backgroundColorInverted))
+      }
+      // The popover appearance: the page's surface and text, a subtle
+      // border, padding equal on every side, no arrow; its trigger opens
+      // it, so it takes the pointer.
+      selector("&[data-appearance='popover']") {
+        cursor(.pointer)
+      }
+      selector("& .tooltip-content[data-appearance='popover']") {
+        backgroundColor(backgroundColorBase)
+        color(colorBase)
+        border(borderWidthBase, .solid, borderColorSubtle)
+        padding(spacing12)
+      }
+      selector("& .tooltip-content[data-appearance='popover']::after") {
+        display(.none)
+      }
+      selector("& .tooltip-content[data-appearance='popover'] time") {
+        color(colorBase).important()
+      }
+      selector(
+        "&[data-dimmed='true'] .tooltip-content[data-appearance='popover']",
+        "[data-dimmed='true'] & .tooltip-content[data-appearance='popover']"
+      ) {
+        CSS.Property("background-color", Self.dimmed(backgroundColorBase))
+        CSS.Property("color", Self.dimmed(colorBase))
       }
     }
   }
