@@ -61,9 +61,9 @@ public struct LabelView: HTMLContent {
     self.descriptionContent = description()
   }
 
-  /// The info icon beside the label: a tooltip's control, as large as the
-  /// label's text.
-  private var infoIconSize: CSS.Length { labelFontSize }
+  /// The info icon beside the label: a tooltip's control, as tall as the
+  /// label's 26px line.
+  private var infoIconSize: CSS.Length { lineHeightMedium26 }
 
   public func build() -> DOM.Node {
     let hasDescription = !descriptionContent.isEmpty
