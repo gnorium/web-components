@@ -826,21 +826,6 @@
       return max(count, 1)
     }
 
-    /// Every lined editor under `root` numbered again: a host changed where
-    /// its numbers start (`--line-offset`, a document's header shown over
-    /// its page).
-    public static func renumber(in root: DOM.Element) {
-      for code in root.querySelectorAll(".code-code[data-code-editing='true'][data-code-lined='true']") {
-        number(code)
-      }
-    }
-
-    /// Where a lined editor's numbers start, less one: its `--line-offset`
-    /// (`CodeView`), 0 where none is set.
-    static func lineOffset(_ code: DOM.Element) -> Int {
-      parseInt(stringTrim(window.getComputedStyle(code).getPropertyValue("--line-offset"))) ?? 0
-    }
-
     /// How many numbers the editor's gutter shows now.
     static func numberedLines(_ code: DOM.Element) -> Int {
       code.parentElement?.querySelector(".code-gutter-lines")?.childElementCount ?? 0
@@ -876,11 +861,10 @@
       }
       var tops: [Double] = []
       var numbers: [DOM.Element] = []
-      let offset = lineOffset(code)
       // An empty editor still has its first line (user, 2026-10-15).
       if starts.isEmpty {
         let number = document.createElement(.span)
-        number.textContent = intToString(offset + 1)
+        number.textContent = "1"
         number.setAttribute(.style, "top: " + intToString(Int(codeRect.top - parentRect.top)) + "px")
         number.setAttribute(data("top"), doubleToString(codeRect.top - parentRect.top))
         numbers.append(number)
@@ -892,7 +876,7 @@
         guard let rect = range.getBoundingClientRect() else { continue }
         tops.append(rect.top - parentRect.top)
         let number = document.createElement(.span)
-        number.textContent = intToString(offset + line + 1)
+        number.textContent = intToString(line + 1)
         number.setAttribute(.style, "top: " + intToString(Int(rect.top - parentRect.top)) + "px")
         number.setAttribute(data("top"), doubleToString(rect.top - parentRect.top))
         numbers.append(number)
@@ -901,7 +885,7 @@
       // digit; the code is set off by it (its own `--gutter`), so a line
       // the browser wrote outside a line's block—typed into an emptied
       // editor, pasted—is never under the numbers (user, 2026-10-15).
-      let width = CodeLines.gutter(lines: offset + max(starts.count, 1))
+      let width = CodeLines.gutter(lines: max(starts.count, 1))
       code.style.setProperty("--gutter", width)
       gutter.setAttribute(
         .style, "left: " + intToString(Int(codeRect.left - parentRect.left)) + "px; --gutter: " + width)

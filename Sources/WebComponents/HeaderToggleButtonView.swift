@@ -4,10 +4,10 @@ import DOMBuilder
 import HTMLBuilder
 import WebTypes
 
-/// Shows a document's header above its code (user, 2026-10-20): beside the
-/// XML switch, and like it subtle and bordered; enabled only while the code
-/// shows. "Header" is the browser's own tooltip; "Show the header" its
-/// accessible name.
+/// Shows a document's header, as code (user, 2026-10-21): after the XML
+/// switch where there is one, and like it subtle and bordered, but never
+/// tied to it—a header shows with or without its pages' XML. "Header" is the
+/// browser's own tooltip; "Show the header" its accessible name.
 public struct HeaderToggleButtonView: HTMLContent {
   let pressed: Bool
   let disabled: Bool
