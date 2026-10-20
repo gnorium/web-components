@@ -21,7 +21,9 @@ public struct BreadcrumbSeparatorView: HTMLContent {
 
   public func build() -> DOM.Node {
     span {
-      NextIconView(size: sizeIconSmall)
+      // Punctuation between words, not a mark beside them: the text's font
+      // size, never its line height (user, 2026-10-21).
+      NextIconView(size: fontSizeMedium16)
     }
     .class(stringIsEmpty(`class`) ? "breadcrumb-separator-view" : "breadcrumb-separator-view \(`class`)")
     .ariaHidden(true)

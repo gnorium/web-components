@@ -165,10 +165,11 @@ public struct RecordLabelView: HTMLContent {
         color(colorSubtle)
         verticalAlign(.baseline)
       }
-      // As tall as the label's 22px line.
+      // Punctuation between the words: the meta line's 16px font size,
+      // never its line height (user, 2026-10-21).
       descendant(".breadcrumb-separator-view") { lineHeight(lineHeightSmall22) }
       descendant(".breadcrumb-separator-view .next-icon-view") {
-        height(lineHeightSmall22).important()
+        height(fontSizeMedium16).important()
       }
       descendant(".record-label-meta") {
         fontSize(fontSizeMedium16)

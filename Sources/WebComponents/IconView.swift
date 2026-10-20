@@ -14,6 +14,12 @@ import WebTypes
 /// the 26px line of 16px body text—and a control on the 22px line takes
 /// lineHeightSmall22. It fills the line box, never grows it, and centers
 /// on the capitals beside it (`centerOnCapitals`) or in the line box.
+///
+/// The exception is an icon that stands in for punctuation between words—a
+/// breadcrumb's chevron (BreadcrumbSeparatorView, BreadcrumbLabelView,
+/// RecordLabelView), an inline arrow in "X → Y" (the Graph's paths): it is
+/// the FONT size of its text (fontSizeMedium16 beside 16px text), as a
+/// character would be (user, 2026-10-21).
 public struct IconView: HTMLContent {
   let icon: [DOM.Node]
   let iconLabel: String?
