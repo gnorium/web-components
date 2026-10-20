@@ -12,8 +12,10 @@ import WebTypes
 /// An icon beside text is as tall as that text's line (user, 2026-10-21;
 /// was its font size): the icon size tokens are line heights—sizeIconSmall
 /// the 26px line of 16px body text—and a control on the 22px line takes
-/// lineHeightSmall22. It fills the line box, never grows it, and centers
-/// on the capitals beside it (`centerOnCapitals`) or in the line box.
+/// lineHeightSmall22. It fills the line box, never grows it, and is
+/// centered in it: a line's middle is the capitals' middle, so its flex row
+/// aligns `center` (`flex-start` where the text wraps), with no
+/// `centerOnCapitals` offset, which is only for a mark smaller than its line.
 ///
 /// The exception is an icon that stands in for punctuation between words—a
 /// breadcrumb's chevron (BreadcrumbSeparatorView, BreadcrumbLabelView,

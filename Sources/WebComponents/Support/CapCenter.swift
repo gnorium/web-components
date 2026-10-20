@@ -16,6 +16,16 @@ public func capCenterOffset(_ size: CSS.Length) -> CSS.Length {
 /// own line box: nothing is trimmed, wrapped lines keep their leading, and
 /// the words beside the mark stay on one baseline.
 ///
+/// Only for a mark SMALLER than its line (user, 2026-10-21), such as an icon
+/// at the font size standing in for punctuation. A mark as tall as the line
+/// of the text beside it—every icon sized by a line-height token—needs no
+/// offset: a line's middle is the capitals' middle (within 0.2px), so its
+/// flex row aligns `center` (or `flex-start`, the mark one line tall, where
+/// the text wraps and the mark keeps the first line). Here, such a mark's
+/// baseline alignment would put its bottom on the text's baseline and push
+/// the row's text down by the descent, which the offset then only half
+/// undoes.
+///
 /// An inline mark (inline-block, inline-flex) in a line of text takes
 /// `vertical-align: calc(0.5cap - size / 2)`. A flex item ignores
 /// `vertical-align`, so with `flexItem` the mark aligns on the row's
