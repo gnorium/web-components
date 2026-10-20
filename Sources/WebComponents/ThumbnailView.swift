@@ -84,10 +84,11 @@
           display(.flex)
           alignItems(.center)
           justifyContent(.center)
-          width(sizeIconMedium)
-          height(sizeIconMedium)
+          // A placeholder in a fixed box, beside no text: its own size.
+          width(size20)
+          height(size20)
           color(colorPlaceholder)
-          fontSize(sizeIconMedium)
+          fontSize(size20)
         }
       }
     }

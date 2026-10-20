@@ -166,7 +166,7 @@ public struct DatePickerView: HTMLContent {
       )
 
       ButtonView(
-        icon: IconView(icon: { s in CalendarIconView(size: s) }, size: sizeIconSmall),
+        icon: IconView(icon: { s in CalendarIconView(size: s) }, size: ButtonView.ButtonSize.medium.iconSize),
         weight: .plain,
         size: .medium,
         disabled: disabled,
@@ -287,7 +287,7 @@ public struct DatePickerView: HTMLContent {
       // the read-only grey, and room at the end for the calendar button, as
       // a text input's end icon has.
       descendant(".date-picker-field .text-input-input") {
-        paddingInlineEnd(calc(spacing12 + sizeIconMedium + spacing8)).important()
+        paddingInlineEnd(calc(spacing12 + lineHeightSmall22 + spacing8)).important()
         backgroundColor(backgroundColorBase).important()
         cursor(.pointer).important()
         userSelect(.none)
@@ -448,7 +448,7 @@ public struct DatePickerView: HTMLContent {
   @HTMLBuilder
   private func navigation(title: String, labelID: String) -> [DOM.Node] {
     ButtonView(
-      icon: IconView(icon: { s in PreviousIconView(size: s) }, size: sizeIconSmall),
+      icon: IconView(icon: { s in PreviousIconView(size: s) }, size: ButtonView.ButtonSize.medium.iconSize),
       weight: .plain,
       size: .medium,
       ariaLabel: "Previous month",
@@ -469,7 +469,7 @@ public struct DatePickerView: HTMLContent {
     .class("date-picker-heading")
     .ariaLive(.polite)
     ButtonView(
-      icon: IconView(icon: { s in NextIconView(size: s) }, size: sizeIconSmall),
+      icon: IconView(icon: { s in NextIconView(size: s) }, size: ButtonView.ButtonSize.medium.iconSize),
       weight: .plain,
       size: .medium,
       ariaLabel: "Next month",

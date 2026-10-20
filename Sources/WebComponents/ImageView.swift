@@ -150,7 +150,8 @@
           justifyContent(.center)
           backgroundColor(backgroundColorBase)
           color(colorPlaceholder)
-          fontSize(sizeIconMedium)
+          // A placeholder in a fixed box, beside no text: its own size.
+          fontSize(size20)
         }
       }
     }

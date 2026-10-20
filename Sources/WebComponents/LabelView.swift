@@ -206,8 +206,9 @@ public struct LabelView: HTMLContent {
           display(.inlineFlex)
           alignItems(.center)
           justifyContent(.center)
-          width(minSizeIconMedium)
-          height(minSizeIconMedium)
+          // As tall as the label's 26px line.
+          width(sizeIconSmall)
+          height(sizeIconSmall)
           color(colorSubtle)
           flexShrink(0)
         }

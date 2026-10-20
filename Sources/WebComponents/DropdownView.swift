@@ -259,12 +259,12 @@ public struct DropdownView: HTMLContent {
               .data("stacked", optionLayout == .stacked)
               .title(options.first { stringEquals($0.value, selectedValue ?? "") }?.altDisplay ?? displayText)
 
-            // Animated chevron icon, beside the value's text: its size.
-            let chevronDim = textFontSize
+            // Animated chevron icon, beside the value's text: its line
+            // (the button's 22px line).
             AnimatedUpDownChevronView(
               id: "dropdown-\(id)",
               expanded: false,
-              size: chevronDim,
+              size: ButtonView.ButtonSize.medium.iconSize,
               class: "dropdown-chevron"
             )
           }

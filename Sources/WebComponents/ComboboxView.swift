@@ -186,7 +186,7 @@ public struct ComboboxView: HTMLContent {
         // Shows every suggestion, whatever is typed; not a stop in the tab
         // order (the arrow keys open the list from the field).
         button {
-          AnimatedUpDownChevronView(id: "combobox-\(id)", expanded: false, size: sizeIconSmall)
+          AnimatedUpDownChevronView(id: "combobox-\(id)", expanded: false, size: lineHeightSmall22)
         }
         .type(.button)
         .class("combobox-toggle")
@@ -270,7 +270,7 @@ public struct ComboboxView: HTMLContent {
       }
       // Room for the toggle at the field's end.
       descendant(".combobox-input-wrapper .text-input-input") {
-        paddingInlineEnd(calc(spacing12 + sizeIconMedium + spacing8))
+        paddingInlineEnd(calc(spacing12 + lineHeightSmall22 + spacing8))
       }
       // The toggle the field's full height, its icon where a field's end
       // icon sits: 12 inside the border.
@@ -282,7 +282,7 @@ public struct ComboboxView: HTMLContent {
         display(.flex)
         alignItems(.center)
         justifyContent(.center)
-        width(calc(borderWidthBase + spacing12 + sizeIconMedium + spacing12))
+        width(calc(borderWidthBase + spacing12 + lineHeightSmall22 + spacing12))
         padding(0)
         color(colorSubtle)
         backgroundColor(backgroundColorTransparent)

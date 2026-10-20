@@ -161,7 +161,7 @@
             // close button's × across from it.
             // A state rather than a verdict (a session waiting or running)
             // shows its own mark: the ring, the rotating sector.
-            if let mark { mark } else { StatusIconView(displayIcon, size: sizeIconSmall) }
+            if let mark { mark } else { StatusIconView(displayIcon, size: lineHeightSmall22) }
           }
           .class("alert-icon")
           .ariaHidden(true)
@@ -175,6 +175,8 @@
               justifyContent(.center)
               height(lineHeightSmall22)
               flexShrink(0)
+              // A caller's mark sized with the icon token fills the line.
+              customProperty("--size-icon-small", lineHeightSmall22.value)
             }
             selector("& svg") {
               display(.block)
@@ -280,7 +282,7 @@
           }
           selector("&.alert-inline .alert-icon") {
             display(.inlineFlex)
-            height(sizeIconSmall)
+            height(lineHeightSmall22)
             verticalAlign(.middle)
             paddingInlineEnd(spacing8)
           }
@@ -635,7 +637,7 @@
       // Icon
       let iconElement = document.createElement(.span)
       iconElement.className = "alert-icon"
-      iconElement.innerHTML = StatusIconView(displayIcon, size: sizeIconSmall).render()
+      iconElement.innerHTML = StatusIconView(displayIcon, size: lineHeightSmall22).render()
       iconElement.setAttribute(.ariaHidden, true)
       switch type {
       case .gray: iconElement.setAttribute(data("color"), "gray")
@@ -656,7 +658,7 @@
       if allowUserDismiss {
         let dismissBtn = document.createElement(.button)
         dismissBtn.className = "alert-dismiss"
-        dismissBtn.innerHTML = CloseIconView(size: sizeIconSmall).render()
+        dismissBtn.innerHTML = CloseIconView(size: lineHeightSmall22).render()
         // Sized inline as well: the opening measures the alert's height at
         // once, before a just-requested alert-view.css may have arrived, and
         // a button measured at its unstyled size makes the alert jump 2px

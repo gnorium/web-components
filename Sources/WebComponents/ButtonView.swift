@@ -119,20 +119,15 @@ public struct ButtonView: HTMLContent {
       padding * 2 + lineHeightSmall22 + borderWidthBase * 2
     }
 
-    /// The size of an icon-only button's icon: 12, 14, 16, 18px, as an icon
-    /// token where one matches—the size's own type size. An icon alone sets
-    /// its own size; beside a label, see labelIconSize.
+    /// The size of an icon-only button's icon: the button's line, 22px at
+    /// every size (user, 2026-10-21; was its type size)—the icon fills the
+    /// line box and never grows the button.
     public var iconSize: CSS.Length {
-      switch self {
-      case .mini: return fontSizeXSmall12
-      case .small: return fontSizeSmall14
-      case .medium: return sizeIconSmall
-      case .large: return fontSizeLarge18
-      }
+      lineHeightSmall22
     }
 
-    /// The size of an icon beside this button's label: its text's font
-    /// size (user, 2026-10-10), as an icon alone—12, 14, 16, 18px.
+    /// The size of an icon beside this button's label: the label's line
+    /// height, as an icon alone—22px.
     public var labelIconSize: CSS.Length {
       iconSize
     }
@@ -157,7 +152,6 @@ public struct ButtonView: HTMLContent {
       selector("\(phoneStep) &[data-size='small']") {
         minHeight(miniMinSize).important()
         fontSize(fontSizeXSmall12).important()
-        customProperty("--size-icon-small", fontSizeXSmall12.value).important()
       }
       selector("\(phoneStep) &[data-full-width='false'][data-size='small']") { minWidth(miniMinSize).important() }
       selector("\(phoneStep) &[data-icon-only='true'][data-size='small']") {
@@ -165,7 +159,6 @@ public struct ButtonView: HTMLContent {
         height(miniMinSize).important()
       }
       selector("\(phoneStep) &[data-icon-only='false'][data-size='small']") { padding(miniPadding).important() }
-      selector("\(phoneStep) &[data-size='small'] .button-icon") { height(fontSizeXSmall12).important() }
       selector("\(phoneStep) &[data-size='medium']") {
         minHeight(smallMinSize).important()
         fontSize(fontSizeSmall14).important()
@@ -176,11 +169,6 @@ public struct ButtonView: HTMLContent {
         height(smallMinSize).important()
       }
       selector("\(phoneStep) &[data-icon-only='false'][data-size='medium']") { padding(smallPadding).important() }
-      // Its icon its type's size: the icon token, there, is the small type's
-      // (an icon sizes its long edge by it).
-      selector("\(phoneStep) &[data-size='medium']") {
-        customProperty("--size-icon-small", fontSizeSmall14.value).important()
-      }
       selector("\(phoneStep) &[data-size='large']") {
         minHeight(ButtonSize.medium.minSize).important()
         fontSize(fontSizeMedium16).important()
@@ -194,11 +182,6 @@ public struct ButtonView: HTMLContent {
       }
       selector("\(phoneStep) &[data-icon-only='false'][data-size='large']") {
         padding(ButtonSize.medium.padding).important()
-      }
-      // Its icon the medium type's size: the large type token, there, is
-      // the medium's.
-      selector("\(phoneStep) &[data-size='large']") {
-        customProperty("--font-size-large-18", fontSizeMedium16.value).important()
       }
     }
   }
@@ -481,6 +464,10 @@ public struct ButtonView: HTMLContent {
             // The standard line at every size: the height is the inset,
             // this line and the border (ButtonSize.minSize).
             lineHeight(lineHeightSmall22)
+            // An icon fills the line: the icon token, here, is the 22px
+            // line's (ButtonSize.iconSize), so an icon a caller sized with
+            // it never grows the button.
+            customProperty("--size-icon-small", lineHeightSmall22.value)
             textDecoration(.none)
             textAlign(.center)
             verticalAlign(.middle)
@@ -563,14 +550,10 @@ public struct ButtonView: HTMLContent {
           selector("&[data-size='mini']") {
             minHeight(ButtonSize.mini.minSize)
             fontSize(fontSizeXSmall12)
-            customProperty("--size-icon-small", fontSizeXSmall12.value)
           }
           selector("&[data-size='small']") {
             minHeight(ButtonSize.small.minSize)
             fontSize(fontSizeSmall14)
-            // An icon its type's size: the icon token, here, is the small
-            // type's (an icon sizes its long edge by it).
-            customProperty("--size-icon-small", fontSizeSmall14.value)
           }
           selector("&[data-size='medium']") { minHeight(ButtonSize.medium.minSize) }
           selector("&[data-size='large']") {
@@ -1273,11 +1256,8 @@ public struct ButtonView: HTMLContent {
             justifyContent(.center)
           }
           // The box is as wide as its icon and as tall as the button's
-          // text (ButtonSize.iconSize), so the icon sits on the label's line.
-          selector("&[data-size='mini'] .button-icon") { height(ButtonSize.mini.iconSize) }
-          selector("&[data-size='small'] .button-icon") { height(ButtonSize.small.iconSize) }
-          selector("&[data-size='medium'] .button-icon") { height(ButtonSize.medium.iconSize) }
-          selector("&[data-size='large'] .button-icon") { height(ButtonSize.large.iconSize) }
+          // line (ButtonSize.iconSize), so the icon fills the label's line.
+          descendant(".button-icon") { height(ButtonSize.medium.iconSize) }
           ButtonView.phoneStepDownCSS()
         }
 
@@ -1332,6 +1312,10 @@ public struct ButtonView: HTMLContent {
             // The standard line at every size: the height is the inset,
             // this line and the border (ButtonSize.minSize).
             lineHeight(lineHeightSmall22)
+            // An icon fills the line: the icon token, here, is the 22px
+            // line's (ButtonSize.iconSize), so an icon a caller sized with
+            // it never grows the button.
+            customProperty("--size-icon-small", lineHeightSmall22.value)
             textDecoration(.none)
             textAlign(.center)
             verticalAlign(.middle)
@@ -1414,14 +1398,10 @@ public struct ButtonView: HTMLContent {
           selector("&[data-size='mini']") {
             minHeight(ButtonSize.mini.minSize)
             fontSize(fontSizeXSmall12)
-            customProperty("--size-icon-small", fontSizeXSmall12.value)
           }
           selector("&[data-size='small']") {
             minHeight(ButtonSize.small.minSize)
             fontSize(fontSizeSmall14)
-            // An icon its type's size: the icon token, here, is the small
-            // type's (an icon sizes its long edge by it).
-            customProperty("--size-icon-small", fontSizeSmall14.value)
           }
           selector("&[data-size='medium']") { minHeight(ButtonSize.medium.minSize) }
           selector("&[data-size='large']") {
@@ -1467,11 +1447,8 @@ public struct ButtonView: HTMLContent {
             justifyContent(.center)
           }
           // The box is as wide as its icon and as tall as the button's
-          // text (ButtonSize.iconSize), so the icon sits on the label's line.
-          selector("&[data-size='mini'] .button-icon") { height(ButtonSize.mini.iconSize) }
-          selector("&[data-size='small'] .button-icon") { height(ButtonSize.small.iconSize) }
-          selector("&[data-size='medium'] .button-icon") { height(ButtonSize.medium.iconSize) }
-          selector("&[data-size='large'] .button-icon") { height(ButtonSize.large.iconSize) }
+          // line (ButtonSize.iconSize), so the icon fills the label's line.
+          descendant(".button-icon") { height(ButtonSize.medium.iconSize) }
           ButtonView.phoneStepDownCSS()
 
           // Quiet/Plain—opaque base bg + transparent border (mirrors <a> branch)

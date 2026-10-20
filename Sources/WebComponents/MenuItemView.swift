@@ -177,7 +177,8 @@
           items.append(
             span {
               if selected {
-                span { CheckIconView(size: sizeIconSmall) }
+                // Inside the 20px checkbox, not beside text: its own size.
+                span { CheckIconView(size: size16) }
                   .class("menu-item-checkmark")
                   .ariaHidden(true)
               }
@@ -384,8 +385,10 @@
         display(.inlineFlex)
         alignItems(.center)
         justifyContent(.center)
-        width(sizeIconMedium)
-        height(sizeIconMedium)
+        // A checkbox's box, as CheckboxView's: a binary input, not an icon
+        // beside text.
+        width(minSizeInputBinary)
+        height(minSizeInputBinary)
         flexShrink(0)
         border(borderWidthBase, .solid, borderColorInputBinary)
         borderRadius(borderRadiusBase)
@@ -397,8 +400,8 @@
       }
       descendant(".menu-item-checkmark") {
         display(.flex)
-        width(sizeIconSmall)
-        height(sizeIconSmall)
+        width(size16)
+        height(size16)
         color(colorOnSolid)
       }
       selector("& .menu-item-checkmark svg") {
@@ -428,8 +431,9 @@
         display(.inlineFlex)
         alignItems(.center)
         justifyContent(.center)
-        width(sizeIconMedium)
-        height(sizeIconMedium)
+        // As tall as the label's line beside it.
+        width(lineHeightSmall22)
+        height(lineHeightSmall22)
         flexShrink(0)
         color(colorSubtle)
         fontSize(fontSizeLarge18)

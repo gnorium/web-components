@@ -18,7 +18,7 @@ public struct MarkdownToggleButtonView: HTMLContent {
   public func build() -> DOM.Node {
     let view = ToggleButtonView(
       label: "Markdown",
-      icon: IconView(icon: { s in MarkdownIconView(size: s) }, size: sizeIconSmall),
+      icon: IconView(icon: { s in MarkdownIconView(size: s) }, size: ButtonView.ButtonSize.medium.iconSize),
       modelValue: pressed, weight: .subtle, buttonColor: .gray,
       disabled: disabled, iconOnly: true,
       ariaLabel: "Markdown mode (edit source)", size: .medium,

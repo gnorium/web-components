@@ -220,9 +220,11 @@
               display(.flex)
               alignItems(.center)
               justifyContent(.center)
-              // Beside the item's 16px text: its size.
-              width(sizeIconSmall)
-              height(sizeIconSmall)
+              // Beside the item's text: its 22px line.
+              width(lineHeightSmall22)
+              height(lineHeightSmall22)
+              // An icon a caller sized with the icon token fills it.
+              customProperty("--size-icon-small", lineHeightSmall22.value)
               flexShrink(0)
             }
           }

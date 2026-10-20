@@ -260,8 +260,8 @@ public struct AccordionView: HTMLContent {
           AnimatedRightDownChevronView(
             id: "accordion-\(id)",
             expanded: isOpen,
-            // Beside the title: its text size.
-            size: IconView.size(beside: titleFontSize)
+            // Beside the title: its 22px line.
+            size: lineHeightSmall22
           )
         }
         .class("accordion-expand-icon")

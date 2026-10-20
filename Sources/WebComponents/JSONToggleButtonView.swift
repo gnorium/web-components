@@ -17,7 +17,7 @@ public struct JSONToggleButtonView: HTMLContent {
   public func build() -> DOM.Node {
     let view = ToggleButtonView(
       label: "JSON",
-      icon: IconView(icon: { s in BracesIconView(size: s) }, size: sizeIconSmall),
+      icon: IconView(icon: { s in BracesIconView(size: s) }, size: ButtonView.ButtonSize.medium.iconSize),
       modelValue: pressed, weight: .subtle, buttonColor: .gray,
       disabled: disabled, iconOnly: true,
       ariaLabel: "JSON mode (edit source)", size: .medium,

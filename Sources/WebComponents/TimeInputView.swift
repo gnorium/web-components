@@ -131,7 +131,7 @@ public struct TimeInputView: HTMLContent {
       )
 
       ButtonView(
-        icon: IconView(icon: { s in ClockIconView(size: s) }, size: sizeIconSmall),
+        icon: IconView(icon: { s in ClockIconView(size: s) }, size: ButtonView.ButtonSize.medium.iconSize),
         weight: .plain,
         size: .medium,
         disabled: disabled,
@@ -194,7 +194,7 @@ public struct TimeInputView: HTMLContent {
       // text input's inset and height, no caret, the base background, room
       // at the end for the clock, as a text input's end icon has.
       descendant(".time-input-field .text-input-input") {
-        paddingInlineEnd(calc(spacing12 + sizeIconMedium + spacing8)).important()
+        paddingInlineEnd(calc(spacing12 + lineHeightSmall22 + spacing8)).important()
         backgroundColor(backgroundColorBase).important()
         cursor(.pointer).important()
         userSelect(.none)

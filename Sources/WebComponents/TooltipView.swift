@@ -1053,7 +1053,7 @@ public struct TooltipView: HTMLContent {
     ) -> DOM.Element {
       let wrapper = document.createElement(.span)
       // Beside 16px text (a session card's title): an info icon is the
-      // tooltip's control, as large as its text.
+      // tooltip's control, as tall as its text's line.
       let view = TooltipView(tooltip: text, placement: placement, font: font) {
         InfoIconView(size: sizeIconSmall)
       }

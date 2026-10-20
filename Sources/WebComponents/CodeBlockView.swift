@@ -222,11 +222,11 @@
 
         let copyIcon = document.createElement(.span)
         copyIcon.classList.add("copy-icon")
-        copyIcon.appendChild(CopyIconFactory.createElement(size: sizeIconSmall))
+        copyIcon.appendChild(CopyIconFactory.createElement(size: ButtonView.ButtonSize.medium.iconSize))
 
         let successIcon = document.createElement(.span)
         successIcon.classList.add("success-icon")
-        successIcon.appendChild(CheckIconFactory.createElement(size: sizeIconSmall))
+        successIcon.appendChild(CheckIconFactory.createElement(size: ButtonView.ButtonSize.medium.iconSize))
 
         button.appendChild(copyIcon)
         button.appendChild(successIcon)

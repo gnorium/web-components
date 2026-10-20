@@ -595,8 +595,8 @@ public struct TableView: HTMLContent {
                                 }
                                 return false
                               }(),
-                              // Beside the 16px header: its size.
-                              size: sizeIconSmall
+                              // Beside the header: its 22px line.
+                              size: lineHeightSmall22
                             )
                           }
                           .class("table-sort-icon")
@@ -763,8 +763,8 @@ public struct TableView: HTMLContent {
                                 AnimatedRightDownChevronView(
                                   id: "table-group-\(gid)",
                                   expanded: false,
-                                  // Beside the 16px header: its size.
-                                  size: sizeIconSmall
+                                  // Beside the header: its 22px line.
+                                  size: lineHeightSmall22
                                 )
                               }
                               // Child rows get indentation
@@ -1327,8 +1327,8 @@ public struct TableView: HTMLContent {
         display(.inlineFlex)
         alignItems(.center)
         justifyContent(.center)
-        width(sizeIconSmall)
-        height(sizeIconSmall)
+        width(lineHeightSmall22)
+        height(lineHeightSmall22)
         fontSize(fontSizeMedium16)
         flexShrink(0)
       }

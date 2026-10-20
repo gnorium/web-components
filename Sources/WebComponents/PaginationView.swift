@@ -104,20 +104,14 @@ public struct PaginationView: HTMLContent {
     // The chrome size (medium) sets "of" and the total apart and keeps its
     // chevrons beside the number.
     let chrome: Bool
-    let iconSize: CSS.Length
     switch size {
-    case .normal:
-      chrome = false
-      iconSize = sizeIconSmall
-    case .medium:
-      chrome = true
-      // Icon-only chevrons on par with the pager's 16px text ("of 3") take
-      // the text's size (user, 2026-10-09), as every icon beside text.
-      iconSize = sizeIconSmall
-    case .large:
-      chrome = true
-      iconSize = fontSizeLarge18
+    case .normal: chrome = false
+    case .medium, .large: chrome = true
     }
+    // Icon-only chevrons on par with the pager's text ("of 3") are as tall
+    // as its 22px line at every size (user, 2026-10-21), as every icon
+    // beside text.
+    let iconSize: CSS.Length = lineHeightSmall22
     // The number box's inset: its control size's.
     let inset: CSS.Length
     switch size {
@@ -464,11 +458,6 @@ public struct PaginationView: HTMLContent {
           fontSize(fontSizeSmall14).important()
         }
         selector("\(ButtonView.phoneStep) &.pagination-size-medium .pagination-indicator") { gap(spacing4).important() }
-        // Its chevrons its words' size, as a small button's icon: the icon
-        // token, there, is the small type's.
-        selector("\(ButtonView.phoneStep) &.pagination-size-medium") {
-          customProperty("--size-icon-small", fontSizeSmall14.value).important()
-        }
         // A large pager medium.
         selector(
           "\(ButtonView.phoneStep) &.pagination-size-large .pagination-prev",
@@ -486,11 +475,6 @@ public struct PaginationView: HTMLContent {
           "\(ButtonView.phoneStep) &.pagination-size-large .pagination-total"
         ) {
           fontSize(fontSizeMedium16).important()
-        }
-        // Its chevrons the medium type's size: the large type token, there,
-        // is the medium's.
-        selector("\(ButtonView.phoneStep) &.pagination-size-large") {
-          customProperty("--font-size-large-18", fontSizeMedium16.value).important()
         }
       }
     }

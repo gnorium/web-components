@@ -163,8 +163,8 @@
               display(.inlineFlex)
               alignItems(.center)
               justifyContent(.center)
-              width(sizeIconMedium)
-              height(sizeIconMedium)
+              width(lineHeightSmall22)
+              height(lineHeightSmall22)
               flexShrink(0)
               color(colorSubtle)
             }
@@ -265,8 +265,8 @@
               display(.inlineFlex)
               alignItems(.center)
               justifyContent(.center)
-              width(sizeIconMedium)
-              height(sizeIconMedium)
+              width(lineHeightSmall22)
+              height(lineHeightSmall22)
               flexShrink(0)
               color(colorSubtle)
             }

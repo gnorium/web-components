@@ -86,7 +86,7 @@ public struct NumberRangeInputView: HTMLContent {
       )
 
       // A dropdown's mark, turning as its menu opens.
-      AnimatedUpDownChevronView(id: "\(id)-chevron", expanded: false, size: sizeIconSmall, class: "number-range-input-indicator")
+      AnimatedUpDownChevronView(id: "\(id)-chevron", expanded: false, size: lineHeightSmall22, class: "number-range-input-indicator")
 
       PopoverView(
         id: "\(id)-popover",
@@ -123,7 +123,7 @@ public struct NumberRangeInputView: HTMLContent {
       selector("&.number-range-input-full-width") { width(perc(100)) }
       // A control, read only: a pointer, the base ground, room for the mark.
       descendant(".number-range-input-field .text-input-input") {
-        paddingInlineEnd(calc(spacing12 + sizeIconSmall + spacing12)).important()
+        paddingInlineEnd(calc(spacing12 + lineHeightSmall22 + spacing12)).important()
         backgroundColor(backgroundColorBase).important()
         cursor(.pointer).important()
         userSelect(.none)

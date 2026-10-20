@@ -20,7 +20,7 @@ public struct HeaderToggleButtonView: HTMLContent {
   public func build() -> DOM.Node {
     let view = ToggleButtonView(
       label: "Header",
-      icon: IconView(icon: { s in PanelTopIconView(size: s) }, size: sizeIconSmall),
+      icon: IconView(icon: { s in PanelTopIconView(size: s) }, size: ButtonView.ButtonSize.medium.iconSize),
       modelValue: pressed, weight: .subtle, buttonColor: .gray,
       disabled: disabled, iconOnly: true,
       ariaLabel: "Show the header", size: .medium,

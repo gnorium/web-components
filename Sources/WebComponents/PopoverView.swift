@@ -313,8 +313,9 @@ public struct PopoverView: HTMLContent {
         display(.inlineFlex)
         alignItems(.center)
         justifyContent(.center)
-        width(sizeIconMedium)
-        height(sizeIconMedium)
+        // As tall as the title's line beside it.
+        width(lineHeightSmall22)
+        height(lineHeightSmall22)
         flexShrink(0)
         color(colorSubtle)
         fontSize(fontSizeLarge18)

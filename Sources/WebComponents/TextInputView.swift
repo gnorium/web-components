@@ -296,11 +296,11 @@ public struct TextInputView: HTMLContent {
       }
       selector("&.text-input-has-start-icon .text-input-control") {
         customProperty(
-          "--edge-fade-inset-start", "calc(\(borderWidthBase.value) + \(spacing12.value) + \(sizeIconMedium.value) + \(spacing8.value))")
+          "--edge-fade-inset-start", "calc(\(borderWidthBase.value) + \(spacing12.value) + \(lineHeightSmall22.value) + \(spacing8.value))")
       }
       selector("&.text-input-has-end-icon .text-input-control", "&.text-input-clearable .text-input-control") {
         customProperty(
-          "--edge-fade-inset-end", "calc(\(borderWidthBase.value) + \(spacing12.value) + \(sizeIconMedium.value) + \(spacing8.value))")
+          "--edge-fade-inset-end", "calc(\(borderWidthBase.value) + \(spacing12.value) + \(lineHeightSmall22.value) + \(spacing8.value))")
       }
       edgeFadeView(control: "& .text-input-control", input: ".text-input-input")
       descendant(".text-input-input") {
@@ -342,10 +342,10 @@ public struct TextInputView: HTMLContent {
         outlineOffset(px(0))
       }
       selector("&.text-input-has-start-icon .text-input-input") {
-        paddingInlineStart(calc(spacing12 + sizeIconMedium + spacing8)).important()
+        paddingInlineStart(calc(spacing12 + lineHeightSmall22 + spacing8)).important()
       }
       selector("&.text-input-has-end-icon .text-input-input", "&.text-input-clearable .text-input-input") {
-        paddingInlineEnd(calc(spacing12 + sizeIconMedium + spacing8)).important()
+        paddingInlineEnd(calc(spacing12 + lineHeightSmall22 + spacing8)).important()
       }
       selector("& .text-input-input::placeholder") {
         color(colorPlaceholder).important()
@@ -372,8 +372,11 @@ public struct TextInputView: HTMLContent {
         display(.inlineFlex)
         alignItems(.center)
         justifyContent(.center)
-        width(sizeIconMedium)
-        height(sizeIconMedium)
+        width(lineHeightSmall22)
+        height(lineHeightSmall22)
+        // The field's line: an icon a caller sized with the icon token
+        // fills it.
+        customProperty("--size-icon-small", lineHeightSmall22.value)
         color(colorSubtle)
         pointerEvents(.none)
       }
@@ -387,8 +390,8 @@ public struct TextInputView: HTMLContent {
         display(.none)
         alignItems(.center)
         justifyContent(.center)
-        width(sizeIconMedium)
-        height(sizeIconMedium)
+        width(lineHeightSmall22)
+        height(lineHeightSmall22)
         padding(0)
         backgroundColor(.transparent)
         border(.none)

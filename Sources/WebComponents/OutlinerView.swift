@@ -422,7 +422,7 @@ public enum OutlineMoves {
     private static func toggle(_ node: Node, treeID: String) -> DOM.Node {
       button {
         AnimatedRightDownChevronView(
-          id: "\(treeID)-toggle-\(node.id)", expanded: true, size: sizeIconSmall)
+          id: "\(treeID)-toggle-\(node.id)", expanded: true, size: lineHeightSmall22)
       }
       .type(.button)
       .class("outliner-toggle")
@@ -517,7 +517,7 @@ public enum OutlineMoves {
         // The grip: what is pressed to pick the item up, what is dragged,
         // and what the keyboard grabs.
         let handle = button {
-          DraggableIconView(size: sizeIconSmall)
+          DraggableIconView(size: lineHeightSmall22)
         }
         .type(.button)
         .class("outliner-handle")
@@ -650,16 +650,16 @@ public enum OutlineMoves {
             // Large: a thumb's size, as the button sizes give it.
             div {
               ButtonView(
-                icon: ArrowUpIconView(size: fontSizeLarge18), weight: .quiet, size: .large,
+                icon: ArrowUpIconView(size: ButtonView.ButtonSize.large.iconSize), weight: .quiet, size: .large,
                 ariaLabel: "Move up", data: [("outliner-action", "up")])
               ButtonView(
-                icon: ArrowDownIconView(size: fontSizeLarge18), weight: .quiet, size: .large,
+                icon: ArrowDownIconView(size: ButtonView.ButtonSize.large.iconSize), weight: .quiet, size: .large,
                 ariaLabel: "Move down", data: [("outliner-action", "down")])
               ButtonView(
-                icon: ArrowPreviousIconView(size: fontSizeLarge18), weight: .quiet, size: .large,
+                icon: ArrowPreviousIconView(size: ButtonView.ButtonSize.large.iconSize), weight: .quiet, size: .large,
                 ariaLabel: "Outdent", data: [("outliner-action", "outdent")])
               ButtonView(
-                icon: ArrowNextIconView(size: fontSizeLarge18), weight: .quiet, size: .large,
+                icon: ArrowNextIconView(size: ButtonView.ButtonSize.large.iconSize), weight: .quiet, size: .large,
                 ariaLabel: "Indent", data: [("outliner-action", "indent")])
             }
             .class("outliner-toolbar-moves")

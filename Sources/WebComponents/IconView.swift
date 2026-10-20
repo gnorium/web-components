@@ -8,6 +8,12 @@ import SVGBuilder
 import WebTypes
 
 /// A graphical representation of an idea. Can be used inside other components.
+///
+/// An icon beside text is as tall as that text's line (user, 2026-10-21;
+/// was its font size): the icon size tokens are line heights—sizeIconSmall
+/// the 26px line of 16px body text—and a control on the 22px line takes
+/// lineHeightSmall22. It fills the line box, never grows it, and centers
+/// on the capitals beside it (`centerOnCapitals`) or in the line box.
 public struct IconView: HTMLContent {
   let icon: [DOM.Node]
   let iconLabel: String?
@@ -18,14 +24,6 @@ public struct IconView: HTMLContent {
   /// starts every label at the same x.
   let square: Bool
   let `class`: String
-
-  /// An icon beside text is that text's font size (user, 2026-10-10): 16px
-  /// beside 16px text, 18 beside 18—a label's icon, a legend's, a status
-  /// mark. It centers on the capitals and digits beside it by the font's
-  /// cap height (`centerOnCapitals`), never by a nudge.
-  public static func size(beside fontSize: CSS.Length) -> CSS.Length {
-    fontSize
-  }
 
   public init<T: HTMLContent>(
     icon: [T],

@@ -68,8 +68,8 @@ public struct SearchInputView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
-    // Beside the 16px text, at every size.
-    let iconSize = sizeIconSmall
+    // Beside the text: its 22px line, at every size.
+    let iconSize = lineHeightSmall22
     // The box's measures, set per size on the root (`data-size`).
     let side: CSS.Length = `var`("--search-input-padding")
     // A control's room: its icon and its 4px padding at either side; the
@@ -317,13 +317,12 @@ public struct SearchInputView: HTMLContent {
         outlineOffset(px(1)).important()
       }
       // Option B (`ButtonView.phoneStep`): a medium box small on a phone,
-      // as the buttons and the pager beside it—its inset 4, its text and
-      // icons 14px (iOS Safari zooms into it as it takes focus; accepted
+      // as the buttons and the pager beside it—its inset 4, its text 14px,
+      // its icons on the same 22px line (iOS Safari zooms into it as it takes focus; accepted
       // for small fields, user 2026-10-12).
       media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
         selector("\(ButtonView.phoneStep) &[data-size='medium']") {
           customProperty("--search-input-padding", ButtonView.smallPadding.value).important()
-          customProperty("--size-icon-small", fontSizeSmall14.value).important()
         }
         selector(
           "\(ButtonView.phoneStep) &[data-size='medium'] .search-input",

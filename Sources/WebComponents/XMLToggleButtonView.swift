@@ -17,7 +17,7 @@ public struct XMLToggleButtonView: HTMLContent {
   public func build() -> DOM.Node {
     let view = ToggleButtonView(
       label: "XML",
-      icon: IconView(icon: { s in CodeXMLIconView(size: s) }, size: sizeIconSmall),
+      icon: IconView(icon: { s in CodeXMLIconView(size: s) }, size: ButtonView.ButtonSize.medium.iconSize),
       modelValue: pressed, weight: .subtle, buttonColor: .gray,
       disabled: disabled, iconOnly: true,
       ariaLabel: "XML", size: .medium,
