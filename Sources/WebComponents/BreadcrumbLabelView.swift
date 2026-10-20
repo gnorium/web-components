@@ -60,6 +60,13 @@ public struct BreadcrumbLabelView: HTMLContent {
       descendant(".breadcrumb-separator-view") {
         color(colorSubtle)
         verticalAlign(.baseline)
+        lineHeight(lineHeightSmall22)
+      }
+      // As tall as the 22px line of the controls it mostly stands in (a
+      // dropdown's option, a record's label), so it never grows a line
+      // (user, 2026-10-21).
+      descendant(".breadcrumb-separator-view .next-icon-view") {
+        height(lineHeightSmall22)
       }
     }
   }
