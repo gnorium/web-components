@@ -7,7 +7,9 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-/// A rotating 120° ring sector, representing a translation layer loading.
+/// A rotating 120° ring sector: calibration running (its target level,
+/// calibrated, is the ring; user, 2026-10-21), arbitration on a calibrated
+/// object, and a translation layer loading.
 public struct RotatingRingSectorView: HTMLContent {
   let size: CSS.Length
   let ariaHidden: Bool
