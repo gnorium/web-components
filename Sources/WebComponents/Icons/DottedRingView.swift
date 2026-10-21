@@ -27,8 +27,9 @@ public struct DottedRingView: HTMLContent {
 
   /// Lucide's grid in the house box: a unit of the 24 grid.
   static let unit: Double = 1024 / 24
-  /// The ring's radius, 9 of the 24 grid's units.
-  static let radius: Double = 9 * unit
+  /// The ring's radius: its dots' outer edge on the box's, as RingIconView's
+  /// ring—the radius less half the stroke (a tight icon fills its box).
+  static let radius: Double = 512 - iconStrokeWidth / 2
   /// A twelfth of the circumference: the step between two dots.
   static let step: Double = 2 * 3.141592653589793 * radius / 12
   /// A dash's length, `0.01` of the grid's units: a point the round cap
