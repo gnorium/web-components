@@ -82,6 +82,8 @@ final class LucideIconTightnessTests: XCTestCase {
   ) {
     let dx = end.0 - start.0, dy = end.1 - start.1
     let chord = (dx * dx + dy * dy).squareRoot()
+    // SVG scales a radius too small for the chord up to half the chord.
+    let radius = max(radius, chord / 2)
     let h = max(0, radius * radius - chord * chord / 4).squareRoot()
     let midX = (start.0 + end.0) / 2, midY = (start.1 + end.1) / 2
     for sign in [1.0, -1.0] {
@@ -89,7 +91,7 @@ final class LucideIconTightnessTests: XCTestCase {
       let a1 = atan2(start.1 - cy, start.0 - cx)
       var delta = atan2(end.1 - cy, end.0 - cx) - a1
       if sweep { while delta < 0 { delta += 2 * .pi } } else { while delta > 0 { delta -= 2 * .pi } }
-      if (abs(delta) > .pi) == large {
+      if h < 1e-9 || (abs(delta) > .pi) == large {
         for step in 0...2000 {
           let angle = a1 + delta * Double(step) / 2000
           bounds.add(cx + radius * cos(angle), cy + radius * sin(angle))
@@ -108,8 +110,13 @@ final class LucideIconTightnessTests: XCTestCase {
       ("triangle-alert", TriangleAlertIconView(size: px(22)).build()),
       ("circle-check", CircleCheckIconView(size: px(22)).build()),
       ("info", InfoIconView(size: px(22)).build()),
-      ("arrow-right", ArrowRightIconView(size: px(22)).build()),
+      ("gavel", GavelIconView(size: px(22)).build()),
       ("stamp", StampIconView(size: px(22)).build()),
+      ("scroll-text", ScrollTextIconView(size: px(22)).build()),
+      ("mailbox", MailboxIconView(size: px(22)).build()),
+      ("layers", LayersIconView(size: px(22)).build()),
+      ("history", HistoryIconView(size: px(22)).build()),
+      ("bookmark-check", BookmarkCheckIconView(size: px(22)).build()),
     ]
     for (name, node) in icons {
       let svg = try XCTUnwrap(node as? DOM.Element, name)
