@@ -6,7 +6,7 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-/// Lucide's `check` (ISC; THIRD_PARTY_NOTICES.md): a done or chosen thing: a status mark (green), a menu's chosen item, a copied code block. Lucide's own
+/// Lucide's `check` (ISC; THIRD_PARTY_NOTICES.md): a done or chosen thing: submitted, a status mark (blue), a menu's chosen item, a copied code block. Lucide's own
 /// 24-grid geometry (lucide-static 1.60.0), fitted to the house box by
 /// IconStrokeFit: the long edge 1024, `iconStrokeWidth` thick, round caps
 /// and joins, the outer edges tight to the box.

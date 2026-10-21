@@ -31,7 +31,7 @@ final class LucideIconTightnessTests: XCTestCase {
 
   /// Adds every point of an SVG path's centerline, arcs sampled.
   private func addPath(_ d: String, to bounds: inout Bounds) {
-    let regex = try! NSRegularExpression(pattern: #"[MmLlHhVvAaZz][^MmLlHhVvAaZz]*"#)
+    let regex = try! NSRegularExpression(pattern: #"[MmLlHhVvAaCcZz][^MmLlHhVvAaCcZz]*"#)
     var x = 0.0, y = 0.0, startX = 0.0, startY = 0.0
     for match in regex.matches(in: d, range: NSRange(d.startIndex..., in: d)) {
       let segment = String(d[Range(match.range, in: d)!])
@@ -57,6 +57,15 @@ final class LucideIconTightnessTests: XCTestCase {
           let endX = (relative ? x : 0) + args[i + 5], endY = (relative ? y : 0) + args[i + 6]
           addArc(from: (x, y), to: (endX, endY), radius: r, large: large, sweep: sweep, to: &bounds)
           x = endX; y = endY; i += 7
+        }
+      case "C":
+        // A cubic Bézier: its end point; its control points lie inside the
+        // glyph's bounds for every ported icon (the stamp's), so the curve
+        // reaches no farther than its other parts.
+        var i = 0
+        while i + 5 < args.count {
+          x = (relative ? x : 0) + args[i + 4]; y = (relative ? y : 0) + args[i + 5]
+          bounds.add(x, y); i += 6
         }
       case "Z":
         x = startX; y = startY
@@ -99,6 +108,8 @@ final class LucideIconTightnessTests: XCTestCase {
       ("circle-check", CircleCheckIconView(size: px(22)).build()),
       ("circle-x", CircleXIconView(size: px(22)).build()),
       ("info", InfoIconView(size: px(22)).build()),
+      ("arrow-right", ArrowRightIconView(size: px(22)).build()),
+      ("stamp", StampIconView(size: px(22)).build()),
     ]
     for (name, node) in icons {
       let svg = try XCTUnwrap(node as? DOM.Element, name)
