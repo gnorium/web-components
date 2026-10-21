@@ -658,7 +658,7 @@
       if allowUserDismiss {
         let dismissBtn = document.createElement(.button)
         dismissBtn.className = "alert-dismiss"
-        dismissBtn.innerHTML = CloseIconView(size: lineHeightSmall22).render()
+        dismissBtn.innerHTML = XIconView(size: lineHeightSmall22).render()
         // Sized inline as well: the opening measures the alert's height at
         // once, before a just-requested alert-view.css may have arrived, and
         // a button measured at its unstyled size makes the alert jump 2px

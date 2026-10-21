@@ -166,9 +166,9 @@ public struct InfoChipView: HTMLContent {
             case .check:
               CheckIconView(size: iconLength)
             case .cross:
-              CrossIconView(size: iconLength)
+              XIconView(size: iconLength)
             case .warning:
-              AlertIconView(size: iconLength)
+              TriangleAlertIconView(size: iconLength)
             case .info:
               InfoIconView(size: iconLength)
             case .automatic, .hidden:

@@ -8,8 +8,9 @@ import SVGBuilder
 import WebTypes
 
 /// The icon a status is drawn with: an alert, a field's message, a result.
-/// Each status is a Codex icon (info = infoFilled, warning = alert, error,
-/// success), filled with `currentColor`, so it takes the color around it.
+/// Each status is a Lucide icon (info = `info`, warning = `triangle-alert`,
+/// error = `circle-x`, success = `circle-check`), stroked with
+/// `currentColor`, so it takes the color around it.
 /// Available on SERVER + CLIENT: client code renders it into a DOM element
 /// (`element.innerHTML = StatusIconView(.success).render()`).
 public struct StatusIconView: HTMLContent {
@@ -38,13 +39,13 @@ public struct StatusIconView: HTMLContent {
     let classes = stringIsEmpty(`class`) ? "status-icon-view" : "status-icon-view \(`class`)"
     switch status {
     case .info:
-      return InfoFilledIconView(size: iconSize, class: classes).build()
+      return InfoIconView(size: iconSize, class: classes).build()
     case .warning:
-      return AlertIconView(size: iconSize, class: classes).build()
+      return TriangleAlertIconView(size: iconSize, class: classes).build()
     case .error:
-      return ErrorIconView(size: iconSize, class: classes).build()
+      return CircleXIconView(size: iconSize, class: classes).build()
     case .success:
-      return SuccessIconView(size: iconSize, class: classes).build()
+      return CircleCheckIconView(size: iconSize, class: classes).build()
     }
   }
 }

@@ -1,46 +1,66 @@
-#if SERVER
-  import CSSBuilder
-  import CSSOMBuilder
-  import DesignTokens
-  import DOMBuilder
-  import HTMLBuilder
-  import SVGBuilder
-  import WebTypes
+import CSSBuilder
+import CSSOMBuilder
+import DOMBuilder
+import EmbeddedSwiftUtilities
+import HTMLBuilder
+import SVGBuilder
+import WebTypes
 
-  public struct XIconView: HTMLContent {
-    let `class`: String
-    let iconSize: CSS.Length
-    let fill: CSS.Color
-    let monochrome: Bool
+/// Lucide's `x` (ISC; THIRD_PARTY_NOTICES.md): a failed thing's mark (red) and the × of a close button: one cross for both. Lucide's own
+/// 24-grid geometry (lucide-static 1.60.0), fitted to the house box by
+/// IconStrokeFit: the long edge 1024, `iconStrokeWidth` thick, round caps
+/// and joins, the outer edges tight to the box.
+/// SERVER + CLIENT: client code renders it too.
+public struct XIconView: HTMLContent {
+  let iconSize: CSS.Length
+  let `class`: String
 
-    public init(
-      class: String = "",
-      size: CSS.Length,
-      fill: CSS.Color = colorBase,
-      monochrome: Bool = false
-    ) {
-      self.class = `class`
-      self.iconSize = size
-      self.fill = fill
-      self.monochrome = monochrome
-    }
+  public init(
+    size: CSS.Length,
+    class: String = ""
+  ) {
+    self.iconSize = size
+    self.class = `class`
+  }
 
-    public func build() -> DOM.Node {
-      svg {
-        path()
-          .d(
-            M(809.03, 0), h(156.96), l(-344.63, 392.4), l(402.64, 532.31), h(-315.97),
-            l(-247.38, -323.48), l(-283.22, 323.48), h(-156.96), l(365.11, -419.71),
-            l(-385.58, -505), h(323.82), l(223.5, 295.5), z(), m(-54.93, 832.58), h(87.01),
-            l(-563.02, -743.86), h(-93.49), z())
-          .fill(fill)
+  public func build() -> DOM.Node {
+    let fit = IconStrokeFit(minX: 6, minY: 6, maxX: 18, maxY: 18)
+    return svg {
+      g {
+        path().d("M18 6 6 18")
+        path().d("m6 6 12 12")
       }
-      .class(`class`.isEmpty ? "x-icon-view" : "x-icon-view \(`class`)")
-      .style { width(iconSize) }
-      .viewBox(0, 0, 1024, 924.71)
-      .xmlns("http://www.w3.org/2000/svg")
-      .xmlnsXlink("http://www.w3.org/1999/xlink")
+      .transform(fit.transform)
+      .strokeWidth(fit.strokeWidth)
+    }
+    .class(stringIsEmpty(`class`) ? "x-icon-view" : "x-icon-view \(`class`)")
+    .style { height(iconSize) }
+    .viewBox(0, 0, fit.width, fit.height)
+    .xmlns("http://www.w3.org/2000/svg")
+    .fill(.none)
+    .stroke(.currentColor)
+    .strokeLinecap(.round)
+    .strokeLinejoin(.round)
+    .ariaHidden(true)
+    .build()
+  }
+}
 
+#if CLIENT
+  import WebAPIs
+
+  public enum XIconFactory {
+    public static func createElement(
+      size: CSS.Length,
+      class: String = ""
+    ) -> DOM.Element {
+      let wrapper = document.createElement(.span)
+      let view = XIconView(size: size, class: `class`)
+      wrapper.innerHTML = view.render()
+      if let svg = wrapper.firstElementChild {
+        return svg
+      }
+      return wrapper
     }
   }
 #endif

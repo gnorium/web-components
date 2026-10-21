@@ -155,13 +155,7 @@ public struct PopoverView: HTMLContent {
           }
 
           if useCloseButton {
-            button {
-              span { "×" }
-                .ariaHidden(true)
-            }
-            .type(.button)
-            .class("popover-close-button")
-            .ariaLabel(closeButtonLabel)
+            CloseButtonView(ariaLabel: closeButtonLabel, class: "popover-close-button")
           }
         }
         .class("popover-header")

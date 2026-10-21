@@ -1,13 +1,16 @@
 import CSSBuilder
 import CSSOMBuilder
-import DesignTokens
 import DOMBuilder
 import EmbeddedSwiftUtilities
 import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-/// Visual check-mark leaf. Available on SERVER + CLIENT for CheckIconFactory.
+/// Lucide's `check` (ISC; THIRD_PARTY_NOTICES.md): a done or chosen thing: a status mark (green), a menu's chosen item, a copied code block. Lucide's own
+/// 24-grid geometry (lucide-static 1.60.0), fitted to the house box by
+/// IconStrokeFit: the long edge 1024, `iconStrokeWidth` thick, round caps
+/// and joins, the outer edges tight to the box.
+/// SERVER + CLIENT: client code renders it too.
 public struct CheckIconView: HTMLContent {
   let iconSize: CSS.Length
   let `class`: String
@@ -21,19 +24,24 @@ public struct CheckIconView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
-    svg {
-      path()
-        .d(
-          M(325.02, 616.85), L(82.13, 373.95), l(-82.13, 82.13), L(325.02, 781.69), L(1024, 82.71),
-          l(-82.13, -82.71), Z())
+    let fit = IconStrokeFit(minX: 4, minY: 6, maxX: 20, maxY: 17)
+    return svg {
+      g {
+        path().d("M20 6 9 17l-5-5")
+      }
+      .transform(fit.transform)
+      .strokeWidth(fit.strokeWidth)
     }
-    .class(
-      stringIsEmpty(`class`) ? "check-icon-view" : "check-icon-view \(`class`)"
-    )
+    .class(stringIsEmpty(`class`) ? "check-icon-view" : "check-icon-view \(`class`)")
     .style { width(iconSize) }
-    .viewBox(0, 0, 1024, 781.69)
+    .viewBox(0, 0, fit.width, fit.height)
     .xmlns("http://www.w3.org/2000/svg")
-    .fill(.currentColor)
+    .fill(.none)
+    .stroke(.currentColor)
+    .strokeLinecap(.round)
+    .strokeLinejoin(.round)
+    .ariaHidden(true)
+    .build()
   }
 }
 

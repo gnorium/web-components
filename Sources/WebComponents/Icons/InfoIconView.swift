@@ -1,12 +1,16 @@
 import CSSBuilder
 import CSSOMBuilder
-import DesignTokens
 import DOMBuilder
 import EmbeddedSwiftUtilities
 import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
+/// Lucide's `info` (ISC; THIRD_PARTY_NOTICES.md): information: a blue or gray alert, a tooltip's trigger. Lucide's own
+/// 24-grid geometry (lucide-static 1.60.0), fitted to the house box by
+/// IconStrokeFit: the long edge 1024, `iconStrokeWidth` thick, round caps
+/// and joins, the outer edges tight to the box.
+/// SERVER + CLIENT: client code renders it too.
 public struct InfoIconView: HTMLContent {
   let iconSize: CSS.Length
   let `class`: String
@@ -20,17 +24,25 @@ public struct InfoIconView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
-    svg {
-      path()
-        .d(
-          M(128, 512), a(384, 384, 0, true, false, 768, 0), a(384, 384, 0, false, false, -768, 0),
-          m(384, -512), a(512, 512, 0, true, true, 0, 1024), a(512, 512, 0, false, true, 0, -1024),
-          m(64, 448), v(320), H(448), V(448), Z(), m(0, -64), V(256), H(448), v(128), Z())
+    let fit = IconStrokeFit(minX: 2, minY: 2, maxX: 22, maxY: 22)
+    return svg {
+      g {
+        circle().cx(12).cy(12).r(10)
+        path().d("M12 16v-4")
+        path().d("M12 8h.01")
+      }
+      .transform(fit.transform)
+      .strokeWidth(fit.strokeWidth)
     }
     .class(stringIsEmpty(`class`) ? "info-icon-view" : "info-icon-view \(`class`)")
     .style { height(iconSize) }
-    .viewBox(0, 0, 1024, 1024)
+    .viewBox(0, 0, fit.width, fit.height)
     .xmlns("http://www.w3.org/2000/svg")
-    .fill(.currentColor)
+    .fill(.none)
+    .stroke(.currentColor)
+    .strokeLinecap(.round)
+    .strokeLinejoin(.round)
+    .ariaHidden(true)
+    .build()
   }
 }
