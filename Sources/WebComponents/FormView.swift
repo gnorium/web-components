@@ -103,9 +103,12 @@
               .class("form-submit")
 
             if let url = cancelUrl {
-              a { cancelLabel }
-                .href(url)
-                .class("form-cancel")
+              a {
+                IconView(icon: { s in XIconView(size: s) }, size: lineHeightSmall22)
+                span { cancelLabel }
+              }
+              .href(url)
+              .class("form-cancel")
             }
           }
           .class("form-actions")
@@ -158,6 +161,9 @@
         }
         descendant(".form-submit:hover") { backgroundColor(backgroundColorBlueHover) }
         descendant(".form-cancel") {
+          display(.inlineFlex)
+          alignItems(.center)
+          gap(spacing8)
           padding(spacing12)
           fontFamily(typographyFontSans)
           fontSize(fontSizeLarge18)

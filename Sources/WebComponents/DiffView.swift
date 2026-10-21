@@ -334,14 +334,8 @@ public struct DiffView: HTMLContent {
     let rootClass = stringIsEmpty(`class`) ? "diff-view" : stringJoin(["diff-view", `class`], separator: " ")
     return div {
       if !stringIsEmpty(label) {
-        // A multiline diff's "Diff:" wears the diff mark; a line's, and any
-        // other label, only its words.
-        if !isLine && stringEquals(label, DiffView.defaultLabel) {
-          DiffLabelView()
-        } else {
-          span { label }
-            .class("diff-label")
-        }
+        // Every label wears the diff mark, a line's and a box's alike.
+        DiffLabelView(label)
       }
       if isLine {
         body
