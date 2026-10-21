@@ -1430,9 +1430,17 @@ public enum OutlineMoves {
       handle(of: item)?.focus()
     }
 
+    /// Whether a page has since frozen an item: its handle is disabled now,
+    /// whether or not it was drawn so.
+    private func isFrozen(_ item: DOM.Element) -> Bool {
+      guard let handle = handle(of: item) else { return false }
+      return handle.hasAttribute("disabled")
+    }
+
     private func grab(_ item: DOM.Element) {
       // A removed item stays where it was removed.
       if isRemoved(item) { return }
+      if isFrozen(item) { return }
       if held != nil { drop() }
       held = item
       handle(of: item)?.setAttribute("aria-pressed", "true")
@@ -1620,6 +1628,10 @@ public enum OutlineMoves {
     // MARK: - Drag and drop
 
     private func dragStart(_ event: Event, _ item: DOM.Element) {
+      if isFrozen(item) {
+        event.preventDefault()
+        return
+      }
       begin(item)
       let transfer = event.dataTransfer
       transfer.setData("text/plain", id(of: item))
@@ -1739,6 +1751,7 @@ public enum OutlineMoves {
     // MARK: - Touch: a long press, then a drag
 
     private func pressStart(_ event: Event, _ item: DOM.Element) {
+      if isFrozen(item) { return }
       pressX = event.clientX
       pressY = event.clientY
       if pressTimer != 0 { clearTimeout(pressTimer) }
