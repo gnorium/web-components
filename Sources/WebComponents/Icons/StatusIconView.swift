@@ -8,8 +8,8 @@ import SVGBuilder
 import WebTypes
 
 /// The icon a status is drawn with: an alert, a field's message, a result.
-/// Each status is a Lucide icon (info = `info`, warning = `octagon-alert`,
-/// error = `circle-x`, success = `circle-check`), stroked with
+/// Each status is a Lucide icon (info = `info`, warning = `triangle-alert`,
+/// error = `octagon-alert`, success = `circle-check`), stroked with
 /// `currentColor`, so it takes the color around it.
 /// Available on SERVER + CLIENT: client code renders it into a DOM element
 /// (`element.innerHTML = StatusIconView(.success).render()`).
@@ -41,9 +41,9 @@ public struct StatusIconView: HTMLContent {
     case .info:
       return InfoIconView(size: iconSize, class: classes).build()
     case .warning:
-      return OctagonAlertIconView(size: iconSize, class: classes).build()
+      return TriangleAlertIconView(size: iconSize, class: classes).build()
     case .error:
-      return CircleXIconView(size: iconSize, class: classes).build()
+      return OctagonAlertIconView(size: iconSize, class: classes).build()
     case .success:
       return CircleCheckIconView(size: iconSize, class: classes).build()
     }

@@ -6,7 +6,8 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-/// Lucide's `x` (ISC; THIRD_PARTY_NOTICES.md): a failed thing's mark (red) and the × of a close button: one cross for both. Lucide's own
+/// Lucide's `x` (ISC; THIRD_PARTY_NOTICES.md): the × of a close or dismiss
+/// control, never a status mark (a failure is `octagon-alert`). Lucide's own
 /// 24-grid geometry (lucide-static 1.60.0), fitted to the house box by
 /// IconStrokeFit: the long edge 1024, `iconStrokeWidth` thick, round caps
 /// and joins, the outer edges tight to the box.

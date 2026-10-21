@@ -6,8 +6,8 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-/// Lucide's `octagon-alert` (ISC; THIRD_PARTY_NOTICES.md): a warning: an
-/// orange alert, a stale figure. Lucide's own 24-grid geometry
+/// Lucide's `octagon-alert` (ISC; THIRD_PARTY_NOTICES.md): an error: a red
+/// alert, a field's error, a failed or nullified status mark. Lucide's own 24-grid geometry
 /// (lucide-static 1.60.0), fitted to the house box by IconStrokeFit: the
 /// long edge 1024, `iconStrokeWidth` thick, round caps and joins, the outer
 /// edges tight to the box. SERVER + CLIENT: client code renders it too.
@@ -48,3 +48,22 @@ public struct OctagonAlertIconView: HTMLContent {
     .build()
   }
 }
+
+#if CLIENT
+  import WebAPIs
+
+  public enum OctagonAlertIconFactory {
+    public static func createElement(
+      size: CSS.Length,
+      class: String = ""
+    ) -> DOM.Element {
+      let wrapper = document.createElement(.span)
+      let view = OctagonAlertIconView(size: size, class: `class`)
+      wrapper.innerHTML = view.render()
+      if let svg = wrapper.firstElementChild {
+        return svg
+      }
+      return wrapper
+    }
+  }
+#endif
