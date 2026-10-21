@@ -183,6 +183,17 @@ public struct ButtonView: HTMLContent {
       selector("\(phoneStep) &[data-icon-only='false'][data-size='large']") {
         padding(ButtonSize.medium.padding).important()
       }
+      // A medium button that holds its size (`data-phone-floor`): a target
+      // a thumb is asked to hit stays 40 on a phone, the step down
+      // above set aside.
+      selector("\(phoneStep) &[data-phone-floor='true'][data-size='medium']") {
+        minHeight(ButtonSize.medium.minSize).important()
+        fontSize(fontSizeMedium16).important()
+      }
+      selector("\(phoneStep) &[data-phone-floor='true'][data-icon-only='true'][data-size='medium']") {
+        width(ButtonSize.medium.minSize).important()
+        height(ButtonSize.medium.minSize).important()
+      }
     }
   }
 

@@ -146,6 +146,16 @@
         descendant(".breadcrumb-separator") {
           flexShrink(0)
         }
+        // A phone taps the trail: each crumb a 40px target, however short
+        // its label or small its logo.
+        media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
+          descendant(".breadcrumb-link") {
+            alignItems(.center).important()
+            justifyContent(.center).important()
+            minHeight(size40).important()
+            minWidth(size40).important()
+          }
+        }
       }
     }
   }

@@ -362,7 +362,10 @@ public struct DiffView: HTMLContent {
       selector("&[data-shape='line']") {
         display(.flex)
         flexWrap(.wrap)
-        alignItems(.baseline)
+        // The label's mark and the values each stand on a 22px line, so
+        // the tops meet: a baseline sat the label's boxed mark off the
+        // values' text.
+        alignItems(.flexStart)
         columnGap(spacing4)
         paddingInlineStart(spacing16)
         overflowWrap(.anywhere)

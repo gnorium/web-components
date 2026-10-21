@@ -505,6 +505,19 @@ public struct DropdownView: HTMLContent {
         cursor(cursorBase)
       }
       ButtonView.phoneStepRowCSS(".dropdown-note", ".dropdown-option")
+      // Its search box is as tall as the trigger it hangs from: medium, 40,
+      // on a phone, not the step below that a lone medium box takes.
+      media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
+        selector("\(ButtonView.phoneStep) & .dropdown-search-input[data-size='medium']") {
+          customProperty("--search-input-padding", ButtonView.ButtonSize.medium.padding.value).important()
+        }
+        selector(
+          "\(ButtonView.phoneStep) & .dropdown-search-input[data-size='medium'] .search-input",
+          "\(ButtonView.phoneStep) & .dropdown-search-input[data-size='medium'] .search-input-button"
+        ) {
+          fontSize(fontSizeMedium16).important()
+        }
+      }
       descendant(".dropdown-search-input-wrapper") {
         padding(spacing8)
         borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)

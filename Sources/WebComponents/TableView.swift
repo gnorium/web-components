@@ -496,14 +496,17 @@ public struct TableView: HTMLContent {
             nextUrl = computedCurrentPage < computedTotalPages ? "#" : nil
           }
 
-          PaginationView(
-            currentPage: computedCurrentPage,
-            totalPages: computedTotalPages,
-            previousUrl: prevUrl,
-            nextUrl: nextUrl,
-            size: paginationControlSize,
-            class: "table-pagination-controls"
-          )
+          // A server-paged list of one page has no other to go to: no "1 of 1".
+          if serverQuery == nil || computedTotalPages > 1 {
+            PaginationView(
+              currentPage: computedCurrentPage,
+              totalPages: computedTotalPages,
+              previousUrl: prevUrl,
+              nextUrl: nextUrl,
+              size: paginationControlSize,
+              class: "table-pagination-controls"
+            )
+          }
         }
         .class("table-pagination table-pagination-top")
       }      // Table wrapper
@@ -519,7 +522,7 @@ public struct TableView: HTMLContent {
             colgroup {
               if selectionMode != nil {
                 col()
-                  .id("table-col-selection")
+                  .class("table-col-selection")
                   .setAttribute("width", "44")
               }
               for column in columns {
@@ -532,7 +535,7 @@ public struct TableView: HTMLContent {
                 columnElement
               }
               col()
-                .id("table-col-spacer")
+                .class("table-col-spacer")
                 .setAttribute("width", "16")
             }
 
@@ -569,7 +572,6 @@ public struct TableView: HTMLContent {
                       div { "" }
                         .class("table-resizer")
                     }
-                .id("col-selection")
                 .scope(.col)
                     .data("table-column-id", "selection")
                     .data("align", "start")
@@ -586,7 +588,6 @@ public struct TableView: HTMLContent {
 
                           span {
                             AnimatedUpDownChevronView(
-                              id: "table-sort-\(column.id)",
                               expanded: {
                                 if let currentSort = sort,
                                   stringEquals(currentSort.columnID, column.id)
@@ -626,7 +627,6 @@ public struct TableView: HTMLContent {
                       div { "" }
                         .class("table-resizer")
                     }
-                    .id("col-\(column.id)")
                     .scope(.col)
                     .data("table-column-id", column.id)
                     .data("align", column.align.value)
@@ -876,14 +876,17 @@ public struct TableView: HTMLContent {
             nextUrl = computedCurrentPage < computedTotalPages ? "#" : nil
           }
 
-          PaginationView(
-            currentPage: computedCurrentPage,
-            totalPages: computedTotalPages,
-            previousUrl: prevUrl,
-            nextUrl: nextUrl,
-            size: paginationControlSize,
-            class: "table-pagination-controls"
-          )
+          // A server-paged list of one page has no other to go to: no "1 of 1".
+          if serverQuery == nil || computedTotalPages > 1 {
+            PaginationView(
+              currentPage: computedCurrentPage,
+              totalPages: computedTotalPages,
+              previousUrl: prevUrl,
+              nextUrl: nextUrl,
+              size: paginationControlSize,
+              class: "table-pagination-controls"
+            )
+          }
         }
         .class("table-pagination table-pagination-bottom")
       }
@@ -1546,6 +1549,13 @@ public struct TableView: HTMLContent {
     private var activeResizer: DOM.Element?
     private var startX: Double = 0
     private var startWidth: Double = 0
+
+    /// The column a header cell heads, by the id its column was declared
+    /// with: the cells carry no element ids, so two tables on a page never
+    /// share one.
+    private func columnKey(_ header: DOM.Element) -> String {
+      header.getAttribute(data("table-column-id")) ?? ""
+    }
     private var targetTh: DOM.Element?
     private var moveListenerID: Int32 = -1
     private var upListenerID: Int32 = -1
@@ -1918,7 +1928,8 @@ public struct TableView: HTMLContent {
       startWidths.removeAll()
       let headers = Array(self.table.querySelectorAll("thead th"))
       for header in headers {
-        if let id = header.getAttribute(.id), !stringIsEmpty(id) {
+        let id = columnKey(header)
+        if !stringIsEmpty(id) {
           setStartWidth(for: id, value: Double(header.getBoundingClientRect()?.width ?? 0))
         }
       }
@@ -1926,7 +1937,7 @@ public struct TableView: HTMLContent {
       // Calculate dynamic floor limit for this manual resize
       let parentTr = targetTh?.parentElement
       let headerCells = parentTr?.querySelectorAll("th") ?? Array<DOM.Element>()
-      let colIndex = headerCells.firstIndex(where: { stringEquals($0.idString, targetTh?.idString ?? "") }) ?? -1
+      let colIndex = headerCells.firstIndex(where: { stringEquals(columnKey($0), targetTh.map { columnKey($0) } ?? "") }) ?? -1
       
       if colIndex >= 0 {
         var maxWidth: Double = 0
@@ -1975,9 +1986,9 @@ public struct TableView: HTMLContent {
       // to prevent table-layout: fixed from redistributing widths during resize.
       let headers = Array(self.table.querySelectorAll("thead th")).filter { !$0.classList.contains("table-th-spacer") }
       var total: Double = 0
-      let activeId = th.getAttribute(.id) ?? ""
+      let activeId = columnKey(th)
       for header in headers {
-        let headerId = header.getAttribute(.id) ?? ""
+        let headerId = columnKey(header)
         var w: Double = 0
         if !stringIsEmpty(headerId) && stringEquals(headerId, activeId) {
           w = newWidth
@@ -1999,7 +2010,7 @@ public struct TableView: HTMLContent {
       
       // Determine column index of this header cell
       let headerCells = parentTr.querySelectorAll("th")
-      let colIndex = headerCells.firstIndex(where: { stringEquals($0.idString, th.idString) }) ?? -1
+      let colIndex = headerCells.firstIndex(where: { stringEquals(columnKey($0), columnKey(th)) }) ?? -1
       guard colIndex >= 0 else { return }
       
       var maxWidth: Double = 0
@@ -2028,9 +2039,9 @@ public struct TableView: HTMLContent {
       let headers = Array(self.table.querySelectorAll("thead th")).filter { !$0.classList.contains("table-th-spacer") }
       
       var total: Double = 0
-      let activeId = th.getAttribute(.id) ?? ""
+      let activeId = columnKey(th)
       for header in headers {
-        let headerId = header.getAttribute(.id) ?? ""
+        let headerId = columnKey(header)
         if !stringIsEmpty(headerId) && stringEquals(headerId, activeId) {
           setColumnWidth(for: header, width: min(finalWidth, 2000.0))
           total += finalWidth

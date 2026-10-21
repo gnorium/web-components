@@ -33,13 +33,15 @@ public struct AnimatedUpDownChevronView: HTMLContent {
     (41.58, 306.19), (512, 306.19), (982.42, 306.19),
   ]
 
+  /// Empty for a chevron nothing refers to by id (a table's sort headers
+  /// repeat on a page, so they carry none).
   public let id: String
   public let expanded: Bool
   public let size: CSS.Length
   public var `class`: String
 
   public init(
-    id: String,
+    id: String = "",
     expanded: Bool = false,
     size: CSS.Length,
     class: String = ""
@@ -65,7 +67,7 @@ public struct AnimatedUpDownChevronView: HTMLContent {
     // The box is tight to the union of all three shapes' ink (butt ends
     // and miter tips included), so they share one box and one center.
 
-    return svg {
+    let chevron = svg {
       if expanded {
         polyline().points(pointsToString(Self.expandedPoints))
       } else {
@@ -75,7 +77,6 @@ public struct AnimatedUpDownChevronView: HTMLContent {
     .class(
       stringIsEmpty(`class`) ? "animated-up-down-chevron-view" : "animated-up-down-chevron-view \(`class`)"
     )
-    .id("\(id)-up-down-chevron")
     .style { width(size) }
     .viewBox(0, 0, 1024, 612.38)
     .xmlns("http://www.w3.org/2000/svg")
@@ -84,6 +85,7 @@ public struct AnimatedUpDownChevronView: HTMLContent {
     .strokeWidth(117.61)
     .strokeLinecap(.butt)
     .strokeLinejoin(.miter)
+    return stringIsEmpty(id) ? chevron : chevron.id("\(id)-up-down-chevron")
   }
 }
 

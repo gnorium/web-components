@@ -28,6 +28,9 @@
       let label: String
       let color: ActionColor
       let disabled: Bool
+      /// The mark of its verb, before its label, as the button that opened
+      /// the dialog wears it.
+      let icon: DOM.Node?
 
       /// Apple HIG color for the dialog action
       public enum ActionColor: String, Sendable {
@@ -179,12 +182,22 @@
             // Primary action button (comes first visually, but second in DOM for stacked)
             if let primAction = primaryAction {
               div {
-                ButtonView(
-                  label: primAction.label,
-                  buttonColor: primAction.color == .blue ? .blue : .red,
-                  weight: .solid, size: .large,
-                  disabled: primAction.disabled
-                )
+                if let icon = primAction.icon {
+                  ButtonView(
+                    label: primAction.label,
+                    icon: icon,
+                    buttonColor: primAction.color == .blue ? .blue : .red,
+                    weight: .solid, size: .large,
+                    disabled: primAction.disabled
+                  )
+                } else {
+                  ButtonView(
+                    label: primAction.label,
+                    buttonColor: primAction.color == .blue ? .blue : .red,
+                    weight: .solid, size: .large,
+                    disabled: primAction.disabled
+                  )
+                }
               }
               .class("dialog-primary-button")
             }

@@ -436,29 +436,10 @@ public struct PaginationView: HTMLContent {
         fontSize(fontSizeLarge18)
         color(colorBase)
       }
-      // Option B (`ButtonView.phoneStep`): a medium pager small on a
-      // phone, its number box with it (iOS Safari zooms into it as it takes
-      // focus; accepted, user 2026-10-12).
+      // Option B (`ButtonView.phoneStep`): a large pager medium on a
+      // phone. A medium pager stays medium: its targets and number box are
+      // 40, the least a thumb is asked to hit.
       media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
-        selector(
-          "\(ButtonView.phoneStep) &.pagination-size-medium .pagination-prev",
-          "\(ButtonView.phoneStep) &.pagination-size-medium .pagination-next"
-        ) {
-          width(ButtonView.smallMinSize).important()
-          height(ButtonView.smallMinSize).important()
-        }
-        selector("\(ButtonView.phoneStep) &.pagination-size-medium .page-box") {
-          padding(ButtonView.smallPadding).important()
-          fontSize(fontSizeSmall14).important()
-        }
-        selector(
-          "\(ButtonView.phoneStep) &.pagination-size-medium .pagination-term",
-          "\(ButtonView.phoneStep) &.pagination-size-medium .pagination-total"
-        ) {
-          fontSize(fontSizeSmall14).important()
-        }
-        selector("\(ButtonView.phoneStep) &.pagination-size-medium .pagination-indicator") { gap(spacing4).important() }
-        // A large pager medium.
         selector(
           "\(ButtonView.phoneStep) &.pagination-size-large .pagination-prev",
           "\(ButtonView.phoneStep) &.pagination-size-large .pagination-next"

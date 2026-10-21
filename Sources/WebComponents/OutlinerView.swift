@@ -908,6 +908,13 @@ public enum OutlineMoves {
         color(colorOnSolid)
         cursor(.grabbing)
       }
+      // A thumb grips it: 40 on a phone, the icon centered in it.
+      media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
+        descendant(".outliner-handle") {
+          width(size40).important()
+          height(size40).important()
+        }
+      }
       // Nothing is selected by a drag that strays over text.
       selector("&[data-outliner-dragging='true']") {
         userSelect(.none)

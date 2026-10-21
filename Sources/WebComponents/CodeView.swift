@@ -398,6 +398,13 @@
         guard stringIsEmpty(block.dataset["highlighted"] ?? "") else { continue }
         guard let rect = block.getBoundingClientRect(), rect.height > 0 else { continue }
         block.setAttribute(data("highlighted"), "yes")
+        // A lined block's lines are elements, and highlight.js warns of
+        // markup in a block it is handed: it is given the lines' text as
+        // the one run it rewrites.
+        if block.hasAttribute("data-code-lined") {
+          let text: String = block.textContent
+          block.textContent = text
+        }
         HighlightJS.highlightElement(elementID: block.id)
       }
     }

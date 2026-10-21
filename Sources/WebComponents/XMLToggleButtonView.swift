@@ -23,7 +23,7 @@ public struct XMLToggleButtonView: HTMLContent {
       ariaLabel: "XML", size: .medium,
       class: `class`.isEmpty ? "xml-toggle-button-view" : "xml-toggle-button-view \(`class`)"
     ).build()
-    return (view as? DOM.Element)?.addingAttribute("title", "XML") ?? view
+    return (view as? DOM.Element)?.addingAttribute("title", "XML").addingAttribute("data-phone-floor", "true") ?? view
   }
 }
 #endif
