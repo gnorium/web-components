@@ -168,4 +168,14 @@ final class StatusMarkTests: XCTestCase {
       XCTAssertTrue(block.contains(".rotating-sector-shape"))
     }
   }
+
+  /// A hand-built (client) alert wears its own color's mark: blue the info
+  /// icon, orange the triangle, red the octagon, green the check.
+  func testAnAlertColorChoosesItsStatusMark() {
+    XCTAssertEqual(StatusIconView.Status.forAlertColor("blue"), .info)
+    XCTAssertEqual(StatusIconView.Status.forAlertColor("gray"), .info)
+    XCTAssertEqual(StatusIconView.Status.forAlertColor("orange"), .warning)
+    XCTAssertEqual(StatusIconView.Status.forAlertColor("red"), .error)
+    XCTAssertEqual(StatusIconView.Status.forAlertColor("green"), .success)
+  }
 }

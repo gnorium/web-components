@@ -23,6 +23,18 @@ public struct StatusIconView: HTMLContent {
     case warning
     case error
     case success
+
+    /// The status mark of an alert of this color, as the server's AlertView
+    /// picks it: blue and gray `info`, orange `warning` (triangle-alert),
+    /// red `error` (octagon-alert), green `success` (circle-check). The
+    /// client's hand-built alerts choose their icon here, so none wears
+    /// another color's.
+    public static func forAlertColor(_ color: String) -> Status {
+      if stringEquals(color, "red") { return .error }
+      if stringEquals(color, "orange") { return .warning }
+      if stringEquals(color, "green") { return .success }
+      return .info
+    }
   }
 
   public init(
