@@ -284,7 +284,7 @@
         // Col 4: Apply (row 0 only—other rows have − spanning into this col)
         if isFirst {
           ButtonView(
-            label: "Apply",
+            label: "Apply", icon: IconView(icon: { s in CheckIconView(size: s) }, size: ButtonView.ButtonSize.large.labelIconSize),
             buttonColor: .blue,
             weight: .solid,
             size: .large,

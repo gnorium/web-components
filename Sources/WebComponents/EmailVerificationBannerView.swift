@@ -60,7 +60,7 @@
           .class("email-verification-banner-message")
 
           ButtonView(
-            label: "Resend Email", buttonColor: .blue, weight: .plain, size: .medium,
+            label: "Resend Email", icon: IconView(icon: { s in SendIconView(size: s) }, size: ButtonView.ButtonSize.medium.labelIconSize), buttonColor: .blue, weight: .plain, size: .medium,
             class: "email-verification-banner-resend")
         }
         .class("email-verification-banner-content")

@@ -160,7 +160,7 @@ public struct TimeInputView: HTMLContent {
         footer: {
           div {
             ButtonView(
-              label: "Reset",
+              label: "Reset", icon: IconView(icon: { s in RotateCCWIconView(size: s) }, size: ButtonView.ButtonSize.medium.labelIconSize),
               buttonColor: .blue,
               weight: .plain,
               size: .medium,

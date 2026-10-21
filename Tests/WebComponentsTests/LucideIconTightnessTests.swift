@@ -129,6 +129,10 @@ final class LucideIconTightnessTests: XCTestCase {
       ("thumbs-up", ThumbsUpIconView(size: px(22)).build()),
       ("thumbs-down", ThumbsDownIconView(size: px(22)).build()),
       ("diff", DiffIconView(size: px(22)).build()),
+      ("house", HouseIconView(size: px(22)).build()),
+      ("unlink", UnlinkIconView(size: px(22)).build()),
+      ("user-plus", UserPlusIconView(size: px(22)).build()),
+      ("send", SendIconView(size: px(22)).build()),
     ]
     for (name, node) in icons {
       let svg = try XCTUnwrap(node as? DOM.Element, name)
