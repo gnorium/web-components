@@ -62,6 +62,9 @@ public struct RotatingRingSectorWithDiscView: HTMLContent {
         animation("rotating-ring-sector-with-disc-spin", animationDurationFast, animationTimingFunctionBase, .infinite)
         media(prefersReducedMotion(.reduce)) { animation("none") }
       }
+      // Held while a replay is paused or scrubbed (user, 2026-10-21): the
+      // replayed session's marks stand still with it.
+      selector("[data-replay-paused='true'] & > .rotating-ring-sector-with-disc-ring") { animationPlayState(.paused) }
       keyframes("rotating-ring-sector-with-disc-spin") {
         from { transform(rotate(deg(0))) }
         to { transform(rotate(deg(360))) }

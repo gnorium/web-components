@@ -64,6 +64,9 @@ public struct RotatingDottedRingSectorView: HTMLContent {
         animation("rotating-dotted-ring-sector-spin", animationDurationFast, animationTimingFunctionBase, .infinite)
         media(prefersReducedMotion(.reduce)) { animation("none") }
       }
+      // Held while a replay is paused or scrubbed (user, 2026-10-21): the
+      // replayed session's marks stand still with it.
+      selector("[data-replay-paused='true'] & > .rotating-dotted-ring-sector-shape") { animationPlayState(.paused) }
       keyframes("rotating-dotted-ring-sector-spin") {
         from { transform(rotate(deg(0))) }
         to { transform(rotate(deg(360))) }
