@@ -326,8 +326,9 @@ public struct ComboboxView: HTMLContent {
         flexDirection(.column)
         justifyContent(.center)
         gap(spacing2)
-        // A row: 8 on every side, at least 40.
-        minHeight(minSizeInteractiveTouch)
+        // A row: 8 on every side, at least the large control's 48 (user,
+        // 2026-10-21), as the field it hangs from.
+        minHeight(ButtonView.ButtonSize.large.minSize)
         padding(spacing8)
         fontFamily(typographyFontSans)
         fontSize(fontSizeMedium16)
@@ -376,7 +377,7 @@ public struct ComboboxView: HTMLContent {
       }
       descendant(".combobox-note") {
         padding(spacing8)
-        minHeight(minSizeInteractiveTouch)
+        minHeight(ButtonView.ButtonSize.large.minSize)
         boxSizing(.borderBox)
         fontFamily(typographyFontSans)
         fontSize(fontSizeMedium16)

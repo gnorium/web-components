@@ -495,7 +495,7 @@ public struct DropdownView: HTMLContent {
       // Not an option: no hover, no pointer, never chosen.
       descendant(".dropdown-note") {
         padding(spacing8)
-        minHeight(minSizeInteractiveTouch)
+        minHeight(ButtonView.ButtonSize.large.minSize)
         boxSizing(.borderBox)
         fontFamily(typographyFontSans)
         fontSize(fontSizeMedium16)
@@ -512,9 +512,10 @@ public struct DropdownView: HTMLContent {
         display(.flex)
         alignItems(.center)
         gap(spacing8)
-        // A row: 8 on every side of its 22px line, at least 40.
+        // A row: 8 on every side of its 22px line, at least the large
+        // control's 48 (user, 2026-10-21), as the field it hangs from.
         padding(spacing8)
-        minHeight(minSizeInteractiveTouch)
+        minHeight(ButtonView.ButtonSize.large.minSize)
         lineHeight(lineHeightSmall22)
         boxSizing(.borderBox)
         fontSize(`var`("--dropdown-font-size") as CSS.Length)
