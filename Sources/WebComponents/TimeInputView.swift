@@ -169,6 +169,7 @@ public struct TimeInputView: HTMLContent {
             )
             ButtonView(
               label: "Done",
+              icon: IconView(icon: { s in CheckIconView(size: s) }, size: ButtonView.ButtonSize.medium.labelIconSize),
               buttonColor: .blue,
               weight: .plain,
               size: .medium,

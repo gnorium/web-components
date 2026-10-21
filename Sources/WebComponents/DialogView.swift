@@ -56,11 +56,24 @@
     public struct DefaultAction: Sendable {
       let label: String
       let disabled: Bool
+      /// Wears the x before its label: a Cancel (user, 2026-10-21).
+      let cancels: Bool
 
       public init(label: String, disabled: Bool = false) {
         self.label = label
         self.disabled = disabled
+        self.cancels = false
       }
+
+      private init(cancels: Bool) {
+        self.label = "Cancel"
+        self.disabled = false
+        self.cancels = cancels
+      }
+
+      /// The dialog's Cancel: the x beside its label, at the label's line,
+      /// in the button's own colors.
+      public static var cancel: DefaultAction { DefaultAction(cancels: true) }
     }
 
     public init(
@@ -143,12 +156,22 @@
             // Default action button (comes second visually, but first in DOM for stacked)
             if let defAction = defaultAction {
               div {
-                ButtonView(
-                  label: defAction.label,
-                  buttonColor: .gray,
-                  weight: .subtle, size: .large,
-                  disabled: defAction.disabled
-                )
+                if defAction.cancels {
+                  ButtonView(
+                    label: defAction.label,
+                    icon: IconView(icon: { s in XIconView(size: s) }, size: ButtonView.ButtonSize.large.labelIconSize),
+                    buttonColor: .gray,
+                    weight: .subtle, size: .large,
+                    disabled: defAction.disabled
+                  )
+                } else {
+                  ButtonView(
+                    label: defAction.label,
+                    buttonColor: .gray,
+                    weight: .subtle, size: .large,
+                    disabled: defAction.disabled
+                  )
+                }
               }
               .class("dialog-default-button")
             }

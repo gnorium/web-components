@@ -664,7 +664,9 @@ public enum OutlineMoves {
             }
             .class("outliner-toolbar-moves")
             ButtonView(
-              label: "Done", buttonColor: .blue, weight: .solid, size: .large,
+              label: "Done",
+              icon: IconView(icon: { s in CheckIconView(size: s) }, size: ButtonView.ButtonSize.large.labelIconSize),
+              buttonColor: .blue, weight: .solid, size: .large,
               data: [("outliner-action", "done")])
           }
           .class("outliner-toolbar")
