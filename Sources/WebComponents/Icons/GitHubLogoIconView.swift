@@ -7,7 +7,7 @@
   import SVGBuilder
   import WebTypes
 
-  public struct GitHubIconView: HTMLContent {
+  public struct GitHubLogoIconView: HTMLContent {
     let `class`: String
     let iconSize: CSS.Length
     let fill: CSS.Color
@@ -56,7 +56,7 @@
             C(877.44, 930.56, 1024, 738.56, 1024, 512), C(1024, 229.12, 794.88, 0, 512, 0), Z())
           .fill(fill)
       }
-      .class(`class`.isEmpty ? "github-icon-view" : "github-icon-view \(`class`)")
+      .class(`class`.isEmpty ? "github-logo-icon-view" : "github-logo-icon-view \(`class`)")
       .style { width(iconSize) }
       .viewBox(0, 0, 1024, 999.17)
       .xmlns("http://www.w3.org/2000/svg")

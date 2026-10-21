@@ -7,7 +7,7 @@
   import SVGBuilder
   import WebTypes
 
-  public struct ThreadsIconView: HTMLContent {
+  public struct ThreadsLogoIconView: HTMLContent {
     let `class`: String
     let iconSize: CSS.Length
     let fill: CSS.Color
@@ -61,7 +61,7 @@
             c(-24.38, -5.48, -42.54, -7.6, -71.99, -7.6), z())
           .fill(monochrome ? colorInverted : .white)
       }
-      .class(`class`.isEmpty ? "threads-icon-view" : "threads-icon-view \(`class`)")
+      .class(`class`.isEmpty ? "threads-logo-icon-view" : "threads-logo-icon-view \(`class`)")
       .style { height(iconSize) }
       .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")

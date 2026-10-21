@@ -7,7 +7,7 @@
   import SVGBuilder
   import WebTypes
 
-  public struct AppleIconView: HTMLContent {
+  public struct AppleLogoIconView: HTMLContent {
     let `class`: String
     let iconSize: CSS.Length
     let fill: CSS.Color
@@ -44,7 +44,7 @@
             c(57.09, 4.44, 115.84, -29.35, 151.85, -72.58))
           .fill(fill)
       }
-      .class(`class`.isEmpty ? "apple-icon-view" : "apple-icon-view \(`class`)")
+      .class(`class`.isEmpty ? "apple-logo-icon-view" : "apple-logo-icon-view \(`class`)")
       .style { height(iconSize) }
       .viewBox(0, 0, 834.13, 1024)
       .xmlns("http://www.w3.org/2000/svg")

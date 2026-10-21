@@ -7,7 +7,7 @@
   import SVGBuilder
   import WebTypes
 
-  public struct FacebookIconView: HTMLContent {
+  public struct FacebookLogoIconView: HTMLContent {
     let `class`: String
     let iconSize: CSS.Length
     let fill: CSS.Color
@@ -68,7 +68,7 @@
           }
         }
       }
-      .class(`class`.isEmpty ? "facebook-icon-view" : "facebook-icon-view \(`class`)")
+      .class(`class`.isEmpty ? "facebook-logo-icon-view" : "facebook-logo-icon-view \(`class`)")
       .style { height(iconSize) }
       .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")

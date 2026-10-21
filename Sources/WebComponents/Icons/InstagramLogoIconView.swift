@@ -7,7 +7,7 @@
   import SVGBuilder
   import WebTypes
 
-  public struct InstagramIconView: HTMLContent {
+  public struct InstagramLogoIconView: HTMLContent {
     let `class`: String
     let iconSize: CSS.Length
     let fill: CSS.Color
@@ -316,7 +316,7 @@
             .fill(colorInverted)
         }
       }
-      .class(`class`.isEmpty ? "instagram-icon-view" : "instagram-icon-view \(`class`)")
+      .class(`class`.isEmpty ? "instagram-logo-icon-view" : "instagram-logo-icon-view \(`class`)")
       .style { height(iconSize) }
       .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")

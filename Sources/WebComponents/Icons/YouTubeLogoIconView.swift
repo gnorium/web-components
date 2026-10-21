@@ -7,7 +7,7 @@
   import SVGBuilder
   import WebTypes
 
-  public struct YouTubeIconView: HTMLContent {
+  public struct YouTubeLogoIconView: HTMLContent {
     let `class`: String
     let iconSize: CSS.Length
     let fill: CSS.Color
@@ -46,7 +46,7 @@
           .d(M(409.5, 512.01), L(675.53, 358.43), L(409.5, 204.85), Z())
           .fill(monochrome ? colorInverted : .white)
       }
-      .class(`class`.isEmpty ? "youtube-icon-view" : "youtube-icon-view \(`class`)")
+      .class(`class`.isEmpty ? "youtube-logo-icon-view" : "youtube-logo-icon-view \(`class`)")
       .style { width(iconSize) }
       .viewBox(0, 0, 1024, 716.83)
       .xmlns("http://www.w3.org/2000/svg")

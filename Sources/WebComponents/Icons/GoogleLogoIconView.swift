@@ -7,7 +7,7 @@
   import SVGBuilder
   import WebTypes
 
-  public struct GoogleIconView: HTMLContent {
+  public struct GoogleLogoIconView: HTMLContent {
     let `class`: String
     let iconSize: CSS.Length
 
@@ -48,7 +48,7 @@
             l(170.36, 132.19), c(40.49, -121.02, 153.6, -210.85, 286.72, -210.85), Z())
           .fill(hex(0xEA4335))
       }
-      .class(`class`.isEmpty ? "google-icon-view" : "google-icon-view \(`class`)")
+      .class(`class`.isEmpty ? "google-logo-icon-view" : "google-logo-icon-view \(`class`)")
       .style { height(iconSize) }
       .viewBox(0, 0, 1003.52, 1024)
       .xmlns("http://www.w3.org/2000/svg")

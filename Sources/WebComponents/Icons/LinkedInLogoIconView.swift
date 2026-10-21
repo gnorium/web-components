@@ -7,7 +7,7 @@
   import SVGBuilder
   import WebTypes
 
-  public struct LinkedInIconView: HTMLContent {
+  public struct LinkedInLogoIconView: HTMLContent {
     let `class`: String
     let iconSize: CSS.Length
     let fill: CSS.Color
@@ -52,7 +52,7 @@
             L(309.61, 881.78), L(309.61, 388.74), L(156.91, 388.74), L(156.91, 881.78), Z())
           .fill(monochrome ? colorInverted : .white)
       }
-      .class(`class`.isEmpty ? "linkedin-icon-view" : "linkedin-icon-view \(`class`)")
+      .class(`class`.isEmpty ? "linkedin-logo-icon-view" : "linkedin-logo-icon-view \(`class`)")
       .style { height(iconSize) }
       .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
