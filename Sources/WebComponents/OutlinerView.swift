@@ -537,7 +537,7 @@ public enum OutlineMoves {
         .class("outliner-handle")
         .draggable(node.movable)
         .disabled(!node.movable)
-        .ariaLabel(node.movable ? "Move \(node.label)" : "\(node.label) stays where it is")
+        .ariaLabel(node.movable ? "Shift \(node.label)" : "\(node.label) stays where it is")
         .ariaPressed(false)
         .ariaDescribedby("\(treeID)-instructions")
         .build()
@@ -614,7 +614,7 @@ public enum OutlineMoves {
       return div {
         if arranges {
           p {
-            "Press Space or Enter on a handle to pick an item up; a toolbar at the foot of the screen then moves it. While it is held, the up and down arrows move it among its neighbors, Tab or the right arrow puts it under the item above, Shift-Tab or the left arrow takes it out a level, and Enter, Space or Escape put it down."
+            "Press Space or Enter on a handle to pick an item up; a toolbar at the foot of the screen then shifts it. While it is held, the up and down arrows shift it among its neighbors, Tab or the right arrow puts it under the item above, Shift-Tab or the left arrow takes it out a level, and Enter, Space or Escape put it down."
           }
           .id("\(id)-instructions")
           .class("outliner-instructions")
@@ -665,10 +665,10 @@ public enum OutlineMoves {
             div {
               ButtonView(
                 icon: ArrowUpIconView(size: ButtonView.ButtonSize.large.iconSize), weight: .quiet, size: .large,
-                ariaLabel: "Move up", data: [("outliner-action", "up")])
+                ariaLabel: "Shift up", data: [("outliner-action", "up")])
               ButtonView(
                 icon: ArrowDownIconView(size: ButtonView.ButtonSize.large.iconSize), weight: .quiet, size: .large,
-                ariaLabel: "Move down", data: [("outliner-action", "down")])
+                ariaLabel: "Shift down", data: [("outliner-action", "down")])
               ButtonView(
                 icon: ArrowPreviousIconView(size: ButtonView.ButtonSize.large.iconSize), weight: .quiet, size: .large,
                 ariaLabel: "Outdent", data: [("outliner-action", "outdent")])
@@ -685,7 +685,7 @@ public enum OutlineMoves {
           }
           .class("outliner-toolbar")
           .role("toolbar")
-          .ariaLabel("Move \(label.lowercased())")
+          .ariaLabel("Shift \(label.lowercased())")
           .data("visible", false)
         }
       }
