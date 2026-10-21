@@ -42,10 +42,11 @@
         public static let destructive = ActionColor.red
       }
       
-      public init(label: String, color: ActionColor = .blue, disabled: Bool = false) {
+      public init(label: String, color: ActionColor = .blue, disabled: Bool = false, icon: DOM.Node? = nil) {
         self.label = label
         self.color = color
         self.disabled = disabled
+        self.icon = icon
       }
 
       /// Legacy init
@@ -53,6 +54,7 @@
         self.label = label
         self.color = type
         self.disabled = disabled
+        self.icon = nil
       }
     }
 
