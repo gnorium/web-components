@@ -229,6 +229,11 @@ public struct TimeInputView: HTMLContent {
         backgroundColor(backgroundColorTransparent).important()
         borderColor(borderColorTransparent).important()
       }
+      // The field is 40 on a phone (`ButtonView.phoneStepFieldCSS`): the
+      // button's 32 stay centered, (40 − 32) / 2.
+      media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
+        selector("\(ButtonView.phoneStep) & .time-input-toggle") { insetBlockEnd(spacing4).important() }
+      }
 
       // Exactly the field's width, as the date picker's calendar is (user,
       // 2026-10-10); border only. Its columns share the width.

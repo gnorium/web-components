@@ -327,6 +327,11 @@ public struct DatePickerView: HTMLContent {
         backgroundColor(backgroundColorTransparent).important()
         borderColor(borderColorTransparent).important()
       }
+      // The field is 40 on a phone (`ButtonView.phoneStepFieldCSS`): the
+      // button's 32 stay centered, (40 − 32) / 2.
+      media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
+        selector("\(ButtonView.phoneStep) & .date-picker-toggle") { insetBlockEnd(spacing4).important() }
+      }
 
       // Exactly the field's width, as a dropdown's menu is (user,
       // 2026-10-10): the grid's seven columns share it, never under 32 a

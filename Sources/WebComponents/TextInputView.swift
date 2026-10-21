@@ -347,6 +347,7 @@ public struct TextInputView: HTMLContent {
       selector("&.text-input-has-end-icon .text-input-input", "&.text-input-clearable .text-input-input") {
         paddingInlineEnd(calc(spacing12 + lineHeightSmall22 + spacing8)).important()
       }
+      ButtonView.phoneStepFieldCSS(".text-input-input")
       selector("& .text-input-input::placeholder") {
         color(colorPlaceholder).important()
         customProperty("-webkit-text-fill-color", colorPlaceholder).important()

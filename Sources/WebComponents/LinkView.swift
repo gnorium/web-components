@@ -32,6 +32,9 @@ public struct LinkView: HTMLContent {
   let content: [DOM.Node]
   let `class`: String
   let title: String?
+  /// The link's accessible name where its visible words do not tell it apart
+  /// from its neighbors'.
+  let ariaLabel: String?
   /// `data-*` attributes on the link, by name without the prefix.
   let data: [(String, String)]
 
@@ -45,6 +48,7 @@ public struct LinkView: HTMLContent {
     linkHeight: CSS.Length? = nil,
     class: String = "",
     title: String? = nil,
+    ariaLabel: String? = nil,
     data: [(String, String)] = [],
     @HTMLBuilder content: () -> [DOM.Node]
   ) {
@@ -60,6 +64,7 @@ public struct LinkView: HTMLContent {
     self.content = content()
     self.`class` = `class`
     self.title = title
+    self.ariaLabel = ariaLabel
   }
 
   /// A form's submit control with this link's look: the form posts, the
@@ -73,6 +78,7 @@ public struct LinkView: HTMLContent {
     linkHeight: CSS.Length? = nil,
     class: String = "",
     title: String? = nil,
+    ariaLabel: String? = nil,
     data: [(String, String)] = [],
     @HTMLBuilder content: () -> [DOM.Node]
   ) {
@@ -88,6 +94,7 @@ public struct LinkView: HTMLContent {
     self.content = content()
     self.`class` = `class`
     self.title = title
+    self.ariaLabel = ariaLabel
   }
 
   public func build() -> DOM.Node {
@@ -97,6 +104,7 @@ public struct LinkView: HTMLContent {
         .class(linkClasses + " link-submit")
         .data("height", linkHeight?.value ?? "auto")
       if let title { control = control.title(title) }
+      if let ariaLabel { control = control.ariaLabel(ariaLabel) }
       for (name, value) in data { control = control.data(name, value) }
       return control.style { linkStyle() }
     }
@@ -116,6 +124,7 @@ public struct LinkView: HTMLContent {
     if let title {
       link = link.title(title)
     }
+    if let ariaLabel { link = link.ariaLabel(ariaLabel) }
     for (name, value) in data { link = link.data(name, value) }
 
     if external {

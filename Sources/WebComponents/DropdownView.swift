@@ -899,6 +899,9 @@ public struct DropdownView: HTMLContent {
       place()
       morphChevron()
       highlightIndex = -1
+      // Typing goes to the menu's search at once, not to the field that had
+      // the focus before the trigger was clicked. The page stays where it is.
+      searchInput?.focus(DOM.FocusOptions(preventScroll: true))
     }
 
     private func closeDropdown() {

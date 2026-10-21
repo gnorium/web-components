@@ -11,7 +11,6 @@
   public struct AlertView: HTMLContent {
     let alertColor: AlertColor
     let inline: Bool
-    let icon: StatusIconView.Status?
     /// A mark in place of the status icon, where one is given.
     let mark: DOM.Node?
     let animatesIn: Bool
@@ -47,7 +46,6 @@
     public init(
       type: AlertColor,
       inline: Bool = false,
-      icon: StatusIconView.Status? = nil,
       animatesIn: Bool = false,
       allowUserDismiss: Bool = false,
       dismissButtonLabel: String = "Close",
@@ -58,7 +56,6 @@
     ) {
       self.alertColor = type
       self.inline = inline
-      self.icon = icon
       self.mark = nil
       self.animatesIn = animatesIn
       self.allowUserDismiss = allowUserDismiss
@@ -72,7 +69,6 @@
     public init(
       color: AlertColor = .gray,
       inline: Bool = false,
-      icon: StatusIconView.Status? = nil,
       mark: DOM.Node? = nil,
       animatesIn: Bool = false,
       allowUserDismiss: Bool = false,
@@ -85,7 +81,6 @@
       self.mark = mark
       self.alertColor = color
       self.inline = inline
-      self.icon = icon
       self.animatesIn = animatesIn
       self.allowUserDismiss = allowUserDismiss
       self.dismissButtonLabel = dismissButtonLabel
@@ -102,10 +97,9 @@
     }
 
     public func build() -> DOM.Node {
-      // The color gives the icon; `icon` overrides it (a blue alert that
-      // reports a recoverable failure draws the error icon).
+      // The color gives the icon (blue: info, orange: warning, red: error,
+      // green: success), never the other way: a failure is a red alert.
       let displayIcon: StatusIconView.Status = {
-        if let icon { return icon }
         switch alertColor {
         case .gray, .blue:
           return .info
@@ -559,7 +553,6 @@
       _ text: String,
       type: AlertColor = .gray,
       inline: Bool = false,
-      icon: StatusIconView.Status? = nil,
       allowUserDismiss: Bool = true,
       autoDismiss: Bool = false,
       autoDismissTime: Int = 10000,
@@ -585,18 +578,13 @@
         alertContainer = c
       }
 
-      // The same icons as the server's AlertView: the color gives the icon,
-      // `icon` overrides it.
+      // The same icons as the server's AlertView: the color gives the icon.
       let displayIcon: StatusIconView.Status
-      if let icon {
-        displayIcon = icon
-      } else {
-        switch type {
-        case .gray, .blue: displayIcon = .info
-        case .orange: displayIcon = .warning
-        case .red: displayIcon = .error
-        case .green: displayIcon = .success
-        }
+      switch type {
+      case .gray, .blue: displayIcon = .info
+      case .orange: displayIcon = .warning
+      case .red: displayIcon = .error
+      case .green: displayIcon = .success
       }
 
       let ariaLive: ARIA.Live

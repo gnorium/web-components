@@ -172,6 +172,7 @@
           outline(borderWidthBase, .solid, borderColorBlueFocus).important()
           outlineOffset(px(0)).important()
         }
+        ButtonView.phoneStepFieldCSS(".select-handle")
         descendant(".select-label") {
           display(.flex)
           alignItems(.center)

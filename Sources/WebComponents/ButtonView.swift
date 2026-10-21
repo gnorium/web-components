@@ -205,6 +205,22 @@ public struct ButtonView: HTMLContent {
     }
   }
 
+  /// A field (a text input's box, a select's handle) is the large control's
+  /// height—48—and steps down with it under `phoneStep`: 40 on a phone
+  /// (user, 2026-10-21), so a text input, a select, a date and a time
+  /// field end the same height as the dropdown trigger beside them. Its
+  /// block inset drops to the medium control's; the inline inset, and the
+  /// room an icon takes, stay. `fields` is each field's selector inside
+  /// the view.
+  @CSSBuilder
+  static func phoneStepFieldCSS(_ fields: String...) -> [CSSOM.CSSRule] {
+    media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
+      selector(fields.map { "\(phoneStep) & \($0)" }.joined(separator: ", ")) {
+        paddingBlock(ButtonSize.medium.padding).important()
+      }
+    }
+  }
+
   // MARK: - Initialization
 
   public init(
