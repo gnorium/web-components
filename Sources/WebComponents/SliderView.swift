@@ -110,7 +110,9 @@
           alignItems(.center)
           flexGrow(1)
           minWidth(spacing48)
-          height(ButtonView.ButtonSize.medium.minSize)
+          // As tall as the large buttons it sits among (user, 2026-10-22),
+          // and one size down on a phone as they are.
+          height(ButtonView.ButtonSize.large.minSize)
           cursor(.pointer)
           // The track is the slider's own: a touch drag moves the handle, it
           // never scrolls the page.
@@ -122,6 +124,9 @@
           // and the fill move by transform, so a value drawn every frame
           // lays nothing out.
           CSS.Property("container-type", "inline-size")
+        }
+        media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
+          selector("&") { height(ButtonView.ButtonSize.medium.minSize).important() }
         }
         descendant(".slider-track") {
           position(.relative)
