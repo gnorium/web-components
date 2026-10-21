@@ -104,7 +104,7 @@ final class LucideIconTightnessTests: XCTestCase {
     let icons: [(String, DOM.Node)] = [
       ("check", CheckIconView(size: px(22)).build()),
       ("x", XIconView(size: px(22)).build()),
-      ("triangle-alert", TriangleAlertIconView(size: px(22)).build()),
+      ("octagon-alert", OctagonAlertIconView(size: px(22)).build()),
       ("circle-check", CircleCheckIconView(size: px(22)).build()),
       ("circle-x", CircleXIconView(size: px(22)).build()),
       ("info", InfoIconView(size: px(22)).build()),
