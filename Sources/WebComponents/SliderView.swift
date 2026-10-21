@@ -21,9 +21,10 @@
   /// mark values along the track—small gaps cut into it, as a video's
   /// chapters are.
   ///
-  /// The client (`Slider`) moves it and tells its host: `slider-input` as the
-  /// value changes (a drag, each move), `slider-change` once it is chosen (a
-  /// drag let go, a click, a key), each carrying the value in its detail. A
+  /// The client (`Slider`) moves it and tells its host: `slider-start` as a
+  /// press begins a drag, `slider-input` as the value changes (a drag, at
+  /// most once a frame), `slider-change` once it is chosen (a drag let go, a
+  /// click, a key), each carrying the value in its detail. A
   /// drag holds `data-dragging="true"` on the root, so a host updating the
   /// value itself (a playing position) leaves the reader's hand alone.
   public struct SliderView: HTMLContent {
@@ -117,6 +118,10 @@
           CSS.Property("user-select", "none")
           CSS.Property("-webkit-user-select", "none")
           outline(borderWidthBase, .solid, borderColorTransparent)
+          // Its width is the length the handle travels (`cqi`): the handle
+          // and the fill move by transform, so a value drawn every frame
+          // lays nothing out.
+          CSS.Property("container-type", "inline-size")
         }
         descendant(".slider-track") {
           position(.relative)
@@ -131,8 +136,14 @@
           insetBlockStart(0)
           insetBlockEnd(0)
           insetInlineStart(0)
-          CSS.Property("inline-size", "calc(var(--slider-fraction, 0) * 100%)")
+          insetInlineEnd(0)
+          CSS.Property("transform", "scaleX(var(--slider-fraction, 0))")
+          CSS.Property("transform-origin", "left center")
           backgroundColor(backgroundColorBlue)
+        }
+        // Right to left, the fill grows from the right.
+        descendant(".slider-fill:dir(rtl)") {
+          CSS.Property("transform-origin", "right center")
         }
         descendant(".slider-ticks") {
           position(.absolute)
@@ -153,7 +164,8 @@
         descendant(".slider-handle") {
           position(.absolute)
           insetBlockStart(calc("50% - \(spacing8.value)"))
-          CSS.Property("inset-inline-start", "calc(var(--slider-fraction, 0) * 100%)")
+          insetInlineStart(0)
+          CSS.Property("transform", "translateX(calc(var(--slider-fraction, 0) * 100cqi))")
           marginInlineStart(calc("-1 * \(spacing8.value)"))
           width(spacing16)
           height(spacing16)
@@ -162,6 +174,10 @@
           backgroundColor(backgroundColorBlue)
           border(borderWidthBase, .solid, backgroundColorBlue)
           pointerEvents(.none)
+        }
+        // Right to left, the handle travels leftward from the right edge.
+        descendant(".slider-handle:dir(rtl)") {
+          CSS.Property("transform", "translateX(calc(var(--slider-fraction, 0) * -100cqi))")
         }
         // Keyboard focus rings the handle, as every control is ringed.
         selector("&:focus-visible .slider-handle") {
@@ -193,12 +209,22 @@
 
   /// Moves every SliderView (see the view) and lets its host move it.
   public enum Slider {
-    /// The drag under way: its slider, and the document's listeners that
-    /// follow it until it is let go.
+    /// The drag under way: its slider, the pointer it captured, and the
+    /// document's listeners that follow it until it is let go.
     nonisolated(unsafe) static var dragged: DOM.Element? = nil
+    nonisolated(unsafe) static var draggedPointer = -1
     nonisolated(unsafe) static var moveListener: Int32 = -1
     nonisolated(unsafe) static var upListener: Int32 = -1
     nonisolated(unsafe) static var cancelListener: Int32 = -1
+    /// The track's box and direction, read once as the drag begins: a move
+    /// reads no layout.
+    nonisolated(unsafe) static var dragTrackLeft: Double = 0
+    nonisolated(unsafe) static var dragTrackWidth: Double = 0
+    nonisolated(unsafe) static var dragRTL = false
+    /// The pointer's latest x, drawn at the next frame: one move a frame,
+    /// however many the pointer sent.
+    nonisolated(unsafe) static var pendingX: Double = 0
+    nonisolated(unsafe) static var moveFrame: Int32 = -1
 
     public static func hydrateIfPresent() {
       guard document.querySelector(".slider-view") != nil else { return }
@@ -242,6 +268,18 @@
       slider.style.setProperty("--slider-fraction", doubleToString(fraction))
     }
 
+    /// Its handle and fill drawn at `value` (held between its ends), its
+    /// value as said (`aria-valuenow`) left as it was: for a host moving it
+    /// every frame (a playing position), which says the value itself less
+    /// often with `set`. A transform only: nothing is laid out.
+    public static func place(_ slider: DOM.Element, value: Int) {
+      let low = minimum(of: slider)
+      let high = max(low, maximum(of: slider))
+      let held = min(max(value, low), high)
+      let fraction = high > low ? Double(held - low) / Double(high - low) : 0
+      slider.style.setProperty("--slider-fraction", doubleToString(fraction))
+    }
+
     /// Its ends set to `min` and `max`, its value held between them.
     public static func setRange(_ slider: DOM.Element, min low: Int, max high: Int) {
       slider.setAttribute("aria-valuemin", intToString(low))
@@ -268,13 +306,24 @@
       slider.dispatchEvent(CustomEvent(type: type, detail: intToString(value(of: slider))))
     }
 
-    /// The value under the pointer at `x`: the track's start edge its least,
-    /// its end edge its greatest, mirrored right to left.
-    static func value(of slider: DOM.Element, atX x: Double) -> Int? {
+    /// The track's box and direction kept for the drag (`dragTrack*`).
+    /// Whether it has a width to measure by.
+    static func measureTrack(of slider: DOM.Element) -> Bool {
       guard let track = slider.querySelector(".slider-track"), let box = track.getBoundingClientRect(), box.width > 0
-      else { return nil }
-      var fraction = (x - box.left) / box.width
-      if let _ = slider.closest("[dir='rtl']") { fraction = 1 - fraction }
+      else { return false }
+      dragTrackLeft = box.left
+      dragTrackWidth = box.width
+      if let _ = slider.closest("[dir='rtl']") { dragRTL = true } else { dragRTL = false }
+      return true
+    }
+
+    /// The value under the pointer at `x`, by the track measured as the drag
+    /// began: its start edge the least, its end edge the greatest, mirrored
+    /// right to left.
+    static func value(of slider: DOM.Element, atX x: Double) -> Int? {
+      guard dragTrackWidth > 0 else { return nil }
+      var fraction = (x - dragTrackLeft) / dragTrackWidth
+      if dragRTL { fraction = 1 - fraction }
       fraction = min(max(fraction, 0), 1)
       let low = minimum(of: slider)
       let high = maximum(of: slider)
@@ -288,8 +337,17 @@
       tell(slider, "slider-input")
     }
 
+    /// The pointer's latest place drawn now, a frame's wait cut short.
+    static func flushMove() {
+      if moveFrame >= 0 { window.cancelAnimationFrame(moveFrame) }
+      moveFrame = -1
+      guard let slider = dragged, let picked = value(of: slider, atX: pendingX) else { return }
+      move(slider, to: picked)
+    }
+
     static func endDrag(commit: Bool) {
       guard let slider = dragged else { return }
+      flushMove()
       dragged = nil
       if moveListener >= 0 { document.removeEventListener(.pointermove, moveListener) }
       if upListener >= 0 { document.removeEventListener(.pointerup, upListener) }
@@ -297,6 +355,8 @@
       moveListener = -1
       upListener = -1
       cancelListener = -1
+      if draggedPointer >= 0 { slider.releasePointerCapture(draggedPointer) }
+      draggedPointer = -1
       slider.setAttribute(data("dragging"), "false")
       if commit { tell(slider, "slider-change") }
     }
@@ -305,20 +365,35 @@
       guard !stringEquals(slider.getAttribute(data("hydrated")) ?? "", "true") else { return }
       slider.setAttribute(data("hydrated"), "true")
       // A press anywhere on it: the handle there at once, then following
-      // the pointer until it is let go, wherever it goes.
+      // the pointer—captured, so it follows wherever the pointer goes—until
+      // it is let go. `slider-start` tells the host first, so it can hold
+      // what it moves the slider by (a playing position) for the drag.
       _ = slider.addEventListener(.pointerdown) { (event: Event) in
         guard !isDisabled(slider), event.button == 0 else { return }
         event.preventDefault()
         slider.focus()
         endDrag(commit: false)
+        guard measureTrack(of: slider) else { return }
         dragged = slider
+        draggedPointer = event.pointerId
+        if draggedPointer >= 0 { slider.setPointerCapture(draggedPointer) }
         slider.setAttribute(data("dragging"), "true")
-        if let picked = value(of: slider, atX: event.clientX) { move(slider, to: picked) }
+        tell(slider, "slider-start")
+        pendingX = event.clientX
+        flushMove()
         moveListener = document.addEventListener(.pointermove) { (event: Event) in
-          guard let slider = dragged, let picked = value(of: slider, atX: event.clientX) else { return }
-          move(slider, to: picked)
+          guard let _ = dragged else { return }
+          pendingX = event.clientX
+          guard moveFrame < 0 else { return }
+          moveFrame = window.requestAnimationFrame {
+            moveFrame = -1
+            flushMove()
+          }
         }
-        upListener = document.addEventListener(.pointerup) { (_: Event) in endDrag(commit: true) }
+        upListener = document.addEventListener(.pointerup) { (event: Event) in
+          pendingX = event.clientX
+          endDrag(commit: true)
+        }
         cancelListener = document.addEventListener(.pointercancel) { (_: Event) in endDrag(commit: true) }
       }
       _ = slider.addEventListener(.keydown) { (event: Event) in
