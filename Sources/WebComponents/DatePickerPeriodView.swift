@@ -173,14 +173,19 @@ public struct DatePickerPeriodView: HTMLContent {
       // The day grid's cell: the cell the target, the pill inside it what
       // shows. Its four rows take the day grid's whole height—its weekday
       // row and six weeks—so the popover keeps one height on every grid
-      // (user, 2026-10-12); each is taller than the 40px a finger needs.
+      // (user, 2026-10-12); each is taller than a month's 48px day row.
       descendant(".date-picker-period-cell") {
-        blockSize(calc("(\(minSizeInteractivePointer.value) + \(minSizeInteractiveTouch.value) * 6) / 4"))
+        blockSize(calc("(\(minSizeInteractivePointer.value) + \(ButtonView.ButtonSize.large.minSize.value) * 6) / 4"))
         padding(0)
         textAlign(.center)
         verticalAlign(.middle)
         cursor(.pointer)
         outline(.none)
+      }
+      media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
+        selector("\(ButtonView.phoneStep) & .date-picker-period-cell") {
+          blockSize(calc("(\(minSizeInteractivePointer.value) + \(ButtonView.ButtonSize.medium.minSize.value) * 6) / 4")).important()
+        }
       }
       // The day's circle drawn as a pill wide enough for a year.
       descendant(".date-picker-period-label") {

@@ -70,11 +70,12 @@ public struct TimeInputPartView: HTMLContent {
         fontWeight(fontWeightSemiBold)
         color(colorSubtle)
       }
-      // Five rows show at once; the rest scroll, a finger's 40px each.
+      // Five rows show at once; the rest scroll, each a large control's 48
+      // (40 on a phone).
       descendant(".time-input-column") {
         flex(1)
         minWidth(0)
-        maxHeight(calc("\(minSizeInteractiveTouch.value) * 5"))
+        maxHeight(calc("\(ButtonView.ButtonSize.large.minSize.value) * 5"))
         overflowY(.auto)
         margin(0)
         padding(0)
@@ -85,7 +86,7 @@ public struct TimeInputPartView: HTMLContent {
         display(.flex)
         alignItems(.center)
         justifyContent(.center)
-        blockSize(minSizeInteractiveTouch)
+        blockSize(ButtonView.ButtonSize.large.minSize)
         borderRadius(borderRadiusBase)
         fontSize(fontSizeMedium16)
         fontVariantNumeric(.tabularNums)
@@ -107,6 +108,12 @@ public struct TimeInputPartView: HTMLContent {
       descendant(".time-input-option:focus-visible") {
         outline(borderWidthThick, .solid, borderColorBlueFocus)
         outlineOffset(calc("-\(borderWidthThick.value)"))
+      }
+      ButtonView.phoneStepRowCSS(".time-input-option", fixed: true)
+      media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
+        selector("\(ButtonView.phoneStep) & .time-input-column") {
+          maxHeight(calc("\(ButtonView.ButtonSize.medium.minSize.value) * 5")).important()
+        }
       }
     }
   }

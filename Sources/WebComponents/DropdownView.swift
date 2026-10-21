@@ -504,6 +504,7 @@ public struct DropdownView: HTMLContent {
         borderBlockStart(borderWidthBase, .solid, borderColorSubtle)
         cursor(cursorBase)
       }
+      ButtonView.phoneStepRowCSS(".dropdown-note", ".dropdown-option")
       descendant(".dropdown-search-input-wrapper") {
         padding(spacing8)
         borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
@@ -746,6 +747,15 @@ public struct DropdownView: HTMLContent {
       else { return }
 
       _ = form.addEventListener(.submit) { [self] (event: Event) in
+        // What the menu shows chosen is what posts: a hidden value that
+        // lost its choice is put back from the option marked chosen.
+        if let field = self.hiddenInput as? HTML.HTMLInputElement, stringIsEmpty(field.value), !self.multiple {
+          for option in self.ownOptions + self.resultOptions
+          where stringEquals(option.getAttribute(data("selected")) ?? "", "true") {
+            field.value = option.getAttribute(data("value")) ?? ""
+            break
+          }
+        }
         // Only a submit the reader made is checked. The page dispatches one
         // itself only to have the form's lists and statements written out
         // (a draft carried to an amendment, the outline's work form), and
@@ -1143,7 +1153,13 @@ public struct DropdownView: HTMLContent {
       let currentVal = (hiddenInput as? HTML.HTMLInputElement)?.value ?? ""
       
       if stringEquals(currentVal, value) {
-        // Toggle off if already selected
+        // Chosen again: a required choice stays (it is never blank after a
+        // visible choice, and a repeated click must not blank it); any
+        // other toggles off.
+        if (hiddenInput as? HTML.HTMLInputElement)?.hasAttribute("required") ?? false {
+          closeDropdown()
+          return
+        }
         clearSelection()
         return
       }

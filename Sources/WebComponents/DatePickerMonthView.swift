@@ -150,15 +150,16 @@ public struct DatePickerMonthView: HTMLContent {
       }
       // The cell is the target; the circle inside it is what shows. Columns
       // give up width before the grid overflows a narrow phone, and a row
-      // keeps the 40px a finger needs.
+      // keeps a large control's 48 (40 on a phone).
       descendant(".date-picker-month-day") {
-        blockSize(minSizeInteractiveTouch)
+        blockSize(ButtonView.ButtonSize.large.minSize)
         padding(0)
         textAlign(.center)
         verticalAlign(.middle)
         cursor(.pointer)
         outline(.none)
       }
+      ButtonView.phoneStepRowCSS(".date-picker-month-day", fixed: true)
       descendant(".date-picker-month-day-label") {
         display(.inlineFlex)
         alignItems(.center)

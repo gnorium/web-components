@@ -235,7 +235,9 @@ public struct ComboboxView: HTMLContent {
       // This combobox's list height, per instance: the shared rule for a
       // limited list reads it.
       if let visibleItemLimit {
-        customProperty("--combobox-visible-limit-height", calc(visibleItemLimit * minSizeInteractiveTouch).value)
+        customProperty(
+          "--combobox-visible-limit-height",
+          calc(visibleItemLimit * ButtonView.ButtonSize.large.minSize).value)
       }
 
       selector("&") {
@@ -385,6 +387,7 @@ public struct ComboboxView: HTMLContent {
         color(colorSubtle)
         borderBlockStart(borderWidthBase, .solid, borderColorSubtle)
       }
+      ButtonView.phoneStepRowCSS(".combobox-option", ".combobox-note")
     }
   }
 
@@ -479,6 +482,8 @@ public struct ComboboxView: HTMLContent {
     /// dropped.
     private var searchState = ComboboxSearch()
     private var isOpen = false
+    /// The id of the suggestion a press began on, until its click.
+    private var pressed = ""
     /// The suggestion the arrow keys are on, in `shown`; -1 for none.
     private var active = -1
 
@@ -566,9 +571,18 @@ public struct ComboboxView: HTMLContent {
       }
     }
 
+    /// A suggestion is chosen by a press that began on it and ended on it
+    /// (a click), never by a click that merely arrives where the list opened:
+    /// opening by the arrow chooses nothing.
     private func bindOptions(_ options: [DOM.Element]) {
       for option in options {
+        _ = option.addEventListener(.mousedown) { [self] _ in
+          self.pressed = option.getAttribute("id") ?? ""
+        }
         _ = option.addEventListener(.click) { [self] _ in
+          let id = option.getAttribute("id") ?? ""
+          guard !stringIsEmpty(id), stringEquals(id, self.pressed) else { return }
+          self.pressed = ""
           self.choose(option)
         }
       }
@@ -692,6 +706,7 @@ public struct ComboboxView: HTMLContent {
       // matches it (diacritics aside): none is hidden again here.
       filter(all || searchState.matches(currentQuery) ? "" : text)
       guard visibleCount() > 0 else { return }
+      pressed = ""
       isOpen = true
       menu.setAttribute(data("open"), true)
       field.setAttribute("aria-expanded", "true")

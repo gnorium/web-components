@@ -211,7 +211,7 @@
           }
 
           if allowUserDismiss {
-            CloseButtonView(ariaLabel: dismissButtonLabel, class: "alert-dismiss")
+            CloseButtonView(ariaLabel: dismissButtonLabel, size: inline ? .medium : .large, class: "alert-dismiss")
           }
         }
         .class("alert-motion-content")
@@ -253,10 +253,23 @@
           selector("&:has(.alert-dismiss)") {
             gridTemplateColumns("auto minmax(0, 1fr) auto")
           }
-          // With a close button its 40px target is the row's first line: the
-          // mark and the content's first line stand level with its center.
-          selector("&:not(.alert-inline):has(.alert-dismiss) .alert-icon") { height(minSizeInteractiveTouch) }
-          selector("&:not(.alert-inline):has(.alert-dismiss) .alert-content") { minHeight(minSizeInteractiveTouch) }
+          // With a close button, a large one in a boxed alert (a medium one in
+          // an inline alert), its target is the row's first line: the mark
+          // and the content's first line stand level with its center. The
+          // button steps down on a phone (`ButtonView.phoneStep`), so does
+          // the row.
+          selector("&") { customProperty("--alert-dismiss-size", ButtonView.ButtonSize.large.minSize.value) }
+          selector("&.alert-inline") { customProperty("--alert-dismiss-size", ButtonView.ButtonSize.medium.minSize.value) }
+          media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
+            selector("\(ButtonView.phoneStep) &") {
+              customProperty("--alert-dismiss-size", ButtonView.ButtonSize.medium.minSize.value)
+            }
+            selector("\(ButtonView.phoneStep) &.alert-inline") {
+              customProperty("--alert-dismiss-size", ButtonView.smallMinSize.value)
+            }
+          }
+          selector("&:not(.alert-inline):has(.alert-dismiss) .alert-icon") { height(`var`("--alert-dismiss-size") as CSS.Length) }
+          selector("&:not(.alert-inline):has(.alert-dismiss) .alert-content") { minHeight(`var`("--alert-dismiss-size") as CSS.Length) }
           selector("&:not(.alert-inline)") {
             minHeight(px(64))
             padding(spacing16)
@@ -374,7 +387,7 @@
           }
           // The dismiss button, server-rendered or built by AlertAPI: no fill
           // of its own on the alert's background, the ✕ in the alert's text
-          // color at the status icon's size, a 40px target, and a tint of
+          // color at the status icon's size, a target on the button scale, and a tint of
           // the alert's own color on hover and focus. `.important()` beats
           // ButtonView's plain-weight fill, and `button.` outranks its
           // `.button-view[data-weight]`, which loads later.
@@ -383,10 +396,10 @@
             alignItems(.center).important()
             justifyContent(.center).important()
             flexShrink(0)
-            minWidth(minSizeInteractiveTouch).important()
-            minHeight(minSizeInteractiveTouch).important()
-            width(minSizeInteractiveTouch).important()
-            height(minSizeInteractiveTouch).important()
+            minWidth(`var`("--alert-dismiss-size") as CSS.Length).important()
+            minHeight(`var`("--alert-dismiss-size") as CSS.Length).important()
+            width(`var`("--alert-dismiss-size") as CSS.Length).important()
+            height(`var`("--alert-dismiss-size") as CSS.Length).important()
             padding(0).important()
             border(borderTransparent).important()
             borderRadius(borderRadiusCircle).important()
@@ -663,8 +676,9 @@
         // once, before a just-requested alert-view.css may have arrived, and
         // a button measured at its unstyled size makes the alert jump 2px
         // taller when the motion ends.
-        dismissBtn.style.setProperty("width", "var(--min-size-interactive-touch)")
-        dismissBtn.style.setProperty("height", "var(--min-size-interactive-touch)")
+        let dismissSize = inline ? ButtonView.ButtonSize.medium.minSize : ButtonView.ButtonSize.large.minSize
+        dismissBtn.style.setProperty("width", dismissSize.value)
+        dismissBtn.style.setProperty("height", dismissSize.value)
         dismissBtn.style.setProperty("flex-shrink", "0")
         let buttonType: HTML.Button.`Type` = .button
         dismissBtn.setAttribute(.type, buttonType)

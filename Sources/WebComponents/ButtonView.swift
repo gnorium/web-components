@@ -186,6 +186,25 @@ public struct ButtonView: HTMLContent {
     }
   }
 
+  /// A popup row hanging from a large control (a dropdown's or combobox's
+  /// option and note, a time part's or a day's cell) is that control's
+  /// height—48—and steps down with it under `phoneStep`: 40 on a phone
+  /// (user, 2026-10-21). `rows` is the row's selector inside the view
+  /// (`.combobox-option`), or several; `fixed` sets their block size
+  /// instead of their least.
+  @CSSBuilder
+  static func phoneStepRowCSS(_ rows: String..., fixed: Bool = false) -> [CSSOM.CSSRule] {
+    media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
+      selector(rows.map { "\(phoneStep) & \($0)" }.joined(separator: ", ")) {
+        if fixed {
+          blockSize(ButtonSize.medium.minSize).important()
+        } else {
+          minHeight(ButtonSize.medium.minSize).important()
+        }
+      }
+    }
+  }
+
   // MARK: - Initialization
 
   public init(
