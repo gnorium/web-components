@@ -93,8 +93,10 @@ final class StatusMarkTests: XCTestCase {
       XCTAssertEqual(attribute("stroke", in: part), "currentColor")
       XCTAssertEqual(attribute("fill", in: part), "none")
     }
-    // Lucide's grid in the house box: radius 9 of 24, the stroke 2 of 24.
-    XCTAssertEqual(DottedRingView.radius, 384, accuracy: 0.001)
+    // Tight (user, 2026-10-21): the dots' outer edge on the box, as the
+    // ring's, the stroke 2 of Lucide's 24.
+    XCTAssertEqual(DottedRingView.radius, 512 - iconStrokeWidth / 2, accuracy: 0.001)
+    XCTAssertEqual(DottedRingView.radius + iconStrokeWidth / 2, 512, accuracy: 0.001)
     XCTAssertEqual(DottedRingView.radius * 2 * Double.pi / DottedRingView.step, 12, accuracy: 0.001)
     // The pattern repeats each step: a point of a dash, the rest a gap.
     let pattern = try XCTUnwrap(attribute("stroke-dasharray", in: ring)).split(separator: " ").compactMap { Double($0) }
@@ -104,7 +106,14 @@ final class StatusMarkTests: XCTestCase {
     // The sector's 120° is four steps: five dots, both ends included.
     XCTAssertEqual(DottedRingView.radius * 2 * Double.pi / 3 / DottedRingView.step, 4, accuracy: 0.001)
     let d = try XCTUnwrap(attribute("d", in: sector))
-    XCTAssertTrue(d.hasPrefix("M512,128 A384,384 ") || d.hasPrefix("M 512,128 A 384,384 "), d)
+    // It starts at the top of the same circle: M 512,(512 − r) A r,r …
+    let numbers = d.split(whereSeparator: { !"0123456789.".contains($0) }).compactMap { Double($0) }
+    XCTAssertTrue(d.hasPrefix("M"), d)
+    XCTAssertGreaterThanOrEqual(numbers.count, 4, d)
+    XCTAssertEqual(numbers[0], 512, accuracy: 0.01, d)
+    XCTAssertEqual(numbers[1], 512 - DottedRingView.radius, accuracy: 0.01, d)
+    XCTAssertEqual(numbers[2], DottedRingView.radius, accuracy: 0.01, d)
+    XCTAssertEqual(numbers[3], DottedRingView.radius, accuracy: 0.01, d)
   }
 
   func testEveryMarkStopsRotationForReducedMotionWithoutHidingTheShape() throws {

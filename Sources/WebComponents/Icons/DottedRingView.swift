@@ -9,8 +9,8 @@ import WebTypes
 
 /// A full ring of 12 round dots (user, 2026-10-18): the pending mark of
 /// calibration and of the objects before it (an overture). Drawn on
-/// Lucide's 24 grid scaled to the house 1024 box—a circle of radius 9, the
-/// stroke 2, round caps—as a dash of next to no length every twelfth of the
+/// Lucide's 24 grid scaled to the house 1024 box—a circle whose dots' outer
+/// edge meets the box (tight), the stroke 2, round caps—as a dash of next to no length every twelfth of the
 /// circumference, which the round cap makes a dot. Its static twin turning
 /// is `RotatingDottedRingSectorView`.
 public struct DottedRingView: HTMLContent {
