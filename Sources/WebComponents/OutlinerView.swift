@@ -416,6 +416,20 @@ public enum OutlineMoves {
       }
     }
 
+    /// A tree node's add or remove control, named by the node's dotted
+    /// number (user, 2026-10-22): "Testament 1.1.1." Its number is the
+    /// node's own, or, for an add control, the one its new child would get
+    /// (`child`). The client writes both again as the outline renumbers.
+    public static func numberedControl(
+      verb: String, noun: String, number: String, child: Bool = false
+    ) -> (label: String, ariaLabel: String, data: [(String, String)]) {
+      let label = "\(noun) \(number)."
+      return (
+        label, "\(verb) \(label)",
+        [("outliner-control-verb", verb), ("outliner-control-noun", noun), ("outliner-control-child", child ? "true" : "false")]
+      )
+    }
+
     /// The toggle that collapses an item's children and expands them again:
     /// its chevron points down while they show. Hidden (its room kept) on
     /// an item with nothing under it.
@@ -1850,6 +1864,16 @@ public enum OutlineMoves {
         if !stringIsEmpty(numberSelector), let slot = item.querySelector(numberSelector) {
           slot.textContent = numbers[offset]
         }
+        // Its add and remove controls name it by that number; an add
+        // control names the number its new child would get.
+        var children = 0
+        if let list = childList(of: item) { children = items(in: list).filter({ !isRemoved($0) }).count }
+        for control in item.querySelectorAll(":scope > .outliner-footer [data-outliner-control-noun]") {
+          let number =
+            stringEquals(control.dataset["outliner-control-child"] ?? "false", "true")
+            ? stringJoin([numbers[offset], intToString(children + 1)], separator: ".") : numbers[offset]
+          name(control, number: number)
+        }
       }
       for item in root.querySelectorAll(".outliner-item[data-outliner-removed='true']") { paint(item) }
       updateToolbar()
@@ -1857,6 +1881,13 @@ public enum OutlineMoves {
         input.setAttribute("value", shapeJSON())
         (input as? HTML.HTMLInputElement)?.value = shapeJSON()
       }
+    }
+
+    /// A control named for a node's number: "Testament 1.1.1."
+    private func name(_ control: DOM.Element, number: String) {
+      let text = stringJoin([control.dataset["outliner-control-noun"] ?? "", " ", number, "."], separator: "")
+      control.querySelector(".button-label")?.textContent = text
+      control.setAttribute("aria-label", stringJoin([control.dataset["outliner-control-verb"] ?? "", " ", text], separator: ""))
     }
 
     private func walk(
