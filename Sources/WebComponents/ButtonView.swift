@@ -80,7 +80,7 @@ public struct ButtonView: HTMLContent {
     /// Medium: furniture only (user, 2026-10-10)—the markup pane's header
     /// and footer bars (and its find bar's field), legends, pagers, the
     /// apparatus rule's switches, menus, picker popovers and inline row
-    /// controls (a comment's Edit/Delete/Hide).
+    /// controls (a comment's Edit/Nullify).
     case medium
     /// Small: a locution's reaction pills (user, 2026-10-12)—the step a
     /// medium button takes on a phone (`phoneStep`), its inset 4 on every

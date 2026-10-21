@@ -8,7 +8,7 @@ import WebTypes
 
 /// Navigates the user to another page, view or section—or, as a form's
 /// submit control (`init(submit:…)`), posts its form while reading exactly
-/// as a link: a row of links whose acts are POSTs (Hide, Delete) stays one
+/// as a link: a row of links whose acts are POSTs (Nullify) stays one
 /// row of links.
 public struct LinkView: HTMLContent {
   public enum LinkWeight: String, Sendable {

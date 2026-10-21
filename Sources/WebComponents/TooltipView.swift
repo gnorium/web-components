@@ -437,44 +437,6 @@ public struct TooltipView: HTMLContent {
       selector("&[data-placement^='left'] .tooltip-content::after", "&[data-placement^='right'] .tooltip-content::after") {
         transform(translateY(perc(-50)))
       }
-      // Opened from dimmed content (a hidden locution, to the few who still
-      // see it), the bubble is dimmed with it: as if at opacity medium, but
-      // over the page's own background rather than over the words beneath
-      // it, which would otherwise show through (user, 2026-10-11). Inside
-      // the content as the server sends it, or moved out to its portal
-      // host, which carries the mark (`data-dimmed`). The content must dim
-      // its parts, not a box holding the tooltip (`LocutionView`).
-      selector("&[data-dimmed='true'] .tooltip-content", "[data-dimmed='true'] & .tooltip-content") {
-        CSS.Property("background-color", Self.dimmed(backgroundColorInverted))
-        CSS.Property("color", Self.dimmed(colorInverted))
-      }
-      selector("&[data-dimmed='true'] .tooltip-content time", "[data-dimmed='true'] & .tooltip-content time") {
-        CSS.Property("color", Self.dimmed(colorInverted), isImportant: true)
-      }
-      selector(
-        "&[data-dimmed='true'][data-placement^='bottom'] .tooltip-content::after",
-        "[data-dimmed='true'] &[data-placement^='bottom'] .tooltip-content::after"
-      ) {
-        CSS.Property("border-bottom-color", Self.dimmed(backgroundColorInverted))
-      }
-      selector(
-        "&[data-dimmed='true'][data-placement^='top'] .tooltip-content::after",
-        "[data-dimmed='true'] &[data-placement^='top'] .tooltip-content::after"
-      ) {
-        CSS.Property("border-top-color", Self.dimmed(backgroundColorInverted))
-      }
-      selector(
-        "&[data-dimmed='true'][data-placement^='left'] .tooltip-content::after",
-        "[data-dimmed='true'] &[data-placement^='left'] .tooltip-content::after"
-      ) {
-        CSS.Property("border-left-color", Self.dimmed(backgroundColorInverted))
-      }
-      selector(
-        "&[data-dimmed='true'][data-placement^='right'] .tooltip-content::after",
-        "[data-dimmed='true'] &[data-placement^='right'] .tooltip-content::after"
-      ) {
-        CSS.Property("border-right-color", Self.dimmed(backgroundColorInverted))
-      }
       // The popover appearance: the page's surface and text, a subtle
       // border, padding equal on every side, no arrow; its trigger opens
       // it, so it takes the pointer.
@@ -493,20 +455,7 @@ public struct TooltipView: HTMLContent {
       selector("& .tooltip-content[data-appearance='popover'] time") {
         color(colorBase).important()
       }
-      selector(
-        "&[data-dimmed='true'] .tooltip-content[data-appearance='popover']",
-        "[data-dimmed='true'] & .tooltip-content[data-appearance='popover']"
-      ) {
-        CSS.Property("background-color", Self.dimmed(backgroundColorBase))
-        CSS.Property("color", Self.dimmed(colorBase))
-      }
     }
-  }
-
-  /// `color` as it reads at opacity medium over the page's background:
-  /// opaque, so nothing under the bubble shows through it.
-  private static func dimmed(_ color: CSS.Color) -> String {
-    "color-mix(in srgb, \(color.value) calc(\(opacityMedium.value) * 100%), \(backgroundColorBase.value))"
   }
 
   /// Nearest the arrow may sit to the bubble's edge: the corner radius plus
@@ -710,9 +659,6 @@ public struct TooltipView: HTMLContent {
       _ = host.dataset["portal"] = "true"
       _ = host.dataset["placement"] = placement.rawValue
       _ = host.dataset["visible"] = "false"
-      // Out of the trigger, the bubble no longer inherits a dimmed
-      // ancestor's opacity: it carries the dimming itself.
-      if trigger.closest("[data-dimmed='true']") != nil { _ = host.dataset["dimmed"] = "true" }
       host.appendChild(content)
       document.body.appendChild(host)
       self.host = host

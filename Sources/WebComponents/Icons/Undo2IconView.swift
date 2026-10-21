@@ -6,7 +6,7 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-/// Lucide's `undo-2` (ISC; THIRD_PARTY_NOTICES.md): Restore: take a deleted object back; an action button's verb mark. Lucide's own
+/// Lucide's `undo-2` (ISC; THIRD_PARTY_NOTICES.md): Restore: take a discarded object back; an action button's verb mark. Lucide's own
 /// 24-grid geometry (lucide-static 1.60.0), fitted to the house box by
 /// IconStrokeFit: the long edge 1024, `iconStrokeWidth` thick, round caps
 /// and joins, the outer edges tight to the box.
