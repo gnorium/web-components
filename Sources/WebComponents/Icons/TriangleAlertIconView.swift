@@ -49,3 +49,22 @@ public struct TriangleAlertIconView: HTMLContent {
     .build()
   }
 }
+
+#if CLIENT
+  import WebAPIs
+
+  public enum TriangleAlertIconFactory {
+    public static func createElement(
+      size: CSS.Length,
+      class: String = ""
+    ) -> DOM.Element {
+      let wrapper = document.createElement(.span)
+      let view = TriangleAlertIconView(size: size, class: `class`)
+      wrapper.innerHTML = view.render()
+      if let svg = wrapper.firstElementChild {
+        return svg
+      }
+      return wrapper
+    }
+  }
+#endif
