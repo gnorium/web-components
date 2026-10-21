@@ -119,6 +119,7 @@ final class LucideIconTightnessTests: XCTestCase {
       ("bookmark-check", BookmarkCheckIconView(size: px(22)).build()),
       ("feather", FeatherIconView(size: px(22)).build()),
       ("trash-2", Trash2IconView(size: px(22)).build()),
+      ("archive-restore", ArchiveRestoreIconView(size: px(22)).build()),
       ("undo-2", Undo2IconView(size: px(22)).build()),
       ("ban", BanIconView(size: px(22)).build()),
       ("rotate-ccw", RotateCCWIconView(size: px(22)).build()),
