@@ -113,7 +113,7 @@ final class LucideIconTightnessTests: XCTestCase {
       ("gavel", GavelIconView(size: px(22)).build()),
       ("stamp", StampIconView(size: px(22)).build()),
       ("scroll-text", ScrollTextIconView(size: px(22)).build()),
-      ("mailbox", MailboxIconView(size: px(22)).build()),
+      ("inbox", InboxIconView(size: px(22)).build()),
       ("layers", LayersIconView(size: px(22)).build()),
       ("history", HistoryIconView(size: px(22)).build()),
       ("bookmark-check", BookmarkCheckIconView(size: px(22)).build()),
