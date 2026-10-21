@@ -780,8 +780,19 @@ public struct TooltipView: HTMLContent {
       _ = host.dataset["placement"] = chosen.rawValue
 
       if horizontal {
-        Self.position(host, x: along, y: chosen.side == .top ? t.top : t.bottom)
+        var y = chosen.side == .top ? t.top : t.bottom
+        Self.position(host, x: along, y: y)
         host.setStyleProperty("--tooltip-arrow-x", Self.px(arrow))
+        // No room above or below: back inside the viewport, the edge
+        // margin kept at both ends (never flush with its edge).
+        guard let placed = content.getBoundingClientRect() else { return }
+        if placed.bottom > viewportHeight - margin {
+          y -= placed.bottom - (viewportHeight - margin)
+        }
+        if placed.top + (y - (chosen.side == .top ? t.top : t.bottom)) < margin {
+          y += margin - (placed.top + (y - (chosen.side == .top ? t.top : t.bottom)))
+        }
+        Self.position(host, x: along, y: y)
         return
       }
       var across = chosen.side == .left ? t.left : t.right
