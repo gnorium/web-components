@@ -184,7 +184,7 @@ public struct ConstraintMessages: Sendable {
           guard event.isTrusted else { return }
           guard let form = event.target, let _ = form.getAttribute("novalidate") else { return }
           guard let firstInvalid = FieldValidationHydration.check(form: form) else { return }
-          firstInvalid.focus()
+          FieldValidationHydration.focusAndReveal(firstInvalid)
           event.preventDefault()
           event.stopPropagation()
         },
@@ -236,8 +236,24 @@ public struct ConstraintMessages: Sendable {
     /// first invalid one. True when the form may be sent.
     public static func validate(form: DOM.Element) -> Bool {
       guard let firstInvalid = check(form: form) else { return true }
-      firstInvalid.focus()
+      focusAndReveal(firstInvalid)
       return false
+    }
+
+    /// Takes the focus to the first invalid control and brings its field,
+    /// with the message drawn under it, to the middle of the view (user,
+    /// 2026-10-21): a required field far from the button the reader pressed
+    /// must not leave the press looking dead. The control's own `focus()`
+    /// scrolls only as far as the control, and not at all for one a custom
+    /// field draws elsewhere.
+    static func focusAndReveal(_ control: DOM.Element) {
+      control.focus()
+      let field =
+        control.closest(".field-view") ?? control.closest(".text-input-view") ?? control.closest(".text-area-view")
+        ?? control.closest(".checkbox-view") ?? control
+      let reduced = window.matchMedia("(prefers-reduced-motion: reduce)")
+      field.scrollIntoView(
+        CSSOM.ScrollIntoViewOptions(behavior: reduced ? .instant : .smooth, block: .center))
     }
 
     /// Checks every control and shows or clears each message; the first
