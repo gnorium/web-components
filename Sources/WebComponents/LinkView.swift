@@ -27,6 +27,8 @@ public struct LinkView: HTMLContent {
   let redLink: Bool
   let redHover: Bool
   let external: Bool
+  /// Opens in a new tab (`target=_blank rel=noopener`), without the external mark.
+  let newTab: Bool
   let weight: LinkWeight
   let linkHeight: CSS.Length?
   let content: [DOM.Node]
@@ -44,6 +46,7 @@ public struct LinkView: HTMLContent {
     redLink: Bool = false,
     redHover: Bool = false,
     external: Bool = false,
+    newTab: Bool = false,
     weight: LinkWeight = .default,
     linkHeight: CSS.Length? = nil,
     class: String = "",
@@ -53,6 +56,7 @@ public struct LinkView: HTMLContent {
     @HTMLBuilder content: () -> [DOM.Node]
   ) {
     self.url = url
+    self.newTab = newTab
     self.data = data
     self.submits = false
     self.underlined = underlined
@@ -89,6 +93,7 @@ public struct LinkView: HTMLContent {
     self.redLink = redLink
     self.redHover = redHover
     self.external = false
+    self.newTab = false
     self.weight = weight
     self.linkHeight = linkHeight
     self.content = content()
@@ -132,6 +137,8 @@ public struct LinkView: HTMLContent {
         link
         .target(.blank)
         .rel(.noopener, .noreferrer)
+    } else if newTab {
+      link = link.target(.blank).rel(.noopener)
     }
 
     return link.style { linkStyle() }
