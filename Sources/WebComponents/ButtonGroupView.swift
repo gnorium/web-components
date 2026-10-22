@@ -32,6 +32,11 @@
       /// Its native tooltip (`ButtonView.title(_:)`): why it is disabled,
       /// where it is.
       public let title: String?
+      /// A tooltip on the button (`TooltipView`), which opens on a click or
+      /// tap even while the button is disabled; `tooltipActive` false keeps
+      /// it from showing (a page's client turns it on and off).
+      public let tooltip: String?
+      public let tooltipActive: Bool
 
       public init(
         value: String,
@@ -49,8 +54,12 @@
         labelFontWeight: CSS.FontWeight = fontWeightSemiBold,
         contentJustifyContent: CSS.JustifyContent = .center,
         form: String? = nil,
-        title: String? = nil
+        title: String? = nil,
+        tooltip: String? = nil,
+        tooltipActive: Bool = true
       ) {
+        self.tooltip = tooltip
+        self.tooltipActive = tooltipActive
         self.value = value
         self.label = label
         self.icon = icon
@@ -156,7 +165,13 @@
                 data: itemData
               )
             }
-            item.formed(button)
+            if let tooltip = item.tooltip {
+              TooltipView(tooltip: tooltip, off: !item.tooltipActive, class: "button-tooltip") {
+                item.formed(button)
+              }
+            } else {
+              item.formed(button)
+            }
           }
         }
         .class(`class`.isEmpty ? "button-group-view" : "button-group-view \(`class`)")

@@ -32,6 +32,7 @@ public struct TooltipView: HTMLContent {
   let appearance: Appearance
   let children: [DOM.Node]
   let pins: Bool
+  let off: Bool
   let `class`: String
 
   /// Typeface of the bubble's text: sans for prose, mono for identifiers,
@@ -141,9 +142,11 @@ public struct TooltipView: HTMLContent {
     width: Width = .standard,
     appearance: Appearance = .tooltip,
     pins: Bool = true,
+    off: Bool = false,
     class: String = "",
     @HTMLBuilder content: () -> [DOM.Node]
   ) {
+    self.off = off
     self.bubble = [DOM.Text(tooltip)]
     self.bubbleWidth = width
     self.appearance = appearance
@@ -160,10 +163,12 @@ public struct TooltipView: HTMLContent {
     width: Width = .standard,
     appearance: Appearance = .tooltip,
     pins: Bool = true,
+    off: Bool = false,
     class: String = "",
     @HTMLBuilder bubble: () -> [DOM.Node],
     @HTMLBuilder content: () -> [DOM.Node]
   ) {
+    self.off = off
     self.bubble = bubble()
     self.bubbleWidth = width
     self.appearance = appearance
@@ -197,6 +202,7 @@ public struct TooltipView: HTMLContent {
     .data("appearance", appearance.rawValue)
     .data("placement", placement.rawValue)
     .data("pins", pins)
+    .data("tooltip-off", off)
     .data("visible", false)
     .style {
       selector("&") {
@@ -209,6 +215,18 @@ public struct TooltipView: HTMLContent {
         // hydration measures; `100vw` counts it) less the page's gutter on
         // both sides.
         CSS.Property("--tooltip-room", "calc(var(--tooltip-viewport-width, 100vw) - 2 * \(pageGutter.value))")
+      }
+      // Around a button: the button's width, and a disabled one lets the
+      // pointer through to the trigger, which opens the tooltip on it.
+      selector("&.button-tooltip", "&.button-tooltip > .tooltip-trigger-content") {
+        display(.flex)
+        flexGrow(1)
+      }
+      selector("&.button-tooltip .button-view") {
+        flexGrow(1)
+      }
+      selector("&.button-tooltip .button-view:disabled") {
+        pointerEvents(.none)
       }
       // Until the hydration moves it to <body>, the bubble sits in its
       // trigger, where even a hidden box widens the page it runs past: it
@@ -957,6 +975,8 @@ public struct TooltipView: HTMLContent {
 
     private func showTooltip() {
       guard let content else { return }
+      // A page turns a tooltip off while it has nothing to say.
+      if stringEquals(trigger.getAttribute("data-tooltip-off") ?? "", "true") { return }
       // A page that changes what a tooltip says after hydration (the bubble
       // is portaled to <body>, out of its reach) sets the trigger's
       // `data-tooltip-text`; the bubble says it as it shows.
