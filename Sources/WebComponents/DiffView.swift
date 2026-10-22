@@ -200,6 +200,7 @@ public struct DiffView: HTMLContent {
         }
       }
       .class("diff-content")
+      .data("edge-fade-view", true)
       .build()
     case .choice(let old, let new):
       isLine = true
@@ -222,6 +223,7 @@ public struct DiffView: HTMLContent {
         }
       }
       .class("diff-content")
+      .data("edge-fade-view", true)
       .build()
     case .check(let ticked):
       isLine = true
@@ -361,7 +363,7 @@ public struct DiffView: HTMLContent {
       // holds it.
       selector("&[data-shape='line']") {
         display(.flex)
-        flexWrap(.wrap)
+        flexWrap(.nowrap)
         // The label's mark and the values each stand on a 22px line, so
         // the tops meet: a baseline sat the label's boxed mark off the
         // values' text.
@@ -370,11 +372,17 @@ public struct DiffView: HTMLContent {
         paddingInlineStart(spacing16)
         overflowWrap(.anywhere)
       }
-      // The values beside the label, old → new flowing as a line of text
-      // does, a long one wrapping under its own start.
+      // The values beside the label, old → new on one line (user,
+      // 2026-10-22): a long one fades out at its edge and scrolls sideways,
+      // never opening into a wrapped column of its own (EdgeFadeView.swift),
+      // which would read as a second column beside the field's.
+      // A diff of several lines is the box's.
       selector("&[data-shape='line'] > .diff-content") {
+        display(.flex)
+        flexWrap(.nowrap)
         flex(1, 1, px(0))
       }
+      edgeFadeView("&[data-shape='line'] > .diff-content")
       selector("&[data-shape='box']") {
         display(.flex)
         flexDirection(.column)
