@@ -200,7 +200,7 @@ public struct DiffView: HTMLContent {
         }
       }
       .class("diff-content")
-      .data("edge-fade-view", true)
+      .data("edge-fade-view", "expand")
       .build()
     case .choice(let old, let new):
       isLine = true
@@ -223,7 +223,7 @@ public struct DiffView: HTMLContent {
         }
       }
       .class("diff-content")
-      .data("edge-fade-view", true)
+      .data("edge-fade-view", "expand")
       .build()
     case .check(let ticked):
       isLine = true
@@ -373,9 +373,9 @@ public struct DiffView: HTMLContent {
         overflowWrap(.anywhere)
       }
       // The values beside the label, old → new on one line (user,
-      // 2026-10-22): a long one fades out at its edge and scrolls sideways,
-      // never opening into a wrapped column of its own (EdgeFadeView.swift),
-      // which would read as a second column beside the field's.
+      // 2026-10-22): a long one fades out at its edge, scrolls sideways and
+      // opens on a tap (EdgeFadeView.swift), wrapped inside this column
+      // alone: the label's column stays as it is, so the two are not mixed.
       // A diff of several lines is the box's.
       selector("&[data-shape='line'] > .diff-content") {
         display(.flex)
