@@ -126,6 +126,8 @@ public struct DatumView: HTMLContent {
         alignItems(.center)
         flex(1)
         minWidth(0)
+        // An empty value keeps its line, so its box is as tall as the others.
+        minHeight(lineHeightSmall22)
       }
       edgeFadeView("& .datum-text")
     }
