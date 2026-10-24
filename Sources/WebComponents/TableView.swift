@@ -461,6 +461,15 @@ public struct TableView: HTMLContent {
     let eRange = formatNumberWithCommas(endRange)
     let tItems = formatNumberWithCommas(computedTotalItems)
     let paginationInfo = "Showing results \(sRange)–\(eRange) of \(tItems)"
+    let previousURL: String
+    let nextURL: String
+    if let serverQuery {
+      previousURL = serverQuery.url(sort: sort, page: computedCurrentPage - 1)
+      nextURL = serverQuery.url(sort: sort, page: computedCurrentPage + 1)
+    } else {
+      previousURL = "#"
+      nextURL = "#"
+    }
 
     return div {
       // Header
@@ -478,38 +487,22 @@ public struct TableView: HTMLContent {
 
       // Pagination (top)
       if paginate && (paginationPosition == .top || paginationPosition == .both) {
-        div {
-          div {
-            paginationInfo
-          }
-          .class("pagination-info")
-
-          let prevUrl: String?
-          let nextUrl: String?
-          if let serverQuery {
-            prevUrl = computedCurrentPage > 1 ? serverQuery.url(sort: sort, page: computedCurrentPage - 1) : nil
-            nextUrl =
-              computedCurrentPage < computedTotalPages
-              ? serverQuery.url(sort: sort, page: computedCurrentPage + 1) : nil
-          } else {
-            prevUrl = computedCurrentPage > 1 ? "#" : nil
-            nextUrl = computedCurrentPage < computedTotalPages ? "#" : nil
-          }
-
-          // A server-paged list of one page has no other to go to: no "1 of 1".
-          if serverQuery == nil || computedTotalPages > 1 {
-            PaginationView(
+        PaginationFooterView(
+          info: paginationInfo,
+          pagination: serverQuery == nil || computedTotalPages > 1
+            ? PaginationView(
               currentPage: computedCurrentPage,
               totalPages: computedTotalPages,
-              previousUrl: prevUrl,
-              nextUrl: nextUrl,
+              previousUrl: computedCurrentPage > 1 ? previousURL : nil,
+              nextUrl: computedCurrentPage < computedTotalPages ? nextURL : nil,
               size: paginationControlSize,
               class: "table-pagination-controls"
-            )
-          }
-        }
-        .class("table-pagination table-pagination-top")
-      }      // Table wrapper
+            ) : nil,
+          class: "table-pagination-top"
+        )
+      }
+
+      // Table wrapper
       div {
         // The box owns the border; this owns the scrolling. A scrollbar is
         // drawn inside its own element's edge, so when the bordered box
@@ -858,37 +851,19 @@ public struct TableView: HTMLContent {
 
       // Pagination (bottom)
       if paginate && (paginationPosition == .bottom || paginationPosition == .both) {
-        div {
-          div {
-            paginationInfo
-          }
-          .class("pagination-info")
-
-          let prevUrl: String?
-          let nextUrl: String?
-          if let serverQuery {
-            prevUrl = computedCurrentPage > 1 ? serverQuery.url(sort: sort, page: computedCurrentPage - 1) : nil
-            nextUrl =
-              computedCurrentPage < computedTotalPages
-              ? serverQuery.url(sort: sort, page: computedCurrentPage + 1) : nil
-          } else {
-            prevUrl = computedCurrentPage > 1 ? "#" : nil
-            nextUrl = computedCurrentPage < computedTotalPages ? "#" : nil
-          }
-
-          // A server-paged list of one page has no other to go to: no "1 of 1".
-          if serverQuery == nil || computedTotalPages > 1 {
-            PaginationView(
+        PaginationFooterView(
+          info: paginationInfo,
+          pagination: serverQuery == nil || computedTotalPages > 1
+            ? PaginationView(
               currentPage: computedCurrentPage,
               totalPages: computedTotalPages,
-              previousUrl: prevUrl,
-              nextUrl: nextUrl,
+              previousUrl: computedCurrentPage > 1 ? previousURL : nil,
+              nextUrl: computedCurrentPage < computedTotalPages ? nextURL : nil,
               size: paginationControlSize,
               class: "table-pagination-controls"
-            )
-          }
-        }
-        .class("table-pagination table-pagination-bottom")
+            ) : nil,
+          class: "table-pagination-bottom"
+        )
       }
 
       // Footer
@@ -1027,27 +1002,6 @@ public struct TableView: HTMLContent {
         color(colorBase)
         margin(0)
       }
-      descendant(".pagination-info") {
-        fontFamily(typographyFontSans)
-        fontSize(fontSizeMedium16)
-        lineHeight(lineHeightSmall22)
-        color(colorBase)
-      }
-      descendant(".table-pagination") {
-        display(.flex)
-        alignItems(.center)
-        justifyContent(.spaceBetween)
-        gap(spacing12)
-        flexWrap(.wrap)
-      }
-      descendant(".table-pagination-controls") {
-        flexShrink(0)
-        // PaginationView centers itself with `margin: 0 auto`. Inside a table
-        // footer it is one end of a space-between row, so the end margin has
-        // to be taken back or the auto pair recenters it mid-row.
-        marginInlineStart(.auto)
-        marginInlineEnd(0)
-      }
       // A compact value shows its short form only on a phone.
       descendant(".table-cell-compact") { display(.none) }
       // On a phone a table with a priority column gives it the room: the
@@ -1079,20 +1033,6 @@ public struct TableView: HTMLContent {
         }
         descendant(".table-cell-full") { display(.none).important() }
         descendant(".table-cell-compact") { display(.inline).important() }
-      }
-      // On a narrow phone the row would wrap unevenly: two lines instead,
-      // the count over the pager, both centered. Wider, one row fits.
-      media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
-        descendant(".table-pagination") {
-          flexDirection(.column).important()
-          justifyContent(.center).important()
-        }
-        descendant(".pagination-info") {
-          textAlign(.center).important()
-        }
-        descendant(".table-pagination-controls") {
-          marginInline(.auto).important()
-        }
       }
       descendant(".table-caption") {
         fontFamily(typographyFontSans)
