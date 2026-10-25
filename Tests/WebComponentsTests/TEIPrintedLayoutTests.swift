@@ -67,8 +67,10 @@ final class TEIPrintedLayoutTests: XCTestCase {
     XCTAssertEqual(attribute("style", of: frame), "background-color:#d7e4f3;padding:1em;")
     XCTAssertEqual(classed("tei-frame", in: nodes).count, 1)
     XCTAssertTrue(text(of: frame).contains("Boxed") && !text(of: frame).contains("After"))
-    // The default ink of either pair carries no color: the theme's text color; gilt is drawn as encoded.
-    let inverted = view(#"<ab><lb/>White type</ab><ab rend="color(yellow)"><lb/>Gilt</ab>"#)
+    // The page's own pair (its <pb>'s renditions) is the theme's: its lines carry no color; another ink is
+    // drawn as encoded.
+    let inverted = view(
+      ##"<ab><lb/>White type</ab><ab rend="color(yellow)"><lb/>Gilt</ab>"##)
     let inked = inverted.filter { (attribute("data-rend", of: $0) ?? "").contains("color(") }
     XCTAssertFalse(inked.isEmpty)
     XCTAssertTrue(inked.allSatisfy { text(of: $0).contains("Gilt") && !text(of: $0).contains("White") })

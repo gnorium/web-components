@@ -1647,13 +1647,13 @@
         selector("& .tei-frame[data-rend~='align(left)']") { alignSelf(.flexStart) }
         // Ink (user, 2026-10-11): a rend's color(NAME), one of the 13
         // ISCC–NBS basic color names (`TEIRenderer.inks`), on a run, a block
-        // or a frame. Colors are drawn as encoded (user, 2026-10-25): the
-        // page's ground is never drawn, and its default ink—black on a light
-        // ground, white on a dark one, either way round, which the TEI
-        // leaves without a color—is the theme's text color; that pair alone
-        // follows the theme (black written is the text color too); every other
-        // ink is its name's centroid (`inks`) in every theme, never another
-        // color where it reads faintly, and no ground is drawn behind it.
+        // or a frame. The TEI is faithful to the print (user, 2026-10-25):
+        // the page's own pair—its ground and its default ink, page-level
+        // renditions on its <pb>—is the one thing mapped to the theme (the
+        // reader's page and text colors, whatever the pair encoded); every
+        // other ink, black and white too, is its name's centroid (`inks`) in
+        // every theme, never another color where it reads faintly, and no
+        // ground is drawn behind it.
         for (name, ink) in Self.inks {
           selector(Self.inkSelectors(name).joined(separator: ", ")) {
             color(ink)
@@ -1867,14 +1867,13 @@
 
   extension TEIView {
     /// The inks a rend may name (`TEIRenderer.inks`) and the color each is
-    /// drawn in: black the theme's text color, every other its
-    /// ISCC–NBS centroid (Kelly's colors of maximum contrast, NBS 1965),
+    /// drawn in: its ISCC–NBS centroid (Kelly's colors of maximum contrast, NBS 1965),
     /// as gnorium-python's `base_tei.INKS` names a sampled ink by them.
     static let inks: [(name: String, ink: CSS.Color)] = [
       ("pink", hex(0xE68FAC)), ("red", hex(0xBE0032)), ("orange", hex(0xF38400)), ("brown", hex(0x654522)),
       ("yellow", hex(0xF3C300)), ("olive", hex(0x665D1E)), ("yellow-green", hex(0x8DB600)),
       ("green", hex(0x008856)), ("blue", hex(0x0067A5)), ("purple", hex(0x875692)), ("white", hex(0xF2F3F4)),
-      ("gray", hex(0x848482)), ("black", colorBase),
+      ("gray", hex(0x848482)), ("black", hex(0x222222)),
     ]
 
     /// The rules that draw a run, a block's lines, a frame and a section's line in `name`'s ink.
