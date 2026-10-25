@@ -1648,8 +1648,10 @@
         // Ink (user, 2026-10-11): a rend's color(NAME), one of the 13
         // ISCC–NBS basic color names (`TEIRenderer.inks`), on a run, a block
         // or a frame. Colors are drawn as encoded (user, 2026-10-25): the
-        // page's ground is never drawn, and the default ink, black, is the
-        // theme's text color—that pair alone follows the theme; every other
+        // page's ground is never drawn, and its default ink—black on a light
+        // ground, white on a dark one, either way round, which the TEI
+        // leaves without a color—is the theme's text color; that pair alone
+        // follows the theme (black written is the text color too); every other
         // ink is its name's centroid (`inks`) in every theme, never another
         // color where it reads faintly, and no ground is drawn behind it.
         for (name, ink) in Self.inks {
