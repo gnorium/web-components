@@ -78,10 +78,23 @@ final class TEIPrintedLayoutTests: XCTestCase {
     let nodes = view(
       #"<p>a<space dim="horizontal" quantity="1.5"/>b<space quantity="0.68" unit="em"/>c<lb/></p>"#)
     let gaps = classed("tei-run-space", in: nodes)
-    XCTAssertEqual(gaps.compactMap { attribute("style", of: $0) }, ["inline-size: 1.5ch;", "inline-size: 0.68em;"])
+    XCTAssertEqual(
+      gaps.compactMap { attribute("style", of: $0) },
+      ["inline-size: calc(1.5 * var(--tei-space-char, 1ch));", "inline-size: 0.68em;"])
     XCTAssertEqual(gaps.map { text(of: $0) }, [" ", " "])
     let layer = try XCTUnwrap(nodes.first { attribute("data-layer", of: $0) == "rendering" })
     XCTAssertEqual(text(of: layer).filter { !$0.isWhitespace }, "abc")
+  }
+
+  /// A space's character is as wide as the header declares the print's quads (the tuning's fitted width,
+  /// gnorium-python `scale.space_rendition`): the page's layer carries it; with none declared, a `ch`.
+  func testASpacesCharacterIsTheWidthTheHeaderDeclares() throws {
+    XCTAssertEqual(TEIView.spaceCharacter(in: ["space-char": "inline-size:0.4452em"]), "0.4452em")
+    XCTAssertNil(TEIView.spaceCharacter(in: [:]))
+    XCTAssertNil(TEIView.spaceCharacter(in: ["space-char": "inline-size:12px"]))
+    XCTAssertEqual(
+      TEIView.pageTextStyle(frame: nil, renditions: ["space-char": "inline-size:0.4452em"]), "--tei-space-char: 0.4452em")
+    XCTAssertEqual(TEIView.pageTextStyle(frame: nil, renditions: [:]), "")
   }
 
   /// A page in its work's frame (user, 2026-10-14): its main text in the

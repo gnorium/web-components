@@ -794,13 +794,37 @@
     }
 
     /// The width a horizontal `<space/>` leaves: so many of the text's
-    /// characters (`ch`); a length in its own unit where CSS has it.
+    /// characters, each as wide as its header declares a space's character
+    /// (`space-char`, the width the tuning fitted to the print's quads: the
+    /// page's `--tei-space-char`, `pageTextStyle`), else a `ch`; a length in
+    /// its own unit where CSS has it.
     static func spaceWidth(quantity: Double, unit: String) -> String {
       switch unit {
       case "mm", "cm", "in", "pt", "pc", "px", "em": return "\(number(quantity))\(unit)"
       case "ems": return "\(number(quantity))em"
-      default: return "\(number(quantity))ch"
+      default: return "calc(\(number(quantity)) * var(--tei-space-char, 1ch))"
       }
+    }
+
+    /// A space's character as the header declares it (`<rendition xml:id="space-char">inline-size:…em</rendition>`,
+    /// gnorium-python `scale.space_rendition`), nil where it declares none.
+    static func spaceCharacter(in renditions: [String: String]) -> String? {
+      guard let css = renditions["space-char"] else { return nil }
+      for declaration in css.split(separator: ";") {
+        let parts = declaration.split(separator: ":", maxSplits: 1).map { $0.trimmingCharacters(in: .whitespaces) }
+        guard parts.count == 2, parts[0] == "inline-size", parts[1].hasSuffix("em"),
+          let value = Double(parts[1].dropLast(2)), value > 0
+        else { continue }
+        return "\(number(value))em"
+      }
+      return nil
+    }
+
+    /// The page's rendering layer's style: its frame (`frameStyle`) and the width of a space's character
+    /// (`spaceCharacter`).
+    static func pageTextStyle(frame: TEIPageFrame?, renditions: [String: String]) -> String {
+      let parts = [frame.map(frameStyle), spaceCharacter(in: renditions).map { "--tei-space-char: \($0)" }]
+      return parts.compactMap { $0 }.joined(separator: "; ")
     }
 
     /// A quantity as written: a whole one with no decimal point.
@@ -1009,7 +1033,7 @@
             .class("tei-page-text")
             .data("layer", "rendering")
             .data("framed", frame != nil)
-            .addingAttribute("style", frame.map(Self.frameStyle) ?? "")
+            .addingAttribute("style", Self.pageTextStyle(frame: frame, renditions: page.renditions))
 
             // The page's code (user, 2026-10-14), never the document's
             // header: that is its viewer's Header pane's alone (user,
