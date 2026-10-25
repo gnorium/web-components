@@ -1628,7 +1628,10 @@
         // An epigraph set as a whole (user, 2026-10-11): as wide as its
         // lines, placed as its rend says, its lines set within it.
         // A printed frame (`border-style`, user, 2026-10-13) is a 1px rule
-        // in its ink, its inset and measure its rend's; never its paper.
+        // in its ink, its inset and measure its rend's; its ground only
+        // where the page encodes one (`background-color`, user, 2026-10-25:
+        // a shaded box, a tinted panel), drawn as encoded in every theme
+        // (its style's), never the page's paper.
         descendant(".tei-frame") {
           display(.flex)
           flexDirection(.column)
@@ -1644,21 +1647,14 @@
         selector("& .tei-frame[data-rend~='align(left)']") { alignSelf(.flexStart) }
         // Ink (user, 2026-10-11): a rend's color(NAME), one of the 13
         // ISCC–NBS basic color names (`TEIRenderer.inks`), on a run, a block
-        // or a frame, drawn in one of the twelve named colors
-        // (`NamedColors`): brown as orange, olive as yellow, yellow-green as
-        // lime, purple as magenta; black the text's own color; white as white.
-        // An ink is drawn only where it reads (user, 2026-10-25): at WCAG 3:1
-        // or more against the current theme's page; below that, in a theme,
-        // the line takes that theme's text color (`TEIView.unreadableInks`).
-        // No fill is drawn behind any ink: a ground is not the page's.
+        // or a frame. Colors are drawn as encoded (user, 2026-10-25): the
+        // page's ground is never drawn, and the default ink, black, is the
+        // theme's text color—that pair alone follows the theme; every other
+        // ink is its name's centroid (`inks`) in every theme, never another
+        // color where it reads faintly, and no ground is drawn behind it.
         for (name, ink) in Self.inks {
           selector(Self.inkSelectors(name).joined(separator: ", ")) {
             color(ink)
-          }
-        }
-        for (theme, name) in Self.unreadableInks {
-          selector(Self.inkSelectors(name).map { "\(theme) \($0)" }.joined(separator: ", ")) {
-            color(colorBase)
           }
         }
         // Type a step larger or smaller than the text's, on a run, a block,
@@ -1868,12 +1864,15 @@
   }
 
   extension TEIView {
-    /// The inks a rend may name (`TEIRenderer.inks`) and the token each is drawn in.
+    /// The inks a rend may name (`TEIRenderer.inks`) and the color each is
+    /// drawn in: black the theme's text color, every other its
+    /// ISCC–NBS centroid (Kelly's colors of maximum contrast, NBS 1965),
+    /// as gnorium-python's `base_tei.INKS` names a sampled ink by them.
     static let inks: [(name: String, ink: CSS.Color)] = [
-      ("pink", colorPink), ("red", colorRed), ("orange", colorOrange), ("brown", colorOrange),
-      ("yellow", colorYellow), ("olive", colorYellow), ("yellow-green", colorLime), ("green", colorGreen),
-      ("blue", colorBlue), ("purple", colorMagenta), ("gray", colorGray), ("black", colorBase),
-      ("white", colorInvertedFixed),
+      ("pink", hex(0xE68FAC)), ("red", hex(0xBE0032)), ("orange", hex(0xF38400)), ("brown", hex(0x654522)),
+      ("yellow", hex(0xF3C300)), ("olive", hex(0x665D1E)), ("yellow-green", hex(0x8DB600)),
+      ("green", hex(0x008856)), ("blue", hex(0x0067A5)), ("purple", hex(0x875692)), ("white", hex(0xF2F3F4)),
+      ("gray", hex(0x848482)), ("black", colorBase),
     ]
 
     /// The rules that draw a run, a block's lines, a frame and a section's line in `name`'s ink.
@@ -1884,42 +1883,6 @@
         "& .tei-section > .tei-line[data-rend~='color(\(name))']",
         "& .tei-frame[data-rend~='color(\(name))'] .tei-line",
       ]
-    }
-
-    /// Each theme's root (`data-color-scheme` and `data-contrast` on `:root`), with its scheme of the named
-    /// colors.
-    static let themes: [(root: String, scheme: NamedColors.Scheme)] = [
-      (":root:not([data-color-scheme='dark']):not([data-contrast='more'])", .light),
-      (":root[data-contrast='more']:not([data-color-scheme='dark'])", .lightMoreContrast),
-      (":root[data-color-scheme='dark']:not([data-contrast='more'])", .dark),
-      (":root[data-color-scheme='dark'][data-contrast='more']", .darkMoreContrast),
-    ]
-
-    /// The contrast an ink keeps against the page to be drawn (WCAG's 3:1).
-    static let inkMinimumContrast = 3.0
-
-    /// The color a name is drawn in, in `scheme`: nil for black, which is the text's own color.
-    static func inkColor(_ name: String, _ scheme: NamedColors.Scheme) -> NamedColors.OKLCH? {
-      switch name {
-      case "black": return nil
-      case "white": return NamedColors.OKLCH(1, 0, 0)
-      case "brown": return NamedColors.color("orange", scheme)
-      case "olive": return NamedColors.color("yellow", scheme)
-      case "yellow-green": return NamedColors.color("lime", scheme)
-      case "purple": return NamedColors.color("magenta", scheme)
-      default: return NamedColors.color(name, scheme)
-      }
-    }
-
-    /// The inks too faint against a theme's page (below `inkMinimumContrast`), by the theme's root: their
-    /// lines take that theme's text color instead.
-    static let unreadableInks: [(theme: String, name: String)] = themes.flatMap { theme in
-      inks.compactMap { ink -> (theme: String, name: String)? in
-        guard let color = inkColor(ink.name, theme.scheme),
-          NamedColors.contrast(color, theme.scheme.page) < inkMinimumContrast
-        else { return nil }
-        return (theme.root, ink.name)
-      }
     }
   }
 #endif
