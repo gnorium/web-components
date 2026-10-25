@@ -162,9 +162,11 @@
     /// zone a ";", in reading order (a line the block's before it, a word
     /// the line's); "" where none was measured. The reader's structure
     /// overlay and its word correspondence read it.
+    /// A page whose surface keeps no measured layout (a calibrated page's
+    /// base TEI) gives its lines as its line breaks name them
+    /// (`TEIFacsimile.layout(of:)` a page): the overlay draws them still.
     static func scanLayoutData(of page: TEIPage) -> String {
-      guard let block = page.textBlock else { return "" }
-      return TEIFacsimile.layout(of: block).map { zone in
+      TEIFacsimile.layout(of: page).map { zone in
         ([zone.type, zone.subtype.isEmpty ? "-" : zone.subtype, zone.id.isEmpty ? "-" : zone.id]
           + (zone.fractions + zone.baseline).map { number(($0 * 100_000).rounded() / 100) }).joined(separator: " ")
       }.joined(separator: ";")
@@ -809,13 +811,14 @@
     /// A space's character as the header declares it (`<rendition xml:id="space-char">inline-size:…em</rendition>`,
     /// gnorium-python `scale.space_rendition`), nil where it declares none.
     static func spaceCharacter(in renditions: [String: String]) -> String? {
-      guard let css = renditions["space-char"] else { return nil }
-      for declaration in css.split(separator: ";") {
-        let parts = declaration.split(separator: ":", maxSplits: 1).map { $0.trimmingCharacters(in: .whitespaces) }
-        guard parts.count == 2, parts[0] == "inline-size", parts[1].hasSuffix("em"),
-          let value = Double(parts[1].dropLast(2)), value > 0
+      // As the header's declarations are read (`TEIRendition.declarations`):
+      // `css:inline-size=0.3em`.
+      guard let tokens = renditions["space-char"] else { return nil }
+      for token in tokens.split(whereSeparator: \.isWhitespace) where token.hasPrefix("css:inline-size=") {
+        let value = token.dropFirst("css:inline-size=".count)
+        guard value.hasSuffix("em"), !value.hasSuffix("rem"), let number = Double(value.dropLast(2)), number > 0
         else { continue }
-        return "\(number(value))em"
+        return "\(Self.number(number))em"
       }
       return nil
     }
@@ -1479,7 +1482,11 @@
         // is wider, never its text narrower. A page genuinely larger than
         // its work's (a plate, a foldout) is its scan's own size at the same
         // scale, its content centered in it. Reflowed, the text runs on in
-        // the pane.
+        // the pane. The edition is regularized (user, 2026-10-25): its
+        // margin is the reading pane's own inset, never the scan's white
+        // around its text block (`--tei-frame-margin`, the scans' extent:
+        // a page drawn at the scan's whole width read tiny); only the
+        // structure overlay lays the page on the scan's geometry.
         selector("& .tei-page-text[data-framed='true']:not([data-reflow='true'] *)") {
           display(.grid)
           CSS.Property(
@@ -1491,7 +1498,6 @@
           CSS.Property("align-content", "center")
           boxSizing(.borderBox)
           fontSize(fontSizeMedium16)
-          CSS.Property("padding", "calc(var(--tei-frame-margin) * 1em)")
           CSS.Property("inline-size", "max-content")
           CSS.Property("min-inline-size", "calc(var(--tei-page-width) * 1em)")
           CSS.Property("min-block-size", "calc(var(--tei-page-height) * 1em)")

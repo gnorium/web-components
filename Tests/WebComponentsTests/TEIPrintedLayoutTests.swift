@@ -89,11 +89,13 @@ final class TEIPrintedLayoutTests: XCTestCase {
   /// A space's character is as wide as the header declares the print's quads (the tuning's fitted width,
   /// gnorium-python `scale.space_rendition`): the page's layer carries it; with none declared, a `ch`.
   func testASpacesCharacterIsTheWidthTheHeaderDeclares() throws {
-    XCTAssertEqual(TEIView.spaceCharacter(in: ["space-char": "inline-size:0.4452em"]), "0.4452em")
+    // As a header's declarations are read (`TEIRendition.declarations`).
+    let declared = TEIRendition.declarations(
+      of: #"<TEI><teiHeader><encodingDesc><tagsDecl><rendition xml:id="space-char" scheme="css">inline-size:0.4452em</rendition></tagsDecl></encodingDesc></teiHeader></TEI>"#)
+    XCTAssertEqual(TEIView.spaceCharacter(in: declared), "0.4452em")
     XCTAssertNil(TEIView.spaceCharacter(in: [:]))
-    XCTAssertNil(TEIView.spaceCharacter(in: ["space-char": "inline-size:12px"]))
-    XCTAssertEqual(
-      TEIView.pageTextStyle(frame: nil, renditions: ["space-char": "inline-size:0.4452em"]), "--tei-space-char: 0.4452em")
+    XCTAssertNil(TEIView.spaceCharacter(in: ["space-char": "css:inline-size=12px"]))
+    XCTAssertEqual(TEIView.pageTextStyle(frame: nil, renditions: declared), "--tei-space-char: 0.4452em")
     XCTAssertEqual(TEIView.pageTextStyle(frame: nil, renditions: [:]), "")
   }
 

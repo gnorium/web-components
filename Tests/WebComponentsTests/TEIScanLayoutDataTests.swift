@@ -61,4 +61,27 @@ final class TEIScanLayoutDataTests: XCTestCase {
     XCTAssertEqual(em, 16.2734, accuracy: 1e-9)
     XCTAssertEqual(em / 1000 * 2820, 45.89, accuracy: 0.01)
   }
+
+  /// A calibrated page (gnorium-python `calibration.base_tei`, 2026-10-23
+  /// on) keeps a zone a measured line, which its `<lb facs>` names, and no
+  /// layout zones: the overlay was handed none and drew no structure at all
+  /// (user, 2026-10-25). Its lines come from its line breaks: the main
+  /// text's after its text block, a marginal note's after a block around
+  /// them, each a box with no baseline. Shaped on dev's Hamlet p. 15.
+  func testACalibratedPagesLinesComeFromItsLineBreaks() throws {
+    let service = "https://web-tests.invalid/iiif/21"
+    let document =
+      #"<TEI><teiHeader><encodingDesc><tagsDecl><rendition xml:id="text-block" scheme="css" selector="text">font-size:85.59px;inline-size:26.50em;block-size:47.89em;margin:26.17em;max-inline-size:80.10em</rendition><rendition xml:id="size-6" scheme="css">font-size:1.0002rem</rendition><rendition xml:id="leading-6" scheme="css">line-height:1.2559rem</rendition></tagsDecl></encodingDesc></teiHeader><facsimile><surface n="p. 15" ulx="0" uly="0" lrx="1000" lry="1000"><graphic url="\#(service)/full/max/0/default.jpg" width="6343px" height="6674px"/><zone xml:id="p21-z-L2" ulx="329" uly="181" lrx="670" lry="204"/><zone xml:id="p21-z-L3" ulx="329" uly="198" lrx="669" lry="220"/><zone xml:id="p21-z-L9" ulx="80" uly="300" lrx="200" lry="320"/><zone xml:id="p21-textblock" type="textblock" points="308.79,164.98 668.87,159.32 679.71,781.41 319.63,787.08" style="font-size:85.75px"/></surface></facsimile>"#
+      + ##"<text><body><pb n="p. 15" facs="\##(service)/full/max/0/default.jpg"/><ab rendition="#size-6 #leading-6"><lb facs="#p21-z-L2"/>Indeed I heard it not<lb facs="#p21-z-L3"/>O the king doth wake</ab><note place="margin-left"><lb facs="#p21-z-L9"/>A note</note></body></text></TEI>"##
+    let page = try XCTUnwrap(
+      elements(in: TEIView(teiXml: document).build()).first { attribute("data-page-index", of: $0) != nil })
+    let zones = (attribute("data-scan-layout", of: page) ?? "").split(separator: ";").map {
+      $0.split(separator: " ").map(String.init)
+    }
+    XCTAssertEqual(zones.map { $0[0] + " " + $0[1] }, ["block main", "line -", "line -", "block marginalia", "line -"])
+    XCTAssertEqual(zones.map(\.count), [11, 11, 11, 11, 11])
+    XCTAssertEqual(zones[1], ["line", "-", "-", "329", "181", "670", "181", "670", "204", "329", "204"])
+    XCTAssertEqual(Array(zones[3][3...]), ["80", "300", "200", "300", "200", "320", "80", "320"])
+    XCTAssertFalse((attribute("data-body-leading", of: page) ?? "").isEmpty)
+  }
 }
