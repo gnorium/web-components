@@ -1646,19 +1646,12 @@
         // ISCC–NBS basic color names (`TEIRenderer.inks`), on a run, a block
         // or a frame, drawn in one of the twelve named colors
         // (`NamedColors`): brown as orange, olive as yellow, yellow-green as
-        // lime, purple as magenta; black the text's own color; white as white.
-        // An ink is drawn only where it reads (user, 2026-10-25): at WCAG 3:1
-        // or more against the current theme's page; below that, in a theme,
-        // the line takes that theme's text color (`TEIView.unreadableInks`).
-        // No fill is drawn behind any ink: a ground is not the page's.
+        // lime, purple as magenta. The default black ink follows the theme
+        // (the text's own color); every other ink is drawn as encoded, white
+        // as white, with no fill behind it (user, 2026-10-25).
         for (name, ink) in Self.inks {
           selector(Self.inkSelectors(name).joined(separator: ", ")) {
             color(ink)
-          }
-        }
-        for (theme, name) in Self.unreadableInks {
-          selector(Self.inkSelectors(name).map { "\(theme) \($0)" }.joined(separator: ", ")) {
-            color(colorBase)
           }
         }
         // Type a step larger or smaller than the text's, on a run, a block,
@@ -1884,42 +1877,6 @@
         "& .tei-section > .tei-line[data-rend~='color(\(name))']",
         "& .tei-frame[data-rend~='color(\(name))'] .tei-line",
       ]
-    }
-
-    /// Each theme's root (`data-color-scheme` and `data-contrast` on `:root`), with its scheme of the named
-    /// colors.
-    static let themes: [(root: String, scheme: NamedColors.Scheme)] = [
-      (":root:not([data-color-scheme='dark']):not([data-contrast='more'])", .light),
-      (":root[data-contrast='more']:not([data-color-scheme='dark'])", .lightMoreContrast),
-      (":root[data-color-scheme='dark']:not([data-contrast='more'])", .dark),
-      (":root[data-color-scheme='dark'][data-contrast='more']", .darkMoreContrast),
-    ]
-
-    /// The contrast an ink keeps against the page to be drawn (WCAG's 3:1).
-    static let inkMinimumContrast = 3.0
-
-    /// The color a name is drawn in, in `scheme`: nil for black, which is the text's own color.
-    static func inkColor(_ name: String, _ scheme: NamedColors.Scheme) -> NamedColors.OKLCH? {
-      switch name {
-      case "black": return nil
-      case "white": return NamedColors.OKLCH(1, 0, 0)
-      case "brown": return NamedColors.color("orange", scheme)
-      case "olive": return NamedColors.color("yellow", scheme)
-      case "yellow-green": return NamedColors.color("lime", scheme)
-      case "purple": return NamedColors.color("magenta", scheme)
-      default: return NamedColors.color(name, scheme)
-      }
-    }
-
-    /// The inks too faint against a theme's page (below `inkMinimumContrast`), by the theme's root: their
-    /// lines take that theme's text color instead.
-    static let unreadableInks: [(theme: String, name: String)] = themes.flatMap { theme in
-      inks.compactMap { ink -> (theme: String, name: String)? in
-        guard let color = inkColor(ink.name, theme.scheme),
-          NamedColors.contrast(color, theme.scheme.page) < inkMinimumContrast
-        else { return nil }
-        return (theme.root, ink.name)
-      }
     }
   }
 #endif
