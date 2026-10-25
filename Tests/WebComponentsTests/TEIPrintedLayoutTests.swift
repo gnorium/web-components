@@ -57,6 +57,27 @@ final class TEIPrintedLayoutTests: XCTestCase {
     XCTAssertEqual(notes.compactMap { attribute("data-rend", of: $0) }.last, "align(justify) css:column-gap=2em")
   }
 
+  /// A run on a ground of its own (user, 2026-10-25: a shaded box, gnorium-python `base_tei.fills`) is a
+  /// frame drawing that ground as encoded, in every theme; the page's ground is never drawn, and an ink is
+  /// its name's color with no theme's fallback.
+  func testAFilledRunDrawsItsGroundAsEncoded() throws {
+    let nodes = view(
+      #"<ab style="background-color:#d7e4f3;padding:1em"><lb/>Boxed<lb/>lines</ab><ab><lb/>After</ab>"#)
+    let frame = try XCTUnwrap(classed("tei-frame", in: nodes).first)
+    XCTAssertEqual(attribute("style", of: frame), "background-color:#d7e4f3;padding:1em;")
+    XCTAssertEqual(classed("tei-frame", in: nodes).count, 1)
+    XCTAssertTrue(text(of: frame).contains("Boxed") && !text(of: frame).contains("After"))
+    // The page's own pair (its <pb>'s renditions) is the theme's: its lines carry no color; another ink is
+    // drawn as encoded.
+    let inverted = view(
+      ##"<ab><lb/>White type</ab><ab rend="color(yellow)"><lb/>Gilt</ab>"##)
+    let inked = inverted.filter { (attribute("data-rend", of: $0) ?? "").contains("color(") }
+    XCTAssertFalse(inked.isEmpty)
+    XCTAssertTrue(inked.allSatisfy { text(of: $0).contains("Gilt") && !text(of: $0).contains("White") })
+    XCTAssertEqual(TEIView.inks.count, TEIRenderer.inks.count)
+    XCTAssertEqual(Set(TEIView.inks.map(\.name)), Set(TEIRenderer.inks))
+  }
+
   func testAParagraphRunOnToTheNextPageNamesItsPart() throws {
     let nodes = view(
       #"<p rend="align(justify)">Whole<lb/>here.<lb/></p><p rend="align(justify)" part="I">Runs<lb/>on<lb/></p>"#)

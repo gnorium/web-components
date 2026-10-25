@@ -1628,7 +1628,10 @@
         // An epigraph set as a whole (user, 2026-10-11): as wide as its
         // lines, placed as its rend says, its lines set within it.
         // A printed frame (`border-style`, user, 2026-10-13) is a 1px rule
-        // in its ink, its inset and measure its rend's; never its paper.
+        // in its ink, its inset and measure its rend's; its ground only
+        // where the page encodes one (`background-color`, user, 2026-10-25:
+        // a shaded box, a tinted panel), drawn as encoded in every theme
+        // (its style's), never the page's paper.
         descendant(".tei-frame") {
           display(.flex)
           flexDirection(.column)
@@ -1644,11 +1647,13 @@
         selector("& .tei-frame[data-rend~='align(left)']") { alignSelf(.flexStart) }
         // Ink (user, 2026-10-11): a rend's color(NAME), one of the 13
         // ISCC–NBS basic color names (`TEIRenderer.inks`), on a run, a block
-        // or a frame, drawn in one of the twelve named colors
-        // (`NamedColors`): brown as orange, olive as yellow, yellow-green as
-        // lime, purple as magenta. The default black ink follows the theme
-        // (the text's own color); every other ink is drawn as encoded, white
-        // as white, with no fill behind it (user, 2026-10-25).
+        // or a frame. The TEI is faithful to the print (user, 2026-10-25):
+        // the page's own pair—its ground and its default ink, page-level
+        // renditions on its <pb>—is the one thing mapped to the theme (the
+        // reader's page and text colors, whatever the pair encoded); every
+        // other ink, black and white too, is its name's centroid (`inks`) in
+        // every theme, never another color where it reads faintly, and no
+        // ground is drawn behind it.
         for (name, ink) in Self.inks {
           selector(Self.inkSelectors(name).joined(separator: ", ")) {
             color(ink)
@@ -1861,12 +1866,14 @@
   }
 
   extension TEIView {
-    /// The inks a rend may name (`TEIRenderer.inks`) and the token each is drawn in.
+    /// The inks a rend may name (`TEIRenderer.inks`) and the color each is
+    /// drawn in: its ISCC–NBS centroid (Kelly's colors of maximum contrast, NBS 1965),
+    /// as gnorium-python's `base_tei.INKS` names a sampled ink by them.
     static let inks: [(name: String, ink: CSS.Color)] = [
-      ("pink", colorPink), ("red", colorRed), ("orange", colorOrange), ("brown", colorOrange),
-      ("yellow", colorYellow), ("olive", colorYellow), ("yellow-green", colorLime), ("green", colorGreen),
-      ("blue", colorBlue), ("purple", colorMagenta), ("gray", colorGray), ("black", colorBase),
-      ("white", colorInvertedFixed),
+      ("pink", hex(0xE68FAC)), ("red", hex(0xBE0032)), ("orange", hex(0xF38400)), ("brown", hex(0x654522)),
+      ("yellow", hex(0xF3C300)), ("olive", hex(0x665D1E)), ("yellow-green", hex(0x8DB600)),
+      ("green", hex(0x008856)), ("blue", hex(0x0067A5)), ("purple", hex(0x875692)), ("white", hex(0xF2F3F4)),
+      ("gray", hex(0x848482)), ("black", hex(0x222222)),
     ]
 
     /// The rules that draw a run, a block's lines, a frame and a section's line in `name`'s ink.
