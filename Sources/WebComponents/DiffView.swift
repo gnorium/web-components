@@ -434,6 +434,17 @@ public struct DiffView: HTMLContent {
       selector("& .diff-box[data-passage-linked='true'] .diff-row") {
         CSS.Property("min-height", "var(--passage-line-height, 0px)")
       }
+      // Wrapped beside a source, its text the source line's width (the
+      // sync's `--passage-column`): the same breaks, line for line.
+      selector("& .diff-box[data-passage-wrap='true'][style*='--passage-column'] .diff-content") {
+        CSS.Property("flex", "0 0 var(--passage-column)")
+        CSS.Property("inline-size", "var(--passage-column)")
+      }
+      selector("& .diff-box[data-passage-wrap='true'][style*='--passage-column'] .diff-lines") {
+        width(.maxContent)
+        minWidth(perc(100))
+        CSS.Property("padding-inline-start", "var(--passage-shift, 0px)")
+      }
       selector("& .diff-box[data-passage-wrap='false'] .diff-lines") {
         width(.maxContent)
         minWidth(perc(100))

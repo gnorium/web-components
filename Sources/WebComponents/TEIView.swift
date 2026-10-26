@@ -1002,6 +1002,8 @@
 
     public func build() -> DOM.Node {
       let pages = self.pages
+      // Each page's surface, the facsimile read once for all of them.
+      let surfaces = TEIFacsimile.surfaces(of: pages, in: teiXml)
       // Record pages register an empty reader before fetching its contents:
       // formula styles are registered then, even with no formula yet.
       _ = TEIMathView(TEIMath(display: false, content: [])).build()
@@ -1055,7 +1057,7 @@
             // 2026-10-21), never in a page's XML.
             let code = TEIFacsimile.headed(
               TEIRendition.headedPage(page.markup, renditions: ""),
-              surface: TEIFacsimile.surface(of: page, in: teiXml))
+              surface: surfaces[index])
             div {
               if editable {
                 // A form of its own, so the page can be sent to be read back
@@ -1560,15 +1562,6 @@
         // one side only.
         selector("& .tei-page-text:not([data-framed='true']):not([data-reflow='true'] *) > *") {
           CSS.Property("min-inline-size", "calc(\(size640.value) - 2 * \(spacing16.value))")
-        }
-        // A blank page (`<gap reason="blank"/>` alone): its `[blank]` note
-        // stands in the middle of the page, across and down.
-        selector(
-          "& .tei-page-text:not([data-reflow='true'] *) > .tei-section:only-child:has(> .tei-line-gap:only-child)",
-          "& .tei-page-text:not([data-reflow='true'] *) > .tei-text-block > .tei-section:only-child:has(> .tei-line-gap:only-child)"
-        ) {
-          margin(.auto)
-          textAlign(.center)
         }
         selector("& .tei-page-text:not([data-reflow='true'] *) .tei-block > *") {
           display(.block)

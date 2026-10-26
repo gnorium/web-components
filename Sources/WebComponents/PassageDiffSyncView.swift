@@ -29,6 +29,13 @@ public enum PassageDiffSyncViewHydration {
         let box = translated ? slot.querySelector(".testament-translation-diff .diff-box") : slot.querySelector(".image-diff-view .diff-box")
         bind(reader, source: source, box: box)
       }
+      // The document's header and its diff under the Header pane (user,
+      // 2026-10-26), paired on the viewer, as the page's are on the reader.
+      if let viewer = reader.querySelector(".artifact-view"),
+        let source = viewer.querySelector(".artifact-document-header .code-code"),
+        let box = viewer.querySelector(".artifact-under-header .diff-box") {
+        bind(viewer, source: source, box: box)
+      }
     }
   }
 
@@ -37,7 +44,7 @@ public enum PassageDiffSyncViewHydration {
   }
 
   private static func scrollport(_ source: DOM.Element, within scope: DOM.Element) -> DOM.Element {
-    if let pane = source.closest(".artifact-markup, .sense-editor-raw") { return pane }
+    if let pane = source.closest(".artifact-markup, .artifact-document-header, .sense-editor-raw") { return pane }
     var node: DOM.Element? = source
     while let current = node {
       let overflow = window.getComputedStyle(current).getPropertyValue("overflow-y")
@@ -55,14 +62,14 @@ public enum PassageDiffSyncViewHydration {
   private static func bind(_ scope: DOM.Element, source: DOM.Element, box: DOM.Element?) {
     guard let box else { return }
     let port = scrollport(source, within: scope)
-    let diffPort = box.closest(".artifact-under-markup") ?? box
+    let diffPort = box.closest(".artifact-under-markup, .artifact-under-header") ?? box
     let key = intToString(Int(source.id)) + ":" + intToString(Int(box.id))
     if stringEquals(scope.getAttribute("data-passage-pair") ?? "", key) { return }
     scope.setAttribute("data-passage-pair", key)
     let pair = Pair(scope: scope, source: source, port: port, box: box, diffPort: diffPort, key: key)
     pair.presentation()
     source.observeResize { _, _ in pair.presentation() }
-    scope.observeMutations(subtree: true, attributeFilter: ["data-reflow", "style", "class"]) { pair.presentation() }
+    scope.observeMutations(subtree: true, attributeFilter: ["data-reflow", "data-header", "style", "class"]) { pair.presentation() }
     _ = port.addEventListener(.scroll) { _ in pair.schedule(fromSource: true) }
     _ = diffPort.addEventListener(.scroll) { _ in pair.schedule(fromSource: false) }
   }
@@ -97,11 +104,34 @@ public enum PassageDiffSyncViewHydration {
       let family = style.getPropertyValue("font-family")
       let size = pixels(style.getPropertyValue("font-size")) * scale
       let leading = pixels(style.getPropertyValue("line-height")) * scale
-      let signature = wrap + family + doubleToString(size) + ":" + doubleToString(leading)
+      let wraps = !(stringEquals(wrap, "pre") || stringEquals(wrap, "nowrap"))
+      // Wrapped, each line's text as wide as the source's code line, so a
+      // diff line breaks where its source line does (user, 2026-10-26:
+      // Reflow's diff wraps with its pane, line for line).
+      let column = wraps ? Double(source.querySelector(".code-line")?.clientWidth ?? 0) * scale : 0
+      let signature = wrap + family + doubleToString(size) + ":" + doubleToString(leading) + ":" + doubleToString(column)
+      // Its text column under the source's, each time it is shown (it is
+      // measured only while both are drawn): the first line's text moved by
+      // what still parts it from the code's (user, 2026-10-26).
+      if column > 0, box.clientWidth > 0,
+        let code = source.querySelector(".code-line")?.getBoundingClientRect(),
+        let text = box.querySelector(".diff-content")?.getBoundingClientRect()
+      {
+        let shift = pixels(box.style.getPropertyValue("--passage-shift")) + code.left - text.left
+        if abs(code.left - text.left) >= 0.5 {
+          box.style.setProperty("--passage-shift", doubleToString(max(0, shift)) + "px")
+        }
+      }
       if stringEquals(signature, presentationKey) { return }
       presentationKey = signature
       box.setAttribute("data-passage-linked", "true")
-      box.setAttribute("data-passage-wrap", stringEquals(wrap, "pre") || stringEquals(wrap, "nowrap") ? "false" : "true")
+      box.setAttribute("data-passage-wrap", wraps ? "true" : "false")
+      if column > 0 {
+        box.style.setProperty("--passage-column", doubleToString(column) + "px")
+      } else {
+        _ = box.style.removeProperty("--passage-column")
+        _ = box.style.removeProperty("--passage-shift")
+      }
       lines.style.setProperty("font-family", family)
       lines.style.setProperty("font-size", doubleToString(size) + "px")
       if leading > 0 {
