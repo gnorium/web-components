@@ -111,7 +111,13 @@ public enum PassageDiffSyncViewHydration {
       // Wrapped, each line's text as wide as the source's code line, so a
       // diff line breaks where its source line does (user, 2026-10-26:
       // Reflow's diff wraps with its pane, line for line).
-      let column = wraps ? Double(source.querySelector(".code-line")?.clientWidth ?? 0) * scale : 0
+      // The text's own box: a line that holds its gutter as its padding
+      // (a reader's code pane) counts from its text, not its edge.
+      let first = source.querySelector(".code-line")
+      let lineStyle = first.map { window.getComputedStyle($0) }
+      let padStart = pixels(lineStyle?.getPropertyValue("padding-inline-start") ?? "0")
+      let padEnd = pixels(lineStyle?.getPropertyValue("padding-inline-end") ?? "0")
+      let column = wraps ? max(0, Double(first?.clientWidth ?? 0) - padStart - padEnd) * scale : 0
       let signature = wrap + family + doubleToString(size) + ":" + doubleToString(leading) + ":" + doubleToString(column)
       // Its text column under the source's, wrapped or not, each time it is
       // shown (it is measured only while both are drawn, neither scrolled
@@ -119,11 +125,12 @@ public enum PassageDiffSyncViewHydration {
       // the code's (user, 2026-10-26).
       if box.clientWidth > 0, source.scrollLeft == 0, port.scrollLeft == 0, box.scrollLeft == 0,
         diffPort.scrollLeft == 0,
-        let code = source.querySelector(".code-line")?.getBoundingClientRect(),
+        let line = first?.getBoundingClientRect(),
         let text = box.querySelector(".diff-content")?.getBoundingClientRect()
       {
-        let shift = pixels(box.style.getPropertyValue("--passage-shift")) + code.left - text.left
-        if abs(code.left - text.left) >= 0.5 {
+        let codeLeft = line.left + padStart * scale
+        let shift = pixels(box.style.getPropertyValue("--passage-shift")) + codeLeft - text.left
+        if abs(codeLeft - text.left) >= 0.5 {
           box.style.setProperty("--passage-shift", doubleToString(max(0, shift)) + "px")
         }
       }

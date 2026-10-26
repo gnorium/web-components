@@ -213,12 +213,13 @@
         // wrapped, scrolling sideways.
         // The number's column: its digits (`--gutter`, the widest number's
         // in ch) with the same inset either side (user, 2026-10-15), so no
-        // number touches the edge or the code. The code itself is set off
+        // number touches the edge or the code; 4px each (user, 2026-10-27:
+        // 8 left a wide margin before every line). The code itself is set off
         // by it, not each line's block: text an editor holds outside a
         // line's block (typed into it emptied, pasted) is set off as well.
         selector("&[data-lined='true'] .code-code") {
           CSS.Property("counter-reset", "code-line")
-          CSS.Property("padding-inline-start", "calc(var(--gutter) + 2 * \(spacing8.value))")
+          CSS.Property("padding-inline-start", "calc(var(--gutter) + 2 * \(spacing4.value))")
           CSS.Property("min-height", "1lh")
           boxSizing(.borderBox)
         }
@@ -260,19 +261,19 @@
         descendant(".code-gutter-lines > span") {
           position(.absolute)
           insetInlineStart(px(0))
-          CSS.Property("width", "calc(var(--gutter) + 2 * \(spacing8.value))")
-          paddingInlineStart(spacing8)
-          paddingInlineEnd(spacing8)
+          CSS.Property("width", "calc(var(--gutter) + 2 * \(spacing4.value))")
+          paddingInlineStart(spacing4)
+          paddingInlineEnd(spacing4)
           boxSizing(.borderBox)
           textAlign(.end)
         }
         selector("&[data-lined='true'] .code-line::before") {
           CSS.Property("content", "counter(code-line)")
           position(.absolute)
-          CSS.Property("inset-inline-start", "calc(-1 * (var(--gutter) + 2 * \(spacing8.value)))")
-          CSS.Property("width", "calc(var(--gutter) + 2 * \(spacing8.value))")
-          paddingInlineStart(spacing8)
-          paddingInlineEnd(spacing8)
+          CSS.Property("inset-inline-start", "calc(-1 * (var(--gutter) + 2 * \(spacing4.value)))")
+          CSS.Property("width", "calc(var(--gutter) + 2 * \(spacing4.value))")
+          paddingInlineStart(spacing4)
+          paddingInlineEnd(spacing4)
           boxSizing(.borderBox)
           textAlign(.end)
           color(colorSubtle)
