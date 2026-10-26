@@ -445,7 +445,7 @@ public struct DiffView: HTMLContent {
         minWidth(perc(100))
       }
       // The shift in each row, so the row's own color runs under it.
-      selector("& .diff-box[data-passage-wrap='true'][style*='--passage-column'] > .diff-lines > .diff-row") {
+      selector("& .diff-box[style*='--passage-shift'] > .diff-lines > .diff-row") {
         CSS.Property("padding-inline-start", "calc(\(spacing8.value) + var(--passage-shift, 0px))")
       }
       selector("& .diff-box[data-passage-wrap='false'] .diff-lines") {

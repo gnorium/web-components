@@ -110,10 +110,12 @@ public enum PassageDiffSyncViewHydration {
       // Reflow's diff wraps with its pane, line for line).
       let column = wraps ? Double(source.querySelector(".code-line")?.clientWidth ?? 0) * scale : 0
       let signature = wrap + family + doubleToString(size) + ":" + doubleToString(leading) + ":" + doubleToString(column)
-      // Its text column under the source's, each time it is shown (it is
-      // measured only while both are drawn): the first line's text moved by
-      // what still parts it from the code's (user, 2026-10-26).
-      if column > 0, box.clientWidth > 0,
+      // Its text column under the source's, wrapped or not, each time it is
+      // shown (it is measured only while both are drawn, neither scrolled
+      // across): the first line's text moved by what still parts it from
+      // the code's (user, 2026-10-26).
+      if box.clientWidth > 0, source.scrollLeft == 0, port.scrollLeft == 0, box.scrollLeft == 0,
+        diffPort.scrollLeft == 0,
         let code = source.querySelector(".code-line")?.getBoundingClientRect(),
         let text = box.querySelector(".diff-content")?.getBoundingClientRect()
       {
@@ -130,7 +132,6 @@ public enum PassageDiffSyncViewHydration {
         box.style.setProperty("--passage-column", doubleToString(column) + "px")
       } else {
         _ = box.style.removeProperty("--passage-column")
-        _ = box.style.removeProperty("--passage-shift")
       }
       lines.style.setProperty("font-family", family)
       lines.style.setProperty("font-size", doubleToString(size) + "px")
