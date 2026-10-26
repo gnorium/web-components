@@ -443,7 +443,10 @@ public struct DiffView: HTMLContent {
       selector("& .diff-box[data-passage-wrap='true'][style*='--passage-column'] .diff-lines") {
         width(.maxContent)
         minWidth(perc(100))
-        CSS.Property("padding-inline-start", "var(--passage-shift, 0px)")
+      }
+      // The shift in each row, so the row's own color runs under it.
+      selector("& .diff-box[data-passage-wrap='true'][style*='--passage-column'] > .diff-lines > .diff-row") {
+        CSS.Property("padding-inline-start", "calc(\(spacing8.value) + var(--passage-shift, 0px))")
       }
       selector("& .diff-box[data-passage-wrap='false'] .diff-lines") {
         width(.maxContent)
