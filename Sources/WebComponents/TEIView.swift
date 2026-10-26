@@ -841,10 +841,14 @@
       return nil
     }
 
-    /// The page's rendering layer's style: its frame (`frameStyle`) and the width of a space's character
-    /// (`spaceCharacter`).
-    static func pageTextStyle(frame: TEIPageFrame?, renditions: [String: String]) -> String {
-      let parts = [frame.map(frameStyle), spaceCharacter(in: renditions).map { "--tei-space-char: \($0)" }]
+    /// The page's rendering layer's style: its frame (`frameStyle`), the width of a space's character
+    /// (`spaceCharacter`) and the body's leading in em (`TEIRendition.bodyLeading`), which a framed page's
+    /// furniture is set at.
+    static func pageTextStyle(frame: TEIPageFrame?, renditions: [String: String], bodyLeading: Double? = nil) -> String {
+      let parts = [
+        frame.map(frameStyle), spaceCharacter(in: renditions).map { "--tei-space-char: \($0)" },
+        bodyLeading.map { "--tei-body-leading: \(number($0))" },
+      ]
       return parts.compactMap { $0 }.joined(separator: "; ")
     }
 
@@ -1056,7 +1060,11 @@
             .class("tei-page-text")
             .data("layer", "rendering")
             .data("framed", frame != nil)
-            .addingAttribute("style", Self.pageTextStyle(frame: frame, renditions: page.renditions))
+            .addingAttribute(
+              "style",
+              Self.pageTextStyle(
+                frame: frame, renditions: page.renditions,
+                bodyLeading: TEIRendition.bodyLeading(in: page.renditions, markup: page.markup)))
 
             // The page's code (user, 2026-10-14), never the document's
             // header: that is its viewer's Header pane's alone (user,
@@ -1770,6 +1778,16 @@
         descendant(".tei-line-forme-signature") {
           textAlign(.start)
           marginBlockStart(spacing8)
+        }
+        // Typeset on its frame, the work's furniture is set as the print
+        // set it: a line of the body's type at the body's leading, its white
+        // from the text its placement's (`#fw-<type>`, gnorium-python
+        // `scale.placement_renditions`), never the reading layout's (user,
+        // 2026-10-27: a running head's 26px line and 8px margin set Hamlet
+        // Q1's every line under it 0.6em low, its catchword a line low).
+        selector("& .tei-page-text[data-framed='true']:not([data-reflow='true'] *) .tei-line-forme") {
+          margin(0)
+          CSS.Property("line-height", "calc(var(--tei-body-leading) * 1em)")
         }
         // An original note, set apart from the text it annotates as the
         // work's apparatus is.
