@@ -203,15 +203,21 @@
     }
 
     /// The book's em on the page's scan, in the 0–1000 space across its
-    /// image (user, 2026-10-18): the book is set in one type, so every
-    /// scan of it has its em as its width over the scans' width in em its
-    /// frame declares (`TEIWorkFrame.width`, `max-inline-size`; gnorium-python
-    /// `type_scale.canvas_em`), whatever the scan's resolution; "" where
-    /// the renditions declare no frame or no width. The reader's overlay
-    /// always lays the scan at this scale, never by the main text block's
-    /// height, the edition's typesetting (`OverlayRegistration.laid`).
+    /// image (user, 2026-10-18): the book is set in one type, so a scan has
+    /// its em as its width over its width in em—the scan's own, as its
+    /// measured text block gives it (`TEITextBlock.frame`: the body type
+    /// measured on it), else the work's frame's (`TEIWorkFrame.width`,
+    /// `max-inline-size`; gnorium-python `type_scale.canvas_em`). The
+    /// scan's own first: one width in em for every scan assumes each frames
+    /// the page alike, and Hamlet Q1's photographs (openings, a ruler, more
+    /// or less of the next leaf) run 73 to 85 em wide (dev, 2026-10-26).
+    /// "" where neither gives a width. The reader's overlay always lays
+    /// the scan at this scale, never by the main text block's height, the
+    /// edition's typesetting (`OverlayRegistration.laid`).
     static func scanEmData(of page: TEIPage) -> String {
-      guard let frame = TEIRendition.frame(in: page.renditions) ?? page.textBlock?.frame, frame.width > 0 else { return "" }
+      guard let frame = page.textBlock?.frame.flatMap({ $0.width > 0 ? $0 : nil }) ?? TEIRendition.frame(in: page.renditions),
+        frame.width > 0
+      else { return "" }
       // Ten-thousandths of the space: finer than a scan's pixel.
       return number((1000 / frame.width * 10_000).rounded() / 10_000)
     }
