@@ -68,8 +68,10 @@ public enum PassageDiffSyncViewHydration {
     scope.setAttribute("data-passage-pair", key)
     let pair = Pair(scope: scope, source: source, port: port, box: box, diffPort: diffPort, key: key)
     pair.presentation()
-    source.observeResize { _, _ in pair.presentation() }
-    scope.observeMutations(subtree: true, attributeFilter: ["data-reflow", "data-header", "style", "class"]) { pair.presentation() }
+    source.observeResize { _, _ in pair.schedulePresentation() }
+    scope.observeMutations(subtree: true, attributeFilter: ["data-reflow", "data-header", "style", "class"]) {
+      pair.schedulePresentation()
+    }
     _ = port.addEventListener(.scroll) { _ in pair.schedule(fromSource: true) }
     _ = diffPort.addEventListener(.scroll) { _ in pair.schedule(fromSource: false) }
   }
@@ -80,6 +82,7 @@ public enum PassageDiffSyncViewHydration {
     let diffPort: DOM.Element
     let key: String
     var queued = false
+    var presentationQueued = false
     var fromSource = true
     var cachedText = ""
     var cachedStyle = ""
@@ -138,6 +141,19 @@ public enum PassageDiffSyncViewHydration {
       if leading > 0 {
         lines.style.setProperty("line-height", doubleToString(leading) + "px")
         box.style.setProperty("--passage-line-height", doubleToString(leading) + "px")
+      }
+    }
+
+    /// `presentation` in the next frame, once however often it is asked
+    /// for: read from the change's own callback, it laid the page out in the
+    /// middle of a frame the browser then laid out again (a Hamlet header
+    /// shown: 39 ms forced, then 56 ms, dev 2026-10-26).
+    func schedulePresentation() {
+      if presentationQueued { return }
+      presentationQueued = true
+      _ = window.requestAnimationFrame { [self] in
+        presentationQueued = false
+        presentation()
       }
     }
 
