@@ -21,7 +21,7 @@
         ButtonView(
           label: "",
           icon: IconView(
-            icon: { s in ConfigureIconView(size: s) },
+            icon: { s in SlidersVerticalIconView(size: s) },
             size: size.iconSize),
           weight: .plain,
           size: size,

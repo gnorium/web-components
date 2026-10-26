@@ -46,7 +46,7 @@ final class TEIPrintedLayoutTests: XCTestCase {
 
   func testRuleFrameAndFootnoteColumns() throws {
     let nodes = view(
-      #"<p>A<lb/></p><milestone unit="section" rend="rule" style="inline-size:10em"/><note type="provenance" style="border-style:solid;padding:1em"><p>Gift<lb/></p></note><note place="foot" rend="align(justify)" style="column-gap:2em"><cb/>One<lb/>two<lb/><cb/>Three<lb/></note>"#)
+      #"<p>A<lb/></p><milestone unit="section" rend="rule" style="inline-size:10em"/><note type="binding" subtype="edition" style="border-style:solid;padding:1em"><p>Gift<lb/></p></note><note place="foot" rend="align(justify)" style="column-gap:2em"><cb/>One<lb/>two<lb/><cb/>Three<lb/></note>"#)
     let rule = try XCTUnwrap(classed("tei-rule", in: nodes).first)
     XCTAssertEqual(attribute("style", of: rule), "inline-size:10em;")
     let frame = try XCTUnwrap(classed("tei-frame", in: nodes).first)
@@ -127,13 +127,19 @@ final class TEIPrintedLayoutTests: XCTestCase {
     let document = """
       <TEI><teiHeader><encodingDesc><tagsDecl><rendition xml:id="text-block" scheme="css" selector="text">\
       font-size:20px;inline-size:44em;block-size:55.9em;margin:3em</rendition></tagsDecl></encodingDesc></teiHeader>\
+      <facsimile><surface n="1" ulx="0" uly="0" lrx="1000" lry="1000">\
+      <graphic url="https://web-tests.invalid/iiif/1"/>\
+      <zone xml:id="z-L1" ulx="120" uly="80" lrx="320" lry="110"/></surface></facsimile>\
       <text><body><pb n="1" facs="https://web-tests.invalid/iiif/1"/>\
-      <note type="provenance" place="top margin-left" style="margin-block-end:2em"><p>Ref PE 1580<lb/></p></note>\
+      <lb facs="#z-L1"/><note type="provenance">69304</note>\
+      <note place="top margin-left" style="margin-block-end:2em"><p>Ref PE 1580<lb/></p></note>\
       <p>Main text<lb/></p>\
       <note place="margin-left" style="margin-inline-end:1em"><p>Gloss<lb/></p></note>\
-      <note type="provenance" place="bottom"><p>Stamp<lb/></p></note></body></text></TEI>
+      <note type="binding" subtype="issue" place="bottom"><p>Stamp<lb/></p></note></body></text></TEI>
       """
     let nodes = elements(in: TEIView(teiXml: document).build())
+    let page = try XCTUnwrap(classed("tei-page", in: nodes).first)
+    XCTAssertEqual(attribute("data-element-zones", of: page), "1:120 80 200 30")
     let layer = try XCTUnwrap(nodes.first { attribute("data-layer", of: $0) == "rendering" })
     XCTAssertEqual(attribute("data-framed", of: layer), "true")
     XCTAssertEqual(

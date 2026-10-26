@@ -6,11 +6,12 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-/// Lucide's `check` (ISC; THIRD_PARTY_NOTICES.md): a done or chosen thing: submitted, a status mark (blue), a menu's chosen item, a copied code block. Lucide's own
-/// 24-grid geometry (lucide-static 1.60.0), fitted to the house box by
-/// IconStrokeFit: the long edge 1024, `iconStrokeWidth` thick, round caps
-/// and joins, the outer edges tight to the box.
-/// SERVER + CLIENT: client code renders it too.
+/// Lucide's `check` (ISC; THIRD_PARTY_NOTICES.md): a done or chosen thing:
+/// submitted, a status mark (blue), a menu's chosen item, a copied code block.
+/// Lucide's own geometry (lucide-static 1.60.0), carried flat into the house
+/// box: the long edge 1024, the house stroke (`iconStrokeWidth`), round caps
+/// and joins, tight to the box (user, 2026-10-26). SERVER + CLIENT: client code
+/// renders it too.
 public struct CheckIconView: HTMLContent {
   let iconSize: CSS.Length
   let `class`: String
@@ -24,20 +25,16 @@ public struct CheckIconView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
-    let fit = IconStrokeFit(minX: 4, minY: 6, maxX: 20, maxY: 17)
-    return svg {
-      g {
-        path().d("M20 6 9 17l-5-5")
-      }
-      .transform(fit.transform)
-      .strokeWidth(fit.strokeWidth)
+    svg {
+      path().d("M977.45 46.55L337.45 686.55L46.55 395.64")
     }
     .class(stringIsEmpty(`class`) ? "check-icon-view" : "check-icon-view \(`class`)")
     .style { width(iconSize) }
-    .viewBox(0, 0, fit.width, fit.height)
+    .viewBox(0, 0, 1024, 733.09)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.none)
     .stroke(.currentColor)
+    .strokeWidth(93.09)
     .strokeLinecap(.round)
     .strokeLinejoin(.round)
     .ariaHidden(true)

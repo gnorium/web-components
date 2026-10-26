@@ -1,16 +1,17 @@
 #if SERVER
   import CSSBuilder
   import DOMBuilder
+  import EmbeddedSwiftUtilities
   import HTMLBuilder
   import SVGBuilder
   import WebTypes
 
-  /// Lucide's `panel-top` (ISC; THIRD_PARTY_NOTICES.md): a sheet with its
-  /// top band ruled off, for a document's header (user, 2026-10-20: the
-  /// testament's header in its XML pane). Lucide's own 24-grid geometry,
-  /// fitted to the house box by IconStrokeFit: the long edge 1024,
-  /// `iconStrokeWidth` thick, round caps and joins, the outer edges tight to
-  /// the box.
+  /// Lucide's `panel-top` (ISC; THIRD_PARTY_NOTICES.md): a sheet with its top
+  /// band ruled off, for a document's header (user, 2026-10-20: the testament's
+  /// header in its XML pane). Lucide's own geometry (lucide-static 1.60.0),
+  /// carried flat into the house box: the long edge 1024, the house stroke
+  /// (`iconStrokeWidth`), round caps and joins, tight to the box (user,
+  /// 2026-10-26).
   public struct PanelTopIconView: HTMLContent {
     let iconSize: CSS.Length
     let `class`: String
@@ -21,23 +22,17 @@
     }
 
     public func build() -> DOM.Node {
-      let fit = IconStrokeFit(minX: 3, minY: 3, maxX: 21, maxY: 21)
-      return svg {
-        g {
-          path().d(
-            M(5, 3), H(19), a(2, 2, 0, false, true, 2, 2), V(19), a(2, 2, 0, false, true, -2, 2), H(5),
-            a(2, 2, 0, false, true, -2, -2), V(5), a(2, 2, 0, false, true, 2, -2), Z())
-          path().d(M(3, 9), h(18))
-        }
-        .transform(fit.transform)
-        .strokeWidth(fit.strokeWidth)
+      svg {
+        rect().x(46.55).y(46.55).width(930.91).height(930.91).rx(103.43)
+        path().d("M46.55 356.85L977.45 356.85")
       }
-      .class(`class`.isEmpty ? "panel-top-icon-view" : "panel-top-icon-view \(`class`)")
-      .style { width(iconSize) }
-      .viewBox(0, 0, fit.width, fit.height)
+      .class(stringIsEmpty(`class`) ? "panel-top-icon-view" : "panel-top-icon-view \(`class`)")
+      .style { height(iconSize) }
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.none)
       .stroke(.currentColor)
+      .strokeWidth(93.09)
       .strokeLinecap(.round)
       .strokeLinejoin(.round)
       .ariaHidden(true)

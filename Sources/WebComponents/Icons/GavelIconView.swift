@@ -6,11 +6,11 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-/// Lucide's `gavel` (ISC; THIRD_PARTY_NOTICES.md): committed: the object went on to its next process (a status mark, blue). Lucide's own
-/// 24-grid geometry (lucide-static 1.60.0), fitted to the house box by
-/// IconStrokeFit: the long edge 1024, `iconStrokeWidth` thick, round caps
-/// and joins, the outer edges tight to the box.
-/// SERVER + CLIENT: client code renders it too.
+/// Lucide's `gavel` (ISC; THIRD_PARTY_NOTICES.md): committed: the object went
+/// on to its next process (a status mark, blue). Lucide's own geometry
+/// (lucide-static 1.60.0), carried flat into the house box: the long edge 1024,
+/// the house stroke (`iconStrokeWidth`), round caps and joins, tight to the box
+/// (user, 2026-10-26). SERVER + CLIENT: client code renders it too.
 public struct GavelIconView: HTMLContent {
   let iconSize: CSS.Length
   let `class`: String
@@ -24,24 +24,20 @@ public struct GavelIconView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
-    let fit = IconStrokeFit(minX: 2, minY: 2, maxX: 22, maxY: 22)
-    return svg {
-      g {
-        path().d("m14 13-8.381 8.38a1 1 0 0 1-3.001-3l8.384-8.381")
-        path().d("m16 16 6-6")
-        path().d("m21.5 10.5-8-8")
-        path().d("m8 8 6-6")
-        path().d("m8.5 7.5 8 8")
-      }
-      .transform(fit.transform)
-      .strokeWidth(fit.strokeWidth)
+    svg {
+      path().d("M605.15 558.46L215.11 948.45A46.53 46.53 0 0 1 75.45 808.84L465.63 418.8")
+      path().d("M698.23 698.08L977.45 418.85")
+      path().d("M954.19 442.12L581.88 69.81")
+      path().d("M325.92 325.77L605.15 46.55")
+      path().d("M349.19 302.5L721.5 674.81")
     }
     .class(stringIsEmpty(`class`) ? "gavel-icon-view" : "gavel-icon-view \(`class`)")
-    .style { height(iconSize) }
-    .viewBox(0, 0, fit.width, fit.height)
+    .style { width(iconSize) }
+    .viewBox(0, 0, 1024, 1023.93)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.none)
     .stroke(.currentColor)
+    .strokeWidth(93.09)
     .strokeLinecap(.round)
     .strokeLinejoin(.round)
     .ariaHidden(true)

@@ -3,11 +3,16 @@
   import CSSOMBuilder
   import DesignTokens
   import DOMBuilder
+  import EmbeddedSwiftUtilities
   import HTMLBuilder
   import SVGBuilder
   import WebTypes
 
-  /// Codex `key` icon.
+  /// Lucide's `key` (ISC; THIRD_PARTY_NOTICES.md): Lucide's `key` (ISC;
+  /// THIRD_PARTY_NOTICES.md). Lucide's own geometry (lucide-static 1.60.0),
+  /// carried flat into the house box: the long edge 1024, the house stroke
+  /// (`iconStrokeWidth`), round caps and joins, tight to the box (user,
+  /// 2026-10-26).
   public struct KeyIconView: HTMLContent {
     let iconSize: CSS.Length
     let `class`: String
@@ -22,23 +27,21 @@
 
     public func build() -> DOM.Node {
       svg {
-        path()
-          .d(
-            M(796.44, 284.44), a(87.61, 87.61, 0, false, true, -85.33, -85.33),
-            a(85.33, 85.33, 0, false, true, 170.67, 0),
-            A(87.61, 87.61, 0, false, true, 796.44, 284.44), m(-85.33, -284.44),
-            A(315.73, 315.73, 0, false, false, 398.22, 312.89),
-            a(386.84, 386.84, 0, false, false, 39.82, 159.29), L(0, 910.22), v(113.78), h(227.56),
-            v(-113.78), h(113.77), v(-113.78), h(113.78), l(182.05, -182.04),
-            a(341.33, 341.33, 0, false, false, 73.95, 11.38),
-            A(315.73, 315.73, 0, false, false, 1024, 312.89),
-            A(315.73, 315.73, 0, false, false, 711.11, 0))
+        path().d("M46.55 949.61L502.83 493.32")
+        path().d("M307.96 688.2L417.28 797.51A47.53 47.53 0 0 1 417.28 864.06L317.46 963.87A47.53 47.53 0 0 1 250.92 963.87L141.6 854.55")
+        circle().cx(688.2).cy(307.96).r(261.41)
       }
-      .class(`class`.isEmpty ? "key-icon-view" : "key-icon-view \(`class`)")
+      .class(stringIsEmpty(`class`) ? "key-icon-view" : "key-icon-view \(`class`)")
       .style { height(iconSize) }
-      .viewBox(0, 0, 1024, 1024)
+      .viewBox(0, 0, 996.15, 1024)
       .xmlns("http://www.w3.org/2000/svg")
-      .fill(.currentColor)
+      .fill(.none)
+      .stroke(.currentColor)
+      .strokeWidth(93.09)
+      .strokeLinecap(.round)
+      .strokeLinejoin(.round)
+      .ariaHidden(true)
+      .build()
     }
   }
 #endif

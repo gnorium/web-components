@@ -131,7 +131,6 @@ public struct CheckboxView: HTMLContent {
     var checkboxInput = input()
       .type(.checkbox)
       .id(id)
-      .name(name)
       .value(value)
       .form(form)
       .checked(checked)
@@ -139,6 +138,9 @@ public struct CheckboxView: HTMLContent {
       .required(required)
       .ariaDescribedby(descriptionID)
       .class("checkbox-input")
+    if !stringIsEmpty(name) {
+      checkboxInput = checkboxInput.name(name)
+    }
     for (name, message) in messages.dataAttributes {
       checkboxInput = checkboxInput.data(name, message)
     }

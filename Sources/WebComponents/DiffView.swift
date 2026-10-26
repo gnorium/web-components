@@ -674,17 +674,18 @@ extension DiffView {
 
   /// The lines a passage's or a source's diff marks "+" and "−", as a
   /// diffstat counts them.
+  ///
+  /// Counted from the lines' edit script alone: the diff marks exactly
+  /// those lines, and refining each changed pair word by word, as the view
+  /// draws it, changes no count. A rewrite of every line (a re-derived
+  /// page) would otherwise be refined in full just to be counted.
   public static func lineCount(old: String, new: String) -> (added: Int, removed: Int) {
-    var added = 0
-    var removed = 0
-    for line in DiffEngine.lines(old: old, new: new) {
-      switch line.kind {
-      case .inserted: added += 1
-      case .removed: removed += 1
-      case .unchanged: break
-      }
+    // No text is no lines, as the diff splits it (`DiffEngine.lines`).
+    func lines(_ text: String) -> [[UInt8]] {
+      if text.utf8.isEmpty { return [] }
+      return text.utf8.split(separator: 0x0A, omittingEmptySubsequences: false).map(Array.init)
     }
-    return (added, removed)
+    return count(DiffEngine.edits(old: lines(old), new: lines(new)))
   }
 
   static func count(_ script: [DiffEngine.Edit]) -> (added: Int, removed: Int) {

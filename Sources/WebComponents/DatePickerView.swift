@@ -248,7 +248,7 @@ public struct DatePickerView: HTMLContent {
         footer: {
           div {
             ButtonView(
-              label: "Reset", icon: IconView(icon: { s in RotateCCWIconView(size: s) }, size: ButtonView.ButtonSize.medium.labelIconSize),
+              label: "Reset", icon: IconView(icon: { s in RotateCounterclockwiseIconView(size: s) }, size: ButtonView.ButtonSize.medium.labelIconSize),
               buttonColor: .blue,
               weight: .plain,
               size: .medium,
@@ -454,7 +454,7 @@ public struct DatePickerView: HTMLContent {
   @HTMLBuilder
   private func navigation(title: String, labelID: String) -> [DOM.Node] {
     ButtonView(
-      icon: IconView(icon: { s in PreviousIconView(size: s) }, size: ButtonView.ButtonSize.medium.iconSize),
+      icon: IconView(icon: { s in ChevronLeftIconView(size: s) }, size: ButtonView.ButtonSize.medium.iconSize),
       weight: .plain,
       size: .medium,
       ariaLabel: "Previous month",
@@ -475,7 +475,7 @@ public struct DatePickerView: HTMLContent {
     .class("date-picker-heading")
     .ariaLive(.polite)
     ButtonView(
-      icon: IconView(icon: { s in NextIconView(size: s) }, size: ButtonView.ButtonSize.medium.iconSize),
+      icon: IconView(icon: { s in ChevronRightIconView(size: s) }, size: ButtonView.ButtonSize.medium.iconSize),
       weight: .plain,
       size: .medium,
       ariaLabel: "Next month",

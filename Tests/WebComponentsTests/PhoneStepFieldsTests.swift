@@ -18,7 +18,7 @@ final class PhoneStepFieldsTests: XCTestCase {
   func testTextInputsAndSelectsStepDownWithTheTrigger() {
     let (_, text) = css { TextInputView(id: "t", name: "t", placeholder: "T").build() }
     XCTAssertTrue(text.contains("data-phone-step='down'] .text-input-view .text-input-input"), text)
-    let (_, select) = css { SelectView(name: "s", menuItems: []).build() }
+    let (_, select) = css { SelectView(id: "s", name: "s", menuItems: []).build() }
     XCTAssertTrue(select.contains("data-phone-step='down'] .select-view .select-handle")
       || select.contains("data-phone-step='down']"), select)
   }

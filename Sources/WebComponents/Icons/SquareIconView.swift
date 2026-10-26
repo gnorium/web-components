@@ -6,11 +6,12 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-/// Lucide's `square` (ISC; THIRD_PARTY_NOTICES.md): Stop: end what is running; an action button's verb mark (Lucide's rect drawn as the equal path). Lucide's own
-/// 24-grid geometry (lucide-static 1.60.0), fitted to the house box by
-/// IconStrokeFit: the long edge 1024, `iconStrokeWidth` thick, round caps
-/// and joins, the outer edges tight to the box.
-/// SERVER + CLIENT: client code renders it too.
+/// Lucide's `square` (ISC; THIRD_PARTY_NOTICES.md): Stop: end what is running;
+/// an action button's verb mark (Lucide's rect drawn as the equal path).
+/// Lucide's own geometry (lucide-static 1.60.0), carried flat into the house
+/// box: the long edge 1024, the house stroke (`iconStrokeWidth`), round caps
+/// and joins, tight to the box (user, 2026-10-26). SERVER + CLIENT: client code
+/// renders it too.
 public struct SquareIconView: HTMLContent {
   let iconSize: CSS.Length
   let `class`: String
@@ -24,20 +25,16 @@ public struct SquareIconView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
-    let fit = IconStrokeFit(minX: 3, minY: 3, maxX: 21, maxY: 21)
-    return svg {
-      g {
-        path().d("M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z")
-      }
-      .transform(fit.transform)
-      .strokeWidth(fit.strokeWidth)
+    svg {
+      rect().x(46.55).y(46.55).width(930.91).height(930.91).rx(103.43)
     }
     .class(stringIsEmpty(`class`) ? "square-icon-view" : "square-icon-view \(`class`)")
     .style { height(iconSize) }
-    .viewBox(0, 0, fit.width, fit.height)
+    .viewBox(0, 0, 1024, 1024)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.none)
     .stroke(.currentColor)
+    .strokeWidth(93.09)
     .strokeLinecap(.round)
     .strokeLinejoin(.round)
     .ariaHidden(true)

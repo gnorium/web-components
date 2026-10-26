@@ -531,7 +531,7 @@ public enum OutlineMoves {
         // The grip: what is pressed to pick the item up, what is dragged,
         // and what the keyboard grabs.
         let handle = button {
-          DraggableIconView(size: lineHeightSmall22)
+          GripVerticalIconView(size: lineHeightSmall22)
         }
         .type(.button)
         .class("outliner-handle")
@@ -670,10 +670,10 @@ public enum OutlineMoves {
                 icon: ArrowDownIconView(size: ButtonView.ButtonSize.large.iconSize), weight: .quiet, size: .large,
                 ariaLabel: "Shift down", data: [("outliner-action", "down")])
               ButtonView(
-                icon: ArrowPreviousIconView(size: ButtonView.ButtonSize.large.iconSize), weight: .quiet, size: .large,
+                icon: ArrowLeftIconView(size: ButtonView.ButtonSize.large.iconSize), weight: .quiet, size: .large,
                 ariaLabel: "Outdent", data: [("outliner-action", "outdent")])
               ButtonView(
-                icon: ArrowNextIconView(size: ButtonView.ButtonSize.large.iconSize), weight: .quiet, size: .large,
+                icon: ArrowRightIconView(size: ButtonView.ButtonSize.large.iconSize), weight: .quiet, size: .large,
                 ariaLabel: "Indent", data: [("outliner-action", "indent")])
             }
             .class("outliner-toolbar-moves")

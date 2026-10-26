@@ -6,11 +6,11 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-/// Lucide's `user-plus` (ISC; THIRD_PARTY_NOTICES.md): Register: add a person; an action button's verb mark. Lucide's own
-/// 24-grid geometry (lucide-static 1.60.0), fitted to the house box by
-/// IconStrokeFit: the long edge 1024, `iconStrokeWidth` thick, round caps
-/// and joins, the outer edges tight to the box.
-/// SERVER + CLIENT: client code renders it too.
+/// Lucide's `user-plus` (ISC; THIRD_PARTY_NOTICES.md): Register: add a person;
+/// an action button's verb mark. Lucide's own geometry (lucide-static 1.60.0),
+/// carried flat into the house box: the long edge 1024, the house stroke
+/// (`iconStrokeWidth`), round caps and joins, tight to the box (user,
+/// 2026-10-26). SERVER + CLIENT: client code renders it too.
 public struct UserPlusIconView: HTMLContent {
   let iconSize: CSS.Length
   let `class`: String
@@ -24,23 +24,19 @@ public struct UserPlusIconView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
-    let fit = IconStrokeFit(minX: 2, minY: 3, maxX: 22, maxY: 21)
-    return svg {
-      g {
-        path().d("M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2")
-        path().d("M19 8v6")
-        path().d("M22 11h-6")
-        circle().cx(9).cy(7).r(4)
-      }
-      .transform(fit.transform)
-      .strokeWidth(fit.strokeWidth)
+    svg {
+      path().d("M698.18 884.36L698.18 791.27A186.18 186.18 0 0 0 512 605.09L232.73 605.09A186.18 186.18 0 0 0 46.55 791.27L46.55 884.36")
+      circle().cx(372.36).cy(232.73).r(186.18)
+      path().d("M837.82 279.27L837.82 558.55")
+      path().d("M977.45 418.91L698.18 418.91")
     }
     .class(stringIsEmpty(`class`) ? "user-plus-icon-view" : "user-plus-icon-view \(`class`)")
-    .style { height(iconSize) }
-    .viewBox(0, 0, fit.width, fit.height)
+    .style { width(iconSize) }
+    .viewBox(0, 0, 1024, 930.91)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.none)
     .stroke(.currentColor)
+    .strokeWidth(93.09)
     .strokeLinecap(.round)
     .strokeLinejoin(.round)
     .ariaHidden(true)

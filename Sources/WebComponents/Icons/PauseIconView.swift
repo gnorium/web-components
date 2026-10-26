@@ -6,12 +6,12 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-/// Lucide's `pause` (ISC; THIRD_PARTY_NOTICES.md), to hold a replay where
-/// it stands (user, 2026-10-21). Lucide's own 24-grid geometry (tag
-/// 1.60.0), fitted to the house box by IconStrokeFit: the long edge 1024,
-/// `iconStrokeWidth` thick, round caps and joins, the outer edges tight to
-/// the box. SERVER + CLIENT for PauseIconFactory: the replay's Pause/Play
-/// swaps it.
+/// Lucide's `pause` (ISC; THIRD_PARTY_NOTICES.md): Lucide's `pause` (ISC;
+/// THIRD_PARTY_NOTICES.md), to hold a replay where it stands (user,
+/// 2026-10-21). Lucide's own geometry (lucide-static 1.60.0), carried flat into
+/// the house box: the long edge 1024, the house stroke (`iconStrokeWidth`),
+/// round caps and joins, tight to the box (user, 2026-10-26). SERVER + CLIENT
+/// for PauseIconFactory: the replay's Pause/Play swaps it.
 public struct PauseIconView: HTMLContent {
   let iconSize: CSS.Length
   let `class`: String
@@ -25,32 +25,17 @@ public struct PauseIconView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
-    let fit = IconStrokeFit(minX: 5, minY: 3, maxX: 19, maxY: 21)
-    return svg {
-      g {
-        rect()
-          .width(px(5))
-          .height(px(18))
-          .x(px(14))
-          .y(px(3))
-          .rx(px(1))
-
-        rect()
-          .width(px(5))
-          .height(px(18))
-          .x(px(5))
-          .y(px(3))
-          .rx(px(1))
-      }
-      .transform(fit.transform)
-      .strokeWidth(fit.strokeWidth)
+    svg {
+      rect().x(512).y(46.55).width(258.59).height(930.91).rx(51.72)
+      rect().x(46.55).y(46.55).width(258.59).height(930.91).rx(51.72)
     }
     .class(stringIsEmpty(`class`) ? "pause-icon-view" : "pause-icon-view \(`class`)")
     .style { height(iconSize) }
-    .viewBox(0, 0, fit.width, fit.height)
+    .viewBox(0, 0, 817.13, 1024)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.none)
     .stroke(.currentColor)
+    .strokeWidth(93.09)
     .strokeLinecap(.round)
     .strokeLinejoin(.round)
     .ariaHidden(true)

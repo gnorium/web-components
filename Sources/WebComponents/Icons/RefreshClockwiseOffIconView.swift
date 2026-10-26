@@ -1,14 +1,16 @@
 #if SERVER
   import CSSBuilder
   import DOMBuilder
+  import EmbeddedSwiftUtilities
   import HTMLBuilder
   import SVGBuilder
   import WebTypes
 
-  /// Lucide's `refresh-cw-off` (ISC; THIRD_PARTY_NOTICES.md), for detaching. Lucide's
-  /// own 24-grid geometry, fitted to the house box by IconStrokeFit: the
-  /// long edge 1024, `iconStrokeWidth` thick, round caps and joins, the
-  /// outer edges tight to the box (user, 2026-10-12).
+  /// Lucide's `refresh-cw-off` (ISC; THIRD_PARTY_NOTICES.md): Lucide's
+  /// `refresh-cw-off` (ISC; THIRD_PARTY_NOTICES.md), for detaching. Lucide's
+  /// own geometry (lucide-static 1.60.0), carried flat into the house box: the
+  /// long edge 1024, the house stroke (`iconStrokeWidth`), round caps and
+  /// joins, tight to the box (user, 2026-10-26).
   public struct RefreshClockwiseOffIconView: HTMLContent {
     let iconSize: CSS.Length
     let `class`: String
@@ -22,26 +24,22 @@
     }
 
     public func build() -> DOM.Node {
-      let fit = IconStrokeFit(minX: 2, minY: 2, maxX: 22, maxY: 22)
-      return svg {
-        g {
-          path().d(M(21, 8), L(18.74, 5.74), A(9.75, 9.75, 0, false, false, 12, 3), C(11, 3, 10.03, 3.16, 9.13, 3.47))
-          path().d(M(8, 16), H(3), v(5))
-          path().d(M(3, 12), C(3, 9.51, 4, 7.26, 5.64, 5.64))
-          path().d(M(3, 16), l(2.26, 2.26), A(9.75, 9.75, 0, false, false, 12, 21), c(2.49, 0, 4.74, -1, 6.36, -2.64))
-          path().d(M(21, 12), c(0, 1, -0.16, 1.97, -0.47, 2.87))
-          path().d(M(21, 3), v(5), h(-5))
-          path().d(M(22, 22), L(2, 2))
-        }
-        .transform(fit.transform)
-        .strokeWidth(fit.strokeWidth)
+      svg {
+        path().d("M930.91 325.82L825.72 220.63A453.82 453.82 0 0 0 512 93.09C465.45 93.09 420.31 100.54 378.41 114.97")
+        path().d("M325.82 698.18L93.09 698.18L93.09 930.91")
+        path().d("M93.09 512C93.09 396.1 139.64 291.37 215.97 215.97")
+        path().d("M93.09 698.18L198.28 803.37A453.82 453.82 0 0 0 512 930.91C627.9 930.91 732.63 884.36 808.03 808.03")
+        path().d("M930.91 512C930.91 558.55 923.46 603.69 909.03 645.59")
+        path().d("M930.91 93.09L930.91 325.82L698.18 325.82")
+        path().d("M977.45 977.45L46.55 46.55")
       }
-      .class(`class`.isEmpty ? "refresh-clockwise-off-icon-view" : "refresh-clockwise-off-icon-view \(`class`)")
+      .class(stringIsEmpty(`class`) ? "refresh-clockwise-off-icon-view" : "refresh-clockwise-off-icon-view \(`class`)")
       .style { height(iconSize) }
-      .viewBox(0, 0, fit.width, fit.height)
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.none)
       .stroke(.currentColor)
+      .strokeWidth(93.09)
       .strokeLinecap(.round)
       .strokeLinejoin(.round)
       .ariaHidden(true)

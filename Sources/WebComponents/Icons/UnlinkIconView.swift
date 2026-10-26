@@ -6,11 +6,11 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-/// Lucide's `unlink` (ISC; THIRD_PARTY_NOTICES.md): Disconnect: end a link to an outside account; an action button's verb mark. Lucide's own
-/// 24-grid geometry (lucide-static 1.60.0), fitted to the house box by
-/// IconStrokeFit: the long edge 1024, `iconStrokeWidth` thick, round caps
-/// and joins, the outer edges tight to the box.
-/// SERVER + CLIENT: client code renders it too.
+/// Lucide's `unlink` (ISC; THIRD_PARTY_NOTICES.md): Disconnect: end a link to
+/// an outside account; an action button's verb mark. Lucide's own geometry
+/// (lucide-static 1.60.0), carried flat into the house box: the long edge 1024,
+/// the house stroke (`iconStrokeWidth`), round caps and joins, tight to the box
+/// (user, 2026-10-26). SERVER + CLIENT: client code renders it too.
 public struct UnlinkIconView: HTMLContent {
   let iconSize: CSS.Length
   let `class`: String
@@ -24,25 +24,21 @@ public struct UnlinkIconView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
-    let fit = IconStrokeFit(minX: 2, minY: 2, maxX: 22, maxY: 22)
-    return svg {
-      g {
-        path().d("m18.84 12.25 1.72-1.71h-.02a5.004 5.004 0 0 0-.12-7.07 5.006 5.006 0 0 0-6.95 0l-1.72 1.71")
-        path().d("m5.17 11.75-1.71 1.71a5.004 5.004 0 0 0 .12 7.07 5.006 5.006 0 0 0 6.95 0l1.71-1.71")
-        path().d("M8 2v3")
-        path().d("M2 8h3")
-        path().d("M16 19v3")
-        path().d("M19 16h3")
-      }
-      .transform(fit.transform)
-      .strokeWidth(fit.strokeWidth)
+    svg {
+      path().d("M830.37 523.64L910.43 444.04L909.5 444.04A232.91 232.91 0 0 0 903.91 114.97A233.01 233.01 0 0 0 580.42 114.97L500.36 194.56")
+      path().d("M194.09 500.36L114.5 579.96A232.91 232.91 0 0 0 120.09 909.03A233.01 233.01 0 0 0 443.58 909.03L523.17 829.44")
+      path().d("M325.82 46.55L325.82 186.18")
+      path().d("M46.55 325.82L186.18 325.82")
+      path().d("M698.18 837.82L698.18 977.45")
+      path().d("M837.82 698.18L977.45 698.18")
     }
     .class(stringIsEmpty(`class`) ? "unlink-icon-view" : "unlink-icon-view \(`class`)")
     .style { height(iconSize) }
-    .viewBox(0, 0, fit.width, fit.height)
+    .viewBox(0, 0, 1024, 1024)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.none)
     .stroke(.currentColor)
+    .strokeWidth(93.09)
     .strokeLinecap(.round)
     .strokeLinejoin(.round)
     .ariaHidden(true)

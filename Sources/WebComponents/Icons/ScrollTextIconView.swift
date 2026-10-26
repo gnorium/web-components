@@ -6,11 +6,11 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-/// Lucide's `scroll-text` (ISC; THIRD_PARTY_NOTICES.md): ported, not yet placed. Lucide's own
-/// 24-grid geometry (lucide-static 1.60.0), fitted to the house box by
-/// IconStrokeFit: the long edge 1024, `iconStrokeWidth` thick, round caps
-/// and joins, the outer edges tight to the box.
-/// SERVER + CLIENT: client code renders it too.
+/// Lucide's `scroll-text` (ISC; THIRD_PARTY_NOTICES.md): ported, not yet
+/// placed. Lucide's own geometry (lucide-static 1.60.0), carried flat into the
+/// house box: the long edge 1024, the house stroke (`iconStrokeWidth`), round
+/// caps and joins, tight to the box (user, 2026-10-26). SERVER + CLIENT: client
+/// code renders it too.
 public struct ScrollTextIconView: HTMLContent {
   let iconSize: CSS.Length
   let `class`: String
@@ -24,23 +24,19 @@ public struct ScrollTextIconView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
-    let fit = IconStrokeFit(minX: 2, minY: 3, maxX: 22, maxY: 21)
-    return svg {
-      g {
-        path().d("M15 12h-5")
-        path().d("M15 8h-5")
-        path().d("M19 17V5a2 2 0 0 0-2-2H4")
-        path().d("M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3")
-      }
-      .transform(fit.transform)
-      .strokeWidth(fit.strokeWidth)
+    svg {
+      path().d("M651.64 465.45L418.91 465.45")
+      path().d("M651.64 279.27L418.91 279.27")
+      path().d("M837.82 698.18L837.82 139.64A93.09 93.09 0 0 0 744.73 46.55L139.64 46.55")
+      path().d("M325.82 884.36L884.36 884.36A93.09 93.09 0 0 0 977.45 791.27L977.45 744.73A46.55 46.55 0 0 0 930.91 698.18L465.45 698.18A46.55 46.55 0 0 0 418.91 744.73L418.91 791.27A93.09 93.09 0 1 1 232.73 791.27L232.73 139.64A93.09 93.09 0 1 0 46.55 139.64L46.55 232.73A46.55 46.55 0 0 0 93.09 279.27L232.73 279.27")
     }
     .class(stringIsEmpty(`class`) ? "scroll-text-icon-view" : "scroll-text-icon-view \(`class`)")
     .style { width(iconSize) }
-    .viewBox(0, 0, fit.width, fit.height)
+    .viewBox(0, 0, 1024, 930.91)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.none)
     .stroke(.currentColor)
+    .strokeWidth(93.09)
     .strokeLinecap(.round)
     .strokeLinejoin(.round)
     .ariaHidden(true)

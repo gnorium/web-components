@@ -17,11 +17,12 @@ import WebTypes
 /// aligns `center` (`flex-start` where the text wraps), with no
 /// `centerOnCapitals` offset, which is only for a mark smaller than its line.
 ///
-/// The exception is an icon that stands in for punctuation between words—a
+/// The exception is an icon that stands in for punctuation or a character—a
 /// breadcrumb's chevron (BreadcrumbSeparatorView, BreadcrumbLabelView,
-/// RecordLabelView), an inline arrow in "X → Y" (the Graph's paths): it is
-/// the FONT size of its text (fontSizeMedium16 beside 16px text), as a
-/// character would be (user, 2026-10-21).
+/// RecordLabelView), a diff label's `±` (DiffLabelView), a process badge's
+/// `∴` or `∫` (WatchtowerProcessView), an inline arrow in "X → Y" (the
+/// Graph's paths): it is the FONT size of its text (fontSizeMedium16 beside
+/// 16px text), as a character would be (user, 2026-10-21, 2026-10-26).
 public struct IconView: HTMLContent {
   let icon: [DOM.Node]
   let iconLabel: String?

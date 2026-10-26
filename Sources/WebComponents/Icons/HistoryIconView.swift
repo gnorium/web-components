@@ -6,11 +6,11 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-/// Lucide's `history` (ISC; THIRD_PARTY_NOTICES.md): ported, not yet placed. Lucide's own
-/// 24-grid geometry (lucide-static 1.60.0), fitted to the house box by
-/// IconStrokeFit: the long edge 1024, `iconStrokeWidth` thick, round caps
-/// and joins, the outer edges tight to the box.
-/// SERVER + CLIENT: client code renders it too.
+/// Lucide's `history` (ISC; THIRD_PARTY_NOTICES.md): ported, not yet placed.
+/// Lucide's own geometry (lucide-static 1.60.0), carried flat into the house
+/// box: the long edge 1024, the house stroke (`iconStrokeWidth`), round caps
+/// and joins, tight to the box (user, 2026-10-26). SERVER + CLIENT: client code
+/// renders it too.
 public struct HistoryIconView: HTMLContent {
   let iconSize: CSS.Length
   let `class`: String
@@ -24,22 +24,18 @@ public struct HistoryIconView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
-    let fit = IconStrokeFit(minX: 3, minY: 3, maxX: 21, maxY: 21)
-    return svg {
-      g {
-        path().d("M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8")
-        path().d("M3 3v5h5")
-        path().d("M12 7v5l4 2")
-      }
-      .transform(fit.transform)
-      .strokeWidth(fit.strokeWidth)
+    svg {
+      path().d("M46.55 512A465.45 465.45 0 1 0 512 46.55A504.24 504.24 0 0 0 163.43 188.25L46.55 305.13")
+      path().d("M46.55 46.55L46.55 305.13L305.13 305.13")
+      path().d("M512 253.41L512 512L718.87 615.43")
     }
     .class(stringIsEmpty(`class`) ? "history-icon-view" : "history-icon-view \(`class`)")
     .style { height(iconSize) }
-    .viewBox(0, 0, fit.width, fit.height)
+    .viewBox(0, 0, 1024, 1024)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.none)
     .stroke(.currentColor)
+    .strokeWidth(93.09)
     .strokeLinecap(.round)
     .strokeLinejoin(.round)
     .ariaHidden(true)

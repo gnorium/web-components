@@ -6,11 +6,11 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-/// Lucide's `layers` (ISC; THIRD_PARTY_NOTICES.md): a vignette: the quiet mark of what is published over what came before. Lucide's own
-/// 24-grid geometry (lucide-static 1.60.0), fitted to the house box by
-/// IconStrokeFit: the long edge 1024, `iconStrokeWidth` thick, round caps
-/// and joins, the outer edges tight to the box.
-/// SERVER + CLIENT: client code renders it too.
+/// Lucide's `layers` (ISC; THIRD_PARTY_NOTICES.md): a vignette: the quiet mark
+/// of what is published over what came before. Lucide's own geometry
+/// (lucide-static 1.60.0), carried flat into the house box: the long edge 1024,
+/// the house stroke (`iconStrokeWidth`), round caps and joins, tight to the box
+/// (user, 2026-10-26). SERVER + CLIENT: client code renders it too.
 public struct LayersIconView: HTMLContent {
   let iconSize: CSS.Length
   let `class`: String
@@ -24,22 +24,18 @@ public struct LayersIconView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
-    let fit = IconStrokeFit(minX: 2, minY: 1.9996, maxX: 22.0165, maxY: 21.9981)
-    return svg {
-      g {
-        path().d("M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z")
-        path().d("M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12")
-        path().d("M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17")
-      }
-      .transform(fit.transform)
-      .strokeWidth(fit.strokeWidth)
+    svg {
+      path().d("M550.22 54.93A93.01 93.01 0 0 0 473.01 54.93L74.45 236.31A46.51 46.51 0 0 0 74.45 321.42L473.48 503.26A93.01 93.01 0 0 0 550.68 503.26L949.71 321.88A46.51 46.51 0 0 0 949.71 236.78Z")
+      path().d("M46.55 511.63A46.51 46.51 0 0 0 73.52 553.95L473.48 735.8A93.01 93.01 0 0 0 550.22 735.8L949.25 554.42A46.51 46.51 0 0 0 976.69 511.63")
+      path().d("M46.55 744.17A46.51 46.51 0 0 0 73.52 786.49L473.48 968.33A93.01 93.01 0 0 0 550.22 968.33L949.25 786.95A46.51 46.51 0 0 0 976.69 744.17")
     }
     .class(stringIsEmpty(`class`) ? "layers-icon-view" : "layers-icon-view \(`class`)")
     .style { width(iconSize) }
-    .viewBox(0, 0, fit.width, fit.height)
+    .viewBox(0, 0, 1024, 1023.16)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.none)
     .stroke(.currentColor)
+    .strokeWidth(93.09)
     .strokeLinecap(.round)
     .strokeLinejoin(.round)
     .ariaHidden(true)

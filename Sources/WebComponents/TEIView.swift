@@ -184,10 +184,22 @@
       }.joined(separator: ";")
     }
 
+    /// Each copy-evidence element on the page (`TEIRenderer.elementZones(of:)`)
+    /// and its bounding zone in the 0–1000 space over the image:
+    /// "element:x y w h" (x y its top-left corner, w h its size, rounded),
+    /// one a ";"; "" where the page has none.
+    static func elementZonesData(of page: TEIPage) -> String {
+      TEIRenderer.elementZones(of: page).map { entry in
+        let box = entry.zone.percent
+        let numbers = [box.x, box.y, box.width, box.height].map { String(Int(($0 * 10).rounded())) }
+        return "\(entry.element):" + numbers.joined(separator: " ")
+      }.joined(separator: ";")
+    }
+
     /// The body's leading in rem (`TEIRendition.bodyLeading`), "" where
     /// the scale declares none: the structure overlay's unit.
     static func bodyLeadingData(of page: TEIPage) -> String {
-      TEIRendition.bodyLeading(in: page.renditions).map { number($0) } ?? ""
+      TEIRendition.bodyLeading(in: page.renditions, markup: page.markup).map { number($0) } ?? ""
     }
 
     /// The book's em on the page's scan, in the 0–1000 space across its
@@ -199,7 +211,7 @@
     /// always lays the scan at this scale, never by the main text block's
     /// height, the edition's typesetting (`OverlayRegistration.laid`).
     static func scanEmData(of page: TEIPage) -> String {
-      guard let frame = TEIRendition.frame(in: page.renditions), frame.width > 0 else { return "" }
+      guard let frame = TEIRendition.frame(in: page.renditions) ?? page.textBlock?.frame, frame.width > 0 else { return "" }
       // Ten-thousandths of the space: finer than a scan's pixel.
       return number((1000 / frame.width * 10_000).rounded() / 10_000)
     }
@@ -1001,7 +1013,7 @@
         for (index, page) in pages.enumerated() where self.page == nil || self.page == index || drawn.contains(index) {
           let tabStop = glossURL == nil ? nil : Self.firstWord(of: page.lines)
           let frame = page.frame
-          div {
+          let pageNode = div {
             div {
               if let frame {
                 // The work's frame, its body pages' main text block: the
@@ -1132,18 +1144,21 @@
           // the work frame placed on its scan), which the overlay lays on
           // the rendered frame itself, whole.
           .data("text-block-derived", page.textBlock?.derived == true)
-          // The scan's measured layout (blocks, lines, words) and the body's
-          // leading: the structure overlay and the word correspondence; each
-          // word's zones, which the correspondence reads.
-          .data("scan-layout", Self.scanLayoutData(of: page))
-          .data("word-zones", Self.wordZonesData(of: page))
-          .data("body-leading", Self.bodyLeadingData(of: page))
-          // The work's em on its scan: the overlay's type scale.
-          .data("scan-em", Self.scanEmData(of: page))
-          // Its place in the document, from 0: what the reader turns to and
-          // a roster names it by, where not every page is drawn.
-          .data("page-index", index + firstIndex)
-          .data("active", index == (self.page ?? 0) ? "true" : "false")
+          pageNode
+            // The scan's measured layout (blocks, lines, words) and the body's
+            // leading: the structure overlay and the word correspondence; each
+            // word's zones, which the correspondence reads; each copy-evidence
+            // element's zone, which opens its gloss on the scan.
+            .data("scan-layout", Self.scanLayoutData(of: page))
+            .data("word-zones", Self.wordZonesData(of: page))
+            .data("element-zones", Self.elementZonesData(of: page))
+            .data("body-leading", Self.bodyLeadingData(of: page))
+            // The work's em on its scan: the overlay's type scale.
+            .data("scan-em", Self.scanEmData(of: page))
+            // Its place in the document, from 0: what the reader turns to and
+            // a roster names it by, where not every page is drawn.
+            .data("page-index", index + firstIndex)
+            .data("active", index == (self.page ?? 0) ? "true" : "false")
         }
       }
       .class("tei-view")
@@ -1456,6 +1471,10 @@
           display(.block)
           minWidth(0)
         }
+        selector("[data-reflow='true'] & .tei-block", "[data-reflow='true'] & .tei-section") {
+          maxWidth(perc(100))
+          boxSizing(.borderBox)
+        }
         selector("& .tei-block > *") {
           display(.inline)
         }
@@ -1482,11 +1501,12 @@
         // is wider, never its text narrower. A page genuinely larger than
         // its work's (a plate, a foldout) is its scan's own size at the same
         // scale, its content centered in it. Reflowed, the text runs on in
-        // the pane. The edition is regularized (user, 2026-10-25): its
-        // margin is the reading pane's own inset, never the scan's white
-        // around its text block (`--tei-frame-margin`, the scans' extent:
-        // a page drawn at the scan's whole width read tiny); only the
-        // structure overlay lays the page on the scan's geometry.
+        // the pane. Its margin is the page's own (user, 2026-10-26): the white
+        // its typesetter left between the leaf's edge and the main text block
+        // (`--tei-frame-margin`, gnorium-python `type_scale.frame`, from the
+        // leaf the measuring found, never the photograph's table, target or
+        // facing leaf beyond it); only the structure overlay lays the page on
+        // the scan's geometry.
         selector("& .tei-page-text[data-framed='true']:not([data-reflow='true'] *)") {
           display(.grid)
           CSS.Property(
@@ -1497,6 +1517,7 @@
           CSS.Property("justify-content", "center")
           CSS.Property("align-content", "center")
           boxSizing(.borderBox)
+          CSS.Property("padding", "calc(var(--tei-frame-margin) * 1em)")
           fontSize(fontSizeMedium16)
           CSS.Property("inline-size", "max-content")
           CSS.Property("min-inline-size", "calc(var(--tei-page-width) * 1em)")
@@ -1539,6 +1560,15 @@
         // one side only.
         selector("& .tei-page-text:not([data-framed='true']):not([data-reflow='true'] *) > *") {
           CSS.Property("min-inline-size", "calc(\(size640.value) - 2 * \(spacing16.value))")
+        }
+        // A blank page (`<gap reason="blank"/>` alone): its `[blank]` note
+        // stands in the middle of the page, across and down.
+        selector(
+          "& .tei-page-text:not([data-reflow='true'] *) > .tei-section:only-child:has(> .tei-line-gap:only-child)",
+          "& .tei-page-text:not([data-reflow='true'] *) > .tei-text-block > .tei-section:only-child:has(> .tei-line-gap:only-child)"
+        ) {
+          margin(.auto)
+          textAlign(.center)
         }
         selector("& .tei-page-text:not([data-reflow='true'] *) .tei-block > *") {
           display(.block)

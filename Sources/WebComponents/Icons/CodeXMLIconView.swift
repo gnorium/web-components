@@ -1,15 +1,16 @@
 #if SERVER
   import CSSBuilder
   import DOMBuilder
+  import EmbeddedSwiftUtilities
   import HTMLBuilder
   import SVGBuilder
   import WebTypes
 
-  /// Lucide's `code-xml` (`</>`) (ISC; THIRD_PARTY_NOTICES.md), the Raw switch of
-  /// a TEI/XML source. Lucide's
-  /// own 24-grid geometry, fitted to the house box by IconStrokeFit: the
-  /// long edge 1024, `iconStrokeWidth` thick, round caps and joins, the
-  /// outer edges tight to the box (user, 2026-10-12).
+  /// Lucide's `code-xml` (ISC; THIRD_PARTY_NOTICES.md): Lucide's `code-xml`
+  /// (`</>`) (ISC; THIRD_PARTY_NOTICES.md), the Raw switch of a TEI/XML source.
+  /// Lucide's own geometry (lucide-static 1.60.0), carried flat into the house
+  /// box: the long edge 1024, the house stroke (`iconStrokeWidth`), round caps
+  /// and joins, tight to the box (user, 2026-10-26).
   public struct CodeXMLIconView: HTMLContent {
     let iconSize: CSS.Length
     let `class`: String
@@ -23,22 +24,18 @@
     }
 
     public func build() -> DOM.Node {
-      let fit = IconStrokeFit(minX: 2, minY: 4, maxX: 22, maxY: 20)
-      return svg {
-        g {
-          path().d(M(18, 16), l(4, -4), l(-4, -4))
-          path().d(M(6, 8), l(-4, 4), l(4, 4))
-          path().d(M(14.5, 4), l(-5, 16))
-        }
-        .transform(fit.transform)
-        .strokeWidth(fit.strokeWidth)
+      svg {
+        path().d("M791.27 605.09L977.45 418.91L791.27 232.73")
+        path().d("M232.73 232.73L46.55 418.91L232.73 605.09")
+        path().d("M628.36 46.55L395.64 791.27")
       }
-      .class(`class`.isEmpty ? "code-xml-icon-view" : "code-xml-icon-view \(`class`)")
+      .class(stringIsEmpty(`class`) ? "code-xml-icon-view" : "code-xml-icon-view \(`class`)")
       .style { width(iconSize) }
-      .viewBox(0, 0, fit.width, fit.height)
+      .viewBox(0, 0, 1024, 837.82)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.none)
       .stroke(.currentColor)
+      .strokeWidth(93.09)
       .strokeLinecap(.round)
       .strokeLinejoin(.round)
       .ariaHidden(true)

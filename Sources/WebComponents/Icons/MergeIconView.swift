@@ -3,10 +3,16 @@
   import CSSOMBuilder
   import DesignTokens
   import DOMBuilder
+  import EmbeddedSwiftUtilities
   import HTMLBuilder
   import SVGBuilder
   import WebTypes
 
+  /// Lucide's `merge` (ISC; THIRD_PARTY_NOTICES.md): Lucide's `merge` (ISC;
+  /// THIRD_PARTY_NOTICES.md). Lucide's own geometry (lucide-static 1.60.0),
+  /// carried flat into the house box: the long edge 1024, the house stroke
+  /// (`iconStrokeWidth`), round caps and joins, tight to the box (user,
+  /// 2026-10-26).
   public struct MergeIconView: HTMLContent {
     let iconSize: CSS.Length
     let `class`: String
@@ -21,20 +27,21 @@
 
     public func build() -> DOM.Node {
       svg {
-        path()
-          .d(
-            M(0, 79.64), L(79.64, 0), l(275.92, 274.77),
-            A(226.42, 226.42, 0, false, false, 515.98, 341.33), h(290.14), L(716.8, 250.31),
-            L(796.44, 170.67), l(227.56, 227.55), l(-227.56, 227.56), l(-79.64, -79.65),
-            l(89.88, -91.02), h(-290.13), a(224.71, 224.71, 0, false, false, -160.99, 67.13),
-            L(79.64, 796.44), L(0, 716.8), L(318.58, 398.22), Z())
+        path().d("M232.73 232.73L418.91 46.55L605.09 232.73")
+        path().d("M418.91 46.55L418.91 525.96A186.18 186.18 0 0 1 364.36 659.64L46.55 977.45")
+        path().d("M791.27 977.45L558.55 744.73")
       }
-      .class(`class`.isEmpty ? "merge-icon-view" : "merge-icon-view \(`class`)")
-      .style { width(iconSize) }
-      .viewBox(0, 0, 1024, 796.44)
+      .class(stringIsEmpty(`class`) ? "merge-icon-view" : "merge-icon-view \(`class`)")
+      .style { height(iconSize) }
+      .viewBox(0, 0, 837.82, 1024)
       .xmlns("http://www.w3.org/2000/svg")
-      .fill(.currentColor)
-
+      .fill(.none)
+      .stroke(.currentColor)
+      .strokeWidth(93.09)
+      .strokeLinecap(.round)
+      .strokeLinejoin(.round)
+      .ariaHidden(true)
+      .build()
     }
   }
 #endif

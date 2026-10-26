@@ -7,8 +7,9 @@ import HTMLBuilder
 import WebTypes
 
 /// The label before any diff (user, 2026-10-21): Lucide's `diff` mark and
-/// "Diff:"—or the page's own words standing for it—the mark as tall as the
-/// label's 22px line, in the label's own color. A line's diff wears it too.
+/// "Diff:"—or the page's own words standing for it—the mark at the label's
+/// 16px font size (a character sign, `±`, like a chevron or `∴`/`∫`: user,
+/// 2026-10-26), in the label's own color. A line's diff wears it too.
 public struct DiffLabelView: HTMLContent {
   let text: String
   let `class`: String
@@ -21,7 +22,7 @@ public struct DiffLabelView: HTMLContent {
   public func build() -> DOM.Node {
     IconLabelView(
       text,
-      mark: IconView(icon: { s in DiffIconView(size: s) }, size: lineHeightSmall22).build(),
+      mark: IconView(icon: { s in DiffIconView(size: s) }, size: fontSizeMedium16).build(),
       class: stringIsEmpty(`class`) ? "diff-label" : "diff-label \(`class`)"
     ).build()
   }

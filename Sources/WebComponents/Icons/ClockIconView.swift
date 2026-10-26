@@ -9,6 +9,11 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
+/// Lucide's `clock` (ISC; THIRD_PARTY_NOTICES.md): Lucide's `clock` (ISC;
+/// THIRD_PARTY_NOTICES.md). Lucide's own geometry (lucide-static 1.60.0),
+/// carried flat into the house box: the long edge 1024, the house stroke
+/// (`iconStrokeWidth`), round caps and joins, tight to the box (user,
+/// 2026-10-26).
 public struct ClockIconView: HTMLContent {
   let iconSize: CSS.Length
   let `class`: String
@@ -23,16 +28,19 @@ public struct ClockIconView: HTMLContent {
 
   public func build() -> DOM.Node {
     svg {
-      path()
-        .d(
-          M(512, 0), a(512, 512, 0, true, false, 512, 512), A(512, 512, 0, false, false, 512, 0),
-          m(128, 742.4), L(460.8, 563.2), V(204.8), h(102.4), v(307.2), l(153.6, 153.6), Z())
+      circle().cx(512).cy(512).r(465.45)
+      path().d("M512 232.73L512 512L698.18 605.09")
     }
     .class(stringIsEmpty(`class`) ? "clock-icon-view" : "clock-icon-view \(`class`)")
     .style { height(iconSize) }
     .viewBox(0, 0, 1024, 1024)
     .xmlns("http://www.w3.org/2000/svg")
-    .fill(.currentColor)
-
+    .fill(.none)
+    .stroke(.currentColor)
+    .strokeWidth(93.09)
+    .strokeLinecap(.round)
+    .strokeLinejoin(.round)
+    .ariaHidden(true)
+    .build()
   }
 }

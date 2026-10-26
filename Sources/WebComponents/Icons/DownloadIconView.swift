@@ -3,10 +3,16 @@
   import CSSOMBuilder
   import DesignTokens
   import DOMBuilder
+  import EmbeddedSwiftUtilities
   import HTMLBuilder
   import SVGBuilder
   import WebTypes
 
+  /// Lucide's `download` (ISC; THIRD_PARTY_NOTICES.md): Lucide's `download`
+  /// (ISC; THIRD_PARTY_NOTICES.md). Lucide's own geometry (lucide-static
+  /// 1.60.0), carried flat into the house box: the long edge 1024, the house
+  /// stroke (`iconStrokeWidth`), round caps and joins, tight to the box (user,
+  /// 2026-10-26).
   public struct DownloadIconView: HTMLContent {
     let iconSize: CSS.Length
     let `class`: String
@@ -21,23 +27,21 @@
 
     public func build() -> DOM.Node {
       svg {
-        path()
-          .d(
-            M(910.22, 625.78), v(284.44), H(113.78), v(-284.44), H(0), v(284.44),
-            a(113.78, 113.78, 0, false, false, 113.78, 113.78), h(796.44),
-            a(113.78, 113.78, 0, false, false, 113.78, -113.78), v(-284.44), Z())
-
-        path()
-          .d(
-            M(796.44, 455.11), h(-227.55), V(0), H(455.11), v(455.11), H(227.56), l(284.44, 341.33),
-            Z())
+        path().d("M512 667.15L512 46.55")
+        path().d("M977.45 667.15L977.45 874.02A103.43 103.43 0 0 1 874.02 977.45L149.98 977.45A103.43 103.43 0 0 1 46.55 874.02L46.55 667.15")
+        path().d("M253.41 408.57L512 667.15L770.59 408.57")
       }
-      .class(`class`.isEmpty ? "download-icon-view" : "download-icon-view \(`class`)")
+      .class(stringIsEmpty(`class`) ? "download-icon-view" : "download-icon-view \(`class`)")
       .style { height(iconSize) }
       .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
-      .fill(.currentColor)
-
+      .fill(.none)
+      .stroke(.currentColor)
+      .strokeWidth(93.09)
+      .strokeLinecap(.round)
+      .strokeLinejoin(.round)
+      .ariaHidden(true)
+      .build()
     }
   }
 #endif

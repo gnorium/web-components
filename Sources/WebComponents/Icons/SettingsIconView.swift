@@ -3,10 +3,16 @@
   import CSSOMBuilder
   import DesignTokens
   import DOMBuilder
+  import EmbeddedSwiftUtilities
   import HTMLBuilder
   import SVGBuilder
   import WebTypes
 
+  /// Lucide's `settings` (ISC; THIRD_PARTY_NOTICES.md): Lucide's `settings`
+  /// (ISC; THIRD_PARTY_NOTICES.md). Lucide's own geometry (lucide-static
+  /// 1.60.0), carried flat into the house box: the long edge 1024, the house
+  /// stroke (`iconStrokeWidth`), round caps and joins, tight to the box (user,
+  /// 2026-10-26).
   public struct SettingsIconView: HTMLContent {
     let iconSize: CSS.Length
     let `class`: String
@@ -21,40 +27,20 @@
 
     public func build() -> DOM.Node {
       svg {
-        g {
-          path()
-            .id("a")
-            .d(
-              M(76.8, -512), h(-153.6), l(-51.2, 332.8), h(256), m(0, 358.4), h(-256),
-              l(51.2, 332.8), h(153.6))
-
-          use()
-            .href("#a")
-            .transform(rotate(45))
-
-          use()
-            .href("#a")
-            .transform(rotate(90))
-
-          use()
-            .href("#a")
-            .transform(rotate(135))
-        }
-        .xmlnsXlink("http://www.w3.org/1999/xlink")
-        .transform(translate(512, 512))
-
-        path()
-          .d(
-            M(512, 128), a(384, 384, 0, false, false, 0, 768),
-            a(384, 384, 0, false, false, 0, -768), v(204.8),
-            a(179.2, 179.2, 0, false, true, 0, 358.4), a(179.2, 179.2, 0, false, true, 0, -358.4))
+        path().d("M355.57 145.33A109.11 109.11 0 0 1 572.82 145.33A109.11 109.11 0 0 0 727.58 234.63A109.11 109.11 0 0 1 836.22 422.68A109.11 109.11 0 0 0 836.22 601.32A109.11 109.11 0 0 1 727.58 789.37A109.11 109.11 0 0 0 572.82 878.67A109.11 109.11 0 0 1 355.57 878.67A109.11 109.11 0 0 0 200.76 789.37A109.11 109.11 0 0 1 92.12 601.32A109.11 109.11 0 0 0 92.12 422.68A109.11 109.11 0 0 1 200.72 234.63A109.11 109.11 0 0 0 355.48 145.33")
+        circle().cx(464.17).cy(512.02).r(139.89)
       }
-      .class(`class`.isEmpty ? "settings-icon-view" : "settings-icon-view \(`class`)")
+      .class(stringIsEmpty(`class`) ? "settings-icon-view" : "settings-icon-view \(`class`)")
       .style { height(iconSize) }
-      .viewBox(0, 0, 1024, 1024)
+      .viewBox(0, 0, 928.34, 1024)
       .xmlns("http://www.w3.org/2000/svg")
-      .fill(.currentColor)
-
+      .fill(.none)
+      .stroke(.currentColor)
+      .strokeWidth(93.09)
+      .strokeLinecap(.round)
+      .strokeLinejoin(.round)
+      .ariaHidden(true)
+      .build()
     }
   }
 #endif

@@ -1,14 +1,16 @@
 #if SERVER
   import CSSBuilder
   import DOMBuilder
+  import EmbeddedSwiftUtilities
   import HTMLBuilder
   import SVGBuilder
   import WebTypes
 
-  /// Lucide's `refresh-cw` (ISC; THIRD_PARTY_NOTICES.md), for sync. Lucide's
-  /// own 24-grid geometry, fitted to the house box by IconStrokeFit: the
-  /// long edge 1024, `iconStrokeWidth` thick, round caps and joins, the
-  /// outer edges tight to the box (user, 2026-10-12).
+  /// Lucide's `refresh-cw` (ISC; THIRD_PARTY_NOTICES.md): Lucide's `refresh-cw`
+  /// (ISC; THIRD_PARTY_NOTICES.md), for sync. Lucide's own geometry
+  /// (lucide-static 1.60.0), carried flat into the house box: the long edge
+  /// 1024, the house stroke (`iconStrokeWidth`), round caps and joins, tight to
+  /// the box (user, 2026-10-26).
   public struct RefreshClockwiseIconView: HTMLContent {
     let iconSize: CSS.Length
     let `class`: String
@@ -22,23 +24,19 @@
     }
 
     public func build() -> DOM.Node {
-      let fit = IconStrokeFit(minX: 3, minY: 3, maxX: 21, maxY: 21)
-      return svg {
-        g {
-          path().d(M(3, 12), a(9, 9, 0, false, true, 9, -9), a(9.75, 9.75, 0, false, true, 6.74, 2.74), L(21, 8))
-          path().d(M(21, 3), v(5), h(-5))
-          path().d(M(21, 12), a(9, 9, 0, false, true, -9, 9), a(9.75, 9.75, 0, false, true, -6.74, -2.74), L(3, 16))
-          path().d(M(8, 16), H(3), v(5))
-        }
-        .transform(fit.transform)
-        .strokeWidth(fit.strokeWidth)
+      svg {
+        path().d("M46.55 512A465.45 465.45 0 0 1 512 46.55A504.24 504.24 0 0 1 860.57 188.25L977.45 305.13")
+        path().d("M977.45 46.55L977.45 305.13L718.87 305.13")
+        path().d("M977.45 512A465.45 465.45 0 0 1 512 977.45A504.24 504.24 0 0 1 163.43 835.75L46.55 718.87")
+        path().d("M305.13 718.87L46.55 718.87L46.55 977.45")
       }
-      .class(`class`.isEmpty ? "refresh-clockwise-icon-view" : "refresh-clockwise-icon-view \(`class`)")
+      .class(stringIsEmpty(`class`) ? "refresh-clockwise-icon-view" : "refresh-clockwise-icon-view \(`class`)")
       .style { height(iconSize) }
-      .viewBox(0, 0, fit.width, fit.height)
+      .viewBox(0, 0, 1024, 1024)
       .xmlns("http://www.w3.org/2000/svg")
       .fill(.none)
       .stroke(.currentColor)
+      .strokeWidth(93.09)
       .strokeLinecap(.round)
       .strokeLinejoin(.round)
       .ariaHidden(true)

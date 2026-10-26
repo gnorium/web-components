@@ -6,11 +6,11 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-/// Lucide's `inbox` (ISC; THIRD_PARTY_NOTICES.md): submitted: the object put in the post for a verdict (a status mark, blue). Lucide's own
-/// 24-grid geometry (lucide-static 1.60.0), fitted to the house box by
-/// IconStrokeFit: the long edge 1024, `iconStrokeWidth` thick, round caps
-/// and joins, the outer edges tight to the box.
-/// SERVER + CLIENT: client code renders it too.
+/// Lucide's `inbox` (ISC; THIRD_PARTY_NOTICES.md): submitted: the object put in
+/// the post for a verdict (a status mark, blue). Lucide's own geometry
+/// (lucide-static 1.60.0), carried flat into the house box: the long edge 1024,
+/// the house stroke (`iconStrokeWidth`), round caps and joins, tight to the box
+/// (user, 2026-10-26). SERVER + CLIENT: client code renders it too.
 public struct InboxIconView: HTMLContent {
   let iconSize: CSS.Length
   let `class`: String
@@ -24,21 +24,17 @@ public struct InboxIconView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
-    let fit = IconStrokeFit(minX: 2, minY: 4, maxX: 22, maxY: 20)
-    return svg {
-      g {
-        path().d("M22 12h-6l-2 3h-4l-2-3H2")
-        path().d("M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z")
-      }
-      .transform(fit.transform)
-      .strokeWidth(fit.strokeWidth)
+    svg {
+      path().d("M977.45 418.91L698.18 418.91L605.09 558.55L418.91 558.55L325.82 418.91L46.55 418.91")
+      path().d("M207.13 98.21L46.55 418.91L46.55 698.18A93.09 93.09 0 0 0 139.64 791.27L884.36 791.27A93.09 93.09 0 0 0 977.45 698.18L977.45 418.91L816.87 98.21A93.09 93.09 0 0 0 733.56 46.55L290.44 46.55A93.09 93.09 0 0 0 207.13 98.21Z")
     }
     .class(stringIsEmpty(`class`) ? "inbox-icon-view" : "inbox-icon-view \(`class`)")
     .style { width(iconSize) }
-    .viewBox(0, 0, fit.width, fit.height)
+    .viewBox(0, 0, 1024, 837.82)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.none)
     .stroke(.currentColor)
+    .strokeWidth(93.09)
     .strokeLinecap(.round)
     .strokeLinejoin(.round)
     .ariaHidden(true)

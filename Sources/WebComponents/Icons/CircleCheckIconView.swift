@@ -6,11 +6,11 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-/// Lucide's `circle-check` (ISC; THIRD_PARTY_NOTICES.md): a success: a green alert. Lucide's own
-/// 24-grid geometry (lucide-static 1.60.0), fitted to the house box by
-/// IconStrokeFit: the long edge 1024, `iconStrokeWidth` thick, round caps
-/// and joins, the outer edges tight to the box.
-/// SERVER + CLIENT: client code renders it too.
+/// Lucide's `circle-check` (ISC; THIRD_PARTY_NOTICES.md): a success: a green
+/// alert. Lucide's own geometry (lucide-static 1.60.0), carried flat into the
+/// house box: the long edge 1024, the house stroke (`iconStrokeWidth`), round
+/// caps and joins, tight to the box (user, 2026-10-26). SERVER + CLIENT: client
+/// code renders it too.
 public struct CircleCheckIconView: HTMLContent {
   let iconSize: CSS.Length
   let `class`: String
@@ -24,21 +24,17 @@ public struct CircleCheckIconView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
-    let fit = IconStrokeFit(minX: 2, minY: 2, maxX: 22, maxY: 22)
-    return svg {
-      g {
-        circle().cx(12).cy(12).r(10)
-        path().d("m16 9-5.5 5.5L8 12")
-      }
-      .transform(fit.transform)
-      .strokeWidth(fit.strokeWidth)
+    svg {
+      circle().cx(512).cy(512).r(465.45)
+      path().d("M698.18 372.36L442.18 628.36L325.82 512")
     }
     .class(stringIsEmpty(`class`) ? "circle-check-icon-view" : "circle-check-icon-view \(`class`)")
     .style { height(iconSize) }
-    .viewBox(0, 0, fit.width, fit.height)
+    .viewBox(0, 0, 1024, 1024)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.none)
     .stroke(.currentColor)
+    .strokeWidth(93.09)
     .strokeLinecap(.round)
     .strokeLinejoin(.round)
     .ariaHidden(true)

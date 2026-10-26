@@ -7,10 +7,10 @@ import SVGBuilder
 import WebTypes
 
 /// Lucide's `octagon-alert` (ISC; THIRD_PARTY_NOTICES.md): an error: a red
-/// alert, a field's error, a failed or nullified status mark. Lucide's own 24-grid geometry
-/// (lucide-static 1.60.0), fitted to the house box by IconStrokeFit: the
-/// long edge 1024, `iconStrokeWidth` thick, round caps and joins, the outer
-/// edges tight to the box. SERVER + CLIENT: client code renders it too.
+/// alert, a field's error, a failed or nullified status mark. Lucide's own
+/// geometry (lucide-static 1.60.0), carried flat into the house box: the long
+/// edge 1024, the house stroke (`iconStrokeWidth`), round caps and joins, tight
+/// to the box (user, 2026-10-26). SERVER + CLIENT: client code renders it too.
 public struct OctagonAlertIconView: HTMLContent {
   let iconSize: CSS.Length
   let `class`: String
@@ -24,24 +24,18 @@ public struct OctagonAlertIconView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
-    let fit = IconStrokeFit(minX: 2, minY: 2, maxX: 22, maxY: 22)
-    return svg {
-      g {
-        path().d("M12 16h.01")
-        path().d("M12 8v4")
-        path().d(
-          "M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z"
-        )
-      }
-      .transform(fit.transform)
-      .strokeWidth(fit.strokeWidth)
+    svg {
+      path().d("M512 698.18L512.47 698.18")
+      path().d("M512 325.82L512 512")
+      path().d("M666.16 46.55A93.09 93.09 0 0 1 731.97 73.82L950.18 292.03A93.09 93.09 0 0 1 977.45 357.84L977.45 666.16A93.09 93.09 0 0 1 950.18 731.97L731.97 950.18A93.09 93.09 0 0 1 666.16 977.45L357.84 977.45A93.09 93.09 0 0 1 292.03 950.18L73.82 731.97A93.09 93.09 0 0 1 46.55 666.16L46.55 357.84A93.09 93.09 0 0 1 73.82 292.03L292.03 73.82A93.09 93.09 0 0 1 357.84 46.55Z")
     }
     .class(stringIsEmpty(`class`) ? "octagon-alert-icon-view" : "octagon-alert-icon-view \(`class`)")
     .style { height(iconSize) }
-    .viewBox(0, 0, fit.width, fit.height)
+    .viewBox(0, 0, 1024, 1024)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.none)
     .stroke(.currentColor)
+    .strokeWidth(93.09)
     .strokeLinecap(.round)
     .strokeLinejoin(.round)
     .ariaHidden(true)

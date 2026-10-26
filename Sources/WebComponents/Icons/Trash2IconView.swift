@@ -6,11 +6,11 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-/// Lucide's `trash-2` (ISC; THIRD_PARTY_NOTICES.md): Discard: a reversible removal; an action button's verb mark. Lucide's own
-/// 24-grid geometry (lucide-static 1.60.0), fitted to the house box by
-/// IconStrokeFit: the long edge 1024, `iconStrokeWidth` thick, round caps
-/// and joins, the outer edges tight to the box.
-/// SERVER + CLIENT: client code renders it too.
+/// Lucide's `trash-2` (ISC; THIRD_PARTY_NOTICES.md): Discard: a reversible
+/// removal; an action button's verb mark. Lucide's own geometry (lucide-static
+/// 1.60.0), carried flat into the house box: the long edge 1024, the house
+/// stroke (`iconStrokeWidth`), round caps and joins, tight to the box (user,
+/// 2026-10-26). SERVER + CLIENT: client code renders it too.
 public struct Trash2IconView: HTMLContent {
   let iconSize: CSS.Length
   let `class`: String
@@ -24,24 +24,20 @@ public struct Trash2IconView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
-    let fit = IconStrokeFit(minX: 3, minY: 2, maxX: 21, maxY: 22)
-    return svg {
-      g {
-        path().d("M10 11v6")
-        path().d("M14 11v6")
-        path().d("M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6")
-        path().d("M3 6h18")
-        path().d("M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2")
-      }
-      .transform(fit.transform)
-      .strokeWidth(fit.strokeWidth)
+    svg {
+      path().d("M372.36 465.45L372.36 744.73")
+      path().d("M558.55 465.45L558.55 744.73")
+      path().d("M791.27 232.73L791.27 884.36A93.09 93.09 0 0 1 698.18 977.45L232.73 977.45A93.09 93.09 0 0 1 139.64 884.36L139.64 232.73")
+      path().d("M46.55 232.73L884.36 232.73")
+      path().d("M279.27 232.73L279.27 139.64A93.09 93.09 0 0 1 372.36 46.55L558.55 46.55A93.09 93.09 0 0 1 651.64 139.64L651.64 232.73")
     }
     .class(stringIsEmpty(`class`) ? "trash-2-icon-view" : "trash-2-icon-view \(`class`)")
     .style { height(iconSize) }
-    .viewBox(0, 0, fit.width, fit.height)
+    .viewBox(0, 0, 930.91, 1024)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.none)
     .stroke(.currentColor)
+    .strokeWidth(93.09)
     .strokeLinecap(.round)
     .strokeLinejoin(.round)
     .ariaHidden(true)

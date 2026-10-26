@@ -64,7 +64,7 @@ public struct BreadcrumbLabelView: HTMLContent {
       }
       // Punctuation between the words: their 16px font size, never the
       // line height (user, 2026-10-21).
-      descendant(".breadcrumb-separator-view .next-icon-view") {
+      descendant(".breadcrumb-separator-view .chevron-right-icon-view") {
         height(fontSizeMedium16)
       }
     }

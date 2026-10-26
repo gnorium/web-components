@@ -7,13 +7,10 @@ import SVGBuilder
 import WebTypes
 
 /// Lucide's `triangle-alert` (ISC; THIRD_PARTY_NOTICES.md): a warning: an
-/// orange alert, a stale figure. Lucide's own 24-grid geometry
-/// (lucide-static 1.60.0), fitted to the house box by IconStrokeFit: the
-/// long edge 1024, `iconStrokeWidth` thick, round caps and joins, the outer
-/// edges tight to the box.
-/// Its bounds take in the rounded corners' arcs, which reach past the
-/// 24 grid's whole numbers (x 1.982…21.998, y 2.986…21.000).
-/// SERVER + CLIENT: client code renders it too.
+/// orange alert, a stale figure. Lucide's own geometry (lucide-static 1.60.0),
+/// carried flat into the house box: the long edge 1024, the house stroke
+/// (`iconStrokeWidth`), round caps and joins, tight to the box (user,
+/// 2026-10-26). SERVER + CLIENT: client code renders it too.
 public struct TriangleAlertIconView: HTMLContent {
   let iconSize: CSS.Length
   let `class`: String
@@ -27,22 +24,18 @@ public struct TriangleAlertIconView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
-    let fit = IconStrokeFit(minX: 1.982, minY: 2.9861, maxX: 21.9979, maxY: 21.0001)
-    return svg {
-      g {
-        path().d("m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3")
-        path().d("M12 9v4")
-        path().d("M12 17h.01")
-      }
-      .transform(fit.transform)
-      .strokeWidth(fit.strokeWidth)
+    svg {
+      path().d("M964.99 744.82L592.93 93.7A93.02 93.02 0 0 0 431.08 93.7L59.01 744.82A93.02 93.02 0 0 0 140.4 884.34L884.53 884.34A93.02 93.02 0 0 0 964.99 744.82")
+      path().d("M512.47 326.24L512.47 512.28")
+      path().d("M512.47 698.31L512.93 698.31")
     }
     .class(stringIsEmpty(`class`) ? "triangle-alert-icon-view" : "triangle-alert-icon-view \(`class`)")
     .style { width(iconSize) }
-    .viewBox(0, 0, fit.width, fit.height)
+    .viewBox(0, 0, 1024, 930.89)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.none)
     .stroke(.currentColor)
+    .strokeWidth(93.09)
     .strokeLinecap(.round)
     .strokeLinejoin(.round)
     .ariaHidden(true)

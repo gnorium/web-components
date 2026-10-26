@@ -90,10 +90,11 @@ public struct SearchInputView: HTMLContent {
 
         input()
           .type(.search)
+          .name("search")
           .class("search-input")
           .value(modelValue)
           .placeholder(placeholder)
-          .ariaLabel(ariaLabel)
+          .ariaLabel(ariaLabel ?? (stringIsEmpty(placeholder) ? "Search" : placeholder))
           .disabled(disabled)
           .ariaInvalid(isError)
           // A long query fades at rest (`edgeFadeView(control:input:)`).
@@ -115,7 +116,7 @@ public struct SearchInputView: HTMLContent {
           // View details icon (positioned to the left of clear button)
           span {
             IconView(
-              icon: { size in ViewDetailsIconView(size: size) },
+              icon: { size in LayoutListIconView(size: size) },
               size: iconSize
             )
           }

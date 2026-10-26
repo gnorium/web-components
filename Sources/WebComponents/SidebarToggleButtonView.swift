@@ -15,7 +15,7 @@
 
     public func build() -> DOM.Node {
       button {
-        SidebarToggleIconView()
+        IconView(icon: { s in PanelLeftIconView(size: s) }, size: ButtonView.ButtonSize.medium.iconSize)
       }
       .type(.button)
       .class(

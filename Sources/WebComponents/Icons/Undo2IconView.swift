@@ -6,11 +6,11 @@ import HTMLBuilder
 import SVGBuilder
 import WebTypes
 
-/// Lucide's `undo-2` (ISC; THIRD_PARTY_NOTICES.md): Revert: undo an accepted revision; an action button's verb mark. Lucide's own
-/// 24-grid geometry (lucide-static 1.60.0), fitted to the house box by
-/// IconStrokeFit: the long edge 1024, `iconStrokeWidth` thick, round caps
-/// and joins, the outer edges tight to the box.
-/// SERVER + CLIENT: client code renders it too.
+/// Lucide's `undo-2` (ISC; THIRD_PARTY_NOTICES.md): Revert: undo an accepted
+/// revision; an action button's verb mark. Lucide's own geometry (lucide-static
+/// 1.60.0), carried flat into the house box: the long edge 1024, the house
+/// stroke (`iconStrokeWidth`), round caps and joins, tight to the box (user,
+/// 2026-10-26). SERVER + CLIENT: client code renders it too.
 public struct Undo2IconView: HTMLContent {
   let iconSize: CSS.Length
   let `class`: String
@@ -24,21 +24,17 @@ public struct Undo2IconView: HTMLContent {
   }
 
   public func build() -> DOM.Node {
-    let fit = IconStrokeFit(minX: 4, minY: 4, maxX: 20, maxY: 20)
-    return svg {
-      g {
-        path().d("M9 14 4 9l5-5")
-        path().d("M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11")
-      }
-      .transform(fit.transform)
-      .strokeWidth(fit.strokeWidth)
+    svg {
+      path().d("M337.45 628.36L46.55 337.45L337.45 46.55")
+      path().d("M46.55 337.45L657.45 337.45A320 320 0 0 1 977.45 657.45A320 320 0 0 1 657.45 977.45L453.82 977.45")
     }
     .class(stringIsEmpty(`class`) ? "undo-2-icon-view" : "undo-2-icon-view \(`class`)")
     .style { height(iconSize) }
-    .viewBox(0, 0, fit.width, fit.height)
+    .viewBox(0, 0, 1024, 1024)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.none)
     .stroke(.currentColor)
+    .strokeWidth(93.09)
     .strokeLinecap(.round)
     .strokeLinejoin(.round)
     .ariaHidden(true)

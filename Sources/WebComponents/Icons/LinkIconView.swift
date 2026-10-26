@@ -2,42 +2,39 @@
   import CSSBuilder
   import CSSOMBuilder
   import DOMBuilder
+  import EmbeddedSwiftUtilities
   import HTMLBuilder
   import SVGBuilder
   import WebTypes
 
-  /// The Codex link icon, drawn edge to edge in its view box.
+  /// Lucide's `link` (ISC; THIRD_PARTY_NOTICES.md): Lucide's `link` (ISC;
+  /// THIRD_PARTY_NOTICES.md). Lucide's own geometry (lucide-static 1.60.0),
+  /// carried flat into the house box: the long edge 1024, the house stroke
+  /// (`iconStrokeWidth`), round caps and joins, tight to the box (user,
+  /// 2026-10-26).
   public struct LinkIconView: HTMLContent {
     let iconSize: CSS.Length
+    let `class`: String
 
-    public init(size: CSS.Length) {
+    public init(size: CSS.Length, class: String = "") {
       self.iconSize = size
+      self.class = `class`
     }
 
     public func build() -> DOM.Node {
       svg {
-        path().d(
-          M(247.3, 512), h(148.99), a(250.88, 250.88, 0, false, true, -79.36, -102.4), H(256),
-          a(153.59, 153.59, 0, true, true, 0, -307.2), h(153.6),
-          a(153.6, 153.6, 0, false, true, 144.38, 204.8), h(107.52),
-          a(256, 256, 0, false, false, 4.1, -42.5), v(-17.4),
-          A(247.3, 247.3, 0, false, false, 418.3, 0), H(247.3),
-          A(247.3, 247.3, 0, false, false, 0, 247.3), v(17.4),
-          A(247.3, 247.3, 0, false, false, 247.3, 512))
-        path().d(
-          M(776.7, 0), h(-148.99), a(250.88, 250.88, 0, false, true, 79.36, 102.4), H(768),
-          a(153.59, 153.59, 0, true, true, 0, 307.2), h(-153.6),
-          a(153.6, 153.6, 0, false, true, -144.38, -204.8), h(-107.52),
-          a(256, 256, 0, false, false, -4.1, 42.5), v(17.4),
-          A(247.3, 247.3, 0, false, false, 605.7, 512), h(171),
-          A(247.3, 247.3, 0, false, false, 1024, 264.7), v(-17.4),
-          A(247.3, 247.3, 0, false, false, 776.7, 0))
+        path().d("M418.38 558.34A234.05 234.05 0 0 0 771.33 583.62L911.75 443.19A234.05 234.05 0 0 0 580.81 112.25L500.3 192.29")
+        path().d("M605.62 464.72A234.05 234.05 0 0 0 252.67 439.45L112.25 579.87A234.05 234.05 0 0 0 443.19 910.82L523.23 830.77")
       }
-      .class("link-icon-view")
+      .class(stringIsEmpty(`class`) ? "link-icon-view" : "link-icon-view \(`class`)")
       .style { width(iconSize) }
-      .viewBox(0, 0, 1024, 512)
+      .viewBox(0, 0, 1024, 1023.06)
       .xmlns("http://www.w3.org/2000/svg")
-      .fill(.currentColor)
+      .fill(.none)
+      .stroke(.currentColor)
+      .strokeWidth(93.09)
+      .strokeLinecap(.round)
+      .strokeLinejoin(.round)
       .ariaHidden(true)
       .build()
     }
