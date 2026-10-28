@@ -1087,8 +1087,11 @@
                 // The work's frame, its body pages' main text block: the
                 // page's main text set in it; its marginalia outside it,
                 // beside, above or below it where the scan has them (user,
-                // 2026-10-14); an equal margin around them all.
-                let lines = page.lines
+                // 2026-10-14); an equal margin around them all. A blank leaf
+                // is the empty page it is (user, 2026-10-29): its `<gap
+                // reason="blank"/>` a statement about the page, kept in its
+                // TEI, never a mark printed on it.
+                let lines = page.lines.filter { if case .gap(reason: "blank") = $0.kind { false } else { true } }
                 div {
                   rendered(
                     lines.filter { Self.marginalPlace(of: $0) == nil }, heading: labelsPages ? page.label : nil,
@@ -1807,15 +1810,20 @@
         selector("& .tei-frame[data-rend~='align(left)']") { alignSelf(.flexStart) }
         // Ink (user, 2026-10-11): a rend's color(NAME), one of the 13
         // ISCC–NBS basic color names (`TEIRenderer.inks`), on a run, a block
-        // or a frame. The TEI is faithful to the print (user, 2026-10-25):
-        // the page's own pair—its ground and its default ink, page-level
-        // renditions on its <pb>—is the one thing mapped to the theme (the
-        // reader's page and text colors, whatever the pair encoded); every
-        // other ink, black and white too, is its name's centroid (`inks`) in
-        // every theme, never another color where it reads faintly, and no
-        // ground is drawn behind it.
+        // or a frame, and a figure's layer by its class (`ink-NAME`). The
+        // TEI is faithful to the print (user, 2026-10-25): the page's own
+        // pair—its ground and its default ink, on its <pb>—is mapped to the
+        // theme (the reader's page and text colors, whatever the pair
+        // encoded); every other ink is the class the printer chose, drawn in
+        // the palette's color for it (`inks`, user, 2026-10-29: never a
+        // scan's faded shade), which follows the theme as the palette does,
+        // and no ground is drawn behind it.
         for (name, ink) in Self.inks {
           selector(Self.inkSelectors(name).joined(separator: ", ")) {
+            color(ink)
+          }
+          selector("& .tei-figure-drawing path.ink-\(name)") {
+            CSS.Property("fill", "currentcolor")
             color(ink)
           }
         }
@@ -2037,13 +2045,17 @@
 
   extension TEIView {
     /// The inks a rend may name (`TEIRenderer.inks`) and the color each is
-    /// drawn in: its ISCC–NBS centroid (Kelly's colors of maximum contrast, NBS 1965),
-    /// as gnorium-python's `base_tei.INKS` names a sampled ink by them.
+    /// drawn in (user, 2026-10-29): the palette's color for its hue, light
+    /// and dark as the palette is, never a centroid or a sampled shade. A
+    /// gilt is yellow (gnorium-python `base_tei.INK_CLASSES`), a silver
+    /// gray; brown and olive, which the palette has no hue for, the orange
+    /// and the yellow nearest them; black the text's ink and white the
+    /// white that stays white in every theme.
     static let inks: [(name: String, ink: CSS.Color)] = [
-      ("pink", hex(0xE68FAC)), ("red", hex(0xBE0032)), ("orange", hex(0xF38400)), ("brown", hex(0x654522)),
-      ("yellow", hex(0xF3C300)), ("olive", hex(0x665D1E)), ("yellow-green", hex(0x8DB600)),
-      ("green", hex(0x008856)), ("blue", hex(0x0067A5)), ("purple", hex(0x875692)), ("white", hex(0xF2F3F4)),
-      ("gray", hex(0x848482)), ("black", hex(0x222222)),
+      ("pink", colorPink), ("red", colorRed), ("orange", colorOrange), ("brown", colorOrange),
+      ("yellow", colorYellow), ("olive", colorYellow), ("yellow-green", colorLime), ("green", colorGreen),
+      ("blue", colorBlue), ("purple", colorViolet), ("white", colorInvertedFixed), ("gray", colorGray),
+      ("black", colorBase),
     ]
 
     /// The rules that draw a run, a block's lines, a frame and a section's line in `name`'s ink.

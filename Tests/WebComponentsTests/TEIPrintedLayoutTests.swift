@@ -151,4 +151,24 @@ final class TEIPrintedLayoutTests: XCTestCase {
     XCTAssertEqual(margins.compactMap { attribute("data-place", of: $0) }, ["top-left", "margin-left", "bottom"])
     XCTAssertEqual(margins.map { text(of: $0).trimmingCharacters(in: .whitespacesAndNewlines) }, ["Ref PE 1580", "Gloss", "Stamp"])
   }
+
+  /// A blank leaf in its work's frame is the empty page it is (user,
+  /// 2026-10-29): its `<gap reason="blank"/>` stays in its TEI, and the
+  /// trace draws no mark, at no place, on a page of its measured size.
+  func testABlankLeafIsAnEmptyPage() throws {
+    let document = """
+      <TEI><teiHeader><encodingDesc><tagsDecl><rendition xml:id="text-block" scheme="css" selector="text">\
+      font-size:20px;inline-size:44em;block-size:55.9em;margin:3em</rendition></tagsDecl></encodingDesc></teiHeader>\
+      <text><body><pb n="Front flyleaf" facs="https://web-tests.invalid/iiif/1"/>\
+      <gap reason="blank" style="margin-inline-start:7em"/></body></text></TEI>
+      """
+    let nodes = elements(in: TEIView(teiXml: document).build())
+    let layer = try XCTUnwrap(nodes.first { attribute("data-layer", of: $0) == "rendering" })
+    XCTAssertEqual(attribute("data-framed", of: layer), "true")
+    XCTAssertEqual(text(of: layer).trimmingCharacters(in: .whitespacesAndNewlines), "")
+    XCTAssertTrue(classed("tei-line-gap", in: nodes).isEmpty)
+    // A page with no frame still says what it is.
+    let unframed = view(#"<gap reason="blank"/>"#)
+    XCTAssertEqual(classed("tei-line-gap", in: unframed).map { text(of: $0) }, ["[blank]"])
+  }
 }

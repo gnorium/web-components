@@ -13,8 +13,9 @@
   /// not shown through `<img>` or a CSS mask: an image resolves
   /// `currentColor` to black, and a mask paints one color, while the
   /// drawing's print layer must take the text's ink (`currentColor`, the
-  /// page's default ink rendition and the theme) and its other inks their own
-  /// fills, each a `<path>`. Inlined, it is vector still, crisp at any zoom.
+  /// page's default ink and the theme) and its other inks their classes'
+  /// palette colors (`ink-red`, `TEIView.inks`), each a `<path>` the
+  /// reader's style reaches. Inlined, it is vector still, crisp at any zoom.
   ///
   /// Every figure on the page at load, and every one a reader fetches into
   /// its viewer afterwards (`artifact-markup-added`, a windowed reader's
