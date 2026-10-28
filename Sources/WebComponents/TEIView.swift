@@ -302,7 +302,7 @@
       var out: [DiffEngine.RenderedLine] = []
       for line in lines {
         switch line.kind {
-        case .figure(_, let zone):
+        case .figure(_, let zone, _):
           out.append(
             .init(
               tokens: [.init(kind: .figure, text: line.text, style: zone.map { ["region \($0.corners)"] } ?? [])],
@@ -901,14 +901,29 @@
         return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class(
           "tei-line tei-line-forme tei-line-forme-\(role.rawValue)"
         ).data("rend", line.rend).addingAttribute("style", inStyledBlock ? "" : TEIRendition.css(from: line.rend)).build()
-      case .figure(let type, let zone):
+      case .figure(let type, let zone, let graphic):
+        let alt = line.text.isEmpty ? "Figure on \(label)" : line.text
+        // Its drawing where it has one (its inks traced as vectors, `TEILine
+        // .Kind.figure`): drawn by the client in the page's ink, inlined in
+        // place of this image (`TEIFigureHydration`), which stands for it
+        // until then, and where no script runs. A crop of the facsimile
+        // where it has none.
+        if let graphic {
+          return glossable(
+            figure {
+              span {
+                img().src(graphic).alt(alt).loading(.lazy).class("tei-figure-image tei-figure-drawing-image")
+              }.class("tei-figure-drawing").data("graphic", graphic)
+              if !line.text.isEmpty { figcaption { line.text }.class("tei-figure-caption") }
+            }.class("tei-line tei-figure").data("figure-type", type.isEmpty ? "figure" : type), line.element
+          ).build()
+        }
         guard let zone, let region = TEIRenderer.regionURL(ofFacsimile: facsimileURL, zone: zone) else {
           return DOM.Node.fragment([])
         }
         return glossable(
           figure {
-            img().src(region).alt(line.text.isEmpty ? "Figure on \(label)" : line.text)
-              .loading(.lazy).class("tei-figure-image")
+            img().src(region).alt(alt).loading(.lazy).class("tei-figure-image")
             if !line.text.isEmpty { figcaption { line.text }.class("tei-figure-caption") }
           }.class("tei-line tei-figure").data("figure-type", type.isEmpty ? "figure" : type), line.element
         ).build()
@@ -1240,6 +1255,25 @@
           objectFit(.contain)
           borderRadius(borderRadiusBase)
           border(borderWidthBase, .solid, borderColorSubtle)
+        }
+        // A figure's drawing is its ink on the page, not a photograph of the
+        // surface: its box is the zone's, no border. Its holder is no box of
+        // its own (`contents`): the image, and the SVG inlined in its place,
+        // is the figure's flex item as the crop is, so it sizes by its own
+        // size and aspect within the same bounds (a block holder in the
+        // column's shrink-to-fit would give it no width), and its print's
+        // layer takes the text's ink (`currentColor`).
+        descendant(".tei-figure-drawing") {
+          display(.contents)
+        }
+        selector("& .tei-figure-drawing-image", "& .tei-figure-drawing > svg") {
+          display(.block)
+          maxWidth(perc(100))
+          maxHeight(px(320))
+          width(.auto)
+          height(.auto)
+          border(.none)
+          borderRadius(0)
         }
         // A decorated initial is one letter of the text; shown at the width
         // of a plate it stops being an initial and becomes a poster.
