@@ -55,16 +55,6 @@
     /// (`?image=…&line=…&word=…`, or `&element=…`). Nil: the markup
     /// is read whole.
     let glossURL: String?
-    /// Where the witness's own typeface is served (gnorium-server
-    /// `/mission-control/typefaces/{halftone}.woff2`; gnorium-python
-    /// `calibration.typeface`: the sorts reconstructed from its scans, user,
-    /// 2026-10-28), for a page whose frame declares the face's family
-    /// (`TEIWorkFrame.family`): the page then carries an `@font-face` for
-    /// it, and its rendered text is set in that face with the edition face
-    /// behind it for every letter the witness never showed. Nil: a frame
-    /// that declares a family still names it (`data-typeface`), but no face
-    /// is loaded and the text stays in the edition face.
-    let typefaceURL: String?
     /// The one page drawn, by its place in the document from 0, where a
     /// reader draws a page at a time and fetches the others as they are
     /// turned to (`TestamentView.pagesURL`); nil draws every page.
@@ -114,9 +104,8 @@
     public init(
       teiXml: String, editable: Bool = false, translation: Translation? = nil,
       highlights: [String: [TEIHighlight]] = [:], labelsPages: Bool = false, glossURL: String? = nil,
-      page: Int? = nil, drawn: [Int] = [], firstIndex: Int = 0, direction: String? = nil, typefaceURL: String? = nil
+      page: Int? = nil, drawn: [Int] = [], firstIndex: Int = 0, direction: String? = nil
     ) {
-      self.typefaceURL = typefaceURL
       self.direction = direction
       self.page = page
       self.drawn = drawn
@@ -853,14 +842,6 @@
       return nil
     }
 
-    /// The `@font-face` that loads a witness's own typeface (`typefaceURL`)
-    /// under the family its frame declares: the face's one file, swapped in
-    /// as it arrives so the text is never invisible while it loads.
-    static func fontFace(family: String, url: String) -> String {
-      let quoted = { (text: String) in "\"" + text.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") + "\"" }
-      return "@font-face{font-family:\(quoted(family));src:url(\(quoted(url))) format(\"woff2\");font-display:swap}"
-    }
-
     /// The page's rendering layer's style: its frame (`frameStyle`), the width of a space's character
     /// (`spaceCharacter`) and the body's leading in em (`TEIRendition.bodyLeading`), which a framed page's
     /// furniture is set at.
@@ -1074,14 +1055,7 @@
         for (index, page) in pages.enumerated() where self.page == nil || self.page == index || drawn.contains(index) {
           let tabStop = glossURL == nil ? nil : Self.firstWord(of: page.lines)
           let frame = page.frame
-          // The witness's own typeface, where its frame declares one.
-          let typeface = TEIRendition.frame(in: page.renditions)?.family ?? ""
           let pageNode = div {
-            if !typeface.isEmpty, let typefaceURL {
-              // The face loaded for this page alone (a document's pages may be
-              // witnesses of several books), never in the view's shared sheet.
-              style(Self.fontFace(family: typeface, url: typefaceURL))
-            }
             div {
               if let frame {
                 // The work's frame, its body pages' main text block: the
@@ -1199,11 +1173,6 @@
           }
           .class("tei-page")
           .id("tei-page-\(index + firstIndex)")
-          // The family of the witness's own typeface its frame declares, which
-          // its rendered text is set in (`--tei-typeface`); absent on a page
-          // set in the edition face alone.
-          .data("typeface", typeface)
-          .addingAttribute("style", typeface.isEmpty ? "" : "--tei-typeface: \"\(typeface)\"")
           // What pairs this markup with a canvas. The viewer matches on it.
           .data("service-id", Self.serviceID(ofFacsimile: page.facsimileURL))
           // The page's own label, its `pb`'s `n`: the viewer's footer names
@@ -1268,14 +1237,6 @@
           "& [data-layer='rendering']", "& [data-layer='translated-rendering']", "& .tei-empty"
         ) {
           padding(spacing16)
-        }
-        // The witness's own typeface (user, 2026-10-28): where the page's
-        // frame declares its family (`data-typeface`), its rendered text is
-        // set in that face, the edition face behind it for every letter the
-        // witness never showed. The translation keeps the edition face: it
-        // is no print of the witness's.
-        selector("& .tei-page[data-typeface]:not([data-typeface='']) .tei-page-text[data-layer='rendering'] .tei-line") {
-          CSS.Property("font-family", "var(--tei-typeface), var(--typography-font-serif)")
         }
         selector("& .tei-page-raw .code-view", "& .tei-page-raw .code-editor-view") {
           borderRadius(0)
