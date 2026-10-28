@@ -51,10 +51,17 @@
       }
       .class("code-editor-view")
       .style {
+        // Its own scrollport sideways (2026-10-28): its code view gives up
+        // scrolling to it, so a line wider than the field scrolls here, the
+        // gutter staying put, and never widens the page. A field in a form
+        // had no pane around it, and a long tool file pushed the whole page
+        // past the screen.
         selector("&") {
           display(.flex)
           flexDirection(.column)
           minWidth(0)
+          maxWidth(perc(100))
+          overflowX(.auto)
         }
         // At a field's 16px (user, 2026-10-08): under 16px, iOS Safari zooms
         // the page as the text is focused. Its surface is the pane's.
