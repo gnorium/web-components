@@ -144,7 +144,7 @@ final class TEIPrintedLayoutTests: XCTestCase {
     XCTAssertEqual(attribute("data-framed", of: layer), "true")
     XCTAssertEqual(
       attribute("style", of: layer),
-      "--tei-frame-measure: 44; --tei-frame-height: 55.9; --tei-frame-margin: 3; --tei-page-width: 0; --tei-page-height: 0")
+      "--tei-frame-measure: 44; --tei-frame-height: 55.9; --tei-frame-head: 3; --tei-frame-foot: 3; --tei-frame-left: 3; --tei-frame-right: 3; --tei-page-width: 0; --tei-page-height: 0")
     let frame = try XCTUnwrap(classed("tei-text-block", in: nodes).first)
     XCTAssertEqual(text(of: frame).trimmingCharacters(in: .whitespacesAndNewlines), "Main text")
     let margins = classed("tei-margin", in: nodes)

@@ -231,8 +231,9 @@
       // Ten-thousandths of an em: finer than a device pixel.
       func rounded(_ value: Double) -> String { number((value * 10_000).rounded() / 10_000) }
       return "--tei-frame-measure: \(rounded(frame.measure)); --tei-frame-height: \(rounded(frame.height));"
-        + " --tei-frame-margin: \(rounded(frame.margin)); --tei-page-width: \(rounded(frame.pageWidth));"
-        + " --tei-page-height: \(rounded(frame.pageHeight))"
+        + " --tei-frame-head: \(rounded(frame.head)); --tei-frame-foot: \(rounded(frame.foot));"
+        + " --tei-frame-left: \(rounded(frame.left)); --tei-frame-right: \(rounded(frame.right));"
+        + " --tei-page-width: \(rounded(frame.pageWidth)); --tei-page-height: \(rounded(frame.pageHeight))"
     }
 
     /// The area around the frame a line of marginalia is set in: a note's,
@@ -1513,16 +1514,18 @@
         // the marginalia outside it, a side note beside it, a top or bottom
         // note above or below it, each placed from it by its own measured
         // margins; around the frame and its marginalia, the content box,
-        // the same margin on all four sides, empty. A page with side notes
+        // the leaf's own margins, empty. A page with side notes
         // is wider, never its text narrower. A page genuinely larger than
         // its work's (a plate, a foldout) is its scan's own size at the same
         // scale, its content centered in it. Reflowed, the text runs on in
-        // the pane. Its margin is the page's own (user, 2026-10-26): the white
-        // its typesetter left between the leaf's edge and the main text block
-        // (`--tei-frame-margin`, gnorium-python `type_scale.frame`, from the
-        // leaf the measuring found, never the photograph's table, target or
-        // facing leaf beyond it); only the structure overlay lays the page on
-        // the scan's geometry.
+        // the pane. Its margins are the leaf's (user, 2026-10-26, 2026-10-28):
+        // the white its typesetter left between the leaf's edges and the main
+        // text block, its head and foot, its inner margin at the fold and its
+        // outer at the fore-edge, a verso's mirrored (`--tei-frame-head`,
+        // `--tei-frame-foot`, `--tei-frame-left`, `--tei-frame-right`,
+        // gnorium-python `type_scale.frame`, from the leaf the measuring found,
+        // never the photograph's table, target or facing leaf beyond it);
+        // only the structure overlay lays the page on the scan's geometry.
         selector("& .tei-page-text[data-framed='true']:not([data-reflow='true'] *)") {
           display(.grid)
           CSS.Property(
@@ -1533,7 +1536,12 @@
           CSS.Property("justify-content", "center")
           CSS.Property("align-content", "center")
           boxSizing(.borderBox)
-          CSS.Property("padding", "calc(var(--tei-frame-margin) * 1em)")
+          // Physical sides: a leaf's fold is on its left or its right
+          // whatever its text's direction.
+          CSS.Property(
+            "padding",
+            "calc(var(--tei-frame-head) * 1em) calc(var(--tei-frame-right) * 1em) calc(var(--tei-frame-foot) * 1em) calc(var(--tei-frame-left) * 1em)"
+          )
           fontSize(fontSizeMedium16)
           CSS.Property("inline-size", "max-content")
           CSS.Property("min-inline-size", "calc(var(--tei-page-width) * 1em)")
