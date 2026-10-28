@@ -53,13 +53,17 @@ final class TEIScanLayoutDataTests: XCTestCase {
     XCTAssertEqual(Array(zones[5][11...]), ["282.05", "110", "663.61", "110.8"])
   }
 
-  /// The book's em on the scan: the scans' width in em its frame declares
-  /// (61.45), whatever the scan's pixels, in the 0–1000 space across it—
-  /// 45.89 of the scan's 2820 pixels.
-  func testTheBooksEmOnTheScanIsItsWidthOverTheFramesDeclaredWidth() throws {
+  /// The book's em on the scan: the scan's own first (dev, 2026-10-26: its
+  /// measured text block's type, 109.89px of its 2820, as `scanEmData` says),
+  /// the frame's declared width (61.45em) only where the page measures none.
+  func testTheBooksEmOnTheScanIsItsOwnTypeElseItsWidthOverTheFramesDeclaredWidth() throws {
     let em = try XCTUnwrap(Double(attribute("data-scan-em", of: try page()) ?? ""))
-    XCTAssertEqual(em, 16.2734, accuracy: 1e-9)
-    XCTAssertEqual(em / 1000 * 2820, 45.89, accuracy: 0.01)
+    XCTAssertEqual(em / 1000 * 2820, 109.89, accuracy: 0.01)
+    let undeclared = Self.document.replacingOccurrences(of: #" style="font-size:109.89px""#, with: "")
+    let page = try XCTUnwrap(elements(in: TEIView(teiXml: undeclared).build()).first { attribute("data-page-index", of: $0) != nil })
+    let declared = try XCTUnwrap(Double(attribute("data-scan-em", of: page) ?? ""))
+    XCTAssertEqual(declared, 16.2734, accuracy: 1e-9)
+    XCTAssertEqual(declared / 1000 * 2820, 45.89, accuracy: 0.01)
   }
 
   /// A calibrated page (gnorium-python `calibration.base_tei`, 2026-10-23
