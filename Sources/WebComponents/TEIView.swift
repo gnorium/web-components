@@ -922,6 +922,9 @@
         ).data("rend", line.rend).addingAttribute("style", inStyledBlock ? "" : TEIRendition.css(from: line.rend)).build()
       case .figure(let type, let zone, let graphic):
         let alt = line.text.isEmpty ? "Figure on \(label)" : line.text
+        // Its size and its place across as the scan has them, where its setting gives them (gnorium-python
+        // `base_tei._figure`, in the body's em): drawn at them, never at an illustration's bounds.
+        let placed = TEIRendition.css(from: line.rend, only: ["inline-size", "block-size", "margin-inline-start"])
         // Its drawing where it has one (its inks traced as vectors, `TEILine
         // .Kind.figure`): drawn by the client in the page's ink, inlined in
         // place of this image (`TEIFigureHydration`), which stands for it
@@ -934,7 +937,8 @@
                 img().src(graphic).alt(alt).loading(.lazy).class("tei-figure-image tei-figure-drawing-image")
               }.class("tei-figure-drawing").data("graphic", graphic)
               if !line.text.isEmpty { figcaption { line.text }.class("tei-figure-caption") }
-            }.class("tei-line tei-figure").data("figure-type", type.isEmpty ? "figure" : type), line.element
+            }.class("tei-line tei-figure").data("figure-type", type.isEmpty ? "figure" : type)
+              .data("placed", placed.isEmpty ? "false" : "true").addingAttribute("style", placed), line.element
           ).build()
         }
         guard let zone, let region = TEIRenderer.regionURL(ofFacsimile: facsimileURL, zone: zone) else {
@@ -944,7 +948,8 @@
           figure {
             img().src(region).alt(alt).loading(.lazy).class("tei-figure-image")
             if !line.text.isEmpty { figcaption { line.text }.class("tei-figure-caption") }
-          }.class("tei-line tei-figure").data("figure-type", type.isEmpty ? "figure" : type), line.element
+          }.class("tei-line tei-figure").data("figure-type", type.isEmpty ? "figure" : type)
+            .data("placed", placed.isEmpty ? "false" : "true").addingAttribute("style", placed), line.element
         ).build()
       case .table(let source):
         return div {
@@ -1320,6 +1325,26 @@
           // (the words' blue) never recolor the drawing; a frame in another
           // ink colors it as it colors its lines (`inkSelectors`).
           color(colorBase)
+        }
+        // A figure the page places (`data-placed`: its size and its place as
+        // the scan has them) is the print's, not an illustration inside a
+        // markup: its box is its setting's, its image or drawing fills it,
+        // no white around it and no border.
+        selector("& .tei-figure[data-placed='true']") {
+          marginBlock(0)
+          gap(0)
+        }
+        selector(
+          "& .tei-figure[data-placed='true'] .tei-figure-image",
+          "& .tei-figure[data-placed='true'] .tei-figure-drawing > svg"
+        ) {
+          width(perc(100))
+          height(perc(100))
+          maxWidth(perc(100))
+          maxHeight(perc(100))
+          objectFit("fill")
+          border(.none)
+          borderRadius(0)
         }
         // A decorated initial is one letter of the text; shown at the width
         // of a plate it stops being an initial and becomes a poster.
