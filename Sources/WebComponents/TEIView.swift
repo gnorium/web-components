@@ -898,8 +898,10 @@
       case .mark:
         return glossable(span { line.text }.class("tei-line tei-line-mark"), line.element).build()
       case .gap(let reason):
-        return glossable(span { "[\(reason.isEmpty ? "gap" : reason)]" }.class("tei-line tei-line-gap"), line.element)
-          .build()
+        return glossable(
+          span { "[\(reason.isEmpty ? "gap" : reason)]" }.class("tei-line tei-line-gap").data("rend", line.rend)
+            .addingAttribute("style", TEIRendition.css(from: line.rend)), line.element
+        ).build()
       case .documentBoundary:
         return hr().class("tei-document-boundary").build()
       case .rule:
@@ -1343,6 +1345,7 @@
         }
         selector(
           "& .tei-figure[data-placed='true'] .tei-figure-image",
+          "& .tei-figure[data-placed='true'] .tei-figure-drawing-image",
           "& .tei-figure[data-placed='true'] .tei-figure-drawing > svg"
         ) {
           width(perc(100))
