@@ -910,6 +910,13 @@
       case .space(let quantity, let unit):
         // Blank height the source leaves, as much as it says (user,
         // 2026-10-11): never a line of text.
+        // A negative one (lines set closer than their leading) draws them
+        // closer: no height, a margin as negative (user, 2026-10-28).
+        if quantity < 0 {
+          return div {}.class("tei-space").ariaHidden(true)
+            .data("quantity", Self.number(quantity)).data("unit", unit)
+            .style { CSS.Property("margin-block-start", Self.spaceHeight(quantity: quantity, unit: unit)) }.build()
+        }
         return div {}.class("tei-space").ariaHidden(true)
           .data("quantity", Self.number(quantity)).data("unit", unit)
           .style { CSS.Property("height", Self.spaceHeight(quantity: quantity, unit: unit)) }.build()
