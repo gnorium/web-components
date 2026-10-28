@@ -1274,6 +1274,13 @@
           height(.auto)
           border(.none)
           borderRadius(0)
+          // The print's layer (`currentColor`) is the page's ink as the text
+          // is (the theme's text color, `colorBase`, as the frame and the
+          // rule set it: the page's own pair maps to the theme), set here
+          // and not inherited, so the glossable figure's hover and focus
+          // (the words' blue) never recolor the drawing; a frame in another
+          // ink colors it as it colors its lines (`inkSelectors`).
+          color(colorBase)
         }
         // A decorated initial is one letter of the text; shown at the width
         // of a plate it stops being an initial and becomes a poster.
@@ -1972,6 +1979,7 @@
         "& .tei-frame[data-rend~='color(\(name))']",
         "& .tei-section > .tei-line[data-rend~='color(\(name))']",
         "& .tei-frame[data-rend~='color(\(name))'] .tei-line",
+        "& .tei-frame[data-rend~='color(\(name))'] .tei-figure-drawing > svg",
       ]
     }
   }
