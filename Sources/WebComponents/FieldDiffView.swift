@@ -137,7 +137,6 @@ public struct FieldDiffView: HTMLContent {
       "& [data-diff-state='\(name)']",
       "& .diff-wrap-\(name) .prompt-text-view",
       "& .diff-wrap-\(name) .sense-editor-view",
-      "& .diff-wrap-\(name) .sentiment-definition-view",
       "& .diff-wrap-\(name) .text-input-input:not(.form-info-panel *)",
       "& .diff-wrap-\(name) .text-area-input:not(.form-info-panel *)",
       "& .diff-wrap-\(name) .dropdown-trigger:not(.form-info-panel *)"
