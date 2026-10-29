@@ -337,8 +337,9 @@
     }
 
     /// A page's lines as the reader sets them: each block's lines run on as
-    /// one paragraph, and the furniture at the head of the page (page
-    /// number, running head, signature) set on one line, which is one row.
+    /// one paragraph, and the furniture the print sets on one row (a page
+    /// number and a running head on the headline, a signature and a
+    /// catchword on the direction line) set on one line, which is one row.
     enum LaidOut {
       /// A line that stands alone: a page turn, a gap, a figure, a table,
       /// a piece of furniture.
@@ -377,6 +378,20 @@
       }
     }
 
+    /// A block's lines by row: each line with the lines after it that share
+    /// its row (`TEILine.sharesLine`).
+    static func rows(of lines: [TEILine]) -> [[TEILine]] {
+      var rows: [[TEILine]] = []
+      for line in lines {
+        if line.sharesLine, !rows.isEmpty {
+          rows[rows.count - 1].append(line)
+        } else {
+          rows.append([line])
+        }
+      }
+      return rows
+    }
+
     static func layout(of lines: [TEILine]) -> [LaidOut] {
       var out: [LaidOut] = []
       var row: [TEILine] = []
@@ -395,10 +410,12 @@
       }
       for line in lines {
         switch line.kind {
-        case .forme(.header), .forme(.pageNumber), .forme(.signature):
+        case .forme:
           end()
           // Furniture that follows furniture with no line break between is
-          // on the same line.
+          // on the same line, whatever its role (Hamlet Q1: its catchword
+          // on its signature's row, stacked under it while a catchword
+          // never joined one).
           if !row.isEmpty && !line.sharesLine { close() }
           row.append(line)
         default:
@@ -777,9 +794,23 @@
               // markup is written inline: an indented block put a
               // newline, a space as read, inside the broken word.
               div {
-                for (index, line) in lines.enumerated() {
-                  if index > 0 { line.joinsPrevious ? "" : " " }
-                  renderingLine(line, facsimileURL: facsimileURL, label: label, tabStop: tabStop, inStyledBlock: true)
+                for (index, row) in Self.rows(of: lines).enumerated() {
+                  if index > 0 { row[0].joinsPrevious ? "" : " " }
+                  if row.count == 1 {
+                    renderingLine(
+                      row[0], facsimileURL: facsimileURL, label: label, tabStop: tabStop, inStyledBlock: true)
+                  } else {
+                    // Lines the print sets on one row (a turnover beside
+                    // the line it stands on): the row's first, and each
+                    // other at its own place across, its own setting's.
+                    span {
+                      for (place, line) in row.enumerated() {
+                        if place > 0 { " " }
+                        renderingLine(
+                          line, facsimileURL: facsimileURL, label: label, tabStop: tabStop, inStyledBlock: place == 0)
+                      }
+                    }.class("tei-row")
+                  }
                 }
               }.class("tei-block").data("rend", lines[0].rend).data("part", lines[0].part).addingAttribute(
                 "style",
@@ -787,14 +818,15 @@
                   from: columns.isEmpty ? lines[0].rend : TEIRendition.inColumns(lines[0].rend, of: columns)))
             case .furniture(let pieces):
               // A page number and a running head set on one line keep
-              // their places on it, as the image has them.
+              // their places on it, as the image has them: each piece
+              // placed across the whole row by its own setting, never after
+              // another (a piece set at its own place, gnorium-python
+              // `base_tei._start_of`, is its start from the measure's).
               div {
-                for place in FurniturePlace.allCases {
+                for piece in pieces {
                   div {
-                    for piece in pieces where FurniturePlace.of(piece) == place {
-                      renderingLine(piece, facsimileURL: facsimileURL, label: label, tabStop: tabStop)
-                    }
-                  }.class("tei-forme-row-\(place.rawValue)")
+                    renderingLine(piece, facsimileURL: facsimileURL, label: label, tabStop: tabStop)
+                  }.class("tei-forme-row-\(FurniturePlace.of(piece).rawValue)")
                 }
               }.class("tei-forme-row")
             }
@@ -1360,7 +1392,8 @@
         // script: those stay in the serif.
         selector(
           "& .tei-run[data-rend~='italic']", "& .tei-run[data-rend~='ital']",
-          "& .tei-block[data-rend~='italic'] > .tei-line", "& .tei-section > .tei-line[data-rend~='italic']",
+          "& .tei-block[data-rend~='italic'] > .tei-line",
+          "& .tei-block[data-rend~='italic'] > .tei-row > .tei-line", "& .tei-section > .tei-line[data-rend~='italic']",
           "& .tei-frame[data-rend~='italic'] .tei-line"
         ) {
           fontFamily(typographyFontSerifItalic)
@@ -1368,6 +1401,7 @@
         }
         selector(
           "& .tei-run[data-rend~='roman']", "& .tei-block[data-rend~='roman'] > .tei-line",
+          "& .tei-block[data-rend~='roman'] > .tei-row > .tei-line",
           "& .tei-section > .tei-line[data-rend~='roman']", "& .tei-frame[data-rend~='roman'] .tei-line"
         ) {
           fontFamily(typographyFontSerif)
@@ -1375,12 +1409,14 @@
         }
         selector(
           "& .tei-run[data-rend~='sans-serif']", "& .tei-block[data-rend~='sans-serif'] > .tei-line",
+          "& .tei-block[data-rend~='sans-serif'] > .tei-row > .tei-line",
           "& .tei-section > .tei-line[data-rend~='sans-serif']", "& .tei-frame[data-rend~='sans-serif'] .tei-line"
         ) {
           fontFamily(typographyFontSans)
         }
         selector(
           "& .tei-run[data-rend~='typewriter']", "& .tei-block[data-rend~='typewriter'] > .tei-line",
+          "& .tei-block[data-rend~='typewriter'] > .tei-row > .tei-line",
           "& .tei-section > .tei-line[data-rend~='typewriter']", "& .tei-frame[data-rend~='typewriter'] .tei-line"
         ) {
           fontFamily(typographyFontMono)
@@ -1701,16 +1737,31 @@
           paddingInlineStart(spacing24)
           CSS.Property("text-indent", "calc(-1 * \(spacing24.value))")
         }
-        // The furniture on one line, each piece in its place on it.
+        // The furniture on one line, each piece in its place on it: all in
+        // the row's one cell, each placed across the whole row.
         descendant(".tei-forme-row") {
           display(.grid)
-          gridTemplateColumns("minmax(0, 1fr) auto minmax(0, 1fr)")
-          gap(spacing8)
+          gridTemplateColumns("minmax(0, 1fr)")
           alignItems(.baseline)
         }
+        selector("& .tei-forme-row > *") { CSS.Property("grid-area", "1 / 1") }
         descendant(".tei-forme-row-start") { justifySelf("start") }
         descendant(".tei-forme-row-center") { justifySelf("center") }
         descendant(".tei-forme-row-end") { justifySelf("end") }
+        // Lines set on one row in a block (a turnover beside its line), each
+        // from the row's start, the others at their own places across.
+        selector("& .tei-page-text:not([data-reflow='true'] *) .tei-block > .tei-row") {
+          display(.grid)
+          gridTemplateColumns("minmax(0, 1fr)")
+          alignItems(.baseline)
+        }
+        selector("& .tei-page-text:not([data-reflow='true'] *) .tei-block > .tei-row > *") {
+          CSS.Property("grid-area", "1 / 1")
+          justifySelf("start")
+        }
+        selector("& .tei-page-text:not([data-reflow='true'] *) .tei-block > .tei-row > :not(:first-child)") {
+          CSS.Property("text-indent", "0")
+        }
         // Paragraphs set close, as printed: the space between them is the
         // TEI's own (its margins, its vertical `<space/>`), never one the
         // reader adds (user, 2026-10-13).
@@ -1792,12 +1843,14 @@
         // or a frame's lines (user, 2026-10-11).
         selector(
           "& .tei-run[data-rend~='larger']", "& .tei-block[data-rend~='larger'] > .tei-line",
+          "& .tei-block[data-rend~='larger'] > .tei-row > .tei-line",
           "& .tei-section > .tei-line[data-rend~='larger']", "& .tei-frame[data-rend~='larger'] .tei-line"
         ) {
           fontSize(fontSizeLarge18)
         }
         selector(
           "& .tei-run[data-rend~='smaller']", "& .tei-block[data-rend~='smaller'] > .tei-line",
+          "& .tei-block[data-rend~='smaller'] > .tei-row > .tei-line",
           "& .tei-section > .tei-line[data-rend~='smaller']", "& .tei-frame[data-rend~='smaller'] .tei-line"
         ) {
           fontSize(fontSizeSmall14)
@@ -1839,10 +1892,18 @@
         // only what the TEI encodes as typography (`<hi rend>`) is styled; a
         // tag (a heading, a speaker, a stage direction, a note, the forme
         // work) keeps its place on the page and no face or color of its own.
-        selector("& .tei-block[style*='font-size'] > .tei-line") { fontSize(.inherit) }
-        selector("& .tei-block[style*='line-height'] > .tei-line") { CSS.Property("line-height", "inherit") }
-        selector("& .tei-block[style*='letter-spacing'] > .tei-line") { CSS.Property("letter-spacing", "inherit") }
-        selector("& .tei-block[style*='word-spacing'] > .tei-line") { CSS.Property("word-spacing", "inherit") }
+        selector("& .tei-block[style*='font-size'] > .tei-line", "& .tei-block[style*='font-size'] > .tei-row > .tei-line") {
+          fontSize(.inherit)
+        }
+        selector(
+          "& .tei-block[style*='line-height'] > .tei-line", "& .tei-block[style*='line-height'] > .tei-row > .tei-line"
+        ) { CSS.Property("line-height", "inherit") }
+        selector(
+          "& .tei-block[style*='letter-spacing'] > .tei-line", "& .tei-block[style*='letter-spacing'] > .tei-row > .tei-line"
+        ) { CSS.Property("letter-spacing", "inherit") }
+        selector(
+          "& .tei-block[style*='word-spacing'] > .tei-line", "& .tei-block[style*='word-spacing'] > .tei-row > .tei-line"
+        ) { CSS.Property("word-spacing", "inherit") }
         // A heading's space is the TEI's, as a paragraph's is.
         descendant(".tei-line-heading") {
           fontSize(.inherit)
@@ -1879,6 +1940,10 @@
         // Q1's every line under it 0.6em low, its catchword a line low).
         selector("& .tei-page-text[data-framed='true']:not([data-reflow='true'] *) .tei-line-forme") {
           margin(0)
+          CSS.Property("line-height", "calc(var(--tei-body-leading) * 1em)")
+        }
+        // Its row too: the pieces on it are no taller than a line of it.
+        selector("& .tei-page-text[data-framed='true']:not([data-reflow='true'] *) .tei-forme-row") {
           CSS.Property("line-height", "calc(var(--tei-body-leading) * 1em)")
         }
         // An original note, set apart from the text it annotates as the
@@ -2023,6 +2088,7 @@
     static func inkSelectors(_ name: String) -> [String] {
       [
         "& .tei-run[data-rend~='color(\(name))']", "& .tei-block[data-rend~='color(\(name))'] > .tei-line",
+        "& .tei-block[data-rend~='color(\(name))'] > .tei-row > .tei-line",
         "& .tei-frame[data-rend~='color(\(name))']",
         "& .tei-section > .tei-line[data-rend~='color(\(name))']",
         "& .tei-frame[data-rend~='color(\(name))'] .tei-line",

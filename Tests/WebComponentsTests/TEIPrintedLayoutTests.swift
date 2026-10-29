@@ -171,4 +171,24 @@ final class TEIPrintedLayoutTests: XCTestCase {
     let unframed = view(#"<gap reason="blank"/>"#)
     XCTAssertEqual(classed("tei-line-gap", in: unframed).map { text(of: $0) }, ["[blank]"])
   }
+
+  /// Lines the print sets on one row (gnorium-python `base_tei._rows`) are one row, each at its own place
+  /// on it: a catchword on its signature's row, never stacked under it (Hamlet Q1), each piece over the
+  /// whole row's measure; a turnover on the row of the line beside it.
+  func testLinesSetOnOneRowAreOneRowEachAtItsPlace() throws {
+    let nodes = view(
+      ##"<ab><lb facs="#z-L21"/>But who must lie in it?<seg facs="#z-L22" rend="align(left)" style="margin-inline-start:24.25rem">(sir.</seg><lb facs="#z-L23"/>If I should say</ab><lb facs="#z-L38"/><fw type="sig" rend="align(left)" style="margin-inline-start:18rem">C</fw><fw type="catch" facs="#z-L39" rend="align(left)" style="margin-inline-start:23.75rem">Ham.</fw>"##)
+    let furniture = try XCTUnwrap(classed("tei-forme-row", in: nodes).first)
+    XCTAssertEqual(text(of: furniture), "CHam.")
+    let pieces = classed("tei-forme-row-start", in: elements(in: furniture))
+    XCTAssertEqual(pieces.count, 2)
+    XCTAssertEqual(
+      classed("tei-line-forme", in: elements(in: furniture)).compactMap { attribute("style", of: $0) },
+      ["margin-inline-start:18em;", "margin-inline-start:23.75em;"])
+    let row = try XCTUnwrap(classed("tei-row", in: nodes).first)
+    let lines = classed("tei-line", in: elements(in: row))
+    XCTAssertEqual(lines.map { text(of: $0) }, ["But who must lie in it?", "(sir."])
+    XCTAssertEqual(attribute("style", of: lines[1]), "margin-inline-start:24.25rem;")
+    XCTAssertFalse(text(of: row).contains("If I should say"))
+  }
 }
