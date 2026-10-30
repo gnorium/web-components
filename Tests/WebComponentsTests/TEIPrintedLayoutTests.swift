@@ -31,6 +31,25 @@ final class TEIPrintedLayoutTests: XCTestCase {
         .build())
   }
 
+  /// A figure the page sets by its zone (user, 2026-10-30: a board's crest, on a page with no body type) is
+  /// drawn at its setting as a figure the page places is: its size, its place across and its place down.
+  func testAFigureSetByItsZoneIsDrawnAtItsPlace() throws {
+    let a = "https://web-tests.invalid/iiif/1/full/max/0/default.jpg"
+    let document = #"<TEI xmlns="http://www.tei-c.org/ns/1.0"><teiHeader><encodingDesc><tagsDecl>"#
+      + #"<rendition xml:id="text-block" scheme="css" selector="text">font-size:20px;inline-size:44em;block-size:55.9em;margin:3em</rendition>"#
+      + "</tagsDecl></encodingDesc></teiHeader>"
+      + #"<facsimile><surface n="1" ulx="0" uly="0" lrx="1000" lry="1000"><graphic url="\#(a)" width="1000px" height="1300px"/>"#
+      + #"<zone xml:id="textblock" type="textblock" points="420,240 620,240 620,440 420,440"/><zone type="leaf" points="100,80 900,80 900,920 100,920"/>"#
+      + #"<zone xml:id="z1" ulx="500" uly="300" lrx="580" lry="400"/></surface></facsimile>"#
+      + ##"<text><body><pb n="1" facs="\##(a)"/><figure facs="#z1"><graphic url="/calibration-figures/z1.svg?image=x" mimeType="image/svg+xml"/></figure></body></text></TEI>"##
+    let nodes = elements(in: TEIView(teiXml: document).build())
+    let figure = try XCTUnwrap(classed("tei-figure", in: nodes).first)
+    XCTAssertEqual(attribute("data-placed", of: figure), "true")
+    XCTAssertEqual(
+      attribute("style", of: figure),
+      "inline-size:5em;block-size:8.125em;margin-inline-start:22em;margin-block-start:14.875em;")
+  }
+
   func testContentsTitleDotsAreALeader() throws {
     let nodes = view(
       #"<table type="contents"><row><cell><p>Preface <pc style="letter-spacing:1.2em">.\#u{2002}.\#u{2002}.\#u{2002}.</pc><lb/></p></cell><cell><p>vii<lb/></p></cell></row></table>"#)

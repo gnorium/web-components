@@ -946,7 +946,7 @@
         let alt = line.text.isEmpty ? "Figure on \(label)" : line.text
         // Its size and its place across as the scan has them, where its setting gives them (gnorium-python
         // `base_tei._figure`, in the body's em): drawn at them, never at an illustration's bounds.
-        let placed = TEIRendition.css(from: line.rend, only: ["inline-size", "block-size", "margin-inline-start"])
+        let placed = TEIRendition.css(from: line.rend, only: TEIPage.figureSetting)
         // Its drawing where it has one (its inks traced as vectors, `TEILine
         // .Kind.figure`): drawn by the client in the page's ink, inlined in
         // place of this image (`TEIFigureHydration`), which stands for it
