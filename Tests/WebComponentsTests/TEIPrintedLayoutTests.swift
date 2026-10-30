@@ -32,7 +32,9 @@ final class TEIPrintedLayoutTests: XCTestCase {
   }
 
   /// A figure the page sets by its zone (user, 2026-10-30: a board's crest, on a page with no body type) is
-  /// drawn at its setting as a figure the page places is: its size, its place across and its place down.
+  /// drawn at its setting as a figure the page places is: its size, its place across and its place down, on
+  /// its leaf (no main text: framed by its leaf whatever its work declares, xml-utilities b810177; 38 em over
+  /// the leaf's 800 px, so 80 px is 3.8 em).
   func testAFigureSetByItsZoneIsDrawnAtItsPlace() throws {
     let a = "https://web-tests.invalid/iiif/1/full/max/0/default.jpg"
     let document = #"<TEI xmlns="http://www.tei-c.org/ns/1.0"><teiHeader><encodingDesc><tagsDecl>"#
@@ -47,34 +49,21 @@ final class TEIPrintedLayoutTests: XCTestCase {
     XCTAssertEqual(attribute("data-placed", of: figure), "true")
     XCTAssertEqual(
       attribute("style", of: figure),
-      "inline-size:5em;block-size:8.125em;margin-inline-start:22em;margin-block-start:14.875em;")
+      "inline-size:3.8em;block-size:6.175em;margin-inline-start:19em;margin-block-start:13.585em;")
   }
 
-  /// A figure whose drawing the server read is drawn into the page as SVG, in the page's ink from the
-  /// first frame (user, 2026-10-31: its image painted the gilt black until the client inlined it); one it
-  /// did not read is its image, for the client to inline.
-  func testAFigureWhoseDrawingIsReadIsDrawnInThePage() throws {
+  /// A figure's drawing is used from the file its graphic names, in the page's ink from the first frame
+  /// (user, 2026-10-31: an image of it painted the gilt black until the client inlined it), never its paths
+  /// in the page.
+  func testAFiguresDrawingIsUsedFromItsFile() throws {
     let url = "/mission-control/calibration-figures/z1.svg?image=x"
-    let figures = ##"<figure facs="#z1"><graphic url="\##(url)" mimeType="image/svg+xml"/></figure>"##
-      + ##"<figure facs="#z2"><graphic url="/mission-control/calibration-figures/z2.svg?image=x" mimeType="image/svg+xml"/></figure>"##
-    let drawing = try XCTUnwrap(
-      TEIDrawing(svg: #"<svg width="2" height="3" viewBox="0 0 2 3"><path class="ink-red" fill="currentColor" d="M0,0L1,1Z"/></svg>"#))
-    let nodes = elements(
-      in: TEIView(
-        teiXml: #"<TEI><text><body><pb n="1" facs="https://web-tests.invalid/iiif/1"/>\#(figures)</body></text></TEI>"#,
-        drawings: [url: drawing]
-      ).build())
-    let holders = classed("tei-figure-drawing", in: nodes)
-    XCTAssertEqual(holders.count, 2)
-    XCTAssertEqual(attribute("data-graphic-inlined", of: holders[0]), "true")
-    let svg = try XCTUnwrap(elements(in: holders[0]).first { $0.tag == "svg" })
-    XCTAssertEqual(attribute("viewBox", of: svg), "0 0 2 3")
-    let path = try XCTUnwrap(elements(in: svg).first { $0.tag == "path" })
-    XCTAssertEqual(attribute("class", of: path), "ink-red")
-    XCTAssertEqual(attribute("d", of: path), "M0,0L1,1Z")
-    XCTAssertTrue(classed("tei-figure-drawing-image", in: elements(in: holders[0])).isEmpty)
-    XCTAssertNil(attribute("data-graphic-inlined", of: holders[1]))
-    XCTAssertEqual(classed("tei-figure-drawing-image", in: elements(in: holders[1])).count, 1)
+    let nodes = view(##"<figure facs="#z1"><graphic url="\##(url)" mimeType="image/svg+xml"/></figure>"##)
+    let holder = try XCTUnwrap(classed("tei-figure-drawing", in: nodes).first)
+    let svg = try XCTUnwrap(elements(in: holder).first { $0.tag == "svg" })
+    let use = try XCTUnwrap(elements(in: svg).first { $0.tag == "use" })
+    XCTAssertEqual(attribute("href", of: use), url + "#figure")
+    XCTAssertEqual(attribute("preserveAspectRatio", of: svg), "none")
+    XCTAssertFalse(elements(in: holder).contains { $0.tag == "img" || $0.tag == "path" })
   }
 
   /// Hamlet Q1's front cover as filed (dev, 2026-10-30): no main text, no body type, no work frame. The page
@@ -194,12 +183,14 @@ final class TEIPrintedLayoutTests: XCTestCase {
     let styles = lines.map { attribute("style", of: $0) ?? "" }
       + classed("tei-block", in: elements(in: page)).map { attribute("style", of: $0) ?? "" }
     XCTAssertEqual(lines.count, 2)
-    // Each stands at its own box and place, centered in it, wherever the style lands (line or its block); each
-    // a line of capitals at its ink's size, 2.2759 em (its 1.625 em box its cap height), its box and place in
-    // that em: HAMLET 12.5 em wide 15.75 em in, LONDON 1603 6.25 em wide 18.875 em in.
-    XCTAssertTrue(styles.contains { $0.contains("margin-inline-start:6.9203em") && $0.contains("inline-size:5.4923em") })
-    XCTAssertTrue(styles.contains { $0.contains("margin-inline-start:8.2934em") && $0.contains("inline-size:2.7462em") })
-    XCTAssertTrue(styles.filter { $0.contains("margin-inline-start") }.allSatisfy { $0.contains("font-size:2.2759em") })
+    // Each stands at its own box and place on its leaf (no main text: framed by its leaf whatever its work
+    // declares, xml-utilities b810177; 38 em over the leaf's 800 px), centered in it, wherever the style lands
+    // (line or its block); each a line of capitals at its ink's size, 1.7297 em (its 1.235 em box its cap
+    // height), its box and place in that em: HAMLET 9.5 em wide 14.25 em in, LONDON 1603 4.75 em wide
+    // 16.625 em in.
+    XCTAssertTrue(styles.contains { $0.contains("margin-inline-start:8.2385em") && $0.contains("inline-size:5.4923em") })
+    XCTAssertTrue(styles.contains { $0.contains("margin-inline-start:9.6115em") && $0.contains("inline-size:2.7462em") })
+    XCTAssertTrue(styles.filter { $0.contains("margin-inline-start") }.allSatisfy { $0.contains("font-size:1.7297em") })
     XCTAssertTrue(styles.filter { $0.contains("margin-inline-start") }.allSatisfy { $0.contains("text-align:center") })
   }
 
