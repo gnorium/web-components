@@ -54,8 +54,10 @@ final class TEIPrintedLayoutTests: XCTestCase {
     let nodes = view(
       #"<table type="contents"><row><cell><p>Preface <pc style="letter-spacing:1.2em">.\#u{2002}.\#u{2002}.\#u{2002}.</pc><lb/></p></cell><cell><p>vii<lb/></p></cell></row></table>"#)
     let leader = try XCTUnwrap(classed("tei-leader", in: nodes).first)
-    // Its dots at their printed pitch: the run's own setting.
-    XCTAssertTrue(elements(in: leader).contains { attribute("style", of: $0) == "letter-spacing:1.2em;" })
+    // Its dots at their printed pitch: the run's own setting, set past its end by the space CSS leaves after
+    // its last dot (`TEIRendition.css`).
+    XCTAssertTrue(
+      elements(in: leader).contains { attribute("style", of: $0) == "letter-spacing:1.2em;margin-inline-end:-1.2em;" })
     // Exactly the printed dots, as the TEI has them, and nothing drawn besides.
     XCTAssertEqual(text(of: leader).filter { $0 == "." }.count, 4)
     XCTAssertNil(attribute("data-leader", of: leader))
@@ -95,6 +97,26 @@ final class TEIPrintedLayoutTests: XCTestCase {
     XCTAssertTrue(inked.allSatisfy { text(of: $0).contains("Gilt") && !text(of: $0).contains("White") })
     XCTAssertEqual(TEIView.inks.count, TEIRenderer.inks.count)
     XCTAssertEqual(Set(TEIView.inks.map(\.name)), Set(TEIRenderer.inks))
+  }
+
+  /// A copy's binding lettering is set in the reading in its page's ink (user, 2026-10-30: Hamlet Q1's
+  /// front cover, gilt on a board): the page's <pb> ink on its text, unless black or white, the theme's; an
+  /// owner's mark stays on the scan.
+  func testABoardsLetteringIsSetInItsPagesInk() throws {
+    func page(_ rend: String) -> [DOM.Element] {
+      elements(
+        in: TEIView(
+          teiXml: #"<TEI><text><body><pb n="Front cover" facs="https://web-tests.invalid/iiif/1" rend="\#(rend)"/>"#
+            + #"<lb/><note type="binding" subtype="copy">HAMLET</note><note type="provenance"><lb/>Ex libris</note></body></text></TEI>"#
+        ).build())
+    }
+    let cover = page("color(yellow)")
+    let text = try XCTUnwrap(classed("tei-page-text", in: cover).first { attribute("data-layer", of: $0) == "rendering" })
+    XCTAssertEqual(attribute("data-ink", of: text), "yellow")
+    XCTAssertTrue(self.text(of: text).contains("HAMLET"))
+    XCTAssertFalse(self.text(of: text).contains("Ex libris"))
+    let black = try XCTUnwrap(classed("tei-page-text", in: page("color(black)")).first)
+    XCTAssertEqual(attribute("data-ink", of: black), "")
   }
 
   func testAParagraphRunOnToTheNextPageNamesItsPart() throws {

@@ -1125,6 +1125,8 @@
             .class("tei-page-text")
             .data("layer", "rendering")
             .data("framed", frame != nil)
+            // Its own ink, where it is no theme color (`TEIPage.ink`).
+            .data("ink", page.ink ?? "")
             .addingAttribute(
               "style",
               Self.pageTextStyle(
@@ -1325,7 +1327,8 @@
           borderRadius(0)
           // The print's layer (`currentColor`) is the page's ink as the text
           // is (the theme's text color, `colorBase`, as the frame and the
-          // rule set it: the page's own pair maps to the theme), set here
+          // rule set it: the page's own pair maps to the theme, save an ink
+          // of its own, `TEIPage.ink`), set here
           // and not inherited, so the glossable figure's hover and focus
           // (the words' blue) never recolor the drawing; a frame in another
           // ink colors it as it colors its lines (`inkSelectors`).
@@ -1623,9 +1626,14 @@
         // A page set in its work's frame (`TEIPage.frame`, user,
         // 2026-10-14): 1em the work's body type, the renderer's 16px; the
         // frame its body pages' main text block, its measure and height in
-        // that em, holding the main text, which never squeezes (it grows to
-        // hold a line wider than its measure or a page taller than its
-        // height, and a page that does is regularized in its TEI to fit);
+        // that em, holding the main text, which never squeezes: a line wider
+        // than its measure runs past it (it never wraps), and a page taller
+        // than its height grows it, a page that does regularized in its TEI
+        // to fit. Across, it never grows (user, 2026-10-30): the measure is
+        // what the compositor set against, so a centered line stands on
+        // its middle and a right-set one on its end, never on a frame
+        // widened by a line the unfitted face sets wider than the print's
+        // (Hamlet Q1 p. 13's "Enter Corambis.", an em right of the print's);
         // the marginalia outside it, a side note beside it, a top or bottom
         // note above or below it, each placed from it by its own measured
         // margins; around the frame and its marginalia, the content box,
@@ -1668,7 +1676,6 @@
           flexDirection(.column)
           boxSizing(.contentBox)
           CSS.Property("inline-size", "calc(var(--tei-frame-measure) * 1em)")
-          CSS.Property("min-inline-size", "max-content")
           CSS.Property("min-block-size", "calc(var(--tei-frame-height) * 1em)")
         }
         selector("& .tei-page-text[data-framed='true']:not([data-reflow='true'] *) > .tei-margin") {
@@ -1830,6 +1837,19 @@
         // the palette's color for it (`inks`, user, 2026-10-29: never a
         // scan's faded shade), which follows the theme as the palette does,
         // and no ground is drawn behind it.
+        // A page's own ink (`TEIPage.ink`, user, 2026-10-30): black and
+        // white are the theme's, every other ink the page names on its <pb>
+        // is drawn as encoded—its lines (a cover's gilt lettering, yellow),
+        // its rules and its figures' drawings. Before the inks a run, a
+        // block, a line or a frame names, which the same weight lets win.
+        for (name, ink) in Self.inks where name != "black" && name != "white" {
+          selector(
+            "& .tei-page-text[data-ink='\(name)'] .tei-line", "& .tei-page-text[data-ink='\(name)'] .tei-rule",
+            "& .tei-page-text[data-ink='\(name)'] .tei-figure-drawing > svg"
+          ) {
+            color(ink)
+          }
+        }
         for (name, ink) in Self.inks {
           selector(Self.inkSelectors(name).joined(separator: ", ")) {
             color(ink)
