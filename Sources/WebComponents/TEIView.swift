@@ -172,6 +172,18 @@
       }.joined(separator: ";")
     }
 
+    /// A figure's zone on its scan (`TEIZone`): its left, top, right and
+    /// bottom in the 0–1000 space over the image, to hundredths, one a
+    /// space. The reader's structure overlay lays it under the figure's
+    /// drawing and judges where the drawing lands (artifact-core
+    /// `ArtifactView.figurePairs`, gnorium-python
+    /// `structure_check.figure_pairs`).
+    static func figureZoneData(_ zone: TEIZone) -> String {
+      let box = zone.percent
+      return [box.x, box.y, box.x + box.width, box.y + box.height]
+        .map { number(($0 * 1_000).rounded() / 100) }.joined(separator: " ")
+    }
+
     /// Each word of the page and the scan's word zones it is in, as its
     /// `@facs` names them (`TEIWord.zones`, the tools' links: gnorium-python
     /// `facsimile.with_word_links`): "line:word" (its place, a `.tei-word`'s
@@ -947,6 +959,8 @@
         // Its size and its place across as the scan has them, where its setting gives them (gnorium-python
         // `base_tei._figure`, in the body's em): drawn at them, never at an illustration's bounds.
         let placed = TEIRendition.css(from: line.rend, only: TEIPage.figureSetting)
+        // Its zone on the scan, which the reader's overlay lays it against (`figureZoneData`).
+        let zoneData = zone.map(Self.figureZoneData) ?? ""
         // Its drawing where it has one (its inks traced as vectors, `TEILine
         // .Kind.figure`): drawn by the client in the page's ink, inlined in
         // place of this image (`TEIFigureHydration`), which stands for it
@@ -960,7 +974,8 @@
               }.class("tei-figure-drawing").data("graphic", graphic)
               if !line.text.isEmpty { figcaption { line.text }.class("tei-figure-caption") }
             }.class("tei-line tei-figure").data("figure-type", type.isEmpty ? "figure" : type)
-              .data("placed", placed.isEmpty ? "false" : "true").addingAttribute("style", placed), line.element
+              .data("placed", placed.isEmpty ? "false" : "true").data("zone", zoneData)
+              .addingAttribute("style", placed), line.element
           ).build()
         }
         guard let zone, let region = TEIRenderer.regionURL(ofFacsimile: facsimileURL, zone: zone) else {
@@ -971,7 +986,8 @@
             img().src(region).alt(alt).loading(.lazy).class("tei-figure-image")
             if !line.text.isEmpty { figcaption { line.text }.class("tei-figure-caption") }
           }.class("tei-line tei-figure").data("figure-type", type.isEmpty ? "figure" : type)
-            .data("placed", placed.isEmpty ? "false" : "true").addingAttribute("style", placed), line.element
+            .data("placed", placed.isEmpty ? "false" : "true").data("zone", zoneData)
+            .addingAttribute("style", placed), line.element
         ).build()
       case .table(let source):
         return div {
