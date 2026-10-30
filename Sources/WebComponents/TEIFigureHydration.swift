@@ -37,9 +37,10 @@
 
     private init() {}
 
-    /// Each drawing under `root` not yet inlined: fetched, and its SVG put in
-    /// place of its image once it arrives; left as the image where the
-    /// fetch fails.
+    /// Each drawing under `root` not yet inlined (the server inlines those
+    /// it reads, gnorium-server `CalibrationFigureDrawings`): fetched, and
+    /// its SVG put in place of its image once it arrives; left as the
+    /// image, shown, where the fetch fails.
     public static func hydrate(in root: DOM.Element) {
       for drawing in root.querySelectorAll(".tei-figure-drawing[data-graphic]:not([data-graphic-inlined])") {
         let url = drawing.dataset["graphic"] ?? ""
@@ -47,7 +48,8 @@
         drawing.setAttribute(data("graphic-inlined"), "fetching")
         window.fetch(url, RequestInit(method: "GET")) { response in
           guard response.ok, !stringIsEmpty(response.text) else {
-            drawing.removeAttribute(data("graphic-inlined"))
+            // Its image shown, black, rather than nothing (`TEIView`).
+            drawing.setAttribute(data("graphic-inlined"), "failed")
             return
           }
           drawing.setInnerHTML(response.text)

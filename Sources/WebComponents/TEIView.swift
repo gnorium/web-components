@@ -6,6 +6,7 @@
   import Foundation
   import HTMLBuilder
   import MathMLBuilder
+  import SVGBuilder
   import WebTypes
   import XMLUtilities
 
@@ -55,6 +56,13 @@
     /// (`?image=…&line=…&word=…`, or `&element=…`). Nil: the markup
     /// is read whole.
     let glossURL: String?
+    /// Each figure's drawing (`TEIDrawing`) by the URL its `<graphic>`
+    /// names, where the server has read it (gnorium-server
+    /// `CalibrationFigureDrawings`): drawn into the page itself, so it
+    /// paints in its ink from the first frame (user, 2026-10-31). A figure
+    /// whose drawing is not here is drawn as its image, which the client
+    /// inlines (`TEIFigureHydration`).
+    let drawings: [String: TEIDrawing]
     /// The one page drawn, by its place in the document from 0, where a
     /// reader draws a page at a time and fetches the others as they are
     /// turned to (`TestamentView.pagesURL`); nil draws every page.
@@ -104,8 +112,10 @@
     public init(
       teiXml: String, editable: Bool = false, translation: Translation? = nil,
       highlights: [String: [TEIHighlight]] = [:], labelsPages: Bool = false, glossURL: String? = nil,
-      page: Int? = nil, drawn: [Int] = [], firstIndex: Int = 0, direction: String? = nil
+      page: Int? = nil, drawn: [Int] = [], firstIndex: Int = 0, direction: String? = nil,
+      drawings: [String: TEIDrawing] = [:]
     ) {
+      self.drawings = drawings
       self.direction = direction
       self.page = page
       self.drawn = drawn
@@ -962,16 +972,41 @@
         // Its zone on the scan, which the reader's overlay lays it against (`figureZoneData`).
         let zoneData = zone.map(Self.figureZoneData) ?? ""
         // Its drawing where it has one (its inks traced as vectors, `TEILine
-        // .Kind.figure`): drawn by the client in the page's ink, inlined in
-        // place of this image (`TEIFigureHydration`), which stands for it
-        // until then, and where no script runs. A crop of the facsimile
+        // .Kind.figure`), in the page's ink: drawn here where the server read
+        // it (`drawings`), each path rebuilt from its values (`TEIDrawing`),
+        // never an `<img>` first, which paints `currentColor` black; else
+        // its image, which the client inlines (`TEIFigureHydration`) and
+        // which stands for it where no script runs. A crop of the facsimile
         // where it has none.
         if let graphic {
+          let drawing = drawings[graphic]
+          let drawn = drawing.map { drawing in
+            let layers: [DOM.Node] = drawing.paths.map { layer in
+              let shape = path().d(layer.d)
+              for (name, value) in [("class", layer.ink), ("fill", layer.fill), ("fill-rule", layer.fillRule)]
+              where !value.isEmpty {
+                shape.addingAttribute(name, value)
+              }
+              return shape
+            }
+            let node = svg { layers }
+              .xmlns("http://www.w3.org/2000/svg").addingAttribute("role", "img").addingAttribute("aria-label", alt)
+            for (name, value) in [("width", drawing.width), ("height", drawing.height), ("viewBox", drawing.viewBox)]
+            where !value.isEmpty {
+              node.addingAttribute(name, value)
+            }
+            return node
+          }
+          let holder = span {
+            if let drawn {
+              drawn
+            } else {
+              img().src(graphic).alt(alt).loading(.lazy).class("tei-figure-image tei-figure-drawing-image")
+            }
+          }.class("tei-figure-drawing").data("graphic", graphic)
           return glossable(
             figure {
-              span {
-                img().src(graphic).alt(alt).loading(.lazy).class("tei-figure-image tei-figure-drawing-image")
-              }.class("tei-figure-drawing").data("graphic", graphic)
+              drawing == nil ? holder : holder.data("graphic-inlined", "true")
               if !line.text.isEmpty { figcaption { line.text }.class("tei-figure-caption") }
             }.class("tei-line tei-figure").data("figure-type", type.isEmpty ? "figure" : type)
               .data("placed", placed.isEmpty ? "false" : "true").data("zone", zoneData)
@@ -1332,6 +1367,14 @@
         // layer takes the text's ink (`currentColor`).
         descendant(".tei-figure-drawing") {
           display(.contents)
+        }
+        // Its image, where the server did not draw it in (`drawings`), is
+        // never seen until the client has put the drawing in its place: an
+        // image paints its print black, never the page's ink (user,
+        // 2026-10-31). Where the drawing could not be fetched the image is
+        // shown, black, rather than nothing.
+        selector("& .tei-figure-drawing:not([data-graphic-inlined='failed']) .tei-figure-drawing-image") {
+          visibility(.hidden)
         }
         selector("& .tei-figure-drawing-image", "& .tei-figure-drawing > svg") {
           display(.block)

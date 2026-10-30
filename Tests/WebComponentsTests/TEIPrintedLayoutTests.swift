@@ -50,6 +50,33 @@ final class TEIPrintedLayoutTests: XCTestCase {
       "inline-size:5em;block-size:8.125em;margin-inline-start:22em;margin-block-start:14.875em;")
   }
 
+  /// A figure whose drawing the server read is drawn into the page as SVG, in the page's ink from the
+  /// first frame (user, 2026-10-31: its image painted the gilt black until the client inlined it); one it
+  /// did not read is its image, for the client to inline.
+  func testAFigureWhoseDrawingIsReadIsDrawnInThePage() throws {
+    let url = "/mission-control/calibration-figures/z1.svg?image=x"
+    let figures = ##"<figure facs="#z1"><graphic url="\##(url)" mimeType="image/svg+xml"/></figure>"##
+      + ##"<figure facs="#z2"><graphic url="/mission-control/calibration-figures/z2.svg?image=x" mimeType="image/svg+xml"/></figure>"##
+    let drawing = try XCTUnwrap(
+      TEIDrawing(svg: #"<svg width="2" height="3" viewBox="0 0 2 3"><path class="ink-red" fill="currentColor" d="M0,0L1,1Z"/></svg>"#))
+    let nodes = elements(
+      in: TEIView(
+        teiXml: #"<TEI><text><body><pb n="1" facs="https://web-tests.invalid/iiif/1"/>\#(figures)</body></text></TEI>"#,
+        drawings: [url: drawing]
+      ).build())
+    let holders = classed("tei-figure-drawing", in: nodes)
+    XCTAssertEqual(holders.count, 2)
+    XCTAssertEqual(attribute("data-graphic-inlined", of: holders[0]), "true")
+    let svg = try XCTUnwrap(elements(in: holders[0]).first { $0.tag == "svg" })
+    XCTAssertEqual(attribute("viewBox", of: svg), "0 0 2 3")
+    let path = try XCTUnwrap(elements(in: svg).first { $0.tag == "path" })
+    XCTAssertEqual(attribute("class", of: path), "ink-red")
+    XCTAssertEqual(attribute("d", of: path), "M0,0L1,1Z")
+    XCTAssertTrue(classed("tei-figure-drawing-image", in: elements(in: holders[0])).isEmpty)
+    XCTAssertNil(attribute("data-graphic-inlined", of: holders[1]))
+    XCTAssertEqual(classed("tei-figure-drawing-image", in: elements(in: holders[1])).count, 1)
+  }
+
   /// Hamlet Q1's front cover as filed (dev, 2026-10-30): no main text, no body type, no work frame. The page
   /// is framed by its leaf (`TEIPage.leafFrame`), its gilt lettering and its crest drawn at their zones' places
   /// and sizes; unframed, its lettering ran at the top left and its crest at its drawing's pixels.
