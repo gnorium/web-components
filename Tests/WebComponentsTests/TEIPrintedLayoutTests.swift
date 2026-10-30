@@ -50,6 +50,30 @@ final class TEIPrintedLayoutTests: XCTestCase {
       "inline-size:5em;block-size:8.125em;margin-inline-start:22em;margin-block-start:14.875em;")
   }
 
+  /// Hamlet Q1's front cover as filed (dev, 2026-10-30): no main text, no body type, no work frame. The page
+  /// is framed by its leaf (`TEIPage.leafFrame`), its gilt lettering and its crest drawn at their zones' places
+  /// and sizes; unframed, its lettering ran at the top left and its crest at its drawing's pixels.
+  func testACoverWithNoTypeOfItsOwnIsDrawnOnItsLeaf() throws {
+    let image = "https://cdm16003.contentdm.oclc.org/iiif/2/p15150coll3:1360"
+    let document = #"<TEI xmlns="http://www.tei-c.org/ns/1.0"><facsimile><surface n="Front cover" ulx="0" uly="0" lrx="1000" lry="1000">"#
+      + #"<graphic url="\#(image)/full/max/0/default.jpg" width="6120px" height="6630px"/>"#
+      + #"<zone xml:id="textblock" type="textblock" points="422.53,239.73 623.51,238 625.51,435.87 424.53,437.6"/>"#
+      + #"<zone type="leaf" points="144.93,54 891.01,54 891.01,946 144.93,946"/>"#
+      + #"<zone xml:id="z-L2" ulx="422" uly="238" lrx="624" lry="259"/><zone xml:id="z-fig-1" type="figure" ulx="515" uly="348" lrx="548" lry="395"/>"#
+      + ##"</surface></facsimile><text><body><pb n="Front cover" facs="\##(image)" rend="color(yellow)"/><lb facs="#z-L2"/><note type="binding" subtype="copy">HAMLET</note>"##
+      + ##"<figure facs="#z-fig-1"><graphic url="/calibration-figures/z-fig-1.svg?image=x" mimeType="image/svg+xml"/></figure></body></text></TEI>"##
+    let nodes = elements(in: TEIView(teiXml: document).build())
+    let page = try XCTUnwrap(classed("tei-page-text", in: nodes).first)
+    XCTAssertEqual(attribute("data-framed", of: page), "true")
+    XCTAssertTrue((attribute("style", of: page) ?? "").contains("--tei-frame-measure: 38;"))
+    let lettering = try XCTUnwrap(
+      classed("tei-block", in: nodes).first { text(of: $0).contains("HAMLET") }.flatMap { attribute("style", of: $0) })
+    XCTAssertTrue(lettering.contains("text-align:center;font-size:"), lettering)
+    XCTAssertTrue(lettering.contains("margin-inline-start:"), lettering)
+    let figure = try XCTUnwrap(classed("tei-figure", in: nodes).first)
+    XCTAssertEqual(attribute("data-placed", of: figure), "true")
+  }
+
   func testContentsTitleDotsAreALeader() throws {
     let nodes = view(
       #"<table type="contents"><row><cell><p>Preface <pc style="letter-spacing:1.2em">.\#u{2002}.\#u{2002}.\#u{2002}.</pc><lb/></p></cell><cell><p>vii<lb/></p></cell></row></table>"#)
@@ -143,9 +167,12 @@ final class TEIPrintedLayoutTests: XCTestCase {
     let styles = lines.map { attribute("style", of: $0) ?? "" }
       + classed("tei-block", in: elements(in: page)).map { attribute("style", of: $0) ?? "" }
     XCTAssertEqual(lines.count, 2)
-    // Each stands at its own box and place, centered in it, wherever the style lands (line or its block).
-    XCTAssertTrue(styles.contains { $0.contains("margin-inline-start:15.75em") && $0.contains("inline-size:12.5em") })
-    XCTAssertTrue(styles.contains { $0.contains("margin-inline-start:18.875em") && $0.contains("inline-size:6.25em") })
+    // Each stands at its own box and place, centered in it, wherever the style lands (line or its block); each
+    // a line of capitals at its ink's size, 2.2759 em (its 1.625 em box its cap height), its box and place in
+    // that em: HAMLET 12.5 em wide 15.75 em in, LONDON 1603 6.25 em wide 18.875 em in.
+    XCTAssertTrue(styles.contains { $0.contains("margin-inline-start:6.9203em") && $0.contains("inline-size:5.4923em") })
+    XCTAssertTrue(styles.contains { $0.contains("margin-inline-start:8.2934em") && $0.contains("inline-size:2.7462em") })
+    XCTAssertTrue(styles.filter { $0.contains("margin-inline-start") }.allSatisfy { $0.contains("font-size:2.2759em") })
     XCTAssertTrue(styles.filter { $0.contains("margin-inline-start") }.allSatisfy { $0.contains("text-align:center") })
   }
 
