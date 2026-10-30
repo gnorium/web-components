@@ -32,7 +32,7 @@ public struct IntegralIconView: HTMLContent {
   public func build() -> DOM.Node {
     // The path's own extent less its regular stroke (930.91 tall); the stroke its share of the long edge
     // that extent and the stroke make (93.09 regular: 1024 tall).
-    let stroke = weight.share * 930.91 / (1 - weight.share)
+    let stroke = weight == .regular ? 93.09 : weight.share * 930.91 / (1 - weight.share)
     let grown = (stroke - 93.09) / 2
     return svg {
       path().d("M418.91 139.64A93.09 93.09 0 0 0 232.73 139.64L232.73 884.36A93.09 93.09 0 0 1 46.55 884.36")
