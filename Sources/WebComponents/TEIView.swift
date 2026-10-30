@@ -302,7 +302,7 @@
       var out: [DiffEngine.RenderedLine] = []
       for line in lines {
         switch line.kind {
-        case .figure(_, let zone, _, _):
+        case .figure(_, let zone, _):
           out.append(
             .init(
               tokens: [.init(kind: .figure, text: line.text, style: zone.map { ["region \($0.corners)"] } ?? [])],
@@ -942,7 +942,7 @@
         return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class(
           "tei-line tei-line-forme tei-line-forme-\(role.rawValue)"
         ).data("rend", line.rend).addingAttribute("style", inStyledBlock ? "" : TEIRendition.css(from: line.rend)).build()
-      case .figure(let type, let zone, let drawing, let cutout):
+      case .figure(let type, let zone, let graphic):
         let alt = line.text.isEmpty ? "Figure on \(label)" : line.text
         // Its size and its place across as the scan has them, where its setting gives them (gnorium-python
         // `base_tei._figure`, in the body's em): drawn at them, never at an illustration's bounds.
@@ -950,27 +950,14 @@
         // Its drawing where it has one (its inks traced as vectors, `TEILine
         // .Kind.figure`): drawn by the client in the page's ink, inlined in
         // place of this image (`TEIFigureHydration`), which stands for it
-        // until then, and where no script runs. Its cutout where it is a
-        // relief (user, 2026-10-30: a tooled or gilt stamp on a binding):
-        // the scan's own pixels of the decoration, its ground transparent,
-        // an image at its zone, never recolored, the theme's background
-        // showing through its ground. A crop of the facsimile where it has
-        // neither.
-        if let drawing {
+        // until then, and where no script runs. A crop of the facsimile
+        // where it has none.
+        if let graphic {
           return glossable(
             figure {
               span {
-                img().src(drawing).alt(alt).loading(.lazy).class("tei-figure-image tei-figure-drawing-image")
-              }.class("tei-figure-drawing").data("graphic", drawing)
-              if !line.text.isEmpty { figcaption { line.text }.class("tei-figure-caption") }
-            }.class("tei-line tei-figure").data("figure-type", type.isEmpty ? "figure" : type)
-              .data("placed", placed.isEmpty ? "false" : "true").addingAttribute("style", placed), line.element
-          ).build()
-        }
-        if let cutout {
-          return glossable(
-            figure {
-              img().src(cutout).alt(alt).loading(.lazy).class("tei-figure-image tei-figure-cutout")
+                img().src(graphic).alt(alt).loading(.lazy).class("tei-figure-image tei-figure-drawing-image")
+              }.class("tei-figure-drawing").data("graphic", graphic)
               if !line.text.isEmpty { figcaption { line.text }.class("tei-figure-caption") }
             }.class("tei-line tei-figure").data("figure-type", type.isEmpty ? "figure" : type)
               .data("placed", placed.isEmpty ? "false" : "true").addingAttribute("style", placed), line.element
@@ -1347,22 +1334,6 @@
           // ink colors it as it colors its lines (`inkSelectors`).
           color(colorBase)
         }
-        // A relief's cutout (user, 2026-10-30) is the scan's own image of a
-        // tooled or gilt decoration with its ground made transparent: no
-        // border and no rounding around it (its outline is the object's, and
-        // the theme's background shows between its parts), never recolored
-        // as a drawing's layers are, never stretched to its zone
-        // (`object-fit: contain`): a photograph keeps its proportions.
-        descendant(".tei-figure-cutout") {
-          display(.block)
-          maxWidth(perc(100))
-          maxHeight(px(320))
-          width(.auto)
-          height(.auto)
-          border(.none)
-          borderRadius(0)
-          objectFit(.contain)
-        }
         // A figure the page places (`data-placed`: its size and its place as
         // the scan has them) is the print's, not an illustration inside a
         // markup: its box is its setting's, its image or drawing fills it,
@@ -1383,13 +1354,6 @@
           objectFit("fill")
           border(.none)
           borderRadius(0)
-        }
-        selector("& .tei-figure[data-placed='true'] .tei-figure-cutout") {
-          width(perc(100))
-          height(perc(100))
-          maxWidth(perc(100))
-          maxHeight(perc(100))
-          objectFit(.contain)
         }
         // A decorated initial is one letter of the text; shown at the width
         // of a plate it stops being an initial and becomes a poster.

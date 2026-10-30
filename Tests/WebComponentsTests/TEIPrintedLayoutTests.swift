@@ -50,28 +50,6 @@ final class TEIPrintedLayoutTests: XCTestCase {
       "inline-size:5em;block-size:8.125em;margin-inline-start:22em;margin-block-start:14.875em;")
   }
 
-  /// A relief's cutout (user, 2026-10-30: a board's tooled gilt crest) is an image of the scan's own pixels
-  /// at the figure's zone: an `<img>` of the cutout's route, placed as a drawing is, with no drawing holder
-  /// to inline (nothing for `TEIFigureHydration` to fetch) and no recoloring.
-  func testAReliefsCutoutIsAnImageAtItsPlace() throws {
-    let a = "https://web-tests.invalid/iiif/1/full/max/0/default.jpg"
-    let document = #"<TEI xmlns="http://www.tei-c.org/ns/1.0"><teiHeader><encodingDesc><tagsDecl>"#
-      + #"<rendition xml:id="text-block" scheme="css" selector="text">font-size:20px;inline-size:44em;block-size:55.9em;margin:3em</rendition>"#
-      + "</tagsDecl></encodingDesc></teiHeader>"
-      + #"<facsimile><surface n="1" ulx="0" uly="0" lrx="1000" lry="1000"><graphic url="\#(a)" width="1000px" height="1300px"/>"#
-      + #"<zone xml:id="textblock" type="textblock" points="420,240 620,240 620,440 420,440"/><zone type="leaf" points="100,80 900,80 900,920 100,920"/>"#
-      + #"<zone xml:id="z1" ulx="500" uly="300" lrx="580" lry="400"/></surface></facsimile>"#
-      + ##"<text><body><pb n="1" facs="\##(a)"/><figure facs="#z1"><graphic url="/mission-control/calibration-figures/z1.png?image=x" mimeType="image/png"/><figDesc>Crest</figDesc></figure></body></text></TEI>"##
-    let nodes = elements(in: TEIView(teiXml: document).build())
-    let figure = try XCTUnwrap(classed("tei-figure", in: nodes).first)
-    XCTAssertEqual(attribute("data-placed", of: figure), "true")
-    let image = try XCTUnwrap(classed("tei-figure-cutout", in: nodes).first)
-    XCTAssertEqual(attribute("src", of: image), "/mission-control/calibration-figures/z1.png?image=x")
-    XCTAssertEqual(attribute("alt", of: image), "Crest")
-    XCTAssertTrue(classed("tei-figure-drawing", in: nodes).isEmpty)
-    XCTAssertFalse(classed("tei-figure-caption", in: nodes).isEmpty)
-  }
-
   func testContentsTitleDotsAreALeader() throws {
     let nodes = view(
       #"<table type="contents"><row><cell><p>Preface <pc style="letter-spacing:1.2em">.\#u{2002}.\#u{2002}.\#u{2002}.</pc><lb/></p></cell><cell><p>vii<lb/></p></cell></row></table>"#)
