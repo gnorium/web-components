@@ -1127,8 +1127,6 @@
             .data("framed", frame != nil)
             // Its own ink, where it is no theme color (`TEIPage.ink`).
             .data("ink", page.ink ?? "")
-            // Its own ground, where the reader draws one (`TEIPage.ground`).
-            .data("ground", page.ground ?? "")
             .addingAttribute(
               "style",
               Self.pageTextStyle(
@@ -1833,37 +1831,14 @@
         // ISCC–NBS basic color names (`TEIRenderer.inks`), on a run, a block
         // or a frame, and a figure's layer by its class (`ink-NAME`). The
         // TEI is faithful to the print (user, 2026-10-25): the page's own
-        // pair—its ground and its default ink, on its <pb>—is mapped to the
-        // theme (the reader's page and text colors, whatever the pair
-        // encoded); every other ink is the class the printer chose, drawn in
-        // the palette's color for it (`inks`, user, 2026-10-29: never a
-        // scan's faded shade), which follows the theme as the palette does,
-        // and no ground is drawn behind it.
-        // A page's own ground (`TEIPage.ground`, user, 2026-10-30): the
-        // page area (its frame and the leaf's margins around it) drawn in
-        // it. Black is the theme's black (`extreme`: black in light, white
-        // in dark), inverted as black ink is—Hamlet Q1's dark leather
-        // cover—its text in the inverse (`extremeInverted`) where the page
-        // names no ink, and every ink on it drawn as the other polarity
-        // draws it (`invertedInks`: the gilt's yellow reads on black in
-        // light and on white in dark at the palette's own contrast). Another
-        // class is its palette fill, its text the color a solid fill's label
-        // takes (`colorOnSolid`). White is the theme's background, never
-        // drawn. Before the page's own ink, which the same weight lets win.
-        selector("& .tei-page-text[data-ground='black']") {
-          backgroundColor(extreme)
-        }
-        selector(Self.groundedSelectors("black").joined(separator: ", ")) {
-          color(extremeInverted)
-        }
-        for (name, ground) in Self.grounds {
-          selector("& .tei-page-text[data-ground='\(name)']") {
-            backgroundColor(ground)
-          }
-          selector(Self.groundedSelectors(name).joined(separator: ", ")) {
-            color(colorOnSolid)
-          }
-        }
+        // ink, on its <pb>, is mapped to the theme, and its ground is never
+        // the edition's (user, 2026-10-30: every page sits on the theme's
+        // background, a near-black board included—black and white follow
+        // the theme as ground and as ink alike); every other ink is the
+        // class the printer chose, drawn in the palette's color for it
+        // (`inks`, user, 2026-10-29: never a scan's faded shade), which
+        // follows the theme as the palette does, and no ground is drawn
+        // behind it.
         // A page's own ink (`TEIPage.ink`, user, 2026-10-30): black and
         // white are the theme's, every other ink the page names on its <pb>
         // is drawn as encoded—its lines (a cover's gilt lettering, yellow),
@@ -1883,29 +1858,6 @@
           }
           selector("& .tei-figure-drawing path.ink-\(name)") {
             CSS.Property("fill", "currentcolor")
-            color(ink)
-          }
-        }
-        // On a black ground (the theme's black), the page's own ink and every
-        // ink a run, a block, a line, a frame or a figure's layer names, as
-        // the other polarity draws it (`invertedInks`).
-        for (name, ink) in Self.invertedInks {
-          if name != "black" && name != "white" {
-            selector(
-              "& .tei-page-text[data-ground='black'][data-ink='\(name)'] .tei-line",
-              "& .tei-page-text[data-ground='black'][data-ink='\(name)'] .tei-rule",
-              "& .tei-page-text[data-ground='black'][data-ink='\(name)'] .tei-figure-drawing > svg"
-            ) {
-              color(ink)
-            }
-          }
-          selector(
-            Self.inkSelectors(name).map { "& .tei-page-text[data-ground='black'] " + $0.dropFirst(2) }
-              .joined(separator: ", ")
-          ) {
-            color(ink)
-          }
-          selector("& .tei-page-text[data-ground='black'] .tei-figure-drawing path.ink-\(name)") {
             color(ink)
           }
         }
@@ -2153,36 +2105,6 @@
       ("blue", colorBlue), ("purple", colorViolet), ("white", colorInvertedFixed), ("gray", colorGray),
       ("black", colorBase),
     ]
-
-    /// The inks on the inverted ground (a page's black ground, the theme's
-    /// black: `TEIPage.ground`), each the palette's color for its hue as
-    /// the other polarity draws it (`colorYellowInverted`, user,
-    /// 2026-10-30), at the palette's own contrast on that ground; white and
-    /// black the ground's inverse and the ground's own.
-    static let invertedInks: [(name: String, ink: CSS.Color)] = [
-      ("pink", colorPinkInverted), ("red", colorRedInverted), ("orange", colorOrangeInverted),
-      ("brown", colorOrangeInverted), ("yellow", colorYellowInverted), ("olive", colorYellowInverted),
-      ("yellow-green", colorLimeInverted), ("green", colorGreenInverted), ("blue", colorBlueInverted),
-      ("purple", colorVioletInverted), ("white", extremeInverted), ("gray", colorGrayInverted),
-      ("black", extreme),
-    ]
-
-    /// The grounds a page draws in its palette fill (`TEIPage.ground`): every
-    /// class but black, the theme's, and white, its background.
-    static let grounds: [(name: String, ground: CSS.Color)] = [
-      ("pink", backgroundColorPink), ("red", backgroundColorRed), ("orange", backgroundColorOrange),
-      ("brown", backgroundColorOrange), ("yellow", backgroundColorYellow), ("olive", backgroundColorYellow),
-      ("yellow-green", backgroundColorLime), ("green", backgroundColorGreen), ("blue", backgroundColorBlue),
-      ("purple", backgroundColorViolet), ("gray", backgroundColorGray),
-    ]
-
-    /// What a page on `name`'s ground draws in the ground's text color: its
-    /// lines, rules, frames, tables and figures' drawings.
-    static func groundedSelectors(_ name: String) -> [String] {
-      [".tei-line", ".tei-rule", ".tei-frame", ".tei-table", ".tei-figure-drawing > svg"].map {
-        "& .tei-page-text[data-ground='\(name)'] \($0)"
-      }
-    }
 
     /// The rules that draw a run, a block's lines, a frame and a section's line in `name`'s ink.
     static func inkSelectors(_ name: String) -> [String] {

@@ -120,9 +120,9 @@ final class TEIPrintedLayoutTests: XCTestCase {
   }
 
   /// A page with no main text sets its lines by their zones as its figures (user, 2026-10-30: Hamlet Q1's
-  /// front cover): each line drawn at its box and its place, its text centered in it; its black ground is
-  /// named for the reader to draw as the theme's black, and the gilt drawn on it in the inverted palette.
-  func testABoardsLinesStandAtTheirPlacesOnItsGround() throws {
+  /// front cover): each line drawn at its box and its place, its text centered in it, in the page's ink on
+  /// the theme's background; its black board is never drawn (user, 2026-10-30: no ground is).
+  func testABoardsLinesStandAtTheirPlaces() throws {
     let a = "https://web-tests.invalid/iiif/1/full/max/0/default.jpg"
     let document = #"<TEI xmlns="http://www.tei-c.org/ns/1.0"><teiHeader><encodingDesc><tagsDecl>"#
       + #"<rendition xml:id="text-block" scheme="css" selector="text">font-size:20px;inline-size:44em;block-size:55.9em;margin:3em</rendition>"#
@@ -132,13 +132,13 @@ final class TEIPrintedLayoutTests: XCTestCase {
       + #"<zone type="leaf" points="100,80 900,80 900,920 100,920"/>"#
       + #"<zone xml:id="z-L1" ulx="400" uly="200" lrx="600" lry="220"/>"#
       + #"<zone xml:id="z-L2" ulx="450" uly="500" lrx="550" lry="520"/></surface></facsimile>"#
-      + ##"<text><body><pb n="Front cover" facs="\##(a)" rendition="#ground-black" rend="color(yellow)"/>"##
+      + ##"<text><body><pb n="Front cover" facs="\##(a)" rend="color(yellow)"/>"##
       + ##"<lb facs="#z-L1"/><note type="binding" subtype="copy">HAMLET</note>"##
       + ##"<lb facs="#z-L2"/><note type="binding" subtype="copy">LONDON 1603</note></body></text></TEI>"##
     let nodes = elements(in: TEIView(teiXml: document).build())
     let page = try XCTUnwrap(classed("tei-page-text", in: nodes).first { attribute("data-layer", of: $0) == "rendering" })
-    XCTAssertEqual(attribute("data-ground", of: page), "black")
     XCTAssertEqual(attribute("data-ink", of: page), "yellow")
+    XCTAssertNil(attribute("data-ground", of: page))
     let lines = classed("tei-line", in: elements(in: page)).filter { ["HAMLET", "LONDON 1603"].contains(text(of: $0)) }
     let styles = lines.map { attribute("style", of: $0) ?? "" }
       + classed("tei-block", in: elements(in: page)).map { attribute("style", of: $0) ?? "" }
@@ -147,8 +147,6 @@ final class TEIPrintedLayoutTests: XCTestCase {
     XCTAssertTrue(styles.contains { $0.contains("margin-inline-start:15.75em") && $0.contains("inline-size:12.5em") })
     XCTAssertTrue(styles.contains { $0.contains("margin-inline-start:18.875em") && $0.contains("inline-size:6.25em") })
     XCTAssertTrue(styles.filter { $0.contains("margin-inline-start") }.allSatisfy { $0.contains("text-align:center") })
-    XCTAssertEqual(Set(TEIView.invertedInks.map(\.name)), Set(TEIRenderer.inks))
-    XCTAssertTrue(TEIView.grounds.allSatisfy { $0.name != "black" && $0.name != "white" })
   }
 
   func testAParagraphRunOnToTheNextPageNamesItsPart() throws {
