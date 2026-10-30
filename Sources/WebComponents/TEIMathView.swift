@@ -12,9 +12,9 @@
   /// (``DiffView``, the formula whole) draw it alike.
   ///
   /// A mark that could not be read (TEI's `<gap>` in MathML's `<semantics>`,
-  /// gnorium-python `bibliographic_explication/formulas.py`) is drawn as a gap in the
-  /// text is, its reason in brackets, "[illegible]": a statement that there
-  /// is no symbol, not one.
+  /// gnorium-python `bibliographic_explication/formulas.py`) draws nothing, as
+  /// a gap in the text draws nothing: its reason is a statement about the
+  /// page, kept in the markup, never a symbol on it (user, 2026-10-30).
   public struct TEIMathView: HTMLContent {
     /// How a token element is drawn: attributes of its own, and its content.
     public struct Token {
@@ -56,9 +56,8 @@
             token.content
           }
         case .gap(let reason):
-          return MathML.MathMLElement("mtext", attributes: [("class", "tei-math-gap")]) {
-            "[\(reason.isEmpty ? "gap" : reason)]"
-          }
+          // Drawn as nothing: its reason is a statement about the page.
+          return MathML.MathMLElement("mtext", attributes: [("class", "tei-math-gap"), ("data-reason", reason)]) {}
         }
       }
       return span {
@@ -75,14 +74,6 @@
           display(.block)
           maxWidth(perc(100))
           overflowX(.auto)
-        }
-        // Not a symbol on the page: a statement that there is none, as a gap
-        // in the text says it.
-        descendant(".tei-math-gap") {
-          fontFamily(typographyFontSans)
-          fontSize(fontSizeMedium16)
-          fontStyle(.italic)
-          color(colorSubtle)
         }
       }
       .build()

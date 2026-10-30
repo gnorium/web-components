@@ -245,8 +245,8 @@ final class TEIPrintedLayoutTests: XCTestCase {
     XCTAssertEqual(margins.map { text(of: $0).trimmingCharacters(in: .whitespacesAndNewlines) }, ["Ref PE 1580", "Gloss", "Stamp"])
   }
 
-  /// A blank leaf in its work's frame is the empty page it is (user,
-  /// 2026-10-29): its `<gap reason="blank"/>` stays in its TEI, and the
+  /// A blank leaf is the empty page it is (user, 2026-10-29, repeated
+  /// 2026-10-30): its `<gap reason="blank"/>` stays in its TEI, and the
   /// trace draws no mark, at no place, on a page of its measured size.
   func testABlankLeafIsAnEmptyPage() throws {
     let document = """
@@ -260,9 +260,15 @@ final class TEIPrintedLayoutTests: XCTestCase {
     XCTAssertEqual(attribute("data-framed", of: layer), "true")
     XCTAssertEqual(text(of: layer).trimmingCharacters(in: .whitespacesAndNewlines), "")
     XCTAssertTrue(classed("tei-line-gap", in: nodes).isEmpty)
-    // A page with no frame still says what it is.
-    let unframed = view(#"<gap reason="blank"/>"#)
-    XCTAssertEqual(classed("tei-line-gap", in: unframed).map { text(of: $0) }, ["[blank]"])
+    // Nor on a page with no frame, nor for a gap of any other reason (user, repeated 2026-10-30): the
+    // reason is kept, never drawn.
+    for reason in ["blank", "illegible", ""] {
+      let unframed = view(#"<gap reason="\#(reason)"/>"#)
+      let gaps = classed("tei-line-gap", in: unframed)
+      XCTAssertEqual(gaps.map { text(of: $0) }, [""])
+      XCTAssertEqual(gaps.map { attribute("data-reason", of: $0) }, [reason])
+      XCTAssertEqual(gaps.map { attribute("aria-hidden", of: $0) }, ["true"])
+    }
   }
 
   /// Lines the print sets on one row (gnorium-python `base_tei._rows`) are one row, each at its own place

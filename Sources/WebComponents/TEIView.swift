@@ -911,10 +911,10 @@
       case .mark:
         return glossable(span { line.text }.class("tei-line tei-line-mark"), line.element).build()
       case .gap(let reason):
-        return glossable(
-          span { "[\(reason.isEmpty ? "gap" : reason)]" }.class("tei-line tei-line-gap").data("rend", line.rend)
-            .addingAttribute("style", TEIRendition.css(from: line.rend)), line.element
-        ).build()
+        // A statement about the page, never a mark on it (user, repeated
+        // 2026-10-30): the trace shows only what the page bears, so a gap of
+        // any reason draws nothing. Its reason stays in the TEI and here.
+        return span {}.class("tei-line tei-line-gap").ariaHidden(true).data("reason", reason).build()
       case .documentBoundary:
         return hr().class("tei-document-boundary").build()
       case .rule:
@@ -2012,12 +2012,10 @@
         selector("& .tei-run[data-rend~='del']") {
           textDecoration(.lineThrough)
         }
-        // Not a word on the page: a statement that there is none.
+        // Not a word on the page: a statement that there is none, drawn as
+        // nothing.
         descendant(".tei-line-gap") {
-          fontFamily(typographyFontSans)
-          fontSize(fontSizeMedium16)
-          fontStyle(.italic)
-          color(colorSubtle)
+          display(.none)
         }
         // A side of the leaf, inside an image that carries two of them.
         descendant(".tei-line-mark") {
