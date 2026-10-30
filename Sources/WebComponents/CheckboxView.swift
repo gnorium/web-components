@@ -35,6 +35,9 @@ public struct CheckboxView: HTMLContent {
   let `class`: String
   let labelFontWeight: CSS.FontWeight
   let labelFontSize: CSS.Length
+  /// The box's accessible name where it differs from its label's words: a
+  /// list's "select all" box, whose label is hidden.
+  let ariaLabel: String?
 
   public enum ValidationStatus: String, Sendable {
     case `default`
@@ -57,6 +60,7 @@ public struct CheckboxView: HTMLContent {
     class: String = "",
     labelFontWeight: CSS.FontWeight = fontWeightNormal,
     labelFontSize: CSS.Length = fontSizeMedium16,
+    ariaLabel: String? = nil,
     @HTMLBuilder label: () -> [DOM.Node],
     @HTMLBuilder description: () -> [DOM.Node] = { [] },
     @HTMLBuilder afterLabel: () -> [DOM.Node] = { [] }
@@ -76,6 +80,7 @@ public struct CheckboxView: HTMLContent {
     self.`class` = `class`
     self.labelFontWeight = labelFontWeight
     self.labelFontSize = labelFontSize
+    self.ariaLabel = ariaLabel
     self.labelContent = label()
     self.descriptionContent = description()
     self.afterLabelContent = afterLabel()
@@ -140,6 +145,9 @@ public struct CheckboxView: HTMLContent {
       .class("checkbox-input")
     if !stringIsEmpty(name) {
       checkboxInput = checkboxInput.name(name)
+    }
+    if let ariaLabel {
+      checkboxInput = checkboxInput.ariaLabel(ariaLabel)
     }
     for (name, message) in messages.dataAttributes {
       checkboxInput = checkboxInput.data(name, message)
