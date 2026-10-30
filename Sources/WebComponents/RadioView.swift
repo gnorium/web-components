@@ -11,6 +11,9 @@ public struct RadioView: HTMLContent {
   let id: String
   let name: String
   let value: String
+  /// The form it belongs to where it stands outside it (`form`); nil, its
+  /// enclosing one.
+  let form: String?
   let checked: Bool
   let inline: Bool
   let disabled: Bool
@@ -30,6 +33,7 @@ public struct RadioView: HTMLContent {
     id: String,
     name: String,
     value: String,
+    form: String? = nil,
     checked: Bool = false,
     inline: Bool = false,
     disabled: Bool = false,
@@ -43,6 +47,7 @@ public struct RadioView: HTMLContent {
     self.id = id
     self.name = name
     self.value = value
+    self.form = form
     self.hideLabel = hideLabel
     self.checked = checked
     self.inline = inline
@@ -69,11 +74,12 @@ public struct RadioView: HTMLContent {
       if hasCustomInput {
         customInputContent
       } else {
-        input()
+        let radio = input()
           .type(.radio)
           .id(id)
           .name(name)
           .value(value)
+        (form.map { radio.form($0) } ?? radio)
           .checked(checked)
           .disabled(disabled)
           .ariaDescribedby(descriptionID ?? "")
