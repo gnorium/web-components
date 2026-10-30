@@ -263,6 +263,13 @@ public enum OutlineMoves {
       /// "Diff: 2.1 → 1.1", shown once the item's number has changed, for
       /// under its title.
       public let diff: DOM.Node?
+
+      /// A tree to read may hand an item its own Diff line: a revision's
+      /// page, which draws a tree as it would rearrange it.
+      public init(handle: DOM.Node? = nil, diff: DOM.Node? = nil) {
+        self.handle = handle
+        self.diff = diff
+      }
     }
 
     /// An item's place in the arrangement moves are counted from.
