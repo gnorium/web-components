@@ -148,6 +148,7 @@ final class LucideIconTightnessTests: XCTestCase {
       ("Ellipsis", EllipsisIconView(size: px(22)).build()),
       ("FaceSlightlySmilingPlus", FaceSlightlySmilingPlusIconView(size: px(22)).build()),
       ("Feather", FeatherIconView(size: px(22)).build()),
+      ("Lightbulb", LightbulbIconView(size: px(22)).build()),
       ("Flag", FlagIconView(size: px(22)).build()),
       ("Gavel", GavelIconView(size: px(22)).build()),
       ("Globe", GlobeIconView(size: px(22)).build()),
