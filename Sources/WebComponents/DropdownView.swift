@@ -300,6 +300,18 @@ public struct DropdownView: HTMLContent {
             options.map { option in
               let isSelected = isChosen(option.value)
               return div {
+                // Several may be chosen: each option's checkbox says whether
+                // it is, as a multiselect menu's item does (`MenuItemView`).
+                // The hover fill is the selected fill, so without it a
+                // toggle under the pointer showed no change at all.
+                if multiple {
+                  span {
+                    span { CheckIconView(size: size16) }
+                      .class("dropdown-option-checkmark")
+                      .ariaHidden(true)
+                  }
+                  .class("dropdown-option-checkbox")
+                }
                 span {
                   if let context = option.context {
                     BreadcrumbLabelView(context: context, text: option.display)
@@ -576,17 +588,46 @@ public struct DropdownView: HTMLContent {
       }
       descendant(".dropdown-option[data-hidden='true']") { display(.none) }
       descendant(".dropdown-option[data-excluded='true']") { display(.none) }
-      descendant(".dropdown-option[data-selected='true']") {
+      // One chosen: its row filled. Several: each row's checkbox says it.
+      selector("&[data-multiple='false'] .dropdown-option[data-selected='true']") {
         backgroundColor(backgroundColorBlue).important()
         color(colorOnSolid).important()
       }
       selector(
-        ".dropdown-option[data-selected='true'] .dropdown-option-display-text",
-        ".dropdown-option[data-selected='true'] .dropdown-option-alt-text",
-        ".dropdown-option[data-selected='true'] .breadcrumb-label-context",
-        ".dropdown-option[data-selected='true'] .breadcrumb-separator-view"
+        "&[data-multiple='false'] .dropdown-option[data-selected='true'] .dropdown-option-display-text",
+        "&[data-multiple='false'] .dropdown-option[data-selected='true'] .dropdown-option-alt-text",
+        "&[data-multiple='false'] .dropdown-option[data-selected='true'] .breadcrumb-label-context",
+        "&[data-multiple='false'] .dropdown-option[data-selected='true'] .breadcrumb-separator-view"
       ) {
         color(colorOnSolid).important()
+      }
+      // A checkbox's box, as CheckboxView's and a multiselect menu item's.
+      descendant(".dropdown-option-checkbox") {
+        display(.inlineFlex)
+        alignItems(.center)
+        justifyContent(.center)
+        width(minSizeInputBinary)
+        height(minSizeInputBinary)
+        flexShrink(0)
+        border(borderWidthBase, .solid, borderColorInputBinary)
+        borderRadius(borderRadiusBase)
+        backgroundColor(backgroundColorBase)
+        boxSizing(.borderBox)
+      }
+      descendant(".dropdown-option[data-selected='true'] .dropdown-option-checkbox") {
+        backgroundColor(backgroundColorInputBinaryChecked)
+      }
+      descendant(".dropdown-option-checkmark") {
+        display(.none)
+        width(size16)
+        height(size16)
+        color(colorOnSolid)
+      }
+      descendant(".dropdown-option[data-selected='true'] .dropdown-option-checkmark") {
+        display(.flex)
+      }
+      descendant(".dropdown-option-checkmark svg") {
+        height(perc(100))
       }
       descendant(".dropdown-option[data-highlighted='true']") {
         backgroundColor(backgroundColorBlue).important()
@@ -864,6 +905,13 @@ public struct DropdownView: HTMLContent {
         } else if stringEquals(event.key, "Enter") {
           event.preventDefault()
           self.selectHighlighted()
+        } else if stringEquals(event.key, "Escape") {
+          // Closed, as a native select's list is, the focus back on the
+          // field; a dialog it stands in stays open.
+          event.preventDefault()
+          event.stopPropagation()
+          self.closeDropdown()
+          (self.trigger?.querySelector("button") ?? self.trigger)?.focus()
         }
       }
     }
