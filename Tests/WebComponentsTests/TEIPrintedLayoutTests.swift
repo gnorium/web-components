@@ -313,4 +313,14 @@ final class TEIPrintedLayoutTests: XCTestCase {
     XCTAssertEqual(attribute("style", of: lines[1]), "margin-inline-start:24.25rem;")
     XCTAssertFalse(text(of: row).contains("If I should say"))
   }
+
+  /// A ligature as typeset (user, 2026-10-31): its run carries `ligature`, which the view draws with the
+  /// face's ligature, and holds the plain letters, so the text copied is the letters.
+  func testALigatureIsARunOfItsPlainLettersMarkedLigature() throws {
+    let nodes = view(##"<ab><lb/>Mo<g ref="#slongt">ſt</g> <g ref="#slong">ſ</g>o a<g ref="#ct">ct</g></ab>"##)
+    let runs = classed("tei-run", in: nodes)
+    let ligatures = runs.filter { (attribute("data-rend", of: $0) ?? "").split(separator: " ").contains("ligature") }
+    XCTAssertEqual(ligatures.map { text(of: $0) }, ["ſt", "ct"])
+    XCTAssertEqual(classed("tei-line", in: nodes).map { text(of: $0) }, ["Moſt ſo act"])
+  }
 }

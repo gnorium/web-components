@@ -1412,6 +1412,17 @@
           // No typed helper for this one; the builder takes a raw property.
           CSS.Property("font-variant-caps", "small-caps")
         }
+        // Ligatures as typeset (user, 2026-10-31): letters the print set as
+        // separate sorts stay apart, the face's own ligatures off; a
+        // ligature the TEI marks (`<g ref>`, TEIRenderer's `ligature`) is
+        // drawn as one sort where the face has it, its text the plain
+        // letters.
+        descendant(".tei-line") {
+          CSS.Property("font-variant-ligatures", "none")
+        }
+        selector("& .tei-run[data-rend~='ligature']") {
+          CSS.Property("font-variant-ligatures", "common-ligatures discretionary-ligatures")
+        }
         // Typeface classes (user, 2026-10-11), in Noto where Noto has the
         // face: roman the serif, italic the serif's italic, sans-serif the
         // sans, typewriter the mono. Noto has no Latin blackletter or
