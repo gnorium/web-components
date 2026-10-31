@@ -556,6 +556,9 @@ public struct DiffView: HTMLContent {
         fontFamily(typographyFontSerif)
         fontSize(fontSizeMedium16)
         lineHeight(lineHeightMedium26)
+        // Ligatures only where the print has them (user, 2026-10-31): the
+        // face's own off; a marked one (`ligature`) joined.
+        CSS.Property("font-variant-ligatures", "none")
       }
       selector("&[data-diff-mode='rendered'] .diff-row") {
         minHeight(lineHeightMedium26)
@@ -582,6 +585,9 @@ public struct DiffView: HTMLContent {
       descendant("[data-style~='bold']") { fontWeight(fontWeightBold) }
       descendant("[data-style~='underline']") { textDecoration(.underline) }
       descendant("[data-style~='smallcaps']") { CSS.Property("font-variant-caps", "small-caps") }
+      descendant("[data-style~='ligature']") {
+        CSS.Property("font-variant-ligatures", "common-ligatures discretionary-ligatures")
+      }
       descendant("[data-style~='sub']") {
         verticalAlign(.sub)
         fontSize(em(0.75))

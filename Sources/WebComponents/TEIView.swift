@@ -1300,6 +1300,7 @@
           flexDirection(.column)
           minWidth(0)
           padding(px(1))
+          CSS.Property("font-variant-ligatures", "none")
         }
         descendant(".tei-page") {
           display(.flex)
@@ -1427,18 +1428,12 @@
           // No typed helper for this one; the builder takes a raw property.
           CSS.Property("font-variant-caps", "small-caps")
         }
-        // Ligatures as typeset (user, 2026-10-31): on a page transcribed
-        // from its scan, letters the print set as separate sorts stay
-        // apart, the face's own ligatures off; modern text (a definition,
-        // a translation) keeps the face's ligatures. A ligature the TEI
-        // marks (`<g ref>`, TEIRenderer's `ligature`) is drawn as one sort
-        // where the face has it: Unicode's presentation form where Unicode
-        // has one (`drawnText`), else its letters with the face's ligatures.
-        selector(
-          "& .tei-page[data-service-id]:not([data-service-id='']) [data-layer='rendering'] .tei-line"
-        ) {
-          CSS.Property("font-variant-ligatures", "none")
-        }
+        // Ligatures only where the print has them (user, 2026-10-31): the
+        // face's automatic ligatures are off in every TEI view, modern text
+        // too (`selector("&")` above); a ligature the TEI marks (`<g ref>`,
+        // TEIRenderer's `ligature`) is drawn as one sort where the face has
+        // it: Unicode's presentation form where Unicode has one
+        // (`drawnText`), else its letters with the face's ligatures on.
         selector("& .tei-run[data-rend~='ligature']") {
           CSS.Property("font-variant-ligatures", "common-ligatures discretionary-ligatures")
         }
