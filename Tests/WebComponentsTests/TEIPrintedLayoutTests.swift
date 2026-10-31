@@ -322,5 +322,9 @@ final class TEIPrintedLayoutTests: XCTestCase {
     let ligatures = runs.filter { (attribute("data-rend", of: $0) ?? "").split(separator: " ").contains("ligature") }
     XCTAssertEqual(ligatures.map { text(of: $0) }, ["ſt", "ct"])
     XCTAssertEqual(classed("tei-line", in: nodes).map { text(of: $0) }, ["Moſt ſo act"])
+    // The face's own ligatures are off only on a page transcribed from its scan (its service id).
+    XCTAssertFalse((classed("tei-page", in: nodes).first.flatMap { attribute("data-service-id", of: $0) } ?? "").isEmpty)
+    let modern = elements(in: TEIView(teiXml: ##"<TEI><text><body><p>a <g ref="#fi">fi</g>sh</p></body></text></TEI>"##).build())
+    XCTAssertEqual(classed("tei-page", in: modern).compactMap { attribute("data-service-id", of: $0) }.filter { !$0.isEmpty }, [])
   }
 }

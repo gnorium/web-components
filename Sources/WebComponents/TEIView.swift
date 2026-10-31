@@ -1412,12 +1412,15 @@
           // No typed helper for this one; the builder takes a raw property.
           CSS.Property("font-variant-caps", "small-caps")
         }
-        // Ligatures as typeset (user, 2026-10-31): letters the print set as
-        // separate sorts stay apart, the face's own ligatures off; a
-        // ligature the TEI marks (`<g ref>`, TEIRenderer's `ligature`) is
-        // drawn as one sort where the face has it, its text the plain
-        // letters.
-        descendant(".tei-line") {
+        // Ligatures as typeset (user, 2026-10-31): on a page transcribed
+        // from its scan, letters the print set as separate sorts stay
+        // apart, the face's own ligatures off; modern text (a definition,
+        // a translation) keeps the face's ligatures. A ligature the TEI
+        // marks (`<g ref>`, TEIRenderer's `ligature`) is drawn as one sort
+        // where the face has it, its text the plain letters.
+        selector(
+          "& .tei-page[data-service-id]:not([data-service-id='']) [data-layer='rendering'] .tei-line"
+        ) {
           CSS.Property("font-variant-ligatures", "none")
         }
         selector("& .tei-run[data-rend~='ligature']") {
