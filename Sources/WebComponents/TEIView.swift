@@ -2083,16 +2083,19 @@
           backgroundColor(.transparent)
           padding(0)
         }
-        // A quote's sentence in subtle blue, and, more strongly by its
-        // border alone (a weight would fight the page's own bold), its
-        // words boxed in blue: the selection's color, never yellow, which
-        // is Find's alone (user, 2026-10-31).
+        // A quote's sentence in a subtle violet wash, and its words in a
+        // stronger one, translucent so its letters read through (a weight
+        // would fight the page's own bold, a box sat off the glyphs):
+        // violet, the quote's own color (user, 2026-10-31), never blue,
+        // a pointed word's, nor yellow, Find's.
         descendant(".tei-highlight") {
-          backgroundColor(backgroundColorBlueSubtle)
+          backgroundColor(backgroundColorVioletSubtle)
           color(.inherit)
         }
         descendant(".tei-highlight[data-highlight='title']") {
-          border(borderWidthBase, .solid, borderColorBlue)
+          CSS.Property(
+            "background-color",
+            "color-mix(in srgb, " + colorViolet.value + " calc(" + opacityLow.value + " * 100%), transparent)")
         }
         // A word that opens its details: the printed page's own type, the
         // accent color only under the pointer, on keyboard focus and while
