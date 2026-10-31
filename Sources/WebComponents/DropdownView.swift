@@ -221,7 +221,7 @@ public struct DropdownView: HTMLContent {
         }
         let displayText =
           multiple
-          ? (chosenNames.isEmpty ? placeholder : stringJoin(chosenNames, separator: ", "))
+          ? (chosenNames.isEmpty ? placeholder : EnglishList.joined(chosenNames))
           : (selectedOption?.display ?? placeholder)
         // Trigger button
         div {
@@ -1190,7 +1190,7 @@ public struct DropdownView: HTMLContent {
           break
         }
       }
-      let shown = stringJoin(names, separator: ", ")
+      let shown = EnglishList.joined(names)
       selectedText?.innerHTML = values.isEmpty ? placeholder : shown
       if values.isEmpty { selectedText?.removeAttribute(.title) } else { selectedText?.setAttribute(.title, shown) }
       selectedText?.setAttribute(data("selected"), !values.isEmpty)
