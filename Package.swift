@@ -17,7 +17,7 @@ let package = Package(
     .package(url: "https://github.com/gnorium/embedded-swift-utilities", branch: "main"),
     .package(url: "https://github.com/gnorium/markdown-utilities", branch: "main"),
     .package(url: "https://github.com/gnorium/xml-utilities", branch: "main"),
-    .package(path: "../tex-utilities"),
+    .package(url: "https://github.com/gnorium/tex-utilities", branch: "main"),
   ],
   targets: [
     .executableTarget(
