@@ -315,13 +315,14 @@ final class TEIPrintedLayoutTests: XCTestCase {
   }
 
   /// A ligature as typeset (user, 2026-10-31): its run carries `ligature`, which the view draws with the
-  /// face's ligature, and holds the plain letters, so the text copied is the letters.
+  /// face's ligature; one Unicode encodes is drawn, and so copied, as its presentation form.
   func testALigatureIsARunOfItsPlainLettersMarkedLigature() throws {
-    let nodes = view(##"<ab><lb/>Mo<g ref="#slongt">ſt</g> <g ref="#slong">ſ</g>o a<g ref="#ct">ct</g></ab>"##)
+    let nodes = view(##"<ab><lb/>Mo<g ref="#slongt">ſt</g> <g ref="#slong">ſ</g>o a<g ref="#ct">ct</g> <g ref="#fi">fi</g>re</ab>"##)
     let runs = classed("tei-run", in: nodes)
     let ligatures = runs.filter { (attribute("data-rend", of: $0) ?? "").split(separator: " ").contains("ligature") }
-    XCTAssertEqual(ligatures.map { text(of: $0) }, ["ſt", "ct"])
-    XCTAssertEqual(classed("tei-line", in: nodes).map { text(of: $0) }, ["Moſt ſo act"])
+    // Drawn and copied as Unicode's presentation form where it has one (ﬅ, ﬁ), as the letters where not (ct).
+    XCTAssertEqual(ligatures.map { text(of: $0) }, ["\u{FB05}", "ct", "\u{FB01}"])
+    XCTAssertEqual(classed("tei-line", in: nodes).map { text(of: $0) }, ["Mo\u{FB05} ſo act \u{FB01}re"])
     // The face's own ligatures are off only on a page transcribed from its scan (its service id).
     XCTAssertFalse((classed("tei-page", in: nodes).first.flatMap { attribute("data-service-id", of: $0) } ?? "").isEmpty)
     let modern = elements(in: TEIView(teiXml: ##"<TEI><text><body><p>a <g ref="#fi">fi</g>sh</p></body></text></TEI>"##).build())

@@ -125,6 +125,17 @@
 
     /// The image service a canvas reads, which is what pairs it with a
     /// canvas. `TEIRenderer` owns the rule; the view only passes it on.
+    /// A run's text as drawn: a ligature's (`TEIRenderer.ligature`) whose
+    /// letters Unicode encodes as one character is that character
+    /// (`TEIRenderer.presentationForms`), so a copy holds it; every other
+    /// run its text.
+    static func drawnText(of run: TEILine.Run) -> String {
+      guard run.rend.split(whereSeparator: \.isWhitespace).contains(where: { $0 == TEIRenderer.ligature }) else {
+        return run.text
+      }
+      return TEIRenderer.presentationForms[run.text] ?? run.text
+    }
+
     public static func serviceID(ofFacsimile url: String) -> String {
       TEIRenderer.serviceID(ofFacsimile: url)
     }
@@ -606,14 +617,18 @@
             span { run.text }.class("tei-initial-letter")
           }.class("tei-run tei-initial").data("rend", run.rend).addingAttribute("style", TEIRendition.css(from: run.rend)).build()
         }
+        // A marked ligature Unicode encodes is drawn, and so copied, as its
+        // presentation form (user, 2026-10-31: ﬁ, ﬅ); the TEI keeps its
+        // letters, and one Unicode lacks (ct, ſi) stays its letters.
+        let text = Self.drawnText(of: run)
         if run.alternative.isEmpty || !showAlternative {
-          let drawn = span { run.text }.class("tei-run").data("rend", run.rend).addingAttribute("style", TEIRendition.css(from: run.rend))
+          let drawn = span { text }.class("tei-run").data("rend", run.rend).addingAttribute("style", TEIRendition.css(from: run.rend))
           return (run.preserved ? drawn.data("space", "preserve") : drawn).build()
         }
         // A regularized spelling, an expansion or a correction the
         // transcription gives beside the reading: read on hover.
         return TooltipView(tooltip: run.alternative, placement: .top, class: "tei-run-alternative") {
-          span { run.text }.class("tei-run").data("rend", run.rend).addingAttribute("style", TEIRendition.css(from: run.rend))
+          span { text }.class("tei-run").data("rend", run.rend).addingAttribute("style", TEIRendition.css(from: run.rend))
         }.build()
       case .math(let formula):
         return mathContent(formula, facsimileURL: facsimileURL, tabStop: tabStop)
@@ -1417,7 +1432,8 @@
         // apart, the face's own ligatures off; modern text (a definition,
         // a translation) keeps the face's ligatures. A ligature the TEI
         // marks (`<g ref>`, TEIRenderer's `ligature`) is drawn as one sort
-        // where the face has it, its text the plain letters.
+        // where the face has it: Unicode's presentation form where Unicode
+        // has one (`drawnText`), else its letters with the face's ligatures.
         selector(
           "& .tei-page[data-service-id]:not([data-service-id='']) [data-layer='rendering'] .tei-line"
         ) {
