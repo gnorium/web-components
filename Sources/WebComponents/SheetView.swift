@@ -27,6 +27,11 @@
       /// the backdrop under it. Where a sheet that would cover a pane has
       /// none to cover (`DialogSheet`).
       case viewport
+      /// A popover on a wide screen (user, 2026-11-01): no backdrop, the
+      /// panel anchored beside what opened it (`DialogSheet.pop`, which
+      /// sets where), at least 320×320, as wide and tall as what it holds
+      /// up to the screen's room, its body scrolling past that.
+      case popover
     }
 
     let id: String
@@ -57,6 +62,9 @@
       case .viewport:
         navbarHeight = 0
         placementName = "viewport"
+      case .popover:
+        navbarHeight = 0
+        placementName = "popover"
       }
       var sheet = div {
         div {}
@@ -99,6 +107,13 @@
           top(0)
           height(dvh(100))
         }
+        // A popover: where it stands is set on it (`DialogSheet.pop`); it
+        // is as large as its panel.
+        selector("&[data-placement='popover']") {
+          position(.fixed)
+          width(.auto)
+          height(.auto)
+        }
         descendant(".sheet-backdrop") {
           position(.absolute)
           inset(0)
@@ -140,6 +155,24 @@
           display(.flex)
           flexDirection(.column)
           borderBlockEnd(.none)
+        }
+        // A popover's panel: no backdrop, framed by a subtle border and
+        // rounded, never shadowed; it fades in where it stands rather than
+        // sliding from above. At least 320×320, it grows to fit what it
+        // holds, up to the screen's room less its gutters.
+        selector("&[data-placement='popover'] .sheet-backdrop") { display(.none) }
+        selector("&[data-placement='popover'] .sheet-panel") {
+          display(.flex)
+          flexDirection(.column)
+          width(.maxContent)
+          minWidth(px(320))
+          maxWidth(min(calc(px(512)), calc(vw(100) - spacing32)))
+          minHeight(px(320))
+          maxHeight(calc(dvh(100) - spacing32))
+          paddingBlock(spacing16)
+          border(borderWidthBase, .solid, borderColorSubtle)
+          borderRadius(borderRadiusBase)
+          transform(translateY(px(0)))
         }
         selector("&[data-state='opening']", "&[data-state='open']", "&[data-state='closing']") { display(.block) }
         selector("&[data-state='opening']", "&[data-state='open']") { pointerEvents(.auto) }
