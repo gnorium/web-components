@@ -1139,6 +1139,33 @@ public enum OutlineMoves {
         data("expanded"), collapsed ? "false" : "true")
     }
 
+    /// An item's add and remove controls (`OutlinerView.numberedControl`)
+    /// named again by its number, `number`; an add control names the
+    /// number its new child would get. A tree that numbers itself (its
+    /// outline renumbering, a form's steps coming and going) calls it for
+    /// each item.
+    public static func nameControls(of item: DOM.Element, number: String) {
+      var children = 0
+      if let list = item.querySelector(":scope > .outliner-list") {
+        children = list.querySelectorAll(":scope > .outliner-item")
+          .filter { !stringEquals($0.dataset["outliner-removed"] ?? "false", "true") }.count
+      }
+      for control in item.querySelectorAll(":scope > .outliner-footer [data-outliner-control-noun]") {
+        let named =
+          stringEquals(control.dataset["outliner-control-child"] ?? "false", "true")
+          ? stringJoin([number, intToString(children + 1)], separator: ".") : number
+        nameControl(control, number: named)
+      }
+    }
+
+    /// A control named for a number: "Testament 1.1.1."; the add control
+    /// at a tree's top level names the number a new top item would get.
+    public static func nameControl(_ control: DOM.Element, number: String) {
+      let text = stringJoin([control.dataset["outliner-control-noun"] ?? "", " ", number, "."], separator: "")
+      if let label = control.querySelector(".button-label") { label.textContent = text }
+      control.setAttribute("aria-label", stringJoin([control.dataset["outliner-control-verb"] ?? "", " ", text], separator: ""))
+    }
+
     /// Expands every collapsed item above `element`, so it shows: an item
     /// moved under a collapsed one, a step added under one. An accordion
     /// item is opened by its own chevron.
@@ -1884,16 +1911,7 @@ public enum OutlineMoves {
         if !stringIsEmpty(numberSelector), let slot = item.querySelector(numberSelector) {
           slot.textContent = numbers[offset]
         }
-        // Its add and remove controls name it by that number; an add
-        // control names the number its new child would get.
-        var children = 0
-        if let list = childList(of: item) { children = items(in: list).filter({ !isRemoved($0) }).count }
-        for control in item.querySelectorAll(":scope > .outliner-footer [data-outliner-control-noun]") {
-          let number =
-            stringEquals(control.dataset["outliner-control-child"] ?? "false", "true")
-            ? stringJoin([numbers[offset], intToString(children + 1)], separator: ".") : numbers[offset]
-          name(control, number: number)
-        }
+        OutlinerHydration.nameControls(of: item, number: numbers[offset])
       }
       for item in root.querySelectorAll(".outliner-item[data-outliner-removed='true']") { paint(item) }
       updateToolbar()
@@ -1901,13 +1919,6 @@ public enum OutlineMoves {
         input.setAttribute("value", shapeJSON())
         (input as? HTML.HTMLInputElement)?.value = shapeJSON()
       }
-    }
-
-    /// A control named for a node's number: "Testament 1.1.1."
-    private func name(_ control: DOM.Element, number: String) {
-      let text = stringJoin([control.dataset["outliner-control-noun"] ?? "", " ", number, "."], separator: "")
-      control.querySelector(".button-label")?.textContent = text
-      control.setAttribute("aria-label", stringJoin([control.dataset["outliner-control-verb"] ?? "", " ", text], separator: ""))
     }
 
     private func walk(
