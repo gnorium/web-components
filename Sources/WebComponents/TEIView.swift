@@ -2099,19 +2099,16 @@
           backgroundColor(.transparent)
           padding(0)
         }
-        // A quote's sentence in a subtle violet wash, and its words in a
-        // stronger one, translucent so its letters read through (a weight
-        // would fight the page's own bold, a box sat off the glyphs):
-        // violet, the quote's own color (user, 2026-10-31), never blue,
-        // a pointed word's, nor yellow, Find's.
+        // A quote on a subtle magenta ground and its lemma, the word
+        // quoted, on a subtle violet one (user, 2026-10-31): grounds alone,
+        // no line around them; never blue, a pointed word's, nor yellow,
+        // Find's (a <mark>'s own yellow is replaced).
         descendant(".tei-highlight") {
-          backgroundColor(backgroundColorVioletSubtle)
+          backgroundColor(backgroundColorMagentaSubtle)
           color(.inherit)
         }
         descendant(".tei-highlight[data-highlight='title']") {
-          CSS.Property(
-            "background-color",
-            "color-mix(in srgb, " + colorViolet.value + " calc(" + opacityLow.value + " * 100%), transparent)")
+          backgroundColor(backgroundColorVioletSubtle)
         }
         // A word that opens its details: the printed page's own type, the
         // accent color only under the pointer, on keyboard focus and while
