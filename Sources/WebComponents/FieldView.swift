@@ -160,14 +160,15 @@ import EmbeddedSwiftUtilities
           }
           // A fieldset's rendered legend sits in its border, outside the
           // flex layout, so the gap never reached it and the label hugged
-          // its control. A floated legend is not the rendered legend (HTML
-          // "The fieldset and legend elements" rendering): it is an ordinary
-          // flex item, the gap applies, and it stays the fieldset's
-          // accessible name.
-          selector("& > legend") {
-            float(.inlineStart)
-            inlineSize(perc(100))
-            padding(0)
+          // its control. A floated legend escaped that in Chrome but not in
+          // Safari, which still drew it as the rendered legend: the Record
+          // field's label touched its dropdown. A legend whose box is its
+          // children's (`display: contents`) is no rendered legend in any
+          // engine: its label line is the fieldset's first flex item, the
+          // gap applies, and the legend stays the fieldset's accessible
+          // name. A visually hidden legend keeps its own box, which hides it.
+          selector("& > legend:not(.visually-hidden)") {
+            display(.contents)
           }
           selector("&[data-disabled='true']") { opacity(opacityMedium) }
           descendant(".field-input-wrapper") { display(.block) }
