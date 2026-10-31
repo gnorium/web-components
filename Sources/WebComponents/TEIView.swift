@@ -2095,15 +2095,15 @@
           padding(0)
         }
         // A quote on a subtle violet ground, and its lemma, the word
-        // quoted, on the same ground in a solid 1px violet line (user,
-        // 2026-10-31); never blue, a pointed word's, nor yellow, Find's (a
-        // <mark>'s own yellow is replaced).
+        // quoted, on a subtle magenta one that stands out from it (user,
+        // 2026-10-31): grounds alone, no line; never blue, a pointed
+        // word's, nor yellow, Find's (a <mark>'s own yellow is replaced).
         descendant(".tei-highlight") {
           backgroundColor(backgroundColorVioletSubtle)
           color(.inherit)
         }
         descendant(".tei-highlight[data-highlight='title']") {
-          border(borderWidthBase, .solid, borderColorViolet)
+          backgroundColor(backgroundColorMagentaSubtle)
         }
         // A word that opens its details: the printed page's own type, the
         // accent color only under the pointer, on keyboard focus and while
