@@ -2069,17 +2069,16 @@
           backgroundColor(.transparent)
           padding(0)
         }
-        // A quote's sentence, and, more strongly by its color alone
-        // (a weight would fight the page's own bold), its word, boxed in
-        // pale red as the OED sets it: the red alert's own pairing of fill
-        // and border.
+        // A quote's sentence in subtle blue, and, more strongly by its
+        // border alone (a weight would fight the page's own bold), its
+        // words boxed in blue: the selection's color, never yellow, which
+        // is Find's alone (user, 2026-10-31).
         descendant(".tei-highlight") {
-          backgroundColor(backgroundColorYellowSubtle)
+          backgroundColor(backgroundColorBlueSubtle)
           color(.inherit)
         }
         descendant(".tei-highlight[data-highlight='title']") {
-          backgroundColor(backgroundColorRedSubtle)
-          border(borderWidthBase, .solid, borderColorRed)
+          border(borderWidthBase, .solid, borderColorBlue)
         }
         // A word that opens its details: the printed page's own type, the
         // accent color only under the pointer, on keyboard focus and while
