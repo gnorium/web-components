@@ -724,11 +724,30 @@ public enum OutlineMoves {
         gap(spacing8)
         minWidth(0)
       }
-      // The scrollport, as every list of artifacts has (`sidewaysScrollport`):
-      // every card widens to hold what it nests (a reader's footer row,
-      // ArtifactView, user 2026-10-12), and the scrollport scrolls the
-      // whole tree from its start edge.
-      sidewaysScrollport("& .outliner-scroll", content: "& .outliner-scroll > .outliner-list")
+      // The scrollport, as a table's: sideways only, its bar over nothing.
+      // A little room at its edges, so a ring drawn outside a row or a
+      // control is not cut off by the edge that scrolls.
+      descendant(".outliner-scroll") {
+        overflowX(.auto)
+        minWidth(0)
+        padding(spacing4)
+      }
+      // On a phone (below 480px) the tree is never narrower than the
+      // narrowest any node can be (a reader's footer row, ArtifactView,
+      // user 2026-10-12): every card widens to hold what it nests, and the
+      // scrollport scrolls the whole tree from its start edge, nothing
+      // clipped at either side.
+      media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
+        selector("& .outliner-scroll > .outliner-list") {
+          CSS.Property("min-width", "min-content").important()
+        }
+      }
+      selector(
+        "& .outliner-scroll::-webkit-scrollbar-track", "& .outliner-scroll::-webkit-scrollbar-track-piece",
+        "& .outliner-scroll::-webkit-scrollbar-corner"
+      ) {
+        backgroundColor(.transparent).important()
+      }
       selector("& .outliner-instructions", "& .outliner-live") {
         position(.absolute)
         width(px(1))
