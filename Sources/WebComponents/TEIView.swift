@@ -1,3 +1,15 @@
+/// A form's Source box selecting a sentence (user, 2026-11-01): the
+/// attribute an ancestor of the reader wears while it does, and the CSS
+/// highlights the sentence under the pointer and its lemma are painted
+/// with, in a quote's own violet and magenta (`TEIView`).
+public enum TEISentenceSelection {
+  /// `data-selects-sentences="true"` on an ancestor: its words open no
+  /// gloss, nor turn blue.
+  public static let attribute = "selects-sentences"
+  public static let sentence = "tei-sentence"
+  public static let title = "tei-sentence-title"
+}
+
 #if SERVER
   import CSSBuilder
   import DesignTokens
@@ -71,6 +83,13 @@
     /// The translator's notes of the layer being set, by the block each
     /// notes: none but while a page's translation is set.
     private var notes: [String: String] = [:]
+    /// The page being set's sentences and lemmas, by its words' places
+    /// (`marking(_:)`): each word says the `<s>` it is read in
+    /// (`data-sentence`, `TEIRenderer.sentences(of:)`) and its `<w>`'s lemma
+    /// (`data-lemma`), where its words can be opened; a form's Source box
+    /// selects a sentence by them (gnorium-web `QuoteSentenceSelection`).
+    private var sentences: [TEIWordPlace: Int] = [:]
+    private var lemmas: [TEIWordPlace: String] = [:]
 
     /// A translation of the markup, page by page, in its own language:
     /// the translation's own TEI, read by the same reader as the markup,
@@ -482,6 +501,17 @@
       }.build()
     }
 
+    /// This view setting `page`'s markup, its words marked with their
+    /// sentences and lemmas.
+    private func marking(_ page: TEIPage) -> TEIView {
+      var view = self
+      view.sentences = TEIRenderer.sentences(of: page)
+      var lemmas: [TEIWordPlace: String] = [:]
+      for word in TEIRenderer.words(of: page) where !word.lemma.isEmpty { lemmas[word.place] = word.lemma }
+      view.lemmas = lemmas
+      return view
+    }
+
     /// This view setting a translation whose blocks carry `notes`.
     private func noting(_ notes: [String: String]) -> TEIView {
       var view = self
@@ -572,25 +602,28 @@
             return [
               glossable(
                 span {
-                  runContents(part.runs, facsimileURL: facsimileURL, tabStop: tabStop)
+                  runContents(part.runs, facsimileURL: facsimileURL, tabStop: tabStop, opens: true)
                 }
                 .class("tei-gloss-element"), element
               ).build()
             ]
           }
         }
-        return [
-          span {
-            runContents(group.runs, facsimileURL: facsimileURL, tabStop: tabStop)
-          }
-          .class("tei-word")
-          .role(.button)
-          .tabindex(word == tabStop ? 0 : -1)
-          .ariaHaspopup(.dialog)
-          .data("line", word.line)
-          .data("word", word.word)
-          .build()
-        ]
+        let node = span {
+          runContents(group.runs, facsimileURL: facsimileURL, tabStop: tabStop, opens: glossURL != nil)
+        }
+        .class("tei-word")
+        .role(.button)
+        .tabindex(word == tabStop ? 0 : -1)
+        .ariaHaspopup(.dialog)
+        .data("line", word.line)
+        .data("word", word.word)
+        .build()
+        if let element = node as? DOM.Element {
+          if let sentence = sentences[word] { element.addingAttribute("data-sentence", "\(sentence)") }
+          if let lemma = lemmas[word] { element.addingAttribute("data-lemma", lemma) }
+        }
+        return [node]
       }
     }
 
@@ -605,7 +638,15 @@
     }
 
     /// One expansion/correction tooltip spans all its differently styled runs.
-    private func runContents(_ runs: [TEILine.Run], facsimileURL: String, tabStop: TEIWordPlace?) -> [DOM.Node] {
+    /// None in what opens a gloss (`opens`, user, 2026-11-01): its gloss
+    /// gives the expansion or correction, and a tap opens the gloss alone,
+    /// never the tooltip first.
+    private func runContents(
+      _ runs: [TEILine.Run], facsimileURL: String, tabStop: TEIWordPlace?, opens: Bool = false
+    ) -> [DOM.Node] {
+      if opens {
+        return runs.map { runContent($0, facsimileURL: facsimileURL, tabStop: tabStop, showAlternative: false) }
+      }
       var groups: [(alternative: String, runs: [TEILine.Run])] = []
       for run in runs {
         if !run.alternative.isEmpty, groups.last?.alternative == run.alternative {
@@ -1156,6 +1197,8 @@
         }
         for (index, page) in pages.enumerated() where self.page == nil || self.page == index || drawn.contains(index) {
           let tabStop = glossURL == nil ? nil : Self.firstWord(of: page.lines)
+          // Its words marked with their sentences and lemmas where they open.
+          let reader = glossURL == nil ? self : marking(page)
           let frame = page.frame
           let pageNode = div {
             div {
@@ -1169,7 +1212,7 @@
                 // TEI, never a mark printed on it.
                 let lines = page.lines.filter { if case .gap(reason: "blank") = $0.kind { false } else { true } }
                 div {
-                  rendered(
+                  reader.rendered(
                     lines.filter { Self.marginalPlace(of: $0) == nil }, heading: labelsPages ? page.label : nil,
                     direction: direction, facsimileURL: page.facsimileURL, label: page.label, tabStop: tabStop)
                 }
@@ -1178,7 +1221,7 @@
                   let notes = lines.filter { Self.marginalPlace(of: $0) == place }
                   if !notes.isEmpty {
                     div {
-                      rendered(
+                      reader.rendered(
                         notes, heading: nil, direction: direction, facsimileURL: page.facsimileURL, label: page.label,
                         tabStop: tabStop)
                     }
@@ -1187,7 +1230,7 @@
                   }
                 }
               } else {
-                rendered(
+                reader.rendered(
                   page.lines, heading: labelsPages ? page.label : nil, direction: direction,
                   facsimileURL: page.facsimileURL, label: page.label, tabStop: tabStop)
               }
@@ -2185,6 +2228,31 @@
           "& .tei-noted[aria-expanded='true']"
         ) {
           color(colorBlue)
+        }
+        // Where a form's Source box selects a sentence (user, 2026-11-01)
+        // its words open no gloss: the hand over them, never the accent
+        // color; the sentence under the pointer tinted as a quote is, its
+        // lemma as a quote's lemma (`TEISentenceSelection`).
+        selector(
+          "[data-selects-sentences='true'] & .tei-word", "[data-selects-sentences='true'] & [data-gloss-element]",
+          "[data-selects-sentences='true'] & .tei-noted"
+        ) {
+          cursor(cursorBaseHover)
+        }
+        selector(
+          "[data-selects-sentences='true'] & .tei-word:hover",
+          "[data-selects-sentences='true'] & .tei-word:focus-visible",
+          "[data-selects-sentences='true'] & .tei-word[aria-expanded='true']",
+          "[data-selects-sentences='true'] & [data-gloss-element]:hover",
+          "[data-selects-sentences='true'] & .tei-noted:hover"
+        ) {
+          color(.inherit)
+        }
+        selector(pseudoElement("& *", .highlight(TEISentenceSelection.sentence))) {
+          backgroundColor(backgroundColorVioletSubtle)
+        }
+        selector(pseudoElement("& *", .highlight(TEISentenceSelection.title))) {
+          backgroundColor(backgroundColorMagentaSubtle)
         }
         selector(".tei-empty") {
           fontFamily(typographyFontSans)
