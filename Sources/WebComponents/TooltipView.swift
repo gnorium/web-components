@@ -815,8 +815,13 @@ public struct TooltipView: HTMLContent {
     private func bindEvents() {
       guard let content else { return }
 
-      // Hover for desktop
-      _ = trigger.addEventListener(.mouseenter) { [self] _ in
+      // Hover for a mouse or a pen, never a touch (user, 2026-11-02): a
+      // tap's emulated mouse events are hit-tested where the finger lifted,
+      // so a tap on an option that closes its menu "hovered" the info icon
+      // under it and left its bubble over the next field. A tap on the
+      // trigger itself shows it pinned (`togglePinned`).
+      _ = trigger.addEventListener("pointerenter") { [self] (event: Event) in
+        guard !stringEquals(event.pointerType, "touch") else { return }
         self.stopAiming()
         self.showTooltip()
       }
@@ -827,7 +832,8 @@ public struct TooltipView: HTMLContent {
       // corners, or across the strip that bridges their gap—and hides as
       // soon as it strays; over the bubble it stays, and leaving the
       // bubble hides it (WCAG 2.1 SC 1.4.13, hoverable).
-      _ = trigger.addEventListener(.mouseleave) { [self] (event: Event) in
+      _ = trigger.addEventListener("pointerleave") { [self] (event: Event) in
+        guard !stringEquals(event.pointerType, "touch") else { return }
         if !self.pinned { self.aim(from: (event.clientX, event.clientY)) }
       }
       _ = content.addEventListener(.mouseenter) { [self] _ in
@@ -847,9 +853,9 @@ public struct TooltipView: HTMLContent {
         if !self.pinned { self.hideTooltip() }
       }
 
-      // A click or tap opens it and pins it; the next one closes it. A
-      // tap's emulated mouseenter and focus have already shown it by the
-      // time its click arrives, so the click only pins. iOS sends no click
+      // A click or tap opens it and pins it; the next one closes it (a
+      // tap's focus may have shown it already: the click then only pins).
+      // iOS sends no click
       // for a tap on something that isn't clickable, hence touchend too,
       // which then takes the tap whole. A trigger whose clicks are its own
       // controls' (`pins: false`) leaves them be.
@@ -926,6 +932,20 @@ public struct TooltipView: HTMLContent {
       hideTooltip()
     }
 
+    /// While shown, its bubble goes with its trigger (user, 2026-11-02): a
+    /// trigger hidden or taken out of the page (a field a choice put away)
+    /// leaves no bubble standing over the page, where it would catch the
+    /// next tap.
+    private func watchTrigger() {
+      guard isVisible else { return }
+      let box = trigger.getBoundingClientRect()
+      if !trigger.isConnected || box.map({ $0.width == 0 && $0.height == 0 }) ?? true {
+        dismiss()
+        return
+      }
+      _ = window.requestAnimationFrame { [self] in self.watchTrigger() }
+    }
+
     /// Follows the pointer from where it left the trigger, keeping the
     /// bubble while it heads there (`Geometry.aims`). The leave itself
     /// must head there from the trigger's center: a pointer that left
@@ -986,6 +1006,7 @@ public struct TooltipView: HTMLContent {
       host?.setAttribute(data("visible"), true)
       trigger.setAttribute(data("visible"), true)
       isVisible = true
+      watchTrigger()
 
       // Dispatch show event
       let event = CustomEvent(type: "tooltip-show", detail: "")
