@@ -13,8 +13,9 @@ import WebTypes
 ///
 /// - ``Size/normal``—table / list footers (44px targets, spaced layout)
 /// - ``Size/medium``—chrome pagers (session, artifact, instance switcher,
-///   legends): ButtonView's medium, 40px targets, 16px text (a field under 16px makes
-///   iOS Safari zoom the page as it is focused), 16px chevrons
+///   legends): ButtonView's medium, 40px targets, 16px text, 16px chevrons;
+///   on a phone small, as every control (`ButtonView.phoneStep`): 32px
+///   targets, 14px text
 ///
 /// URL mode (`previousUrl` / `nextUrl`) is hydrated by
 /// ``PaginationHydration``. Query / custom mode sets `kind` and prev/next
@@ -438,9 +439,9 @@ public struct PaginationView: HTMLContent {
         fontSize(fontSizeLarge18)
         color(colorBase)
       }
-      // Option B (`ButtonView.phoneStep`): a large pager medium on a
-      // phone. A medium pager stays medium: its targets and number box are
-      // 40, the least a thumb is asked to hit.
+      // Option B (`ButtonView.phoneStep`): on a phone every pager steps
+      // one size down, as every control does—large to medium, medium to
+      // small (32, its text 14px)—its buttons and number box together.
       media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
         selector(
           "\(ButtonView.phoneStep) &.pagination-size-large .pagination-prev",
@@ -458,6 +459,23 @@ public struct PaginationView: HTMLContent {
           "\(ButtonView.phoneStep) &.pagination-size-large .pagination-total"
         ) {
           fontSize(fontSizeMedium16).important()
+        }
+        selector(
+          "\(ButtonView.phoneStep) &.pagination-size-medium .pagination-prev",
+          "\(ButtonView.phoneStep) &.pagination-size-medium .pagination-next"
+        ) {
+          width(ButtonView.ButtonSize.small.minSize).important()
+          height(ButtonView.ButtonSize.small.minSize).important()
+        }
+        selector("\(ButtonView.phoneStep) &.pagination-size-medium .page-box") {
+          padding(ButtonView.ButtonSize.small.padding).important()
+          fontSize(fontSizeSmall14).important()
+        }
+        selector(
+          "\(ButtonView.phoneStep) &.pagination-size-medium .pagination-term",
+          "\(ButtonView.phoneStep) &.pagination-size-medium .pagination-total"
+        ) {
+          fontSize(fontSizeSmall14).important()
         }
       }
     }
