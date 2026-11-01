@@ -304,9 +304,12 @@ public struct AccordionView: HTMLContent {
           outline(.none).important()
           boxShadow(.none).important()
         }
+        // Its one line centered in the pointer's target, the same space
+        // above and below, however many lines it wraps to: the controls
+        // stand on that first line.
         selector("&[data-separation='minimal']") {
           minHeight(minSizeInteractivePointer)
-          padding(spacing4, spacing0)
+          padding(calc((minSizeInteractivePointer - lineHeightSmall22) / 2), spacing0)
         }
         selector("&:not([data-separation='minimal'])") { padding(spacing16) }
         // Nested one border-width inside the card's radius, so the hover
