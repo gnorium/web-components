@@ -29,8 +29,8 @@
       case viewport
       /// A popover on a wide screen (user, 2026-11-01): no backdrop, the
       /// panel anchored beside what opened it (`DialogSheet.pop`, which
-      /// sets where), at least 320×320, as wide and tall as what it holds
-      /// up to the screen's room, its body scrolling past that.
+      /// sets where), at least 320 wide, as wide and tall as what it holds
+      /// up to 320 tall, its body scrolling past that.
       case popover
     }
 
@@ -158,8 +158,9 @@
         }
         // A popover's panel: no backdrop, framed by a subtle border and
         // rounded, never shadowed; it fades in where it stands rather than
-        // sliding from above. At least 320×320, it grows to fit what it
-        // holds, up to the screen's room less its gutters.
+        // sliding from above. At least 320 wide, it grows to fit what it
+        // holds, up to 320 tall (user, 2026-11-01): past that its body
+        // scrolls under the header (`DialogSheet`), with no edge fade.
         selector("&[data-placement='popover'] .sheet-backdrop") { display(.none) }
         selector("&[data-placement='popover'] .sheet-panel") {
           display(.flex)
@@ -167,8 +168,8 @@
           width(.maxContent)
           minWidth(px(320))
           maxWidth(min(calc(px(512)), calc(vw(100) - spacing32)))
-          minHeight(px(320))
-          maxHeight(calc(dvh(100) - spacing32))
+          maxHeight(min(calc(px(320)), calc(dvh(100) - spacing32)))
+          overflow(.hidden)
           paddingBlock(spacing16)
           border(borderWidthBase, .solid, borderColorSubtle)
           borderRadius(borderRadiusBase)

@@ -890,8 +890,8 @@ public enum OutlineMoves {
       selector("&:not(:has(.outliner-item > .outliner-list:not(:empty))) .outliner-toggle") {
         display(.none)
       }
-      // A round target centered on the grip, the grip a step in from its
-      // edge all round. It stands out of its line by the same amount above
+      // A round target the medium button's size, the grip centered in it.
+      // It stands out of its line by the same amount above
       // and below, so the row is as tall as its line, not the circle.
       descendant(".outliner-handle") {
         display(.inlineFlex)
@@ -899,10 +899,10 @@ public enum OutlineMoves {
         justifyContent(.center)
         flexShrink(0)
         boxSizing(.borderBox)
-        width(size32)
-        height(size32)
-        padding(spacing8)
-        marginBlock(calc((lineHeightSmall22 - size32) / 2))
+        width(ButtonView.ButtonSize.medium.minSize)
+        height(ButtonView.ButtonSize.medium.minSize)
+        padding(0)
+        marginBlock(calc((lineHeightSmall22 - ButtonView.ButtonSize.medium.minSize) / 2))
         border(.none)
         borderRadius(borderRadiusCircle)
         backgroundColor(.transparent)
@@ -935,12 +935,13 @@ public enum OutlineMoves {
         color(colorOnSolid)
         cursor(.grabbing)
       }
-      // A thumb grips it: 40 on a phone, the icon centered in it.
+      // On a phone it steps down one size with every control
+      // (`ButtonView.phoneStep`): medium's target becomes small's.
       media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
-        descendant(".outliner-handle") {
-          width(size40).important()
-          height(size40).important()
-          marginBlock(calc((lineHeightSmall22 - size40) / 2)).important()
+        selector("\(ButtonView.phoneStep) & .outliner-handle") {
+          width(ButtonView.ButtonSize.small.minSize).important()
+          height(ButtonView.ButtonSize.small.minSize).important()
+          marginBlock(calc((lineHeightSmall22 - ButtonView.ButtonSize.small.minSize) / 2)).important()
         }
       }
       // Nothing is selected by a drag that strays over text.
