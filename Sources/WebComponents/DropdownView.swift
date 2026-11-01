@@ -306,9 +306,7 @@ public struct DropdownView: HTMLContent {
                 // toggle under the pointer showed no change at all.
                 if multiple {
                   span {
-                    span { CheckIconView(size: size16) }
-                      .class("dropdown-option-checkmark")
-                      .ariaHidden(true)
+                    span().class("dropdown-option-checkmark").ariaHidden(true)
                   }
                   .class("dropdown-option-checkbox")
                 }
@@ -601,33 +599,59 @@ public struct DropdownView: HTMLContent {
       ) {
         color(colorOnSolid).important()
       }
-      // A checkbox's box, as CheckboxView's and a multiselect menu item's.
+      // A checkbox's box and mark, as CheckboxView's: square (the minimal
+      // radius), its border the control's, blue with a white tick when on.
       descendant(".dropdown-option-checkbox") {
-        display(.inlineFlex)
-        alignItems(.center)
-        justifyContent(.center)
+        display(.inlineBlock)
+        position(.relative)
         width(minSizeInputBinary)
         height(minSizeInputBinary)
         flexShrink(0)
         border(borderWidthBase, .solid, borderColorInputBinary)
-        borderRadius(borderRadiusBase)
+        borderRadius(borderRadiusMinimal)
         backgroundColor(backgroundColorBase)
         boxSizing(.borderBox)
       }
       descendant(".dropdown-option[data-selected='true'] .dropdown-option-checkbox") {
         backgroundColor(backgroundColorInputBinaryChecked)
+        borderColor(borderColorInputBinaryChecked)
+      }
+      // On a solid blue row (highlighted or under the pointer) the box
+      // inverts: unchecked, a white edge on the blue; checked, white filled
+      // with the tick in the row's blue.
+      selector(
+        "& .dropdown-option[data-highlighted='true'] .dropdown-option-checkbox",
+        "& .dropdown-option:hover .dropdown-option-checkbox"
+      ) {
+        backgroundColor(backgroundColorTransparent)
+        borderColor(borderColorInvertedFixed)
+      }
+      selector(
+        "& .dropdown-option[data-highlighted='true'][data-selected='true'] .dropdown-option-checkbox",
+        "& .dropdown-option[data-selected='true']:hover .dropdown-option-checkbox"
+      ) {
+        backgroundColor(backgroundColorBaseFixed)
+      }
+      selector(
+        "& .dropdown-option[data-highlighted='true'] .dropdown-option-checkmark",
+        "& .dropdown-option:hover .dropdown-option-checkmark"
+      ) {
+        borderRightColor(backgroundColorBlue)
+        borderBottomColor(backgroundColorBlue)
       }
       descendant(".dropdown-option-checkmark") {
         display(.none)
-        width(size16)
-        height(size16)
-        color(colorOnSolid)
+        position(.absolute)
+        top(perc(50))
+        left(perc(50))
+        width(px(5))
+        height(px(10))
+        borderRight(px(2), .solid, colorOnSolid)
+        borderBottom(px(2), .solid, colorOnSolid)
+        transform(translate(perc(-50), perc(-60)), rotate(deg(45)))
       }
       descendant(".dropdown-option[data-selected='true'] .dropdown-option-checkmark") {
-        display(.flex)
-      }
-      descendant(".dropdown-option-checkmark svg") {
-        height(perc(100))
+        display(.block)
       }
       descendant(".dropdown-option[data-highlighted='true']") {
         backgroundColor(backgroundColorBlue).important()

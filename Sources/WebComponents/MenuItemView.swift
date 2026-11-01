@@ -176,12 +176,7 @@
         if multiselect {
           items.append(
             span {
-              if selected {
-                // Inside the 20px checkbox, not beside text: its own size.
-                span { CheckIconView(size: size16) }
-                  .class("menu-item-checkmark")
-                  .ariaHidden(true)
-              }
+              span().class("menu-item-checkmark").ariaHidden(true)
             }
             .class("menu-item-checkbox")
           )
@@ -381,31 +376,37 @@
         outline(borderWidthBase, .solid, borderColorBlueFocus).important()
         outlineOffset(px(-1)).important()
       }
+      // A checkbox's box and mark, as CheckboxView's: square (the minimal
+      // radius), its border the control's, blue with a white tick when on.
       descendant(".menu-item-checkbox") {
-        display(.inlineFlex)
-        alignItems(.center)
-        justifyContent(.center)
-        // A checkbox's box, as CheckboxView's: a binary input, not an icon
-        // beside text.
+        display(.inlineBlock)
+        position(.relative)
         width(minSizeInputBinary)
         height(minSizeInputBinary)
         flexShrink(0)
         border(borderWidthBase, .solid, borderColorInputBinary)
-        borderRadius(borderRadiusBase)
+        borderRadius(borderRadiusMinimal)
         backgroundColor(backgroundColorBase)
+        boxSizing(.borderBox)
         transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
       }
       selector("&[data-selected='true'] .menu-item-checkbox") {
         backgroundColor(backgroundColorInputBinaryChecked)
+        borderColor(borderColorInputBinaryChecked)
       }
       descendant(".menu-item-checkmark") {
-        display(.flex)
-        width(size16)
-        height(size16)
-        color(colorOnSolid)
+        display(.none)
+        position(.absolute)
+        top(perc(50))
+        left(perc(50))
+        width(px(5))
+        height(px(10))
+        borderRight(px(2), .solid, colorOnSolid)
+        borderBottom(px(2), .solid, colorOnSolid)
+        transform(translate(perc(-50), perc(-60)), rotate(deg(45)))
       }
-      selector("& .menu-item-checkmark svg") {
-        height(perc(100))
+      selector("&[data-selected='true'] .menu-item-checkmark") {
+        display(.block)
       }
       descendant(".menu-item-thumbnail") {
         display(.inlineFlex)
