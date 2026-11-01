@@ -537,8 +537,9 @@ public enum OutlineMoves {
       if arranges {
         // The grip: what is pressed to pick the item up, what is dragged,
         // and what the keyboard grabs.
+        // An icon-only control: the icon the text's size.
         let handle = button {
-          GripVerticalIconView(size: lineHeightSmall22)
+          GripVerticalIconView(size: fontSizeMedium16)
         }
         .type(.button)
         .class("outliner-handle")
@@ -889,16 +890,21 @@ public enum OutlineMoves {
       selector("&:not(:has(.outliner-item > .outliner-list:not(:empty))) .outliner-toggle") {
         display(.none)
       }
+      // A round target centered on the grip, the grip a step in from its
+      // edge all round. It stands out of its line by the same amount above
+      // and below, so the row is as tall as its line, not the circle.
       descendant(".outliner-handle") {
         display(.inlineFlex)
         alignItems(.center)
         justifyContent(.center)
         flexShrink(0)
-        width(size24)
-        height(size24)
-        padding(0)
+        boxSizing(.borderBox)
+        width(size32)
+        height(size32)
+        padding(spacing8)
+        marginBlock(calc((lineHeightSmall22 - size32) / 2))
         border(.none)
-        borderRadius(borderRadiusBase)
+        borderRadius(borderRadiusCircle)
         backgroundColor(.transparent)
         color(colorSubtle)
         cursor(.grab)
@@ -934,6 +940,7 @@ public enum OutlineMoves {
         descendant(".outliner-handle") {
           width(size40).important()
           height(size40).important()
+          marginBlock(calc((lineHeightSmall22 - size40) / 2)).important()
         }
       }
       // Nothing is selected by a drag that strays over text.
