@@ -77,10 +77,13 @@ public struct DatumView: HTMLContent {
     let tagged = sent ? view.data("sent", "true") : view
     return (stringIsEmpty(id) ? tagged : tagged.id(id))
     .style {
+      // Its label a field's label's step above its box (user, 2026-11-01:
+      // the Origin datum's label stood closer to its tree than every field's
+      // to its control): `FieldView`'s 8.
       selector("&") {
         display(.flex)
         flexDirection(.column)
-        gap(spacing4)
+        gap(spacing8)
         minWidth(0)
         backgroundColor(.transparent)
       }

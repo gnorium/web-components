@@ -7,22 +7,28 @@ import HTMLBuilder
 import WebTypes
 
 /// Navigates the user to another page, view or section—or, as a form's
-/// submit control (`init(submit:…)`), posts its form while reading exactly
+/// submit control (`init(_: .submit, …)`), posts its form while reading exactly
 /// as a link: a row of links whose acts are POSTs (Nullify) stays one
-/// row of links.
+/// row of links. As a page's control (`.button`) it acts on the page and
+/// never navigates: a term that opens its preview (user, 2026-11-01).
 public struct LinkView: HTMLContent {
   public enum LinkWeight: String, Sendable {
     case `default`
     case plain
   }
 
-  /// A link drawn as a form's submit control: `<button type="submit">`.
+  /// A link drawn as a button: a form's submit control (`<button
+  /// type="submit">`), or a control acting on the page (`<button
+  /// type="button">`).
   public enum Submit: Sendable {
     case submit
+    case button
   }
 
   let url: String
   let submits: Bool
+  /// As a button, which kind: nil for a link.
+  let control: Submit?
   let underlined: Bool
   let redLink: Bool
   let redHover: Bool
@@ -59,6 +65,7 @@ public struct LinkView: HTMLContent {
     self.newTab = newTab
     self.data = data
     self.submits = false
+    self.control = nil
     self.underlined = underlined
     self.redLink = redLink
     self.redHover = redHover
@@ -89,6 +96,7 @@ public struct LinkView: HTMLContent {
     self.url = ""
     self.data = data
     self.submits = true
+    self.control = submit
     self.underlined = underlined
     self.redLink = redLink
     self.redHover = redHover
@@ -104,8 +112,12 @@ public struct LinkView: HTMLContent {
 
   public func build() -> DOM.Node {
     if submits {
+      let acts: Bool = {
+        if case .button? = self.control { return true }
+        return false
+      }()
       var control = button { content }
-        .type(.submit)
+        .type(acts ? .button : .submit)
         .class(linkClasses + " link-submit")
         .data("height", linkHeight?.value ?? "auto")
       if let title { control = control.title(title) }

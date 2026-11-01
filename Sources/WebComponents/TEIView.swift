@@ -2112,8 +2112,10 @@
         // click or a tap.
         // What is no word but encoded opens its gloss the same way, and a
         // translated block the translator noted, its note.
+        // The question-mark cursor, as over every term that opens a gloss
+        // or a preview (user, 2026-11-01).
         selector("& .tei-word", "& [data-gloss-element]", "& .tei-noted") {
-          cursor(.pointer)
+          cursor(cursorHelp)
           borderRadius(borderRadiusMinimal)
           outline(.none)
         }
