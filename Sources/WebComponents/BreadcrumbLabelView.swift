@@ -53,14 +53,11 @@ public struct BreadcrumbLabelView: HTMLContent {
         fontWeight(fontWeightNormal)
         color(colorSubtle)
       }
-      // The chevron as quiet as what it follows, and on the text's middle:
-      // `middle` (the separator's own) set it 1.8px low here, on the
-      // lowercase letters' middle; on the baseline it sits within 0.5px
-      // (measured, user, 2026-10-08).
+      // The chevron as quiet as what it follows, centered on the
+      // lowercase letters' middle by the separator's own `middle` (user,
+      // 2026-11-01): on the baseline it stood about 4px high.
       descendant(".breadcrumb-separator-view") {
         color(colorSubtle)
-        verticalAlign(.baseline)
-        lineHeight(lineHeightSmall22)
       }
       // Punctuation between the words: their 16px font size, never the
       // line height (user, 2026-10-21).

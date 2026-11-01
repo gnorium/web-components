@@ -246,12 +246,10 @@
     /// at): below it where there is room, else above, its start edge at the
     /// box's start (its end in right-to-left text), kept inside the screen.
     /// `follows`: the box is `opener`'s, which it stays by as the page
-    /// scrolls. With `focuses`, the focus goes to its close button, as a
-    /// sheet's does; without (opened by a hover or a focus on what opened
-    /// it), the focus stays where it is. Open already, it moves.
-    public func pop(
-      at box: DOM.Rect, opener: DOM.Element?, follows: Bool, focuses: Bool, fromKeyboard: Bool = false
-    ) {
+    /// scrolls. The focus goes to its close button, as a sheet's does
+    /// (only a click, a tap or a key opens one, user, 2026-11-01). Open
+    /// already, it moves.
+    public func pop(at box: DOM.Rect, opener: DOM.Element?, follows: Bool, fromKeyboard: Bool = false) {
       if let previous = host { previous.removeAttribute(data("sheet-covered")) }
       host = nil
       if let _ = moving.closest("[data-sheet-host]") { document.body.appendChild(moving) }
@@ -266,10 +264,8 @@
       opener?.setAttribute("aria-expanded", "true")
       if !isOpen { SheetMotion.open(sheet) }
       place()
-      if focuses {
-        sheet.querySelector(".dialog-sheet-close")?.focus(
-          DOM.FocusOptions(preventScroll: true, focusVisible: fromKeyboard))
-      }
+      sheet.querySelector(".dialog-sheet-close")?.focus(
+        DOM.FocusOptions(preventScroll: true, focusVisible: fromKeyboard))
     }
 
     /// Places a popover again beside its box, as large as it now is (what

@@ -483,6 +483,10 @@ public struct AccordionView: HTMLContent {
     private var actionButton: DOM.Element?
     private var chevronEl: DOM.Element?
     private var isOpen: Bool
+    /// What it holds watched while it opens: content that arrives mid-way
+    /// (a reader fetched as it opens) grows the motion's end, never left
+    /// clipped until it ends and then jumping into place.
+    private var growWatch: (inner: DOM.Element, handle: Int32)?
 
     init(accordion: DOM.Element) {
       self.accordion = accordion
@@ -608,6 +612,7 @@ public struct AccordionView: HTMLContent {
     }
 
     private func beginClose(_ details: DOM.Element) {
+      stopGrowWatch()
       self.isOpen = false
       chevronEl?.setAttribute(data("expanded"), "false")
       if let actionButton = self.actionButton {
@@ -656,6 +661,16 @@ public struct AccordionView: HTMLContent {
       lockClipHeight("0px", animate: false)
       details.setAttribute(data("motion"), "enter-to")
       lockClipHeight(pixelHeight(endHeight), animate: true)
+      if let inner {
+        stopGrowWatch()
+        let handle = inner.observeResize { [self] _, _ in
+          guard self.isOpen, stringEquals(details.dataset["motion"] ?? "", "enter-to"),
+            let watched = self.growWatch?.inner
+          else { return }
+          self.clip?.style.setProperty("height", self.pixelHeight(watched.scrollHeight))
+        }
+        growWatch = (inner, handle)
+      }
 
       let openEvent = CustomEvent(type: "accordion-toggle", detail: "true")
       self.accordion.dispatchEvent(openEvent)
@@ -667,7 +682,13 @@ public struct AccordionView: HTMLContent {
       }
     }
 
+    private func stopGrowWatch() {
+      if let watch = growWatch { watch.inner.unobserveResize(watch.handle) }
+      growWatch = nil
+    }
+
     private func completeOpen(_ details: DOM.Element) {
+      stopGrowWatch()
       guard self.isOpen else { return }
       let motion = details.dataset["motion"] ?? ""
       guard stringEquals(motion, "enter-to") else { return }

@@ -160,14 +160,13 @@ public struct RecordLabelView: HTMLContent {
         fontSize(fontSizeMedium16)
         color(colorSubtle)
       }
-      // The meta row's chevrons as its first row's: quiet, on the baseline.
+      // The meta row's chevrons as its first row's: quiet, centered on the
+      // lowercase letters' middle (the separator's own `middle`).
       descendant(".record-label-meta .breadcrumb-separator-view") {
         color(colorSubtle)
-        verticalAlign(.baseline)
       }
       // Punctuation between the words: the meta line's 16px font size,
       // never its line height (user, 2026-10-21).
-      descendant(".breadcrumb-separator-view") { lineHeight(lineHeightSmall22) }
       descendant(".breadcrumb-separator-view .chevron-right-icon-view") {
         height(fontSizeMedium16).important()
       }

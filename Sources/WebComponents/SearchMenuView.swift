@@ -265,8 +265,7 @@
           width(perc(100))
           maxHeight(perc(100))
           backgroundColor(backgroundColorBase)
-          paddingBlockStart(spacing16)
-          paddingBlockEnd(spacing16)
+          paddingBlock(spacing8)
           borderBlockEnd(borderWidthBase, .solid, borderColorSubtle)
           boxSizing(.borderBox)
           overflowY(.auto)
@@ -277,10 +276,6 @@
             (.opacity, transitionDurationMedium, transitionTimingFunctionSystem),
             (.transform, transitionDurationMedium, transitionTimingFunctionSystem)
           )
-          media(minWidth(minWidthBreakpointTablet)) {
-            paddingBlockStart(spacing20)
-            paddingBlockEnd(spacing20)
-          }
         }
         descendant(".search-menu-input-row") {
           display(.flex)
