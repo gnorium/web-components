@@ -122,12 +122,11 @@ public enum OutlineMoves {
   /// is its last row, after its content and every item under it: "+" adds
   /// below it (user, 2026-10-01).
   ///
-  /// **Deep trees scroll.** The tree sits in a sideways scrollport (as a
-  /// table does), and every node is at least `minWidthTreeNode` wide, so a
-  /// node at depth 100 is as readable as one at depth 1: past the width the
-  /// column gives, the tree scrolls, never the page. A menu opened inside
-  /// the scrollport is placed over the page, not cut off at its edge
-  /// (`DropdownView`).
+  /// **Deep trees widen the page.** Every node is at least
+  /// `minWidthTreeNode` wide, so a node at depth 100 is as readable as one
+  /// at depth 1: past the width the column gives, the page itself widens
+  /// and scrolls sideways (user, 2026-11-02: a phone pinches out to see it
+  /// whole), no scrollport of the tree's own.
   ///
   /// **Arranged** only where it has a `name` (the hidden input the
   /// arrangement posts as): then its reader can rearrange it—by dragging
@@ -643,10 +642,9 @@ public enum OutlineMoves {
           .hidden()
         }
 
-        // The scrollport: a deep tree scrolls here, never the page.
+        // The tree's frame: a deep tree widens the page (user, 2026-11-02).
         div { top }
           .class("outliner-scroll")
-          .data("scrollport", true)
 
         if let name {
           if let form {
@@ -724,29 +722,18 @@ public enum OutlineMoves {
         gap(spacing8)
         minWidth(0)
       }
-      // The scrollport, as a table's: sideways only, its bar over nothing.
-      // A little room at its edges, so a ring drawn outside a row or a
-      // control is not cut off by the edge that scrolls.
+      // A deep tree is as wide as its nodes need (user, 2026-11-02): never
+      // narrower than the narrowest any node can be (a reader's footer row,
+      // ArtifactView), every card widening to hold what it nests; past the
+      // screen the page itself widens, so a phone pinches out to see it
+      // whole. No scrollport of its own. A little room at its edges keeps a
+      // ring drawn outside a row or a control clear.
       descendant(".outliner-scroll") {
-        overflowX(.auto)
         minWidth(0)
         padding(spacing4)
       }
-      // On a phone (below 480px) the tree is never narrower than the
-      // narrowest any node can be (a reader's footer row, ArtifactView,
-      // user 2026-10-12): every card widens to hold what it nests, and the
-      // scrollport scrolls the whole tree from its start edge, nothing
-      // clipped at either side.
-      media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
-        selector("& .outliner-scroll > .outliner-list") {
-          CSS.Property("min-width", "min-content").important()
-        }
-      }
-      selector(
-        "& .outliner-scroll::-webkit-scrollbar-track", "& .outliner-scroll::-webkit-scrollbar-track-piece",
-        "& .outliner-scroll::-webkit-scrollbar-corner"
-      ) {
-        backgroundColor(.transparent).important()
+      selector("& .outliner-scroll > .outliner-list") {
+        CSS.Property("min-width", "min-content").important()
       }
       selector("& .outliner-instructions", "& .outliner-live") {
         position(.absolute)
