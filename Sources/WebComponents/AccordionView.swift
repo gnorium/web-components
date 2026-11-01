@@ -306,10 +306,14 @@ public struct AccordionView: HTMLContent {
         }
         // Its controls stand on the title's first line, however many lines
         // it wraps to; 4px above and below it (user, 2026-11-02: the
-        // centering's 5px moved it a pixel).
+        // centering's 5px moved it a pixel). One line stays centered in the
+        // pointer's target: title and controls are one flex line (wrap),
+        // which `align-content` centers whole.
         selector("&[data-separation='minimal']") {
           minHeight(minSizeInteractivePointer)
           padding(spacing4, spacing0)
+          flexWrap(.wrap)
+          alignContent(.center)
         }
         selector("&:not([data-separation='minimal'])") { padding(spacing16) }
         // Nested one border-width inside the card's radius, so the hover
