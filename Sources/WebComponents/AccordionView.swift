@@ -215,62 +215,77 @@ public struct AccordionView: HTMLContent {
           }
         }
 
-        if let icon = actionIcon {
-          button {
-            span { icon }
-              .ariaHidden(true)
+        // Its controls as one group on the title's FIRST line, as a
+        // record row's number and info icon stand: one line high, however
+        // many lines the title wraps to.
+        span {
+          if let icon = actionIcon {
+            button {
+              span { icon }
+                .ariaHidden(true)
+            }
+            .type(.button)
+            .class("accordion-action-button")
+            .ariaLabel(actionButtonLabel)
+            .data("always-visible", actionAlwaysVisible)
+            .data("visible", actionAlwaysVisible || isOpen)
+            .style {
+              selector("&") {
+                alignItems(.center)
+                justifyContent(.center)
+                flexShrink(0)
+                width(minSizeInteractivePointer)
+                height(minSizeInteractivePointer)
+                padding(0)
+                backgroundColor(.transparent)
+                border(.none)
+                borderRadius(borderRadiusBase)
+                color(colorSubtle)
+                cursor(cursorBase)
+                transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
+              }
+              selector("&[data-always-visible='true']") { display(.inlineFlex) }
+              selector("&[data-always-visible='false'][data-visible='true']") { display(.inlineFlex) }
+              selector("&[data-always-visible='false'][data-visible='false']") { display(.none) }
+              pseudoClass(.hover) {
+                backgroundColor(backgroundColorInteractiveSubtleHover).important()
+                color(colorBase).important()
+              }
+              pseudoClass(.active) { backgroundColor(backgroundColorInteractiveSubtleActive).important() }
+              pseudoClass(.focus) {
+                outline(px(2), .solid, borderColorBlueFocus).important()
+                outlineOffset(px(-2)).important()
+              }
+            }
           }
-          .type(.button)
-          .class("accordion-action-button")
-          .ariaLabel(actionButtonLabel)
-          .data("always-visible", actionAlwaysVisible)
-          .data("visible", actionAlwaysVisible || isOpen)
+
+          // Animated chevron—right (collapsed) to down (open)
+          span {
+            AnimatedRightDownChevronView(
+              id: "accordion-\(id)",
+              expanded: isOpen,
+              // Beside the title: its 22px line.
+              size: lineHeightSmall22
+            )
+          }
+          .class("accordion-expand-icon")
           .style {
             selector("&") {
+              display(.inlineFlex)
               alignItems(.center)
               justifyContent(.center)
-              flexShrink(0)
-              width(minSizeInteractivePointer)
-              height(minSizeInteractivePointer)
-              padding(0)
-              backgroundColor(.transparent)
-              border(.none)
-              borderRadius(borderRadiusBase)
               color(colorSubtle)
-              cursor(cursorBase)
-              transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
-            }
-            selector("&[data-always-visible='true']") { display(.inlineFlex) }
-            selector("&[data-always-visible='false'][data-visible='true']") { display(.inlineFlex) }
-            selector("&[data-always-visible='false'][data-visible='false']") { display(.none) }
-            pseudoClass(.hover) {
-              backgroundColor(backgroundColorInteractiveSubtleHover).important()
-              color(colorBase).important()
-            }
-            pseudoClass(.active) { backgroundColor(backgroundColorInteractiveSubtleActive).important() }
-            pseudoClass(.focus) {
-              outline(px(2), .solid, borderColorBlueFocus).important()
-              outlineOffset(px(-2)).important()
             }
           }
         }
-
-        // Animated chevron—right (collapsed) to down (open)
-        span {
-          AnimatedRightDownChevronView(
-            id: "accordion-\(id)",
-            expanded: isOpen,
-            // Beside the title: its 22px line.
-            size: lineHeightSmall22
-          )
-        }
-        .class("accordion-expand-icon")
+        .class("accordion-controls")
         .style {
           selector("&") {
-            display(.inlineFlex)
+            display(.flex)
             alignItems(.center)
-            justifyContent(.center)
-            color(colorSubtle)
+            gap(spacing8)
+            height(lineHeightSmall22)
+            flexShrink(0)
           }
         }
       }
@@ -279,7 +294,7 @@ public struct AccordionView: HTMLContent {
       .style {
         selector("&") {
           display(.flex)
-          alignItems(.center)
+          alignItems(.flexStart)
           gap(spacing8)
           cursor(cursorBaseHover)
           listStyle(.none)
