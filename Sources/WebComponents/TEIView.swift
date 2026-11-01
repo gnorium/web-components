@@ -90,6 +90,9 @@ public enum TEISentenceSelection {
     /// selects a sentence by them (gnorium-web `QuoteSentenceSelection`).
     private var sentences: [TEIWordPlace: Int] = [:]
     private var lemmas: [TEIWordPlace: String] = [:]
+    /// Its words' `xml:id`s ("w12.31", `data-word-id`): what a quote's
+    /// chosen words are stored by (`wordIds`).
+    private var wordIDs: [TEIWordPlace: String] = [:]
 
     /// A translation of the markup, page by page, in its own language:
     /// the translation's own TEI, read by the same reader as the markup,
@@ -507,8 +510,13 @@ public enum TEISentenceSelection {
       var view = self
       view.sentences = TEIRenderer.sentences(of: page)
       var lemmas: [TEIWordPlace: String] = [:]
-      for word in TEIRenderer.words(of: page) where !word.lemma.isEmpty { lemmas[word.place] = word.lemma }
+      var ids: [TEIWordPlace: String] = [:]
+      for word in TEIRenderer.words(of: page) {
+        if !word.lemma.isEmpty { lemmas[word.place] = word.lemma }
+        if !word.id.isEmpty { ids[word.place] = word.id }
+      }
       view.lemmas = lemmas
+      view.wordIDs = ids
       return view
     }
 
@@ -622,6 +630,7 @@ public enum TEISentenceSelection {
         if let element = node as? DOM.Element {
           if let sentence = sentences[word] { element.addingAttribute("data-sentence", "\(sentence)") }
           if let lemma = lemmas[word] { element.addingAttribute("data-lemma", lemma) }
+          if let id = wordIDs[word] { element.addingAttribute("data-word-id", id) }
         }
         return [node]
       }

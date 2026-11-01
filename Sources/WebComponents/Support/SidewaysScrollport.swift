@@ -2,6 +2,7 @@ import CSSBuilder
 import CSSOMBuilder
 import DesignTokens
 import DOMBuilder
+import EmbeddedSwiftUtilities
 import WebTypes
 
 /// A sideways scrollport (user, 2026-11-02), the one a tree uses
