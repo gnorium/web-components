@@ -129,6 +129,10 @@
     /// letters Unicode encodes as one character is that character
     /// (`TEIRenderer.presentationForms`), so a copy holds it; every other
     /// run its text.
+    /// The cap height of the text's serif face (Noto Serif: 1,462 of 2,048
+    /// units), in em: what a dropped initial's size is reckoned by.
+    static let dropCapHeight = "0.714"
+
     static func drawnText(of run: TEILine.Run) -> String {
       guard run.rend.split(whereSeparator: \.isWhitespace).contains(where: { $0 == TEIRenderer.ligature }) else {
         return run.text
@@ -459,7 +463,23 @@
     }
 
     private func inlineContent(_ line: TEILine, facsimileURL: String, tabStop: TEIWordPlace? = nil) -> DOM.Node {
-      span { markedContent(line.runs, facsimileURL: facsimileURL, tabStop: tabStop) }.build()
+      // A line beside an initial dropped from a line above begins its text
+      // after the initial, as the print sets it: what stands before its
+      // first letter (a speech prefix, "2. "), then the initial's room (a
+      // drop hang, its letter drawn invisible at the initial's size, never
+      // the text), then its text.
+      guard let hang = line.hang, let start = line.runs.firstIndex(where: { $0.text.contains(where: \.isLetter) })
+      else {
+        return span { markedContent(line.runs, facsimileURL: facsimileURL, tabStop: tabStop) }.build()
+      }
+      let before = markedContent(Array(line.runs[..<start]), facsimileURL: facsimileURL, tabStop: tabStop)
+      let after = markedContent(Array(line.runs[start...]), facsimileURL: facsimileURL, tabStop: tabStop)
+      return span {
+        for node in before { node }
+        span { "" }.class("tei-drop-hang").addingAttribute("aria-hidden", "true").data("letter", hang.letter)
+          .addingAttribute("style", "--tei-drop-lines:\(hang.lines)")
+        for node in after { node }
+      }.build()
     }
 
     /// This view setting a translation whose blocks carry `notes`.
@@ -605,6 +625,16 @@
     private func runContent(_ run: TEILine.Run, facsimileURL: String, tabStop: TEIWordPlace?, showAlternative: Bool = true) -> DOM.Node {
       switch run.kind {
       case .text:
+        // An initial the print drops through the lines beside it
+        // (`TEIRenderer.dropped`, Hamlet Q1 p. 3's two-line S): the letter in
+        // the text's face, still the word's text, its cap from its line's cap
+        // height down to the last line's baseline beside it.
+        if run.drop > 1 {
+          return span {
+            span { span { run.text }.class("tei-drop-letter") }.class("tei-drop-shift")
+          }.class("tei-run tei-drop-initial").data("rend", run.rend).data("drop", run.drop)
+            .addingAttribute("style", TEIRendition.css(from: run.rend) + "--tei-drop-lines:\(run.drop)").build()
+        }
         // A decorated initial with its box: the decoration cut from the
         // facsimile as a figure's is, with its letter drawn over it
         // transparent, so the letter stays the word's text (selected, found,
@@ -1414,6 +1444,31 @@
           alignItems(.center)
           justifyContent(.center)
           color(.transparent)
+        }
+        // A dropped initial (user, 2026-11-01): as wide as its letter, no
+        // taller than nothing, so its line keeps its leading; set at the top
+        // of its line, where its own strut puts its baseline on the line's,
+        // and lowered from there by the lines it drops through, so its
+        // baseline is the last line's beside it. Its size makes its cap (the
+        // serif face's cap height, `dropCapHeight`) reach from the drop's
+        // lines down to its line's cap height. A line beside it holds its
+        // room (`tei-drop-hang`): the letter again at that size, invisible
+        // and never text.
+        selector("& .tei-drop-initial", "& .tei-drop-hang") {
+          display(.inlineBlock)
+          CSS.Property("block-size", "0")
+          verticalAlign(.top)
+        }
+        descendant(".tei-drop-shift") {
+          CSS.Property("vertical-align", "calc((1 - var(--tei-drop-lines)) * 1lh)")
+        }
+        selector("& .tei-drop-letter", "& .tei-drop-hang::before") {
+          CSS.Property("font-size", "calc((var(--tei-drop-lines) - 1) * 1lh / \(Self.dropCapHeight) + 1em)")
+          CSS.Property("line-height", "0")
+        }
+        descendant(".tei-drop-hang::before") {
+          CSS.Property("content", "attr(data-letter)")
+          visibility(.hidden)
         }
         descendant(".tei-figure-caption") {
           fontFamily(typographyFontSans)
