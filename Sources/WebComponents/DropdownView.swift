@@ -439,8 +439,9 @@ public struct DropdownView: HTMLContent {
       descendant(".dropdown-chevron") {
         flexShrink(0)
       }
-      descendant(".dropdown-selected-text[data-selected='true'][data-disabled='false']") { color(colorBase) }
-      descendant(".dropdown-selected-text[data-disabled='true']") { color(colorDisabled) }
+      // A value chosen reads in the base color, disabled or not, as every
+      // disabled field's value does; none chosen, the placeholder's.
+      descendant(".dropdown-selected-text[data-selected='true']") { color(colorBase) }
       // Only when it is narrow. `stacked` describes the OPTIONS; a full-width
       // trigger has room for the whole title and was cutting it to "An
       // Anglo-Saxon Dic...".
@@ -608,7 +609,6 @@ public struct DropdownView: HTMLContent {
       descendant(".dropdown-option-number::after") {
         content("\".\"")
       }
-      descendant(".dropdown-selected-text[data-disabled='true'] .dropdown-option-number") { color(colorDisabled) }
       // In the open list the number stands beside its value, which wraps
       // in a column of its own.
       descendant(".dropdown-option-display-text .dropdown-numbered-label") {

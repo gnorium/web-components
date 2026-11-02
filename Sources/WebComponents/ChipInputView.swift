@@ -194,7 +194,7 @@
           descendant(".chip-input-items") {
             backgroundColor(backgroundColorDisabled)
             borderColor(borderColorDisabled)
-            color(colorDisabled)
+            color(colorBase)
           }
         }
         // A field's inset: 12 inside the border on every side.

@@ -169,9 +169,12 @@ public struct TextAreaView: HTMLContent {
         resize(.vertical)
         overflowY(.auto)
       }
+      // A disabled field's value reads in the base color on the disabled
+      // ground, as every disabled field's does; its placeholder stays the
+      // placeholder's.
       selector("&.text-area-disabled .text-area-input") {
-        color(colorDisabled)
-        customProperty("-webkit-text-fill-color", colorDisabled)
+        color(colorBase)
+        customProperty("-webkit-text-fill-color", colorBase)
         backgroundColor(backgroundColorDisabled)
         borderColor(borderColorDisabled)
         cursor(cursorNotAllowed)
@@ -206,10 +209,6 @@ public struct TextAreaView: HTMLContent {
       selector("& .text-area-input::placeholder") {
         color(colorPlaceholder).important()
         customProperty("-webkit-text-fill-color", colorPlaceholder).important()
-      }
-      selector("& .text-area-input:disabled::placeholder") {
-        color(colorDisabled).important()
-        customProperty("-webkit-text-fill-color", colorDisabled).important()
       }
       selector("&:not(.text-area-disabled):not(.text-area-read-only) .text-area-input:focus") {
         borderColor(borderColorBlueFocus).important()

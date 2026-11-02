@@ -363,6 +363,9 @@ public struct AccordionView: HTMLContent {
             // No top padding: the header's bottom padding already separates
             // title from body, and doubling it read as a gap.
             selector("&:not([data-separation='minimal'])") { padding(spacing0, spacing16, spacing16) }
+            // A body with nothing in it opens to nothing: no padding under
+            // the header.
+            selector("&:empty") { padding(spacing0).important() }
           }
       }
       .class("accordion-content-clip")

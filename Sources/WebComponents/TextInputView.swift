@@ -341,9 +341,12 @@ public struct TextInputView: HTMLContent {
       // WebKit paints a disabled control's text with -webkit-text-fill-color,
       // which its UA sheet sets for :disabled—so `color` alone left Safari
       // painting system grey over ours, for the value and the placeholder both.
+      // A disabled field's value reads in the base color on the disabled
+      // ground, as every disabled field's does (DropdownView's too); its
+      // placeholder stays the placeholder's.
       selector("&.text-input-disabled .text-input-input") {
-        color(colorDisabled)
-        customProperty("-webkit-text-fill-color", colorDisabled)
+        color(colorBase)
+        customProperty("-webkit-text-fill-color", colorBase)
         backgroundColor(backgroundColorDisabled)
         borderColor(borderColorDisabled)
         cursor(cursorNotAllowed)
@@ -384,7 +387,6 @@ public struct TextInputView: HTMLContent {
       descendant(".text-input-prefix::after") {
         content("\".\"")
       }
-      selector("&.text-input-disabled .text-input-prefix") { color(colorDisabled) }
       selector("&.text-input-has-start-icon .text-input-input") {
         paddingInlineStart(calc(spacing12 + lineHeightSmall22 + spacing8)).important()
       }
@@ -395,10 +397,6 @@ public struct TextInputView: HTMLContent {
       selector("& .text-input-input::placeholder") {
         color(colorPlaceholder).important()
         customProperty("-webkit-text-fill-color", colorPlaceholder).important()
-      }
-      selector("& .text-input-input:disabled::placeholder") {
-        color(colorDisabled).important()
-        customProperty("-webkit-text-fill-color", colorDisabled).important()
       }
       // Focused, the field's ring: its border blue and a 1px outline of the
       // same color, two pixels in all—no shadow. Focus only, like the

@@ -207,20 +207,20 @@ public struct SearchInputView: HTMLContent {
       selector("& .search-input::-webkit-search-cancel-button") { display(.none).important() }
       selector("& .search-input::placeholder") {
         color(colorPlaceholder).important()
+        customProperty("-webkit-text-fill-color", colorPlaceholder).important()
         opacity(1).important()
-      }
-      selector("& .search-input:disabled::placeholder") {
-        color(colorDisabled).important()
-        customProperty("-webkit-text-fill-color", colorDisabled).important()
       }
       descendant(".search-input:focus") {
         outline(borderWidthBase, .solid, borderColorBlue).important()
         outlineOffset(px(-2)).important()
         borderColor(borderColorBlue).important()
       }
+      // Its value in the base color on the disabled ground, as every
+      // disabled field's.
       descendant(".search-input:disabled") {
         backgroundColor(backgroundColorDisabled).important()
-        color(colorDisabled).important()
+        color(colorBase).important()
+        customProperty("-webkit-text-fill-color", colorBase).important()
         borderColor(borderColorDisabled).important()
         cursor(cursorNotAllowed).important()
       }

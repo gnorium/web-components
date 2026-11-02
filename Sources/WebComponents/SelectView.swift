@@ -158,7 +158,7 @@
         selector("&.select-disabled .select-handle") {
           backgroundColor(backgroundColorDisabled)
           borderColor(borderColorDisabled)
-          color(colorDisabled)
+          color(colorBase)
           cursor(cursorNotAllowed)
         }
         selector("&.select-error .select-handle") {
