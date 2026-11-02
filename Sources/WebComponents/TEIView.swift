@@ -90,8 +90,9 @@ public enum TEISentenceSelection {
     /// selects a sentence by them (gnorium-web `QuoteSentenceSelection`).
     private var sentences: [TEIWordPlace: Int] = [:]
     private var lemmas: [TEIWordPlace: String] = [:]
-    /// Its words' `xml:id`s ("w12.31", `data-word-id`): what a quote's
-    /// chosen words are stored by (`wordIds`).
+    /// Its words' keys (`data-word-id`, `TEIWord.key`): an `xml:id`
+    /// ("w12.31"), or on a calibrated page the word's first zone
+    /// ("p3-wz12"); what a quote's chosen words are stored by (`wordIds`).
     private var wordIDs: [TEIWordPlace: String] = [:]
 
     /// A translation of the markup, page by page, in its own language:
@@ -513,7 +514,8 @@ public enum TEISentenceSelection {
       var ids: [TEIWordPlace: String] = [:]
       for word in TEIRenderer.words(of: page) {
         if !word.lemma.isEmpty { lemmas[word.place] = word.lemma }
-        if !word.id.isEmpty { ids[word.place] = word.id }
+        let key = word.key
+        if !key.isEmpty { ids[word.place] = key }
       }
       view.lemmas = lemmas
       view.wordIDs = ids
