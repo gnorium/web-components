@@ -255,22 +255,24 @@ public enum TEISentenceSelection {
 
     /// The book's em on the page's scan, in the 0–1000 space across its
     /// image (user, 2026-10-18): the book is set in one type, so a scan has
-    /// its em as its width over its width in em—the scan's own, as its
+    /// its em as its width over its width in em (`TEIPage.scanWidth`)—the
+    /// em the page is set in: a page framed by its leaf (a board lettered
+    /// in gilt, Hamlet Q1's front cover) its leaf's, 38 em across it
+    /// (user, 2026-11-03: at the work's em its overlay drew the cover's
+    /// gilt frame at 0.63 of the scan's); else the scan's own, as its
     /// measured text block gives it (`TEITextBlock.frame`: the body type
     /// measured on it), else the work's frame's (`TEIWorkFrame.width`,
-    /// `max-inline-size`; gnorium-python `type_scale.canvas_em`). The
-    /// scan's own first: one width in em for every scan assumes each frames
-    /// the page alike, and Hamlet Q1's photographs (openings, a ruler, more
-    /// or less of the next leaf) run 73 to 85 em wide (dev, 2026-10-26).
-    /// "" where neither gives a width. The reader's overlay always lays
-    /// the scan at this scale, never by the main text block's height, the
-    /// edition's typesetting (`OverlayRegistration.laid`).
+    /// `max-inline-size`). The scan's own before the work's: one width in
+    /// em for every scan assumes each frames the page alike, and Hamlet
+    /// Q1's photographs (openings, a ruler, more or less of the next leaf)
+    /// run 73 to 85 em wide (dev, 2026-10-26). "" where none gives a
+    /// width. The reader's overlay always lays the scan at this scale,
+    /// never by the main text block's height, the edition's typesetting
+    /// (`OverlayRegistration.laid`).
     static func scanEmData(of page: TEIPage) -> String {
-      guard let frame = page.textBlock?.frame.flatMap({ $0.width > 0 ? $0 : nil }) ?? TEIRendition.frame(in: page.renditions),
-        frame.width > 0
-      else { return "" }
+      guard let width = page.scanWidth, width > 0 else { return "" }
       // Ten-thousandths of the space: finer than a scan's pixel.
-      return number((1000 / frame.width * 10_000).rounded() / 10_000)
+      return number((1000 / width * 10_000).rounded() / 10_000)
     }
 
     /// The page's frame as the custom properties its rules read
@@ -1360,7 +1362,7 @@ public enum TEISentenceSelection {
             .data("word-zones", Self.wordZonesData(of: page))
             .data("element-zones", Self.elementZonesData(of: page))
             .data("body-leading", Self.bodyLeadingData(of: page))
-            // The work's em on its scan: the overlay's type scale.
+            // The em the page is set in, on its scan: the overlay's type scale.
             .data("scan-em", Self.scanEmData(of: page))
             // Its place in the document, from 0: what the reader turns to and
             // a roster names it by, where not every page is drawn.
