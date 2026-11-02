@@ -19,6 +19,10 @@ public struct TextInputView: HTMLContent {
   let required: Bool
   let clearable: Bool
   let startIcon: String?
+  /// Text that stands at the start of the field, inside it and never part
+  /// of its value: a typed Value's number, "1." (user, 2026-11-02), mono
+  /// and subtle as a tree row's number, with the "." after it. Nil for none.
+  let prefix: String?
   let endIcon: String?
   let inputFontSize: CSS.Length
   let labelText: String
@@ -93,6 +97,7 @@ public struct TextInputView: HTMLContent {
     clearable: Bool = false,
     startIcon: String? = nil,
     endIcon: String? = nil,
+    prefix: String? = nil,
     inputFontSize: CSS.Length = fontSizeMedium16,
     label: String = "",
     optional: Bool = false,
@@ -125,6 +130,7 @@ public struct TextInputView: HTMLContent {
     self.required = required
     self.clearable = clearable
     self.startIcon = startIcon
+    self.prefix = prefix
     self.endIcon = endIcon
     self.inputFontSize = inputFontSize
     self.labelText = label
@@ -151,8 +157,9 @@ public struct TextInputView: HTMLContent {
   public func build() -> DOM.Node {
     let hasStartIcon = if let _ = startIcon { true } else { false }
     let hasEndIcon = if let _ = endIcon { true } else { false }
+    let hasPrefix = if let _ = prefix { true } else { false }
     let htmlInputType = getHTMLInputType(type)
-    let stateClass = "\(fullWidth ? "text-input-full-width " : "")\(disabled ? "text-input-disabled " : "")\(readonly ? "text-input-read-only " : "")\(status == .error ? "text-input-error " : "")\(hasStartIcon ? "text-input-has-start-icon " : "")\(hasEndIcon ? "text-input-has-end-icon " : "")\(clearable ? "text-input-clearable" : "")"
+    let stateClass = "\(fullWidth ? "text-input-full-width " : "")\(disabled ? "text-input-disabled " : "")\(readonly ? "text-input-read-only " : "")\(status == .error ? "text-input-error " : "")\(hasStartIcon ? "text-input-has-start-icon " : "")\(hasEndIcon ? "text-input-has-end-icon " : "")\(clearable ? "text-input-clearable " : "")\(hasPrefix ? "text-input-has-prefix" : "")"
     let textInputClass = stringIsEmpty(`class`)
       ? "text-input-view \(stateClass)"
       : "text-input-view \(stateClass) \(`class`)"
@@ -235,6 +242,12 @@ public struct TextInputView: HTMLContent {
             .ariaHidden(true)
         }
 
+        if let prefix {
+          span { prefix }
+            .class("text-input-prefix")
+            .ariaHidden(true)
+        }
+
         inputEl
 
         if clearable {
@@ -270,6 +283,10 @@ public struct TextInputView: HTMLContent {
     return container.style {
       // This input's text size, per instance: the shared rule reads it.
       customProperty("--text-input-font-size", inputFontSize.value)
+      // A prefix's width: a mono character is 0.6em wide, its "." one more.
+      if let prefix {
+        customProperty("--text-input-prefix-width", "calc(\(prefix.utf8.count + 1) * 0.6em)")
+      }
 
       // The label row and the box in a column, 8px apart as every field's
       // label and control (FieldView, DropdownView, ComboboxView): the gap,
@@ -341,6 +358,33 @@ public struct TextInputView: HTMLContent {
         outline(borderWidthBase, .solid, borderColorRed)
         outlineOffset(px(0))
       }
+      // The value starts after its prefix, 8 from it.
+      selector("&.text-input-has-prefix .text-input-control") {
+        customProperty(
+          "--edge-fade-inset-start",
+          "calc(\(borderWidthBase.value) + \(spacing12.value) + var(--text-input-prefix-width) + \(spacing8.value))")
+      }
+      selector("&.text-input-has-prefix .text-input-input") {
+        paddingInlineStart(calc(spacing12 + (`var`("--text-input-prefix-width") as CSS.Length) + spacing8)).important()
+      }
+      // As a tree row's number (`.record-row-number`) and a dropdown
+      // option's (`.dropdown-option-number`): mono, subtle, a "." after it.
+      descendant(".text-input-prefix") {
+        position(.absolute)
+        top(perc(50))
+        insetInlineStart(calc(borderWidthBase + spacing12))
+        transform(translateY(perc(-50)))
+        fontFamily(typographyFontMono)
+        fontSize(`var`("--text-input-font-size") as CSS.Length)
+        fontWeight(fontWeightNormal)
+        lineHeight(lineHeightSmall22)
+        color(colorSubtle)
+        pointerEvents(.none)
+      }
+      descendant(".text-input-prefix::after") {
+        content("\".\"")
+      }
+      selector("&.text-input-disabled .text-input-prefix") { color(colorDisabled) }
       selector("&.text-input-has-start-icon .text-input-input") {
         paddingInlineStart(calc(spacing12 + lineHeightSmall22 + spacing8)).important()
       }
