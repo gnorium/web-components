@@ -563,6 +563,15 @@ public struct AccordionView: HTMLContent {
           event.preventDefault()
           return
         }
+        // So does a gloss trigger (a term of a node's value that names a
+        // record, `data-gloss-preview`): it opens its gloss, never the row,
+        // and never navigates.
+        if let target = event.target, let term = target.closest("[data-gloss-preview]"),
+          let _ = term.closest(".accordion-summary")
+        {
+          event.preventDefault()
+          return
+        }
         // A button in the header (a tool call's JSON switch at its end) is
         // its own control and leaves the accordion as it is. Not prevented:
         // the button's own activation runs, and a native <details> never
