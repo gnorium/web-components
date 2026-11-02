@@ -568,10 +568,11 @@ public struct AccordionView: HTMLContent {
           return
         }
         // So is a checkbox and its label (a call's tick on a Metadata
-        // accordion, user, 2026-10-16): interactive content, which a
+        // accordion, user, 2026-10-16), and a field typed into in the
+        // header (a new node's value): interactive content, which a
         // native <details> never toggles on either (HTML, the summary
         // element's activation behavior).
-        if let target = event.target, let control = target.closest("input, label"),
+        if let target = event.target, let control = target.closest("input, label, textarea"),
           let _ = control.closest(".accordion-summary") {
           return
         }

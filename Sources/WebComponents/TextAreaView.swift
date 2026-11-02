@@ -25,6 +25,9 @@ public struct TextAreaView: HTMLContent {
   let fullWidth: Bool
   /// The id of the form this submits with, when it sits outside that form.
   let form: String?
+  /// Its accessible name where no label is drawn: a field that stands
+  /// in a heading.
+  let ariaLabel: String?
   let `class`: String
   /// Whether the label carries the lighter "(optional)" aside after its
   /// text, as LabelView draws it: not part of the label text.
@@ -59,6 +62,7 @@ public struct TextAreaView: HTMLContent {
     tooltip: String? = nil,
     fullWidth: Bool = true,
     form: String? = nil,
+    ariaLabel: String? = nil,
     class: String = ""
   ) {
     self.id = id
@@ -77,6 +81,7 @@ public struct TextAreaView: HTMLContent {
     self.tooltip = tooltip
     self.fullWidth = fullWidth
     self.form = form
+    self.ariaLabel = ariaLabel
     self.`class` = `class`
     self.optional = optional
     self.optionalFlag = optionalFlag
@@ -99,6 +104,10 @@ public struct TextAreaView: HTMLContent {
     }
     if let form {
       textAreaInput = textAreaInput.form(form)
+    }
+    // Named for assistive technology where no label is drawn.
+    if let ariaLabel {
+      textAreaInput = textAreaInput.ariaLabel(ariaLabel)
     }
 
     var hasStartIcon = false
