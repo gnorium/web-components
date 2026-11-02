@@ -25,10 +25,15 @@ public struct DropdownView: HTMLContent {
     /// broad one), 1 an option under the head before it, drawn indented.
     /// Nil in a list that is not grouped.
     public let depth: Int?
+    /// Its number in a tree, drawn before `display` as a tree row's is
+    /// (mono, subtle, a "." after it): "1.2. a fine word" (user,
+    /// 2026-11-02). The closed dropdown shows it the same way. Nil for an
+    /// option with no number.
+    public let number: String?
 
     public init(
       value: String, context: String? = nil, display: String, altDisplay: String? = nil,
-      displayLower: String? = nil, depth: Int? = nil
+      displayLower: String? = nil, depth: Int? = nil, number: String? = nil
     ) {
       self.value = value
       self.context = context
@@ -36,7 +41,24 @@ public struct DropdownView: HTMLContent {
       self.altDisplay = altDisplay
       self.displayLower = displayLower
       self.depth = depth
+      self.number = number
     }
+  }
+
+  /// An option's number, then its display (`DropdownOption.number`): the
+  /// open list's and the closed dropdown's alike. The space is the spacing
+  /// on one line (inline flow has no gap); the open list sets them side by
+  /// side, its value wrapping beside the number as a tree row's does.
+  static func numberedLabel(number: String, display: String) -> DOM.Node {
+    span {
+      span { number }
+        .class("dropdown-option-number")
+      " "
+      span { display }
+        .class("dropdown-numbered-text")
+    }
+    .class("dropdown-numbered-label")
+    .build()
   }
 
   /// How one option lays out. Named for the shape, not for the one page that
@@ -239,6 +261,8 @@ public struct DropdownView: HTMLContent {
             span {
               if let option = selectedOption, let context = option.context {
                 BreadcrumbLabelView(context: context, text: option.display)
+              } else if let option = selectedOption, let number = option.number {
+                Self.numberedLabel(number: number, display: option.display)
               } else {
                 displayText
               }
@@ -313,6 +337,8 @@ public struct DropdownView: HTMLContent {
                 span {
                   if let context = option.context {
                     BreadcrumbLabelView(context: context, text: option.display)
+                  } else if let number = option.number {
+                    Self.numberedLabel(number: number, display: option.display)
                   } else {
                     option.display
                   }
@@ -331,6 +357,7 @@ public struct DropdownView: HTMLContent {
               .data("value", option.value)
               .data("display", option.display)
               .data("context", option.context ?? "")
+              .data("number", option.number ?? "")
               .data("display-lower", option.displayLower ?? option.display)
               .data("alt-display", option.altDisplay ?? "")
               .data("selected", isSelected)
@@ -552,7 +579,7 @@ public struct DropdownView: HTMLContent {
           color(colorOnSolid).important()
           selector(
             ".dropdown-option-display-text", ".dropdown-option-alt-text", ".breadcrumb-label-context",
-            ".breadcrumb-separator-view"
+            ".breadcrumb-separator-view", ".dropdown-option-number"
           ) {
             color(colorOnSolid).important()
           }
@@ -569,6 +596,32 @@ public struct DropdownView: HTMLContent {
         minWidth(0)
         whiteSpace(.normal)
         overflowWrap(.breakWord)
+      }
+      // A numbered option's number, as a tree row's (`.record-row-number`):
+      // mono, subtle, a "." after it; white on a solid blue row as the
+      // other secondary texts are.
+      descendant(".dropdown-option-number") {
+        fontFamily(typographyFontMono)
+        fontWeight(fontWeightNormal)
+        color(colorSubtle)
+      }
+      descendant(".dropdown-option-number::after") {
+        content("\".\"")
+      }
+      descendant(".dropdown-selected-text[data-disabled='true'] .dropdown-option-number") { color(colorDisabled) }
+      // In the open list the number stands beside its value, which wraps
+      // in a column of its own.
+      descendant(".dropdown-option-display-text .dropdown-numbered-label") {
+        display(.flex)
+        alignItems(.baseline)
+        gap(spacing8)
+      }
+      descendant(".dropdown-option-display-text .dropdown-option-number") {
+        flexShrink(0)
+      }
+      descendant(".dropdown-option-display-text .dropdown-numbered-text") {
+        flex(1)
+        minWidth(0)
       }
       // A grouped list: each head a choice of its own, set in semibold, its
       // options indented under it.
@@ -595,7 +648,8 @@ public struct DropdownView: HTMLContent {
         "&[data-multiple='false'] .dropdown-option[data-selected='true'] .dropdown-option-display-text",
         "&[data-multiple='false'] .dropdown-option[data-selected='true'] .dropdown-option-alt-text",
         "&[data-multiple='false'] .dropdown-option[data-selected='true'] .breadcrumb-label-context",
-        "&[data-multiple='false'] .dropdown-option[data-selected='true'] .breadcrumb-separator-view"
+        "&[data-multiple='false'] .dropdown-option[data-selected='true'] .breadcrumb-separator-view",
+        "&[data-multiple='false'] .dropdown-option[data-selected='true'] .dropdown-option-number"
       ) {
         color(colorOnSolid).important()
       }
@@ -661,7 +715,8 @@ public struct DropdownView: HTMLContent {
         ".dropdown-option[data-highlighted='true'] .dropdown-option-display-text",
         ".dropdown-option[data-highlighted='true'] .dropdown-option-alt-text",
         ".dropdown-option[data-highlighted='true'] .breadcrumb-label-context",
-        ".dropdown-option[data-highlighted='true'] .breadcrumb-separator-view"
+        ".dropdown-option[data-highlighted='true'] .breadcrumb-separator-view",
+        ".dropdown-option[data-highlighted='true'] .dropdown-option-number"
       ) {
         color(colorOnSolid).important()
       }
@@ -1079,6 +1134,7 @@ public struct DropdownView: HTMLContent {
           || stringContainsCaseInsensitive(
             option.getAttribute(data("alt-display")) ?? "", searchValue)
           || stringContainsCaseInsensitive(option.getAttribute(data("context")) ?? "", searchValue)
+          || stringContainsCaseInsensitive(option.getAttribute(data("number")) ?? "", searchValue)
         if matches {
           option.setAttribute(data("hidden"), "false")
         } else {
@@ -1263,8 +1319,9 @@ public struct DropdownView: HTMLContent {
       let altDisplay = option.getAttribute(data("alt-display")) ?? display
 
       // Update selected text and title (tooltip): an option with a context
-      // shows its breadcrumb label, as the server draws a chosen one.
-      if let label = option.querySelector(".breadcrumb-label-view") {
+      // shows its breadcrumb label, one with a number its numbered label,
+      // as the server draws a chosen one.
+      if let label = option.querySelector(".breadcrumb-label-view") ?? option.querySelector(".dropdown-numbered-label") {
         selectedText?.innerHTML = ""
         selectedText?.appendChild(label.cloneNode(deep: true))
       } else {
