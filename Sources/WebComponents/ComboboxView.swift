@@ -594,6 +594,13 @@ public struct ComboboxView: HTMLContent {
       // A server's suggestion is taken only by choosing it: namesakes read
       // alike, and a name typed is the name typed.
       commit(value: Self.valueOf(text, among: own))
+      // Typed elsewhere and written here (a tree row's value box, which
+      // mirrors this field), it takes the text and opens nothing: the list
+      // opens under the field being typed in (user, 2026-11-02).
+      guard let active = document.activeElement, active.id == field.id else {
+        close()
+        return
+      }
       if stringIsEmpty(searchURL) {
         filter(text)
         setActive(-1)
