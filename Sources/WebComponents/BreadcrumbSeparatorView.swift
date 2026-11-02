@@ -28,13 +28,17 @@ public struct BreadcrumbSeparatorView: HTMLContent {
     .class(stringIsEmpty(`class`) ? "breadcrumb-separator-view" : "breadcrumb-separator-view \(`class`)")
     .ariaHidden(true)
     .style {
+      // Centered on the line it stands in (user, 2026-11-03): a box one
+      // line high (its text's line height, inherited) from the line's top,
+      // the chevron in its middle. `middle` set it on the lowercase
+      // letters' middle, 2px under the line's.
       selector("&") {
         display(.inlineFlex)
         alignItems(.center)
         justifyContent(.center)
         flexShrink(0)
-        verticalAlign(.middle)
-        lineHeight(lineHeightContent)
+        verticalAlign(.top)
+        height(lh(1))
         color(colorBase)
         userSelect(.none)
       }

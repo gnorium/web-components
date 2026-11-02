@@ -160,8 +160,8 @@ public struct RecordLabelView: HTMLContent {
         fontSize(fontSizeMedium16)
         color(colorSubtle)
       }
-      // The meta row's chevrons as its first row's: quiet, centered on the
-      // lowercase letters' middle (the separator's own `middle`).
+      // The meta row's chevrons as its first row's: quiet, centered on
+      // their line (the separator's own).
       descendant(".record-label-meta .breadcrumb-separator-view") {
         color(colorSubtle)
       }
