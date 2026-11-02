@@ -863,7 +863,70 @@ public struct DropdownView: HTMLContent {
       searchURL = container.closest(".dropdown-view")?.getAttribute(data("search-url")) ?? ""
       multiple = stringEquals(container.closest(".dropdown-view")?.getAttribute(data("multiple")) ?? "", "true")
 
+      showValue()
       bindEvents()
+    }
+
+    /// The trigger and the options showing the value input's choice where
+    /// the page drew another. A browser that restores a page's form state (a
+    /// tab reopened or brought back, a history entry; Firefox on a reload)
+    /// puts a hidden input's value back before the page hydrates, as it does
+    /// a select's: the field showed the choice the page drew and posted the
+    /// one put back, and a kept draft's restore, finding its value already
+    /// there, chose nothing (Submit Testament's Carrier, user 2026-11-03). A
+    /// value no option of its own has (a search's) leaves it as drawn.
+    private func showValue() {
+      let values = chosenValues()
+      var drawn: [String] = []
+      for option in optionsList?.querySelectorAll("[data-dropdown-option=\"true\"][data-selected=\"true\"]") ?? [] {
+        drawn.append(option.getAttribute(data("value")) ?? "")
+      }
+      guard !stringEquals(stringJoin(drawn, separator: ","), stringJoin(values, separator: ",")) else { return }
+      var chosen: [DOM.Element] = []
+      for value in values {
+        guard let option = ownOptions.first(where: { stringEquals($0.getAttribute(data("value")) ?? "", value) })
+        else { return }
+        chosen.append(option)
+      }
+      show(chosen)
+      mark(chosen)
+    }
+
+    /// The trigger showing the options `chosen`, as the server draws them:
+    /// one, its label (an option with a context its breadcrumb label, one
+    /// with a number its numbered label); several, their names in the order
+    /// chosen; none, the placeholder.
+    private func show(_ chosen: [DOM.Element]) {
+      if !multiple, let option = chosen.first {
+        let display = option.getAttribute(data("display")) ?? ""
+        if let label = option.querySelector(".breadcrumb-label-view") ?? option.querySelector(".dropdown-numbered-label") {
+          selectedText?.innerHTML = ""
+          selectedText?.appendChild(label.cloneNode(deep: true))
+        } else {
+          selectedText?.innerHTML = display
+        }
+        // Its tooltip, its alternative name where it has one.
+        let alt = option.getAttribute(data("alt-display")) ?? ""
+        selectedText?.setAttribute(.title, stringIsEmpty(alt) ? display : alt)
+      } else {
+        var names: [String] = []
+        for option in chosen { names.append(option.getAttribute(data("display")) ?? "") }
+        let shown = EnglishList.joined(names)
+        selectedText?.innerHTML = chosen.isEmpty ? placeholder : shown
+        if chosen.isEmpty { selectedText?.removeAttribute(.title) } else { selectedText?.setAttribute(.title, shown) }
+      }
+      selectedText?.setAttribute(data("selected"), !chosen.isEmpty)
+      // A new title starts at its beginning, wherever the last was scrolled to.
+      selectedText?.scrollLeft = 0
+    }
+
+    /// The options `chosen` marked chosen in the menu, every other not.
+    private func mark(_ chosen: [DOM.Element]) {
+      for opt in ownOptions + resultOptions {
+        let isIn = chosen.contains { $0.id == opt.id }
+        if isIn { _ = opt.classList.add("is-selected") } else { _ = opt.classList.remove("is-selected") }
+        opt.setAttribute(data("selected"), isIn)
+      }
     }
 
     /// Enforces `required` for this dropdown on its form's submit.
@@ -1291,7 +1354,7 @@ public struct DropdownView: HTMLContent {
         return
       }
       guard let value = option.getAttribute(data("value")),
-        let display = option.getAttribute(data("display"))
+        let _ = option.getAttribute(data("display"))
       else { return }
 
       let currentVal = (hiddenInput as? HTML.HTMLInputElement)?.value ?? ""
@@ -1315,30 +1378,8 @@ public struct DropdownView: HTMLContent {
         (container.closest(".dropdown-view") ?? container).removeAttribute("data-invalid")
       }
 
-      // Get altDisplay for tooltip
-      let altDisplay = option.getAttribute(data("alt-display")) ?? display
-
-      // Update selected text and title (tooltip): an option with a context
-      // shows its breadcrumb label, one with a number its numbered label,
-      // as the server draws a chosen one.
-      if let label = option.querySelector(".breadcrumb-label-view") ?? option.querySelector(".dropdown-numbered-label") {
-        selectedText?.innerHTML = ""
-        selectedText?.appendChild(label.cloneNode(deep: true))
-      } else {
-        selectedText?.innerHTML = display
-      }
-      selectedText?.setAttribute(.title, altDisplay)
-      selectedText?.setAttribute(data("selected"), true)
-      // A new title starts at its beginning, wherever the last was scrolled to.
-      selectedText?.scrollLeft = 0
-
-      // Update selected state in menu
-      for opt in ownOptions + resultOptions {
-        _ = opt.classList.remove("is-selected")
-        opt.setAttribute(data("selected"), false)
-      }
-      _ = option.classList.add("is-selected")
-      option.setAttribute(data("selected"), true)
+      show([option])
+      mark([option])
 
       // Dispatch change event on hidden input
       if let hiddenInput {
@@ -1395,15 +1436,8 @@ public struct DropdownView: HTMLContent {
 
     private func clearSelection() {
       (hiddenInput as? HTML.HTMLInputElement)?.value = ""
-      selectedText?.innerHTML = placeholder
-      selectedText?.removeAttribute(.title)
-      selectedText?.setAttribute(data("selected"), false)
-      selectedText?.scrollLeft = 0
-
-      for opt in ownOptions + resultOptions {
-        _ = opt.classList.remove("is-selected")
-        opt.setAttribute(data("selected"), false)
-      }
+      show([])
+      mark([])
 
       if let hiddenInput {
         hiddenInput.dispatchEvent(.change)
