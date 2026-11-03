@@ -1891,10 +1891,19 @@ public enum TEISentenceSelection {
         // lets it, a centered one either way, so a face that sets it a hair
         // wider than the print never wraps it in a wide pane; a paragraph
         // wraps at the frame's measure, as its print does.
+        // Above and below it, its leaf's own head and foot, and its frame
+        // at least its height (user, 2026-11-03: the title page's "THE"
+        // stood at the pane's top, its "1603." at its foot, where its page
+        // sets them inside its leaf's margins), in its em, zoomed with it;
+        // the pane's inset is its reader's, around it.
         selector("[data-reflow='true'] & .tei-page-text[data-framed='true']") {
           CSS.Property("container-type", "inline-size")
           CSS.Property(
             "--tei-reflow-room", "max(var(--tei-reflow-outdent, 0rem), (100cqi - var(--tei-frame-measure) * 1rem) / 2)")
+          CSS.Property("padding-block", "calc(var(--tei-frame-head) * 1rem) calc(var(--tei-frame-foot) * 1rem)")
+        }
+        selector("[data-reflow='true'] & .tei-page-text[data-framed='true'] > .tei-text-block") {
+          CSS.Property("min-block-size", "calc(var(--tei-frame-height) * 1rem)")
         }
         selector(
           "[data-reflow='true'] & .tei-page-text[data-framed='true'] > .tei-text-block",
