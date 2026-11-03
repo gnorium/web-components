@@ -832,8 +832,9 @@ public enum OutlineNumberAdvance {
     /// dot on a graph and a locution's avatar on its thread: a disc a
     /// thread's avatar's size (`AvatarView`'s medium: a medium control's
     /// 40, a small one's 32 on a phone, `ButtonView.phoneStep`), centered
-    /// on the spine at its heading's first line, its subtle
-    /// border and ground breaking the spine round it. It is the item's fold
+    /// on the spine at its heading's first line, its subtle ground and the
+    /// avatar's ring (a subtle 1px border outside the disc) breaking the
+    /// spine round it. It is the item's fold
     /// control, as an avatar folds its locution: its caller draws it, a
     /// button classed `outliner-marker outliner-fold`, `data-outliner-fold-noun`
     /// its noun, holding its scrim (`outliner-marker-scrim`) and the scrim's
@@ -1067,8 +1068,12 @@ public enum OutlineNumberAdvance {
         paddingBlockStart(spacing16)
       }
       // Its marker (`markerSize`), on the spine, centered on its heading's
-      // first line (a large control's, or a line's): a disc with a subtle
-      // border and ground, over the spine and the stretches it stands on.
+      // first line (a large control's, or a line's): a disc of a subtle
+      // ground, over the spine and the stretches it stands on, ringed as a
+      // locution's avatar is (user, 2026-11-03): one subtle 1px border
+      // outside the disc, which keeps its full size; focused from the
+      // keyboard, the focus ring every control wears, the border in the
+      // focus color and a 1px outline of it, two pixels in all.
       // The fold control, as a locution's avatar is: a press folds the node
       // and every node under it, or opens it; under the pointer and focus,
       // and while the node is folded, a scrim over it shows its chevron,
@@ -1084,10 +1089,18 @@ public enum OutlineNumberAdvance {
         height(Self.markerSize)
         padding(0)
         margin(0)
-        border(borderWidthBase, .solid, borderColorSubtle)
+        border(.none)
         borderRadius(borderRadiusCircle)
         backgroundColor(backgroundColorNeutralSubtle)
         cursor(.pointer)
+      }
+      descendant(".outliner-marker::after") {
+        content("\"\"")
+        position(.absolute)
+        inset(-borderWidthBase)
+        border(borderWidthBase, .solid, borderColorSubtle)
+        borderRadius(borderRadiusCircle)
+        pointerEvents(.none)
       }
       selector("&[data-outliner-heading='line'] .outliner-marker") {
         insetBlockStart((lineHeightSmall22 - Self.markerSize) / 2)
@@ -1095,14 +1108,15 @@ public enum OutlineNumberAdvance {
       descendant(".outliner-marker:focus") {
         outline(borderWidthBase, .solid, borderColorTransparent)
       }
-      descendant(".outliner-marker:focus-visible") {
-        outline(borderWidthThick, .solid, borderColorBlueFocus)
-        outlineOffset(borderWidthBase)
+      descendant(".outliner-marker:focus-visible::after") {
+        borderColor(borderColorBlueFocus)
+        outline(borderWidthBase, .solid, borderColorBlueFocus)
+        outlineOffset(px(0))
       }
       descendant(".outliner-marker-scrim") {
         display(.none)
         position(.absolute)
-        inset(-borderWidthBase)
+        inset(0)
         alignItems(.center)
         justifyContent(.center)
         borderRadius(borderRadiusCircle)
@@ -1367,8 +1381,10 @@ public enum OutlineNumberAdvance {
       }
       descendant(".outliner-marker.outliner-handle[aria-pressed='true']") {
         backgroundColor(backgroundColorBlue)
-        borderColor(borderColorBlue)
         cursor(.grabbing)
+      }
+      descendant(".outliner-marker.outliner-handle[aria-pressed='true']:not(:focus-visible)::after") {
+        borderColor(borderColorBlue)
       }
       descendant(".outliner-marker[aria-pressed='true'] .outliner-marker-grip") {
         color(colorOnSolid)
