@@ -684,6 +684,31 @@ public struct ButtonView: HTMLContent {
             backgroundColor(backgroundColorDisabled).important()
             borderColor(borderColorDisabled).important()
           }
+          // In a part drawn disabled (`DisabledRegion`), as a disabled
+          // button: its words and icons, and its ground and border by its
+          // weight (a quiet or plain one's none, on the part's ground). The
+          // mark weighs, as its weight and color do, over every enabled
+          // color of a weight and a color.
+          selector("[data-disabled-region='true'] &[data-weight][data-color]") {
+            color(colorDisabled).important()
+            cursor(cursorNotAllowed).important()
+          }
+          selector(
+            "[data-disabled-region='true'] &[data-weight][data-color] .button-icon", "[data-disabled-region='true'] &[data-weight][data-color] .button-label",
+            "[data-disabled-region='true'] &[data-weight][data-color] .icon-view"
+          ) {
+            color(colorDisabled).important()
+          }
+          selector("[data-disabled-region='true'] &[data-weight='quiet'][data-color], [data-disabled-region='true'] &[data-weight='plain'][data-color]") {
+            backgroundColor(backgroundColorTransparent).important()
+            borderColor(.transparent).important()
+          }
+          selector(
+            "[data-disabled-region='true'] &[data-weight='subtle'][data-color], [data-disabled-region='true'] &[data-weight='solid'][data-color], [data-disabled-region='true'] &[data-weight='static'][data-color]"
+          ) {
+            backgroundColor(backgroundColorDisabled).important()
+            borderColor(borderColorDisabled).important()
+          }
           // Solid / Subtle / Static superset—cacheable overrides for per-instance base (fixes Mission Control blue vs white)
           selector("&[data-weight='solid'][data-color='gray']") {
             backgroundColor(backgroundColorInteractive)
@@ -1535,6 +1560,31 @@ public struct ButtonView: HTMLContent {
             borderColor(.transparent).important()
           }
           selector("&[data-weight='subtle']:disabled, &[data-weight='solid']:disabled, &[data-weight='static']:disabled") {
+            backgroundColor(backgroundColorDisabled).important()
+            borderColor(borderColorDisabled).important()
+          }
+          // In a part drawn disabled (`DisabledRegion`), as a disabled
+          // button: its words and icons, and its ground and border by its
+          // weight (a quiet or plain one's none, on the part's ground). The
+          // mark weighs, as its weight and color do, over every enabled
+          // color of a weight and a color.
+          selector("[data-disabled-region='true'] &[data-weight][data-color]") {
+            color(colorDisabled).important()
+            cursor(cursorNotAllowed).important()
+          }
+          selector(
+            "[data-disabled-region='true'] &[data-weight][data-color] .button-icon", "[data-disabled-region='true'] &[data-weight][data-color] .button-label",
+            "[data-disabled-region='true'] &[data-weight][data-color] .icon-view"
+          ) {
+            color(colorDisabled).important()
+          }
+          selector("[data-disabled-region='true'] &[data-weight='quiet'][data-color], [data-disabled-region='true'] &[data-weight='plain'][data-color]") {
+            backgroundColor(backgroundColorTransparent).important()
+            borderColor(.transparent).important()
+          }
+          selector(
+            "[data-disabled-region='true'] &[data-weight='subtle'][data-color], [data-disabled-region='true'] &[data-weight='solid'][data-color], [data-disabled-region='true'] &[data-weight='static'][data-color]"
+          ) {
             backgroundColor(backgroundColorDisabled).important()
             borderColor(borderColorDisabled).important()
           }

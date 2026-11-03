@@ -310,6 +310,14 @@ public struct PaginationView: HTMLContent {
         transition(.none)
       }
       descendant(".page-box[data-input-width='\(inputWidth.value)']") { width(inputWidth) }
+      // In a part drawn disabled (`DisabledRegion`), its page box a
+      // disabled field: the disabled ground and border, its number in the
+      // base color; its chevrons disabled buttons (`ButtonView`).
+      selector(":where([data-disabled-region='true']) & .page-box") {
+        backgroundColor(backgroundColorDisabled).important()
+        borderColor(borderColorDisabled).important()
+        cursor(cursorNotAllowed)
+      }
       selector(
         "input.page-box[type=number]::-webkit-outer-spin-button",
         "input.page-box[type=number]::-webkit-inner-spin-button"

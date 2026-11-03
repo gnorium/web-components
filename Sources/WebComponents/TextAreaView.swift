@@ -27,6 +27,20 @@ public struct TextAreaView: HTMLContent {
   /// More classes on the prefix: what the page reads it as (a tree row's
   /// `record-node-number`, which its outline writes again as it moves).
   let prefixClass: String
+  /// Text that stands at the end of the field, inside it and never part of
+  /// its value, as `prefix` stands at its start: a tree row's date, "AD
+  /// 1603" (user, 2026-11-03), sans and subtle, on the first line; its own
+  /// column, no line of the value under it, the value kept clear of it by
+  /// its advance in the sans (`SansAdvance`). Nil for none.
+  let suffix: String?
+  /// More classes on the suffix: what the page reads it as.
+  let suffixClass: String
+  /// A control at the very end of the field, inside it and after its
+  /// suffix, on its first line: a tree row's info (user, 2026-11-03), a
+  /// line high and a line wide. Its own control: its own cursor and its
+  /// own click, which never focuses the field; the value kept clear of it
+  /// as of an end icon. Empty for none.
+  let endControl: [DOM.Node]
   let endIcon: String?
   let labelText: String
   let tooltip: String?
@@ -65,6 +79,9 @@ public struct TextAreaView: HTMLContent {
     endIcon: String? = nil,
     prefix: String? = nil,
     prefixClass: String = "",
+    suffix: String? = nil,
+    suffixClass: String = "",
+    endControl: [DOM.Node] = [],
     label: String = "",
     optional: Bool = false,
     optionalFlag: String = "(optional)",
@@ -88,6 +105,9 @@ public struct TextAreaView: HTMLContent {
     self.startIcon = startIcon
     self.prefix = prefix
     self.prefixClass = prefixClass
+    self.suffix = suffix
+    self.suffixClass = suffixClass
+    self.endControl = endControl
     self.endIcon = endIcon
     self.labelText = label
     self.tooltip = tooltip
@@ -127,7 +147,9 @@ public struct TextAreaView: HTMLContent {
     if let _ = startIcon { hasStartIcon = true }
     if let _ = endIcon { hasEndIcon = true }
     let hasPrefix = if let _ = prefix { true } else { false }
-    let stateClass = "\(fullWidth ? "text-area-full-width " : "")\(disabled ? "text-area-disabled " : "")\(readonly ? "text-area-read-only " : "")\(status == .error ? "text-area-error " : "")\(autosize ? "text-area-autosize " : "")\(hasStartIcon ? "text-area-has-start-icon " : "")\(hasEndIcon ? "text-area-has-end-icon " : "")\(hasPrefix ? "text-area-has-prefix" : "")"
+    let hasSuffix = if let _ = suffix { true } else { false }
+    let hasEndControl = !endControl.isEmpty
+    let stateClass = "\(fullWidth ? "text-area-full-width " : "")\(disabled ? "text-area-disabled " : "")\(readonly ? "text-area-read-only " : "")\(status == .error ? "text-area-error " : "")\(autosize ? "text-area-autosize " : "")\(hasStartIcon ? "text-area-has-start-icon " : "")\(hasEndIcon ? "text-area-has-end-icon " : "")\(hasPrefix ? "text-area-has-prefix " : "")\(hasSuffix ? "text-area-has-suffix " : "")\(hasEndControl ? "text-area-has-end-control" : "")"
     let textAreaClass = stringIsEmpty(`class`)
       ? "text-area-view \(stateClass)"
       : "text-area-view \(stateClass) \(`class`)"
@@ -144,10 +166,18 @@ public struct TextAreaView: HTMLContent {
           .ariaHidden(true)
       }
       textAreaInput
+      if let suffix {
+        span { suffix }
+          .class(stringIsEmpty(suffixClass) ? "text-area-suffix" : "text-area-suffix \(suffixClass)")
+      }
       if let icon = endIcon {
         span { icon }
           .class("text-area-end-icon")
           .ariaHidden(true)
+      }
+      if hasEndControl {
+        span { endControl }
+          .class("text-area-end-control")
       }
     }
     .class(textAreaClass)
@@ -162,6 +192,11 @@ public struct TextAreaView: HTMLContent {
       // TextInputView's; written again as it changes (`setPrefix`).
       if let prefix {
         customProperty("--text-area-prefix-width", Self.prefixWidth(prefix))
+      }
+      // A suffix's width: as far as its text runs in the sans
+      // (`SansAdvance`).
+      if let suffix {
+        customProperty("--text-area-suffix-width", SansAdvance.length(suffix))
       }
       selector("&") {
         position(.relative)
@@ -195,8 +230,9 @@ public struct TextAreaView: HTMLContent {
       }
       // A disabled field's value reads in the base color on the disabled
       // ground, as every disabled field's does; its placeholder stays the
-      // placeholder's.
-      selector("&.text-area-disabled .text-area-input") {
+      // placeholder's. So does a field in a part drawn disabled
+      // (`DisabledRegion`).
+      selector("&.text-area-disabled .text-area-input", ":where([data-disabled-region='true']) & .text-area-input") {
         color(colorBase)
         customProperty("-webkit-text-fill-color", colorBase)
         backgroundColor(backgroundColorDisabled)
@@ -218,7 +254,7 @@ public struct TextAreaView: HTMLContent {
         fieldSizing(.content)
         maxHeight(rem(18))
       }
-      selector("&.text-area-autosize.text-area-disabled .text-area-input") {
+      selector("&.text-area-autosize.text-area-disabled .text-area-input", ":where([data-disabled-region='true']) &.text-area-autosize .text-area-input") {
         overflowY(.hidden)
       }
       selector("&.text-area-has-start-icon .text-area-input") {
@@ -231,6 +267,20 @@ public struct TextAreaView: HTMLContent {
       // prefix a column of its own, which no wrapped line runs under.
       selector("&.text-area-has-prefix .text-area-input") {
         paddingInlineStart(calc(spacing12 + (`var`("--text-area-prefix-width") as CSS.Length) + spacing8)).important()
+      }
+      // The value ends before its end control and its suffix, 8 from
+      // each, on every line: each a column of its own, which no wrapped
+      // line runs under.
+      selector("&.text-area-has-end-control .text-area-input") {
+        paddingInlineEnd(calc(spacing12 + lineHeightSmall22 + spacing8)).important()
+      }
+      selector("&.text-area-has-suffix .text-area-input") {
+        paddingInlineEnd(calc(spacing12 + (`var`("--text-area-suffix-width") as CSS.Length) + spacing8)).important()
+      }
+      selector("&.text-area-has-suffix.text-area-has-end-control .text-area-input") {
+        paddingInlineEnd(
+          calc(spacing12 + (`var`("--text-area-suffix-width") as CSS.Length) + spacing8 + lineHeightSmall22 + spacing8)
+        ).important()
       }
       // As TextInputView's prefix, a tree row's number and a dropdown
       // option's: sans, subtle, a "." after it; on the first line, as
@@ -249,6 +299,36 @@ public struct TextAreaView: HTMLContent {
       }
       descendant(".text-area-prefix::after") {
         content("\".\"")
+      }
+      // Its suffix as its prefix, at its end: sans, subtle, on the first
+      // line; before its end control, where it has one.
+      descendant(".text-area-suffix") {
+        position(.absolute)
+        top(calc(borderWidthBase + spacing12))
+        insetInlineEnd(calc(borderWidthBase + spacing12))
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeMedium16)
+        fontWeight(fontWeightNormal)
+        lineHeight(lineHeightSmall22)
+        color(colorSubtle)
+        whiteSpace(.nowrap)
+        pointerEvents(.none)
+      }
+      selector("&.text-area-has-end-control .text-area-suffix") {
+        insetInlineEnd(calc(borderWidthBase + spacing12 + lineHeightSmall22 + spacing8))
+      }
+      // Its end control where an end icon stands, a line high and wide,
+      // taking its own pointer.
+      descendant(".text-area-end-control") {
+        position(.absolute)
+        top(calc(borderWidthBase + spacing12))
+        insetInlineEnd(calc(borderWidthBase + spacing12))
+        display(.inlineFlex)
+        alignItems(.center)
+        justifyContent(.center)
+        minWidth(lineHeightSmall22)
+        height(lineHeightSmall22)
+        customProperty("--size-icon-small", lineHeightSmall22.value)
       }
       // The same rule as TextInputView's: color only. An opacity on top of
       // the color made a textarea's placeholder read as a different grey
@@ -319,6 +399,11 @@ public struct TextAreaView: HTMLContent {
         descendant(".text-area-optional-flag") {
           fontWeight(fontWeightNormal)
           color(colorSubtle)
+        }
+        // In a part drawn disabled (`DisabledRegion`), as a disabled
+        // LabelView: its words, its "(optional)" and its info.
+        selector(":where([data-disabled-region='true']) &", ":where([data-disabled-region='true']) & .text-area-optional-flag") {
+          color(colorDisabled)
         }
       }
       styledContainer

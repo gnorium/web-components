@@ -145,42 +145,45 @@ public struct ToggleButtonView: HTMLContent {
         display(.inlineFlex)
       }
 
+      // Each state below an enabled toggle's: never a disabled one's, nor
+      // one in a part drawn disabled (`DisabledRegion`), which is drawn as
+      // a disabled button (`ButtonView`).
       // Off: colorBase (ColorScheme unselected / “Dark”). Gated the same
       // way the ON rule below is—a caller that passes `indicateSelection:
       // false` to keep its own colored base (a permanently solid button
       // that merely toggles WHAT it does, not how it looks) was having its
       // white-on-blue label overridden back to colorBase regardless, which
       // read as black text on a blue pill.
-      selector("&[data-indicate-selection='true'][aria-pressed='false'] .button-view:not(:disabled)") {
+      selector("&[data-indicate-selection='true'][aria-pressed='false'] .button-view:not(:disabled):not(:where([data-disabled-region='true']) *)") {
         color(colorBase).important()
       }
-      selector("&[data-indicate-selection='true'][aria-pressed='false'] .button-view:not(:disabled) .button-label") {
+      selector("&[data-indicate-selection='true'][aria-pressed='false'] .button-view:not(:disabled):not(:where([data-disabled-region='true']) *) .button-label") {
         color(colorBase).important()
       }
-      selector("&[data-indicate-selection='true'][aria-pressed='false'] .button-view:not(:disabled) .button-icon") {
+      selector("&[data-indicate-selection='true'][aria-pressed='false'] .button-view:not(:disabled):not(:where([data-disabled-region='true']) *) .button-icon") {
         color(colorBase).important()
       }
 
       // On: solid blue pill (ColorScheme selected / “Light”).
-      selector("&[data-indicate-selection='true'][aria-pressed='true'] .button-view:not(:disabled)") {
+      selector("&[data-indicate-selection='true'][aria-pressed='true'] .button-view:not(:disabled):not(:where([data-disabled-region='true']) *)") {
         backgroundColor(backgroundColorBlue).important()
         borderColor(backgroundColorBlue).important()
         color(colorOnSolid).important()
       }
-      selector("&[data-indicate-selection='true'][aria-pressed='true'] .button-view:not(:disabled) .button-label") {
+      selector("&[data-indicate-selection='true'][aria-pressed='true'] .button-view:not(:disabled):not(:where([data-disabled-region='true']) *) .button-label") {
         color(colorOnSolid).important()
       }
-      selector("&[data-indicate-selection='true'][aria-pressed='true'] .button-view:not(:disabled) .button-icon") {
+      selector("&[data-indicate-selection='true'][aria-pressed='true'] .button-view:not(:disabled):not(:where([data-disabled-region='true']) *) .button-icon") {
         color(colorOnSolid).important()
       }
       selector(
-        "&[data-indicate-selection='true'][aria-pressed='true'] .button-view:hover:not(:disabled)"
+        "&[data-indicate-selection='true'][aria-pressed='true'] .button-view:hover:not(:disabled):not(:where([data-disabled-region='true']) *)"
       ) {
         backgroundColor(backgroundColorBlueHover).important()
         borderColor(borderColorBlueHover).important()
       }
       selector(
-        "&[data-indicate-selection='true'][aria-pressed='true'] .button-view:active:not(:disabled)"
+        "&[data-indicate-selection='true'][aria-pressed='true'] .button-view:active:not(:disabled):not(:where([data-disabled-region='true']) *)"
       ) {
         backgroundColor(backgroundColorBlueActive).important()
         borderColor(borderColorBlueActive).important()

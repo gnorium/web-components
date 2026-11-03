@@ -26,6 +26,17 @@ public struct TextInputView: HTMLContent {
   /// More classes on the prefix: what the page reads it as, as
   /// TextAreaView's `prefixClass`.
   let prefixClass: String
+  /// Text that stands at the end of the field, inside it and never part of
+  /// its value, as TextAreaView's `suffix`: sans and subtle, the value kept
+  /// clear of it by its advance in the sans (`SansAdvance`). Nil for none.
+  let suffix: String?
+  /// More classes on the suffix: what the page reads it as.
+  let suffixClass: String
+  /// A control at the very end of the field, inside it and after its
+  /// suffix, as TextAreaView's `endControl`: a line high and a line wide,
+  /// its own cursor and its own click. It takes an end icon's place and a
+  /// clear button's: a field has one of the three. Empty for none.
+  let endControl: [DOM.Node]
   let endIcon: String?
   let inputFontSize: CSS.Length
   let labelText: String
@@ -102,6 +113,9 @@ public struct TextInputView: HTMLContent {
     endIcon: String? = nil,
     prefix: String? = nil,
     prefixClass: String = "",
+    suffix: String? = nil,
+    suffixClass: String = "",
+    endControl: [DOM.Node] = [],
     inputFontSize: CSS.Length = fontSizeMedium16,
     label: String = "",
     optional: Bool = false,
@@ -136,6 +150,9 @@ public struct TextInputView: HTMLContent {
     self.startIcon = startIcon
     self.prefix = prefix
     self.prefixClass = prefixClass
+    self.suffix = suffix
+    self.suffixClass = suffixClass
+    self.endControl = endControl
     self.endIcon = endIcon
     self.inputFontSize = inputFontSize
     self.labelText = label
@@ -163,8 +180,10 @@ public struct TextInputView: HTMLContent {
     let hasStartIcon = if let _ = startIcon { true } else { false }
     let hasEndIcon = if let _ = endIcon { true } else { false }
     let hasPrefix = if let _ = prefix { true } else { false }
+    let hasSuffix = if let _ = suffix { true } else { false }
+    let hasEndControl = !endControl.isEmpty
     let htmlInputType = getHTMLInputType(type)
-    let stateClass = "\(fullWidth ? "text-input-full-width " : "")\(disabled ? "text-input-disabled " : "")\(readonly ? "text-input-read-only " : "")\(status == .error ? "text-input-error " : "")\(hasStartIcon ? "text-input-has-start-icon " : "")\(hasEndIcon ? "text-input-has-end-icon " : "")\(clearable ? "text-input-clearable " : "")\(hasPrefix ? "text-input-has-prefix" : "")"
+    let stateClass = "\(fullWidth ? "text-input-full-width " : "")\(disabled ? "text-input-disabled " : "")\(readonly ? "text-input-read-only " : "")\(status == .error ? "text-input-error " : "")\(hasStartIcon ? "text-input-has-start-icon " : "")\(hasEndIcon ? "text-input-has-end-icon " : "")\(clearable ? "text-input-clearable " : "")\(hasPrefix ? "text-input-has-prefix " : "")\(hasSuffix ? "text-input-has-suffix " : "")\(hasEndControl ? "text-input-has-end-control" : "")"
     let textInputClass = stringIsEmpty(`class`)
       ? "text-input-view \(stateClass)"
       : "text-input-view \(stateClass) \(`class`)"
@@ -267,10 +286,20 @@ public struct TextInputView: HTMLContent {
           .data("visible", !value.isEmpty)
         }
 
+        if let suffix {
+          span { suffix }
+            .class(stringIsEmpty(suffixClass) ? "text-input-suffix" : "text-input-suffix \(suffixClass)")
+        }
+
         if let icon = endIcon {
           span { icon }
             .class("text-input-end-icon")
             .ariaHidden(true)
+        }
+
+        if hasEndControl {
+          span { endControl }
+            .class("text-input-end-control")
         }
       }
       .class("text-input-control")
@@ -293,6 +322,11 @@ public struct TextInputView: HTMLContent {
       if let prefix {
         customProperty("--text-input-prefix-width", "calc(\(OutlineNumberAdvance.of(prefix)) * 0.001em)")
       }
+      // A suffix's width: as far as its text runs in the sans
+      // (`SansAdvance`).
+      if let suffix {
+        customProperty("--text-input-suffix-width", SansAdvance.length(suffix))
+      }
 
       // The label row and the box in a column, 8px apart as every field's
       // label and control (FieldView, DropdownView, ComboboxView): the gap,
@@ -311,7 +345,7 @@ public struct TextInputView: HTMLContent {
         customProperty("--edge-fade-inset-start", "calc(\(borderWidthBase.value) + \(spacing12.value))")
         customProperty("--edge-fade-inset-end", "calc(\(borderWidthBase.value) + \(spacing12.value))")
       }
-      selector("&.text-input-disabled .text-input-control") {
+      selector("&.text-input-disabled .text-input-control", ":where([data-disabled-region='true']) & .text-input-control") {
         customProperty("--edge-fade-ground", backgroundColorDisabled)
       }
       selector("&.text-input-read-only .text-input-control") {
@@ -321,9 +355,29 @@ public struct TextInputView: HTMLContent {
         customProperty(
           "--edge-fade-inset-start", "calc(\(borderWidthBase.value) + \(spacing12.value) + \(lineHeightSmall22.value) + \(spacing8.value))")
       }
-      selector("&.text-input-has-end-icon .text-input-control", "&.text-input-clearable .text-input-control") {
+      selector(
+        "&.text-input-has-end-icon .text-input-control", "&.text-input-clearable .text-input-control",
+        "&.text-input-has-end-control .text-input-control"
+      ) {
         customProperty(
           "--edge-fade-inset-end", "calc(\(borderWidthBase.value) + \(spacing12.value) + \(lineHeightSmall22.value) + \(spacing8.value))")
+      }
+      // The value ends before its suffix, 8 from it; before its end
+      // control (or end icon, or clear button) too, 8 from that.
+      selector("&.text-input-has-suffix .text-input-control") {
+        customProperty("--text-input-end-width", "calc(var(--text-input-suffix-width) + \(spacing8.value))")
+        customProperty(
+          "--edge-fade-inset-end",
+          "calc(\(borderWidthBase.value) + \(spacing12.value) + var(--text-input-end-width))")
+      }
+      selector(
+        "&.text-input-has-suffix.text-input-has-end-icon .text-input-control",
+        "&.text-input-has-suffix.text-input-clearable .text-input-control",
+        "&.text-input-has-suffix.text-input-has-end-control .text-input-control"
+      ) {
+        customProperty(
+          "--text-input-end-width",
+          "calc(var(--text-input-suffix-width) + \(spacing8.value) + \(lineHeightSmall22.value) + \(spacing8.value))")
       }
       edgeFadeView(control: "& .text-input-control", input: ".text-input-input")
       descendant(".text-input-input") {
@@ -349,8 +403,9 @@ public struct TextInputView: HTMLContent {
       // painting system grey over ours, for the value and the placeholder both.
       // A disabled field's value reads in the base color on the disabled
       // ground, as every disabled field's does (DropdownView's too); its
-      // placeholder stays the placeholder's.
-      selector("&.text-input-disabled .text-input-input") {
+      // placeholder stays the placeholder's. So does a field in a part
+      // drawn disabled (`DisabledRegion`).
+      selector("&.text-input-disabled .text-input-input", ":where([data-disabled-region='true']) & .text-input-input") {
         color(colorBase)
         customProperty("-webkit-text-fill-color", colorBase)
         backgroundColor(backgroundColorDisabled)
@@ -396,8 +451,49 @@ public struct TextInputView: HTMLContent {
       selector("&.text-input-has-start-icon .text-input-input") {
         paddingInlineStart(calc(spacing12 + lineHeightSmall22 + spacing8)).important()
       }
-      selector("&.text-input-has-end-icon .text-input-input", "&.text-input-clearable .text-input-input") {
+      selector(
+        "&.text-input-has-end-icon .text-input-input", "&.text-input-clearable .text-input-input",
+        "&.text-input-has-end-control .text-input-input"
+      ) {
         paddingInlineEnd(calc(spacing12 + lineHeightSmall22 + spacing8)).important()
+      }
+      selector("&.text-input-has-suffix .text-input-input") {
+        paddingInlineEnd(calc(spacing12 + (`var`("--text-input-end-width") as CSS.Length))).important()
+      }
+      // Its suffix as its prefix, at its end: sans, subtle; before its end
+      // control, end icon or clear button, where it has one.
+      descendant(".text-input-suffix") {
+        position(.absolute)
+        top(perc(50))
+        insetInlineEnd(calc(borderWidthBase + spacing12))
+        transform(translateY(perc(-50)))
+        fontFamily(typographyFontSans)
+        fontSize(`var`("--text-input-font-size") as CSS.Length)
+        fontWeight(fontWeightNormal)
+        lineHeight(lineHeightSmall22)
+        color(colorSubtle)
+        whiteSpace(.nowrap)
+        pointerEvents(.none)
+      }
+      selector(
+        "&.text-input-has-end-icon .text-input-suffix", "&.text-input-clearable .text-input-suffix",
+        "&.text-input-has-end-control .text-input-suffix"
+      ) {
+        insetInlineEnd(calc(borderWidthBase + spacing12 + lineHeightSmall22 + spacing8))
+      }
+      // Its end control where an end icon stands, a line high and wide,
+      // taking its own pointer.
+      descendant(".text-input-end-control") {
+        position(.absolute)
+        top(perc(50))
+        insetInlineEnd(calc(borderWidthBase + spacing12))
+        transform(translateY(perc(-50)))
+        display(.inlineFlex)
+        alignItems(.center)
+        justifyContent(.center)
+        minWidth(lineHeightSmall22)
+        height(lineHeightSmall22)
+        customProperty("--size-icon-small", lineHeightSmall22.value)
       }
       ButtonView.phoneStepFieldCSS(".text-input-input")
       selector("& .text-input-input::placeholder") {
@@ -479,6 +575,11 @@ public struct TextInputView: HTMLContent {
         fontWeight(600)
         color(colorBase)
         fontFamily(typographyFontSans)
+      }
+      // In a part drawn disabled (`DisabledRegion`), as a disabled
+      // LabelView: its words, its "(optional)" and its info.
+      selector(":where([data-disabled-region='true']) & .text-input-label-row", ":where([data-disabled-region='true']) & .text-input-optional-flag") {
+        color(colorDisabled)
       }
     }
   }

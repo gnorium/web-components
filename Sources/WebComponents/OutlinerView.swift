@@ -1022,6 +1022,16 @@ public enum OutlineNumberAdvance {
       selector("&:has(> .outliner-stepper-view)") {
         gap(spacing16)
       }
+      // The spine's hang below its last item is the tree's own room (user,
+      // 2026-11-03): reserved at its end, so what follows the tree (a
+      // section's link, the next section) stands clear of the fade, never
+      // crossed by it. A tree whose row of steppers stands after its items
+      // has that row beside the hang, from the body start.
+      selector(
+        "&:not(:has(> .outliner-stepper-view)):has(> .outliner-list > .outliner-item[data-outliner-accordion='true'])"
+      ) {
+        paddingBlockEnd(Self.spineHang)
+      }
       // At rest after its items, in use wherever it acts (user,
       // 2026-11-03): either way at the tree's body start.
       descendant(".outliner-stepper-view") {
@@ -1120,8 +1130,19 @@ public enum OutlineNumberAdvance {
         borderRadius(borderRadiusCircle)
         pointerEvents(.none)
       }
+      // A line's heading (an origin step's summary) stands at least a
+      // marker tall, its first line centered on the marker, which stands at
+      // the item's top (user, 2026-11-03): pulled up to a line's middle, it
+      // stood out over its item into what is above the tree.
       selector("&[data-outliner-heading='line'] .outliner-marker") {
-        insetBlockStart((lineHeightSmall22 - Self.markerSize) / 2)
+        insetBlockStart(0)
+      }
+      selector(
+        "&[data-outliner-heading='line'] .outliner-item[data-outliner-accordion='true'] > .outliner-row [data-outliner-own-accordion='true'] > .accordion-details > .accordion-summary"
+      ) {
+        boxSizing(.borderBox)
+        minHeight(Self.markerSize)
+        paddingBlockStart((Self.markerSize - lineHeightSmall22) / 2)
       }
       descendant(".outliner-marker:focus") {
         outline(borderWidthBase, .solid, borderColorTransparent)
@@ -1171,11 +1192,11 @@ public enum OutlineNumberAdvance {
         insetBlockEnd(-(Self.nodeGap + (ButtonView.ButtonSize.large.minSize - Self.markerSize) / 2))
       }
       selector("&[data-outliner-heading='line'] .outliner-rail") {
-        insetBlockStart((lineHeightSmall22 + Self.markerSize) / 2)
-        insetBlockEnd(-(Self.nodeGap + (lineHeightSmall22 - Self.markerSize) / 2))
+        insetBlockStart(Self.markerSize)
+        insetBlockEnd(-Self.nodeGap)
       }
       selector("&[data-outliner-heading='line'] > .outliner-list:has(> .outliner-item[data-outliner-accordion='true'])::before") {
-        insetBlockStart((lineHeightSmall22 + Self.markerSize) / 2)
+        insetBlockStart(Self.markerSize)
       }
       // With no item after it, nor after any item it stands in, an item's
       // stretch ends at its foot: below it is the tree's own end.
@@ -1393,6 +1414,17 @@ public enum OutlineNumberAdvance {
       }
       descendant(".outliner-marker[data-outliner-immovable='true'] .outliner-marker-grip") {
         color(colorDisabled)
+      }
+      // A marker whose item is frozen (user, 2026-11-03)—held by an open
+      // object (`data-outliner-held`, its plain disc), or kept in its place
+      // by its page—rings its disc in the disabled border; still its fold
+      // control, its pointer and its scrim a marker's, and focused, the
+      // focus ring.
+      selector(
+        "& .outliner-marker[data-outliner-held='true']:not(:focus-visible)::after",
+        "& .outliner-marker[data-outliner-immovable='true']:not(:focus-visible)::after"
+      ) {
+        borderColor(borderColorDisabled)
       }
       selector("&[data-outliner-dragging='true'] .outliner-marker.outliner-handle") {
         cursor(.grabbing)
