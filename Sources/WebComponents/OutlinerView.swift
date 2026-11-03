@@ -855,9 +855,10 @@ public enum OutlineNumberAdvance {
     /// focus and while the item is folded.
     public static let markerSize: CSS.Length = `var`("--outliner-marker")
 
-    /// Between a flat item's marker and what it shows, as between a
-    /// locution's avatar and its words.
-    public static let markerSpace: CSS.Length = spacing12
+    /// Between a flat item's marker and what it shows (user, 2026-11-03:
+    /// "too cramped"): room for its ring midway, a step from the marker and
+    /// a step from what it rings.
+    public static let markerSpace: CSS.Length = spacing16
 
     /// Where every flat item's heading and body start, the same x for the
     /// whole tree (user, 2026-11-03): right after its marker. A node is one
@@ -872,10 +873,11 @@ public enum OutlineNumberAdvance {
     /// meeting.
     static let nodeGap: CSS.Length = spacing24
 
-    /// How far a flat item's ring stands outside what it rings: a step of
-    /// room inside it (user, 2026-11-03: the grip and the value box touched
-    /// it), then its border; its outline outside that.
-    static let ringOffset: CSS.Length = spacing8 + borderWidthBase
+    /// How far a flat item's ring stands outside what it rings, on every
+    /// side (user, 2026-11-03: the number, the value box and the body a
+    /// step inside it), its start midway between the marker and what it
+    /// rings (`markerSpace`), never touching the marker.
+    static let ringOffset: CSS.Length = spacing8
 
     /// A flat item's ring (user, 2026-11-03), the selector it is drawn by,
     /// for `item`, a selector of the item: what an action affects, the
