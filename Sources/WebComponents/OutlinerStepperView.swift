@@ -24,6 +24,13 @@ import EmbeddedSwiftUtilities
   /// ring round its heading) is marked in the tree, a chevron's press
   /// scrolling to it; nothing is marked at rest. The tree's page says where
   /// a new node may go and what a press does (`OutlinerStepper`).
+  ///
+  /// A node an open object holds (`hold`, user 2026-11-03) is still
+  /// stepped to: "− Testament 1.1." is disabled there, and at a node one it
+  /// holds stands under (it would go with it), and "+ Testament 1.1.1." at a
+  /// place under one it holds; the button's tooltip is then the object's
+  /// whole UUID, its one link, as a held testament's radio is
+  /// (`TestamentChoiceView`).
   public struct OutlinerStepperView: HTMLContent {
     let tree: String
     let noun: String
@@ -36,6 +43,24 @@ import EmbeddedSwiftUtilities
       self.noun = noun
     }
 
+    /// What marks a node an open object holds (user, 2026-11-01), among its
+    /// outline item's attributes (`OutlinerView.Node.data`): the object's
+    /// whole UUID, the words of the link its tooltip holds, and its page.
+    public static func hold(id: String, url: String) -> [(String, String)] {
+      [("outliner-hold", id), ("outliner-hold-url", url)]
+    }
+
+    /// A stepper's button in the tooltip a hold speaks in: off, and its
+    /// clicks its button's, until the stepper steps onto a node or a place
+    /// a hold keeps (`OutlinerStepper`), which fills its link.
+    private func held(_ button: ButtonView) -> TooltipView {
+      TooltipView(placement: .bottomStart, font: .mono, pins: false, off: true, class: "button-tooltip outliner-stepper-hold") {
+        LinkView(url: "#") { "" }
+      } content: {
+        button
+      }
+    }
+
     public func build() -> DOM.Node {
       let place = "\(noun) 1."
       let lower = noun.lowercased()
@@ -45,20 +70,22 @@ import EmbeddedSwiftUtilities
           previousAriaLabel: "Previous place", nextAriaLabel: "Next place", previousDisabled: true, nextDisabled: true,
           class: "outliner-stepper-add"
         ) {
-          ButtonView(
-            label: place, icon: IconView.add, buttonColor: .gray, weight: .subtle, size: .large, disabled: true,
-            type: .button, ariaLabel: "Add \(lower) 1.", class: "outliner-stepper-button",
-            labelFontWeight: fontWeightSemiBold)
+          held(
+            ButtonView(
+              label: place, icon: IconView.add, buttonColor: .gray, weight: .subtle, size: .large, disabled: true,
+              type: .button, ariaLabel: "Add \(lower) 1.", class: "outliner-stepper-button",
+              labelFontWeight: fontWeightSemiBold))
         }
         PaginationView(
           size: .large, kind: "outliner-stepper", ariaLabel: "Which \(lower) goes",
           previousAriaLabel: "Previous \(lower)", nextAriaLabel: "Next \(lower)",
           previousDisabled: true, nextDisabled: true, class: "outliner-stepper-remove"
         ) {
-          ButtonView(
-            label: place, icon: IconView.subtract, buttonColor: .gray, weight: .subtle, size: .large,
-            disabled: true, type: .button, ariaLabel: "Remove \(lower)", class: "outliner-stepper-button",
-            labelFontWeight: fontWeightSemiBold)
+          held(
+            ButtonView(
+              label: place, icon: IconView.subtract, buttonColor: .gray, weight: .subtle, size: .large,
+              disabled: true, type: .button, ariaLabel: "Remove \(lower)", class: "outliner-stepper-button",
+              labelFontWeight: fontWeightSemiBold))
           // A removed node's: the same button, restoring it.
           span {
             IconView.add
@@ -105,6 +132,11 @@ import EmbeddedSwiftUtilities
         }
         selector("& .outliner-stepper-restore-icon", "& .outliner-stepper-remove-icon") {
           display(.none)
+        }
+        // The hold's tooltip round a button sizes as the button alone: it
+        // never holds it wider than its stepper (a phone's long number).
+        selector("& .outliner-stepper-hold", "& .outliner-stepper-hold > .tooltip-trigger-content") {
+          minWidth(0)
         }
       }
       .build()
@@ -177,6 +209,33 @@ import EmbeddedSwiftUtilities
     private static func isRemoved(_ item: DOM.Element) -> Bool {
       stringEquals(item.getAttribute(data("outliner-removed")) ?? "false", "true")
     }
+
+    /// An open object holding a node, as its page marks the node's item
+    /// (`OutlinerStepperView.hold`): its whole UUID and its page.
+    private struct Hold {
+      let id: String
+      let url: String
+    }
+
+    /// The hold on `item` itself; nil for none, or for the tree's top.
+    private static func hold(of item: DOM.Element?) -> Hold? {
+      guard let item, let id = item.getAttribute(data("outliner-hold")) else { return nil }
+      return Hold(id: id, url: item.getAttribute(data("outliner-hold-url")) ?? "")
+    }
+
+    /// What keeps a node from going: a hold on it, or on the first node
+    /// under it, which would go with it.
+    private static func removalHold(of item: DOM.Element) -> Hold? {
+      if let own = hold(of: item) { return own }
+      for under in item.querySelectorAll(".outliner-item") {
+        if let found = hold(of: under) { return found }
+      }
+      return nil
+    }
+
+    /// What keeps a place from taking a new node: a hold on the node it
+    /// would go under.
+    private static func placeHold(of place: Place) -> Hold? { hold(of: place.parent) }
 
     private var topList: DOM.Element? { tree.querySelector(":scope > .outliner-list") }
 
@@ -285,7 +344,8 @@ import EmbeddedSwiftUtilities
       }
       if let pager = addPager {
         let chosen = place >= 0 ? places[place] : nil
-        name(pager, number: chosen?.number ?? "", verb: "Add", restoring: false, enabled: chosen != nil)
+        let hold = chosen.flatMap { Self.placeHold(of: $0) }
+        name(pager, number: chosen?.number ?? "", verb: "Add", restoring: false, enabled: chosen != nil, hold: hold)
         pager.querySelector(".pagination-prev")?.setDisabled(place <= 0)
         pager.querySelector(".pagination-next")?.setDisabled(place < 0 || place + 1 >= places.count)
         stepClass(pager)
@@ -293,9 +353,11 @@ import EmbeddedSwiftUtilities
       if let pager = removePager {
         let chosen = target >= 0 ? targets[target] : nil
         let restoring = chosen.map { Self.isRemoved($0) } ?? false
+        // A removed node is never held: what it restores keeps nothing.
+        let hold = restoring ? nil : chosen.flatMap { Self.removalHold(of: $0) }
         name(
           pager, number: chosen.map { Self.number(of: $0) } ?? "", verb: restoring ? "Restore" : "Remove",
-          restoring: restoring, enabled: chosen != nil)
+          restoring: restoring, enabled: chosen != nil, hold: hold)
         pager.querySelector(".pagination-prev")?.setDisabled(target <= 0)
         pager.querySelector(".pagination-next")?.setDisabled(target < 0 || target + 1 >= targets.count)
         stepClass(pager)
@@ -316,14 +378,18 @@ import EmbeddedSwiftUtilities
     }
 
     /// The pager's button named for the number it acts on: "+ Testament
-    /// 1.2.", "− Testament 1.1.", a removed one's "+ Testament 1.1.".
-    private func name(_ pager: DOM.Element, number: String, verb: String, restoring: Bool, enabled: Bool) {
+    /// 1.2.", "− Testament 1.1.", a removed one's "+ Testament 1.1."; where
+    /// a hold keeps it, disabled and the hold in its tooltip.
+    private func name(_ pager: DOM.Element, number: String, verb: String, restoring: Bool, enabled: Bool, hold: Hold?) {
       guard let button = pager.querySelector(".outliner-stepper-button") else { return }
       let text = stringIsEmpty(number) ? noun : stringJoin([noun, " ", number, "."], separator: "")
       button.querySelector(".button-label")?.textContent = text
       let spoken = stringIsEmpty(number) ? lowerNoun : stringJoin([lowerNoun, " ", number, "."], separator: "")
       button.setAttribute("aria-label", stringJoin([verb, " ", spoken], separator: ""))
-      button.setDisabled(!enabled)
+      var held = false
+      if let _ = hold { held = true }
+      button.setDisabled(!enabled || held)
+      show(hold, on: pager)
       // A removal's icon: − to remove, + to restore.
       if let icon = button.querySelector(".icon-view"),
         let source = pager.querySelector(
@@ -332,6 +398,28 @@ import EmbeddedSwiftUtilities
       {
         icon.setInnerHTML(source.innerHTML)
       }
+    }
+
+    /// The pager's tooltip, saying the hold that keeps its button (user,
+    /// 2026-11-03): the object's whole UUID, its one link; a click or a tap
+    /// on the disabled button pins it, and it takes the focus the button no
+    /// longer can. Off, and its button's own clicks and taps left alone,
+    /// with none.
+    private func show(_ hold: Hold?, on pager: DOM.Element) {
+      guard let trigger = pager.querySelector(".outliner-stepper-hold") else { return }
+      guard let hold else {
+        trigger.setAttribute(data("tooltip-off"), "true")
+        trigger.setAttribute(data("pins"), "false")
+        trigger.removeAttribute("tabindex")
+        return
+      }
+      if let link = TooltipHydration.bubble(of: trigger)?.querySelector("a") {
+        link.setAttribute("href", hold.url)
+        link.textContent = hold.id
+      }
+      trigger.setAttribute(data("tooltip-off"), "false")
+      trigger.setAttribute(data("pins"), "true")
+      trigger.setAttribute("tabindex", "0")
     }
 
     // MARK: - Marking
@@ -433,9 +521,11 @@ import EmbeddedSwiftUtilities
     private func press(adding: Bool) {
       if adding {
         guard place >= 0 else { return }
+        if let _ = Self.placeHold(of: places[place]) { return }
         insert(places[place])
       } else {
         guard target >= 0 else { return }
+        if !Self.isRemoved(targets[target]), let _ = Self.removalHold(of: targets[target]) { return }
         remove(targets[target])
       }
       using = nil

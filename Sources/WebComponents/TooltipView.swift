@@ -858,15 +858,17 @@ public struct TooltipView: HTMLContent {
       // iOS sends no click
       // for a tap on something that isn't clickable, hence touchend too,
       // which then takes the tap whole. A trigger whose clicks are its own
-      // controls' (`pins: false`) leaves them be.
-      if !stringEquals(trigger.dataset["pins"] ?? "true", "false") {
-        _ = trigger.addEventListener(.touchend) { [self] (event: Event) in
-          event.preventDefault()
-          self.togglePinned()
-        }
-        _ = trigger.addEventListener(.click) { [self] _ in
-          self.togglePinned()
-        }
+      // controls' (`pins: false`) leaves them be. Read at each tap: a page
+      // may change it while the tooltip stands (a stepper's button, its
+      // own control until a hold disables it, `OutlinerStepper`).
+      _ = trigger.addEventListener(.touchend) { [self] (event: Event) in
+        guard self.pins else { return }
+        event.preventDefault()
+        self.togglePinned()
+      }
+      _ = trigger.addEventListener(.click) { [self] _ in
+        guard self.pins else { return }
+        self.togglePinned()
       }
 
       // A pinned one closes on a click or tap anywhere else. iOS sends no
@@ -896,6 +898,9 @@ public struct TooltipView: HTMLContent {
         if self.isVisible { self.dismiss() }
       }
     }
+
+    /// Whether a click or tap on its trigger pins it open (`data-pins`).
+    private var pins: Bool { !stringEquals(trigger.dataset["pins"] ?? "true", "false") }
 
     /// Whether its trigger is `root` or inside it.
     func isInside(_ root: DOM.Element) -> Bool {
