@@ -122,14 +122,11 @@ public enum OutlineMoves {
   /// is its last row, after its content and every item under it: "+" adds
   /// below it (user, 2026-10-01).
   ///
-  /// **Deep trees scroll in their frame.** Every node is at least
+  /// **Deep trees widen the page.** Every node is at least
   /// `minWidthTreeNode` wide, so a node at depth 100 is as readable as one
-  /// at depth 1, and every card widens to hold what it nests: past the
-  /// width the column gives, the tree's frame scrolls sideways, never the
-  /// page (user, 2026-11-03: a phone's page is never wider than the phone;
-  /// a reader's footer row in a card, or five levels of cards, outgrew it
-  /// when the page widened instead). A menu opened inside the frame is
-  /// placed over the page, not cut off at its edge (`DropdownView`).
+  /// at depth 1: past the width the column gives, the page itself widens
+  /// and scrolls sideways (user, 2026-11-02: a phone pinches out to see it
+  /// whole), no scrollport of the tree's own.
   ///
   /// **Arranged** only where it has a `name` (the hidden input the
   /// arrangement posts as): then its reader can rearrange it—by dragging
@@ -645,10 +642,9 @@ public enum OutlineMoves {
           .hidden()
         }
 
-        // The tree's frame: a deep tree scrolls here, never the page.
+        // The tree's frame: a deep tree widens the page (user, 2026-11-02).
         div { top }
           .class("outliner-scroll")
-          .data("scrollport", true)
 
         if let name {
           if let form {
@@ -728,24 +724,16 @@ public enum OutlineMoves {
       }
       // A deep tree is as wide as its nodes need (user, 2026-11-02): never
       // narrower than the narrowest any node can be (a reader's footer row,
-      // ArtifactView), every card widening to hold what it nests. Past the
-      // column its frame scrolls sideways, as a table's does, never the page
-      // (user, 2026-11-03), its bar over nothing. A little room at its edges
-      // keeps a ring drawn outside a row or a control clear of the edge that
-      // scrolls.
+      // ArtifactView), every card widening to hold what it nests; past the
+      // screen the page itself widens, so a phone pinches out to see it
+      // whole. No scrollport of its own. A little room at its edges keeps a
+      // ring drawn outside a row or a control clear.
       descendant(".outliner-scroll") {
-        overflowX(.auto)
         minWidth(0)
         padding(spacing4)
       }
       selector("& .outliner-scroll > .outliner-list") {
         CSS.Property("min-width", "min-content").important()
-      }
-      selector(
-        "& .outliner-scroll::-webkit-scrollbar-track", "& .outliner-scroll::-webkit-scrollbar-track-piece",
-        "& .outliner-scroll::-webkit-scrollbar-corner"
-      ) {
-        backgroundColor(.transparent).important()
       }
       selector("& .outliner-instructions", "& .outliner-live") {
         position(.absolute)
