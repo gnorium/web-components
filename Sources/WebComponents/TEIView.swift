@@ -926,9 +926,10 @@ public enum TEISentenceSelection {
     /// one above; a line placed by its zone about its box's middle, as far
     /// as the frame's `measure` lets it (`TEIPage.reflowedBox`:
     /// `--tei-reflow-start`, `--tei-reflow-size`, in its em), so it wraps
-    /// where its frame ends, never because the face fills its box. Hamlet
+    /// where its frame ends, never because the face fills its box (Hamlet
     /// Q1's front cover, reflowed: "HAMLE" over its "T", "SHAKESPEAR" over
-    /// its "E", "LONDON" over "1603". Reflow off, the print's setting
+    /// its "E", "LONDON" over "1603"); a tracked line, its tracking as its
+    /// inset (`--tei-reflow-tracking`). Reflow off, the print's setting
     /// stands.
     static func reflowStyle(of rend: String, measure: Double) -> String {
       func em(_ value: Double) -> String { number((value * 10_000).rounded() / 10_000) + "em" }
@@ -936,6 +937,16 @@ public enum TEISentenceSelection {
       if let leading = TEIRendition.leading(of: rend), leading < 1 { style += "--tei-reflow-leading:1;" }
       if let box = TEIPage.reflowedBox(of: rend, measure: measure) {
         style += "--tei-reflow-start:\(em(box.start));--tei-reflow-size:\(em(box.size));"
+      }
+      // A tracked box is set past its end by its tracking
+      // (`TEIRendition.css(from:)`): as wide as its pane, it ran past the
+      // pane, which scrolled sideways (Hamlet Q1's title page, "THE"); in a
+      // box of its own, its line still centered half its tracking short.
+      // Reflowed, its tracking is its inset at its start instead
+      // (`--tei-reflow-tracking`), which only a centered line keeps.
+      let tracking = TEIRendition.css(from: rend, only: ["letter-spacing"])
+      if tracking.hasPrefix("letter-spacing:"), !tracking.hasPrefix("letter-spacing:-"), !tracking.hasPrefix("letter-spacing:0;") {
+        style += "--tei-reflow-tracking:\(tracking.dropFirst("letter-spacing:".count).prefix { $0 != ";" });"
       }
       return style
     }
@@ -976,7 +987,9 @@ public enum TEISentenceSelection {
                     }.class("tei-row")
                   }
                 }
-              }.class("tei-block").data("rend", lines[0].rend).data("part", lines[0].part).addingAttribute(
+              }.class("tei-block").data("rend", lines[0].rend).data("part", lines[0].part)
+                // How many lines the print sets it in: one runs, reflowed, as far as its pane lets it.
+                .data("printed-lines", Self.rows(of: lines).count).addingAttribute(
                 "style", setting(columns.isEmpty ? lines[0].rend : TEIRendition.inColumns(lines[0].rend, of: columns)))
             case .furniture(let pieces):
               // A page number and a running head set on one line keep
@@ -1036,13 +1049,33 @@ public enum TEISentenceSelection {
       return nil
     }
 
+    /// How far before its frame's start a page sets a line, in its em (user,
+    /// 2026-11-03): the most a block or a line starts before it (a negative
+    /// `margin-inline-start`, in its own type's em, Hamlet Q1's title page's
+    /// "Tragicall Hiſtorie of" 2.2 em out), 0 for none. Reflowed, the frame
+    /// keeps that much room either side, so no line runs out of sight
+    /// (`--tei-reflow-outdent`, in rem: the page's em is the root's, 16 px,
+    /// wherever a box of another size reads it).
+    static func outdent(of lines: [TEILine]) -> Double {
+      lines.reduce(0) { most, line in
+        let set = TEIRendition.css(from: line.rend, only: ["margin-inline-start"])
+        guard set.hasPrefix("margin-inline-start:-"), set.hasSuffix("em;"), !set.hasSuffix("rem;"),
+          let value = Double(set.dropFirst("margin-inline-start:-".count).dropLast(3))
+        else { return most }
+        return max(most, value * (TEIRendition.fontSize(of: line.rend) ?? 1))
+      }
+    }
+
     /// The page's rendering layer's style: its frame (`frameStyle`), the width of a space's character
     /// (`spaceCharacter`) and the body's leading in em (`TEIRendition.bodyLeading`), which a framed page's
     /// furniture is set at.
-    static func pageTextStyle(frame: TEIPageFrame?, renditions: [String: String], bodyLeading: Double? = nil) -> String {
+    static func pageTextStyle(
+      frame: TEIPageFrame?, renditions: [String: String], bodyLeading: Double? = nil, outdent: Double = 0
+    ) -> String {
       let parts = [
         frame.map(frameStyle), spaceCharacter(in: renditions).map { "--tei-space-char: \($0)" },
         bodyLeading.map { "--tei-body-leading: \(number($0))" },
+        outdent > 0 ? "--tei-reflow-outdent: \(number((outdent * 10_000).rounded() / 10_000))rem" : nil,
       ]
       return parts.compactMap { $0 }.joined(separator: "; ")
     }
@@ -1308,7 +1341,8 @@ public enum TEISentenceSelection {
               "style",
               Self.pageTextStyle(
                 frame: frame, renditions: page.renditions,
-                bodyLeading: TEIRendition.bodyLeading(in: page.renditions, markup: page.markup)))
+                bodyLeading: TEIRendition.bodyLeading(in: page.renditions, markup: page.markup),
+                outdent: Self.outdent(of: page.lines)))
 
             // The page's code (user, 2026-10-14), never the document's
             // header: that is its viewer's Header pane's alone (user,
@@ -1843,14 +1877,58 @@ public enum TEISentenceSelection {
           CSS.Property("inline-size", "var(--tei-reflow-size)").important()
           maxWidth(.none)
         }
-        // A block the print sets into the margin before its frame (Hamlet
-        // Q1's title page, "Tragicall Hiſtorie of" 0.7 em out) starts,
-        // reflowed, at the pane's edge, never past it out of sight.
+        // Reflowed, a page's frame stands in the middle of its pane, its
+        // measure wide where the pane is wider, else the pane's (user,
+        // 2026-11-03: Hamlet Q1's title page, its lines placed across its
+        // frame from its start, stood at the pane's left), with room on
+        // either side for a line the print sets out before it (`outdent`),
+        // so no line runs out of sight and a centered line stays on the
+        // pane's middle; its lines wrap in it, never past the pane.
+        // Its room either side (`--tei-reflow-room`) in its pane's width
+        // (the page's, its query container's: `cqi`) and its em (the
+        // root's, `rem`). A line the print sets alone (`data-printed-lines`,
+        // a title page's) runs on past the frame's end, as far as the pane
+        // lets it, a centered one either way, so a face that sets it a hair
+        // wider than the print never wraps it in a wide pane; a paragraph
+        // wraps at the frame's measure, as its print does.
+        selector("[data-reflow='true'] & .tei-page-text[data-framed='true']") {
+          CSS.Property("container-type", "inline-size")
+          CSS.Property(
+            "--tei-reflow-room", "max(var(--tei-reflow-outdent, 0rem), (100cqi - var(--tei-frame-measure) * 1rem) / 2)")
+        }
         selector(
-          "[data-reflow='true'] & .tei-block[style*='margin-inline-start:-']",
-          "[data-reflow='true'] & .tei-line[style*='margin-inline-start:-']"
+          "[data-reflow='true'] & .tei-page-text[data-framed='true'] > .tei-text-block",
+          "[data-reflow='true'] & .tei-page-text[data-framed='true'] > .tei-margin"
         ) {
-          CSS.Property("margin-inline-start", "0").important()
+          width(perc(100))
+          boxSizing(.borderBox)
+          CSS.Property("padding-inline", "var(--tei-reflow-room)")
+        }
+        selector(
+          "[data-reflow='true'] & .tei-page-text[data-framed='true'] > * > .tei-section > .tei-block[data-printed-lines='1']:not([style*='--tei-reflow-size'])"
+        ) {
+          CSS.Property("margin-inline-end", "calc(-1 * var(--tei-reflow-room))").important()
+          maxWidth(.none)
+        }
+        selector(
+          "[data-reflow='true'] & .tei-page-text[data-framed='true'] > * > .tei-section > .tei-block[data-printed-lines='1']:not([style*='--tei-reflow-size'])[style*='text-align:center']",
+          "[data-reflow='true'] & .tei-page-text[data-framed='true'] > * > .tei-section > .tei-block[data-printed-lines='1']:not([style*='--tei-reflow-size'])[data-rend~='align(center)']"
+        ) {
+          CSS.Property("margin-inline-start", "calc(-1 * var(--tei-reflow-room))").important()
+        }
+        selector("[data-reflow='true'] & .tei-page-text:not([data-framed='true'])") {
+          CSS.Property("padding-inline-start", "calc(\(spacing16.value) + var(--tei-reflow-outdent, 0rem))")
+        }
+        // A tracked line's inset in its place (`reflowStyle`): its end on
+        // its box's, its centered ink on its box's middle.
+        selector("[data-reflow='true'] & [style*='--tei-reflow-tracking']") {
+          CSS.Property("margin-inline-end", "0").important()
+        }
+        selector(
+          "[data-reflow='true'] & [style*='--tei-reflow-tracking'][style*='text-align:center']",
+          "[data-reflow='true'] & [style*='--tei-reflow-tracking'][data-rend~='align(center)']"
+        ) {
+          CSS.Property("padding-inline-start", "var(--tei-reflow-tracking)")
         }
         selector("& .tei-block > *") {
           display(.inline)
