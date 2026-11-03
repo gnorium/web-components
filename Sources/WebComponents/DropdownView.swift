@@ -484,13 +484,26 @@ public struct DropdownView: HTMLContent {
         }
       }
       // Placed over the page from a scrollport (`place()`): fixed at its
-      // field's place on the screen, which the page writes as it moves.
+      // field's place on the screen, which the page writes as it moves, in
+      // the top layer (a manual popover). Raised inside its accordion only,
+      // a neighbor accordion raised by the pointer over it (as the page
+      // scrolled to show the menu's foot) drew over it: an accordion's
+      // z-index counts only inside the context it makes (2026-10-30). The
+      // browser's own popover box undone: its inset, margin, padding and
+      // color.
       descendant(".dropdown-menu[data-placement='fixed']") {
         position(.fixed)
         top((`var`("--dropdown-placed-top") as CSS.Length))
         insetInlineStart((`var`("--dropdown-placed-start") as CSS.Length))
         insetInlineEnd(.auto)
+        CSS.Property("bottom", "auto")
         minWidth((`var`("--dropdown-placed-width") as CSS.Length))
+      }
+      descendant(".dropdown-menu[data-placement='fixed'][popover]") {
+        margin(0)
+        marginBlockStart(spacing4)
+        padding(0)
+        CSS.Property("color", "inherit")
       }
       // Matches LabelView, which every FieldView label uses: a dropdown in a
       // form is a form field and its label has to look like one.
@@ -1164,6 +1177,12 @@ public struct DropdownView: HTMLContent {
       let rightToLeft = stringEquals(container.closest("[dir]")?.getAttribute("dir") ?? "", "rtl")
       let start = rightToLeft ? window.innerWidth - rect.right : rect.left
       menu.setStyleProperty("--dropdown-placed-start", stringJoin([intToString(Int(start)), "px"], separator: ""))
+      // In the top layer, over every accordion raised around it; a browser
+      // with no popovers keeps it fixed where it stands.
+      if !menu.hasAttribute("popover") {
+        menu.setAttribute("popover", "manual")
+        if !menu.showPopover() { menu.removeAttribute("popover") }
+      }
       // A menu hanging from its field scrolls with the page, so an option
       // below the screen's foot is scrolled to; a placed one stays put, so
       // the page is scrolled up to bring its foot on screen, as far as the
@@ -1188,6 +1207,10 @@ public struct DropdownView: HTMLContent {
     /// Back to hanging from its field.
     private func unplace() {
       guard let menu else { return }
+      if menu.hasAttribute("popover") {
+        menu.hidePopover()
+        menu.removeAttribute("popover")
+      }
       menu.removeAttribute(data("placement"))
       for property in ["--dropdown-placed-top", "--dropdown-placed-width", "--dropdown-placed-start"] {
         menu.setStyleProperty(property, "")

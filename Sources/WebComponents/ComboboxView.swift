@@ -313,6 +313,24 @@ public struct ComboboxView: HTMLContent {
       descendant(".combobox-menu[data-open='true']") {
         display(.block)
       }
+      // Placed over the page from a scrollport (a tree's frame), as a
+      // dropdown's menu is: fixed under its field, its width, at the place
+      // the page writes as it moves (`place()`), in the top layer.
+      descendant(".combobox-menu[data-placement='fixed']") {
+        position(.fixed)
+        top((`var`("--combobox-placed-top") as CSS.Length))
+        insetInlineStart((`var`("--combobox-placed-start") as CSS.Length))
+        insetInlineEnd(.auto)
+        CSS.Property("bottom", "auto")
+        width((`var`("--combobox-placed-width") as CSS.Length))
+      }
+      // In the top layer (a manual popover), the browser's own box undone.
+      descendant(".combobox-menu[data-placement='fixed'][popover]") {
+        margin(0)
+        marginBlockStart(spacing4)
+        padding(0)
+        CSS.Property("color", "inherit")
+      }
       descendant(".combobox-listbox") {
         listStyle(.none)
         margin(0)
@@ -716,6 +734,7 @@ public struct ComboboxView: HTMLContent {
       pressed = ""
       isOpen = true
       menu.setAttribute(data("open"), true)
+      place()
       field.setAttribute("aria-expanded", "true")
       toggle?.setAttribute("aria-expanded", "true")
       chevron?.setState(expanded: true, animated: true)
@@ -725,10 +744,55 @@ public struct ComboboxView: HTMLContent {
       }
     }
 
+    /// Whether the scroll and resize listeners that keep a placed list by
+    /// its field are bound.
+    private var placementBound = false
+
+    /// A combobox in a scrollport (a deep tree's frame, `OutlinerView`,
+    /// marked `data-scrollport`) would have its list cut off at the frame's
+    /// edge, or scrolled inside it: there the open list is placed over the
+    /// page, fixed under its field at its width, and kept there as anything
+    /// scrolls or the window resizes (as `DropdownView`'s menu). Anywhere
+    /// else it hangs from the field.
+    private func place() {
+      guard isOpen, let _ = root.closest("[data-scrollport='true']"),
+        let anchor = menu.parentElement, let rect = anchor.getBoundingClientRect()
+      else { return }
+      menu.setAttribute(data("placement"), "fixed")
+      menu.setStyleProperty("--combobox-placed-top", stringJoin([intToString(Int(rect.bottom)), "px"], separator: ""))
+      menu.setStyleProperty("--combobox-placed-width", stringJoin([intToString(Int(rect.width)), "px"], separator: ""))
+      let rightToLeft = stringEquals(root.closest("[dir]")?.getAttribute("dir") ?? "", "rtl")
+      let start = rightToLeft ? window.innerWidth - rect.right : rect.left
+      menu.setStyleProperty("--combobox-placed-start", stringJoin([intToString(Int(start)), "px"], separator: ""))
+      // In the top layer, over every accordion raised around it.
+      if !menu.hasAttribute("popover") {
+        menu.setAttribute("popover", "manual")
+        if !menu.showPopover() { menu.removeAttribute("popover") }
+      }
+      guard !placementBound else { return }
+      placementBound = true
+      let follow: @Sendable (Event) -> Void = { [self] _ in self.place() }
+      _ = document.addEventListener(Event.scroll, follow, capture: true, passive: true)
+      _ = window.addEventListener("resize", follow, capture: false, passive: true)
+    }
+
+    /// Back to hanging from its field.
+    private func unplace() {
+      if menu.hasAttribute("popover") {
+        menu.hidePopover()
+        menu.removeAttribute("popover")
+      }
+      menu.removeAttribute(data("placement"))
+      for property in ["--combobox-placed-top", "--combobox-placed-width", "--combobox-placed-start"] {
+        menu.setStyleProperty(property, "")
+      }
+    }
+
     private func close() {
       setActive(-1)
       guard isOpen else { return }
       isOpen = false
+      unplace()
       menu.setAttribute(data("open"), false)
       field.setAttribute("aria-expanded", "false")
       toggle?.setAttribute("aria-expanded", "false")
