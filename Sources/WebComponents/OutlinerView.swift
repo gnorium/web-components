@@ -331,13 +331,22 @@ public enum OutlineNumberAdvance {
     /// with no movement folds the item; a drag, or a long press on a touch
     /// screen, moves it; Space picks it up for the keyboard's moves, Enter
     /// folds it. Its name says both: "Testament 1.1., fold or move".
+    ///
+    /// An item an open object holds (`OutlinerStepperView.hold` among its
+    /// data, user 2026-11-03) is never moved, and its marker says why: a
+    /// tooltip holding the object's whole UUID, its one link (`hold`), the
+    /// marker's pointer the not-allowed one, as a disabled control's.
     public struct Grip: Sendable {
       public let movable: Bool
       public let describedBy: String
+      /// The open object holding the item: its whole UUID and its page; nil
+      /// for none.
+      public let hold: (id: String, url: String)?
 
-      public init(movable: Bool, describedBy: String) {
+      public init(movable: Bool, describedBy: String, hold: (id: String, url: String)? = nil) {
         self.movable = movable
         self.describedBy = describedBy
+        self.hold = hold
       }
     }
 
@@ -637,7 +646,11 @@ public enum OutlineNumberAdvance {
           .class("outliner-diff")
           .data("visible", !stringEquals(origin.number, number))
           .build()
-        slots = Slots(diff: diff, grip: Grip(movable: node.movable, describedBy: "\(treeID)-instructions"))
+        let held = node.data.first { $0.0 == "outliner-hold" }.map { id in
+          (id: id.1, url: node.data.first { $0.0 == "outliner-hold-url" }?.1 ?? "")
+        }
+        slots = Slots(
+          diff: diff, grip: Grip(movable: node.movable && held == nil, describedBy: "\(treeID)-instructions", hold: held))
       } else if arranges {
         // The grip: what is pressed to pick the item up, what is dragged,
         // and what the keyboard grabs.
@@ -832,9 +845,9 @@ public enum OutlineNumberAdvance {
     /// dot on a graph and a locution's avatar on its thread: a disc a
     /// thread's avatar's size (`AvatarView`'s medium: a medium control's
     /// 40, a small one's 32 on a phone, `ButtonView.phoneStep`), centered
-    /// on the spine at its heading's first line, its subtle ground and the
-    /// avatar's ring (a subtle 1px border outside the disc) breaking the
-    /// spine round it. It is the item's fold
+    /// on the spine at its heading's first line, its subtle ground and a
+    /// control avatar's ring (a base 1px border outside the disc) breaking
+    /// the spine round it. It is the item's fold
     /// control, as an avatar folds its locution: its caller draws it, a
     /// button classed `outliner-marker outliner-fold`, `data-outliner-fold-noun`
     /// its noun, holding its scrim (`outliner-marker-scrim`) and the scrim's
@@ -1070,10 +1083,11 @@ public enum OutlineNumberAdvance {
       // Its marker (`markerSize`), on the spine, centered on its heading's
       // first line (a large control's, or a line's): a disc of a subtle
       // ground, over the spine and the stretches it stands on, ringed as a
-      // locution's avatar is (user, 2026-11-03): one subtle 1px border
-      // outside the disc, which keeps its full size; focused from the
-      // keyboard, the focus ring every control wears, the border in the
-      // focus color and a 1px outline of it, two pixels in all.
+      // locution's avatar is (user, 2026-11-03): one 1px border outside the
+      // disc, which keeps its full size, the base border, a control's
+      // (3:1), its edge saying it is one; focused from the keyboard, the
+      // focus ring every control wears, the border in the focus color and
+      // a 1px outline of it, two pixels in all.
       // The fold control, as a locution's avatar is: a press folds the node
       // and every node under it, or opens it; under the pointer and focus,
       // and while the node is folded, a scrim over it shows its chevron,
@@ -1098,7 +1112,7 @@ public enum OutlineNumberAdvance {
         content("\"\"")
         position(.absolute)
         inset(-borderWidthBase)
-        border(borderWidthBase, .solid, borderColorSubtle)
+        border(borderWidthBase, .solid, borderColorBase)
         borderRadius(borderRadiusCircle)
         pointerEvents(.none)
       }
