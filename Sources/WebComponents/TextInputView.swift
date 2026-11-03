@@ -370,7 +370,7 @@ public struct TextInputView: HTMLContent {
       selector("&.text-input-has-prefix .text-input-input") {
         paddingInlineStart(calc(spacing12 + (`var`("--text-input-prefix-width") as CSS.Length) + spacing8)).important()
       }
-      // As a tree row's number (`.record-row-number`) and a dropdown
+      // As a tree row's number (`.record-node-number`) and a dropdown
       // option's (`.dropdown-option-number`): mono, subtle, a "." after it.
       descendant(".text-input-prefix") {
         position(.absolute)

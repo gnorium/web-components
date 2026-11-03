@@ -614,7 +614,7 @@ public struct DropdownView: HTMLContent {
         whiteSpace(.normal)
         overflowWrap(.breakWord)
       }
-      // A numbered option's number, as a tree row's (`.record-row-number`):
+      // A numbered option's number, as a tree row's (`.record-node-number`):
       // mono, subtle, a "." after it; white on a solid blue row as the
       // other secondary texts are.
       descendant(".dropdown-option-number") {

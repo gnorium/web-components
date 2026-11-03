@@ -52,6 +52,10 @@ public struct PaginationView: HTMLContent {
   public let nextDisabled: Bool
   public let previousData: [(String, String)]
   public let nextData: [(String, String)]
+  /// What stands between the chevrons in place of the page number and its
+  /// total, itself and unwrapped: a stepper's own control (a tree's "+
+  /// Testament 1.2." button, user 2026-11-03). Empty draws the page number.
+  let indicator: [DOM.Node]
   let `class`: String
 
   public init(
@@ -73,8 +77,10 @@ public struct PaginationView: HTMLContent {
     nextDisabled: Bool? = nil,
     previousData: [(String, String)] = [],
     nextData: [(String, String)] = [],
-    class: String = ""
+    class: String = "",
+    @HTMLBuilder indicator: () -> [DOM.Node] = { [] }
   ) {
+    self.indicator = indicator()
     self.totalPages = max(0, totalPages)
     self.currentPage = max(1, currentPage ?? 1)
     self.previousUrl = previousUrl
@@ -169,49 +175,54 @@ public struct PaginationView: HTMLContent {
         .class("pagination-previous-container")
       }
 
-      div {
-        if let inputID {
-          input()
-            .type(.number)
-            .id(inputID)
-            .name("page")
-            .value("\(safePage)")
-            .class("page-box")
-            .min(1)
-            .max(safeTotal)
-            .ariaLabel(inputAriaLabel)
-            .data("input-width", inputWidth.value)
-            .addingAttribute("size", "\(digitCount)")
-        } else {
-          input()
-            .type(.number)
-            .name("page")
-            .value("\(safePage)")
-            .class("page-box")
-            .min(1)
-            .max(safeTotal)
-            .ariaLabel(inputAriaLabel)
-            .data("input-width", inputWidth.value)
-            .addingAttribute("size", "\(digitCount)")
-        }
-
-        if chrome {
-          span { "of" }
-            .class("pagination-term")
-          if let totalID {
-            span { totalPagesStr }
-              .id(totalID)
-              .class("pagination-total")
+      if !indicator.isEmpty {
+        // A stepper's own control, itself between the chevrons.
+        indicator
+      } else {
+        div {
+          if let inputID {
+            input()
+              .type(.number)
+              .id(inputID)
+              .name("page")
+              .value("\(safePage)")
+              .class("page-box")
+              .min(1)
+              .max(safeTotal)
+              .ariaLabel(inputAriaLabel)
+              .data("input-width", inputWidth.value)
+              .addingAttribute("size", "\(digitCount)")
           } else {
-            span { totalPagesStr }
+            input()
+              .type(.number)
+              .name("page")
+              .value("\(safePage)")
+              .class("page-box")
+              .min(1)
+              .max(safeTotal)
+              .ariaLabel(inputAriaLabel)
+              .data("input-width", inputWidth.value)
+              .addingAttribute("size", "\(digitCount)")
+          }
+
+          if chrome {
+            span { "of" }
+              .class("pagination-term")
+            if let totalID {
+              span { totalPagesStr }
+                .id(totalID)
+                .class("pagination-total")
+            } else {
+              span { totalPagesStr }
+                .class("pagination-total")
+            }
+          } else {
+            span { "of \(totalPagesStr)" }
               .class("pagination-total")
           }
-        } else {
-          span { "of \(totalPagesStr)" }
-            .class("pagination-total")
         }
+        .class("pagination-indicator")
       }
-      .class("pagination-indicator")
 
       if showControls {
         div {
