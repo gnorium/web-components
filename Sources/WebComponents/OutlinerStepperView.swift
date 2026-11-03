@@ -29,8 +29,8 @@ import EmbeddedSwiftUtilities
   /// stepped to: "− Testament 1.1." is disabled there, and at a node one it
   /// holds stands under (it would go with it), and "+ Testament 1.1.1." at a
   /// place under one it holds; the button's tooltip is then the object's
-  /// whole UUID, its one link, as a held testament's radio is
-  /// (`TestamentChoiceView`).
+  /// whole UUID, its one link, as a held node's marker's is
+  /// (`OutlinerView.Grip.hold`).
   public struct OutlinerStepperView: HTMLContent {
     let tree: String
     let noun: String
