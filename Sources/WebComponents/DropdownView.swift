@@ -530,8 +530,12 @@ public struct DropdownView: HTMLContent {
         fontWeight(fontWeightNormal)
         color(colorSubtle)
       }
-      // Not an option: no hover, no pointer, never chosen.
+      // Not an option: no hover, no pointer, never chosen. As tall as an
+      // option, its line centered in it as an option's is, not left at the
+      // top with the rest of the height below it.
       descendant(".dropdown-note") {
+        display(.flex)
+        alignItems(.center)
         padding(spacing8)
         minHeight(ButtonView.ButtonSize.large.minSize)
         boxSizing(.borderBox)
