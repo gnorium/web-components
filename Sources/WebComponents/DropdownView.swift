@@ -544,8 +544,20 @@ public struct DropdownView: HTMLContent {
         fontSize(fontSizeMedium16)
         lineHeight(lineHeightSmall22)
         color(colorSubtle)
-        borderBlockStart(borderWidthBase, .solid, borderColorSubtle)
         cursor(cursorBase)
+        position(.relative)
+      }
+      // Its rule above it drawn over its top edge, not as a border, so the
+      // row keeps the options' own measure: 8 + 32 + 8 = 48 beside one-line
+      // options, 12 + 22 + 12 = 46 beside stacked ones (user, 2026-11-03).
+      descendant(".dropdown-note::before") {
+        content("\"\"")
+        position(.absolute)
+        insetBlockStart(0)
+        insetInlineStart(0)
+        insetInlineEnd(0)
+        height(borderWidthBase)
+        backgroundColor(borderColorSubtle)
       }
       ButtonView.phoneStepRowCSS(".dropdown-note", ".dropdown-option")
       // Its search box is as tall as the trigger it hangs from: medium, 40,
@@ -645,6 +657,7 @@ public struct DropdownView: HTMLContent {
       // Its text on the options' own inset in a stacked list.
       descendant(".dropdown-note[data-stacked='true']") {
         padding(spacing12)
+        minHeight(0)
       }
       descendant(".dropdown-option[data-hidden='true']") { display(.none) }
       descendant(".dropdown-option[data-excluded='true']") { display(.none) }
