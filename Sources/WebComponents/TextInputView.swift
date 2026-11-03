@@ -20,7 +20,7 @@ public struct TextInputView: HTMLContent {
   let clearable: Bool
   let startIcon: String?
   /// Text that stands at the start of the field, inside it and never part
-  /// of its value: a typed Value's number, "1." (user, 2026-11-02), mono
+  /// of its value: a typed Value's number, "1." (user, 2026-11-02), sans
   /// and subtle as a tree row's number, with the "." after it. Nil for none.
   let prefix: String?
   let endIcon: String?
@@ -283,9 +283,10 @@ public struct TextInputView: HTMLContent {
     return container.style {
       // This input's text size, per instance: the shared rule reads it.
       customProperty("--text-input-font-size", inputFontSize.value)
-      // A prefix's width: a mono character is 0.6em wide, its "." one more.
+      // A prefix's width: as far as the number runs in the sans, its "."
+      // after it (`OutlineNumberAdvance`, thousandths of the em).
       if let prefix {
-        customProperty("--text-input-prefix-width", "calc(\(prefix.utf8.count + 1) * 0.6em)")
+        customProperty("--text-input-prefix-width", "calc(\(OutlineNumberAdvance.of(prefix)) * 0.001em)")
       }
 
       // The label row and the box in a column, 8px apart as every field's
@@ -371,13 +372,13 @@ public struct TextInputView: HTMLContent {
         paddingInlineStart(calc(spacing12 + (`var`("--text-input-prefix-width") as CSS.Length) + spacing8)).important()
       }
       // As a tree row's number (`.record-node-number`) and a dropdown
-      // option's (`.dropdown-option-number`): mono, subtle, a "." after it.
+      // option's (`.dropdown-option-number`): sans, subtle, a "." after it.
       descendant(".text-input-prefix") {
         position(.absolute)
         top(perc(50))
         insetInlineStart(calc(borderWidthBase + spacing12))
         transform(translateY(perc(-50)))
-        fontFamily(typographyFontMono)
+        fontFamily(typographyFontSans)
         fontSize(`var`("--text-input-font-size") as CSS.Length)
         fontWeight(fontWeightNormal)
         lineHeight(lineHeightSmall22)

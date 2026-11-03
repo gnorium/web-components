@@ -36,6 +36,8 @@ public struct ButtonView: HTMLContent {
   var submitValue: String? = nil
   /// The standard `title` attribute: the button's native tooltip.
   var titleText: String? = nil
+  /// The standard `id` attribute: what a link or a label names it by.
+  var elementID: String? = nil
   /// Whether the content is the caller's own, placed as given (never
   /// wrapped as an icon), icon-only or not.
   var customContent = false
@@ -461,6 +463,13 @@ public struct ButtonView: HTMLContent {
   public func ariaControls(_ id: String) -> Self {
     var copy = self
     copy.controlsID = id
+    return copy
+  }
+
+  /// The standard `id` attribute: what a link or a label names it by.
+  public func id(_ id: String) -> Self {
+    var copy = self
+    copy.elementID = id
     return copy
   }
 
@@ -1333,6 +1342,10 @@ public struct ButtonView: HTMLContent {
         aBtn = aBtn.title(titleText)
       }
 
+      if let elementID {
+        aBtn = aBtn.id(elementID)
+      }
+
       return aBtn
     } else {
       var bBtn = button { renderContent() }
@@ -2178,6 +2191,10 @@ public struct ButtonView: HTMLContent {
 
       if let controlsID {
         bBtn = bBtn.ariaControls(controlsID)
+      }
+
+      if let elementID {
+        bBtn = bBtn.id(elementID)
       }
 
       if let submitName, let submitValue {

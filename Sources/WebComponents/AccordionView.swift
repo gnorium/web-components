@@ -492,7 +492,7 @@ public struct AccordionView: HTMLContent {
         pointerEvents(.none)
       }
       // A header that folds nothing (`data-header-folds`, set where
-      // something else folds it—a tree node's number and rail): no
+      // something else folds it—a tree node's own chevron and its rail): no
       // chevron, and no pointer that promises a fold.
       selector("&[data-header-folds='false'] > .accordion-details > .accordion-summary") {
         cursor(cursorBase)
@@ -598,7 +598,7 @@ public struct AccordionView: HTMLContent {
           return
         }
         // A header that folds nothing (`data-header-folds`: a tree node's,
-        // which its number and its rail fold) leaves the accordion as it
+        // which its own chevron and its rail fold) leaves the accordion as it
         // is under a person's click or key; what folds it clicks it from
         // the page.
         if event.isTrusted, stringEquals(self.accordion.dataset["header-folds"] ?? "true", "false") {

@@ -301,13 +301,16 @@ public struct PaginationView: HTMLContent {
       ) {
         flex(0)
       }
+      // Its chevrons hug their icons (user, 2026-11-03): each as wide as
+      // its icon and a small inset either side, a control's height (its
+      // size's), all of it the pointer's.
       selector(".pagination-prev", ".pagination-next") {
         display(.flex)
         alignItems(.center)
         justifyContent(.center)
-        width(ButtonView.ButtonSize.medium.minSize)
         height(ButtonView.ButtonSize.medium.minSize)
-        padding(0)
+        paddingBlock(0)
+        paddingInline(spacing4)
         margin(0)
         color(colorBase)
         textDecoration(.none)
@@ -318,7 +321,6 @@ public struct PaginationView: HTMLContent {
         boxSizing(.borderBox)
       }
       selector("&.pagination-size-medium .pagination-prev", "&.pagination-size-medium .pagination-next") {
-        width(ButtonView.ButtonSize.medium.minSize)
         height(ButtonView.ButtonSize.medium.minSize)
         borderRadius(0)
       }
@@ -433,7 +435,6 @@ public struct PaginationView: HTMLContent {
         lineHeight(lineHeightSmall22)
       }
       selector("&.pagination-size-large .pagination-prev", "&.pagination-size-large .pagination-next") {
-        width(ButtonView.ButtonSize.large.minSize)
         height(ButtonView.ButtonSize.large.minSize)
         borderRadius(0)
       }
@@ -458,7 +459,6 @@ public struct PaginationView: HTMLContent {
           "\(ButtonView.phoneStep) &.pagination-size-large .pagination-prev",
           "\(ButtonView.phoneStep) &.pagination-size-large .pagination-next"
         ) {
-          width(ButtonView.ButtonSize.medium.minSize).important()
           height(ButtonView.ButtonSize.medium.minSize).important()
         }
         selector("\(ButtonView.phoneStep) &.pagination-size-large .page-box") {
@@ -475,7 +475,6 @@ public struct PaginationView: HTMLContent {
           "\(ButtonView.phoneStep) &.pagination-size-medium .pagination-prev",
           "\(ButtonView.phoneStep) &.pagination-size-medium .pagination-next"
         ) {
-          width(ButtonView.ButtonSize.small.minSize).important()
           height(ButtonView.ButtonSize.small.minSize).important()
         }
         selector("\(ButtonView.phoneStep) &.pagination-size-medium .page-box") {

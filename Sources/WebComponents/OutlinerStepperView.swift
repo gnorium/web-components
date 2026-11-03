@@ -115,8 +115,10 @@ import EmbeddedSwiftUtilities
         }
         // A phone (the forms' breakpoint, `FormActionsView`): each stepper
         // a row of its own, the whole width—‹ at its start, › at its end,
-        // its button stretching between them, its label centered (user,
-        // 2026-11-03).
+        // its button stretching between them, its icon and label one group
+        // centered in it, the button's own gap apart (user, 2026-11-03): a
+        // button the whole width never moves its chevrons, so its label
+        // keeps no width for its longest number.
         media(maxWidth(maxWidthBreakpointMobile)) {
           selector("&") {
             flexDirection(.column).important()
@@ -128,6 +130,9 @@ import EmbeddedSwiftUtilities
           selector("& .outliner-stepper-button") {
             flex(1).important()
             justifyContent(.center).important()
+          }
+          selector("& .outliner-stepper-button .button-label") {
+            minWidth(0).important()
           }
         }
         selector("& .outliner-stepper-restore-icon", "& .outliner-stepper-remove-icon") {
@@ -145,6 +150,7 @@ import EmbeddedSwiftUtilities
 #endif
 
 #if CLIENT
+  import DesignTokens
   import DOMBuilder
   import HTMLBuilder
   import WebAPIs
@@ -240,8 +246,7 @@ import EmbeddedSwiftUtilities
     private var topList: DOM.Element? { tree.querySelector(":scope > .outliner-list") }
 
     private static func number(of item: DOM.Element) -> String {
-      guard let fold = item.querySelector(":scope > .outliner-row .outliner-fold") else { return "" }
-      return stringTrim(fold.textContent)
+      OutlinerHydration.number(of: item)
     }
 
     /// Every place a new node may go, in the tree's order: under each
@@ -430,23 +435,34 @@ import EmbeddedSwiftUtilities
     /// never at rest.
     private func mark() {
       for item in tree.querySelectorAll("[data-outliner-spot]") { item.removeAttribute(data("outliner-spot")) }
+      for line in tree.querySelectorAll(".outliner-spot") { line.remove() }
       for item in tree.querySelectorAll("[data-outliner-target]") { item.removeAttribute(data("outliner-target")) }
       guard let using else { return }
       if let pager = addPager, pager.id == using.id, place >= 0 {
         let chosen = places[place]
         if let after = chosen.after {
-          after.setAttribute(data("outliner-spot"), "after")
+          spot(after, "after")
         } else if let parent = chosen.parent {
           if let first = items(in: parent.querySelector(":scope > .outliner-list")).first {
-            first.setAttribute(data("outliner-spot"), "before")
+            spot(first, "before")
           } else {
-            parent.setAttribute(data("outliner-spot"), "under")
+            spot(parent, "under")
           }
         }
       }
       if let pager = removePager, pager.id == using.id, target >= 0 {
         targets[target].setAttribute(data("outliner-target"), "true")
       }
+    }
+
+    /// A place's line, a box of its own in the node it is drawn by
+    /// (`outliner-spot`), so the page can scroll to it.
+    private func spot(_ item: DOM.Element, _ kind: String) {
+      item.setAttribute(data("outliner-spot"), kind)
+      let line = document.createElement(.div)
+      _ = line.classList.add("outliner-spot")
+      line.setAttribute("aria-hidden", "true")
+      item.appendChild(line)
     }
 
     /// The stepper in use, whose choice is marked; nil at rest.
@@ -457,19 +473,41 @@ import EmbeddedSwiftUtilities
       mark()
     }
 
-    /// Scrolls the place or the node chosen into view.
+    /// Scrolls the place or the node chosen into view, only as far as it
+    /// takes (user, 2026-11-03): the place's line, or the node's heading
+    /// its ring is round, never the node's whole box, nor at all where it
+    /// is in view; with the row of steppers in view too, where both fit.
     private func reveal(adding: Bool) {
-      let element: DOM.Element?
+      let node: DOM.Element?
       if adding {
         let chosen = place >= 0 ? places[place] : nil
-        element = chosen.flatMap { $0.after ?? $0.parent }
+        node = chosen.flatMap { $0.after ?? $0.parent }
       } else {
-        element = target >= 0 ? targets[target] : nil
+        node = target >= 0 ? targets[target] : nil
       }
-      guard let element else { return }
-      OutlinerHydration.expand(around: element)
-      let heading = element.querySelector(":scope > .outliner-row") ?? element
-      heading.scrollIntoView(CSSOM.ScrollIntoViewOptions(block: .nearest))
+      guard let node else { return }
+      OutlinerHydration.expand(around: node)
+      let shown: DOM.Element?
+      if adding {
+        shown = tree.querySelector(".outliner-spot")
+      } else {
+        shown =
+          node.querySelector(
+            ":scope > .outliner-row [data-outliner-own-accordion='true'] > .accordion-details > .accordion-summary")
+          ?? node.querySelector(":scope > .outliner-row")
+      }
+      guard let shown, let box = shown.getBoundingClientRect() else { return }
+      // The steppers under it in view with it, where the two fit: its
+      // scroll margin runs on to their foot.
+      var margin = 0.0
+      if let row = view.getBoundingClientRect(), row.bottom > box.bottom, row.bottom - box.top <= window.innerHeight {
+        margin = row.bottom - box.bottom
+      }
+      shown.setStyleProperty("scroll-margin-block-end", stringJoin([intToString(Int(margin)), "px"], separator: ""))
+      // Room above it for a node's ring, drawn outside its heading.
+      shown.setStyleProperty("scroll-margin-block-start", spacing8.value)
+      let still = window.matchMedia("(prefers-reduced-motion: reduce)")
+      shown.scrollIntoView(CSSOM.ScrollIntoViewOptions(behavior: still ? .auto : .smooth, block: .nearest))
     }
 
     // MARK: - Binding
@@ -515,6 +553,16 @@ import EmbeddedSwiftUtilities
         target = max(0, min(targets.count - 1, target + delta))
       }
       draw()
+      // A chevron stepped to the end turns disabled under focus, which then
+      // leaves the row and ends its use, unmarking the choice: focus goes
+      // to the other chevron, the page kept where it is.
+      if let pager = using, let pressed = pager.querySelector(delta < 0 ? ".pagination-prev" : ".pagination-next"),
+        pressed.hasAttribute("disabled"), let focused = document.activeElement, focused.id == pressed.id,
+        let other = pager.querySelector(delta < 0 ? ".pagination-next" : ".pagination-prev"),
+        !other.hasAttribute("disabled")
+      {
+        other.focus(DOM.FocusOptions(preventScroll: true))
+      }
       reveal(adding: adding)
     }
 
