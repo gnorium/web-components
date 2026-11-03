@@ -68,6 +68,11 @@ public enum TEISentenceSelection {
     /// (`?image=…&line=…&word=…`, or `&element=…`). Nil: the markup
     /// is read whole.
     let glossURL: String?
+    /// Whether its words are marked with no gloss to open (a cited web
+    /// page's quote on its snapshot, user 2026-11-03): each `<w>` a word
+    /// the reader pairs with its zones on the image (`.tei-word`, its place),
+    /// tinted there as a quote's, but no control. A gloss marks them too.
+    let marksWords: Bool
     /// The one page drawn, by its place in the document from 0, where a
     /// reader draws a page at a time and fetches the others as they are
     /// turned to (`TestamentView.pagesURL`); nil draws every page.
@@ -128,8 +133,9 @@ public enum TEISentenceSelection {
     public init(
       teiXml: String, editable: Bool = false, translation: Translation? = nil,
       highlights: [String: [TEIHighlight]] = [:], labelsPages: Bool = false, glossURL: String? = nil,
-      page: Int? = nil, drawn: [Int] = [], firstIndex: Int = 0, direction: String? = nil
+      marksWords: Bool = false, page: Int? = nil, drawn: [Int] = [], firstIndex: Int = 0, direction: String? = nil
     ) {
+      self.marksWords = marksWords
       self.direction = direction
       self.page = page
       self.drawn = drawn
@@ -143,8 +149,12 @@ public enum TEISentenceSelection {
     }
 
     public var pages: [TEIPage] {
-      TEIRenderer.pages(in: teiXml, highlights: highlights, marksWords: glossURL != nil)
+      TEIRenderer.pages(in: teiXml, highlights: highlights, marksWords: wordsMarked)
     }
+
+    /// Whether its words are marked: each opens its gloss, or is paired
+    /// with its zones alone (`marksWords`).
+    private var wordsMarked: Bool { glossURL != nil || marksWords }
 
     /// The image service a canvas reads, which is what pairs it with a
     /// canvas. `TEIRenderer` owns the rule; the view only passes it on.
@@ -625,13 +635,16 @@ public enum TEISentenceSelection {
           runContents(group.runs, facsimileURL: facsimileURL, tabStop: tabStop, opens: glossURL != nil)
         }
         .class("tei-word")
-        .role(.button)
-        .tabindex(word == tabStop ? 0 : -1)
-        .ariaHaspopup(.dialog)
         .data("line", word.line)
         .data("word", word.word)
         .build()
         if let element = node as? DOM.Element {
+          // A control only where it opens a gloss.
+          if glossURL != nil {
+            element.addingAttribute("role", "button")
+            element.addingAttribute("tabindex", word == tabStop ? "0" : "-1")
+            element.addingAttribute("aria-haspopup", "dialog")
+          }
           if let sentence = sentences[word] { element.addingAttribute("data-sentence", "\(sentence)") }
           if let lemma = lemmas[word] { element.addingAttribute("data-lemma", lemma) }
           if let id = wordIDs[word] { element.addingAttribute("data-word-id", id) }
@@ -1211,7 +1224,7 @@ public enum TEISentenceSelection {
         for (index, page) in pages.enumerated() where self.page == nil || self.page == index || drawn.contains(index) {
           let tabStop = glossURL == nil ? nil : Self.firstWord(of: page.lines)
           // Its words marked with their sentences and lemmas where they open.
-          let reader = glossURL == nil ? self : marking(page)
+          let reader = wordsMarked ? marking(page) : self
           let frame = page.frame
           let pageNode = div {
             div {
@@ -2225,7 +2238,7 @@ public enum TEISentenceSelection {
         // translated block the translator noted, its note.
         // The question-mark cursor, as over every term that opens a gloss
         // or a preview (user, 2026-11-01).
-        selector("& .tei-word", "& [data-gloss-element]", "& .tei-noted") {
+        selector("& .tei-word[role='button']", "& [data-gloss-element]", "& .tei-noted") {
           cursor(cursorHelp)
           borderRadius(borderRadiusMinimal)
           outline(.none)
@@ -2235,7 +2248,7 @@ public enum TEISentenceSelection {
           outlineOffset(borderWidthBase)
         }
         selector(
-          "& .tei-word:hover", "& .tei-word:focus-visible", "& .tei-word[aria-expanded='true']",
+          "& .tei-word[role='button']:hover", "& .tei-word:focus-visible", "& .tei-word[aria-expanded='true']",
           "& [data-gloss-element]:hover", "& [data-gloss-element]:focus-visible",
           "& [data-gloss-element][aria-expanded='true']", "& .tei-noted:hover", "& .tei-noted:focus-visible",
           "& .tei-noted[aria-expanded='true']"
