@@ -369,7 +369,6 @@ public struct DropdownView: HTMLContent {
               div { note }
                 .class("dropdown-note")
                 .data("dropdown-note", true)
-                .data("stacked", optionLayout == .stacked)
             }
           }
           .class("dropdown-options-list")
@@ -548,8 +547,8 @@ public struct DropdownView: HTMLContent {
         position(.relative)
       }
       // Its rule above it drawn over its top edge, not as a border, so the
-      // row keeps the options' own measure: 8 + 32 + 8 = 48 beside one-line
-      // options, 12 + 22 + 12 = 46 beside stacked ones (user, 2026-11-03).
+      // row keeps a one-line option's measure, 48, its text on the options'
+      // inset in every list (user, 2026-11-03).
       descendant(".dropdown-note::before") {
         content("\"\"")
         position(.absolute)
@@ -648,16 +647,13 @@ public struct DropdownView: HTMLContent {
       descendant(".dropdown-option[data-depth='1']") {
         paddingInlineStart(spacing32)
       }
+      // Two lines on the one-line row's inset, 4 apart: 8 + 22 + 4 + 22 + 8
+      // = 64, twice the 32 step of the size scale (user, 2026-11-03).
       descendant(".dropdown-option[data-stacked='true']") {
         flexDirection(.column)
         alignItems(.flexStart)
-        gap(spacing2)
-        padding(spacing12)
-      }
-      // Its text on the options' own inset in a stacked list.
-      descendant(".dropdown-note[data-stacked='true']") {
-        padding(spacing12)
-        minHeight(0)
+        gap(spacing4)
+        padding(spacing8)
       }
       descendant(".dropdown-option[data-hidden='true']") { display(.none) }
       descendant(".dropdown-option[data-excluded='true']") { display(.none) }
