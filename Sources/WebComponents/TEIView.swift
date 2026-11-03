@@ -1916,8 +1916,13 @@ public enum TEISentenceSelection {
         ) {
           CSS.Property("margin-inline-start", "calc(-1 * var(--tei-reflow-room))").important()
         }
+        // Reflowed, its inset is its reader's, around it at every zoom
+        // (ArtifactView), never its own, which its zoom shrinks.
+        selector("[data-reflow='true'] & [data-layer='rendering']", "[data-reflow='true'] & [data-layer='translated-rendering']") {
+          padding(0)
+        }
         selector("[data-reflow='true'] & .tei-page-text:not([data-framed='true'])") {
-          CSS.Property("padding-inline-start", "calc(\(spacing16.value) + var(--tei-reflow-outdent, 0rem))")
+          CSS.Property("padding-inline-start", "var(--tei-reflow-outdent, 0rem)")
         }
         // A tracked line's inset in its place (`reflowStyle`): its end on
         // its box's, its centered ink on its box's middle.
