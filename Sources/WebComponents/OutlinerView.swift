@@ -334,8 +334,9 @@ public enum OutlineNumberAdvance {
     ///
     /// An item an open object holds (`OutlinerStepperView.hold` among its
     /// data, user 2026-11-03) is never moved, and its marker says why: a
-    /// tooltip holding the object's whole UUID, its one link (`hold`), the
-    /// marker's pointer the not-allowed one, as a disabled control's.
+    /// tooltip holding the object's whole UUID, its one link (`hold`); it
+    /// still folds, an enabled control's pointer and scrim, only its drag
+    /// gone.
     public struct Grip: Sendable {
       public let movable: Bool
       public let describedBy: String
