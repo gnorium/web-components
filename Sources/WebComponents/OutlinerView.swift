@@ -136,7 +136,8 @@ public enum OutlineNumberAdvance {
   /// marker (`markerSize`), a commit's dot on a graph, a locution's avatar
   /// on its thread. Right after the marker (`bodyStart`) the item is one
   /// column: its heading, its number first (the caller's, classed
-  /// `outliner-number`), then its grip, its value and its info, and under
+  /// `outliner-number`; a record row's the first column of its value's
+  /// box), then its value and its info, and under
   /// the heading what it opens into and its own controls, the rest of the
   /// width. The marker is the item's fold control, as an avatar folds its
   /// locution (user, 2026-11-03): the caller draws it as a button classed
@@ -1633,6 +1634,27 @@ public enum OutlineNumberAdvance {
         data("expanded"), collapsed ? "false" : "true")
     }
 
+    /// Where an item's own number is written (`numberSelector`), every
+    /// place in its own row: a sentiment's Value boxes each carry it, its
+    /// English one and the one in its record's language (user, 2026-11-03).
+    /// Never an item's under it, nor a tree's inside its row.
+    public static func numberSlots(of item: DOM.Element, _ selector: String) -> [DOM.Element] {
+      let own = item.getAttribute(data("outliner-id")) ?? ""
+      return item.querySelectorAll(stringJoin([":scope > .outliner-row ", selector], separator: "")).filter {
+        stringEquals($0.closest(".outliner-item")?.getAttribute(data("outliner-id")) ?? "", own)
+      }
+    }
+
+    /// An item's number written in one of its slots: a field's prefix
+    /// (`TextAreaView.prefix`, a Value box's) as wide as it now runs.
+    public static func write(number: String, in slot: DOM.Element) {
+      if slot.classList.contains("text-area-prefix") {
+        TextAreaView.setPrefix(slot, number)
+      } else {
+        slot.textContent = number
+      }
+    }
+
     /// An item's number as it now stands (`outliner-number`), without the
     /// point after it: "1.1".
     public static func number(of item: DOM.Element) -> String {
@@ -2519,8 +2541,10 @@ public enum OutlineNumberAdvance {
           diff.setAttribute(data("visible"), renumbered ? "true" : "false")
           if renumbered { diff.setInnerHTML(DiffView(.outline(old: original, new: numbers[offset])).render()) }
         }
-        if !stringIsEmpty(numberSelector), let slot = item.querySelector(numberSelector) {
-          slot.textContent = numbers[offset]
+        if !stringIsEmpty(numberSelector) {
+          for slot in OutlinerHydration.numberSlots(of: item, numberSelector) {
+            OutlinerHydration.write(number: numbers[offset], in: slot)
+          }
         }
         OutlinerHydration.nameFold(of: item)
       }

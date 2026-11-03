@@ -19,6 +19,14 @@ public struct TextAreaView: HTMLContent {
   let rows: Int
   let autosize: Bool
   let startIcon: String?
+  /// Text that stands at the start of the field, inside it and never part
+  /// of its value, as TextInputView's `prefix`: a tree row's number, "1.1"
+  /// (user, 2026-11-03), sans and subtle, the "." after it, on the first
+  /// line; its own column, every line of the value after it. Nil for none.
+  let prefix: String?
+  /// More classes on the prefix: what the page reads it as (a tree row's
+  /// `record-node-number`, which its outline writes again as it moves).
+  let prefixClass: String
   let endIcon: String?
   let labelText: String
   let tooltip: String?
@@ -55,6 +63,8 @@ public struct TextAreaView: HTMLContent {
     autosize: Bool = false,
     startIcon: String? = nil,
     endIcon: String? = nil,
+    prefix: String? = nil,
+    prefixClass: String = "",
     label: String = "",
     optional: Bool = false,
     optionalFlag: String = "(optional)",
@@ -76,6 +86,8 @@ public struct TextAreaView: HTMLContent {
     self.rows = rows
     self.autosize = autosize
     self.startIcon = startIcon
+    self.prefix = prefix
+    self.prefixClass = prefixClass
     self.endIcon = endIcon
     self.labelText = label
     self.tooltip = tooltip
@@ -114,7 +126,8 @@ public struct TextAreaView: HTMLContent {
     var hasEndIcon = false
     if let _ = startIcon { hasStartIcon = true }
     if let _ = endIcon { hasEndIcon = true }
-    let stateClass = "\(fullWidth ? "text-area-full-width " : "")\(disabled ? "text-area-disabled " : "")\(readonly ? "text-area-read-only " : "")\(status == .error ? "text-area-error " : "")\(autosize ? "text-area-autosize " : "")\(hasStartIcon ? "text-area-has-start-icon " : "")\(hasEndIcon ? "text-area-has-end-icon" : "")"
+    let hasPrefix = if let _ = prefix { true } else { false }
+    let stateClass = "\(fullWidth ? "text-area-full-width " : "")\(disabled ? "text-area-disabled " : "")\(readonly ? "text-area-read-only " : "")\(status == .error ? "text-area-error " : "")\(autosize ? "text-area-autosize " : "")\(hasStartIcon ? "text-area-has-start-icon " : "")\(hasEndIcon ? "text-area-has-end-icon " : "")\(hasPrefix ? "text-area-has-prefix" : "")"
     let textAreaClass = stringIsEmpty(`class`)
       ? "text-area-view \(stateClass)"
       : "text-area-view \(stateClass) \(`class`)"
@@ -123,6 +136,11 @@ public struct TextAreaView: HTMLContent {
       if let icon = startIcon {
         span { icon }
           .class("text-area-start-icon")
+          .ariaHidden(true)
+      }
+      if let prefix {
+        span { prefix }
+          .class(stringIsEmpty(prefixClass) ? "text-area-prefix" : "text-area-prefix \(prefixClass)")
           .ariaHidden(true)
       }
       textAreaInput
@@ -139,6 +157,12 @@ public struct TextAreaView: HTMLContent {
     }
 
     let styledContainer = container.style {
+      // A prefix's width: as far as the number runs in the sans, its "."
+      // after it (`OutlineNumberAdvance`, thousandths of the em), as
+      // TextInputView's; written again as it changes (`setPrefix`).
+      if let prefix {
+        customProperty("--text-area-prefix-width", Self.prefixWidth(prefix))
+      }
       selector("&") {
         position(.relative)
         display(.inlineBlock)
@@ -202,6 +226,29 @@ public struct TextAreaView: HTMLContent {
       }
       selector("&.text-area-has-end-icon .text-area-input") {
         paddingInlineEnd(calc(spacing12 + lineHeightSmall22 + spacing8)).important()
+      }
+      // The value starts after its prefix, 8 from it, on every line: the
+      // prefix a column of its own, which no wrapped line runs under.
+      selector("&.text-area-has-prefix .text-area-input") {
+        paddingInlineStart(calc(spacing12 + (`var`("--text-area-prefix-width") as CSS.Length) + spacing8)).important()
+      }
+      // As TextInputView's prefix, a tree row's number and a dropdown
+      // option's: sans, subtle, a "." after it; on the first line, as
+      // tall as it, where a start icon stands.
+      descendant(".text-area-prefix") {
+        position(.absolute)
+        top(calc(borderWidthBase + spacing12))
+        insetInlineStart(calc(borderWidthBase + spacing12))
+        fontFamily(typographyFontSans)
+        fontSize(fontSizeMedium16)
+        fontWeight(fontWeightNormal)
+        lineHeight(lineHeightSmall22)
+        color(colorSubtle)
+        whiteSpace(.nowrap)
+        pointerEvents(.none)
+      }
+      descendant(".text-area-prefix::after") {
+        content("\".\"")
       }
       // The same rule as TextInputView's: color only. An opacity on top of
       // the color made a textarea's placeholder read as a different grey
@@ -292,8 +339,28 @@ public struct TextAreaView: HTMLContent {
   }
 }
 
+extension TextAreaView {
+  /// A prefix's width, `--text-area-prefix-width`: its number's advance in
+  /// the sans with the "." after it (`OutlineNumberAdvance`).
+  static func prefixWidth(_ prefix: String) -> String {
+    stringJoin(["calc(", intToString(OutlineNumberAdvance.of(prefix)), " * 0.001em)"], separator: "")
+  }
+}
+
 #if CLIENT
   import WebAPIs
+
+  extension TextAreaView {
+    /// A field's prefix (`prefix`) written anew—a tree row's number as its
+    /// outline renumbers it—and its width with it, so its value still
+    /// starts 8 after it.
+    public static func setPrefix(_ prefix: DOM.Element, _ text: String) {
+      prefix.textContent = text
+      if let view = prefix.closest(".text-area-view") {
+        view.style.setProperty("--text-area-prefix-width", prefixWidth(text))
+      }
+    }
+  }
 
   public class TextAreaHydration: @unchecked Sendable {
     public static nonisolated(unsafe) var instance: TextAreaHydration?

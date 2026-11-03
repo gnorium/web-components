@@ -23,6 +23,9 @@ public struct TextInputView: HTMLContent {
   /// of its value: a typed Value's number, "1." (user, 2026-11-02), sans
   /// and subtle as a tree row's number, with the "." after it. Nil for none.
   let prefix: String?
+  /// More classes on the prefix: what the page reads it as, as
+  /// TextAreaView's `prefixClass`.
+  let prefixClass: String
   let endIcon: String?
   let inputFontSize: CSS.Length
   let labelText: String
@@ -98,6 +101,7 @@ public struct TextInputView: HTMLContent {
     startIcon: String? = nil,
     endIcon: String? = nil,
     prefix: String? = nil,
+    prefixClass: String = "",
     inputFontSize: CSS.Length = fontSizeMedium16,
     label: String = "",
     optional: Bool = false,
@@ -131,6 +135,7 @@ public struct TextInputView: HTMLContent {
     self.clearable = clearable
     self.startIcon = startIcon
     self.prefix = prefix
+    self.prefixClass = prefixClass
     self.endIcon = endIcon
     self.inputFontSize = inputFontSize
     self.labelText = label
@@ -244,7 +249,7 @@ public struct TextInputView: HTMLContent {
 
         if let prefix {
           span { prefix }
-            .class("text-input-prefix")
+            .class(stringIsEmpty(prefixClass) ? "text-input-prefix" : "text-input-prefix \(prefixClass)")
             .ariaHidden(true)
         }
 
