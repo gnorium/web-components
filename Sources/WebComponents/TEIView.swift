@@ -99,6 +99,10 @@ public enum TEISentenceSelection {
     /// ("w12.31"), or on a calibrated page the word's first zone
     /// ("p3-wz12"); what a quote's chosen words are stored by (`wordIds`).
     private var wordIDs: [TEIWordPlace: String] = [:]
+    /// The measure of the frame the page being set is set in, in its em
+    /// (`TEIPageFrame.measure`; 0 where it has none): how far a line placed
+    /// by its zone runs reflowed (`reflowStyle`).
+    private var frameMeasure: Double = 0
 
     /// A translation of the markup, page by page, in its own language:
     /// the translation's own TEI, read by the same reader as the markup,
@@ -541,6 +545,13 @@ public enum TEISentenceSelection {
       return view
     }
 
+    /// This view setting a page set in `frame` (`frameMeasure`).
+    private func measuring(_ frame: TEIPageFrame?) -> TEIView {
+      var view = self
+      view.frameMeasure = frame?.measure ?? 0
+      return view
+    }
+
     /// Runs, each stretch of a block the translator noted one control that
     /// opens the note (`GlossHydration`), as a word opens its gloss.
     private func markedContent(_ runs: [TEILine.Run], facsimileURL: String, tabStop: TEIWordPlace?) -> [DOM.Node] {
@@ -901,6 +912,34 @@ public enum TEISentenceSelection {
       "margin-block-start", "margin-block-end",
     ])
 
+    /// A block's or a line's style from its rend: its print's setting, and
+    /// what Reflow sets it by in its place (`reflowStyle`).
+    private func setting(_ rend: String) -> String {
+      TEIRendition.css(from: rend) + Self.reflowStyle(of: rend, measure: frameMeasure)
+    }
+
+    /// What Reflow sets a box of `rend` by in place of its print's setting
+    /// (user, 2026-11-03), as the custom properties its rules read: lines
+    /// set closer than their type is tall (`TEIRendition.leading` under 1:
+    /// a line placed by its zone is its box's height, 0.714 of its type)
+    /// set solid (`--tei-reflow-leading`), so a line they wrap clears the
+    /// one above; a line placed by its zone about its box's middle, as far
+    /// as the frame's `measure` lets it (`TEIPage.reflowedBox`:
+    /// `--tei-reflow-start`, `--tei-reflow-size`, in its em), so it wraps
+    /// where its frame ends, never because the face fills its box. Hamlet
+    /// Q1's front cover, reflowed: "HAMLE" over its "T", "SHAKESPEAR" over
+    /// its "E", "LONDON" over "1603". Reflow off, the print's setting
+    /// stands.
+    static func reflowStyle(of rend: String, measure: Double) -> String {
+      func em(_ value: Double) -> String { number((value * 10_000).rounded() / 10_000) + "em" }
+      var style = ""
+      if let leading = TEIRendition.leading(of: rend), leading < 1 { style += "--tei-reflow-leading:1;" }
+      if let box = TEIPage.reflowedBox(of: rend, measure: measure) {
+        style += "--tei-reflow-start:\(em(box.start));--tei-reflow-size:\(em(box.size));"
+      }
+      return style
+    }
+
     /// Sections of laid-out lines, each its own block (`laidOut`); in
     /// columns, the setting of the element they stand in (`columnLayout`).
     private func sectioned(
@@ -938,9 +977,7 @@ public enum TEISentenceSelection {
                   }
                 }
               }.class("tei-block").data("rend", lines[0].rend).data("part", lines[0].part).addingAttribute(
-                "style",
-                TEIRendition.css(
-                  from: columns.isEmpty ? lines[0].rend : TEIRendition.inColumns(lines[0].rend, of: columns)))
+                "style", setting(columns.isEmpty ? lines[0].rend : TEIRendition.inColumns(lines[0].rend, of: columns)))
             case .furniture(let pieces):
               // A page number and a running head set on one line keep
               // their places on it, as the image has them: each piece
@@ -1024,14 +1061,14 @@ public enum TEISentenceSelection {
       }
       switch line.kind {
       case .heading:
-        return h3 { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line tei-line-heading").data("rend", line.rend).addingAttribute("style", inStyledBlock ? "" : TEIRendition.css(from: line.rend))
+        return h3 { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line tei-line-heading").data("rend", line.rend).addingAttribute("style", inStyledBlock ? "" : setting(line.rend))
           .build()
       case .speaker:
         return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line tei-line-speaker").data(
           "rend", line.rend
-        ).addingAttribute("style", inStyledBlock ? "" : TEIRendition.css(from: line.rend)).build()
+        ).addingAttribute("style", inStyledBlock ? "" : setting(line.rend)).build()
       case .stage:
-        return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line tei-line-stage").data("rend", line.rend).addingAttribute("style", inStyledBlock ? "" : TEIRendition.css(from: line.rend))
+        return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line tei-line-stage").data("rend", line.rend).addingAttribute("style", inStyledBlock ? "" : setting(line.rend))
           .build()
       case .mark:
         return glossable(span { line.text }.class("tei-line tei-line-mark"), line.element).build()
@@ -1062,11 +1099,11 @@ public enum TEISentenceSelection {
           .style { CSS.Property("height", Self.spaceHeight(quantity: quantity, unit: unit)) }.build()
       case .note(let place):
         return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line tei-line-note")
-          .data("place", place.isEmpty ? "inline" : place).data("rend", line.rend).addingAttribute("style", inStyledBlock ? "" : TEIRendition.css(from: line.rend)).build()
+          .data("place", place.isEmpty ? "inline" : place).data("rend", line.rend).addingAttribute("style", inStyledBlock ? "" : setting(line.rend)).build()
       case .forme(let role):
         return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class(
           "tei-line tei-line-forme tei-line-forme-\(role.rawValue)"
-        ).data("rend", line.rend).addingAttribute("style", inStyledBlock ? "" : TEIRendition.css(from: line.rend)).build()
+        ).data("rend", line.rend).addingAttribute("style", inStyledBlock ? "" : setting(line.rend)).build()
       case .figure(let type, let zone, let graphic):
         let alt = line.text.isEmpty ? "Figure on \(label)" : line.text
         // Its size and its place across as the scan has them, where its setting gives them (gnorium-python
@@ -1149,7 +1186,7 @@ public enum TEISentenceSelection {
       case .text:
         // Whether the break before it falls inside a word (`<lb
         // break="no"/>`): a reader's find reads the two lines as one word.
-        return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line").data("rend", line.rend).addingAttribute("style", inStyledBlock ? "" : TEIRendition.css(from: line.rend))
+        return span { inlineContent(line, facsimileURL: facsimileURL, tabStop: tabStop) }.class("tei-line").data("rend", line.rend).addingAttribute("style", inStyledBlock ? "" : setting(line.rend))
           .data("joins-previous", line.joinsPrevious).build()
       }
     }
@@ -1223,9 +1260,10 @@ public enum TEISentenceSelection {
         }
         for (index, page) in pages.enumerated() where self.page == nil || self.page == index || drawn.contains(index) {
           let tabStop = glossURL == nil ? nil : Self.firstWord(of: page.lines)
-          // Its words marked with their sentences and lemmas where they open.
-          let reader = wordsMarked ? marking(page) : self
+          // Its words marked with their sentences and lemmas where they open;
+          // its lines placed by their zones run, reflowed, in its frame.
           let frame = page.frame
+          let reader = (wordsMarked ? marking(page) : self).measuring(frame)
           let pageNode = div {
             div {
               if let frame {
@@ -1319,7 +1357,7 @@ public enum TEISentenceSelection {
                   if let translated {
                     // In the translation's own direction, the layer's; its
                     // noted blocks opening their notes.
-                    noting(translated.notes).rendered(
+                    noting(translated.notes).measuring(translated.page.frame).rendered(
                       translated.page.lines, heading: nil, direction: nil,
                       facsimileURL: translated.page.facsimileURL, label: translated.page.label)
                   }
@@ -1781,6 +1819,38 @@ public enum TEISentenceSelection {
         selector("[data-reflow='true'] & .tei-block", "[data-reflow='true'] & .tei-section") {
           maxWidth(perc(100))
           boxSizing(.borderBox)
+        }
+        // Reflowed, every line it wraps is a whole line of its type (user,
+        // 2026-11-03: Hamlet Q1's front cover wrapped "HAMLE" over its "T"
+        // 0.714 em below, its box's height): lines set closer than their
+        // type set solid, and a box the print gives a height as tall as its
+        // lines (`reflowStyle`).
+        selector("[data-reflow='true'] & [style*='--tei-reflow-leading']") {
+          CSS.Property("line-height", "var(--tei-reflow-leading)").important()
+        }
+        selector(
+          "[data-reflow='true'] & .tei-block[style*='block-size']",
+          "[data-reflow='true'] & .tei-line[style*='block-size']:not(.tei-figure)",
+          "[data-reflow='true'] & .tei-frame[style*='block-size']"
+        ) {
+          CSS.Property("block-size", "auto").important()
+        }
+        // A line placed by its zone, about its box's middle as far as its
+        // frame lets it (`reflowStyle`), never held to the pane's width: its
+        // frame is its leaf, laid as the print lays it.
+        selector("[data-reflow='true'] & [style*='--tei-reflow-size']") {
+          CSS.Property("margin-inline-start", "var(--tei-reflow-start)").important()
+          CSS.Property("inline-size", "var(--tei-reflow-size)").important()
+          maxWidth(.none)
+        }
+        // A block the print sets into the margin before its frame (Hamlet
+        // Q1's title page, "Tragicall Hiſtorie of" 0.7 em out) starts,
+        // reflowed, at the pane's edge, never past it out of sight.
+        selector(
+          "[data-reflow='true'] & .tei-block[style*='margin-inline-start:-']",
+          "[data-reflow='true'] & .tei-line[style*='margin-inline-start:-']"
+        ) {
+          CSS.Property("margin-inline-start", "0").important()
         }
         selector("& .tei-block > *") {
           display(.inline)

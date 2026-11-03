@@ -88,4 +88,33 @@ final class TEIScanLayoutDataTests: XCTestCase {
     XCTAssertEqual(Array(zones[3][3...]), ["80", "300", "200", "300", "200", "320", "80", "320"])
     XCTAssertFalse((attribute("data-body-leading", of: page) ?? "").isEmpty)
   }
+
+  /// What Reflow sets a block by in place of its print's setting (user,
+  /// 2026-11-03): Hamlet Q1's front cover, its gilt "HAMLET" a line placed
+  /// by its zone at its ink's size, its line its box's height, reflowed
+  /// wrapped its "T" over its "M". Its block says to set it solid and to run
+  /// it about its box's middle as far as its leaf's nearer side; a text
+  /// page's block, with no box and no leading under its type, says neither.
+  func testAPlacedLineSaysHowReflowSetsIt() throws {
+    let image = "https://web-tests.invalid/iiif/cover"
+    let cover = ##"<TEI xmlns="http://www.tei-c.org/ns/1.0"><facsimile><surface n="Front cover" ulx="0" uly="0" lrx="1000" lry="1000"><graphic url="\##(image)/full/max/0/default.jpg" width="6120px" height="6630px"/>"##
+      + ##"<zone xml:id="p1-z-L2" ulx="417" uly="238" lrx="637" lry="259"/>"##
+      + ##"<zone xml:id="p1-textblock" type="textblock" points="172.3,64.24 879.57,59.61 884.82,936.85 175.7,941.07"/>"##
+      + ##"<zone type="leaf" points="144.85,53.4 890.9,53.4 890.9,945.42 144.85,945.42"/></surface></facsimile>"##
+      + ##"<text><body><pb n="Front cover" facs="\##(image)/full/max/0/default.jpg"/>"##
+      + ##"<lb facs="#p1-z-L2"/><note type="binding" subtype="copy" style="letter-spacing:0.527em">HAMLET</note></body></text></TEI>"##
+    let block = try XCTUnwrap(elements(in: TEIView(teiXml: cover).build()).first { attribute("class", of: $0) == "tei-block" })
+    let style = attribute("style", of: block) ?? ""
+    XCTAssertTrue(style.contains("line-height:"), style)
+    XCTAssertTrue(style.contains("--tei-reflow-leading:1;"), style)
+    let start = try XCTUnwrap(style.range(of: "--tei-reflow-start:").map { Double(style[$0.upperBound...].prefix { $0 != "e" }) ?? -1 })
+    let size = try XCTUnwrap(style.range(of: "--tei-reflow-size:").map { Double(style[$0.upperBound...].prefix { $0 != "e" }) ?? -1 })
+    let font = try XCTUnwrap(style.range(of: "font-size:").map { Double(style[$0.upperBound...].prefix { $0 != "e" }) ?? -1 })
+    // About the zone's middle on the 38 em leaf, its nearer side 18.5 em from it, in the line's em.
+    let middle = (527 - 144.85) / (890.9 - 144.85) * TEIPage.leafMeasure
+    XCTAssertEqual((start + size / 2) * font, middle, accuracy: 0.001)
+    XCTAssertEqual(size * font, 2 * (TEIPage.leafMeasure - middle), accuracy: 0.001)
+    let body = try XCTUnwrap(elements(in: TEIView(teiXml: Self.document).build()).first { attribute("class", of: $0) == "tei-block" })
+    XCTAssertFalse((attribute("style", of: body) ?? "").contains("--tei-reflow"))
+  }
 }
