@@ -917,9 +917,8 @@ public enum OutlineNumberAdvance {
       finalChain + ":not([data-outliner-collapsed='true']):not(:has(> .outliner-list:not([hidden]) > \(drawn)))"
 
     /// How far the spine runs on below the tree's last item, fading out: the
-    /// stretch of its last item in sight, which folds or opens it (user,
-    /// 2026-11-03). Twice a node gap, so the fade reads as one (user,
-    /// 2026-11-03).
+    /// stretch of its last item in sight, which folds or opens it, long
+    /// enough that its fade reads (user, 2026-11-03).
     static let spineHang: CSS.Length = spacing32
 
     /// The tree's own rules: its indent, spine, rails, guide lines, toggles
