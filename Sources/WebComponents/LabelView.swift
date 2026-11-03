@@ -223,17 +223,11 @@ public struct LabelView: HTMLContent {
           color(colorSubtle)
           fontWeight(fontWeightNormal)
         }
-        // Disabled, or in a part drawn disabled (`DisabledRegion`): its
-        // words, its icon, its "(optional)", its info and its description.
         selector(
           "&[data-disabled='true'] > .label-text",
           "&[data-disabled='true'] > .label-text > .label-icon",
           "&[data-disabled='true'] > .label-text > .label-optional-flag",
-          "&[data-disabled='true'] > .label-description",
-          ":where([data-disabled-region='true']) & > .label-text",
-          ":where([data-disabled-region='true']) & > .label-text > .label-icon",
-          ":where([data-disabled-region='true']) & > .label-text > .label-optional-flag",
-          ":where([data-disabled-region='true']) & > .label-description"
+          "&[data-disabled='true'] > .label-description"
         ) {
           color(colorDisabled)
         }

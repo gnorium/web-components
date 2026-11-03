@@ -576,11 +576,6 @@ public struct TextInputView: HTMLContent {
         color(colorBase)
         fontFamily(typographyFontSans)
       }
-      // In a part drawn disabled (`DisabledRegion`), as a disabled
-      // LabelView: its words, its "(optional)" and its info.
-      selector(":where([data-disabled-region='true']) & .text-input-label-row", ":where([data-disabled-region='true']) & .text-input-optional-flag") {
-        color(colorDisabled)
-      }
     }
   }
 

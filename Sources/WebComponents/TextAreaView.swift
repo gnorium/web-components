@@ -400,11 +400,6 @@ public struct TextAreaView: HTMLContent {
           fontWeight(fontWeightNormal)
           color(colorSubtle)
         }
-        // In a part drawn disabled (`DisabledRegion`), as a disabled
-        // LabelView: its words, its "(optional)" and its info.
-        selector(":where([data-disabled-region='true']) &", ":where([data-disabled-region='true']) & .text-area-optional-flag") {
-          color(colorDisabled)
-        }
       }
       styledContainer
     }

@@ -530,12 +530,6 @@ public struct DropdownView: HTMLContent {
         fontWeight(fontWeightNormal)
         color(colorSubtle)
       }
-      // In a part drawn disabled (`DisabledRegion`), as a disabled
-      // LabelView: its words, its "(optional)" and its info; its trigger a
-      // disabled button (`ButtonView`).
-      selector(":where([data-disabled-region='true']) & .dropdown-label", ":where([data-disabled-region='true']) & .dropdown-label-text", ":where([data-disabled-region='true']) & .dropdown-optional-flag") {
-        color(colorDisabled)
-      }
       // Not an option: no hover, no pointer, never chosen. At least a
       // one-line option's height (48), its line centered in it, never left
       // at the top with the spare height below it.

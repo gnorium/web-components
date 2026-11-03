@@ -72,8 +72,9 @@ public struct AccordionView: HTMLContent {
   let contentSlot: [DOM.Node]
   /// Whether it is disabled (user, 2026-11-03): it neither opens nor closes,
   /// its header and chevron in the disabled color, its frame the disabled
-  /// border and ground. So is every accordion in a part drawn disabled
-  /// (`DisabledRegion`); a page may set and clear `data-disabled` live.
+  /// border and ground; a page may set and clear `data-disabled` live. An
+  /// accordion in a part drawn disabled (`DisabledRegion`) is not: it still
+  /// opens and closes, so what it holds is read.
   let disabled: Bool
   let `class`: String
 
@@ -508,30 +509,20 @@ public struct AccordionView: HTMLContent {
       selector("&[data-header-folds='false'] > .accordion-details > .accordion-summary > .accordion-controls") {
         display(.none)
       }
-      // Disabled, or in a part drawn disabled (`DisabledRegion`): no fold
-      // under the pointer, its title, description and chevron in the
-      // disabled color, its frame the disabled border on the disabled
-      // ground, over whatever ground its page gave it.
-      selector(
-        "&[data-disabled='true'] > .accordion-details > .accordion-summary",
-        ":where([data-disabled-region='true']) & > .accordion-details > .accordion-summary"
-      ) {
+      // Disabled: no fold under the pointer, its title, description and
+      // chevron in the disabled color, its frame the disabled border on the
+      // disabled ground, over whatever ground its page gave it.
+      selector("&[data-disabled='true'] > .accordion-details > .accordion-summary") {
         cursor(cursorNotAllowed)
       }
       selector(
         "&[data-disabled='true'] > .accordion-details > .accordion-summary .accordion-title",
         "&[data-disabled='true'] > .accordion-details > .accordion-summary .accordion-description",
-        "&[data-disabled='true'] > .accordion-details > .accordion-summary .accordion-expand-icon",
-        ":where([data-disabled-region='true']) & > .accordion-details > .accordion-summary .accordion-title",
-        ":where([data-disabled-region='true']) & > .accordion-details > .accordion-summary .accordion-description",
-        ":where([data-disabled-region='true']) & > .accordion-details > .accordion-summary .accordion-expand-icon"
+        "&[data-disabled='true'] > .accordion-details > .accordion-summary .accordion-expand-icon"
       ) {
         color(colorDisabled).important()
       }
-      selector(
-        "&[data-disabled='true']:not([data-separation='minimal']):not([data-separation='divider'])",
-        ":where([data-disabled-region='true']) &:not([data-separation='minimal']):not([data-separation='divider'])"
-      ) {
+      selector("&[data-disabled='true']:not([data-separation='minimal']):not([data-separation='divider'])") {
         borderColor(borderColorDisabled).important()
         backgroundColor(backgroundColorDisabledSubtle).important()
       }
@@ -595,11 +586,8 @@ public struct AccordionView: HTMLContent {
 
       _ = summary.addEventListener(.click) { [self] event in
         guard let details = self.details else { return }
-        // Disabled (`disabled`, `data-disabled`), or in a part drawn
-        // disabled (`DisabledRegion`): it stays as it is.
-        if stringEquals(self.accordion.dataset["disabled"] ?? "false", "true")
-          || self.accordion.closest("[data-disabled-region='true']") != nil
-        {
+        // Disabled (`disabled`, `data-disabled`): it stays as it is.
+        if stringEquals(self.accordion.dataset["disabled"] ?? "false", "true") {
           event.preventDefault()
           return
         }

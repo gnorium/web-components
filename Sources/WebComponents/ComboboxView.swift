@@ -266,12 +266,6 @@ public struct ComboboxView: HTMLContent {
         fontWeight(fontWeightNormal)
         color(colorSubtle)
       }
-      // In a part drawn disabled (`DisabledRegion`), as a disabled
-      // LabelView: its words, its "(optional)" and its info; its field a
-      // disabled TextInputView.
-      selector(":where([data-disabled-region='true']) & .combobox-label", ":where([data-disabled-region='true']) & .combobox-label-text", ":where([data-disabled-region='true']) & .combobox-optional-flag") {
-        color(colorDisabled)
-      }
       descendant(".combobox-input-wrapper") {
         position(.relative)
         minWidth(0)
