@@ -331,22 +331,13 @@ public enum OutlineNumberAdvance {
     /// with no movement folds the item; a drag, or a long press on a touch
     /// screen, moves it; Space picks it up for the keyboard's moves, Enter
     /// folds it. Its name says both: "Testament 1.1., fold or move".
-    ///
-    /// An item an open object holds (`OutlinerStepperView.hold` among its
-    /// data, user 2026-11-03) is never moved, and its marker says why: a
-    /// tooltip holding the object's whole UUID, its one link (`hold`), the
-    /// marker's pointer the not-allowed one, as a disabled control's.
     public struct Grip: Sendable {
       public let movable: Bool
       public let describedBy: String
-      /// The open object holding the item: its whole UUID and its page; nil
-      /// for none.
-      public let hold: (id: String, url: String)?
 
-      public init(movable: Bool, describedBy: String, hold: (id: String, url: String)? = nil) {
+      public init(movable: Bool, describedBy: String) {
         self.movable = movable
         self.describedBy = describedBy
-        self.hold = hold
       }
     }
 
@@ -646,11 +637,7 @@ public enum OutlineNumberAdvance {
           .class("outliner-diff")
           .data("visible", !stringEquals(origin.number, number))
           .build()
-        let held = node.data.first { $0.0 == "outliner-hold" }.map { id in
-          (id: id.1, url: node.data.first { $0.0 == "outliner-hold-url" }?.1 ?? "")
-        }
-        slots = Slots(
-          diff: diff, grip: Grip(movable: node.movable && held == nil, describedBy: "\(treeID)-instructions", hold: held))
+        slots = Slots(diff: diff, grip: Grip(movable: node.movable, describedBy: "\(treeID)-instructions"))
       } else if arranges {
         // The grip: what is pressed to pick the item up, what is dragged,
         // and what the keyboard grabs.
