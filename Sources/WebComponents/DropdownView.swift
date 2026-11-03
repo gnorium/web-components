@@ -369,6 +369,7 @@ public struct DropdownView: HTMLContent {
               div { note }
                 .class("dropdown-note")
                 .data("dropdown-note", true)
+                .data("stacked", optionLayout == .stacked)
             }
           }
           .class("dropdown-options-list")
@@ -530,9 +531,9 @@ public struct DropdownView: HTMLContent {
         fontWeight(fontWeightNormal)
         color(colorSubtle)
       }
-      // Not an option: no hover, no pointer, never chosen. As tall as an
-      // option, its line centered in it as an option's is, not left at the
-      // top with the rest of the height below it.
+      // Not an option: no hover, no pointer, never chosen. At least a
+      // one-line option's height (48), its line centered in it, never left
+      // at the top with the spare height below it.
       descendant(".dropdown-note") {
         display(.flex)
         alignItems(.center)
@@ -639,6 +640,10 @@ public struct DropdownView: HTMLContent {
         flexDirection(.column)
         alignItems(.flexStart)
         gap(spacing2)
+        padding(spacing12)
+      }
+      // Its text on the options' own inset in a stacked list.
+      descendant(".dropdown-note[data-stacked='true']") {
         padding(spacing12)
       }
       descendant(".dropdown-option[data-hidden='true']") { display(.none) }
