@@ -300,20 +300,44 @@ public enum OutlineNumberAdvance {
       }
     }
 
-    /// What the outline puts in an item, for the item to place. Both are
+    /// What the outline puts in an item, for the item to place. All are
     /// nil in a tree to read.
     public struct Slots: Sendable {
-      /// The grip that picks the item up, for the start of its header.
+      /// The grip that picks the item up, for the start of its header: an
+      /// item that is no accordion's.
       public let handle: DOM.Node?
       /// "Diff: 2.1 → 1.1", shown once the item's number has changed, for
       /// under its title.
       public let diff: DOM.Node?
+      /// A flat item's handle is its marker (user, 2026-11-03): what the
+      /// caller makes of its marker so the outline moves the item by it.
+      public let grip: Grip?
 
       /// A tree to read may hand an item its own Diff line: a revision's
       /// page, which draws a tree as it would rearrange it.
-      public init(handle: DOM.Node? = nil, diff: DOM.Node? = nil) {
+      public init(handle: DOM.Node? = nil, diff: DOM.Node? = nil, grip: Grip? = nil) {
         self.handle = handle
         self.diff = diff
+        self.grip = grip
+      }
+    }
+
+    /// A flat item's marker as its handle too (user, 2026-11-03): its
+    /// caller draws its marker (`markerSize`) a button classed
+    /// `outliner-handle` as well, the grip in its disc
+    /// (`outliner-marker-grip`), draggable where the item is `movable`,
+    /// `data-outliner-immovable` where it is not (never disabled: it still
+    /// folds), `aria-pressed` false, described by `describedBy`. A press
+    /// with no movement folds the item; a drag, or a long press on a touch
+    /// screen, moves it; Space picks it up for the keyboard's moves, Enter
+    /// folds it. Its name says both: "Testament 1.1., fold or move".
+    public struct Grip: Sendable {
+      public let movable: Bool
+      public let describedBy: String
+
+      public init(movable: Bool, describedBy: String) {
+        self.movable = movable
+        self.describedBy = describedBy
       }
     }
 
@@ -607,7 +631,14 @@ public enum OutlineNumberAdvance {
       let origin = node.origin ?? Origin(parent: parent, position: position, number: number)
       let isMoved = moved.contains(node.id)
       var slots = Slots(handle: nil, diff: nil)
-      if arranges {
+      if arranges, node.accordion {
+        // A flat item's handle is its marker, which its caller draws.
+        let diff = div { DiffView(.outline(old: origin.number, new: number)) }
+          .class("outliner-diff")
+          .data("visible", !stringEquals(origin.number, number))
+          .build()
+        slots = Slots(diff: diff, grip: Grip(movable: node.movable, describedBy: "\(treeID)-instructions"))
+      } else if arranges {
         // The grip: what is pressed to pick the item up, what is dragged,
         // and what the keyboard grabs.
         // An icon-only control: the icon the text's size.
@@ -703,7 +734,7 @@ public enum OutlineNumberAdvance {
       return div {
         if arranges {
           p {
-            "Press Space or Enter on a handle to pick an item up; a toolbar at the foot of the screen then shifts it. While it is held, the up and down arrows shift it among its neighbors, Tab or the right arrow puts it under the item above, Shift-Tab or the left arrow takes it out a level, and Enter, Space or Escape put it down."
+            "Press Space on an item's handle, its marker, to pick the item up (Enter on a marker folds or opens it); a toolbar at the foot of the screen then shifts it. While it is held, the up and down arrows shift it among its neighbors, Tab or the right arrow puts it under the item above, Shift-Tab or the left arrow takes it out a level, and Enter, Space or Escape put it down."
           }
           .id("\(id)-instructions")
           .class("outliner-instructions")
@@ -973,7 +1004,10 @@ public enum OutlineNumberAdvance {
       selector("&:has(> .outliner-stepper-view)") {
         gap(spacing16)
       }
-      selector("& > .outliner-stepper-view") {
+      // At rest after its items, in use wherever it acts (user,
+      // 2026-11-03): either way at the tree's body start.
+      descendant(".outliner-stepper-view") {
+        position(.relative)
         paddingInlineStart(Self.bodyStart)
       }
       selector("& .outliner-list:has(> .outliner-item[data-outliner-accordion='true'])") {
@@ -1163,35 +1197,21 @@ public enum OutlineNumberAdvance {
       selector("& .outliner-footer:not(:has(> :not([hidden], :empty)))") {
         display(.none)
       }
-      // What a tree's steppers chose (`OutlinerStepperView`), while one is
-      // in use, never at rest. A place: a line where the new node's
-      // content will start, in the gap there—after a number a figure and
-      // a point longer where it goes under a node with none under it yet—a
-      // box of its own (`outliner-spot`), so the page can scroll to it. A
-      // node: a ring round its heading.
-      selector(
-        "& .outliner-item[data-outliner-spot] > .outliner-spot"
-      ) {
+      // Its row of steppers where it acts (`OutlinerStepperView`, user
+      // 2026-11-03), while one is in use, never at rest: the add stepper's
+      // at the place chosen, in the tree, a blue line just above it in the
+      // gap where the new node goes; the remove stepper's right after the
+      // node chosen, ringed above it.
+      selector("& .outliner-stepper-view[data-outliner-stepper-at='add']::before") {
+        content("\"\"")
         position(.absolute)
         insetInlineStart(Self.bodyStart)
         insetInlineEnd(0)
+        top(-(Self.nodeGap + borderWidthThick) / 2)
         height(borderWidthThick)
         backgroundColor(borderColorBlue)
         borderRadius(borderRadiusSharp)
-        zIndex(zIndexToolbar)
         pointerEvents(.none)
-      }
-      selector(
-        "& .outliner-item[data-outliner-spot='after'] > .outliner-spot",
-        "& .outliner-item[data-outliner-spot='under'] > .outliner-spot"
-      ) {
-        bottom(-(Self.nodeGap + borderWidthThick) / 2)
-      }
-      selector("& .outliner-item[data-outliner-spot='before'] > .outliner-spot") {
-        top(-(Self.nodeGap + borderWidthThick) / 2)
-      }
-      selector("& .outliner-item[data-outliner-spot='under'] > .outliner-spot") {
-        insetInlineStart(Self.bodyStart)
       }
       descendant(".outliner-row") {
         position(.relative)
@@ -1246,7 +1266,7 @@ public enum OutlineNumberAdvance {
       // drawn as a subtle gray button is (user, 2026-11-03: bordered, as
       // the steppers' are). It stands out of its line by the same amount
       // above and below, so the row is as tall as its line, not the circle.
-      descendant(".outliner-handle") {
+      descendant(".outliner-handle:not(.outliner-marker)") {
         display(.inlineFlex)
         alignItems(.center)
         justifyContent(.center)
@@ -1269,20 +1289,20 @@ public enum OutlineNumberAdvance {
         transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
       }
       // An item that keeps its place: its grip greyed, and nothing to grab.
-      descendant(".outliner-handle:disabled") {
+      descendant(".outliner-handle:not(.outliner-marker):disabled") {
         color(colorDisabled)
         backgroundColor(backgroundColorDisabled)
         borderColor(borderColorDisabled)
         cursor(cursorBase)
       }
-      descendant(".outliner-handle:not(:disabled):not([aria-pressed='true']):hover") {
+      descendant(".outliner-handle:not(.outliner-marker):not(:disabled):not([aria-pressed='true']):hover") {
         backgroundColor(backgroundColorInteractiveSubtleHover)
       }
-      descendant(".outliner-handle:not(:disabled):not([aria-pressed='true']):active") {
+      descendant(".outliner-handle:not(.outliner-marker):not(:disabled):not([aria-pressed='true']):active") {
         backgroundColor(backgroundColorInteractiveSubtleActive)
         color(colorEmphasized)
       }
-      descendant(".outliner-handle:focus-visible") {
+      descendant(".outliner-handle:not(.outliner-marker):focus-visible") {
         outline(borderWidthThick, .solid, borderColorBlueFocus)
         outlineOffset(borderWidthBase)
       }
@@ -1292,28 +1312,72 @@ public enum OutlineNumberAdvance {
       // 2026-11-03: the hover's gray once won over the fill, its white dots
       // all but gone). How the rest of the item reads as held is its own
       // layout's to say.
-      descendant(".outliner-handle[aria-pressed='true']") {
+      descendant(".outliner-handle:not(.outliner-marker)[aria-pressed='true']") {
         backgroundColor(backgroundColorBlue)
         borderColor(borderColorBlue)
         color(colorOnSolid)
         cursor(.grabbing)
       }
-      descendant(".outliner-handle[aria-pressed='true']:hover") {
+      descendant(".outliner-handle:not(.outliner-marker)[aria-pressed='true']:hover") {
         backgroundColor(backgroundColorBlueHover)
         borderColor(borderColorBlueHover)
       }
-      descendant(".outliner-handle[aria-pressed='true']:active") {
+      descendant(".outliner-handle:not(.outliner-marker)[aria-pressed='true']:active") {
         backgroundColor(backgroundColorBlueActive)
         borderColor(borderColorBlueActive)
       }
       // On a phone it steps down one size with every control
       // (`ButtonView.phoneStep`): medium's target becomes small's.
       media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
-        selector("\(ButtonView.phoneStep) & .outliner-handle") {
+        selector("\(ButtonView.phoneStep) & .outliner-handle:not(.outliner-marker)") {
           width(ButtonView.ButtonSize.small.minSize).important()
           height(ButtonView.ButtonSize.small.minSize).important()
           marginBlock(calc((lineHeightSmall22 - ButtonView.ButtonSize.small.minSize) / 2)).important()
         }
+      }
+      // A flat item's marker as its handle (`Grip`, user 2026-11-03): the
+      // grip in its disc, subtle; grabbed under the pointer, grabbing while
+      // dragged; taken up, solid blue with the grip in the color a solid
+      // fill's label takes, as a pressed toggle, its scrim away. One that
+      // keeps its place folds and no more: the grip disabled's color.
+      descendant(".outliner-marker.outliner-handle") {
+        cursor(.grab)
+        // A long press drags it; the screen neither scrolls nor offers to
+        // copy under the finger.
+        touchAction(.none)
+        userSelect(.none)
+        CSS.Property("-webkit-touch-callout", "none")
+      }
+      descendant(".outliner-marker-grip") {
+        display(.flex)
+        alignItems(.center)
+        justifyContent(.center)
+        width(perc(100))
+        height(perc(100))
+        color(colorSubtle)
+      }
+      descendant(".outliner-marker.outliner-handle[data-outliner-immovable='true']") {
+        cursor(.pointer)
+      }
+      descendant(".outliner-marker[data-outliner-immovable='true'] .outliner-marker-grip") {
+        color(colorDisabled)
+      }
+      selector("&[data-outliner-dragging='true'] .outliner-marker.outliner-handle") {
+        cursor(.grabbing)
+      }
+      descendant(".outliner-marker.outliner-handle[aria-pressed='true']") {
+        backgroundColor(backgroundColorBlue)
+        borderColor(borderColorBlue)
+        cursor(.grabbing)
+      }
+      descendant(".outliner-marker[aria-pressed='true'] .outliner-marker-grip") {
+        color(colorOnSolid)
+      }
+      selector(
+        "& .outliner-marker[aria-pressed='true'] .outliner-marker-scrim",
+        "& .outliner-item[data-outliner-collapsed='true'] > .outliner-row .outliner-marker[aria-pressed='true'] .outliner-marker-scrim"
+      ) {
+        display(.none)
       }
       // Nothing is selected by a drag that strays over text.
       selector("&[data-outliner-dragging='true']") {
@@ -1516,10 +1580,21 @@ public enum OutlineNumberAdvance {
       let number = Self.number(of: item)
       let noun = fold.dataset["outliner-fold-noun"] ?? ""
       let verb = collapsed ? "Expand" : "Collapse"
-      fold.setAttribute(
-        "aria-label",
-        stringIsEmpty(number)
-          ? stringJoin([verb, " ", noun], separator: "") : stringJoin([verb, " ", noun, " ", number, "."], separator: ""))
+      if fold.classList.contains("outliner-handle") {
+        // A marker that is its handle too (`Grip`): "Testament 1.1., fold
+        // or move", its state in `aria-expanded`.
+        let title = fold.dataset["outliner-fold-title"] ?? noun
+        fold.setAttribute(
+          "aria-label",
+          stringIsEmpty(number)
+            ? stringJoin([title, ", fold or move"], separator: "")
+            : stringJoin([title, " ", number, "., fold or move"], separator: ""))
+      } else {
+        fold.setAttribute(
+          "aria-label",
+          stringIsEmpty(number)
+            ? stringJoin([verb, " ", noun], separator: "") : stringJoin([verb, " ", noun, " ", number, "."], separator: ""))
+      }
       fold.setAttribute("aria-expanded", collapsed ? "false" : "true")
       fold.querySelector(".animated-right-down-chevron-view")?.setAttribute(
         data("expanded"), collapsed ? "false" : "true")
@@ -1791,19 +1866,32 @@ public enum OutlineNumberAdvance {
     // MARK: - Binding
 
     private func bind(_ item: DOM.Element) {
-      // A handle drawn disabled belongs to an item that keeps its place.
-      if let handle = handle(of: item), !handle.hasAttribute("disabled") {
+      // A handle drawn disabled, or a marker drawn immovable, belongs to an
+      // item that keeps its place.
+      if let handle = handle(of: item), !isFrozen(item) {
         _ = handle.addEventListener(.keydown) { [self] event in self.key(event, on: item) }
-        // The handle sits in the item's header, which may open and close its
-        // body: a press on it picks the item up and does nothing else.
+        // A grip sits in the item's header, which may open and close its
+        // body: a press on it picks the item up and does nothing else. A
+        // marker's press, with no drag, folds the item (`OutlinerHydration`)
+        // and puts it down where it is held.
+        let marker = handle.classList.contains("outliner-marker")
         _ = handle.addEventListener(.click) { [self] event in
-          event.preventDefault()
-          event.stopPropagation()
           if self.swallowClick {
             self.swallowClick = false
+            event.preventDefault()
+            event.stopPropagation()
             return
           }
-          if self.isHeld(item) { self.drop() } else { self.grab(item) }
+          if self.isHeld(item) {
+            event.preventDefault()
+            event.stopPropagation()
+            self.drop()
+            return
+          }
+          guard !marker else { return }
+          event.preventDefault()
+          event.stopPropagation()
+          self.grab(item)
         }
         _ = handle.addEventListener(.dragstart) { [self] event in self.dragStart(event, item) }
         _ = handle.addEventListener(.dragend) { [self] _ in self.dragEnd() }
@@ -1878,7 +1966,9 @@ public enum OutlineNumberAdvance {
     private func key(_ event: Event, on item: DOM.Element) {
       let key = event.key
       guard isHeld(item) else {
-        if stringEquals(key, " ") || stringEquals(key, "Enter") {
+        // Space picks it up; Enter on a marker folds it, as its press does.
+        let marker = handle(of: item)?.classList.contains("outliner-marker") ?? false
+        if stringEquals(key, " ") || (!marker && stringEquals(key, "Enter")) {
           event.preventDefault()
           event.stopPropagation()
           grab(item)
@@ -1908,11 +1998,13 @@ public enum OutlineNumberAdvance {
       handle(of: item)?.focus()
     }
 
-    /// Whether a page has since frozen an item: its handle is disabled now,
-    /// whether or not it was drawn so.
+    /// Whether a page has since frozen an item: its handle is disabled now
+    /// (a marker immovable, `data-outliner-immovable`), whether or not it
+    /// was drawn so.
     private func isFrozen(_ item: DOM.Element) -> Bool {
       guard let handle = handle(of: item) else { return false }
-      return handle.hasAttribute("disabled")
+      if handle.hasAttribute("disabled") { return true }
+      return stringEquals(handle.getAttribute(data("outliner-immovable")) ?? "false", "true")
     }
 
     private func grab(_ item: DOM.Element) {
