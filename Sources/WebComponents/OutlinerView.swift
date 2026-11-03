@@ -131,27 +131,26 @@ public enum OutlineNumberAdvance {
   /// itself an accordion (`accordion`: a record's row) is no card and has
   /// no rule, and nothing is indented: every item at every depth stands
   /// flush, its number alone saying how deep. One spine, a thread's line,
-  /// runs down the tree's start, from under the first number to the last
-  /// item's foot (user, 2026-11-03), through the middle of every number's
-  /// first figure and hidden behind the number: every number starts at
-  /// one x for the tree (`numberInset`), as wide as it runs (`numberColumn`,
-  /// the caller's number classed `outliner-number`), plain text; its
-  /// heading (grip, value, date, info), what it opens into and its own
-  /// controls start right after it, a small gap apart, taking the rest of
-  /// the width, so a longer number pushes its own item's content on. The
-  /// item's fold control is the chevron at its heading's end, as an
-  /// accordion's (user, 2026-11-03): the caller draws it as a button
-  /// classed `outliner-fold`, `data-outliner-fold-noun` its noun, and the
-  /// outline folds the item by it and names it "Collapse testament 1.1." or
-  /// "Expand testament 1.1.", `aria-expanded` saying which. The rest of its
+  /// runs down the tree's start, from under the first marker to the last
+  /// item's foot (user, 2026-11-03), through the middle of every item's
+  /// marker (`markerSize`), a commit's dot on a graph, a locution's avatar
+  /// on its thread. Right after the marker (`bodyStart`) the item is one
+  /// column: its heading, its number first (the caller's, classed
+  /// `outliner-number`), then its grip, its value and its info, and under
+  /// the heading what it opens into and its own controls, the rest of the
+  /// width. The marker is the item's fold control, as an avatar folds its
+  /// locution (user, 2026-11-03): the caller draws it as a button classed
+  /// `outliner-marker outliner-fold`, `data-outliner-fold-noun` its noun,
+  /// and the outline folds the item by it and names it "Collapse testament
+  /// 1.1." or "Expand testament 1.1.", `aria-expanded` saying which. Its
   /// heading folds nothing (`data-header-folds`). Each item's stretch of
-  /// the spine (`RailView`, a locution's rail) runs from under its number
-  /// beside its open body and every item under it to its foot: under
-  /// the pointer that stretch darkens, and a click on it folds the item.
-  /// Where stretches nest, the pointer finds the innermost. An item with
-  /// nothing to fold, closed or empty, has none. The rail is the pointer's
-  /// alone; the chevron is the keyboard's. Collapsed, an item hides its body
-  /// and every item under it.
+  /// the spine (`RailView`, a locution's rail) runs from under its marker
+  /// beside its open body and every item under it to its foot, and on to
+  /// the next item's marker: under the pointer that stretch darkens, and a
+  /// click on it folds the item, or opens it. Where stretches nest, the
+  /// pointer finds the innermost; every stretch of the spine in sight is
+  /// one. The rail is the pointer's alone; the marker is the keyboard's.
+  /// Collapsed, an item hides its body and every item under it.
   ///
   /// **Drawn indented**, an item that is no accordion: each level a step
   /// (`spacing24`) further in than its parent, a thin guide line down the
@@ -226,8 +225,9 @@ public enum OutlineNumberAdvance {
   /// place a dragged item left, `moved` once it stands where it did not, and
   /// `none`. They are in that order of precedence, so no two are ever drawn
   /// together. A refusal is said once, in an alert, and leaves no mark. A
-  /// flat item's ring is drawn by its `::after`, a little outside it, its
-  /// border transparent until the caller colors it and its outline.
+  /// flat item's ring (`ring`) is drawn round its own row, a step outside
+  /// it, right of its number, its border transparent until the caller
+  /// colors it.
   ///
   /// The arrangement is submitted as JSON in a hidden input: each item's id
   /// to its parent's and its position among its siblings,
@@ -671,9 +671,6 @@ public enum OutlineNumberAdvance {
       .data("outliner-label", node.label)
       .data("outliner-collapsed", frame.collapsed)
       .data("outliner-accordion", node.accordion)
-      // Its number and the point after it, which its number's width is
-      // fitted to (`numberColumn`).
-      .style { CSS.Property("--outliner-number-advance", "\(OutlineNumberAdvance.of(frame.number))") }
       if arranges {
         element =
           element
@@ -797,76 +794,56 @@ public enum OutlineNumberAdvance {
       .data("outliner-depth-refusal", depthRefusal)
       .data("outliner-heading", heading.rawValue)
       .style { Self.treeCSS() }
-      // Its last item in sight's number and the point after it, whose
-      // content its row of steppers starts at.
-      .style {
-        CSS.Property("--outliner-last-advance", "\(lastAdvance)")
-      }
       .build()
     }
 
-    /// How far the number of its last item in sight runs—its last top item
-    /// drawn, and the last under it while it is open—with the point after
-    /// it (`OutlineNumberAdvance`), which its row of steppers is aligned to
-    /// (user, 2026-11-03). An item out of the tree (`data-outliner-out`) is
-    /// not drawn.
-    private var lastAdvance: Int {
-      var list = nodes
-      var number = ""
-      while true {
-        let shown = list.filter { node in
-          !node.data.contains(where: { $0.0 == "outliner-out" && $0.1 == "true" })
-        }
-        guard let last = shown.last else { break }
-        number = number.isEmpty ? "\(shown.count)" : "\(number).\(shown.count)"
-        // Open, the last under it is in sight below it.
-        guard last.accordion, Self.accordionIsOpen(last.content(Slots(handle: nil, diff: nil))) == true else { break }
-        list = last.children
-      }
-      return OutlineNumberAdvance.of(number.isEmpty ? "1" : number)
+    /// A flat item's marker on the spine (user, 2026-11-03), as a commit's
+    /// dot on a graph and a locution's avatar on its thread: a disc a
+    /// thread's avatar's size (`AvatarView`'s medium: a medium control's
+    /// 40, a small one's 32 on a phone, `ButtonView.phoneStep`), centered
+    /// on the spine at its heading's first line, its subtle
+    /// border and ground breaking the spine round it. It is the item's fold
+    /// control, as an avatar folds its locution: its caller draws it, a
+    /// button classed `outliner-marker outliner-fold`, `data-outliner-fold-noun`
+    /// its noun, holding its scrim (`outliner-marker-scrim`) and the scrim's
+    /// chevron (`AnimatedRightDownChevronView`), shown under the pointer and
+    /// focus and while the item is folded.
+    public static let markerSize: CSS.Length = `var`("--outliner-marker")
+
+    /// Between a flat item's marker and what it shows, as between a
+    /// locution's avatar and its words.
+    public static let markerSpace: CSS.Length = spacing12
+
+    /// Where every flat item's heading and body start, the same x for the
+    /// whole tree (user, 2026-11-03): right after its marker. A node is one
+    /// column—its heading (its number first, then its grip, its value, its
+    /// info) and under it what it opens into (its Metadata, Note,
+    /// citations, Source, reading), the full width from here; the tree's
+    /// row of steppers starts here too.
+    public static let bodyStart: CSS.Length = markerSize + markerSpace
+
+    /// Between two flat items, and between an item's own row and the items
+    /// under it: room for two rings face to face (`ringOffset`), never
+    /// meeting.
+    static let nodeGap: CSS.Length = spacing24
+
+    /// How far a flat item's ring stands outside what it rings: a step of
+    /// room inside it (user, 2026-11-03: the grip and the value box touched
+    /// it), then its border; its outline outside that.
+    static let ringOffset: CSS.Length = spacing8 + borderWidthBase
+
+    /// A flat item's ring (user, 2026-11-03), the selector it is drawn by,
+    /// for `item`, a selector of the item: what an action affects, the
+    /// whole node—its heading with its number, its body and every node
+    /// under it—a step outside it, right of its marker. A caller colors
+    /// its border and its outline, a field's ring.
+    public static func ring(_ item: String) -> String {
+      "\(item)::after"
     }
 
-    /// The width of a flat item's number (user, 2026-11-03): its number and
-    /// the point after it, set on the item as `--outliner-number-advance`
-    /// (`OutlineNumberAdvance`), taken up to a whole pixel. A caller's
-    /// number (`outliner-number`) starts it, `numberInset` in from the
-    /// item's start; what the item shows starts after it, a small gap
-    /// (`spacing8`) apart: each item's its own width, so a longer number
-    /// pushes its own item's content on.
-    public static let numberColumn: CSS.Length = `var`("--outliner-number-column")
-
-    /// Where the spine runs, in from the tree's start (user, 2026-11-03: at
-    /// its start): as far as its stretches reach either side of it
-    /// (`RailView.reach`), so the pointer finds them inside the tree.
-    static let spine: CSS.Length = RailView.reach / 2
-
-    /// How far in from an item's start its number starts, the same for
-    /// every number of the tree (user, 2026-11-03): half a figure before the
-    /// spine's line, so the spine runs through the middle of its first
-    /// figure (`OutlineNumberAdvance.figure`), the rest of it after.
-    public static let numberInset: CSS.Length = `var`("--outliner-number-inset")
-
-    /// The spine's gap round a flat item's number (user, 2026-11-03): a
-    /// large control's height, a medium one's on a phone
-    /// (`numberGapPhone`, `ButtonView.phoneStep`), centered on its heading's
-    /// first line, the number's ground (its caller's to draw) hiding the
-    /// spine there; its item's rail starts directly under it, so the
-    /// spine's every layer, at rest and under the pointer, breaks at the
-    /// same edges.
-    public static let numberGap: CSS.Length = ButtonView.ButtonSize.large.minSize
-    public static let numberGapPhone: CSS.Length = ButtonView.ButtonSize.medium.minSize
-
-    /// Where what an item shows starts, in from its start: after its
-    /// number, a small gap on.
-    static let contentStart: CSS.Length = `var`("--outliner-content-start")
-
-    /// Where what a new first item under this one would show would start:
-    /// after a number a figure and a point longer ("1." to "1.1.").
-    static let childContentStart: CSS.Length = `var`("--outliner-child-content-start")
-
-    /// A thousandth of the em of a number's 16px, the unit its advance is
-    /// counted in (`OutlineNumberAdvance`).
-    static let advanceUnit = "0.001rem"
+    /// Where the spine runs, in from the tree's start: through the middle
+    /// of every marker, as a thread's line runs through its avatars.
+    static let spine: CSS.Length = markerSize / 2
 
     /// A drawn item: one in the tree. An item out of it
     /// (`data-outliner-out`, a new node until its page puts it in) is not
@@ -979,48 +956,37 @@ public enum OutlineNumberAdvance {
       }
       // A flat tree (user, 2026-11-03), drawn as a thread is: no card, no
       // frame, no rule and no indent. Every item at every depth stands
-      // flush: its number's first figure on the spine (`numberInset`), the
-      // number as wide as it runs (`numberColumn`), and its heading, what
-      // it opens into and its own controls right after it, a small gap
-      // apart; the items under it flush with it; items a node's step apart.
+      // flush: its marker on the spine (`markerSize`), and right after it
+      // (`bodyStart`) its heading, its number first, what it opens into and
+      // its own controls, one column the rest of the width; the items under
+      // it flush with it; items a node's step apart (`nodeGap`).
       selector("&") {
-        CSS.Property(
-          "--outliner-number-inset",
-          "calc(\(Self.spine.value) + \(borderWidthBase.value) / 2 - \(OutlineNumberAdvance.figure / 2) * \(Self.advanceUnit))")
+        CSS.Property("--outliner-marker", ButtonView.ButtonSize.medium.minSize.value)
       }
-      // Its row of steppers where the content of its last item in sight
-      // starts, after that item's number, the nodes' gap under it.
+      media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
+        selector("\(ButtonView.phoneStep) &") {
+          CSS.Property("--outliner-marker", ButtonView.ButtonSize.small.minSize.value).important()
+        }
+      }
+      // Its row of steppers at the tree's body start (user, 2026-11-03),
+      // the nodes' gap under it.
       selector("&:has(> .outliner-stepper-view)") {
         gap(spacing16)
       }
       selector("& > .outliner-stepper-view") {
-        CSS.Property(
-          "padding-inline-start",
-          "calc(\(Self.numberInset.value) + round(up, calc(var(--outliner-last-advance, 840) * \(Self.advanceUnit)), 1px) + \(spacing8.value))")
-      }
-      descendant(".outliner-item") {
-        CSS.Property(
-          "--outliner-number-column",
-          "round(up, calc(var(--outliner-number-advance, 840) * \(Self.advanceUnit)), 1px)")
-        CSS.Property(
-          "--outliner-content-start",
-          "calc(\(Self.numberInset.value) + var(--outliner-number-column) + \(spacing8.value))")
-        CSS.Property(
-          "--outliner-child-content-start",
-          "calc(\(Self.numberInset.value) + round(up, calc((var(--outliner-number-advance, 840) + \(OutlineNumberAdvance.figure + OutlineNumberAdvance.point)) * \(Self.advanceUnit)), 1px) + \(spacing8.value))")
+        paddingInlineStart(Self.bodyStart)
       }
       selector("& .outliner-list:has(> .outliner-item[data-outliner-accordion='true'])") {
-        gap(spacing16)
+        gap(Self.nodeGap)
       }
       descendant(".outliner-item[data-outliner-accordion='true']") {
         position(.relative)
-        gap(spacing16)
+        gap(Self.nodeGap)
       }
       // The spine: one line down the whole tree's start, a thread's line
-      // (its width and its color), through the middle of every number's
-      // first figure and hidden behind the number (user, 2026-11-03): from
-      // under the first number past the last item's foot, fading out below
-      // it (`spineHang`).
+      // (its width and its color), through the middle of every marker,
+      // which breaks it (user, 2026-11-03): from under the first marker
+      // past the last item's foot, fading out below it (`spineHang`).
       selector("& > .outliner-list:has(> .outliner-item[data-outliner-accordion='true'])") {
         position(.relative)
       }
@@ -1028,7 +994,7 @@ public enum OutlineNumberAdvance {
         content("\"\"")
         position(.absolute)
         insetInlineStart(Self.spine)
-        insetBlockStart((ButtonView.ButtonSize.large.minSize + Self.numberGap) / 2)
+        insetBlockStart((ButtonView.ButtonSize.large.minSize + Self.markerSize) / 2)
         insetBlockEnd(-Self.spineHang)
         width(borderWidthBase)
         CSS.Property(
@@ -1044,13 +1010,14 @@ public enum OutlineNumberAdvance {
       descendant(".outliner-item[data-outliner-accordion='true'] > .outliner-list::before") {
         display(.none)
       }
-      // Its own row after its number, as its body is.
+      // Its own row at the tree's body start, as its body is.
       descendant(".outliner-item[data-outliner-accordion='true'] > .outliner-footer") {
         gap(spacing16)
-        paddingInlineStart(Self.contentStart)
+        paddingInlineStart(Self.bodyStart)
       }
-      // Its own accordion frameless: its heading a row, what it opens into
-      // a node's step under it, no inset at its sides or its foot.
+      // Its own accordion frameless, after its marker (its caller's to
+      // place there, `markerSpace` on): its heading a row, what it opens
+      // into a node's step under it, no inset at its sides or its foot.
       descendant(".outliner-item[data-outliner-accordion='true'] > .outliner-row [data-outliner-own-accordion='true']") {
         border(.none)
       }
@@ -1065,60 +1032,99 @@ public enum OutlineNumberAdvance {
         padding(0)
         paddingBlockStart(spacing16)
       }
+      // Its marker (`markerSize`), on the spine, centered on its heading's
+      // first line (a large control's, or a line's): a disc with a subtle
+      // border and ground, over the spine and the stretches it stands on.
+      // The fold control, as a locution's avatar is: a press folds the node
+      // and every node under it, or opens it; under the pointer and focus,
+      // and while the node is folded, a scrim over it shows its chevron,
+      // down open and to the side folded.
+      descendant(".outliner-marker") {
+        position(.relative)
+        zIndex(zIndexAboveContent)
+        insetBlockStart((ButtonView.ButtonSize.large.minSize - Self.markerSize) / 2)
+        display(.flex)
+        flexShrink(0)
+        boxSizing(.borderBox)
+        width(Self.markerSize)
+        height(Self.markerSize)
+        padding(0)
+        margin(0)
+        border(borderWidthBase, .solid, borderColorSubtle)
+        borderRadius(borderRadiusCircle)
+        backgroundColor(backgroundColorNeutralSubtle)
+        cursor(.pointer)
+      }
+      selector("&[data-outliner-heading='line'] .outliner-marker") {
+        insetBlockStart((lineHeightSmall22 - Self.markerSize) / 2)
+      }
+      descendant(".outliner-marker:focus") {
+        outline(borderWidthBase, .solid, borderColorTransparent)
+      }
+      descendant(".outliner-marker:focus-visible") {
+        outline(borderWidthThick, .solid, borderColorBlueFocus)
+        outlineOffset(borderWidthBase)
+      }
+      descendant(".outliner-marker-scrim") {
+        display(.none)
+        position(.absolute)
+        inset(-borderWidthBase)
+        alignItems(.center)
+        justifyContent(.center)
+        borderRadius(borderRadiusCircle)
+        backgroundColor(backgroundColorBackdropDark)
+        color(colorOnSolid)
+      }
+      selector(
+        "& .outliner-marker:hover .outliner-marker-scrim",
+        "& .outliner-marker:focus-visible .outliner-marker-scrim",
+        "& .outliner-item[data-outliner-collapsed='true'] > .outliner-row .outliner-marker .outliner-marker-scrim"
+      ) {
+        display(.flex)
+      }
+      media(prefersReducedMotion(.reduce)) {
+        selector("& .outliner-marker .animated-right-down-chevron-view") {
+          transition(.none).important()
+        }
+      }
       // Its stretch of the spine (`RailView`, a locution's rail): from
-      // directly under its number's gap (`numberGap`, centered on a large
-      // control's height or a line's) down beside what it would fold, its
-      // open body and every item under it, to its foot (user, 2026-11-03),
-      // the pointer finding it anywhere there. Under the pointer that
-      // stretch darkens; a click folds the item, as its chevron does. Over
-      // every box it runs by, the innermost item's over the ones it stands
-      // in, and under the numbers of the items it holds. Nothing to fold,
-      // none: closed, or nothing under its heading; there the stretch of
-      // the item it stands in is the pointer's.
+      // directly under its marker down beside what it would fold, its open
+      // body and every item under it, to its foot and on through the gap
+      // under it to the next item's marker (user, 2026-11-03): every
+      // stretch of the spine in sight is some item's, the pointer finding
+      // it anywhere along it. Under the pointer that stretch darkens; a
+      // click folds the item, as its marker does, or opens it. Over every
+      // box it runs by, the innermost item's over the ones it stands in,
+      // and under the markers of the items it holds. Folded, an item's
+      // stretch is what shows of the spine below its marker alone.
       descendant(".outliner-rail") {
         position(.absolute)
         zIndex(zIndexAboveContent)
         insetInlineStart(Self.spine - RailView.reach / 2)
-        insetBlockStart((ButtonView.ButtonSize.large.minSize + Self.numberGap) / 2)
-        insetBlockEnd(0)
+        insetBlockStart((ButtonView.ButtonSize.large.minSize + Self.markerSize) / 2)
+        insetBlockEnd(-(Self.nodeGap + (ButtonView.ButtonSize.large.minSize - Self.markerSize) / 2))
       }
       selector("&[data-outliner-heading='line'] .outliner-rail") {
-        insetBlockStart((lineHeightSmall22 + Self.numberGap) / 2)
+        insetBlockStart((lineHeightSmall22 + Self.markerSize) / 2)
+        insetBlockEnd(-(Self.nodeGap + (lineHeightSmall22 - Self.markerSize) / 2))
       }
       selector("&[data-outliner-heading='line'] > .outliner-list:has(> .outliner-item[data-outliner-accordion='true'])::before") {
-        insetBlockStart((lineHeightSmall22 + Self.numberGap) / 2)
+        insetBlockStart((lineHeightSmall22 + Self.markerSize) / 2)
       }
-      media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
-        selector(
-          "\(ButtonView.phoneStep) & .outliner-rail",
-          "\(ButtonView.phoneStep) & > .outliner-list:has(> .outliner-item[data-outliner-accordion='true'])::before"
-        ) {
-          insetBlockStart((ButtonView.ButtonSize.large.minSize + Self.numberGapPhone) / 2).important()
-        }
-        selector(
-          "\(ButtonView.phoneStep) &[data-outliner-heading='line'] .outliner-rail",
-          "\(ButtonView.phoneStep) &[data-outliner-heading='line'] > .outliner-list:has(> .outliner-item[data-outliner-accordion='true'])::before"
-        ) {
-          insetBlockStart((lineHeightSmall22 + Self.numberGapPhone) / 2).important()
-        }
-      }
-      selector("& .outliner-item[data-outliner-collapsed='true'] > .outliner-rail") {
-        display(.none)
+      // With no item after it, nor after any item it stands in, an item's
+      // stretch ends at its foot: below it is the tree's own end.
+      selector("& \(Self.finalChain) > .outliner-rail") {
+        insetBlockEnd(0)
       }
       // Below the tree's last item the spine runs on a little, fading out
       // (user, 2026-11-03): the stretch of its last item in sight, the
       // innermost it ends in, at whatever depth, which darkens under the
       // pointer into the fade as it fades and folds or opens that item as
       // the stretches above do. Open, its stretch runs on into it; folded,
-      // its stretch is that hanging part alone, from its foot, and a click
-      // there opens it, as its number does.
+      // its stretch is what shows below its number, the hang with it, and a
+      // click there opens it, as its marker does.
       selector("& \(Self.lastOpen) > .outliner-rail", "& \(Self.lastFolded) > .outliner-rail") {
         insetBlockEnd(-Self.spineHang)
-      }
-      selector("& \(Self.lastFolded) > .outliner-rail") {
-        display(.block)
-        // Over a phone's start (`numberGapPhone`) too.
-        insetBlockStart(perc(100)).important()
       }
       selector("& \(Self.lastOpen) > .outliner-rail .rail-line", "& \(Self.lastFolded) > .outliner-rail .rail-line") {
         CSS.Property(
@@ -1126,19 +1132,26 @@ public enum OutlineNumberAdvance {
         CSS.Property(
           "-webkit-mask-image", "linear-gradient(to bottom, black calc(100% - \(Self.spineHang.value)), transparent)")
       }
-      // Where its state is drawn (`data-outline-state`, a diff's change): a
-      // ring round the whole item—its heading, its body and every item
-      // under it—a little outside it, transparent until the page colors
-      // its border and outline. It starts where the item's content does,
-      // right of its number, never crossing the spine (user, 2026-11-03).
+      // Where what an action affects is drawn (user, 2026-11-03): a state
+      // (`data-outline-state`, a diff's change), a node grabbed, the node
+      // the remove stepper has chosen—its ring (`ring`) round the whole
+      // node, its heading with its number, its body and every node under
+      // it, a step outside them, right of its marker (`bodyStart`),
+      // transparent until the page colors its border and outline.
       descendant(".outliner-item[data-outliner-accordion='true']::after") {
         content("\"\"")
         position(.absolute)
-        inset(-spacing4)
-        insetInlineStart(Self.contentStart - spacing4)
+        inset(-Self.ringOffset)
+        insetInlineStart(Self.bodyStart - Self.ringOffset)
         border(borderWidthBase, .solid, borderColorTransparent)
         borderRadius(borderRadiusBase)
         pointerEvents(.none)
+      }
+      // The node the remove stepper has chosen (`OutlinerStepperView`):
+      // ringed blue while the stepper is in use, over any state of its own.
+      selector("& .outliner-item[data-outliner-accordion='true'][data-outliner-target='true']::after") {
+        borderColor(borderColorBlue)
+        outline(borderWidthBase, .solid, borderColorBlue)
       }
       // An item's own row, its room taken by what is shown in it: a footer
       // with nothing to show (its parts hidden or empty) takes none.
@@ -1160,7 +1173,7 @@ public enum OutlineNumberAdvance {
         "& .outliner-item[data-outliner-spot] > .outliner-spot"
       ) {
         position(.absolute)
-        insetInlineStart(Self.contentStart)
+        insetInlineStart(Self.bodyStart)
         insetInlineEnd(0)
         height(borderWidthThick)
         backgroundColor(borderColorBlue)
@@ -1172,20 +1185,13 @@ public enum OutlineNumberAdvance {
         "& .outliner-item[data-outliner-spot='after'] > .outliner-spot",
         "& .outliner-item[data-outliner-spot='under'] > .outliner-spot"
       ) {
-        bottom(-(spacing16 + borderWidthThick) / 2)
+        bottom(-(Self.nodeGap + borderWidthThick) / 2)
       }
       selector("& .outliner-item[data-outliner-spot='before'] > .outliner-spot") {
-        top(-(spacing16 + borderWidthThick) / 2)
+        top(-(Self.nodeGap + borderWidthThick) / 2)
       }
       selector("& .outliner-item[data-outliner-spot='under'] > .outliner-spot") {
-        insetInlineStart(Self.childContentStart)
-      }
-      selector(
-        "& .outliner-item[data-outliner-target='true'] > .outliner-row [data-outliner-own-accordion='true'] > .accordion-details > .accordion-summary"
-      ) {
-        outline(borderWidthThick, .solid, borderColorBlue)
-        outlineOffset(spacing4)
-        borderRadius(borderRadiusBase)
+        insetInlineStart(Self.bodyStart)
       }
       descendant(".outliner-row") {
         position(.relative)
@@ -1347,15 +1353,15 @@ public enum OutlineNumberAdvance {
       // its row, into it along its row's foot where the content of an item
       // under it would start, where nothing else is drawn.
       descendant(".outliner-item[data-outliner-accordion='true'] > .outliner-row[data-outliner-drop='before']::before") {
-        top(-(spacing16 + borderWidthThick) / 2)
-        insetInlineStart(Self.contentStart)
+        top(-(Self.nodeGap + borderWidthThick) / 2)
+        insetInlineStart(Self.bodyStart)
       }
       descendant(".outliner-item[data-outliner-accordion='true'] > .outliner-row[data-outliner-drop='after']::after") {
-        bottom(-(spacing16 + borderWidthThick) / 2)
-        insetInlineStart(Self.contentStart)
+        bottom(-(Self.nodeGap + borderWidthThick) / 2)
+        insetInlineStart(Self.bodyStart)
       }
       descendant(".outliner-item[data-outliner-accordion='true'] > .outliner-row[data-outliner-drop='inside']::after") {
-        insetInlineStart(Self.childContentStart)
+        insetInlineStart(Self.bodyStart)
       }
       descendant(".outliner-item[data-outline-state='refused'] > .outliner-row") {
         cursor(.notAllowed)
@@ -1372,8 +1378,9 @@ public enum OutlineNumberAdvance {
       descendant(".outliner-item[data-outliner-accordion='true'][data-outline-state='placeholder'] > .outliner-row") {
         outline(.none)
       }
-      descendant(".outliner-item[data-outliner-accordion='true'][data-outline-state='placeholder']::after") {
+      selector(Self.ring("& .outliner-item[data-outliner-accordion='true'][data-outline-state='placeholder']")) {
         borderColor(borderColorBase)
+        outline(borderWidthBase, .solid, borderColorBase)
       }
       descendant(".outliner-item[data-outline-state='placeholder'] > .outliner-row > *") {
         opacity(opacityLow)
@@ -1499,13 +1506,11 @@ public enum OutlineNumberAdvance {
       }
     }
 
-    /// An item's fold control (`outliner-fold`, the chevron at its
-    /// heading's end) says what a press on it does: "Collapse testament
+    /// An item's fold control (`outliner-fold`, its marker on the spine)
+    /// says what a press on it does: "Collapse testament
     /// 1.1." while it is open, "Expand testament 1.1." folded, by its number
     /// (`outliner-number`), `aria-expanded` and its chevron the same.
     public static func nameFold(of item: DOM.Element) {
-      // Folded or opened, the last item in sight may be another.
-      if let root = item.closest(".outliner-view") { fitLast(root) }
       guard let fold = item.querySelector(":scope > .outliner-row .outliner-fold") else { return }
       let collapsed = stringEquals(item.dataset["outliner-collapsed"] ?? "false", "true")
       let number = Self.number(of: item)
@@ -1527,38 +1532,6 @@ public enum OutlineNumberAdvance {
       return stringTrim(number.textContent)
     }
 
-    /// Fits each item of a flat tree to its number as it now stands, and
-    /// the point after it (`numberColumn`): a tree that numbers itself
-    /// again calls it.
-    public static func fitNumbers(_ root: DOM.Element) {
-      for item in root.querySelectorAll(".outliner-item") {
-        guard let _ = item.querySelector(":scope > .outliner-row .outliner-number") else { continue }
-        item.setStyleProperty("--outliner-number-advance", intToString(OutlineNumberAdvance.of(number(of: item))))
-      }
-      fitLast(root)
-    }
-
-    /// Aligns a flat tree's row of steppers to the content of its last item
-    /// in sight as the tree now stands: its last top item drawn, and the
-    /// last under it while it is open (`--outliner-last-advance`). Its folds
-    /// and its numbering call it.
-    public static func fitLast(_ root: DOM.Element) {
-      var list = root.querySelector(":scope > .outliner-list")
-      var last: DOM.Element?
-      while let current = list {
-        let shown = current.querySelectorAll(":scope > .outliner-item")
-          .filter { !stringEquals($0.dataset["outliner-out"] ?? "false", "true") }
-        guard let item = shown.last else { break }
-        last = item
-        if stringEquals(item.dataset["outliner-collapsed"] ?? "false", "true") { break }
-        list = item.querySelector(":scope > .outliner-list")
-      }
-      var number = ""
-      if let last { number = Self.number(of: last) }
-      root.setStyleProperty(
-        "--outliner-last-advance", intToString(OutlineNumberAdvance.of(stringIsEmpty(number) ? "1" : number)))
-    }
-
     /// An accordion item's own accordion: the first in its node, which is
     /// the outermost.
     private static func ownAccordion(of item: DOM.Element) -> DOM.Element? {
@@ -1578,7 +1551,7 @@ public enum OutlineNumberAdvance {
       togglesBound = true
       _ = document.addEventListener(.click) { event in
         guard let target = event.target else { return }
-        // A flat item's rail, or its chevron (its fold control), folds it or
+        // A flat item's rail, or its marker (its fold control), folds it or
         // opens it: a click on the accordion's header, its motion and all.
         let fold = target.closest(".outliner-rail") ?? target.closest(".outliner-fold")
         if let fold, let item = fold.closest(".outliner-item") {
@@ -2427,8 +2400,6 @@ public enum OutlineNumberAdvance {
         OutlinerHydration.nameFold(of: item)
       }
       for item in root.querySelectorAll(".outliner-item[data-outliner-removed='true']") { paint(item) }
-      // Each item as wide as its number now is.
-      OutlinerHydration.fitNumbers(root)
       updateToolbar()
       if let input = root.querySelector(":scope > .outliner-shape") {
         input.setAttribute("value", shapeJSON())

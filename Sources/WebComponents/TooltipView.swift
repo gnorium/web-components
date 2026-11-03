@@ -228,6 +228,16 @@ public struct TooltipView: HTMLContent {
       selector("&.button-tooltip .button-view:disabled") {
         pointerEvents(.none)
       }
+      // Round a disabled control, never the help cursor (user, 2026-11-03):
+      // the pointer says the control is disabled, as over every disabled
+      // control, the trigger it may pass through to too; only the bubble's
+      // link points.
+      selector(
+        "&:has(> .tooltip-trigger-content :disabled)",
+        "&:has(> .tooltip-trigger-content :disabled) > .tooltip-trigger-content"
+      ) {
+        cursor(cursorNotAllowed)
+      }
       // Until the hydration moves it to <body>, the bubble sits in its
       // trigger, where even a hidden box widens the page it runs past: it
       // takes no box there until it shows.

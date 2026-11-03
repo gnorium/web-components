@@ -115,10 +115,6 @@ public struct PaginationView: HTMLContent {
     case .normal: chrome = false
     case .medium, .large: chrome = true
     }
-    // Icon-only chevrons on par with the pager's text ("of 3") are as tall
-    // as its 22px line at every size (user, 2026-10-21), as every icon
-    // beside text.
-    let iconSize: CSS.Length = lineHeightSmall22
     // The number box's inset: its control size's.
     let inset: CSS.Length
     switch size {
@@ -132,6 +128,36 @@ public struct PaginationView: HTMLContent {
       ? calc("\(ch(digitCount).value) + \(inset.value) * 2 + \(borderWidthBase.value) * 2")
       : calc("\(ch(digitCount).value) + \(spacing8.value) * 2 + \(borderWidthBase.value) * 2 + \(spacing4.value)")
     let useButtons = stringEquals(previousUrl, nil) && stringEquals(nextUrl, nil) && showControls
+    // Its chevrons (user, 2026-11-03): subtle icon-only circles one size
+    // smaller than the control between them—a large one's medium, a
+    // medium one's small—stepping down with it on a phone
+    // (`ButtonView.phoneStep`): a link where it pages by URL, a button
+    // where its page binds it, disabled where there is no page that way.
+    // `pagination-prev` / `pagination-next` name them for the pages that
+    // bind them, `pagination-disabled` marks one disabled.
+    let chevronSize: ButtonView.ButtonSize
+    switch size {
+    case .large: chevronSize = .medium
+    case .medium, .normal: chevronSize = .small
+    }
+    func chevron(next: Bool) -> DOM.Node {
+      let url = next ? nextUrl : previousUrl
+      let disabled = stringEquals(url, nil) && (!useButtons || (next ? nextDisabled : previousDisabled))
+      let base = next ? "pagination-next" : "pagination-prev"
+      let classes = disabled ? stringJoin([base, "pagination-disabled"], separator: " ") : base
+      if next {
+        return ButtonView(
+          icon: ChevronRightIconView(size: chevronSize.iconSize), weight: .subtle, size: chevronSize,
+          disabled: disabled, url: url, ariaLabel: nextAriaLabel, class: classes, borderRadius: .circle,
+          data: nextData
+        ).build()
+      }
+      return ButtonView(
+        icon: ChevronLeftIconView(size: chevronSize.iconSize), weight: .subtle, size: chevronSize,
+        disabled: disabled, url: url, ariaLabel: previousAriaLabel, class: classes, borderRadius: .circle,
+        data: previousData
+      ).build()
+    }
 
     let sizeClass = "pagination-size-\(size.rawValue)"
     let rootClass = stringIsEmpty(`class`)
@@ -141,36 +167,7 @@ public struct PaginationView: HTMLContent {
     return section {
       if showControls {
         div {
-          if let prevHref = previousUrl {
-            var link = a {
-              ChevronLeftIconView(size: iconSize)
-            }
-            .class("pagination-prev")
-            .href(prevHref)
-            .ariaLabel(previousAriaLabel)
-            for (key, value) in previousData {
-              link = link.data(key, value)
-            }
-            link
-          } else if useButtons {
-            var btn = button {
-              ChevronLeftIconView(size: iconSize)
-            }
-            .type(.button)
-            .class(previousDisabled ? "pagination-prev pagination-disabled" : "pagination-prev")
-            .disabled(previousDisabled)
-            .ariaLabel(previousAriaLabel)
-            for (key, value) in previousData {
-              btn = btn.data(key, value)
-            }
-            btn
-          } else {
-            span {
-              ChevronLeftIconView(size: iconSize)
-            }
-            .class("pagination-prev pagination-disabled")
-            .ariaLabel(previousAriaLabel)
-          }
+          chevron(next: false)
         }
         .class("pagination-previous-container")
       }
@@ -226,36 +223,7 @@ public struct PaginationView: HTMLContent {
 
       if showControls {
         div {
-          if let nextHref = nextUrl {
-            var link = a {
-              ChevronRightIconView(size: iconSize)
-            }
-            .class("pagination-next")
-            .href(nextHref)
-            .ariaLabel(nextAriaLabel)
-            for (key, value) in nextData {
-              link = link.data(key, value)
-            }
-            link
-          } else if useButtons {
-            var btn = button {
-              ChevronRightIconView(size: iconSize)
-            }
-            .type(.button)
-            .class(nextDisabled ? "pagination-next pagination-disabled" : "pagination-next")
-            .disabled(nextDisabled)
-            .ariaLabel(nextAriaLabel)
-            for (key, value) in nextData {
-              btn = btn.data(key, value)
-            }
-            btn
-          } else {
-            span {
-              ChevronRightIconView(size: iconSize)
-            }
-            .class("pagination-next pagination-disabled")
-            .ariaLabel(nextAriaLabel)
-          }
+          chevron(next: true)
         }
         .class("pagination-next-container")
       }
@@ -274,7 +242,10 @@ public struct PaginationView: HTMLContent {
         alignItems(.center)
         maxWidth(px(600))
         margin(0, .auto)
-        gap(spacing16)
+        // Its parts (chevron, indicator, chevron) apart by half its size
+        // step's (user, 2026-11-03): 8 round a large control (48), 4 round
+        // a medium one (40), 2 round a small one (32), on a phone too.
+        gap(spacing4)
       }
       // Every pager medium (user, 2026-10-10): its text a medium
       // control's 16px, its targets and number box 40.
@@ -301,60 +272,11 @@ public struct PaginationView: HTMLContent {
       ) {
         flex(0)
       }
-      // Its chevrons hug their icons (user, 2026-11-03): each as wide as
-      // its icon and a small inset either side, a control's height (its
-      // size's), all of it the pointer's.
-      selector(".pagination-prev", ".pagination-next") {
-        display(.flex)
-        alignItems(.center)
-        justifyContent(.center)
-        height(ButtonView.ButtonSize.medium.minSize)
-        paddingBlock(0)
-        paddingInline(spacing4)
-        margin(0)
-        color(colorBase)
-        textDecoration(.none)
-        borderRadius(borderRadiusBase)
-        border(.none)
-        backgroundColor(.transparent)
-        cursor(.pointer)
-        boxSizing(.borderBox)
-      }
-      selector("&.pagination-size-medium .pagination-prev", "&.pagination-size-medium .pagination-next") {
-        height(ButtonView.ButtonSize.medium.minSize)
-        borderRadius(0)
-      }
-      selector(".pagination-prev.pagination-disabled", ".pagination-next.pagination-disabled") {
-        color(colorSubtle)
-        opacity(0.5)
-        pointerEvents(.none)
-        cursor(cursorNotAllowed)
-      }
-      selector(
-        "&.pagination-size-medium .pagination-prev.pagination-disabled", "&.pagination-size-medium .pagination-next.pagination-disabled",
-        "&.pagination-size-large .pagination-prev.pagination-disabled", "&.pagination-size-large .pagination-next.pagination-disabled"
-      ) {
-        color(colorDisabled)
-        opacity(1)
-      }
-      selector(".pagination-prev:focus", ".pagination-next:focus") {
-        outline(borderWidthBase, .solid, colorBlueFocus).important()
-        outlineOffset(px(2)).important()
-      }
-      selector(
-        "&.pagination-size-medium .pagination-prev:focus", "&.pagination-size-medium .pagination-next:focus",
-        "&.pagination-size-large .pagination-prev:focus", "&.pagination-size-large .pagination-next:focus"
-      ) {
-        outline(.none).important()
-      }
       descendant(".pagination-indicator") {
         display(.flex)
         flexDirection(.row)
         alignItems(.center)
         justifyContent(.center)
-        gap(spacing12)
-      }
-      selector("&.pagination-size-medium .pagination-indicator", "&.pagination-size-large .pagination-indicator") {
         gap(spacing8)
       }
       descendant(".page-box") {
@@ -427,16 +349,12 @@ public struct PaginationView: HTMLContent {
         justifyContent(.flexStart)
         maxWidth(.none)
         margin(0)
-        gap(spacing4)
+        gap(spacing8)
         flexShrink(0)
         color(colorBase)
         fontFamily(typographyFontSans)
         fontSize(fontSizeLarge18)
         lineHeight(lineHeightSmall22)
-      }
-      selector("&.pagination-size-large .pagination-prev", "&.pagination-size-large .pagination-next") {
-        height(ButtonView.ButtonSize.large.minSize)
-        borderRadius(0)
       }
       selector("&.pagination-size-large .page-box") {
         fontFamily(typographyFontMono)
@@ -453,13 +371,21 @@ public struct PaginationView: HTMLContent {
       }
       // Option B (`ButtonView.phoneStep`): on a phone every pager steps
       // one size down, as every control does—large to medium, medium to
-      // small (32, its text 14px)—its buttons and number box together.
+      // small (32, its text 14px)—its buttons, its number box and its gap
+      // together.
       media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
-        selector(
-          "\(ButtonView.phoneStep) &.pagination-size-large .pagination-prev",
-          "\(ButtonView.phoneStep) &.pagination-size-large .pagination-next"
-        ) {
-          height(ButtonView.ButtonSize.medium.minSize).important()
+        selector("\(ButtonView.phoneStep) &.pagination-size-large") {
+          gap(spacing4).important()
+        }
+        selector("\(ButtonView.phoneStep) &.pagination-size-medium", "\(ButtonView.phoneStep) &.pagination-size-normal") {
+          gap(spacing2).important()
+        }
+        selector("\(ButtonView.phoneStep) &.pagination-size-normal .page-box") {
+          padding(ButtonView.ButtonSize.small.padding).important()
+          fontSize(fontSizeSmall14).important()
+        }
+        selector("\(ButtonView.phoneStep) &.pagination-size-normal .pagination-total") {
+          fontSize(fontSizeSmall14).important()
         }
         selector("\(ButtonView.phoneStep) &.pagination-size-large .page-box") {
           padding(ButtonView.ButtonSize.medium.padding).important()
@@ -470,12 +396,6 @@ public struct PaginationView: HTMLContent {
           "\(ButtonView.phoneStep) &.pagination-size-large .pagination-total"
         ) {
           fontSize(fontSizeMedium16).important()
-        }
-        selector(
-          "\(ButtonView.phoneStep) &.pagination-size-medium .pagination-prev",
-          "\(ButtonView.phoneStep) &.pagination-size-medium .pagination-next"
-        ) {
-          height(ButtonView.ButtonSize.small.minSize).important()
         }
         selector("\(ButtonView.phoneStep) &.pagination-size-medium .page-box") {
           padding(ButtonView.ButtonSize.small.padding).important()
