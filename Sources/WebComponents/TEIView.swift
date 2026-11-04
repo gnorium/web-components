@@ -99,10 +99,10 @@ public enum TEISentenceSelection {
     /// ("w12.31"), or on a calibrated page the word's first zone
     /// ("p3-wz12"); what a quote's chosen words are stored by (`wordIds`).
     private var wordIDs: [TEIWordPlace: String] = [:]
-    /// The measure of the frame the page being set is set in, in its em
-    /// (`TEIPageFrame.measure`; 0 where it has none): how far a line placed
+    /// The measure of the type area the page being set is set in, in its em
+    /// (`TEIPageTypeArea.measure`; 0 where it has none): how far a line placed
     /// by its zone runs reflowed (`reflowStyle`).
-    private var frameMeasure: Double = 0
+    private var typeAreaMeasure: Double = 0
 
     /// A translation of the markup, page by page, in its own language:
     /// the translation's own TEI, read by the same reader as the markup,
@@ -270,14 +270,14 @@ public enum TEISentenceSelection {
     /// The book's em on the page's scan, in the 0–1000 space across its
     /// image (user, 2026-10-18): the book is set in one type, so a scan has
     /// its em as its width over its width in em (`TEIPage.scanWidth`)—the
-    /// em the page is set in: a page framed by its leaf (a board lettered
+    /// em the page is set in: a page set in its leaf (a board lettered
     /// in gilt, Hamlet Q1's front cover) its leaf's, 38 em across it
     /// (user, 2026-11-03: at the work's em its overlay drew the cover's
-    /// gilt frame at 0.63 of the scan's); else the scan's own, as its
-    /// measured text block gives it (`TEITextBlock.frame`: the body type
-    /// measured on it), else the work's frame's (`TEIWorkFrame.width`,
+    /// gilt border at 0.63 of the scan's); else the scan's own, as its
+    /// measured text block gives it (`TEITextBlock.typeArea`: the body type
+    /// measured on it), else the work's type area's (`TEIWorkTypeArea.width`,
     /// `max-inline-size`). The scan's own before the work's: one width in
-    /// em for every scan assumes each frames the page alike, and Hamlet
+    /// em for every scan assumes each takes in the page alike, and Hamlet
     /// Q1's photographs (openings, a ruler, more or less of the next leaf)
     /// run 73 to 85 em wide (dev, 2026-10-26). "" where none gives a
     /// width. The reader's overlay always lays the scan at this scale,
@@ -289,21 +289,21 @@ public enum TEISentenceSelection {
       return number((1000 / width * 10_000).rounded() / 10_000)
     }
 
-    /// The page's frame as the custom properties its rules read
-    /// (`.tei-page-text[data-framed]`, `.tei-text-block`), in em of the
-    /// work's body type: the frame's measure and height, the margin around
+    /// The page's type area as the custom properties its rules read
+    /// (`.tei-page-text[data-type-area]`, `.tei-text-block`), in em of the
+    /// work's body type: the type area's measure and height, the margin around
     /// the page's content, and a genuinely larger page's own size (0 for
     /// any other: its content and margins set its size).
-    static func frameStyle(_ frame: TEIPageFrame) -> String {
+    static func typeAreaStyle(_ typeArea: TEIPageTypeArea) -> String {
       // Ten-thousandths of an em: finer than a device pixel.
       func rounded(_ value: Double) -> String { number((value * 10_000).rounded() / 10_000) }
-      return "--tei-frame-measure: \(rounded(frame.measure)); --tei-frame-height: \(rounded(frame.height));"
-        + " --tei-frame-head: \(rounded(frame.head)); --tei-frame-foot: \(rounded(frame.foot));"
-        + " --tei-frame-left: \(rounded(frame.left)); --tei-frame-right: \(rounded(frame.right));"
-        + " --tei-page-width: \(rounded(frame.pageWidth)); --tei-page-height: \(rounded(frame.pageHeight))"
+      return "--tei-type-area-measure: \(rounded(typeArea.measure)); --tei-type-area-height: \(rounded(typeArea.height));"
+        + " --tei-type-area-head: \(rounded(typeArea.head)); --tei-type-area-foot: \(rounded(typeArea.foot));"
+        + " --tei-type-area-left: \(rounded(typeArea.left)); --tei-type-area-right: \(rounded(typeArea.right));"
+        + " --tei-page-width: \(rounded(typeArea.pageWidth)); --tei-page-height: \(rounded(typeArea.pageHeight))"
     }
 
-    /// The area around the frame a line of marginalia is set in: a note's,
+    /// The area around the type area a line of marginalia is set in: a note's,
     /// placed in a margin beside, above or below it or at a corner
     /// (`TEIRenderer.marginalArea`); nil for a line of the main text.
     static func marginalPlace(of line: TEILine) -> String? {
@@ -545,10 +545,10 @@ public enum TEISentenceSelection {
       return view
     }
 
-    /// This view setting a page set in `frame` (`frameMeasure`).
-    private func measuring(_ frame: TEIPageFrame?) -> TEIView {
+    /// This view setting a page set in `typeArea` (`typeAreaMeasure`).
+    private func measuring(_ typeArea: TEIPageTypeArea?) -> TEIView {
       var view = self
-      view.frameMeasure = frame?.measure ?? 0
+      view.typeAreaMeasure = typeArea?.measure ?? 0
       return view
     }
 
@@ -876,38 +876,38 @@ public enum TEISentenceSelection {
     private func laidOut(
       _ lines: [TEILine], facsimileURL: String, label: String, tabStop: TEIWordPlace? = nil, columns: String = ""
     ) -> [DOM.Node] {
-      // Runs of lines one frame sets (an epigraph's), each its sections.
-      var frames: [(frame: String, sections: [[LaidOut]])] = []
+      // Runs of lines one box sets (an epigraph's), each its sections.
+      var boxes: [(box: String, sections: [[LaidOut]])] = []
       for item in Self.layout(of: lines) {
         let first: TEILine
         switch item {
         case .line(let line): first = line
         case .block(let lines), .furniture(let lines): first = lines[0]
         }
-        if frames.isEmpty || frames[frames.count - 1].frame != first.frame {
-          frames.append((first.frame, [[item]]))
+        if boxes.isEmpty || boxes[boxes.count - 1].box != first.box {
+          boxes.append((first.box, [[item]]))
         } else if first.opensParagraph {
-          frames[frames.count - 1].sections.append([item])
+          boxes[boxes.count - 1].sections.append([item])
         } else {
-          let last = frames[frames.count - 1].sections.count - 1
-          frames[frames.count - 1].sections[last].append(item)
+          let last = boxes[boxes.count - 1].sections.count - 1
+          boxes[boxes.count - 1].sections[last].append(item)
         }
       }
-      return frames.flatMap { run -> [DOM.Node] in
+      return boxes.flatMap { run -> [DOM.Node] in
         let sections = sectioned(
           run.sections, facsimileURL: facsimileURL, label: label, tabStop: tabStop, columns: columns)
-        guard !run.frame.isEmpty else { return sections }
-        // Its own box only (a printed frame's rule, inset and measure, its
+        guard !run.box.isEmpty else { return sections }
+        // Its own box only (a printed box's rule, inset and measure, its
         // margins): its lines carry the rest of their setting.
         return [
-          div { sections }.class("tei-frame").data("rend", run.frame)
-            .addingAttribute("style", TEIRendition.css(from: run.frame, only: Self.frameBox)).build()
+          div { sections }.class("tei-box").data("rend", run.box)
+            .addingAttribute("style", TEIRendition.css(from: run.box, only: Self.ownBoxProperties)).build()
         ]
       }
     }
 
-    /// What a frame draws of its rend: its box (`TEIRendition.frame(of:)`).
-    static let frameBox = TEIRendition.frameProperties.union([
+    /// What a box draws of its rend: its own setting (`TEIRendition.box(of:)`).
+    static let ownBoxProperties = TEIRendition.boxProperties.union([
       "margin-left", "margin-right", "margin-inline-start", "margin-inline-end", "margin-top", "margin-bottom",
       "margin-block-start", "margin-block-end",
     ])
@@ -915,7 +915,7 @@ public enum TEISentenceSelection {
     /// A block's or a line's style from its rend: its print's setting, and
     /// what Reflow sets it by in its place (`reflowStyle`).
     private func setting(_ rend: String) -> String {
-      TEIRendition.css(from: rend) + Self.reflowStyle(of: rend, measure: frameMeasure)
+      TEIRendition.css(from: rend) + Self.reflowStyle(of: rend, measure: typeAreaMeasure)
     }
 
     /// What Reflow sets a box of `rend` by in place of its print's setting
@@ -924,9 +924,9 @@ public enum TEISentenceSelection {
     /// a line placed by its zone is its box's height, 0.714 of its type)
     /// set solid (`--tei-reflow-leading`), so a line they wrap clears the
     /// one above; a line placed by its zone about its box's middle, as far
-    /// as the frame's `measure` lets it (`TEIPage.reflowedBox`:
+    /// as the type area's `measure` lets it (`TEIPage.reflowedBox`:
     /// `--tei-reflow-start`, `--tei-reflow-size`, in its em), so it wraps
-    /// where its frame ends, never because the face fills its box (Hamlet
+    /// where its type area ends, never because the face fills its box (Hamlet
     /// Q1's front cover, reflowed: "HAMLE" over its "T", "SHAKESPEAR" over
     /// its "E", "LONDON" over "1603"); a tracked line, its tracking as its
     /// inset (`--tei-reflow-tracking`). Reflow off, the print's setting
@@ -1049,10 +1049,10 @@ public enum TEISentenceSelection {
       return nil
     }
 
-    /// How far before its frame's start a page sets a line, in its em (user,
+    /// How far before its type area's start a page sets a line, in its em (user,
     /// 2026-11-03): the most a block or a line starts before it (a negative
     /// `margin-inline-start`, in its own type's em, Hamlet Q1's title page's
-    /// "Tragicall Hiſtorie of" 2.2 em out), 0 for none. Reflowed, the frame
+    /// "Tragicall Hiſtorie of" 2.2 em out), 0 for none. Reflowed, the type area
     /// keeps that much room either side, so no line runs out of sight
     /// (`--tei-reflow-outdent`, in rem: the page's em is the root's, 16 px,
     /// wherever a box of another size reads it).
@@ -1066,14 +1066,14 @@ public enum TEISentenceSelection {
       }
     }
 
-    /// The page's rendering layer's style: its frame (`frameStyle`), the width of a space's character
-    /// (`spaceCharacter`) and the body's leading in em (`TEIRendition.bodyLeading`), which a framed page's
-    /// furniture is set at.
+    /// The page's rendering layer's style: its type area (`typeAreaStyle`), the width of a space's character
+    /// (`spaceCharacter`) and the body's leading in em (`TEIRendition.bodyLeading`), which the furniture of a
+    /// page set in its type area is set at.
     static func pageTextStyle(
-      frame: TEIPageFrame?, renditions: [String: String], bodyLeading: Double? = nil, outdent: Double = 0
+      typeArea: TEIPageTypeArea?, renditions: [String: String], bodyLeading: Double? = nil, outdent: Double = 0
     ) -> String {
       let parts = [
-        frame.map(frameStyle), spaceCharacter(in: renditions).map { "--tei-space-char: \($0)" },
+        typeArea.map(typeAreaStyle), spaceCharacter(in: renditions).map { "--tei-space-char: \($0)" },
         bodyLeading.map { "--tei-body-leading: \(number($0))" },
         outdent > 0 ? "--tei-reflow-outdent: \(number((outdent * 10_000).rounded() / 10_000))rem" : nil,
       ]
@@ -1294,13 +1294,13 @@ public enum TEISentenceSelection {
         for (index, page) in pages.enumerated() where self.page == nil || self.page == index || drawn.contains(index) {
           let tabStop = glossURL == nil ? nil : Self.firstWord(of: page.lines)
           // Its words marked with their sentences and lemmas where they open;
-          // its lines placed by their zones run, reflowed, in its frame.
-          let frame = page.frame
-          let reader = (wordsMarked ? marking(page) : self).measuring(frame)
+          // its lines placed by their zones run, reflowed, in its type area.
+          let typeArea = page.typeArea
+          let reader = (wordsMarked ? marking(page) : self).measuring(typeArea)
           let pageNode = div {
             div {
-              if let frame {
-                // The work's frame, its body pages' main text block: the
+              if let typeArea {
+                // The work's type area, its body pages' main text block: the
                 // page's main text set in it; its marginalia outside it,
                 // beside, above or below it where the scan has them (user,
                 // 2026-10-14); an equal margin around them all. A blank leaf
@@ -1334,13 +1334,13 @@ public enum TEISentenceSelection {
             }
             .class("tei-page-text")
             .data("layer", "rendering")
-            .data("framed", frame != nil)
+            .data("type-area", typeArea != nil)
             // Its own ink, where it is no theme color (`TEIPage.ink`).
             .data("ink", page.ink ?? "")
             .addingAttribute(
               "style",
               Self.pageTextStyle(
-                frame: frame, renditions: page.renditions,
+                typeArea: typeArea, renditions: page.renditions,
                 bodyLeading: TEIRendition.bodyLeading(in: page.renditions, markup: page.markup),
                 outdent: Self.outdent(of: page.lines)))
 
@@ -1391,7 +1391,7 @@ public enum TEISentenceSelection {
                   if let translated {
                     // In the translation's own direction, the layer's; its
                     // noted blocks opening their notes.
-                    noting(translated.notes).measuring(translated.page.frame).rendered(
+                    noting(translated.notes).measuring(translated.page.typeArea).rendered(
                       translated.page.lines, heading: nil, direction: nil,
                       facsimileURL: translated.page.facsimileURL, label: translated.page.label)
                   }
@@ -1435,8 +1435,8 @@ public enum TEISentenceSelection {
           // to lay the scan under the text by.
           .data("text-block", Self.textBlockData(of: page))
           // Whether that text block is derived (a page with no main text:
-          // the work frame placed on its scan), which the overlay lays on
-          // the rendered frame itself, whole.
+          // the work's type area placed on its scan), which the overlay lays on
+          // the rendered type area itself, whole.
           .data("text-block-derived", page.textBlock?.derived == true)
           pageNode
             // The scan's measured layout (blocks, lines, words) and the body's
@@ -1460,7 +1460,7 @@ public enum TEISentenceSelection {
       .data("gloss", glossURL ?? "")
       .style {
         // The pane it sits in (the reader's markup pane, a quote's
-        // frame) has no padding, so a ring drawn on the pane sits on its own
+        // box) has no padding, so a ring drawn on the pane sits on its own
         // edges; the view's 1px keeps the ring's inward outline clear of
         // what it holds (user, 2026-10-10). The text's 16 inset is its
         // layer's own (the rendered page, the translation, the note of a
@@ -1537,11 +1537,11 @@ public enum TEISentenceSelection {
           border(.none)
           borderRadius(0)
           // The print's layer (`currentColor`) is the page's ink as the text
-          // is (the theme's text color, `colorBase`, as the frame and the
+          // is (the theme's text color, `colorBase`, as the box and the
           // rule set it: the page's own pair maps to the theme, save an ink
           // of its own, `TEIPage.ink`), set here
           // and not inherited, so the glossable figure's hover and focus
-          // (the words' blue) never recolor the drawing; a frame in another
+          // (the words' blue) never recolor the drawing; a box in another
           // ink colors it as it colors its lines (`inkSelectors`).
           color(colorBase)
         }
@@ -1641,7 +1641,7 @@ public enum TEISentenceSelection {
           "& .tei-run[data-rend~='italic']", "& .tei-run[data-rend~='ital']",
           "& .tei-block[data-rend~='italic'] > .tei-line",
           "& .tei-block[data-rend~='italic'] > .tei-row > .tei-line", "& .tei-section > .tei-line[data-rend~='italic']",
-          "& .tei-frame[data-rend~='italic'] .tei-line"
+          "& .tei-box[data-rend~='italic'] .tei-line"
         ) {
           fontFamily(typographyFontSerifItalic)
           fontStyle(.italic)
@@ -1649,7 +1649,7 @@ public enum TEISentenceSelection {
         selector(
           "& .tei-run[data-rend~='roman']", "& .tei-block[data-rend~='roman'] > .tei-line",
           "& .tei-block[data-rend~='roman'] > .tei-row > .tei-line",
-          "& .tei-section > .tei-line[data-rend~='roman']", "& .tei-frame[data-rend~='roman'] .tei-line"
+          "& .tei-section > .tei-line[data-rend~='roman']", "& .tei-box[data-rend~='roman'] .tei-line"
         ) {
           fontFamily(typographyFontSerif)
           fontStyle(.normal)
@@ -1657,14 +1657,14 @@ public enum TEISentenceSelection {
         selector(
           "& .tei-run[data-rend~='sans-serif']", "& .tei-block[data-rend~='sans-serif'] > .tei-line",
           "& .tei-block[data-rend~='sans-serif'] > .tei-row > .tei-line",
-          "& .tei-section > .tei-line[data-rend~='sans-serif']", "& .tei-frame[data-rend~='sans-serif'] .tei-line"
+          "& .tei-section > .tei-line[data-rend~='sans-serif']", "& .tei-box[data-rend~='sans-serif'] .tei-line"
         ) {
           fontFamily(typographyFontSans)
         }
         selector(
           "& .tei-run[data-rend~='typewriter']", "& .tei-block[data-rend~='typewriter'] > .tei-line",
           "& .tei-block[data-rend~='typewriter'] > .tei-row > .tei-line",
-          "& .tei-section > .tei-line[data-rend~='typewriter']", "& .tei-frame[data-rend~='typewriter'] .tei-line"
+          "& .tei-section > .tei-line[data-rend~='typewriter']", "& .tei-box[data-rend~='typewriter'] .tei-line"
         ) {
           fontFamily(typographyFontMono)
         }
@@ -1865,63 +1865,63 @@ public enum TEISentenceSelection {
         selector(
           "[data-reflow='true'] & .tei-block[style*='block-size']",
           "[data-reflow='true'] & .tei-line[style*='block-size']:not(.tei-figure)",
-          "[data-reflow='true'] & .tei-frame[style*='block-size']"
+          "[data-reflow='true'] & .tei-box[style*='block-size']"
         ) {
           CSS.Property("block-size", "auto").important()
         }
         // A line placed by its zone, about its box's middle as far as its
-        // frame lets it (`reflowStyle`), never held to the pane's width: its
-        // frame is its leaf, laid as the print lays it.
+        // type area lets it (`reflowStyle`), never held to the pane's width: its
+        // type area is its leaf, laid as the print lays it.
         selector("[data-reflow='true'] & [style*='--tei-reflow-size']") {
           CSS.Property("margin-inline-start", "var(--tei-reflow-start)").important()
           CSS.Property("inline-size", "var(--tei-reflow-size)").important()
           maxWidth(.none)
         }
-        // Reflowed, a page's frame stands in the middle of its pane, its
+        // Reflowed, a page's type area stands in the middle of its pane, its
         // measure wide where the pane is wider, else the pane's (user,
         // 2026-11-03: Hamlet Q1's title page, its lines placed across its
-        // frame from its start, stood at the pane's left), with room on
+        // type area from its start, stood at the pane's left), with room on
         // either side for a line the print sets out before it (`outdent`),
         // so no line runs out of sight and a centered line stays on the
         // pane's middle; its lines wrap in it, never past the pane.
         // Its room either side (`--tei-reflow-room`) in its pane's width
         // (the page's, its query container's: `cqi`) and its em (the
         // root's, `rem`). A line the print sets alone (`data-printed-lines`,
-        // a title page's) runs on past the frame's end, as far as the pane
+        // a title page's) runs on past the type area's end, as far as the pane
         // lets it, a centered one either way, so a face that sets it a hair
         // wider than the print never wraps it in a wide pane; a paragraph
-        // wraps at the frame's measure, as its print does.
-        // Above and below it, its leaf's own head and foot, and its frame
+        // wraps at the type area's measure, as its print does.
+        // Above and below it, its leaf's own head and foot, and its type area
         // at least its height (user, 2026-11-03: the title page's "THE"
         // stood at the pane's top, its "1603." at its foot, where its page
         // sets them inside its leaf's margins), in its em, zoomed with it;
         // the pane's inset is its reader's, around it.
-        selector("[data-reflow='true'] & .tei-page-text[data-framed='true']") {
+        selector("[data-reflow='true'] & .tei-page-text[data-type-area='true']") {
           CSS.Property("container-type", "inline-size")
           CSS.Property(
-            "--tei-reflow-room", "max(var(--tei-reflow-outdent, 0rem), (100cqi - var(--tei-frame-measure) * 1rem) / 2)")
-          CSS.Property("padding-block", "calc(var(--tei-frame-head) * 1rem) calc(var(--tei-frame-foot) * 1rem)")
+            "--tei-reflow-room", "max(var(--tei-reflow-outdent, 0rem), (100cqi - var(--tei-type-area-measure) * 1rem) / 2)")
+          CSS.Property("padding-block", "calc(var(--tei-type-area-head) * 1rem) calc(var(--tei-type-area-foot) * 1rem)")
         }
-        selector("[data-reflow='true'] & .tei-page-text[data-framed='true'] > .tei-text-block") {
-          CSS.Property("min-block-size", "calc(var(--tei-frame-height) * 1rem)")
+        selector("[data-reflow='true'] & .tei-page-text[data-type-area='true'] > .tei-text-block") {
+          CSS.Property("min-block-size", "calc(var(--tei-type-area-height) * 1rem)")
         }
         selector(
-          "[data-reflow='true'] & .tei-page-text[data-framed='true'] > .tei-text-block",
-          "[data-reflow='true'] & .tei-page-text[data-framed='true'] > .tei-margin"
+          "[data-reflow='true'] & .tei-page-text[data-type-area='true'] > .tei-text-block",
+          "[data-reflow='true'] & .tei-page-text[data-type-area='true'] > .tei-margin"
         ) {
           width(perc(100))
           boxSizing(.borderBox)
           CSS.Property("padding-inline", "var(--tei-reflow-room)")
         }
         selector(
-          "[data-reflow='true'] & .tei-page-text[data-framed='true'] > * > .tei-section > .tei-block[data-printed-lines='1']:not([style*='--tei-reflow-size'])"
+          "[data-reflow='true'] & .tei-page-text[data-type-area='true'] > * > .tei-section > .tei-block[data-printed-lines='1']:not([style*='--tei-reflow-size'])"
         ) {
           CSS.Property("margin-inline-end", "calc(-1 * var(--tei-reflow-room))").important()
           maxWidth(.none)
         }
         selector(
-          "[data-reflow='true'] & .tei-page-text[data-framed='true'] > * > .tei-section > .tei-block[data-printed-lines='1']:not([style*='--tei-reflow-size'])[style*='text-align:center']",
-          "[data-reflow='true'] & .tei-page-text[data-framed='true'] > * > .tei-section > .tei-block[data-printed-lines='1']:not([style*='--tei-reflow-size'])[data-rend~='align(center)']"
+          "[data-reflow='true'] & .tei-page-text[data-type-area='true'] > * > .tei-section > .tei-block[data-printed-lines='1']:not([style*='--tei-reflow-size'])[style*='text-align:center']",
+          "[data-reflow='true'] & .tei-page-text[data-type-area='true'] > * > .tei-section > .tei-block[data-printed-lines='1']:not([style*='--tei-reflow-size'])[data-rend~='align(center)']"
         ) {
           CSS.Property("margin-inline-start", "calc(-1 * var(--tei-reflow-room))").important()
         }
@@ -1930,7 +1930,7 @@ public enum TEISentenceSelection {
         selector("[data-reflow='true'] & [data-layer='rendering']", "[data-reflow='true'] & [data-layer='translated-rendering']") {
           padding(0)
         }
-        selector("[data-reflow='true'] & .tei-page-text:not([data-framed='true'])") {
+        selector("[data-reflow='true'] & .tei-page-text:not([data-type-area='true'])") {
           CSS.Property("padding-inline-start", "var(--tei-reflow-outdent, 0rem)")
         }
         // A tracked line's inset in its place (`reflowStyle`): its end on
@@ -1957,20 +1957,20 @@ public enum TEISentenceSelection {
           whiteSpace(.nowrap)
           overflowX(.auto)
         }
-        // A page set in its work's frame (`TEIPage.frame`, user,
+        // A page set in its work's type area (`TEIPage.typeArea`, user,
         // 2026-10-14): 1em the work's body type, the renderer's 16px; the
-        // frame its body pages' main text block, its measure and height in
+        // type area its body pages' main text block, its measure and height in
         // that em, holding the main text, which never squeezes: a line wider
         // than its measure runs past it (it never wraps), and a page taller
         // than its height grows it, a page that does regularized in its TEI
         // to fit. Across, it never grows (user, 2026-10-30): the measure is
         // what the compositor set against, so a centered line stands on
-        // its middle and a right-set one on its end, never on a frame
+        // its middle and a right-set one on its end, never on a type area
         // widened by a line the unfitted face sets wider than the print's
         // (Hamlet Q1 p. 13's "Enter Corambis.", an em right of the print's);
         // the marginalia outside it, a side note beside it, a top or bottom
         // note above or below it, each placed from it by its own measured
-        // margins; around the frame and its marginalia, the content box,
+        // margins; around the type area and its marginalia, the content box,
         // the leaf's own margins, empty. A page with side notes
         // is wider, never its text narrower. A page genuinely larger than
         // its work's (a plate, a foldout) is its scan's own size at the same
@@ -1978,16 +1978,16 @@ public enum TEISentenceSelection {
         // the pane. Its margins are the leaf's (user, 2026-10-26, 2026-10-28):
         // the white its typesetter left between the leaf's edges and the main
         // text block, its head and foot, its inner margin at the fold and its
-        // outer at the fore-edge, a verso's mirrored (`--tei-frame-head`,
-        // `--tei-frame-foot`, `--tei-frame-left`, `--tei-frame-right`,
-        // gnorium-python `type_scale.frame`, from the leaf the measuring found,
+        // outer at the fore-edge, a verso's mirrored (`--tei-type-area-head`,
+        // `--tei-type-area-foot`, `--tei-type-area-left`, `--tei-type-area-right`,
+        // gnorium-python `type_scale.type_area`, from the leaf the measuring found,
         // never the photograph's table, target or facing leaf beyond it);
         // only the structure overlay lays the page on the scan's geometry.
-        selector("& .tei-page-text[data-framed='true']:not([data-reflow='true'] *)") {
+        selector("& .tei-page-text[data-type-area='true']:not([data-reflow='true'] *)") {
           display(.grid)
           CSS.Property(
             "grid-template-areas",
-            "\"top-left top top-right\" \"margin-left frame margin-right\" \"bottom-left bottom bottom-right\"")
+            "\"top-left top top-right\" \"margin-left type-area margin-right\" \"bottom-left bottom bottom-right\"")
           CSS.Property("grid-template-columns", "auto max-content auto")
           CSS.Property("grid-template-rows", "auto auto auto")
           CSS.Property("justify-content", "center")
@@ -1997,29 +1997,29 @@ public enum TEISentenceSelection {
           // whatever its text's direction.
           CSS.Property(
             "padding",
-            "calc(var(--tei-frame-head) * 1em) calc(var(--tei-frame-right) * 1em) calc(var(--tei-frame-foot) * 1em) calc(var(--tei-frame-left) * 1em)"
+            "calc(var(--tei-type-area-head) * 1em) calc(var(--tei-type-area-right) * 1em) calc(var(--tei-type-area-foot) * 1em) calc(var(--tei-type-area-left) * 1em)"
           )
           fontSize(fontSizeMedium16)
           CSS.Property("inline-size", "max-content")
           CSS.Property("min-inline-size", "calc(var(--tei-page-width) * 1em)")
           CSS.Property("min-block-size", "calc(var(--tei-page-height) * 1em)")
         }
-        selector("& .tei-page-text[data-framed='true']:not([data-reflow='true'] *) > .tei-text-block") {
-          CSS.Property("grid-area", "frame")
+        selector("& .tei-page-text[data-type-area='true']:not([data-reflow='true'] *) > .tei-text-block") {
+          CSS.Property("grid-area", "type-area")
           display(.flex)
           flexDirection(.column)
           boxSizing(.contentBox)
-          CSS.Property("inline-size", "calc(var(--tei-frame-measure) * 1em)")
-          CSS.Property("min-block-size", "calc(var(--tei-frame-height) * 1em)")
+          CSS.Property("inline-size", "calc(var(--tei-type-area-measure) * 1em)")
+          CSS.Property("min-block-size", "calc(var(--tei-type-area-height) * 1em)")
         }
-        selector("& .tei-page-text[data-framed='true']:not([data-reflow='true'] *) > .tei-margin") {
+        selector("& .tei-page-text[data-type-area='true']:not([data-reflow='true'] *) > .tei-margin") {
           display(.flex)
           flexDirection(.column)
           minWidth(0)
         }
-        // Each area against the frame: a side note from the frame's top,
-        // against its side; a top note ending where the frame begins, a
-        // bottom note beginning where it ends, across the frame's measure
+        // Each area against the type area: a side note from the type area's top,
+        // against its side; a top note ending where the type area begins, a
+        // bottom note beginning where it ends, across the type area's measure
         // (from its left, or centered over it as its rend sets it: an
         // owner's mark regularized to the head's middle, user, 2026-10-14);
         // a corner note against both.
@@ -2028,17 +2028,17 @@ public enum TEISentenceSelection {
           ("margin-left", "start", "end"), ("margin-right", "start", "start"),
           ("bottom-left", "start", "end"), ("bottom", "start", "stretch"), ("bottom-right", "start", "start"),
         ] {
-          selector("& .tei-page-text[data-framed='true']:not([data-reflow='true'] *) > .tei-margin[data-place='\(area)']") {
+          selector("& .tei-page-text[data-type-area='true']:not([data-reflow='true'] *) > .tei-margin[data-place='\(area)']") {
             CSS.Property("grid-area", area)
             CSS.Property("align-self", align)
             CSS.Property("justify-self", justify)
           }
         }
-        // A page with no frame: its lines set on the canonical render's
+        // A page with no type area: its lines set on the canonical render's
         // page, never a narrower pane's, so a pane too narrow scrolls the
         // page whole rather than running its long lines into the margin on
         // one side only.
-        selector("& .tei-page-text:not([data-framed='true']):not([data-reflow='true'] *) > *") {
+        selector("& .tei-page-text:not([data-type-area='true']):not([data-reflow='true'] *) > *") {
           CSS.Property("min-inline-size", "calc(\(size640.value) - 2 * \(spacing16.value))")
         }
         selector("& .tei-page-text:not([data-reflow='true'] *) .tei-block > *") {
@@ -2143,12 +2143,12 @@ public enum TEISentenceSelection {
         }
         // An epigraph set as a whole (user, 2026-10-11): as wide as its
         // lines, placed as its rend says, its lines set within it.
-        // A printed frame (`border-style`, user, 2026-10-13) is a 1px rule
+        // A printed box (`border-style`, user, 2026-10-13) is a 1px rule
         // in its ink, its inset and measure its rend's; its ground only
         // where the page encodes one (`background-color`, user, 2026-10-25:
         // a shaded box, a tinted panel), drawn as encoded in every theme
         // (its style's), never the page's paper.
-        descendant(".tei-frame") {
+        descendant(".tei-box") {
           display(.flex)
           flexDirection(.column)
           minWidth(0)
@@ -2158,12 +2158,12 @@ public enum TEISentenceSelection {
           borderColor("currentcolor")
           color(colorBase)
         }
-        selector("& .tei-frame[data-rend~='align(center)']") { alignSelf(.center) }
-        selector("& .tei-frame[data-rend~='align(right)']") { alignSelf(.flexEnd) }
-        selector("& .tei-frame[data-rend~='align(left)']") { alignSelf(.flexStart) }
+        selector("& .tei-box[data-rend~='align(center)']") { alignSelf(.center) }
+        selector("& .tei-box[data-rend~='align(right)']") { alignSelf(.flexEnd) }
+        selector("& .tei-box[data-rend~='align(left)']") { alignSelf(.flexStart) }
         // Ink (user, 2026-10-11): a rend's color(NAME), one of the 13
         // ISCC–NBS basic color names (`TEIRenderer.inks`), on a run, a block
-        // or a frame, and a figure's layer by its class (`ink-NAME`). The
+        // or a box, and a figure's layer by its class (`ink-NAME`). The
         // TEI is faithful to the print (user, 2026-10-25): the page's own
         // ink, on its <pb>, is mapped to the theme, and its ground is never
         // the edition's (user, 2026-10-30: every page sits on the theme's
@@ -2177,7 +2177,7 @@ public enum TEISentenceSelection {
         // white are the theme's, every other ink the page names on its <pb>
         // is drawn as encoded—its lines (a cover's gilt lettering, yellow),
         // its rules and its figures' drawings. Before the inks a run, a
-        // block, a line or a frame names, which the same weight lets win.
+        // block, a line or a box names, which the same weight lets win.
         for (name, ink) in Self.inks where name != "black" && name != "white" {
           selector(
             "& .tei-page-text[data-ink='\(name)'] .tei-line", "& .tei-page-text[data-ink='\(name)'] .tei-rule",
@@ -2200,18 +2200,18 @@ public enum TEISentenceSelection {
           }
         }
         // Type a step larger or smaller than the text's, on a run, a block,
-        // or a frame's lines (user, 2026-10-11).
+        // or a box's lines (user, 2026-10-11).
         selector(
           "& .tei-run[data-rend~='larger']", "& .tei-block[data-rend~='larger'] > .tei-line",
           "& .tei-block[data-rend~='larger'] > .tei-row > .tei-line",
-          "& .tei-section > .tei-line[data-rend~='larger']", "& .tei-frame[data-rend~='larger'] .tei-line"
+          "& .tei-section > .tei-line[data-rend~='larger']", "& .tei-box[data-rend~='larger'] .tei-line"
         ) {
           fontSize(fontSizeLarge18)
         }
         selector(
           "& .tei-run[data-rend~='smaller']", "& .tei-block[data-rend~='smaller'] > .tei-line",
           "& .tei-block[data-rend~='smaller'] > .tei-row > .tei-line",
-          "& .tei-section > .tei-line[data-rend~='smaller']", "& .tei-frame[data-rend~='smaller'] .tei-line"
+          "& .tei-section > .tei-line[data-rend~='smaller']", "& .tei-box[data-rend~='smaller'] .tei-line"
         ) {
           fontSize(fontSizeSmall14)
         }
@@ -2292,18 +2292,18 @@ public enum TEISentenceSelection {
           textAlign(.start)
           marginBlockStart(spacing8)
         }
-        // Typeset on its frame, the work's furniture is set as the print
+        // Typeset in its type area, the work's furniture is set as the print
         // set it: a line of the body's type at the body's leading, its white
         // from the text its placement's (`#fw-<type>`, gnorium-python
         // `scale.placement_renditions`), never the reading layout's (user,
         // 2026-10-27: a running head's 26px line and 8px margin set Hamlet
         // Q1's every line under it 0.6em low, its catchword a line low).
-        selector("& .tei-page-text[data-framed='true']:not([data-reflow='true'] *) .tei-line-forme") {
+        selector("& .tei-page-text[data-type-area='true']:not([data-reflow='true'] *) .tei-line-forme") {
           margin(0)
           CSS.Property("line-height", "calc(var(--tei-body-leading) * 1em)")
         }
         // Its row too: the pieces on it are no taller than a line of it.
-        selector("& .tei-page-text[data-framed='true']:not([data-reflow='true'] *) .tei-forme-row") {
+        selector("& .tei-page-text[data-type-area='true']:not([data-reflow='true'] *) .tei-forme-row") {
           CSS.Property("line-height", "calc(var(--tei-body-leading) * 1em)")
         }
         // An original note, set apart from the text it annotates as the
@@ -2468,15 +2468,15 @@ public enum TEISentenceSelection {
       ("black", colorBase),
     ]
 
-    /// The rules that draw a run, a block's lines, a frame and a section's line in `name`'s ink.
+    /// The rules that draw a run, a block's lines, a box and a section's line in `name`'s ink.
     static func inkSelectors(_ name: String) -> [String] {
       [
         "& .tei-run[data-rend~='color(\(name))']", "& .tei-block[data-rend~='color(\(name))'] > .tei-line",
         "& .tei-block[data-rend~='color(\(name))'] > .tei-row > .tei-line",
-        "& .tei-frame[data-rend~='color(\(name))']",
+        "& .tei-box[data-rend~='color(\(name))']",
         "& .tei-section > .tei-line[data-rend~='color(\(name))']",
-        "& .tei-frame[data-rend~='color(\(name))'] .tei-line",
-        "& .tei-frame[data-rend~='color(\(name))'] .tei-figure-drawing > svg",
+        "& .tei-box[data-rend~='color(\(name))'] .tei-line",
+        "& .tei-box[data-rend~='color(\(name))'] .tei-figure-drawing > svg",
       ]
     }
   }

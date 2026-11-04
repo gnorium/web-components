@@ -597,7 +597,7 @@ public enum OutlineNumberAdvance {
       return nil
     }
 
-    private struct ItemFrame {
+    private struct PendingItem {
       let node: Node
       let number: String
       let origin: Origin
@@ -614,19 +614,19 @@ public enum OutlineNumberAdvance {
       _ node: Node, parent: String, position: Int, prefix: String, treeID: String, arranges: Bool,
       moved: Set<String>, touched: [String]
     ) -> DOM.Node {
-      var frames = [prepareItem(node, parent: parent, position: position, prefix: prefix,
+      var pending = [prepareItem(node, parent: parent, position: position, prefix: prefix,
         treeID: treeID, arranges: arranges, moved: moved)]
-      while let frame = frames.last {
-        if frame.nextChild < frame.node.children.count {
-          let index = frame.nextChild
-          frames[frames.count - 1].nextChild += 1
-          frames.append(prepareItem(frame.node.children[index], parent: frame.node.id, position: index,
-            prefix: frame.number, treeID: treeID, arranges: arranges, moved: moved))
+      while let item = pending.last {
+        if item.nextChild < item.node.children.count {
+          let index = item.nextChild
+          pending[pending.count - 1].nextChild += 1
+          pending.append(prepareItem(item.node.children[index], parent: item.node.id, position: index,
+            prefix: item.number, treeID: treeID, arranges: arranges, moved: moved))
         } else {
-          frames.removeLast()
-          let rendered = finishItem(frame, arranges: arranges, touched: touched)
-          if frames.isEmpty { return rendered }
-          frames[frames.count - 1].children.append(rendered)
+          pending.removeLast()
+          let rendered = finishItem(item, arranges: arranges, touched: touched)
+          if pending.isEmpty { return rendered }
+          pending[pending.count - 1].children.append(rendered)
         }
       }
       preconditionFailure("An outliner item always has a root")
@@ -637,7 +637,7 @@ public enum OutlineNumberAdvance {
     private static func prepareItem(
       _ node: Node, parent: String, position: Int, prefix: String, treeID: String, arranges: Bool,
       moved: Set<String>
-    ) -> ItemFrame {
+    ) -> PendingItem {
       let number = prefix.isEmpty ? "\(position + 1)" : "\(prefix).\(position + 1)"
       let origin = node.origin ?? Origin(parent: parent, position: position, number: number)
       let isMoved = moved.contains(node.id)
@@ -690,11 +690,11 @@ public enum OutlineNumberAdvance {
       }
       .class("outliner-row")
       .build()
-      return ItemFrame(node: node, number: number, origin: origin, isMoved: isMoved, collapsed: collapsed, row: row)
+      return PendingItem(node: node, number: number, origin: origin, isMoved: isMoved, collapsed: collapsed, row: row)
     }
 
-    private static func finishItem(_ frame: ItemFrame, arranges: Bool, touched: [String]) -> DOM.Node {
-      let node = frame.node
+    private static func finishItem(_ item: PendingItem, arranges: Bool, touched: [String]) -> DOM.Node {
+      let node = item.node
       var element = li {
         // A flat item's stretch of the spine, first: the stretches of the
         // items under it lie over it, so the innermost is the one the
@@ -702,7 +702,7 @@ public enum OutlineNumberAdvance {
         if node.accordion {
           RailView(line: .overlay, class: "outliner-rail")
         }
-        frame.row
+        item.row
         // Its own controls end its own body, before the items under it
         // (user, 2026-11-03): never stacked after the deepest of them.
         let footer = node.footer()
@@ -710,23 +710,23 @@ public enum OutlineNumberAdvance {
           div { footer }
             .class("outliner-footer")
         }
-        ol { frame.children }.class("outliner-list")
+        ol { item.children }.class("outliner-list")
       }
       .class("outliner-item")
       .data("outliner-id", node.id)
       .data("outliner-label", node.label)
-      .data("outliner-collapsed", frame.collapsed)
+      .data("outliner-collapsed", item.collapsed)
       .data("outliner-accordion", node.accordion)
       if arranges {
         element =
           element
           .data("outliner-rank", node.rank)
-          .data("outliner-original-parent", frame.origin.parent)
-          .data("outliner-original-position", frame.origin.position)
-          .data("outliner-original-number", frame.origin.number)
-          .data("outliner-moved", frame.isMoved)
+          .data("outliner-original-parent", item.origin.parent)
+          .data("outliner-original-position", item.origin.position)
+          .data("outliner-original-number", item.origin.number)
+          .data("outliner-moved", item.isMoved)
           .data("outliner-touched", touched.contains(node.id))
-          .data("outline-state", frame.isMoved ? "moved" : "none")
+          .data("outline-state", item.isMoved ? "moved" : "none")
       }
       for (key, value) in node.data {
         element = element.data(key, value)
@@ -935,7 +935,7 @@ public enum OutlineNumberAdvance {
       // A tree is as wide as the page gives it, never wider (user,
       // 2026-11-03): flat, its nodes wrap to any width, and what holds a
       // row that cannot (a reader's footer, ArtifactView) scrolls it
-      // inside itself; the page never widens for it. No frame or
+      // inside itself; the page never widens for it. No border or
       // scrollport of its own, so nothing clips a ring or a mark drawn
       // past its edge.
       selector("& .outliner-instructions", "& .outliner-live") {
@@ -1004,7 +1004,7 @@ public enum OutlineNumberAdvance {
         display(.none)
       }
       // A flat tree (user, 2026-11-03), drawn as a thread is: no card, no
-      // frame, no rule and no indent. Every item at every depth stands
+      // border, no rule and no indent. Every item at every depth stands
       // flush: its marker on the spine (`markerSize`), and right after it
       // (`bodyStart`) its heading, its number first, what it opens into and
       // its own controls, one column the rest of the width; the items under
@@ -1077,7 +1077,7 @@ public enum OutlineNumberAdvance {
         gap(spacing16)
         paddingInlineStart(Self.bodyStart)
       }
-      // Its own accordion frameless, after its marker (its caller's to
+      // Its own accordion borderless, after its marker (its caller's to
       // place there, `markerSpace` on): its heading a row, what it opens
       // into a node's step under it, no inset at its sides or its foot.
       descendant(".outliner-item[data-outliner-accordion='true'] > .outliner-row [data-outliner-own-accordion='true']") {

@@ -34,11 +34,11 @@
     }
 
     /// Renders the tab button (called by TabsView)
-    public func renderButton(isActive: Bool, tabindex: Int, framed: Bool) -> DOM.Node {
+    public func renderButton(isActive: Bool, tabindex: Int, bordered: Bool) -> DOM.Node {
       let displayLabel = label.isEmpty ? name : label
       let tabStateClass = isActive
-        ? (framed ? "tab-active tab-framed" : "tab-active")
-        : (framed ? "tab-framed" : "")
+        ? (bordered ? "tab-active tab-bordered" : "tab-active")
+        : (bordered ? "tab-bordered" : "")
       let tabClass = `class`.isEmpty
         ? (tabStateClass.isEmpty ? "tab-view" : "tab-view \(tabStateClass)")
         : (tabStateClass.isEmpty ? "tab-view \(`class`)" : "tab-view \(tabStateClass) \(`class`)")
@@ -79,10 +79,10 @@
             color(colorBlue)
             fontWeight(fontWeightSemiBold)
           }
-          selector("&.tab-active:not(.tab-framed)") {
+          selector("&.tab-active:not(.tab-bordered)") {
             borderBlockEnd(borderWidthThick, .solid, borderColorBlue)
           }
-          selector("&.tab-active.tab-framed") {
+          selector("&.tab-active.tab-bordered") {
             backgroundColor(backgroundColorBase)
           }
           selector("&:disabled") {
@@ -104,11 +104,11 @@
     }
 
     /// Renders the tab panel content (called by TabsView)
-    public func renderPanel(isActive: Bool, framed: Bool) -> DOM.Node {
+    public func renderPanel(isActive: Bool, bordered: Bool) -> DOM.Node {
       return section {
         content
       }
-      .class(framed ? "tab-panel tab-framed" : "tab-panel")
+      .class(bordered ? "tab-panel tab-bordered" : "tab-panel")
       .role("tabpanel")
       .id("panel-\(name)")
       .ariaLabelledby("tab-\(name)")
@@ -118,7 +118,7 @@
         selector("&") {
           padding(spacing16, 0)
         }
-        selector("&.tab-framed") {
+        selector("&.tab-bordered") {
           padding(spacing16)
         }
       }

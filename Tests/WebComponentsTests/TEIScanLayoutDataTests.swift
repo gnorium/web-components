@@ -55,8 +55,8 @@ final class TEIScanLayoutDataTests: XCTestCase {
 
   /// The book's em on the scan: the scan's own first (dev, 2026-10-26: its
   /// measured text block's type, 109.89px of its 2820, as `scanEmData` says),
-  /// the frame's declared width (61.45em) only where the page measures none.
-  func testTheBooksEmOnTheScanIsItsOwnTypeElseItsWidthOverTheFramesDeclaredWidth() throws {
+  /// the type area's declared width (61.45em) only where the page measures none.
+  func testTheBooksEmOnTheScanIsItsOwnTypeElseItsWidthOverTheTypeAreasDeclaredWidth() throws {
     let em = try XCTUnwrap(Double(attribute("data-scan-em", of: try page()) ?? ""))
     XCTAssertEqual(em / 1000 * 2820, 109.89, accuracy: 0.01)
     let undeclared = Self.document.replacingOccurrences(of: #" style="font-size:109.89px""#, with: "")

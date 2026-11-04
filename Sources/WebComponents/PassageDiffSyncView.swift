@@ -99,10 +99,10 @@ public enum PassageDiffSyncViewHydration {
     /// Its different viewport width is handled by logical-line geometry.
     func presentation() {
       guard stringEquals(scope.getAttribute("data-passage-pair") ?? "", key),
-        source.clientWidth > 0, let frame = source.getBoundingClientRect(),
+        source.clientWidth > 0, let rect = source.getBoundingClientRect(),
         let lines = box.querySelector(".diff-lines") else { return }
       let style = window.getComputedStyle(source)
-      let scale = source.offsetWidth > 0 ? frame.width / source.offsetWidth : 1
+      let scale = source.offsetWidth > 0 ? rect.width / source.offsetWidth : 1
       let wrap = style.getPropertyValue("white-space")
       let family = style.getPropertyValue("font-family")
       let size = pixels(style.getPropertyValue("font-size")) * scale
@@ -194,11 +194,11 @@ public enum PassageDiffSyncViewHydration {
       // gutter, wrapping, and inherited CSS zoom. Use it without a mirror.
       let live = source.querySelectorAll(".code-line")
       if live.count == stringSplit(text, separator: "\n").count, !live.isEmpty,
-        let frame = source.getBoundingClientRect() {
-        let scale = source.offsetWidth > 0 ? frame.width / source.offsetWidth : 1
+        let rect = source.getBoundingClientRect() {
+        let scale = source.offsetWidth > 0 ? rect.width / source.offsetWidth : 1
         let inset = pixels(window.getComputedStyle(source).getPropertyValue("padding-top"))
-        var offsets = live.map { (($0.getBoundingClientRect()?.top ?? frame.top) - frame.top) / max(0.01, scale) - inset }
-        if let last = live.last?.getBoundingClientRect() { offsets.append((last.bottom - frame.top) / max(0.01, scale) - inset) }
+        var offsets = live.map { (($0.getBoundingClientRect()?.top ?? rect.top) - rect.top) / max(0.01, scale) - inset }
+        if let last = live.last?.getBoundingClientRect() { offsets.append((last.bottom - rect.top) / max(0.01, scale) - inset) }
         return offsets
       }
       let style = window.getComputedStyle(source)
@@ -239,18 +239,18 @@ public enum PassageDiffSyncViewHydration {
     /// spread over its neighbors' span instead of leapt. Each point is past
     /// the one before on both sides, so the mapping runs one way, without
     /// steps.
-    func anchors(origin: Double, scale: Double, boxFrame: DOM.Rect) -> [(source: Double, diff: Double)] {
+    func anchors(origin: Double, scale: Double, boxRect: DOM.Rect) -> [(source: Double, diff: Double)] {
       let lines = positions()
       // Each line number's row top, -1 where it has none.
       var rowTops = [Double](repeating: -1, count: lines.count + 1)
       var lastBottom = 0.0
       for row in box.querySelectorAll(".diff-row") {
-        guard let frame = row.getBoundingClientRect() else { continue }
-        lastBottom = diffPort.scrollTop + frame.bottom - boxFrame.top
+        guard let rect = row.getBoundingClientRect() else { continue }
+        lastBottom = diffPort.scrollTop + rect.bottom - boxRect.top
         if stringEquals(row.getAttribute("data-diff-line") ?? "", "removed") { continue }
         let number = parseInt(row.getAttribute("data-diff-at") ?? "") ?? 0
         if number > 0, number < rowTops.count, rowTops[number] < 0 {
-          rowTops[number] = diffPort.scrollTop + frame.top - boxFrame.top
+          rowTops[number] = diffPort.scrollTop + rect.top - boxRect.top
         }
       }
       let sourceEnd = port.scrollHeight, diffEnd = diffPort.scrollHeight
@@ -293,12 +293,12 @@ public enum PassageDiffSyncViewHydration {
     func synchronize() {
       presentation()
       guard source.clientWidth > 0, port.clientHeight > 0, diffPort.clientHeight > 0,
-        let sourceFrame = source.getBoundingClientRect(), let portFrame = port.getBoundingClientRect(),
-        let boxFrame = diffPort.getBoundingClientRect(), !box.querySelectorAll(".diff-row").isEmpty else { return }
-      let scale = source.offsetWidth > 0 ? sourceFrame.width / source.offsetWidth : 1
+        let sourceRect = source.getBoundingClientRect(), let portRect = port.getBoundingClientRect(),
+        let boxRect = diffPort.getBoundingClientRect(), !box.querySelectorAll(".diff-row").isEmpty else { return }
+      let scale = source.offsetWidth > 0 ? sourceRect.width / source.offsetWidth : 1
       let padding = pixels(window.getComputedStyle(source).getPropertyValue("padding-top")) * scale
-      let origin = source.id == port.id ? padding : port.scrollTop + sourceFrame.top - portFrame.top + padding
-      let points = anchors(origin: origin, scale: scale, boxFrame: boxFrame)
+      let origin = source.id == port.id ? padding : port.scrollTop + sourceRect.top - portRect.top + padding
+      let points = anchors(origin: origin, scale: scale, boxRect: boxRect)
       let sourceRange = max(0, port.scrollHeight - port.clientHeight)
       let diffRange = max(0, diffPort.scrollHeight - diffPort.clientHeight)
       if fromSource {

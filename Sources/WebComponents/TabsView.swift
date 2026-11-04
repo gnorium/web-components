@@ -11,7 +11,7 @@
   public struct TabsView: HTMLContent {
     let tabs: [TabView]
     let activeTab: String?
-    let framed: Bool
+    let bordered: Bool
     let variant: Variant
     let `class`: String
     let fullWidth: Bool
@@ -36,7 +36,7 @@
     public init(
       tabs: [TabView],
       activeTab: String? = nil,
-      framed: Bool = false,
+      bordered: Bool = false,
       variant: Variant = .quiet,
       class: String = "",
       fullWidth: Bool = false,
@@ -46,7 +46,7 @@
     ) {
       self.tabs = tabs
       self.activeTab = activeTab ?? tabs.first?.name
-      self.framed = framed
+      self.bordered = bordered
       self.variant = variant
       self.`class` = `class`
       self.fullWidth = fullWidth
@@ -131,7 +131,7 @@
       .class(
         [
           "tabs-view",
-          framed ? "tabs-framed" : nil,
+          bordered ? "tabs-bordered" : nil,
           fullWidth ? "tabs-full-width" : nil,
           "tabs-\(variant.rawValue)",
           `class`.isEmpty ? nil : `class`,
@@ -150,7 +150,7 @@
           display(.block)
           fontFamily(typographyFontSans)
         }
-        selector("&.tabs-framed") {
+        selector("&.tabs-bordered") {
           border(borderWidthBase, .solid, borderColorSubtle)
           borderRadius(borderRadiusBase)
         }
@@ -307,7 +307,7 @@
         }
 
         // Tab panels
-        selector("&.tabs-framed .tab-panel") { padding(spacing16) }
+        selector("&.tabs-bordered .tab-panel") { padding(spacing16) }
       }
     }
   }

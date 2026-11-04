@@ -5,7 +5,7 @@ import XMLUtilities
 @testable import WebComponents
 
 /// The printed page's furniture as TEI encodes it (user, 2026-10-13): a
-/// contents leader, a printed rule, a framed block, footnote columns.
+/// contents leader, a printed rule, a boxed block, footnote columns.
 final class TEIPrintedLayoutTests: XCTestCase {
   private func elements(in node: DOM.Node) -> [DOM.Element] {
     guard let element = node as? DOM.Element else { return [] }
@@ -33,7 +33,7 @@ final class TEIPrintedLayoutTests: XCTestCase {
 
   /// A figure the page sets by its zone (user, 2026-10-30: a board's crest, on a page with no body type) is
   /// drawn at its setting as a figure the page places is: its size, its place across and its place down, on
-  /// its leaf (no main text: framed by its leaf whatever its work declares, xml-utilities b810177; 38 em over
+  /// its leaf (no main text: set in its leaf whatever its work declares, xml-utilities b810177; 38 em over
   /// the leaf's 800 px, so 80 px is 3.8 em).
   func testAFigureSetByItsZoneIsDrawnAtItsPlace() throws {
     let a = "https://web-tests.invalid/iiif/1/full/max/0/default.jpg"
@@ -66,9 +66,9 @@ final class TEIPrintedLayoutTests: XCTestCase {
     XCTAssertFalse(elements(in: holder).contains { $0.tag == "img" || $0.tag == "path" })
   }
 
-  /// Hamlet Q1's front cover as filed (dev, 2026-10-30): no main text, no body type, no work frame. The page
-  /// is framed by its leaf (`TEIPage.leafFrame`), its gilt lettering and its crest drawn at their zones' places
-  /// and sizes; unframed, its lettering ran at the top left and its crest at its drawing's pixels.
+  /// Hamlet Q1's front cover as filed (dev, 2026-10-30): no main text, no body type, no work type area. The page
+  /// is set in its leaf (`TEIPage.leafTypeArea`), its gilt lettering and its crest drawn at their zones' places
+  /// and sizes; without it, its lettering ran at the top left and its crest at its drawing's pixels.
   func testACoverWithNoTypeOfItsOwnIsDrawnOnItsLeaf() throws {
     let image = "https://cdm16003.contentdm.oclc.org/iiif/2/p15150coll3:1360"
     let document = #"<TEI xmlns="http://www.tei-c.org/ns/1.0"><facsimile><surface n="Front cover" ulx="0" uly="0" lrx="1000" lry="1000">"#
@@ -80,8 +80,8 @@ final class TEIPrintedLayoutTests: XCTestCase {
       + ##"<figure facs="#z-fig-1"><graphic url="/calibration-figures/z-fig-1.svg?image=x" mimeType="image/svg+xml"/></figure></body></text></TEI>"##
     let nodes = elements(in: TEIView(teiXml: document).build())
     let page = try XCTUnwrap(classed("tei-page-text", in: nodes).first)
-    XCTAssertEqual(attribute("data-framed", of: page), "true")
-    XCTAssertTrue((attribute("style", of: page) ?? "").contains("--tei-frame-measure: 38;"))
+    XCTAssertEqual(attribute("data-type-area", of: page), "true")
+    XCTAssertTrue((attribute("style", of: page) ?? "").contains("--tei-type-area-measure: 38;"))
     let lettering = try XCTUnwrap(
       classed("tei-block", in: nodes).first { text(of: $0).contains("HAMLET") }.flatMap { attribute("style", of: $0) })
     XCTAssertTrue(lettering.contains("text-align:center;font-size:"), lettering)
@@ -105,13 +105,13 @@ final class TEIPrintedLayoutTests: XCTestCase {
     XCTAssertEqual(classed("tei-line-leadered", in: nodes).count, 1)
   }
 
-  func testRuleFrameAndFootnoteColumns() throws {
+  func testRuleBoxAndFootnoteColumns() throws {
     let nodes = view(
       #"<p>A<lb/></p><milestone unit="section" rend="rule" style="inline-size:10em"/><note type="binding" subtype="edition" style="border-style:solid;padding:1em"><p>Gift<lb/></p></note><note place="foot" rend="align(justify)" style="column-gap:2em"><cb/>One<lb/>two<lb/><cb/>Three<lb/></note>"#)
     let rule = try XCTUnwrap(classed("tei-rule", in: nodes).first)
     XCTAssertEqual(attribute("style", of: rule), "inline-size:10em;")
-    let frame = try XCTUnwrap(classed("tei-frame", in: nodes).first)
-    XCTAssertEqual(attribute("style", of: frame), "border-style:solid;padding:1em;")
+    let box = try XCTUnwrap(classed("tei-box", in: nodes).first)
+    XCTAssertEqual(attribute("style", of: box), "border-style:solid;padding:1em;")
     let columns = try XCTUnwrap(classed("tei-columns", in: nodes).first)
     XCTAssertEqual(attribute("style", of: columns), "column-gap:2em;")
     let notes = classed("tei-line-note", in: nodes)
@@ -119,15 +119,15 @@ final class TEIPrintedLayoutTests: XCTestCase {
   }
 
   /// A run on a ground of its own (user, 2026-10-25: a shaded box, gnorium-python `base_tei.fills`) is a
-  /// frame drawing that ground as encoded, in every theme; the page's ground is never drawn, and an ink is
+  /// box drawing that ground as encoded, in every theme; the page's ground is never drawn, and an ink is
   /// its name's color with no theme's fallback.
   func testAFilledRunDrawsItsGroundAsEncoded() throws {
     let nodes = view(
       #"<ab style="background-color:#d7e4f3;padding:1em"><lb/>Boxed<lb/>lines</ab><ab><lb/>After</ab>"#)
-    let frame = try XCTUnwrap(classed("tei-frame", in: nodes).first)
-    XCTAssertEqual(attribute("style", of: frame), "background-color:#d7e4f3;padding:1em;")
-    XCTAssertEqual(classed("tei-frame", in: nodes).count, 1)
-    XCTAssertTrue(text(of: frame).contains("Boxed") && !text(of: frame).contains("After"))
+    let box = try XCTUnwrap(classed("tei-box", in: nodes).first)
+    XCTAssertEqual(attribute("style", of: box), "background-color:#d7e4f3;padding:1em;")
+    XCTAssertEqual(classed("tei-box", in: nodes).count, 1)
+    XCTAssertTrue(text(of: box).contains("Boxed") && !text(of: box).contains("After"))
     // The page's own pair (its <pb>'s renditions) is the theme's: its lines carry no color; another ink is
     // drawn as encoded.
     let inverted = view(
@@ -183,7 +183,7 @@ final class TEIPrintedLayoutTests: XCTestCase {
     let styles = lines.map { attribute("style", of: $0) ?? "" }
       + classed("tei-block", in: elements(in: page)).map { attribute("style", of: $0) ?? "" }
     XCTAssertEqual(lines.count, 2)
-    // Each stands at its own box and place on its leaf (no main text: framed by its leaf whatever its work
+    // Each stands at its own box and place on its leaf (no main text: set in its leaf whatever its work
     // declares, xml-utilities b810177; 38 em over the leaf's 800 px), centered in it, wherever the style lands
     // (line or its block); each a line of capitals at its ink's size, 1.7297 em (its 1.235 em box its cap
     // height), its box and place in that em: HAMLET 9.5 em wide 14.25 em in, LONDON 1603 4.75 em wide
@@ -232,14 +232,14 @@ final class TEIPrintedLayoutTests: XCTestCase {
     XCTAssertEqual(TEIView.spaceCharacter(in: declared), "0.4452em")
     XCTAssertNil(TEIView.spaceCharacter(in: [:]))
     XCTAssertNil(TEIView.spaceCharacter(in: ["space-char": "css:inline-size=12px"]))
-    XCTAssertEqual(TEIView.pageTextStyle(frame: nil, renditions: declared), "--tei-space-char: 0.4452em")
-    XCTAssertEqual(TEIView.pageTextStyle(frame: nil, renditions: [:]), "")
+    XCTAssertEqual(TEIView.pageTextStyle(typeArea: nil, renditions: declared), "--tei-space-char: 0.4452em")
+    XCTAssertEqual(TEIView.pageTextStyle(typeArea: nil, renditions: [:]), "")
   }
 
-  /// A page in its work's frame (user, 2026-10-14): its main text in the
-  /// frame, its marginalia outside it on their sides, the page's frame,
+  /// A page in its work's type area (user, 2026-10-14): its main text in the
+  /// type area, its marginalia outside it on their sides, the page's type area,
   /// margin and size in the body type's em on the page's layer.
-  func testMarginaliaAreSetOutsideTheFrameOnTheirSides() throws {
+  func testMarginaliaAreSetOutsideTheTypeAreaOnTheirSides() throws {
     let document = """
       <TEI><teiHeader><encodingDesc><tagsDecl><rendition xml:id="text-block" scheme="css" selector="text">\
       font-size:20px;inline-size:44em;block-size:55.9em;margin:3em</rendition></tagsDecl></encodingDesc></teiHeader>\
@@ -257,12 +257,12 @@ final class TEIPrintedLayoutTests: XCTestCase {
     let page = try XCTUnwrap(classed("tei-page", in: nodes).first)
     XCTAssertEqual(attribute("data-element-zones", of: page), "1:120 80 200 30")
     let layer = try XCTUnwrap(nodes.first { attribute("data-layer", of: $0) == "rendering" })
-    XCTAssertEqual(attribute("data-framed", of: layer), "true")
+    XCTAssertEqual(attribute("data-type-area", of: layer), "true")
     XCTAssertEqual(
       attribute("style", of: layer),
-      "--tei-frame-measure: 44; --tei-frame-height: 55.9; --tei-frame-head: 3; --tei-frame-foot: 3; --tei-frame-left: 3; --tei-frame-right: 3; --tei-page-width: 0; --tei-page-height: 0")
-    let frame = try XCTUnwrap(classed("tei-text-block", in: nodes).first)
-    XCTAssertEqual(text(of: frame).trimmingCharacters(in: .whitespacesAndNewlines), "Main text")
+      "--tei-type-area-measure: 44; --tei-type-area-height: 55.9; --tei-type-area-head: 3; --tei-type-area-foot: 3; --tei-type-area-left: 3; --tei-type-area-right: 3; --tei-page-width: 0; --tei-page-height: 0")
+    let textBlock = try XCTUnwrap(classed("tei-text-block", in: nodes).first)
+    XCTAssertEqual(text(of: textBlock).trimmingCharacters(in: .whitespacesAndNewlines), "Main text")
     let margins = classed("tei-margin", in: nodes)
     XCTAssertEqual(margins.compactMap { attribute("data-place", of: $0) }, ["top-left", "margin-left", "bottom"])
     XCTAssertEqual(margins.map { text(of: $0).trimmingCharacters(in: .whitespacesAndNewlines) }, ["Ref PE 1580", "Gloss", "Stamp"])
@@ -280,14 +280,14 @@ final class TEIPrintedLayoutTests: XCTestCase {
       """
     let nodes = elements(in: TEIView(teiXml: document).build())
     let layer = try XCTUnwrap(nodes.first { attribute("data-layer", of: $0) == "rendering" })
-    XCTAssertEqual(attribute("data-framed", of: layer), "true")
+    XCTAssertEqual(attribute("data-type-area", of: layer), "true")
     XCTAssertEqual(text(of: layer).trimmingCharacters(in: .whitespacesAndNewlines), "")
     XCTAssertTrue(classed("tei-line-gap", in: nodes).isEmpty)
-    // Nor on a page with no frame, nor for a gap of any other reason (user, repeated 2026-10-30): the
+    // Nor on a page with no type area, nor for a gap of any other reason (user, repeated 2026-10-30): the
     // reason is kept, never drawn.
     for reason in ["blank", "illegible", ""] {
-      let unframed = view(#"<gap reason="\#(reason)"/>"#)
-      let gaps = classed("tei-line-gap", in: unframed)
+      let withoutTypeArea = view(#"<gap reason="\#(reason)"/>"#)
+      let gaps = classed("tei-line-gap", in: withoutTypeArea)
       XCTAssertEqual(gaps.map { text(of: $0) }, [""])
       XCTAssertEqual(gaps.map { attribute("data-reason", of: $0) }, [reason])
       XCTAssertEqual(gaps.map { attribute("aria-hidden", of: $0) }, ["true"])

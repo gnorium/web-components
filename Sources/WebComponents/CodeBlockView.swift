@@ -189,8 +189,8 @@
     /// The page's framed blocks, bound. Only `hydrate(in:)` frames: a bare
     /// `<pre>` elsewhere (a transcript's Raw, a prompt's source) is no fence.
     public static func hydrateIfPresent() {
-      for frame in document.querySelectorAll(".code-block-view") {
-        if let pre = frame.querySelector("pre"), let button = frame.querySelector(".code-block-copy") {
+      for block in document.querySelectorAll(".code-block-view") {
+        if let pre = block.querySelector("pre"), let button = block.querySelector(".code-block-copy") {
           bind(button, pre: pre)
         }
       }
