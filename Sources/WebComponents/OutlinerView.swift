@@ -1415,17 +1415,6 @@ public enum OutlineNumberAdvance {
       descendant(".outliner-marker[data-outliner-immovable='true'] .outliner-marker-grip") {
         color(colorDisabled)
       }
-      // A marker whose item is frozen (user, 2026-11-03)—held by an open
-      // object (`data-outliner-held`, its plain disc), or kept in its place
-      // by its page—rings its disc in the disabled border; still its fold
-      // control, its pointer and its scrim a marker's, and focused, the
-      // focus ring.
-      selector(
-        "& .outliner-marker[data-outliner-held='true']:not(:focus-visible)::after",
-        "& .outliner-marker[data-outliner-immovable='true']:not(:focus-visible)::after"
-      ) {
-        borderColor(borderColorDisabled)
-      }
       selector("&[data-outliner-dragging='true'] .outliner-marker.outliner-handle") {
         cursor(.grabbing)
       }

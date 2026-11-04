@@ -6,7 +6,7 @@
 /// never greyed out nor faded: every field its disabled field's own look,
 /// the disabled ground and border, its value in the base color, an empty
 /// one's placeholder its placeholder's; every button and pager a disabled
-/// one's; a tree's marker its disabled ring. Its labels, their
+/// one's. A tree's marker stays as it is, its fold control still. Its labels, their
 /// "(optional)" and info, its accordions' headers and chevrons and its
 /// section titles keep their own colors, and its accordions still open and
 /// close, so what they hold is read. Unmarked, each is drawn as it was.
