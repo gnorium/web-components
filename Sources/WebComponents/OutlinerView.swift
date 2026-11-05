@@ -920,29 +920,6 @@ public enum OutlineNumberAdvance {
     /// its last item in sight, which folds or opens it (user, 2026-11-03).
     static let spineHang: CSS.Length = spacing32
 
-    /// The hang dashed (user, 2026-11-05): below the tree's last item the
-    /// line hangs from no node, so its last `spineHang` is drawn dashed, the
-    /// line above it solid. A mask, so the line keeps its own color and
-    /// still darkens under the pointer. It opens on a gap, so the solid line
-    /// visibly ends before the first dash.
-    @CSSBuilder
-    static func hangDashCSS(_ line: String) -> [CSSOM.CSSRule] {
-      let dash = spacing4.value
-      let image =
-        "linear-gradient(black, black), repeating-linear-gradient(to bottom, transparent 0 \(dash), black \(dash) calc(2 * \(dash)))"
-      let size = "100% calc(100% - \(spineHang.value)), 100% \(spineHang.value)"
-      selector(line) {
-        CSS.Property("mask-image", image)
-        CSS.Property("-webkit-mask-image", image)
-        CSS.Property("mask-size", size)
-        CSS.Property("-webkit-mask-size", size)
-        CSS.Property("mask-position", "0 0, 0 100%")
-        CSS.Property("-webkit-mask-position", "0 0, 0 100%")
-        CSS.Property("mask-repeat", "no-repeat")
-        CSS.Property("-webkit-mask-repeat", "no-repeat")
-      }
-    }
-
     /// The tree's own rules: its indent, spine, rails, guide lines, toggles
     /// and an arranged outline's handles, drop marks and
     /// toolbar.
@@ -1082,10 +1059,24 @@ public enum OutlineNumberAdvance {
         insetBlockStart((ButtonView.ButtonSize.large.minSize + Self.markerSize) / 2)
         insetBlockEnd(-Self.spineHang)
         width(borderWidthBase)
-        backgroundColor(borderColorSubtle)
+        // Solid down to the hang; the hang is its own native dashed border.
+        CSS.Property("background-image", "linear-gradient(\(borderColorSubtle.value), \(borderColorSubtle.value))")
+        CSS.Property("background-size", "100% calc(100% - \(Self.spineHang.value))")
+        CSS.Property("background-repeat", "no-repeat")
         pointerEvents(.none)
       }
-      Self.hangDashCSS("& > .outliner-list:has(> .outliner-item[data-outliner-accordion='true'])::before")
+      // The hang (user, 2026-11-05): below the last item the spine hangs
+      // from no node, so that stretch is a native dashed border, as
+      // `border-style: dashed` draws it.
+      selector("& > .outliner-list:has(> .outliner-item[data-outliner-accordion='true'])::after") {
+        content("\"\"")
+        position(.absolute)
+        insetInlineStart(Self.spine)
+        insetBlockEnd(-Self.spineHang)
+        blockSize(Self.spineHang)
+        CSS.Property("border-inline-start", "\(borderWidthBase.value) dashed \(borderColorSubtle.value)")
+        pointerEvents(.none)
+      }
       // The items under it flush with it, their numbers saying how deep
       // they stand; no guide line of their own, the spine is the line.
       descendant(".outliner-item[data-outliner-accordion='true'] > .outliner-list") {
@@ -1226,17 +1217,40 @@ public enum OutlineNumberAdvance {
         insetBlockEnd(0)
       }
       // Below the tree's last item the spine runs on a little, dashed
-      // (user, 2026-11-03; dashed, not faded, 2026-11-05): the stretch of its last
-      // item in sight, the innermost it ends in, at whatever depth, which
-      // darkens under the pointer and folds or opens that item as the
-      // stretches above do. Open, its stretch runs on into it; folded,
+      // (user, 2026-11-03; dashed, not faded, 2026-11-05): the stretch of
+      // its last item in sight, the innermost it ends in, at whatever
+      // depth, which darkens under the pointer and folds or opens that item
+      // as the stretches above do. Open, its stretch runs on into it; folded,
       // its stretch is what shows below its number, the hang with it, and a
       // click there opens it, as its marker does.
       selector("& \(Self.lastOpen) > .outliner-rail", "& \(Self.lastFolded) > .outliner-rail") {
         insetBlockEnd(-Self.spineHang)
       }
-      Self.hangDashCSS("& \(Self.lastOpen) > .outliner-rail .rail-line")
-      Self.hangDashCSS("& \(Self.lastFolded) > .outliner-rail .rail-line")
+      // Its line solid down to the hang, the hang a native dashed border
+      // (user, 2026-11-05), both in the line's color (`currentColor`), which
+      // darkens under the pointer as the rail's line does.
+      selector("& \(Self.lastOpen) > .outliner-rail .rail-line", "& \(Self.lastFolded) > .outliner-rail .rail-line") {
+        backgroundColor(backgroundColorTransparent)
+        color(borderColorSubtle)
+        CSS.Property("background-image", "linear-gradient(currentColor, currentColor)")
+        CSS.Property("background-size", "100% calc(100% - \(Self.spineHang.value))")
+        CSS.Property("background-repeat", "no-repeat")
+      }
+      selector(
+        "& \(Self.lastOpen) > .outliner-rail:hover .rail-line", "& \(Self.lastFolded) > .outliner-rail:hover .rail-line"
+      ) {
+        color(borderColorBase)
+      }
+      selector(
+        "& \(Self.lastOpen) > .outliner-rail .rail-line::after", "& \(Self.lastFolded) > .outliner-rail .rail-line::after"
+      ) {
+        content("\"\"")
+        position(.absolute)
+        insetInlineStart(px(0))
+        insetBlockEnd(px(0))
+        blockSize(Self.spineHang)
+        CSS.Property("border-inline-start", "\(borderWidthBase.value) dashed")
+      }
       // Where what an action affects is drawn (user, 2026-11-03): a state
       // (`data-outline-state`, a diff's change), a node grabbed, the node
       // the remove stepper has chosen—its ring (`ring`) round the whole
