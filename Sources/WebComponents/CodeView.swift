@@ -62,7 +62,8 @@
     }
 
     /// Each line its own block (`lined`), its line feed in it, so the text
-    /// reads, copies and edits as written.
+    /// reads, copies and edits as written; its number its own
+    /// (`CodeLines.numberAttribute`), never a counter run across the lines.
     @HTMLBuilder
     private var linedContent: [DOM.Node] {
       let all = CodeLines.lines(of: text)
@@ -74,6 +75,7 @@
         let end = offset + value.utf16.count
         span { if editableLabel == nil { colored(offset..<end, units: units, tokens: tokens) } else { DOM.Node.text(value) } }
           .class("code-line")
+          .addingAttribute(CodeLines.numberAttribute, "\(index + 1)")
           .style { customProperty("--indent", "\(line.indent)") }
         offset = end
       }
@@ -208,9 +210,13 @@
           color(.inherit)
           padding(0)
         }
-        // Lined: each line a block, numbered in a gutter by a counter
-        // (never part of the text). Wide: the lines as stored, never
-        // wrapped, scrolling sideways.
+        // Lined: each line a block, numbered in a gutter by its own number
+        // (`CodeLines.numberAttribute`, never part of the text). Never a
+        // counter run across the lines: a line laid out only as it comes
+        // into view (`content-visibility: auto`, a reader's pane) is
+        // style-contained, and its number read no counter from outside it:
+        // every line read 0 (user, 2026-11-05). Wide: the lines as stored,
+        // never wrapped, scrolling sideways.
         // The number's column: its digits (`--gutter`, the widest number's
         // in ch) with the same inset either side (user, 2026-10-15), so no
         // number touches the edge or the code; 4px each (user, 2026-10-27:
@@ -218,7 +224,6 @@
         // by it, not each line's block: text an editor holds outside a
         // line's block (typed into it emptied, pasted) is set off as well.
         selector("&[data-lined='true'] .code-code") {
-          CSS.Property("counter-reset", "code-line")
           CSS.Property("padding-inline-start", "calc(var(--gutter) + 2 * \(spacing4.value))")
           CSS.Property("min-height", "1lh")
           boxSizing(.borderBox)
@@ -226,7 +231,6 @@
         selector("&[data-lined='true'] .code-line") {
           display(.block)
           position(.relative)
-          CSS.Property("counter-increment", "code-line")
           CSS.Property("min-height", "1lh")
         }
         // Reflowed (an ancestor's Reflow, user 2026-10-12): wrapped as plain
@@ -268,7 +272,7 @@
           textAlign(.end)
         }
         selector("&[data-lined='true'] .code-line::before") {
-          CSS.Property("content", "counter(code-line)")
+          CSS.Property("content", "attr(\(CodeLines.numberAttribute))")
           position(.absolute)
           CSS.Property("inset-inline-start", "calc(-1 * (var(--gutter) + 2 * \(spacing4.value)))")
           CSS.Property("width", "calc(var(--gutter) + 2 * \(spacing4.value))")
@@ -416,6 +420,11 @@
 /// alike: split by bytes, never by `Character`, which Embedded Swift
 /// cannot compare.
 public enum CodeLines {
+  /// The attribute a lined line's number is kept in, from 1, which its
+  /// `::before` shows (`CodeView`'s CSS); every place that draws a line
+  /// (`CodeView`, `CodeEditorHydration.reline`) writes it.
+  public static let numberAttribute = "data-code-number"
+
   /// The text's lines, each with the spaces (or tabs) it is indented by.
   public static func lines(of text: String) -> [(text: String, indent: Int)] {
     var out: [(text: String, indent: Int)] = []

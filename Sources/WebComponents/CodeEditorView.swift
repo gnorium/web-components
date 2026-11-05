@@ -800,6 +800,8 @@
       for (index, line) in all.enumerated() {
         let span = document.createElement(.span)
         span.className = "code-line"
+        // Its number its own, as the server draws a line (`CodeView`).
+        span.setAttribute(CodeLines.numberAttribute, intToString(index + 1))
         span.setAttribute(.style, "--indent: " + intToString(line.indent))
         span.textContent = line.text + (index < all.count - 1 ? "\n" : "")
         spans.append(span)

@@ -506,6 +506,7 @@ public struct ComboboxView: HTMLContent {
       ownNote = root.querySelector("[data-combobox-note='true']")
       shown = own
       searchURL = root.getAttribute(data("search-url")) ?? ""
+      showValue()
       bind()
     }
 
@@ -515,6 +516,35 @@ public struct ComboboxView: HTMLContent {
 
     private var value: String {
       (hidden as? HTML.HTMLInputElement)?.value ?? ""
+    }
+
+    /// The field showing what its value input holds where the page drew
+    /// another, as a dropdown's trigger does (`DropdownView`). A browser that
+    /// restores a page's form state (a tab reopened or brought back, a
+    /// history entry; Firefox on a reload) puts the hidden value back before
+    /// the page hydrates, never the field's text (`autocomplete="off"`): the
+    /// field read empty while it posted the value put back, and a kept
+    /// draft's restore, finding that value already there, wrote nothing
+    /// (Submit Testament's voice Name and genres, user 2026-11-05). Its own
+    /// suggestion's name where the value is one, else the value as typed.
+    private func showValue() {
+      let current = value
+      guard !stringEquals(Self.valueOf(text, among: own), current) else { return }
+      (field as? HTML.HTMLInputElement)?.value = Self.display(of: current, among: own)
+      for option in own {
+        let chosen = !stringIsEmpty(current) && stringEquals(option.getAttribute(data("value")) ?? "", current)
+        option.setAttribute(data("chosen"), chosen)
+      }
+    }
+
+    /// The name a value shows by: its suggestion's, among `options`, where
+    /// it is one; the value itself (text as typed) where it is none.
+    static func display(of value: String, among options: [DOM.Element]) -> String {
+      guard !stringIsEmpty(value) else { return "" }
+      for option in options where stringEquals(option.getAttribute(data("value")) ?? "", value) {
+        return option.getAttribute(data("display")) ?? value
+      }
+      return value
     }
 
     private func bind() {
