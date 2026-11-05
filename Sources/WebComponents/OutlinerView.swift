@@ -916,9 +916,8 @@ public enum OutlineNumberAdvance {
     static let lastOpen =
       finalChain + ":not([data-outliner-collapsed='true']):not(:has(> .outliner-list:not([hidden]) > \(drawn)))"
 
-    /// How far the spine runs on below the tree's last item, fading out: the
-    /// stretch of its last item in sight, which folds or opens it, long
-    /// enough that its fade reads (user, 2026-11-03).
+    /// How far the spine runs on below the tree's last item: the stretch of
+    /// its last item in sight, which folds or opens it (user, 2026-11-03).
     static let spineHang: CSS.Length = spacing32
 
     /// The tree's own rules: its indent, spine, rails, guide lines, toggles
@@ -1024,7 +1023,7 @@ public enum OutlineNumberAdvance {
       }
       // The spine's hang below its last item is the tree's own room (user,
       // 2026-11-03): reserved at its end, so what follows the tree (a
-      // section's link, the next section) stands clear of the fade, never
+      // section's link, the next section) stands clear of it, never
       // crossed by it. A tree whose row of steppers stands after its items
       // has that row beside the hang, from the body start.
       selector(
@@ -1048,7 +1047,8 @@ public enum OutlineNumberAdvance {
       // The spine: one line down the whole tree's start, a thread's line
       // (its width and its color), through the middle of every marker,
       // which breaks it (user, 2026-11-03): from under the first marker
-      // past the last item's foot, fading out below it (`spineHang`).
+      // past the last item's foot, running on below it (`spineHang`), never
+      // faded (user, 2026-11-05: the fade was too short and looked forced).
       selector("& > .outliner-list:has(> .outliner-item[data-outliner-accordion='true'])") {
         position(.relative)
       }
@@ -1059,9 +1059,7 @@ public enum OutlineNumberAdvance {
         insetBlockStart((ButtonView.ButtonSize.large.minSize + Self.markerSize) / 2)
         insetBlockEnd(-Self.spineHang)
         width(borderWidthBase)
-        CSS.Property(
-          "background-image",
-          "linear-gradient(to bottom, \(borderColorSubtle.value) calc(100% - \(Self.spineHang.value)), transparent)")
+        backgroundColor(borderColorSubtle)
         pointerEvents(.none)
       }
       // The items under it flush with it, their numbers saying how deep
@@ -1203,21 +1201,15 @@ public enum OutlineNumberAdvance {
       selector("& \(Self.finalChain) > .outliner-rail") {
         insetBlockEnd(0)
       }
-      // Below the tree's last item the spine runs on a little, fading out
-      // (user, 2026-11-03): the stretch of its last item in sight, the
-      // innermost it ends in, at whatever depth, which darkens under the
-      // pointer into the fade as it fades and folds or opens that item as
-      // the stretches above do. Open, its stretch runs on into it; folded,
+      // Below the tree's last item the spine runs on a little, solid
+      // (user, 2026-11-03; unfaded 2026-11-05): the stretch of its last
+      // item in sight, the innermost it ends in, at whatever depth, which
+      // darkens under the pointer and folds or opens that item as the
+      // stretches above do. Open, its stretch runs on into it; folded,
       // its stretch is what shows below its number, the hang with it, and a
       // click there opens it, as its marker does.
       selector("& \(Self.lastOpen) > .outliner-rail", "& \(Self.lastFolded) > .outliner-rail") {
         insetBlockEnd(-Self.spineHang)
-      }
-      selector("& \(Self.lastOpen) > .outliner-rail .rail-line", "& \(Self.lastFolded) > .outliner-rail .rail-line") {
-        CSS.Property(
-          "mask-image", "linear-gradient(to bottom, black calc(100% - \(Self.spineHang.value)), transparent)")
-        CSS.Property(
-          "-webkit-mask-image", "linear-gradient(to bottom, black calc(100% - \(Self.spineHang.value)), transparent)")
       }
       // Where what an action affects is drawn (user, 2026-11-03): a state
       // (`data-outline-state`, a diff's change), a node grabbed, the node
