@@ -357,10 +357,10 @@ public struct DiffView: HTMLContent {
         color(colorSubtle)
         minWidth(0)
       }
-      // Where a field's diff line has always been: under the field,
-      // indented to its text. Spaced by gaps alone: the label from its
-      // values here, the line from what stands above it by the column that
-      // holds it.
+      // Under the field, at its edge, where a box diff's label stands too
+      // (user, 2026-11-05: the two labels align). Spaced by gaps alone: the
+      // label from its values here, the line from what stands above it by
+      // the column that holds it.
       selector("&[data-shape='line']") {
         display(.flex)
         flexWrap(.nowrap)
@@ -369,7 +369,6 @@ public struct DiffView: HTMLContent {
         // values' text.
         alignItems(.flexStart)
         columnGap(spacing4)
-        paddingInlineStart(spacing16)
         overflowWrap(.anywhere)
       }
       // The values beside the label, old → new on one line (user,
