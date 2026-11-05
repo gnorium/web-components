@@ -96,12 +96,12 @@ final class TEIScanLayoutDataTests: XCTestCase {
   /// it about its box's middle as far as its leaf's nearer side; a text
   /// page's block, with no box and no leading under its type, says neither.
   func testAPlacedLineSaysHowReflowSetsIt() throws {
-    let image = "https://web-tests.invalid/iiif/cover"
-    let cover = ##"<TEI xmlns="http://www.tei-c.org/ns/1.0"><facsimile><surface n="Front cover" ulx="0" uly="0" lrx="1000" lry="1000"><graphic url="\##(image)/full/max/0/default.jpg" width="6120px" height="6630px"/>"##
+    let frame = "https://web-tests.invalid/iiif/cover"
+    let cover = ##"<TEI xmlns="http://www.tei-c.org/ns/1.0"><facsimile><surface n="Front cover" ulx="0" uly="0" lrx="1000" lry="1000"><graphic url="\##(frame)/full/max/0/default.jpg" width="6120px" height="6630px"/>"##
       + ##"<zone xml:id="p1-z-L2" ulx="417" uly="238" lrx="637" lry="259"/>"##
       + ##"<zone xml:id="p1-textblock" type="textblock" points="172.3,64.24 879.57,59.61 884.82,936.85 175.7,941.07"/>"##
       + ##"<zone type="leaf" points="144.85,53.4 890.9,53.4 890.9,945.42 144.85,945.42"/></surface></facsimile>"##
-      + ##"<text><body><pb n="Front cover" facs="\##(image)/full/max/0/default.jpg"/>"##
+      + ##"<text><body><pb n="Front cover" facs="\##(frame)/full/max/0/default.jpg"/>"##
       + ##"<lb facs="#p1-z-L2"/><note type="binding" subtype="copy" style="letter-spacing:0.527em">HAMLET</note></body></text></TEI>"##
     let block = try XCTUnwrap(elements(in: TEIView(teiXml: cover).build()).first { attribute("class", of: $0) == "tei-block" })
     let style = attribute("style", of: block) ?? ""

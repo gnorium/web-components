@@ -70,13 +70,13 @@ final class TEIPrintedLayoutTests: XCTestCase {
   /// is set in its leaf (`TEIPage.leafTypeArea`), its gilt lettering and its crest drawn at their zones' places
   /// and sizes; without it, its lettering ran at the top left and its crest at its drawing's pixels.
   func testACoverWithNoTypeOfItsOwnIsDrawnOnItsLeaf() throws {
-    let image = "https://cdm16003.contentdm.oclc.org/iiif/2/p15150coll3:1360"
+    let frame = "https://cdm16003.contentdm.oclc.org/iiif/2/p15150coll3:1360"
     let document = #"<TEI xmlns="http://www.tei-c.org/ns/1.0"><facsimile><surface n="Front cover" ulx="0" uly="0" lrx="1000" lry="1000">"#
-      + #"<graphic url="\#(image)/full/max/0/default.jpg" width="6120px" height="6630px"/>"#
+      + #"<graphic url="\#(frame)/full/max/0/default.jpg" width="6120px" height="6630px"/>"#
       + #"<zone xml:id="textblock" type="textblock" points="422.53,239.73 623.51,238 625.51,435.87 424.53,437.6"/>"#
       + #"<zone type="leaf" points="144.93,54 891.01,54 891.01,946 144.93,946"/>"#
       + #"<zone xml:id="z-L2" ulx="422" uly="238" lrx="624" lry="259"/><zone xml:id="z-fig-1" type="figure" ulx="515" uly="348" lrx="548" lry="395"/>"#
-      + ##"</surface></facsimile><text><body><pb n="Front cover" facs="\##(image)" rend="color(yellow)"/><lb facs="#z-L2"/><note type="binding" subtype="copy">HAMLET</note>"##
+      + ##"</surface></facsimile><text><body><pb n="Front cover" facs="\##(frame)" rend="color(yellow)"/><lb facs="#z-L2"/><note type="binding" subtype="copy">HAMLET</note>"##
       + ##"<figure facs="#z-fig-1"><graphic url="/calibration-figures/z-fig-1.svg?image=x" mimeType="image/svg+xml"/></figure></body></text></TEI>"##
     let nodes = elements(in: TEIView(teiXml: document).build())
     let page = try XCTUnwrap(classed("tei-page-text", in: nodes).first)

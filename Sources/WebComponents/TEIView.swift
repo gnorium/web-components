@@ -1357,7 +1357,7 @@ public enum TEISentenceSelection {
                 form {
                   input()
                     .type(.hidden)
-                    .name("image")
+                    .name("frame")
                     .value(Self.serviceID(ofFacsimile: page.facsimileURL))
                   CodeEditorView(
                     id: "tei-page-raw-\(index + firstIndex)",
