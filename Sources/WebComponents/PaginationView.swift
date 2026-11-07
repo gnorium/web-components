@@ -247,9 +247,9 @@ public struct PaginationView: HTMLContent {
         alignItems(.center)
         maxWidth(px(600))
         margin(0, .auto)
-        // Its parts (chevron, indicator, chevron) apart by half its size
-        // step's (user, 2026-11-03): 8 round a large control (48), 4 round
-        // a medium one (40), 2 round a small one (32), on a phone too.
+        // Its parts (chevron, indicator, chevron) apart: 4 round a large
+        // control (48, user, 2026-11-07) and a medium one (40), 2 round a
+        // small one (32), on a phone too.
         gap(spacing4)
       }
       // Every pager medium (user, 2026-10-10): its text a medium
@@ -362,7 +362,7 @@ public struct PaginationView: HTMLContent {
         justifyContent(.flexStart)
         maxWidth(.none)
         margin(0)
-        gap(spacing8)
+        gap(spacing4)
         flexShrink(0)
         color(colorBase)
         fontFamily(typographyFontSans)
