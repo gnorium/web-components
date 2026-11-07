@@ -44,6 +44,13 @@ public struct IconLabelView: HTMLContent {
         display(.inlineFlex)
         alignItems(.center)
         gap(spacing8)
+        // Top, not baseline: an inline flex box's baseline is its first
+        // item's, the icon's bottom edge, which raised the box above the
+        // text's baseline and grew its line by the font's descent—a
+        // heading holding one stood taller than its neighbors' and its
+        // label sat above center (an accordion's Pedigree header). Its line
+        // height is its parent's, so top keeps it on the line.
+        verticalAlign(.top)
       }
     }
     .build()
