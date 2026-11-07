@@ -420,19 +420,20 @@ public struct DiffView: HTMLContent {
         paddingInlineStart(spacing8)
       }
       // A field's text stands where the field's own words do (user,
-      // 2026-11-05): a text or passage box not linked to a source (whose
-      // sync places its lines) is inset 12 on every side, as TextAreaView's,
-      // each line's sign in that inset, so a word sits under the same word
-      // above.
-      selector("&:is([data-diff-mode='text'], [data-diff-mode='passage']) .diff-box:not([data-passage-linked='true']) > .diff-lines") {
+      // 2026-11-05): a text or passage box not paired with a code pane
+      // (unpaired, or paired with a plain text field, `data-passage-source`
+      // "field") is inset 12 on every side, as TextAreaView's, each line's
+      // sign in that inset, so a word sits under the same word above. A box
+      // paired with a code pane lines up with the code's lines instead.
+      selector("&:is([data-diff-mode='text'], [data-diff-mode='passage']) .diff-box:not([data-passage-source='code']) > .diff-lines") {
         paddingBlock(spacing12)
       }
-      selector("&:is([data-diff-mode='text'], [data-diff-mode='passage']) .diff-box:not([data-passage-linked='true']) > .diff-lines > .diff-row") {
+      selector("&:is([data-diff-mode='text'], [data-diff-mode='passage']) .diff-box:not([data-passage-source='code']) > .diff-lines > .diff-row") {
         position(.relative)
         paddingInlineStart(spacing12)
         paddingInlineEnd(spacing12)
       }
-      selector("&:is([data-diff-mode='text'], [data-diff-mode='passage']) .diff-box:not([data-passage-linked='true']) > .diff-lines > .diff-row > .diff-sign") {
+      selector("&:is([data-diff-mode='text'], [data-diff-mode='passage']) .diff-box:not([data-passage-source='code']) > .diff-lines > .diff-row > .diff-sign") {
         position(.absolute)
         CSS.Property("inset-inline-start", "calc((\(spacing12.value) - 1ch) / 2)")
       }

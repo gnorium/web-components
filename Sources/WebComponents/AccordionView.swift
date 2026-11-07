@@ -360,7 +360,10 @@ public struct AccordionView: HTMLContent {
               gap(spacing16)
               minWidth(0)
               minHeight(0)
-              overflow(.hidden)
+              // Clipped for the height animation, never a scroller: hidden,
+              // a focus or a scrollIntoView inside it scrolled it sideways
+              // and left it cut off at its start (user, 2026-11-05).
+              overflow(.clip)
               opacity(1)
               // Fade leads the height so glyphs are gone before the last pixels clip.
               transition(
@@ -382,7 +385,8 @@ public struct AccordionView: HTMLContent {
           display(.block)
           minWidth(0)
           height(px(0))
-          overflow(.hidden)
+          // Clipped, never a scroller (as its content, above).
+          overflow(.clip)
           transition(
             "height \(transitionDurationMedium.value) \(transitionTimingFunctionSystem.value)"
           )

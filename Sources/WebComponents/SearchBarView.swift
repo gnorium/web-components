@@ -623,8 +623,8 @@
     let id: Int
     let text: String
     let language: String
-    /// Its voice names as text (`voiceNames`): a work's own, a word's those of
-    /// the work holding its earliest attestation; "—" for none.
+    /// Its voice names as text (`voiceNames`): a biblio-record's own, a
+    /// lexico-record's those of the work holding its earliest attestation; "—" for none.
     let voiceNames: String
     /// Its type (Book, Noun…); "" when it has none.
     let type: String

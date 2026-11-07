@@ -34,6 +34,11 @@ public struct PaginationView: HTMLContent {
   /// 2026-10-11): the one number each pages by.
   public static let perPage = 100
 
+  /// Options a dropdown or combobox lists at most, every option list on
+  /// the site alike: as many as a page's rows (user, 2026-11-05). A list
+  /// cut short ends in a note ("Showing the first 100.").
+  public static let perList = perPage
+
   public let currentPage: Int
   public let totalPages: Int
   public let previousUrl: String?

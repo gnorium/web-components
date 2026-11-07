@@ -372,6 +372,12 @@
           flex(1)
           minHeight(0)
         }
+        // With no header above it (a confirmation's sentence alone), 16
+        // above the text as under it and under the buttons (user,
+        // 2026-11-06: "make gap uniform top and bottom and middle").
+        descendant(".dialog-shell > .dialog-body:first-child") {
+          paddingBlockStart(spacing16)
+        }
       }
       .style(prefix: false) {
         // The page behind a modal holds still.

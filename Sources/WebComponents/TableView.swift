@@ -589,8 +589,8 @@ public struct TableView: HTMLContent {
                                 }
                                 return false
                               }(),
-                              // Beside the header: its 22px line.
-                              size: lineHeightSmall22
+                              // Beside the header: its text's size (user, 2026-11-05).
+                              size: fontSizeMedium16
                             )
                           }
                           .class("table-sort-icon")
@@ -1270,8 +1270,8 @@ public struct TableView: HTMLContent {
         display(.inlineFlex)
         alignItems(.center)
         justifyContent(.center)
-        width(lineHeightSmall22)
-        height(lineHeightSmall22)
+        width(fontSizeMedium16)
+        height(fontSizeMedium16)
         fontSize(fontSizeMedium16)
         flexShrink(0)
       }

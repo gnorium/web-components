@@ -54,7 +54,7 @@ public struct FieldValidationMessageView: HTMLContent {
     }
 
     var message = div {
-      span { IconView(icon: { s in StatusIconView(iconStatus, size: s) }, size: lineHeightSmall22) }
+      span { IconView(icon: { s in StatusIconView(iconStatus, size: s) }, size: fontSizeMedium16) }
         .class("field-validation-message-icon")
         .ariaHidden(true)
 

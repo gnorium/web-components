@@ -85,8 +85,8 @@
         AnimatedUpDownChevronView(
           id: "\(id)-chevron",
           expanded: false,
-          // Beside the value's text: its 22px line.
-          size: lineHeightSmall22,
+          // Beside the value's text: the text's size (user, 2026-11-05).
+          size: fontSizeMedium16,
           class: "select-indicator"
         )
       }

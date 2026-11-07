@@ -98,7 +98,21 @@ public struct DropdownView: HTMLContent {
   /// send: typing asks `searchURL?q=…` (debounced, a late answer to an
   /// earlier query dropped) and shows the options of the dropdown the
   /// answer holds in place of its own; an empty query shows its own again.
+  /// While the latest query's answer is on its way, the open menu shows a
+  /// wait under the options it shows, and one that fails says so in the
+  /// wait's place, those options kept (`OptionsStatusView`); the next
+  /// keystroke, or the next open, asks again. An earlier query's answer,
+  /// or its failure, says nothing.
   let searchURL: String?
+  /// Where its own list comes from, when the page draws only its chosen
+  /// options (every language: user, 2026-11-05): on its first open it asks
+  /// `listURL`, once a page however many dropdowns ask the same, and lists
+  /// the options of the dropdown the answer holds after its own (those it
+  /// holds already left out), the answer's note after them. While it is on
+  /// its way, the open menu shows a wait under the options it draws; one
+  /// that fails says so in the wait's place (`OptionsStatusView`), and the
+  /// next open asks again (user, 2026-11-05).
+  let listURL: String?
   /// Whether the label carries the lighter "(optional)" aside after its
   /// text, as LabelView draws it: not part of the label text.
   let optional: Bool
@@ -107,8 +121,8 @@ public struct DropdownView: HTMLContent {
   /// its tooltip: a record page's reference marks. Not label text.
   let labelMarks: [DOM.Node]
   /// A line at the end of the menu that is not an option: what the list
-  /// leaves out ("Showing the first 50."). A
-  /// remote search's answer brings its own.
+  /// leaves out ("Showing the first 100.", `PaginationView.perList`). A
+  /// remote search's answer brings its own, as does the list `listURL` gives.
   let note: String?
   /// Whether several options may be chosen at once (an origin step's
   /// relations): a click toggles an option and the menu stays open, the
@@ -144,6 +158,7 @@ public struct DropdownView: HTMLContent {
     submitFormOnChange: Bool = false,
     form: String? = nil,
     searchURL: String? = nil,
+    listURL: String? = nil,
     note: String? = nil,
     multiple: Bool = false,
     selectedValues: [String] = []
@@ -170,6 +185,7 @@ public struct DropdownView: HTMLContent {
     self.submitFormOnChange = submitFormOnChange
     self.form = form
     self.searchURL = searchURL
+    self.listURL = listURL
     self.optional = optional
     self.optionalFlag = optionalFlag
     self.labelMarks = labelMarks
@@ -283,12 +299,12 @@ public struct DropdownView: HTMLContent {
               .data("stacked", optionLayout == .stacked)
               .title(options.first { stringEquals($0.value, selectedValue ?? "") }?.altDisplay ?? displayText)
 
-            // Animated chevron icon, beside the value's text: its line
-            // (the button's 22px line).
+            // Animated chevron icon, beside the value's text: the text's
+            // size, as an icon beside a label is (user, 2026-11-05).
             AnimatedUpDownChevronView(
               id: "dropdown-\(id)",
               expanded: false,
-              size: ButtonView.ButtonSize.medium.iconSize,
+              size: textFontSize,
               class: "dropdown-chevron"
             )
           }
@@ -373,6 +389,13 @@ public struct DropdownView: HTMLContent {
           }
           .class("dropdown-options-list")
           .data("dropdown-options-list", true)
+
+          // Its list or a search on its way from the server, or failed:
+          // said under the options it shows (`OptionsStatusView`). A
+          // search's answer goes before it, in the place of its own list.
+          if !stringIsEmpty(listURL ?? "") || !stringIsEmpty(searchURL ?? "") {
+            OptionsStatusView()
+          }
         }
         .class("dropdown-menu")
         .data("dropdown-menu", true)
@@ -388,6 +411,7 @@ public struct DropdownView: HTMLContent {
     .data("fixed-width", dropdownWidth != nil ? "true" : "false")
     .data("menu-width", menuWidth != nil ? "custom" : (dropdownWidth != nil ? "beside-fixed-trigger" : "auto"))
     .data("search-url", searchURL ?? "")
+    .data("list-url", listURL ?? "")
     .data("multiple", multiple)
     .style {
       // This dropdown's own sizes, per instance: the shared rules below
@@ -829,20 +853,43 @@ public struct DropdownView: HTMLContent {
     private var isOpen: Bool = false
     /// The options the list shows now: its own, or a search's.
     private var allOptions: [DOM.Element] = []
-    /// Its own options, as the page drew them.
+    /// Its own options: those the page drew, any chosen search option kept
+    /// first (`keepChosen`), the list `listURL` gives after them.
     private var ownOptions: [DOM.Element] = []
     /// A remote search's answer, shown in place of its own list.
     private var resultsList: DOM.Element?
     private var resultOptions: [DOM.Element] = []
     /// The search answer's note, after its options.
     private var resultNote: DOM.Element?
+    /// Whether a search's answer shows in place of its own list.
+    private var showingResults = false
     private var searchURL: String = ""
+    /// Where its own list comes from on its first open
+    /// (`DropdownView.listURL`); empty once the list is in.
+    private var listURL: String = ""
+    /// Whether its list is asked for and not yet in.
+    private var listAsked = false
+    /// Whether its list's last ask failed, until the next open asks again.
+    private var listFailed = false
+    /// What it says under the options it shows (`OptionsStatusView`): the
+    /// wait for, or the failure of, its list or the latest query's answer.
+    private var status: DOM.Element?
+    /// Its stable node id, which the page names it by
+    /// (`DropdownHydration.option`).
+    private(set) var rootID: Int32 = 0
     /// Whether several options may be chosen (`DropdownView.multiple`).
     private var multiple = false
     private var searchTimer: Int32 = 0
     /// Which query is the latest: an answer overtaken by a later one is
     /// dropped.
     private var searchSequence = 0
+    /// Whether a query is typed in its search: what it says under the
+    /// options is then the search's, not its list's.
+    private var hasQuery = false
+    /// Whether the latest query's answer is on its way.
+    private var searchBusy = false
+    /// Whether the latest query's answer failed.
+    private var searchFailed = false
     private var placeholder: String = "Select an option"
 
     private var highlightIndex: Int = -1
@@ -851,6 +898,7 @@ public struct DropdownView: HTMLContent {
       self.container = container
       trigger = container.querySelector("[data-dropdown-trigger=\"true\"]")
       menu = container.querySelector("[data-dropdown-menu=\"true\"]")
+      status = menu?.querySelector(":scope > .options-status-view")
       searchInput = container.querySelector("[data-dropdown-search=\"true\"] .search-input")
       optionsList = container.querySelector("[data-dropdown-options-list=\"true\"]")
       selectedText = container.querySelector("[data-dropdown-selected-text=\"true\"]")
@@ -878,8 +926,14 @@ public struct DropdownView: HTMLContent {
         allOptions = Array(optionsList.querySelectorAll("[data-dropdown-option=\"true\"]"))
       }
       ownOptions = allOptions
-      searchURL = container.closest(".dropdown-view")?.getAttribute(data("search-url")) ?? ""
-      multiple = stringEquals(container.closest(".dropdown-view")?.getAttribute(data("multiple")) ?? "", "true")
+      let root = container.closest(".dropdown-view")
+      rootID = root?.id ?? container.id
+      searchURL = root?.getAttribute(data("search-url")) ?? ""
+      listURL = root?.getAttribute(data("list-url")) ?? ""
+      multiple = stringEquals(root?.getAttribute(data("multiple")) ?? "", "true")
+      // One that searches the server can be asked for an option it does
+      // not list (`DropdownHydration.option`).
+      if !stringIsEmpty(searchURL) { DropdownHydration.searching.append(self) }
 
       showValue()
       bindEvents()
@@ -892,7 +946,9 @@ public struct DropdownView: HTMLContent {
     /// a select's: the field showed the choice the page drew and posted the
     /// one put back, and a kept draft's restore, finding its value already
     /// there, chose nothing (Submit Testament's Carrier, user 2026-11-03). A
-    /// value no option of its own has (a search's) leaves it as drawn.
+    /// value no option of its own has (a search's) is shown once its search
+    /// finds it (`option(_:then:)`), one chosen alone; any other leaves it
+    /// as drawn.
     private func showValue() {
       let values = chosenValues()
       var drawn: [String] = []
@@ -903,11 +959,62 @@ public struct DropdownView: HTMLContent {
       var chosen: [DOM.Element] = []
       for value in values {
         guard let option = ownOptions.first(where: { stringEquals($0.getAttribute(data("value")) ?? "", value) })
-        else { return }
+        else {
+          guard !multiple, !stringIsEmpty(searchURL) else { return }
+          self.option(value) { [self] found in
+            // Still its value once found: a choice made meanwhile stands.
+            guard self.isChosen(value) else { return }
+            self.show([found])
+            self.markChosen()
+          }
+          return
+        }
         chosen.append(option)
       }
       show(chosen)
-      mark(chosen)
+      markChosen()
+    }
+
+    /// The option of `value`, as soon as it has one: at once where it lists
+    /// it; else, where it searches the server, once its search for `value`
+    /// finds the option of exactly that value, kept in its own list, first,
+    /// as a chosen search option is (`keepChosen`). A value the search does
+    /// not find has none.
+    func option(_ value: String, then: @escaping @Sendable (DOM.Element) -> Void) {
+      if let option = listed(value) {
+        then(option)
+        return
+      }
+      guard !stringIsEmpty(value), !stringIsEmpty(searchURL) else { return }
+      let url = stringJoin(
+        [searchURL, stringContains(searchURL, "?") ? "&q=" : "?q=", encodeURIComponent(value)], separator: "")
+      let answer = document.createElement(.div)
+      answer.loadFragment(url) { [self] ok in
+        guard ok else { return }
+        // Listed meanwhile (its list, or a search, came in): that one.
+        if let option = self.listed(value) {
+          then(option)
+          return
+        }
+        for found in answer.querySelectorAll("[data-dropdown-option=\"true\"]")
+        where stringEquals(found.getAttribute(data("value")) ?? "", value) {
+          found.setAttribute(data("hidden"), false)
+          self.listFirst([found])
+          self.bindOptions([found])
+          self.markChosen()
+          then(found)
+          return
+        }
+      }
+    }
+
+    /// The option of `value` it shows now or has shown, its own or a
+    /// search's.
+    private func listed(_ value: String) -> DOM.Element? {
+      for option in ownOptions + resultOptions where stringEquals(option.getAttribute(data("value")) ?? "", value) {
+        return option
+      }
+      return nil
     }
 
     /// The trigger showing the options `chosen`, as the server draws them:
@@ -938,10 +1045,12 @@ public struct DropdownView: HTMLContent {
       selectedText?.scrollLeft = 0
     }
 
-    /// The options `chosen` marked chosen in the menu, every other not.
-    private func mark(_ chosen: [DOM.Element]) {
+    /// Every option of a chosen value marked chosen in the menu, its own
+    /// or a search's (a value can be both: a listed language a search
+    /// found), every other not.
+    private func markChosen() {
       for opt in ownOptions + resultOptions {
-        let isIn = chosen.contains { $0.id == opt.id }
+        let isIn = isChosen(opt.getAttribute(data("value")) ?? "")
         if isIn { _ = opt.classList.add("is-selected") } else { _ = opt.classList.remove("is-selected") }
         opt.setAttribute(data("selected"), isIn)
       }
@@ -1004,8 +1113,11 @@ public struct DropdownView: HTMLContent {
 
       bindRequiredValidation()
 
-      // Toggle dropdown on trigger click
+      // Toggle dropdown on trigger click. A link in the value it shows (a
+      // citation's claim, leading to its field) is a link: a click on its
+      // words follows it, one anywhere else on the trigger opens the menu.
       _ = trigger.addEventListener(.click) { [self] event in
+        if let target = event.target, let _ = target.closest("a[href]") { return }
         self.toggleDropdown()
       }
 
@@ -1013,8 +1125,11 @@ public struct DropdownView: HTMLContent {
       // focus: a click on it focuses the trigger and opens nothing, as a
       // native select's label does. One that ends selecting the label's
       // words (to copy them) leaves the focus, and the selection, alone.
+      // A link in the label's words (a claimed field's, a citation's
+      // Claim) is a link: it leads where it points, the field left alone.
       if let label = container?.closest(".dropdown-view")?.querySelector(".dropdown-label") {
         _ = label.addEventListener(.click) { [self] event in
+          if let target = event.target, let _ = target.closest("a[href]") { return }
           event.preventDefault()
           if let selection = window.getSelection(), !selection.isCollapsed { return }
           (self.trigger?.querySelector("button") ?? self.trigger)?.focus()
@@ -1076,21 +1191,22 @@ public struct DropdownView: HTMLContent {
       }
     }
 
-    /// Click and hover on each option; `i` is its place in the list that
-    /// shows it.
+    /// Click and hover on each option. Its place is read in the list that
+    /// shows it as it is hovered: a chosen search option moves into its
+    /// own list (`keepChosen`).
     private func bindOptions(_ options: [DOM.Element]) {
-      for (i, option) in options.enumerated() {
+      for option in options {
         _ = option.addEventListener(.click) { [self] _ in
           self.selectOption(option)
         }
         _ = option.addEventListener(.mousemove) { [self] _ in
-          if self.highlightIndex != i {
-            if self.highlightIndex >= 0, self.highlightIndex < self.allOptions.count {
-              self.allOptions[self.highlightIndex].setAttribute(data("highlighted"), false)
-            }
-            self.highlightIndex = i
-            option.setAttribute(data("highlighted"), true)
+          guard let i = self.allOptions.firstIndex(where: { $0.id == option.id }), self.highlightIndex != i
+          else { return }
+          if self.highlightIndex >= 0, self.highlightIndex < self.allOptions.count {
+            self.allOptions[self.highlightIndex].setAttribute(data("highlighted"), false)
           }
+          self.highlightIndex = i
+          option.setAttribute(data("highlighted"), true)
         }
       }
     }
@@ -1113,6 +1229,7 @@ public struct DropdownView: HTMLContent {
     }
 
     private func openDropdown() {
+      takeList()
       applyExclusions()
       isOpen = true
       menu?.setAttribute(data("open"), true)
@@ -1227,6 +1344,11 @@ public struct DropdownView: HTMLContent {
 
     /// Asks the server for the options matching `query`, shortly: each key
     /// typed restarts the wait, and only the latest query's answer is shown.
+    /// The wait shows under the options it shows from the key on, until
+    /// that answer is in; one that fails says so in the wait's place, the
+    /// options it shows kept (as its list's failure keeps its own), and the
+    /// next key asks again. An earlier query's answer, or its failure, says
+    /// nothing and ends no wait.
     private func searchRemotely(_ query: String) {
       if searchTimer != 0 {
         clearTimeout(searchTimer)
@@ -1234,10 +1356,15 @@ public struct DropdownView: HTMLContent {
       }
       searchSequence += 1
       highlightIndex = -1
-      if stringIsEmpty(query) {
+      searchFailed = false
+      hasQuery = !stringIsEmpty(query)
+      searchBusy = hasQuery
+      if !hasQuery {
         showOwnOptions()
+        showStatus()
         return
       }
+      showStatus()
       let asked = searchSequence
       let url = stringJoin(
         [searchURL, stringContains(searchURL, "?") ? "&q=" : "?q=", encodeURIComponent(query)], separator: "")
@@ -1246,13 +1373,31 @@ public struct DropdownView: HTMLContent {
         // The answer is a dropdown: loaded aside, its options taken.
         let answer = document.createElement(.div)
         answer.loadFragment(url) { [self] ok in
-          guard ok, asked == self.searchSequence else { return }
-          self.showResults(from: answer)
+          guard asked == self.searchSequence else { return }
+          self.searchBusy = false
+          // Why it failed is the bridge's to log.
+          self.searchFailed = !ok
+          if ok { self.showResults(from: answer) }
+          self.showStatus()
         }
       }
     }
 
+    /// Says, under the options it shows, the wait for or the failure of the
+    /// answer they wait on (`OptionsStatusView`): the latest query's while
+    /// one is typed, its list's otherwise.
+    private func showStatus() {
+      let state: OptionsStatusView.State
+      if hasQuery {
+        state = searchFailed ? .failed : (searchBusy ? .busy : .idle)
+      } else {
+        state = listFailed ? .failed : (listAsked ? .busy : .idle)
+      }
+      OptionsStatusView.show(state, in: status)
+    }
+
     private func showResults(from answer: DOM.Element) {
+      keepChosen()
       let results: DOM.Element
       if let resultsList {
         results = resultsList
@@ -1260,7 +1405,8 @@ public struct DropdownView: HTMLContent {
         results = document.createElement(.div)
         _ = results.classList.add("dropdown-options-list")
         results.setAttribute(data("dropdown-results"), true)
-        menu?.appendChild(results)
+        // In its own list's place, before what it says under them.
+        if let status { menu?.insertBefore(results, status) } else { menu?.appendChild(results) }
         bindLeave(results)
         resultsList = results
       }
@@ -1289,15 +1435,106 @@ public struct DropdownView: HTMLContent {
       optionsList?.setAttribute(.hidden, "")
       results.removeAttribute(.hidden)
       allOptions = options
+      showingResults = true
       applyExclusions()
       highlightIndex = -1
     }
 
     private func showOwnOptions() {
+      keepChosen()
       resultsList?.setAttribute(.hidden, "")
       optionsList?.removeAttribute(.hidden)
       allOptions = ownOptions
+      showingResults = false
       applyExclusions()
+    }
+
+    /// The chosen options a search found that its own list lacks, moved
+    /// into its own list, first (user, 2026-11-05): the next answer
+    /// replaces a search's options, and a choice stays in the list—where
+    /// what reads it finds it (the origin sentence, its language's name),
+    /// and shown before a search.
+    private func keepChosen() {
+      var kept: [DOM.Element] = []
+      var found: [DOM.Element] = []
+      for option in resultOptions {
+        let value = option.getAttribute(data("value")) ?? ""
+        let listed = ownOptions.contains { stringEquals($0.getAttribute(data("value")) ?? "", value) }
+        if isChosen(value) && !listed { kept.append(option) } else { found.append(option) }
+      }
+      guard !kept.isEmpty else { return }
+      resultOptions = found
+      listFirst(kept)
+    }
+
+    /// `options` moved to the head of its own list, before every option it
+    /// lists (`ownOptions`).
+    private func listFirst(_ options: [DOM.Element]) {
+      guard let optionsList else { return }
+      let first = ownOptions.first
+      for option in options {
+        option.setAttribute(data("highlighted"), false)
+        if let first, let list = first.parentElement {
+          list.insertBefore(option, first)
+        } else if let note = optionsList.querySelector(":scope > [data-dropdown-note=\"true\"]") {
+          optionsList.insertBefore(option, note)
+        } else {
+          optionsList.appendChild(option)
+        }
+      }
+      ownOptions = options + ownOptions
+      if !showingResults { allOptions = ownOptions }
+    }
+
+    /// Its own list asked for (`listURL`), on its first open: once a page
+    /// for every dropdown that asks the same (`SharedLists`). The wait
+    /// shows under its options until the list is in; a failed answer is
+    /// said in the wait's place (`OptionsStatusView`; the bridge logs why)
+    /// and asked again on the next open, which takes the message away while
+    /// it waits; once the list is in it never shows again.
+    private func takeList() {
+      guard !stringIsEmpty(listURL), !listAsked else { return }
+      listAsked = true
+      listFailed = false
+      showStatus()
+      SharedLists.take(listURL) { [self] answer in
+        self.listAsked = false
+        if let answer {
+          self.listURL = ""
+          self.adopt(list: answer)
+        } else {
+          self.listFailed = true
+        }
+        self.showStatus()
+      }
+    }
+
+    /// The options of the list `answer` holds, each a copy (every dropdown
+    /// asking the same list takes its own), listed after its own—one of a
+    /// value it lists already left out—with the answer's note after them,
+    /// before any note of its own.
+    private func adopt(list answer: DOM.Element) {
+      guard let optionsList else { return }
+      let ownNote = optionsList.querySelector(":scope > [data-dropdown-note=\"true\"]")
+      var added: [DOM.Element] = []
+      for source in answer.querySelectorAll("[data-dropdown-option=\"true\"]") {
+        let value = source.getAttribute(data("value")) ?? ""
+        if ownOptions.contains(where: { stringEquals($0.getAttribute(data("value")) ?? "", value) }) { continue }
+        let option = source.cloneNode(deep: true)
+        option.setAttribute(data("hidden"), false)
+        if let ownNote { optionsList.insertBefore(option, ownNote) } else { optionsList.appendChild(option) }
+        added.append(option)
+      }
+      if ownNote == nil, let note = answer.querySelector("[data-dropdown-note=\"true\"]") {
+        optionsList.appendChild(note.cloneNode(deep: true))
+      }
+      ownOptions = ownOptions + added
+      bindOptions(added)
+      markChosen()
+      if !showingResults {
+        allOptions = ownOptions
+        applyExclusions()
+      }
     }
 
     /// Marks the options the page withholds: values a page sets on the
@@ -1356,11 +1593,7 @@ public struct DropdownView: HTMLContent {
       if values.isEmpty { selectedText?.removeAttribute(.title) } else { selectedText?.setAttribute(.title, shown) }
       selectedText?.setAttribute(data("selected"), !values.isEmpty)
       selectedText?.scrollLeft = 0
-      for opt in ownOptions + resultOptions {
-        let chosen = isChosen(opt.getAttribute(data("value")) ?? "")
-        if chosen { _ = opt.classList.add("is-selected") } else { _ = opt.classList.remove("is-selected") }
-        opt.setAttribute(data("selected"), chosen)
-      }
+      markChosen()
       if let hiddenInput {
         hiddenInput.dispatchEvent(.change)
       }
@@ -1397,7 +1630,7 @@ public struct DropdownView: HTMLContent {
       }
 
       show([option])
-      mark([option])
+      markChosen()
 
       // Dispatch change event on hidden input
       if let hiddenInput {
@@ -1455,7 +1688,7 @@ public struct DropdownView: HTMLContent {
     private func clearSelection() {
       (hiddenInput as? HTML.HTMLInputElement)?.value = ""
       show([])
-      mark([])
+      markChosen()
 
       if let hiddenInput {
         hiddenInput.dispatchEvent(.change)
@@ -1475,9 +1708,68 @@ public struct DropdownView: HTMLContent {
     }
   }
 
+  /// The lists dropdowns take on their first open (`DropdownView.listURL`):
+  /// each asked once a page, however many dropdowns take it. The answer is
+  /// kept by its URL; a dropdown that asks while it is on its way waits for
+  /// it, and one that asks after takes it at once. An answer that failed is
+  /// forgotten, and told as nil, so the next open asks again.
+  ///
+  /// Arrays, not a dictionary: hashing a String in Embedded Swift pulls in
+  /// Unicode normalization.
+  private enum SharedLists {
+    nonisolated(unsafe) static var urls: [String] = []
+    /// Each URL's answer, nil while it is on its way.
+    nonisolated(unsafe) static var answers: [DOM.Element?] = []
+    nonisolated(unsafe) static var waiting: [[@Sendable (DOM.Element?) -> Void]] = []
+
+    static func take(_ url: String, _ then: @escaping @Sendable (DOM.Element?) -> Void) {
+      for (index, known) in urls.enumerated() where stringEquals(known, url) {
+        if let answer = answers[index] { then(answer) } else { waiting[index].append(then) }
+        return
+      }
+      urls.append(url)
+      answers.append(nil)
+      waiting.append([then])
+      let index = urls.count - 1
+      let answer = document.createElement(.div)
+      answer.loadFragment(url) { ok in
+        let told = waiting[index]
+        waiting[index] = []
+        if ok {
+          answers[index] = answer
+        } else {
+          // Never matched again: the next ask starts afresh.
+          urls[index] = ""
+        }
+        for tell in told { tell(ok ? answer : nil) }
+      }
+    }
+  }
+
   public class DropdownHydration: @unchecked Sendable {
     public static nonisolated(unsafe) var instance: DropdownHydration?
     private var instances: [DropdownInstance] = []
+    /// Every dropdown that searches the server, which `option(_:in:then:)`
+    /// can ask for an option it does not list.
+    fileprivate static nonisolated(unsafe) var searching: [DropdownInstance] = []
+
+    /// The option of `value` in the dropdown `view` (its `.dropdown-view`),
+    /// as soon as it has one: at once where it lists it; else, where it
+    /// searches the server, once its search finds it, kept in its own list
+    /// (`DropdownInstance.option`). A choice put back—a kept draft, a post
+    /// the server turned back—is made through it even where the page does
+    /// not list it (every language: `DropdownView.listURL`).
+    public static func option(_ value: String, in view: DOM.Element, then: @escaping @Sendable (DOM.Element) -> Void) {
+      for option in view.querySelectorAll("[data-dropdown-option=\"true\"]")
+      where stringEquals(option.getAttribute(data("value")) ?? "", value) {
+        then(option)
+        return
+      }
+      for dropdown in searching where dropdown.rootID == view.id {
+        dropdown.option(value, then: then)
+        return
+      }
+    }
 
     public init() {
       hydrateAllDropdowns()

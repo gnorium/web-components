@@ -107,6 +107,16 @@ final class TEIScanLayoutDataTests: XCTestCase {
     let style = attribute("style", of: block) ?? ""
     XCTAssertTrue(style.contains("line-height:"), style)
     XCTAssertTrue(style.contains("--tei-reflow-leading:1;"), style)
+    // Set solid, it gives the leading it gains back, half above and half
+    // below, and keeps its printed height less that: its line where its
+    // print sets it, the next box as far below (user, 2026-11-05).
+    let leading = try XCTUnwrap(TEIRendition.leading(of: try XCTUnwrap(attribute("data-rend", of: block))))
+    let half = TEIView.number(((leading - 1) / 2 * 10_000).rounded() / 10_000) + "em"
+    XCTAssertTrue(style.contains("--tei-reflow-margin-end:calc(0em + \(half));"), style)
+    let printedStart = style.range(of: ";margin-block-start:").map { String(style[$0.upperBound...].prefix { $0 != ";" }) } ?? "0em"
+    XCTAssertTrue(style.contains("--tei-reflow-margin-start:calc(\(printedStart) + \(half));"), style)
+    let height = try XCTUnwrap(style.range(of: "block-size:").map { String(style[$0.upperBound...].prefix { $0 != ";" }) })
+    XCTAssertTrue(style.contains("--tei-reflow-min-block:calc(\(height) - 2 * \(half));"), style)
     let start = try XCTUnwrap(style.range(of: "--tei-reflow-start:").map { Double(style[$0.upperBound...].prefix { $0 != "e" }) ?? -1 })
     let size = try XCTUnwrap(style.range(of: "--tei-reflow-size:").map { Double(style[$0.upperBound...].prefix { $0 != "e" }) ?? -1 })
     let font = try XCTUnwrap(style.range(of: "font-size:").map { Double(style[$0.upperBound...].prefix { $0 != "e" }) ?? -1 })
@@ -116,5 +126,42 @@ final class TEIScanLayoutDataTests: XCTestCase {
     XCTAssertEqual(size * font, 2 * (TEIPage.leafMeasure - middle), accuracy: 0.001)
     let body = try XCTUnwrap(elements(in: TEIView(teiXml: Self.document).build()).first { attribute("class", of: $0) == "tei-block" })
     XCTAssertFalse((attribute("style", of: body) ?? "").contains("--tei-reflow"))
+  }
+
+  /// Reflowed, a block set solid keeps of the leading it gives back what
+  /// clears the block straight after it, and gives the rest back (user,
+  /// 2026-11-05: Hamlet Q1's title page, its "THE" 1.6 px into "Tragicall
+  /// Historie of" once it gave all its leading back; "As it hath beene…"
+  /// and "1603.", both set solid, 2.6 px). Web-tests
+  /// `ArtifactReflowCoverTests.aTitlePageReflowsInTheMiddleOfItsPane`.
+  func testABlockSetSolidKeepsWhatClearsTheNextBlock() throws {
+    let page =
+      #"<TEI xmlns="http://www.tei-c.org/ns/1.0"><teiHeader><encodingDesc><tagsDecl>"#
+      + #"<rendition xml:id="text-block" scheme="css" selector="text">font-size:85.44px;inline-size:26.47em;block-size:47.94em;margin:7.42em 13.26em 11.23em 9.33em;max-inline-size:80.61em</rendition>"#
+      + "</tagsDecl></encodingDesc></teiHeader><text><body>"
+      + #"<pb n="Title page (p. 1)" facs="https://web-tests.invalid/page-7/full/max/0/default.jpg"/>"#
+      + #"<ab rend="align(center)" style="font-size:2.8214em;line-height:0.8804em;letter-spacing:0.3332em">THE</ab>"#
+      + #"<ab style="font-size:3.1216em;line-height:1.0482em;margin-inline-start:-0.7008em">Tragicall Historie of</ab>"#
+      + #"<ab style="font-size:4.3192em;line-height:1.1511em;margin-inline-start:0.8217em">HAMLET</ab>"#
+      + #"<ab style="font-size:1.3105em;line-height:0.9608em;margin-inline-start:-1.6789em">As it hath beene diuerse times acted by his Highnesse ser-</ab>"#
+      + #"<ab rend="align(center)" style="font-size:1.4876em;line-height:0.8464em">1603.</ab>"#
+      + "</body></text></TEI>"
+    let styles = elements(in: TEIView(teiXml: page).build()).filter { attribute("class", of: $0) == "tei-block" }
+      .map { attribute("style", of: $0) ?? "" }
+    XCTAssertEqual(styles.count, 5)
+    guard styles.count == 5 else { return }
+    // "THE": all of its leading given back above it, nothing over it; below
+    // it, what leaves its type touching "Tragicall"'s, which stands half its
+    // own leading (1.0482) inside its line: 0.0598 less 0.0241 × 3.1216 / 2.8214.
+    XCTAssertTrue(styles[0].contains("--tei-reflow-margin-start:calc(0em + -0.0598em);"), styles[0])
+    XCTAssertTrue(styles[0].contains("--tei-reflow-margin-end:calc(0em + -0.0267em);"), styles[0])
+    // "HAMLET" stands far enough inside its line (1.1511) for all of "As it
+    // hath…"'s to be given back above it.
+    XCTAssertTrue(styles[3].contains("--tei-reflow-margin-start:calc(0em + -0.0196em);"), styles[3])
+    // Between "As it hath…" and "1603.", both set solid with no room
+    // between them, nothing given back; below "1603.", all of it.
+    XCTAssertTrue(styles[3].contains("--tei-reflow-margin-end:calc(0em + 0em);"), styles[3])
+    XCTAssertTrue(styles[4].contains("--tei-reflow-margin-start:calc(0em + 0em);"), styles[4])
+    XCTAssertTrue(styles[4].contains("--tei-reflow-margin-end:calc(0em + -0.0768em);"), styles[4])
   }
 }

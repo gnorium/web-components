@@ -177,6 +177,18 @@ public enum TEISentenceSelection {
       return TEIRenderer.presentationForms[run.text] ?? run.text
     }
 
+    /// A page's fragment as Raw, the Diff and the Revise editor show it:
+    /// formatted as stored TEI is (`XMLFormatter.formatted`, user
+    /// 2026-11-05: "store it formatted"), one element a line where its
+    /// containers hold elements only, its mixed content byte for byte. A
+    /// page stored formatted shows as it is stored (formatting it again
+    /// changes nothing); a page stored before (one line, or laid out
+    /// otherwise) shows formatted alike in all three, so its editor and Raw
+    /// never differ, and its edit is compared with what its editor showed.
+    public static func shownCode(_ markup: String) -> String {
+      XMLFormatter.formatted(markup)
+    }
+
     public static func serviceID(ofFacsimile url: String) -> String {
       TEIRenderer.serviceID(ofFacsimile: url)
     }
@@ -913,28 +925,139 @@ public enum TEISentenceSelection {
     ])
 
     /// A block's or a line's style from its rend: its print's setting, and
-    /// what Reflow sets it by in its place (`reflowStyle`).
-    private func setting(_ rend: String) -> String {
-      TEIRendition.css(from: rend) + Self.reflowStyle(of: rend, measure: typeAreaMeasure)
+    /// what Reflow sets it by in its place (`reflowStyle`), the leading it
+    /// keeps where the box next to it needs it (`keptLeading`).
+    private func setting(_ rend: String, kept: KeptLeading = .init()) -> String {
+      TEIRendition.css(from: rend) + Self.reflowStyle(of: rend, measure: typeAreaMeasure, kept: kept)
+    }
+
+    /// Of the leading a box set solid gives back reflowed (`reflowStyle`),
+    /// what it keeps at its start and at its end, in its own em.
+    struct KeptLeading {
+      var start = 0.0
+      var end = 0.0
+    }
+
+    /// Reflowed, what each of a run's blocks set solid keeps of the leading
+    /// it gives back (`reflowStyle`), so no line's type runs into the next
+    /// block's (user, 2026-11-05: Hamlet Q1's title page, "THE" set 0.88 of
+    /// its type and straight under it "Tragicall Historie of", their type
+    /// 1.6 px into each other once "THE" gave its leading back; "As it hath
+    /// beene…" and "1603.", both set solid, 2.6 px). Where the print stands
+    /// two blocks closer than their type is tall, it keeps as much as clears
+    /// them, the upper one's end first, and what follows stands that much
+    /// lower; where the print gives them the room, all of it is given back,
+    /// and each stands where its print sets it. Only blocks one straight
+    /// after another (`items`, a run's sections in order, which stand with
+    /// no room between them): a space, a figure or a rule between two is the
+    /// print's own room, and text set over a figure is set so by its print.
+    /// Each block's type is its em, centered on its line: set solid its line,
+    /// otherwise half its leading over its type inside it, where its rend
+    /// says its leading; at its line's edge where it says none.
+    static func keptLeading(of items: [LaidOut], columns: String) -> [KeptLeading] {
+      var kept = Array(repeating: KeptLeading(), count: items.count)
+      /// A block's type size in the body's em, its leading, and the margins
+      /// its print declares before and after it in its own em.
+      typealias Box = (size: Double, leading: Double?, start: Double, end: Double)
+      /// A block's `Box`; nil for what is no block, or where a margin is no
+      /// length read here (a `calc`, an unknown unit).
+      func box(_ item: LaidOut) -> Box? {
+        guard case .block(let lines) = item else { return nil }
+        let rend = columns.isEmpty ? lines[0].rend : TEIRendition.inColumns(lines[0].rend, of: columns)
+        guard let size = TEIRendition.fontSize(of: rend), size > 0 else { return nil }
+        func margin(_ names: [String]) -> Double? {
+          for name in names {
+            let css = TEIRendition.css(from: rend, only: [name])
+            guard css.hasPrefix(name + ":") else { continue }
+            let value = String(css.dropFirst(name.count + 1).prefix { $0 != ";" })
+            if value.hasSuffix("rem") { return Double(value.dropLast(3)).map { $0 / size } }
+            if value.hasSuffix("em") { return Double(value.dropLast(2)) }
+            if value.hasSuffix("px") { return Double(value.dropLast(2)).map { $0 / 16 / size } }
+            return Double(value).flatMap { $0 == 0 ? 0 : nil }
+          }
+          return 0
+        }
+        guard let start = margin(["margin-block-start", "margin-top"]), let end = margin(["margin-block-end", "margin-bottom"])
+        else { return nil }
+        return (size, TEIRendition.leading(of: rend), start, end)
+      }
+      guard items.count > 1 else { return kept }
+      for index in 1..<items.count {
+        guard let above = box(items[index - 1]), let below = box(items[index]) else { continue }
+        // In the body's em: what each gives back (set solid, half the
+        // leading it gains), and how far inside its line its type stands.
+        func given(_ box: Box) -> Double {
+          guard let leading = box.leading, leading < 1 else { return 0 }
+          return (1 - leading) / 2 * box.size
+        }
+        func inset(_ box: Box) -> Double {
+          guard let leading = box.leading, leading > 1 else { return 0 }
+          return (leading - 1) / 2 * box.size
+        }
+        let up = given(above)
+        let down = given(below)
+        guard up + down > 0 else { continue }
+        let room = above.end * above.size + below.start * below.size + inset(above) + inset(below) - up - down
+        guard room < 0 else { continue }
+        let atEnd = min(-room, up)
+        let atStart = min(-room - atEnd, down)
+        kept[index - 1].end = atEnd / above.size
+        kept[index].start = atStart / below.size
+      }
+      return kept
     }
 
     /// What Reflow sets a box of `rend` by in place of its print's setting
-    /// (user, 2026-11-03), as the custom properties its rules read: lines
-    /// set closer than their type is tall (`TEIRendition.leading` under 1:
-    /// a line placed by its zone is its box's height, 0.714 of its type)
-    /// set solid (`--tei-reflow-leading`), so a line they wrap clears the
-    /// one above; a line placed by its zone about its box's middle, as far
-    /// as the type area's `measure` lets it (`TEIPage.reflowedBox`:
-    /// `--tei-reflow-start`, `--tei-reflow-size`, in its em), so it wraps
-    /// where its type area ends, never because the face fills its box (Hamlet
-    /// Q1's front cover, reflowed: "HAMLE" over its "T", "SHAKESPEAR" over
-    /// its "E", "LONDON" over "1603"); a tracked line, its tracking as its
-    /// inset (`--tei-reflow-tracking`). Reflow off, the print's setting
-    /// stands.
-    static func reflowStyle(of rend: String, measure: Double) -> String {
+    /// (user, 2026-11-03), as the custom properties its rules read. Reflow
+    /// changes only how text runs on and wraps; the page's vertical rhythm
+    /// is its print's (user, 2026-11-05: "why reflow changes vertical
+    /// gaps?"): a box keeps the room its print gives it, its first line
+    /// where the print sets it and each gap to the next box as printed, and
+    /// grows only by the lines it wraps. So: lines set closer than their
+    /// type is tall (`TEIRendition.leading` under 1: a line placed by its
+    /// zone is its box's height, 0.714 of its type) set solid
+    /// (`--tei-reflow-leading`), so a line they wrap clears the one above,
+    /// the leading that gains taken back half above and half below the box
+    /// (`--tei-reflow-margin-start`, `--tei-reflow-margin-end`: its print's
+    /// margins less that half); a box the print gives a height at least that
+    /// tall (`--tei-reflow-min-block`, less the leading taken back), as tall
+    /// as its lines where they need more; a line placed by its zone about
+    /// its box's middle, as far as the type area's `measure` lets it
+    /// (`TEIPage.reflowedBox`: `--tei-reflow-start`, `--tei-reflow-size`, in
+    /// its em), so it wraps where its type area ends, never because the face
+    /// fills its box (Hamlet Q1's front cover, reflowed: "HAMLE" over its
+    /// "T", "SHAKESPEAR" over its "E", "LONDON" over "1603"); a tracked
+    /// line, its tracking as its inset (`--tei-reflow-tracking`). Reflow
+    /// off, the print's setting stands. Of the leading it gives back, a box
+    /// keeps what `kept` says at either side, so its type never runs into
+    /// the box next to it (`keptLeading`).
+    static func reflowStyle(of rend: String, measure: Double, kept: KeptLeading = .init()) -> String {
       func em(_ value: Double) -> String { number((value * 10_000).rounded() / 10_000) + "em" }
+      /// The value its print declares for the first of `names` it declares.
+      func declared(_ names: [String]) -> String? {
+        for name in names {
+          let css = TEIRendition.css(from: rend, only: [name])
+          if css.hasPrefix(name + ":") { return String(css.dropFirst(name.count + 1).prefix { $0 != ";" }) }
+        }
+        return nil
+      }
       var style = ""
-      if let leading = TEIRendition.leading(of: rend), leading < 1 { style += "--tei-reflow-leading:1;" }
+      // Half the leading a line set solid gains, in its em (negative).
+      var half: String?
+      if let leading = TEIRendition.leading(of: rend), leading < 1 {
+        let taken = em((leading - 1) / 2)
+        half = taken
+        let start = declared(["margin-block-start", "margin-top"]) ?? "0em"
+        let end = declared(["margin-block-end", "margin-bottom"]) ?? "0em"
+        // What it gives back at either side, less what it keeps there.
+        let atStart = kept.start > 0 ? em((leading - 1) / 2 + kept.start) : taken
+        let atEnd = kept.end > 0 ? em((leading - 1) / 2 + kept.end) : taken
+        style += "--tei-reflow-leading:1;--tei-reflow-margin-start:calc(\(start) + \(atStart));"
+          + "--tei-reflow-margin-end:calc(\(end) + \(atEnd));"
+      }
+      if let height = declared(["block-size", "height"]) {
+        style += "--tei-reflow-min-block:" + (half.map { "calc(\(height) - 2 * \($0))" } ?? height) + ";"
+      }
       if let box = TEIPage.reflowedBox(of: rend, measure: measure) {
         style += "--tei-reflow-start:\(em(box.start));--tei-reflow-size:\(em(box.size));"
       }
@@ -956,9 +1079,22 @@ public enum TEISentenceSelection {
     private func sectioned(
       _ sections: [[LaidOut]], facsimileURL: String, label: String, tabStop: TEIWordPlace?, columns: String = ""
     ) -> [DOM.Node] {
-      sections.map { items in
+      // The run's blocks in order, one section straight after another: what
+      // each keeps of the leading it gives back reflowed (`keptLeading`).
+      let kept = Self.keptLeading(of: sections.flatMap { $0 }, columns: columns)
+      // Where each section's first item stands in that order.
+      let firsts: [Int] = {
+        var out: [Int] = []
+        var count = 0
+        for items in sections {
+          out.append(count)
+          count += items.count
+        }
+        return out
+      }()
+      return sections.enumerated().map { section, items in
         div {
-          for item in items {
+          for (at, item) in items.enumerated() {
             switch item {
             case .line(let line):
               renderingLine(line, facsimileURL: facsimileURL, label: label, tabStop: tabStop)
@@ -990,7 +1126,10 @@ public enum TEISentenceSelection {
               }.class("tei-block").data("rend", lines[0].rend).data("part", lines[0].part)
                 // How many lines the print sets it in: one runs, reflowed, as far as its pane lets it.
                 .data("printed-lines", Self.rows(of: lines).count).addingAttribute(
-                "style", setting(columns.isEmpty ? lines[0].rend : TEIRendition.inColumns(lines[0].rend, of: columns)))
+                "style",
+                setting(
+                  columns.isEmpty ? lines[0].rend : TEIRendition.inColumns(lines[0].rend, of: columns),
+                  kept: kept[firsts[section] + at]))
             case .furniture(let pieces):
               // A page number and a running head set on one line keep
               // their places on it, as the image has them: each piece
@@ -1152,6 +1291,11 @@ public enum TEISentenceSelection {
         // the page (user, 2026-10-31). Its box is the zone's: its setting's
         // where it is placed; else the zone's proportions on the surface. A
         // crop of the facsimile where it has none.
+        // Its `<figDesc>` (`line.text`) is the encoder's description, never
+        // printed on the page: the drawing's label (the crop's `alt`), its
+        // gloss's and its XML's, never a caption drawn under it (user,
+        // 2026-11-05). A caption the page prints (a `<head>` in the figure)
+        // is set as the text's own lines after it (`TEIRenderer`).
         if let graphic {
           let box = zone?.percent
           return glossable(
@@ -1163,7 +1307,6 @@ public enum TEISentenceSelection {
                 .viewBox("0 0 \(Self.number(box?.width ?? 1)) \(Self.number(box?.height ?? 1))")
                 .preserveAspectRatio("none").role("img").ariaLabel(alt)
               }.class("tei-figure-drawing")
-              if !line.text.isEmpty { figcaption { line.text }.class("tei-figure-caption") }
             }.class("tei-line tei-figure").data("figure-type", type.isEmpty ? "figure" : type)
               .data("placed", placed.isEmpty ? "false" : "true").data("zone", zoneData)
               .addingAttribute("style", placed), line.element
@@ -1175,7 +1318,6 @@ public enum TEISentenceSelection {
         return glossable(
           figure {
             img().src(region).alt(alt).loading(.lazy).class("tei-figure-image")
-            if !line.text.isEmpty { figcaption { line.text }.class("tei-figure-caption") }
           }.class("tei-line tei-figure").data("figure-type", type.isEmpty ? "figure" : type)
             .data("placed", placed.isEmpty ? "false" : "true").data("zone", zoneData)
             .addingAttribute("style", placed), line.element
@@ -1347,9 +1489,10 @@ public enum TEISentenceSelection {
             // The page's code (user, 2026-10-14), never the document's
             // header: that is its viewer's Header pane's alone (user,
             // 2026-10-21), never in a page's XML.
+            // Edited or read, the same text (`shownCode`): the page as it is
+            // stored, formatted.
             let code = TEIFacsimile.headed(
-              TEIRendition.headedPage(page.markup, renditions: ""),
-              surface: surfaces[index])
+              TEIRendition.headedPage(Self.shownCode(page.markup), renditions: ""), surface: surfaces[index])
             div {
               if editable {
                 // A form of its own, so the page can be sent to be read back
@@ -1371,7 +1514,7 @@ public enum TEISentenceSelection {
                 }
                 .class("tei-page-edit")
               } else {
-                // The stored text as it is (a document is stored formatted),
+                // The page's code formatted, one element a line (`shownCode`),
                 // its surface as its <facsimile> as its diff shows it (user,
                 // 2026-10-16), numbered and soft-wrapped (user, 2026-10-11).
                 CodeView(code, showLineNumbers: false, lined: true)
@@ -1459,18 +1602,19 @@ public enum TEISentenceSelection {
       .data("editable", editable)
       .data("gloss", glossURL ?? "")
       .style {
-        // The pane it sits in (the reader's markup pane, a quote's
-        // box) has no padding, so a ring drawn on the pane sits on its own
-        // edges; the view's 1px keeps the ring's inward outline clear of
-        // what it holds (user, 2026-10-10). The text's 16 inset is its
-        // layer's own (the rendered page, the translation, the note of a
-        // document with no pages); the code fills the view edge to edge,
-        // square, with its own inset.
+        // No inset on any TEI pane (user, 2026-11-05: "yes, everywhere"):
+        // not the view's, not its layers' (the rendered page, the
+        // translation), in a reader's markup pane, a quote's box or a bare
+        // view (TestamentView's plain box) alike. The white around the text
+        // is its page's own, its type area's margins; a page with none runs
+        // to its pane's edge, as the scan does. A ring drawn on a reader's
+        // pane stands outside it (ArtifactView). The code fills the view edge
+        // to edge, square. Only the note of a document with no pages keeps
+        // an inset: it is a message, not a page.
         selector("&") {
           display(.flex)
           flexDirection(.column)
           minWidth(0)
-          padding(px(1))
           CSS.Property("font-variant-ligatures", "none")
         }
         descendant(".tei-page") {
@@ -1479,9 +1623,7 @@ public enum TEISentenceSelection {
           gap(spacing8)
           minWidth(0)
         }
-        selector(
-          "& [data-layer='rendering']", "& [data-layer='translated-rendering']", "& .tei-empty"
-        ) {
+        descendant(".tei-empty") {
           padding(spacing16)
         }
         selector("& .tei-page-raw .code-view", "& .tei-page-raw .code-editor-view") {
@@ -1610,12 +1752,6 @@ public enum TEISentenceSelection {
         descendant(".tei-drop-hang::before") {
           CSS.Property("content", "attr(data-letter)")
           visibility(.hidden)
-        }
-        descendant(".tei-figure-caption") {
-          fontFamily(typographyFontSans)
-          fontSize(fontSizeMedium16)
-          fontStyle(.italic)
-          color(colorSubtle)
         }
         // `<hi rend="…">` on the run it applies to. Small caps mark an author
         // statement; italic marks a speaker prefix or an emphasis the
@@ -1858,9 +1994,18 @@ public enum TEISentenceSelection {
         // 2026-11-03: Hamlet Q1's front cover wrapped "HAMLE" over its "T"
         // 0.714 em below, its box's height): lines set closer than their
         // type set solid, and a box the print gives a height as tall as its
-        // lines (`reflowStyle`).
+        // lines (`reflowStyle`). Only what it wraps moves anything (user,
+        // 2026-11-05: "why reflow changes vertical gaps?"): a box set solid
+        // gives back the leading it gains, half above it and half below, so
+        // its first line stands where its print sets it and the next box
+        // as far below as printed; a box the print gives a height keeps at
+        // least that height. A page whose lines do not wrap reads the same
+        // reflowed or not, down to the pixel; one whose lines wrap keeps its
+        // gaps between boxes.
         selector("[data-reflow='true'] & [style*='--tei-reflow-leading']") {
           CSS.Property("line-height", "var(--tei-reflow-leading)").important()
+          CSS.Property("margin-block-start", "var(--tei-reflow-margin-start)").important()
+          CSS.Property("margin-block-end", "var(--tei-reflow-margin-end)").important()
         }
         selector(
           "[data-reflow='true'] & .tei-block[style*='block-size']",
@@ -1868,6 +2013,7 @@ public enum TEISentenceSelection {
           "[data-reflow='true'] & .tei-box[style*='block-size']"
         ) {
           CSS.Property("block-size", "auto").important()
+          CSS.Property("min-block-size", "var(--tei-reflow-min-block, 0px)")
         }
         // A line placed by its zone, about its box's middle as far as its
         // type area lets it (`reflowStyle`), never held to the pane's width: its
@@ -1884,22 +2030,38 @@ public enum TEISentenceSelection {
         // either side for a line the print sets out before it (`outdent`),
         // so no line runs out of sight and a centered line stays on the
         // pane's middle; its lines wrap in it, never past the pane.
-        // Its room either side (`--tei-reflow-room`) in its pane's width
-        // (the page's, its query container's: `cqi`) and its em (the
-        // root's, `rem`). A line the print sets alone (`data-printed-lines`,
-        // a title page's) runs on past the type area's end, as far as the pane
-        // lets it, a centered one either way, so a face that sets it a hair
-        // wider than the print never wraps it in a wide pane; a paragraph
-        // wraps at the type area's measure, as its print does.
+        // Its room either side in its page's own width and its em (the
+        // root's, `rem`): on the type area's own box (`.tei-text-block`, a
+        // margin's), the page's width is its containing block's, `100%`,
+        // which every browser resolves inside the zoomed page as the page's
+        // own width, whatever stands around it (user, 2026-11-05: Hamlet
+        // Q1's front cover stood left of its pane's middle in the in-app
+        // browser, which read `100cqi` inside the zoomed page as the page's
+        // width on screen and zoomed it again; then right of it in Chrome,
+        // by half the scrollbar the pane took after the reader measured the
+        // page). A line the print sets alone (`data-printed-lines`, a title
+        // page's) runs on past the type area's end into that room, as far
+        // as the pane lets it, a centered one either way, so a face that
+        // sets it a hair wider than the print never wraps it in a wide
+        // pane; a paragraph wraps at the type area's measure, as its print
+        // does. The room it runs into (`--tei-reflow-room`) is the same
+        // quantity read from a line's own box, where `100%` is its block's:
+        // from the reader's measure of the page at its zoom
+        // (`--tei-reflow-width`, ArtifactView: the page's width on screen
+        // over its zoom, taken once the pane's scrollbars have settled), the
+        // query container's `100cqi` only where no reader sets it. A
+        // centered line runs into it as far either way, so it stays on the
+        // type area's middle whatever that room reads.
         // Above and below it, its leaf's own head and foot, and its type area
         // at least its height (user, 2026-11-03: the title page's "THE"
         // stood at the pane's top, its "1603." at its foot, where its page
         // sets them inside its leaf's margins), in its em, zoomed with it;
-        // the pane's inset is its reader's, around it.
+        // no inset of a pane's around it (user, 2026-11-05).
         selector("[data-reflow='true'] & .tei-page-text[data-type-area='true']") {
           CSS.Property("container-type", "inline-size")
           CSS.Property(
-            "--tei-reflow-room", "max(var(--tei-reflow-outdent, 0rem), (100cqi - var(--tei-type-area-measure) * 1rem) / 2)")
+            "--tei-reflow-room",
+            "max(var(--tei-reflow-outdent, 0rem), (var(--tei-reflow-width, 100cqi) - var(--tei-type-area-measure) * 1rem) / 2)")
           CSS.Property("padding-block", "calc(var(--tei-type-area-head) * 1rem) calc(var(--tei-type-area-foot) * 1rem)")
         }
         selector("[data-reflow='true'] & .tei-page-text[data-type-area='true'] > .tei-text-block") {
@@ -1911,7 +2073,8 @@ public enum TEISentenceSelection {
         ) {
           width(perc(100))
           boxSizing(.borderBox)
-          CSS.Property("padding-inline", "var(--tei-reflow-room)")
+          CSS.Property(
+            "padding-inline", "max(var(--tei-reflow-outdent, 0rem), (100% - var(--tei-type-area-measure) * 1rem) / 2)")
         }
         selector(
           "[data-reflow='true'] & .tei-page-text[data-type-area='true'] > * > .tei-section > .tei-block[data-printed-lines='1']:not([style*='--tei-reflow-size'])"
@@ -1924,11 +2087,6 @@ public enum TEISentenceSelection {
           "[data-reflow='true'] & .tei-page-text[data-type-area='true'] > * > .tei-section > .tei-block[data-printed-lines='1']:not([style*='--tei-reflow-size'])[data-rend~='align(center)']"
         ) {
           CSS.Property("margin-inline-start", "calc(-1 * var(--tei-reflow-room))").important()
-        }
-        // Reflowed, its inset is its reader's, around it at every zoom
-        // (ArtifactView), never its own, which its zoom shrinks.
-        selector("[data-reflow='true'] & [data-layer='rendering']", "[data-reflow='true'] & [data-layer='translated-rendering']") {
-          padding(0)
         }
         selector("[data-reflow='true'] & .tei-page-text:not([data-type-area='true'])") {
           CSS.Property("padding-inline-start", "var(--tei-reflow-outdent, 0rem)")

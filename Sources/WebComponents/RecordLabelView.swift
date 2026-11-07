@@ -15,7 +15,7 @@ import WebTypes
 /// subordinate by color (16px, as the title), the title the linked
 /// grain the path leads to; then, small and subtle, a path of what tells it
 /// from the records listed with it (`metas`, the clash rule), the same for
-/// works and words, as its address is: Class › Voice names › Homograph—its
+/// biblio-records and lexico-records, as its address is: Class › Voice names › Homograph—its
 /// class always › its voice names only where another listed record has its
 /// language, title and class › its homograph number only where another has
 /// its voice names too. "Middle English › anker", "Noun"; "English
@@ -44,7 +44,7 @@ public struct RecordLabelView: HTMLContent {
     /// Its class by its name ("Dictionary", "Noun"); "" when unknown.
     public let type: String
     /// Its voice names as its address takes them, as English lists them,
-    /// the same on both sides: a work's own, a word's those of the work
+    /// the same on both sides: a biblio-record's own, a lexico-record's those of the work
     /// holding its earliest attestation ("Margery Kempe"); "" or "—" when
     /// none is recorded.
     public let voiceNames: String
@@ -65,7 +65,7 @@ public struct RecordLabelView: HTMLContent {
   /// The clash rule (user, 2026-10-08), each record's meta row against the
   /// others listed with it, down its address—class › voice names ›
   /// homograph,
-  /// the same for works and words: its class, always ("—" when unknown);
+  /// the same for biblio-records and lexico-records: its class, always ("—" when unknown);
   /// then its voice names where another has the same language, title and
   /// class ("—" when none is recorded, a voice-names segment like any
   /// other); then its homograph number where another has the same voice

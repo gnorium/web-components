@@ -21,7 +21,12 @@ import WebTypes
 /// The suggestions are its own (`options`), or a server's (`searchURL`):
 /// typing asks `searchURL?q=…` (debounced; a late answer to an earlier query
 /// is dropped) and shows the suggestions of the ComboboxView the answer
-/// holds, its own again for an empty query.
+/// holds, its own again for an empty query. While the latest query's
+/// answer is on its way, the list under the field typed in shows a wait
+/// under the suggestions of its own that match, and one that fails says so
+/// in the wait's place, as a dropdown's does (`OptionsStatusView`); the next
+/// keystroke, or the next open, asks again. An earlier query's answer, or
+/// its failure, says nothing.
 ///
 /// Built on both sides: a list's rows clone it, and the client may build
 /// one. `build()` stays embedded-safe (stringIsEmpty/stringEquals).
@@ -62,7 +67,7 @@ public struct ComboboxView: HTMLContent {
   /// Where it asks for suggestions, when the server holds too many to send.
   let searchURL: String?
   /// A line after the suggestions that is not one: what the list leaves out
-  /// ("Showing the first 50."). A search's answer
+  /// ("Showing the first 100.", `PaginationView.perList`). A search's answer
   /// brings its own.
   let note: String?
   /// The id of the form its value submits with, when it sits outside it.
@@ -186,7 +191,7 @@ public struct ComboboxView: HTMLContent {
         // Shows every suggestion, whatever is typed; not a stop in the tab
         // order (the arrow keys open the list from the field).
         button {
-          AnimatedUpDownChevronView(id: "combobox-\(id)", expanded: false, size: lineHeightSmall22)
+          AnimatedUpDownChevronView(id: "combobox-\(id)", expanded: false, size: fontSizeMedium16)
         }
         .type(.button)
         .class("combobox-toggle")
@@ -215,6 +220,12 @@ public struct ComboboxView: HTMLContent {
             div { note }
               .class("combobox-note")
               .data("combobox-note", true)
+          }
+
+          // A search on its way from the server, or failed: said under the
+          // suggestions it shows, a search's note before it.
+          if !stringIsEmpty(searchURL ?? "") {
+            OptionsStatusView()
           }
         }
         .class("combobox-menu")
@@ -272,7 +283,7 @@ public struct ComboboxView: HTMLContent {
       }
       // Room for the toggle at the field's end.
       descendant(".combobox-input-wrapper .text-input-input") {
-        paddingInlineEnd(calc(spacing12 + lineHeightSmall22 + spacing8))
+        paddingInlineEnd(calc(spacing12 + fontSizeMedium16 + spacing8))
       }
       // The toggle the field's full height, its icon where a field's end
       // icon sits: 12 inside the border.
@@ -284,7 +295,7 @@ public struct ComboboxView: HTMLContent {
         display(.flex)
         alignItems(.center)
         justifyContent(.center)
-        width(calc(borderWidthBase + spacing12 + lineHeightSmall22 + spacing12))
+        width(calc(borderWidthBase + spacing12 + fontSizeMedium16 + spacing12))
         padding(0)
         color(colorSubtle)
         backgroundColor(backgroundColorTransparent)
@@ -481,6 +492,14 @@ public struct ComboboxView: HTMLContent {
     /// Which query is the latest: an answer overtaken by a later one is
     /// dropped.
     private var searchState = ComboboxSearch()
+    /// What it says under the suggestions it shows (`OptionsStatusView`):
+    /// the wait for, or the failure of, the latest query's answer. Nil
+    /// where it searches nothing.
+    private let status: DOM.Element?
+    /// Whether the latest query's answer is on its way.
+    private var searchBusy = false
+    /// Whether the latest query's answer failed.
+    private var searchFailed = false
     private var isOpen = false
     /// The id of the suggestion a press began on, until its click.
     private var pressed = ""
@@ -504,6 +523,7 @@ public struct ComboboxView: HTMLContent {
       }
       own = Array(listbox.querySelectorAll("[data-combobox-option='true']"))
       ownNote = root.querySelector("[data-combobox-note='true']")
+      status = menu.querySelector(":scope > .options-status-view")
       shown = own
       searchURL = root.getAttribute(data("search-url")) ?? ""
       showValue()
@@ -561,8 +581,11 @@ public struct ComboboxView: HTMLContent {
       // field as a click, which opens the list. One that ends selecting the
       // label's words (to copy them) leaves the focus alone: in the field it
       // would drop the selection.
+      // A link in the label's words (a claimed field's) is a link: it leads
+      // where it points, the field left alone.
       if let label = root.querySelector(".combobox-label") {
         _ = label.addEventListener(.click) { [self] event in
+          if let target = event.target, let _ = target.closest("a[href]") { return }
           event.preventDefault()
           if let selection = window.getSelection(), !selection.isCollapsed { return }
           self.field.focus()
@@ -626,8 +649,10 @@ public struct ComboboxView: HTMLContent {
       commit(value: Self.valueOf(text, among: own))
       // Typed elsewhere and written here (a tree row's value box, which
       // mirrors this field), it takes the text and opens nothing: the list
-      // opens under the field being typed in (user, 2026-11-02).
-      guard let active = document.activeElement, active.id == field.id else {
+      // opens under the field being typed in (user, 2026-11-02). A search
+      // out for the text it had is no more.
+      guard isTypedIn else {
+        cancelSearch()
         close()
         return
       }
@@ -737,12 +762,25 @@ public struct ComboboxView: HTMLContent {
       let currentQuery = stringTrim(text)
       if !results.isEmpty && !searchState.matches(currentQuery) { showOwn() }
       if !stringIsEmpty(searchURL) && isNarrowing && !searchState.matches(currentQuery) {
+        // Asked again after a failure too: its next open asks again.
         search(stringTrim(text))
+      } else if searchFailed {
+        // Nothing to ask (the text is a suggestion's name): the failure
+        // said no more.
+        searchFailed = false
+        showStatus()
       }
       // A server's suggestions already match the text, as the server
       // matches it (diacritics aside): none is hidden again here.
       filter(all || searchState.matches(currentQuery) ? "" : text)
-      guard visibleCount() > 0 else { return }
+      reveal()
+    }
+
+    /// Shows the list: the suggestions it holds, and under them a search's
+    /// wait or failure (`OptionsStatusView`); nothing when it has none of
+    /// them to show.
+    private func reveal() {
+      guard visibleCount() > 0 || searchBusy || searchFailed else { return }
       pressed = ""
       isOpen = true
       menu.setAttribute(data("open"), true)
@@ -753,6 +791,13 @@ public struct ComboboxView: HTMLContent {
       for (i, option) in shown.enumerated() where stringEquals(option.getAttribute(data("chosen")) ?? "", "true") {
         scroll(to: i)
       }
+    }
+
+    /// Whether the field has the focus: the list opens under the field
+    /// being typed in.
+    private var isTypedIn: Bool {
+      guard let active = document.activeElement else { return false }
+      return active.id == field.id
     }
 
     private func close() {
@@ -811,10 +856,12 @@ public struct ComboboxView: HTMLContent {
       }
     }
 
-    /// Takes a suggestion: its name in the field, its value posted.
+    /// Takes a suggestion: its name in the field, its value posted; a
+    /// search still out for what was typed is no more.
     private func choose(_ option: DOM.Element) {
       (field as? HTML.HTMLInputElement)?.value = option.getAttribute(data("display")) ?? ""
       commit(value: option.getAttribute(data("value")) ?? "")
+      cancelSearch()
       close()
       filter("")
     }
@@ -833,7 +880,11 @@ public struct ComboboxView: HTMLContent {
 
     /// Asks the server for the suggestions matching `query`, shortly: each
     /// key typed restarts the wait, and only the latest query's answer is
-    /// shown.
+    /// shown. From the key on, the list under the field typed in shows the
+    /// wait under its own suggestions that match, until that answer is in;
+    /// one that fails says so in the wait's place, those suggestions kept,
+    /// and the next key asks again. An earlier query's answer, or its
+    /// failure, says nothing and ends no wait.
     private func search(_ query: String) {
       if searchTimer != 0 {
         clearTimeout(searchTimer)
@@ -844,22 +895,67 @@ public struct ComboboxView: HTMLContent {
       // Remove the previous query's DOM options immediately: reopening
       // during the debounce must never make them selectable again.
       showOwn()
+      searchFailed = false
+      searchBusy = !stringIsEmpty(query)
+      showStatus()
       if stringIsEmpty(query) {
+        close()
         return
       }
       filter(query)
+      if isTypedIn { reveal() } else { close() }
       let url = stringJoin(
         [searchURL, stringContains(searchURL, "?") ? "&q=" : "?q=", encodeURIComponent(query)], separator: "")
       searchTimer = setTimeout(250) { [self] in
         self.searchTimer = 0
         let answer = document.createElement(.div)
         answer.loadFragment(url) { [self] ok in
-          guard ok,
-            self.searchState.receive(query: query, sequence: asked, currentQuery: stringTrim(self.text))
-          else { return }
-          self.show(answer)
+          // Overtaken by a later query, whose own answer ends the wait.
+          guard asked == self.searchState.sequence else { return }
+          self.searchBusy = false
+          let current = stringTrim(self.text)
+          if ok, self.searchState.receive(query: query, sequence: asked, currentQuery: current) {
+            self.showStatus()
+            self.show(answer)
+            return
+          }
+          // Failed while the text is still what was asked (why is the
+          // bridge's to log): said under the suggestions it shows, in the
+          // list under the field typed in. The text moved on without
+          // asking: nothing to say.
+          self.searchFailed = !ok && stringEquals(query, current)
+          self.showStatus()
+          if self.searchFailed && self.isTypedIn {
+            self.reveal()
+          } else if self.visibleCount() == 0 {
+            self.close()
+          }
         }
       }
+    }
+
+    /// Says the latest query's wait or failure under the suggestions it
+    /// shows (`OptionsStatusView`).
+    private func showStatus() {
+      OptionsStatusView.show(searchFailed ? .failed : (searchBusy ? .busy : .idle), in: status)
+    }
+
+    /// No search out any more: a late answer to it is dropped, and nothing
+    /// waits or fails.
+    private func cancelSearch() {
+      if searchTimer != 0 {
+        clearTimeout(searchTimer)
+        searchTimer = 0
+      }
+      _ = searchState.begin()
+      searchBusy = false
+      searchFailed = false
+      showStatus()
+    }
+
+    /// A note at the end of the list, before what it says under it.
+    private func putNote(_ note: DOM.Element) {
+      if let status { menu.insertBefore(note, status) } else { menu.appendChild(note) }
     }
 
     /// A search's suggestions, in the list in place of its own.
@@ -880,7 +976,7 @@ public struct ComboboxView: HTMLContent {
         found.append(option)
       }
       if let note = answer.querySelector("[data-combobox-note='true']") {
-        menu.appendChild(note)
+        putNote(note)
         resultNote = note
       }
       bindOptions(found)
@@ -893,6 +989,8 @@ public struct ComboboxView: HTMLContent {
       }
     }
 
+    /// Its own suggestions back in the list, in place of a search's; the
+    /// list left open or shut as it is.
     private func showOwn() {
       setActive(-1)
       for option in results { option.remove() }
@@ -900,10 +998,9 @@ public struct ComboboxView: HTMLContent {
       resultNote = nil
       results = []
       for option in own { listbox.appendChild(option) }
-      if let ownNote { menu.appendChild(ownNote) }
+      if let ownNote { putNote(ownNote) }
       shown = own
       filter("")
-      close()
     }
   }
 

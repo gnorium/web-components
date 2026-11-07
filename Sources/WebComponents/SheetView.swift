@@ -85,7 +85,9 @@
           width(perc(100))
           zIndex(zIndexOverlay)
           pointerEvents(.none)
-          overflow(.hidden)
+          // It clips its panel's slide and never scrolls (`ScrollPort`): its
+          // panel is the scroller.
+          overflow(.clip)
         }
         // Only a sheet below the navbar sets this rule: a pane or viewport
         // sheet's zero height would otherwise override it in the shared

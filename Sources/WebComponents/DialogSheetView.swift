@@ -99,7 +99,11 @@
         // is laid beside its image): forced relative here, a reader's
         // absolute frame fell into the flow and grew over the image pane
         // (user, 2026-10-14).
-        selector("[data-sheet-covered='true']") {
+        // A marked host (`data-sheet-host`, a reader's pane frame) neither
+        // scrolls nor zooms and clips (`overflow: clip`): made hidden here it
+        // became a box a focus could scroll sideways, its pane left cut off
+        // at its start (user, 2026-11-05). It is left as it is.
+        selector("[data-sheet-covered='true']:not([data-sheet-host])") {
           overflow(.hidden).important()
         }
       }
@@ -361,18 +365,27 @@
       let last = focusable[focusable.count - 1]
       guard let inside = active.closest(".dialog-sheet-content"), inside.id == content.id else {
         event.preventDefault()
-        first.focus()
+        focusInside(first)
         return
       }
       if event.shiftKey {
         if active.id == first.id {
           event.preventDefault()
-          last.focus()
+          focusInside(last)
         }
       } else if active.id == last.id {
         event.preventDefault()
-        first.focus()
+        focusInside(first)
       }
+    }
+
+    /// `element` focused from the keyboard, its ring shown, and brought into
+    /// view in the dialog's body alone (`ScrollPort.reveal`): a focus that
+    /// scrolls its own way scrolls every box around the dialog too, the
+    /// pane and the page under it among them (user, 2026-11-05).
+    private func focusInside(_ element: DOM.Element) {
+      element.focus(DOM.FocusOptions(preventScroll: true, focusVisible: true))
+      if let body { ScrollPort.reveal(element, in: body) }
     }
   }
 #endif

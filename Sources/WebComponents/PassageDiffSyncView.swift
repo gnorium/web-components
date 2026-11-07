@@ -7,13 +7,17 @@ import WebTypes
 
 /// Corresponding source lines, including wrapped portions, move together.
 /// Listen on actual scrollports; only the latest user scroll drives matching.
-/// A diff box drawn as large as its lines (under a reader's markup pane)
-/// scrolls in its zone, which is then the diff's side (user, 2026-10-16).
+/// The diff's side is always its box: under a reader's pane too, where the
+/// box fills its zone and scrolls both ways as the pane does (user,
+/// 2026-11-05), its sideways scroll the pane's.
 public enum PassageDiffSyncViewHydration {
   public static func hydrate(in root: DOM.Element) {
     for field in root.querySelectorAll(".field-diff-view") {
       if let source = field.querySelector(".diff-field-input .code-code, .diff-field-input textarea, textarea") {
-        bind(field, source: source, box: field.querySelector(".diff-box"))
+        // A plain text field (a Note's TextAreaView), no code pane in it:
+        // its diff keeps the field's own inset, its words under the
+        // field's words (user, 2026-11-05).
+        bind(field, source: source, box: field.querySelector(".diff-box"), plain: field.querySelector(".code-code") == nil)
       }
     }
     for comparison in root.querySelectorAll(".prompt-text-comparison") {
@@ -39,8 +43,28 @@ public enum PassageDiffSyncViewHydration {
     }
   }
 
+  /// `element` scrolled by code to `top`, and across to `left` where given:
+  /// marked with where it stands (`data-passage-scroll`, "left top"), so
+  /// the scroll event its move sets off is known as an echo and moves
+  /// nothing back (`Pair.schedule`), whichever way it moved. Where it did
+  /// not move, no event comes, and no mark is left to swallow the reader's
+  /// next scroll (user, 2026-11-05: a sideways scroll of the code pane once
+  /// left its diff where it was).
+  public static func scroll(_ element: DOM.Element, left: Double? = nil, top: Double) {
+    let before = (element.scrollLeft, element.scrollTop)
+    if let left { element.scrollLeft = left }
+    element.scrollTop = top
+    if element.scrollLeft == before.0 && element.scrollTop == before.1 {
+      element.removeAttribute("data-passage-scroll")
+    } else {
+      element.setAttribute(
+        "data-passage-scroll", doubleToString(element.scrollLeft) + " " + doubleToString(element.scrollTop))
+    }
+  }
+
   public static func bindBox(_ field: DOM.Element, area: HTML.HTMLTextAreaElement) {
-    bind(field, source: field.querySelector(".code-code") ?? area, box: field.querySelector(".diff-box"))
+    let code = field.querySelector(".code-code")
+    bind(field, source: code ?? area, box: field.querySelector(".diff-box"), plain: code == nil)
   }
 
   private static func scrollport(_ source: DOM.Element, within scope: DOM.Element) -> DOM.Element {
@@ -59,27 +83,29 @@ public enum PassageDiffSyncViewHydration {
     return source
   }
 
-  private static func bind(_ scope: DOM.Element, source: DOM.Element, box: DOM.Element?) {
+  /// `plain`: the source is a plain text field, not a code pane. Its box
+  /// says so (`data-passage-source`), and DiffView gives it the field's
+  /// inset; a code pane's diff lines up with the code's own lines instead.
+  private static func bind(_ scope: DOM.Element, source: DOM.Element, box: DOM.Element?, plain: Bool = false) {
     guard let box else { return }
+    box.setAttribute("data-passage-source", plain ? "field" : "code")
     let port = scrollport(source, within: scope)
-    let diffPort = box.closest(".artifact-under-markup, .artifact-under-header") ?? box
     let key = intToString(Int(source.id)) + ":" + intToString(Int(box.id))
     if stringEquals(scope.getAttribute("data-passage-pair") ?? "", key) { return }
     scope.setAttribute("data-passage-pair", key)
-    let pair = Pair(scope: scope, source: source, port: port, box: box, diffPort: diffPort, key: key)
+    let pair = Pair(scope: scope, source: source, port: port, box: box, key: key)
     pair.presentation()
     source.observeResize { _, _ in pair.schedulePresentation() }
     scope.observeMutations(subtree: true, attributeFilter: ["data-reflow", "data-header", "style", "class"]) {
       pair.schedulePresentation()
     }
     _ = port.addEventListener(.scroll) { _ in pair.schedule(fromSource: true) }
-    _ = diffPort.addEventListener(.scroll) { _ in pair.schedule(fromSource: false) }
+    _ = box.addEventListener(.scroll) { _ in pair.schedule(fromSource: false) }
   }
 
   private final class Pair: @unchecked Sendable {
+    /// `box` is the diff's side: it scrolls its lines both ways.
     let scope: DOM.Element, source: DOM.Element, port: DOM.Element, box: DOM.Element
-    /// What scrolls the diff: its box, or the zone it is drawn whole in.
-    let diffPort: DOM.Element
     let key: String
     var queued = false
     var presentationQueued = false
@@ -91,8 +117,8 @@ public enum PassageDiffSyncViewHydration {
     var cachedPositions: [Double] = []
     var presentationKey = ""
 
-    init(scope: DOM.Element, source: DOM.Element, port: DOM.Element, box: DOM.Element, diffPort: DOM.Element, key: String) {
-      self.scope = scope; self.source = source; self.port = port; self.box = box; self.diffPort = diffPort; self.key = key
+    init(scope: DOM.Element, source: DOM.Element, port: DOM.Element, box: DOM.Element, key: String) {
+      self.scope = scope; self.source = source; self.port = port; self.box = box; self.key = key
     }
 
     /// The diff follows the source's wrapping mode and effective code size.
@@ -112,19 +138,21 @@ public enum PassageDiffSyncViewHydration {
       // diff line breaks where its source line does (user, 2026-10-26:
       // Reflow's diff wraps with its pane, line for line).
       // The text's own box: a line that holds its gutter as its padding
-      // (a reader's code pane) counts from its text, not its edge.
+      // (a reader's code pane) counts from its text, not its edge. Its
+      // width as drawn, to the fraction (`clientWidth` is rounded to a
+      // pixel: a word that just fits the code line would wrap in the diff).
       let first = source.querySelector(".code-line")
       let lineStyle = first.map { window.getComputedStyle($0) }
       let padStart = pixels(lineStyle?.getPropertyValue("padding-inline-start") ?? "0")
       let padEnd = pixels(lineStyle?.getPropertyValue("padding-inline-end") ?? "0")
-      let column = wraps ? max(0, Double(first?.clientWidth ?? 0) - padStart - padEnd) * scale : 0
+      let drawn = first?.getBoundingClientRect()?.width ?? 0
+      let column = wraps ? max(0, drawn - (padStart + padEnd) * scale) : 0
       let signature = wrap + family + doubleToString(size) + ":" + doubleToString(leading) + ":" + doubleToString(column)
       // Its text column under the source's, wrapped or not, each time it is
       // shown (it is measured only while both are drawn, neither scrolled
       // across): the first line's text moved by what still parts it from
       // the code's (user, 2026-10-26).
       if box.clientWidth > 0, source.scrollLeft == 0, port.scrollLeft == 0, box.scrollLeft == 0,
-        diffPort.scrollLeft == 0,
         let line = first?.getBoundingClientRect(),
         let text = box.querySelector(".diff-content")?.getBoundingClientRect()
       {
@@ -166,11 +194,18 @@ public enum PassageDiffSyncViewHydration {
 
     func schedule(fromSource: Bool) {
       guard stringEquals(scope.getAttribute("data-passage-pair") ?? "", key), source.clientWidth > 0,
-        port.clientHeight > 0, diffPort.clientHeight > 0 else { return }
-      let origin = fromSource ? port : diffPort
-      if let expected = parseDouble(origin.getAttribute("data-passage-scroll") ?? "") {
+        port.clientHeight > 0, box.clientHeight > 0 else { return }
+      let origin = fromSource ? port : box
+      // The echo of a move this pair made (`scroll`), either way: where it
+      // stands as marked, both across and down, it moves nothing back.
+      if let mark = origin.getAttribute("data-passage-scroll") {
         origin.removeAttribute("data-passage-scroll")
-        if abs(origin.scrollTop - expected) < 1 { return }
+        let at = stringSplit(mark, separator: " ")
+        if at.count == 2, let left = parseDouble(at[0]), let top = parseDouble(at[1]),
+          abs(origin.scrollLeft - left) < 1, abs(origin.scrollTop - top) < 1
+        {
+          return
+        }
       }
       self.fromSource = fromSource
       if queued { return }
@@ -246,14 +281,14 @@ public enum PassageDiffSyncViewHydration {
       var lastBottom = 0.0
       for row in box.querySelectorAll(".diff-row") {
         guard let rect = row.getBoundingClientRect() else { continue }
-        lastBottom = diffPort.scrollTop + rect.bottom - boxRect.top
+        lastBottom = box.scrollTop + rect.bottom - boxRect.top
         if stringEquals(row.getAttribute("data-diff-line") ?? "", "removed") { continue }
         let number = parseInt(row.getAttribute("data-diff-at") ?? "") ?? 0
         if number > 0, number < rowTops.count, rowTops[number] < 0 {
-          rowTops[number] = diffPort.scrollTop + rect.top - boxRect.top
+          rowTops[number] = box.scrollTop + rect.top - boxRect.top
         }
       }
-      let sourceEnd = port.scrollHeight, diffEnd = diffPort.scrollHeight
+      let sourceEnd = port.scrollHeight, diffEnd = box.scrollHeight
       var points: [(source: Double, diff: Double)] = [(0, 0)]
       func add(_ source: Double, _ diff: Double) {
         guard let last = points.last, source > last.source, diff > last.diff, source < sourceEnd, diff < diffEnd
@@ -292,27 +327,25 @@ public enum PassageDiffSyncViewHydration {
     /// the scroll it came from.
     func synchronize() {
       presentation()
-      guard source.clientWidth > 0, port.clientHeight > 0, diffPort.clientHeight > 0,
+      guard source.clientWidth > 0, port.clientHeight > 0, box.clientHeight > 0,
         let sourceRect = source.getBoundingClientRect(), let portRect = port.getBoundingClientRect(),
-        let boxRect = diffPort.getBoundingClientRect(), !box.querySelectorAll(".diff-row").isEmpty else { return }
+        let boxRect = box.getBoundingClientRect(), !box.querySelectorAll(".diff-row").isEmpty else { return }
       let scale = source.offsetWidth > 0 ? sourceRect.width / source.offsetWidth : 1
       let padding = pixels(window.getComputedStyle(source).getPropertyValue("padding-top")) * scale
       let origin = source.id == port.id ? padding : port.scrollTop + sourceRect.top - portRect.top + padding
       let points = anchors(origin: origin, scale: scale, boxRect: boxRect)
       let sourceRange = max(0, port.scrollHeight - port.clientHeight)
-      let diffRange = max(0, diffPort.scrollHeight - diffPort.clientHeight)
+      let diffRange = max(0, box.scrollHeight - box.clientHeight)
       if fromSource {
-        diffPort.scrollLeft = port.scrollLeft
         let place = port.scrollTop + (sourceRange > 0 ? port.scrollTop / sourceRange : 0) * port.clientHeight
         let focus = Self.carry(place, points, fromSource: true)
-        diffPort.scrollTop = focus * diffRange / max(1, diffPort.scrollHeight)
-        diffPort.setAttribute("data-passage-scroll", doubleToString(diffPort.scrollTop))
+        PassageDiffSyncViewHydration.scroll(
+          box, left: port.scrollLeft, top: focus * diffRange / max(1, box.scrollHeight))
       } else {
-        port.scrollLeft = diffPort.scrollLeft
-        let place = diffPort.scrollTop + (diffRange > 0 ? diffPort.scrollTop / diffRange : 0) * diffPort.clientHeight
+        let place = box.scrollTop + (diffRange > 0 ? box.scrollTop / diffRange : 0) * box.clientHeight
         let focus = Self.carry(place, points, fromSource: false)
-        port.scrollTop = focus * sourceRange / max(1, port.scrollHeight)
-        port.setAttribute("data-passage-scroll", doubleToString(port.scrollTop))
+        PassageDiffSyncViewHydration.scroll(
+          port, left: box.scrollLeft, top: focus * sourceRange / max(1, port.scrollHeight))
       }
     }
   }

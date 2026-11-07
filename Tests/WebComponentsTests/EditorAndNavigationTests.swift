@@ -40,17 +40,28 @@ final class EditorAndNavigationTests: XCTestCase {
     }
   }
 
-  /// A page stored on one line opens as stored, not laid out: what the
-  /// editor shows is what is stored, headed as every single-page view
-  /// shows it.
-  func testTEIEditorOpensAOneLinePageAsStored() throws {
-    let view = TEIView(
-      teiXml: #"<TEI><text><body><pb n="1" facs="https://web-tests.invalid/iiif/1"/><div><p>Old line</p></div></body></text></TEI>"#,
-      editable: true)
+  /// A page stored before stored TEI was formatted (one line) opens
+  /// formatted (`TEIView.shownCode`, user 2026-11-05), exactly as Raw shows
+  /// it: the editor and Raw never differ, and a page stored formatted
+  /// opens as it is stored.
+  func testTEIEditorOpensAOneLinePageFormattedAsRawShowsIt() throws {
+    let teiXml = #"<TEI><text><body><pb n="1" facs="https://web-tests.invalid/iiif/1"/><div><p>Old line</p></div></body></text></TEI>"#
+    let view = TEIView(teiXml: teiXml, editable: true)
     let page = try XCTUnwrap(view.pages.first)
+    XCTAssertEqual(XMLFormatter.formatted(page.markup), "<div>\n  <p>Old line</p>\n</div>")
     let input = try XCTUnwrap(elements(in: view.build()).first { $0.tag == "textarea" })
-    XCTAssertNotEqual(XMLFormatter.prettified(page.markup), page.markup)
-    XCTAssertEqual(text(in: input), TEIRendition.headedPage(page.markup, renditions: TEIRendition.renditions(of: view.teiXml)))
+    let shown = TEIRendition.headedPage(XMLFormatter.formatted(page.markup), renditions: "")
+    XCTAssertEqual(text(in: input), shown)
+    // Raw, read-only, shows the same text.
+    let raw = try XCTUnwrap(
+      elements(in: TEIView(teiXml: teiXml).build()).first { element in
+        element.tag == "code" && element.attributes.contains { $0.0 == "class" && $0.1.contains("code-code") }
+      })
+    XCTAssertEqual(text(in: raw), shown)
+    // Stored formatted, it opens as stored.
+    let stored = teiXml.replacingOccurrences(of: "<div><p>Old line</p></div>", with: "<div>\n  <p>Old line</p>\n</div>")
+    let again = try XCTUnwrap(elements(in: TEIView(teiXml: stored, editable: true).build()).first { $0.tag == "textarea" })
+    XCTAssertEqual(text(in: again), shown)
   }
 
   func testPaginationChangesOnlyExactPageParameters() {

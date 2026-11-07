@@ -176,6 +176,8 @@
       }
       if schema.contains(where: { if case .combobox = $0 { return true } else { return false } }) {
         _ = ComboboxView(id: "filter-bar-combobox-preload", name: "").build()
+        // And the wait and failure a server's suggestions say under them.
+        _ = OptionsStatusView().build()
       }
       if schema.contains(where: {
         switch $0 {
