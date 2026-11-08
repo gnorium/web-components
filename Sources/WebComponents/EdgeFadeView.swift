@@ -205,7 +205,8 @@ private func edgeFadeViewGradient(_ toward: CSS.GradientDirection) -> String {
   /// whenever the page changes in a way that could change a line's fit—a
   /// node added or its text changed, a class or style or `hidden` turned (a
   /// page of rows shown, a column dragged, a menu opened), the window
-  /// resized—at most once a frame. A box a component draws on the client
+  /// resized, a width's transition ended (a sidebar opened)—at most once a
+  /// frame. A box a component draws on the client
   /// (a search menu's rows, a dropdown's value) is covered the moment it is
   /// in the page. Taps and keys are taken once, for the whole page.
   public final class EdgeFadeViewHydration: @unchecked Sendable {
@@ -242,7 +243,25 @@ private func edgeFadeViewGradient(_ toward: CSS.GradientDirection) -> String {
       // input scrolls back to its start, a frame later.
       _ = document.addEventListener("input", { event in EdgeFadeViewHydration.scrolled(event) }, capture: true, passive: true)
       _ = document.addEventListener("focusout", { _ in EdgeFadeViewHydration.scheduleRefresh() }, capture: true, passive: true)
+      // A size that moves (a sidebar opening, a drawer sliding in) is
+      // measured on the frame its class or style turned, at its first
+      // width, and no mutation follows when it settles: a name that fits
+      // stood marked as running past its box, faded with room to spare
+      // (user, 2026-11-08: "First Quarto" in a record's sidebar). Re-read
+      // when such a motion ends; a color's or an opacity's fits no line.
+      _ = document.addEventListener(
+        "transitionend",
+        { event in if EdgeFadeViewHydration.resizes(event.propertyName) { EdgeFadeViewHydration.scheduleRefresh() } },
+        capture: true, passive: true)
       refresh()
+    }
+
+    /// Whether a transition of `property` can change a line's fit: a
+    /// width, an inline size, a padding, a flex basis or a grid's tracks.
+    static func resizes(_ property: String) -> Bool {
+      stringContains(property, "width") || stringContains(property, "inline-size")
+        || stringContains(property, "padding") || stringEquals(property, "flex-basis")
+        || stringStartsWith(property, "grid-template")
     }
 
     /// Re-reads the boxes at the next frame, however many changes ask.
