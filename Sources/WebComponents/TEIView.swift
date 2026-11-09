@@ -647,7 +647,7 @@ public enum TEISentenceSelection {
             return [
               glossable(
                 span {
-                  runContents(part.runs, facsimileURL: facsimileURL, tabStop: tabStop, opens: true)
+                  runContents(part.runs, facsimileURL: facsimileURL, tabStop: tabStop)
                 }
                 .class("tei-gloss-element"), element
               ).build()
@@ -655,7 +655,7 @@ public enum TEISentenceSelection {
           }
         }
         let node = span {
-          runContents(group.runs, facsimileURL: facsimileURL, tabStop: tabStop, opens: glossURL != nil)
+          runContents(group.runs, facsimileURL: facsimileURL, tabStop: tabStop)
         }
         .class("tei-word")
         .data("line", word.line)
@@ -686,33 +686,14 @@ public enum TEISentenceSelection {
         .setAttribute("aria-haspopup", "dialog").setAttribute("data-gloss-element", "\(element)")
     }
 
-    /// One expansion/correction tooltip spans all its differently styled runs.
-    /// None in what opens a gloss (`opens`, user, 2026-11-01): its gloss
-    /// gives the expansion or correction, and a tap opens the gloss alone,
-    /// never the tooltip first.
-    private func runContents(
-      _ runs: [TEILine.Run], facsimileURL: String, tabStop: TEIWordPlace?, opens: Bool = false
-    ) -> [DOM.Node] {
-      if opens {
-        return runs.map { runContent($0, facsimileURL: facsimileURL, tabStop: tabStop, showAlternative: false) }
-      }
-      var groups: [(alternative: String, runs: [TEILine.Run])] = []
-      for run in runs {
-        if !run.alternative.isEmpty, groups.last?.alternative == run.alternative {
-          groups[groups.count - 1].runs.append(run)
-        } else { groups.append((run.alternative, [run])) }
-      }
-      return groups.flatMap { group in
-        if group.alternative.isEmpty {
-          return group.runs.map { runContent($0, facsimileURL: facsimileURL, tabStop: tabStop) }
-        }
-        return [TooltipView(tooltip: group.alternative, placement: .top, class: "tei-run-alternative") {
-          for run in group.runs { runContent(run, facsimileURL: facsimileURL, tabStop: tabStop, showAlternative: false) }
-        }.build()]
-      }
+    /// A word's runs as printed. Its expansion, regularization or
+    /// correction is read in its gloss sheet alone (user, 2026-11-09: the
+    /// gloss sheet superseded the hover tooltip; no fallback to it).
+    private func runContents(_ runs: [TEILine.Run], facsimileURL: String, tabStop: TEIWordPlace?) -> [DOM.Node] {
+      runs.map { runContent($0, facsimileURL: facsimileURL, tabStop: tabStop) }
     }
 
-    private func runContent(_ run: TEILine.Run, facsimileURL: String, tabStop: TEIWordPlace?, showAlternative: Bool = true) -> DOM.Node {
+    private func runContent(_ run: TEILine.Run, facsimileURL: String, tabStop: TEIWordPlace?) -> DOM.Node {
       switch run.kind {
       case .text:
         // An initial the print drops through the lines beside it
@@ -741,15 +722,8 @@ public enum TEISentenceSelection {
         // presentation form (user, 2026-10-31: ﬁ, ﬅ); the TEI keeps its
         // letters, and one Unicode lacks (ct, ſi) stays its letters.
         let text = Self.drawnText(of: run)
-        if run.alternative.isEmpty || !showAlternative {
-          let drawn = span { text }.class("tei-run").data("rend", run.rend).addingAttribute("style", TEIRendition.css(from: run.rend))
-          return (run.preserved ? drawn.data("space", "preserve") : drawn).build()
-        }
-        // A regularized spelling, an expansion or a correction the
-        // transcription gives beside the reading: read on hover.
-        return TooltipView(tooltip: run.alternative, placement: .top, class: "tei-run-alternative") {
-          span { text }.class("tei-run").data("rend", run.rend).addingAttribute("style", TEIRendition.css(from: run.rend))
-        }.build()
+        let drawn = span { text }.class("tei-run").data("rend", run.rend).addingAttribute("style", TEIRendition.css(from: run.rend))
+        return (run.preserved ? drawn.data("space", "preserve") : drawn).build()
       case .math(let formula):
         return mathContent(formula, facsimileURL: facsimileURL, tabStop: tabStop)
       case .space(let quantity, let unit):
@@ -1628,16 +1602,6 @@ public enum TEISentenceSelection {
         }
         selector("& .tei-page-raw .code-view", "& .tei-page-raw .code-editor-view") {
           borderRadius(0)
-        }
-        // A run with an alternative (an abbreviation's expansion, a
-        // regularized spelling) is a word of its line: the tooltip's
-        // trigger is an inline-flex box centered on the line, which set the
-        // word apart from its neighbors, so here it is plain inline text in
-        // the line's own font, on its baseline; the bubble still opens on it.
-        selector("& .tei-run-alternative", "& .tei-run-alternative .tooltip-trigger-content") {
-          display(.inline)
-          verticalAlign(.baseline)
-          CSS.Property("font", "inherit")
         }
         // A figure is set apart from the markup around it: it is a
         // photograph of part of the surface, not a sentence on it.
