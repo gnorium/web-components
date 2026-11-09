@@ -43,10 +43,10 @@
       }
     }
 
-    /// What of the moment a stamp shows: the day and time ("Jun 15, 2026
-    /// at 9:10 AM"), the day alone ("Jun 15, 2026"), as a table's "on"
+    /// What of the moment a stamp shows: the day and time ("15 Jun 2026
+    /// at 9:10 AM"), the day alone ("15 Jun 2026"), as a table's "on"
     /// column, the time alone ("9:10 AM"), as its "at" column, or the exact
-    /// instant—to the second ("Oct 16, 2026 at 12:52:22 PM"), where the
+    /// instant – to the second ("16 Oct 2026 at 12:52:22 PM"), where the
     /// second matters (a payment's time). Once hydrated, no stamp names a
     /// zone: it is the reader's own local time. Only the server's text,
     /// before hydration, carries the "UTC" suffix, because it is not local.
@@ -107,10 +107,11 @@
     /// first table to draw a day or a time crashed the server (2026-10-16).
     /// The offset comes from `ViewerZone`, the same as every other local day.
     ///
-    /// "Jun 15, 2026 at 9:10 AM UTC" (the day and time, UTC until the client
-    /// hydrates), "Jun 15, 2026 at 9:10:05 AM UTC" (the instant), "Jun 15,
+    /// "15 Jun 2026 at 9:10 AM UTC" (the day and time, UTC until the client
+    /// hydrates), "15 Jun 2026 at 9:10:05 AM UTC" (the instant), "15 Jun
     /// 2026" (the day) or "9:10 AM" (the time), the last two in the reader's
-    /// zone.
+    /// zone: the day before the month, as British English writes a date
+    /// (user, 2026-11-09).
     static func text(_ date: Date, format: Format, fallbackSuffix: String) -> String {
       let seconds = Int64(date.timeIntervalSince1970.rounded(.down))
       let utcMinutes = seconds / 60 - (seconds % 60 < 0 ? 1 : 0)

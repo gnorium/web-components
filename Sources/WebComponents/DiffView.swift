@@ -349,7 +349,7 @@ public struct DiffView: HTMLContent {
                 case .figure:
                   span {
                     if regionChanged {
-                      "[Figure: \(token.text)—region changed]"
+                      "[Figure: \(token.text) – region changed]"
                     } else {
                       token.text.isEmpty ? "[Figure]" : "[Figure: \(token.text)]"
                     }
