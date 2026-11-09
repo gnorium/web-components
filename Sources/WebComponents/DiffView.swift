@@ -175,15 +175,44 @@ public struct DiffView: HTMLContent {
     let body: DOM.Node
     switch mode {
     case .text(let old, let new):
-      // One continuous text (user, 2026-11-09): what was taken out, red,
-      // where it was, and what was put in, green, where it is, never the
-      // old text, an arrow and the new one apart.
+      // A text that keeps some of itself is one continuous text (user,
+      // 2026-11-09): what was taken out, red, where it was, and what was put
+      // in, green, where it is. One replaced whole—nothing of it kept—reads
+      // "old → new" (user, 2026-11-09: "where is arrow").
       isLine = true
       modeName = "text"
-      body = span { Self.runNodes(DiffEngine.runs(old: old, new: new)) }
-      .class("diff-content")
-      .data("edge-fade-view", "expand")
-      .build()
+      let runs = DiffEngine.runs(old: old, new: new)
+      let keeps = runs.contains { run in
+        if case .unchanged(let text) = run { return !DiffEngine.isSpace(text) }
+        return false
+      }
+      if keeps {
+        body = span { Self.runNodes(runs) }
+        .class("diff-content")
+        .data("edge-fade-view", "expand")
+        .build()
+      } else {
+        body = span {
+          if !stringIsEmpty(old) {
+            span { Self.changed(old) }
+              .class("diff-old")
+              .dir("auto")
+          }
+          if !stringIsEmpty(old) && !stringIsEmpty(new) {
+            span { "→" }
+              .class("diff-arrow")
+              .ariaHidden(true)
+          }
+          if !stringIsEmpty(new) {
+            span { Self.changed(new) }
+              .class("diff-new")
+              .dir("auto")
+          }
+        }
+        .class("diff-content")
+        .data("edge-fade-view", "expand")
+        .build()
+      }
     case .outline(let old, let new):
       isLine = true
       modeName = "outline"
