@@ -299,12 +299,13 @@ public struct DropdownView: HTMLContent {
               .data("stacked", optionLayout == .stacked)
               .title(options.first { stringEquals($0.value, selectedValue ?? "") }?.altDisplay ?? displayText)
 
-            // Animated chevron icon, beside the value's text: the text's
-            // size, as an icon beside a label is (user, 2026-11-05).
+            // Animated chevron icon at the box's end, apart from the
+            // value's text—no punctuation of it: the line's height, as an
+            // accordion's chevron is (user, 2026-11-09).
             AnimatedUpDownChevronView(
               id: "dropdown-\(id)",
               expanded: false,
-              size: textFontSize,
+              size: lineHeightSmall22,
               class: "dropdown-chevron"
             )
           }

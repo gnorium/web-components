@@ -191,7 +191,8 @@ public struct ComboboxView: HTMLContent {
         // Shows every suggestion, whatever is typed; not a stop in the tab
         // order (the arrow keys open the list from the field).
         button {
-          AnimatedUpDownChevronView(id: "combobox-\(id)", expanded: false, size: fontSizeMedium16)
+          // At the box's end: the line's height, as a dropdown's chevron is.
+          AnimatedUpDownChevronView(id: "combobox-\(id)", expanded: false, size: lineHeightSmall22)
         }
         .type(.button)
         .class("combobox-toggle")

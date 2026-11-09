@@ -85,8 +85,9 @@
         AnimatedUpDownChevronView(
           id: "\(id)-chevron",
           expanded: false,
-          // Beside the value's text: the text's size (user, 2026-11-05).
-          size: fontSizeMedium16,
+          // At the box's end, apart from the value's text: the line's
+          // height, as a dropdown's chevron is (user, 2026-11-09).
+          size: lineHeightSmall22,
           class: "select-indicator"
         )
       }
