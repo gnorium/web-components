@@ -42,6 +42,10 @@ public enum TEISentenceSelection {
     /// original source, including significant whitespace; saving an edit
     /// changes only what the reader changed.
     let editable: Bool
+    /// Each page's code is edited where it is read, in no form of its own
+    /// and posting nothing: its host reads it as it is typed (a typed
+    /// quote's XML, user 2026-11-10; gnorium-web `QuoteTyped`).
+    let editsCode: Bool
     /// The markup's translation, when it has one: a third layer of each
     /// page's markup, which the viewer's Translated switch shows in the
     /// markup's place.
@@ -137,8 +141,10 @@ public enum TEISentenceSelection {
     public init(
       teiXml: String, editable: Bool = false, translation: Translation? = nil,
       highlights: [String: [TEIHighlight]] = [:], labelsPages: Bool = false, glossURL: String? = nil,
-      marksWords: Bool = false, page: Int? = nil, drawn: [Int] = [], firstIndex: Int = 0, direction: String? = nil
+      marksWords: Bool = false, page: Int? = nil, drawn: [Int] = [], firstIndex: Int = 0, direction: String? = nil,
+      editsCode: Bool = false
     ) {
+      self.editsCode = editsCode
       self.marksWords = marksWords
       self.direction = direction
       self.page = page
@@ -1487,6 +1493,10 @@ public enum TEISentenceSelection {
                   )
                 }
                 .class("tei-page-edit")
+              } else if editsCode {
+                CodeEditorView(
+                  id: "tei-page-code-\(index + firstIndex)", name: "", value: code,
+                  ariaLabel: page.label.isEmpty ? "Code of this page" : "Code of \(page.label)", lined: true)
               } else {
                 // The page's code formatted, one element a line (`shownCode`),
                 // its surface as its <facsimile> as its diff shows it (user,
