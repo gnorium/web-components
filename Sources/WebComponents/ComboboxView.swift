@@ -594,8 +594,11 @@ public struct ComboboxView: HTMLContent {
       }
       // A click or tap in the field opens the list, as the toggle does: on a
       // phone it is the only way to see what is on it.
+      // Text typed and left there (no suggestion's name) narrows the list
+      // again as it did while it was typed (user, 2026-11-10): every
+      // suggestion only for an empty field or one holding a suggestion.
       _ = field.addEventListener(.click) { [self] _ in
-        if !self.isOpen { self.open(all: true) }
+        if !self.isOpen { self.open(all: !self.isNarrowing) }
       }
       _ = field.addEventListener(.focusout) { [self] event in
         if let next = event.payload.relatedTarget, self.root.contains(next) { return }
