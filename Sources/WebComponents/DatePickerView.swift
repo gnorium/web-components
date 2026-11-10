@@ -26,7 +26,7 @@ import WebTypes
 /// stays relative in the value (`-7d..`); two days picked in the calendar
 /// make a fixed range—the UTC instants that bound those local days
 /// (`2026-09-30T18:30Z..2026-10-08T18:30Z`, Oct 1–8 in India)—the first alone
-/// an open one. The field shows it in words ("Oct 1 – Oct 8, 2026",
+/// an open one. The field shows it in words ("Oct 1–8, 2026",
 /// "Last 7 days"). On a phone the presets sit above the calendar.
 public struct DatePickerView: HTMLContent {
   let id: String

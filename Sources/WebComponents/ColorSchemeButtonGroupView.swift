@@ -41,7 +41,7 @@
         direction: .column,
         class: `class`.isEmpty
           ? "color-scheme-button-group-view" : "color-scheme-button-group-view \(`class`)",
-        ariaLabel: "Colour scheme"
+        ariaLabel: "Color scheme"
       )
     }
   }

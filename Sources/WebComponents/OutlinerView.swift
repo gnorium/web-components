@@ -751,7 +751,7 @@ public enum OutlineNumberAdvance {
       return div {
         if arranges {
           p {
-            "Press Space on an item's handle, its marker, to pick the item up (Enter on a marker folds or opens it); a toolbar at the foot of the screen then shifts it. While it is held, the up and down arrows shift it among its neighbours, Tab or the right arrow puts it under the item above, Shift-Tab or the left arrow takes it out a level, and Enter, Space or Escape put it down."
+            "Press Space on an item's handle, its marker, to pick the item up (Enter on a marker folds or opens it); a toolbar at the foot of the screen then shifts it. While it is held, the up and down arrows shift it among its neighbors, Tab or the right arrow puts it under the item above, Shift-Tab or the left arrow takes it out a level, and Enter, Space or Escape put it down."
           }
           .id("\(id)-instructions")
           .class("outliner-instructions")

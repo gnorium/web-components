@@ -65,30 +65,29 @@ public struct CalendarDate: Sendable {
     "\(Self.padded(year, 4))-\(Self.padded(month, 2))-\(Self.padded(day, 2))"
   }
 
-  /// "25 Sep 2026": day, month, year, as British English writes a date
-  /// (user, 2026-11-09).
+  /// "Sep 25, 2026".
   public var display: String {
-    "\(day) \(Self.monthAbbreviations[month - 1]) \(year)"
+    "\(Self.monthAbbreviations[month - 1]) \(day), \(year)"
   }
 
-  /// "Friday 25 September 2026".
+  /// "Friday, September 25, 2026".
   public var spoken: String {
-    "\(Self.weekdayNames[weekday]) \(day) \(Self.monthNames[month - 1]) \(year)"
+    "\(Self.weekdayNames[weekday]), \(Self.monthNames[month - 1]) \(day), \(year)"
   }
 
-  /// A range of days in words, as New Hart's Rules writes one: a closed en
-  /// dash, the month and year the ends share said once—"1–8 Oct 2026",
-  /// "28 Sep–8 Oct 2026", "28 Dec 2025–3 Jan 2026"; one day, "8 Oct 2026";
-  /// an open end, "Since 1 Oct 2026" or "Until 8 Oct 2026". Every range of
-  /// days on the site is written by this one formatter.
+  /// A range of days in words, Chicago style: a closed en dash, the
+  /// year and month the ends share said once—"Oct 1–8, 2026", "Sep 28–Oct 8,
+  /// 2026", "Dec 28, 2025–Jan 3, 2026"; one day, "Oct 8, 2026"; an open end,
+  /// "Since Oct 1, 2026" or "Until Oct 8, 2026". Every range of days on the
+  /// site is written by this one formatter.
   public static func rangeText(_ first: CalendarDate?, _ last: CalendarDate?) -> String {
     switch (first, last) {
     case (.some(let first), .some(let last)):
       if first.isSameDay(as: last) { return first.display }
       if first.year != last.year { return "\(first.display)–\(last.display)" }
-      let month = monthAbbreviations[last.month - 1]
-      if first.month == last.month { return "\(first.day)–\(last.day) \(month) \(last.year)" }
-      return "\(first.day) \(monthAbbreviations[first.month - 1])–\(last.day) \(month) \(last.year)"
+      let month = monthAbbreviations[first.month - 1]
+      if first.month == last.month { return "\(month) \(first.day)–\(last.day), \(last.year)" }
+      return "\(month) \(first.day)–\(monthAbbreviations[last.month - 1]) \(last.day), \(last.year)"
     case (.some(let first), .none): return "Since \(first.display)"
     case (.none, .some(let last)): return "Until \(last.display)"
     case (.none, .none): return ""
