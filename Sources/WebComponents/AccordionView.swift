@@ -63,6 +63,15 @@ public struct AccordionView: HTMLContent {
   let actionAlwaysVisible: Bool
   let actionButtonLabel: String
   let separation: Separation
+  /// How high its header stands: `.medium`, 16 round its title's line;
+  /// `.small`, 12, a framed one as high as a field (48), for one that
+  /// stands among fields (a choice's Information; user, 2026-11-11).
+  let size: Size
+
+  public enum Size: String, Sendable {
+    case medium
+    case small
+  }
   let headingLevel: HeadingLevel
   let headerDirection: HeaderDirection
   let titleFontSize: CSS.Length
@@ -85,6 +94,7 @@ public struct AccordionView: HTMLContent {
     actionAlwaysVisible: Bool = false,
     actionButtonLabel: String = "",
     separation: Separation = .divider,
+    size: Size = .medium,
     headingLevel: HeadingLevel = .h3,
     headerDirection: HeaderDirection = .column,
     titleFontSize: CSS.Length = fontSizeMedium16,
@@ -100,6 +110,7 @@ public struct AccordionView: HTMLContent {
     self.actionAlwaysVisible = actionAlwaysVisible
     self.actionButtonLabel = actionButtonLabel
     self.separation = separation
+    self.size = size
     self.headingLevel = headingLevel
     self.headerDirection = headerDirection
     self.titleFontSize = titleFontSize
@@ -299,6 +310,7 @@ public struct AccordionView: HTMLContent {
       }
       .class("accordion-summary")
       .data("separation", separation.value)
+      .data("size", size.rawValue)
       .style {
         selector("&") {
           display(.flex)
@@ -324,6 +336,7 @@ public struct AccordionView: HTMLContent {
           alignContent(.center)
         }
         selector("&:not([data-separation='minimal'])") { padding(spacing16) }
+        selector("&[data-size='small']:not([data-separation='minimal'])") { padding(spacing12) }
         // Nested one border-width inside the card's radius, so the hover
         // wash follows the corner exactly now that no inset separates them.
         selector("&[data-separation='outline']") {
@@ -347,6 +360,7 @@ public struct AccordionView: HTMLContent {
         div { contentSlot }
           .class("accordion-content")
           .data("separation", separation.value)
+      .data("size", size.rawValue)
           .style {
             selector("&") {
               fontFamily(typographyFontSans)
@@ -374,6 +388,9 @@ public struct AccordionView: HTMLContent {
             // No top padding: the header's bottom padding already separates
             // title from body, and doubling it read as a gap.
             selector("&:not([data-separation='minimal'])") { padding(spacing0, spacing16, spacing16) }
+            selector("&[data-size='small']:not([data-separation='minimal'])") {
+              padding(spacing0, spacing12, spacing12)
+            }
             // A body with nothing in it opens to nothing: no padding under
             // the header.
             selector("&:empty") { padding(spacing0).important() }
@@ -449,6 +466,7 @@ public struct AccordionView: HTMLContent {
     }
     .class(stringIsEmpty(`class`) ? "accordion-view" : "accordion-view \(`class`)")
     .data("separation", separation.value)
+      .data("size", size.rawValue)
     if disabled { root = root.data("disabled", true) }
     return root.style {
       selector("&") {
@@ -827,6 +845,10 @@ public struct AccordionView: HTMLContent {
         cursor = current.closest(".accordion-view")?.closest(".accordion-details")
       }
       guard closed else { return }
+      // Its scroll is the page's own from here: on a reload the browser
+      // put the page back where it had been, after this had landed on the
+      // target, so the page went down and came back up (user, 2026-11-11).
+      window.setScrollRestoration(manual: true)
       let reduced = window.matchMedia("(prefers-reduced-motion: reduce)")
       reveal(target) {
         target.scrollIntoView(CSSOM.ScrollIntoViewOptions(behavior: reduced ? .instant : .smooth, block: .start))

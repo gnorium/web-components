@@ -1700,16 +1700,32 @@ public enum OutlineNumberAdvance {
     public static func write(number: String, in slot: DOM.Element) {
       if slot.classList.contains("text-area-prefix") {
         TextAreaView.setPrefix(slot, number)
-      } else {
-        slot.textContent = number
+        return
       }
+      slot.textContent = number
+      // Its point after it, where its slot writes one as text
+      // (`data-outliner-number-point`; user, 2026-11-11: drawn by CSS, it
+      // was never selected nor copied with its number): none for no number.
+      guard slot.hasAttribute("data-outliner-number-point"), !stringIsEmpty(number) else { return }
+      let point = document.createElement(.span)
+      point.setAttribute("class", "outliner-number-point")
+      point.textContent = "."
+      slot.appendChild(point)
+    }
+
+    /// A slot's number as it now stands, without the point written after
+    /// it: "1.1".
+    public static func number(in slot: DOM.Element) -> String {
+      let text = stringTrim(slot.textContent)
+      guard slot.querySelector(".outliner-number-point") != nil, stringEndsWith(text, ".") else { return text }
+      return stringRemoveSuffix(text, ".")
     }
 
     /// An item's number as it now stands (`outliner-number`), without the
     /// point after it: "1.1".
     public static func number(of item: DOM.Element) -> String {
       guard let number = item.querySelector(":scope > .outliner-row .outliner-number") else { return "" }
-      return stringTrim(number.textContent)
+      return Self.number(in: number)
     }
 
     /// An accordion item's own accordion: the first in its node, which is
