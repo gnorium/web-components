@@ -37,6 +37,13 @@ public struct TextInputView: HTMLContent {
   /// its own cursor and its own click. It takes an end icon's place and a
   /// clear button's: a field has one of the three. Empty for none.
   let endControl: [DOM.Node]
+  /// Its end control right after its value and not at the field's end, as
+  /// a link's icon follows the link's text (user, 2026-11-11: at the end
+  /// "it just gets missed"): the value is written again, unseen, to take
+  /// its width (`.text-input-value-mirror`, kept in step as it is typed,
+  /// `TextInputHydration.mirror`). A value longer than the field leaves the
+  /// control at the field's end.
+  let endControlFollowsValue: Bool
   let endIcon: String?
   let inputFontSize: CSS.Length
   let labelText: String
@@ -116,6 +123,7 @@ public struct TextInputView: HTMLContent {
     suffix: String? = nil,
     suffixClass: String = "",
     endControl: [DOM.Node] = [],
+    endControlFollowsValue: Bool = false,
     inputFontSize: CSS.Length = fontSizeMedium16,
     label: String = "",
     optional: Bool = false,
@@ -153,6 +161,7 @@ public struct TextInputView: HTMLContent {
     self.suffix = suffix
     self.suffixClass = suffixClass
     self.endControl = endControl
+    self.endControlFollowsValue = endControlFollowsValue
     self.endIcon = endIcon
     self.inputFontSize = inputFontSize
     self.labelText = label
@@ -298,8 +307,19 @@ public struct TextInputView: HTMLContent {
         }
 
         if hasEndControl {
-          span { endControl }
-            .class("text-input-end-control")
+          if endControlFollowsValue {
+            span {
+              span { value }
+                .class("text-input-value-mirror")
+                .ariaHidden(true)
+              span { endControl }
+                .class("text-input-end-control")
+            }
+            .class("text-input-value-end")
+          } else {
+            span { endControl }
+              .class("text-input-end-control")
+          }
         }
       }
       .class("text-input-control")
@@ -495,6 +515,57 @@ public struct TextInputView: HTMLContent {
         height(lineHeightSmall22)
         customProperty("--size-icon-small", lineHeightSmall22.value)
       }
+      // Under a live diff's line its control is a grid of two rows
+      // (`FieldDiffView.stateCSS`): everything laid over its input keeps
+      // to the input's row, which is then what it is placed in.
+      selector(
+        "& .text-input-prefix", "& .text-input-suffix", "& .text-input-start-icon", "& .text-input-end-icon",
+        "& .text-input-clear-button", "& .text-input-control > .text-input-end-control", "& .text-input-value-end"
+      ) {
+        // Each line named: an end left `auto` is the grid's own edge to
+        // what is laid over it.
+        gridRow("1 / 2")
+        gridColumn("1 / 2")
+      }
+      // Its end control right after its value (`endControlFollowsValue`): a
+      // row over the input's text box that lets the pointer through to
+      // the input, the value written again unseen to take its width and
+      // the control 8 after it, as wide as it is and no wider. A value
+      // longer than the field takes what the control leaves, so the
+      // control stands at the field's end, where the value fades before it.
+      descendant(".text-input-value-end") {
+        position(.absolute)
+        top(0)
+        bottom(0)
+        insetInlineStart(`var`("--edge-fade-inset-start") as CSS.Length)
+        insetInlineEnd(calc(borderWidthBase + spacing12))
+        display(.flex)
+        alignItems(.center)
+        gap(spacing8)
+        pointerEvents(.none)
+      }
+      descendant(".text-input-value-mirror") {
+        flexShrink(1)
+        minWidth(0)
+        overflow(.hidden)
+        whiteSpace(.pre)
+        visibility(.hidden)
+        fontFamily(typographyFontSans)
+        fontSize(`var`("--text-input-font-size") as CSS.Length)
+        fontWeight(fontWeightNormal)
+        lineHeight(lineHeightSmall22)
+      }
+      selector("& .text-input-value-end .text-input-end-control") {
+        position("static")
+        transform("none")
+        flexShrink(0)
+        minWidth(0)
+        pointerEvents(.auto)
+      }
+      // No value, nothing for the control to follow: its gap goes with it.
+      selector("& .text-input-value-mirror:empty") {
+        display(.none)
+      }
       ButtonView.phoneStepFieldCSS(".text-input-input")
       selector("& .text-input-input::placeholder") {
         color(colorPlaceholder).important()
@@ -628,6 +699,13 @@ public struct TextInputView: HTMLContent {
         updateClearButtonVisibility()
       }
 
+      // Its value written again for its end control to follow, as it is typed.
+      if let input, textInput.querySelector(".text-input-value-mirror") != nil {
+        _ = input.addEventListener(.input) { _ in
+          TextInputHydration.mirror(textInput)
+        }
+      }
+
       // A right-click should land the paste that follows it. Chromium focuses
       // on the click; Safari does not, and Paste from its menu then goes
       // nowhere. Focus on the context menu opening, in every browser.
@@ -725,6 +803,16 @@ public struct TextInputView: HTMLContent {
     }
 
     private init(binding: Bool) {}
+
+    /// A field's value written again for its end control to follow
+    /// (`endControlFollowsValue`), after a value set by code: an input's
+    /// `value` set that way sends no event.
+    public static func mirror(_ textInput: DOM.Element) {
+      guard let mirror = textInput.querySelector(".text-input-value-mirror"),
+        let input = textInput.querySelector(".text-input-input") as? HTML.HTMLInputElement
+      else { return }
+      mirror.textContent = input.value
+    }
   }
 
   public enum TextInputFactory {

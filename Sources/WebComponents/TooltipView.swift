@@ -846,10 +846,16 @@ public struct TooltipView: HTMLContent {
         guard !stringEquals(event.pointerType, "touch") else { return }
         if !self.pinned { self.aim(from: (event.clientX, event.clientY)) }
       }
-      _ = content.addEventListener(.mouseenter) { [self] _ in
+      // Pointer events, as the trigger's: a move's mouse events follow all
+      // its pointer events, so a bubble dismissed under the pointer
+      // (Escape) sent its mouse leave after the trigger's pointer enter,
+      // and hid the tooltip that enter had just shown again.
+      _ = content.addEventListener("pointerenter") { [self] (event: Event) in
+        guard !stringEquals(event.pointerType, "touch") else { return }
         self.stopAiming()
       }
-      _ = content.addEventListener(.mouseleave) { [self] _ in
+      _ = content.addEventListener("pointerleave") { [self] (event: Event) in
+        guard !stringEquals(event.pointerType, "touch") else { return }
         if !self.pinned { self.hideTooltip() }
       }
 
@@ -1049,9 +1055,18 @@ public struct TooltipView: HTMLContent {
       bind(in: document.body)
     }
 
+    /// The page's tooltips, bound once. A hydration that ran before this
+    /// one and bound a fragment's (`hydrate(in:)`) has already made the
+    /// page's instance, which holds every tooltip bound so far: it is kept,
+    /// never replaced by an empty one, or `bubble(of:)` and `release(in:)`
+    /// would find none of them.
     public static func hydrateIfPresent() {
       guard document.querySelector(".tooltip-view") != nil else { return }
-      instance = TooltipHydration()
+      if let instance {
+        instance.bind(in: document.body)
+      } else {
+        instance = TooltipHydration()
+      }
     }
 
     /// The tooltips under `root`—a fragment fetched into the page after its
@@ -1062,6 +1077,25 @@ public struct TooltipView: HTMLContent {
         return
       }
       instance.bind(in: root)
+    }
+
+    /// The tooltips of `clone`, a deep copy of `source` made in the page (a
+    /// list's row from its template, a row from the one before it). A
+    /// trigger bound in `source` comes across marked bound with nothing
+    /// bound to it, its bubble left at the end of <body> with the
+    /// source's: each takes a copy of that bubble and is bound as its own.
+    public static func hydrate(clone: DOM.Element, of source: DOM.Element) {
+      let from = source.querySelectorAll("[data-tooltip=\"true\"]")
+      for (index, trigger) in clone.querySelectorAll("[data-tooltip=\"true\"]").enumerated() {
+        guard trigger.hasAttribute("data-tooltip-hydrated") else { continue }
+        trigger.removeAttribute("data-tooltip-hydrated")
+        trigger.setAttribute(data("visible"), "false")
+        guard index < from.count, trigger.querySelector(":scope > .tooltip-content") == nil,
+          let content = Self.bubble(of: from[index])
+        else { continue }
+        trigger.appendChild(content.cloneNode(deep: true))
+      }
+      hydrate(in: clone)
     }
 
     private func bind(in root: DOM.Element) {

@@ -118,13 +118,21 @@ public struct FieldDiffView: HTMLContent {
     // control, spaced from it by the box's gap, a field stack's (as
     // `FieldView`'s); hidden, it takes none.
     selector(
-      "& .text-input-control:has(> [data-form-item-annotation])",
       "& .dropdown-container:has(> [data-form-item-annotation])",
       "& .dropdown-search-input-wrapper:has(> [data-form-item-annotation])"
     ) {
       display(.flex)
       flexDirection(.column)
       gap(spacing8)
+    }
+    // A text field's, a grid of two rows: what is laid over its input (its
+    // prefix, suffix, icons, clear button, end control) keeps to the
+    // input's row (`TextInputView`), centered on the input and not on the
+    // input and its line together.
+    selector("& .text-input-control:has(> [data-form-item-annotation])") {
+      display(.grid)
+      gridTemplateColumns("minmax(0, 1fr)")
+      rowGap(spacing8)
     }
   }
 
