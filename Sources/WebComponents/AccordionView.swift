@@ -803,6 +803,36 @@ public struct AccordionView: HTMLContent {
     }
   }
 
+  /// A fragment's target kept at the window's top while the page over it
+  /// is still taking its height: looked at four times a second for six
+  /// seconds, put back where it drifted, and let go at once when the
+  /// reader moves the page themself (a wheel, a touch, a key, a press).
+  private final class FragmentHold: @unchecked Sendable {
+    private let target: DOM.Element
+    private var left = 24
+    private var stopped = false
+
+    init(_ target: DOM.Element) { self.target = target }
+
+    func start() {
+      _ = window.addEventListener("wheel", { [self] _ in self.stopped = true }, capture: true, passive: true)
+      _ = window.addEventListener("touchstart", { [self] _ in self.stopped = true }, capture: true, passive: true)
+      _ = window.addEventListener("keydown", { [self] _ in self.stopped = true }, capture: true, passive: true)
+      _ = window.addEventListener("mousedown", { [self] _ in self.stopped = true }, capture: true, passive: true)
+      // After a smooth landing has run its course.
+      _ = window.setTimeout(700) { [self] in self.look() }
+    }
+
+    private func look() {
+      guard !stopped, left > 0 else { return }
+      left -= 1
+      if let top = target.getBoundingClientRect()?.top, top > 24 || top < -4 {
+        target.scrollIntoView(CSSOM.ScrollIntoViewOptions(behavior: .instant, block: .start))
+      }
+      _ = window.setTimeout(250) { [self] in self.look() }
+    }
+  }
+
   public class AccordionHydration: @unchecked Sendable {
     /// The active instance, set automatically on init. Accessible from any module that imports WebComponents.
     public static nonisolated(unsafe) var current: AccordionHydration?
@@ -844,14 +874,19 @@ public struct AccordionView: HTMLContent {
         closed = Self.isClosed(current)
         cursor = current.closest(".accordion-view")?.closest(".accordion-details")
       }
-      guard closed else { return }
-      // Its scroll is the page's own from here: on a reload the browser
-      // put the page back where it had been, after this had landed on the
-      // target, so the page went down and came back up (user, 2026-11-11).
+      // Its scroll is the page's own from here (user, 2026-11-11): on a
+      // reload the browser put the page back where it had been after the
+      // target was landed on, and what stands over the target still
+      // comes (readers fetched as their accordions open, images taking
+      // their height), pushing it out of the window: landed on, the
+      // target is held at the window's top until the page stands still
+      // (`FragmentHold`). One the browser opened itself is held too.
       window.setScrollRestoration(manual: true)
       let reduced = window.matchMedia("(prefers-reduced-motion: reduce)")
+      let smooth = closed && !reduced
       reveal(target) {
-        target.scrollIntoView(CSSOM.ScrollIntoViewOptions(behavior: reduced ? .instant : .smooth, block: .start))
+        target.scrollIntoView(CSSOM.ScrollIntoViewOptions(behavior: smooth ? .smooth : .instant, block: .start))
+        FragmentHold(target).start()
       }
     }
 
