@@ -25,9 +25,9 @@ import WebTypes
 /// Two shapes, by how much there is to show:
 ///
 /// - **A line**—`text`, `outline`, `choice`, `check`—sits where a field's diff
-///   line has always sat, under the field. A text is one continuous text,
-///   what was taken out red where it was and what was put in green where it
-///   is (user, 2026-11-09); the others read "Diff: old → new". Each kind of
+///   line has always sat, under the field: "Diff: old → new". A text's is one
+///   line of running text, wrapped where it is long (user, 2026-11-10); the
+///   others stay on one line and fade at its edge. Each kind of
 ///   value is compared by its own unit, which the caller names: a text word
 ///   by word, then letter by letter inside a changed word; an outline number
 ///   level by level, by position; a choice—a dropdown's, a date part's—whole; a checkbox's as one tick, green ticked, red unticked. A value
@@ -175,44 +175,32 @@ public struct DiffView: HTMLContent {
     let body: DOM.Node
     switch mode {
     case .text(let old, let new):
-      // A text that keeps some of itself is one continuous text (user,
-      // 2026-11-09): what was taken out, red, where it was, and what was put
-      // in, green, where it is. One replaced whole—nothing of it kept—reads
-      // "old → new" (user, 2026-11-09: "where is arrow").
+      // "old → new", always (user, 2026-11-10: "X -> Y as 1 line wrapped", never the old text, the
+      // arrow and the new text each on a line of its own, never the two woven into one text): one
+      // line of running text, wrapped where it is long, the words that changed red in the old and
+      // green in the new. The continuous text of 2026-11-09 misread "where is arrow".
       isLine = true
       modeName = "text"
-      let runs = DiffEngine.runs(old: old, new: new)
-      let keeps = runs.contains { run in
-        if case .unchanged(let text) = run { return !DiffEngine.isSpace(text) }
-        return false
-      }
-      if keeps {
-        body = span { Self.runNodes(runs) }
-        .class("diff-content")
-        .data("edge-fade-view", "expand")
-        .build()
-      } else {
-        body = span {
-          if !stringIsEmpty(old) {
-            span { Self.changed(old) }
-              .class("diff-old")
-              .dir("auto")
-          }
-          if !stringIsEmpty(old) && !stringIsEmpty(new) {
-            span { "→" }
-              .class("diff-arrow")
-              .ariaHidden(true)
-          }
-          if !stringIsEmpty(new) {
-            span { Self.changed(new) }
-              .class("diff-new")
-              .dir("auto")
-          }
+      let pair = DiffEngine.refine(old: old, new: new)
+      body = span {
+        if !stringIsEmpty(old) {
+          span { segmentNodes(stringIsEmpty(new) ? [.changed(old)] : pair.old) }
+            .class("diff-old")
+            .dir("auto")
         }
-        .class("diff-content")
-        .data("edge-fade-view", "expand")
-        .build()
+        if !stringIsEmpty(old) && !stringIsEmpty(new) {
+          span { "→" }
+            .class("diff-arrow")
+            .ariaHidden(true)
+        }
+        if !stringIsEmpty(new) {
+          span { segmentNodes(stringIsEmpty(old) ? [.changed(new)] : pair.new) }
+            .class("diff-new")
+            .dir("auto")
+        }
       }
+      .class("diff-content")
+      .build()
     case .outline(let old, let new):
       isLine = true
       modeName = "outline"
@@ -411,12 +399,19 @@ public struct DiffView: HTMLContent {
       // opens on a tap (EdgeFadeView.swift), wrapped inside this column
       // alone: the label's column stays as it is, so the two are not mixed.
       // A diff of several lines is the box's.
-      selector("&[data-shape='line'] > .diff-content") {
+      selector("&[data-shape='line']:not([data-diff-mode='text']) > .diff-content") {
         display(.flex)
         flexWrap(.nowrap)
         flex(1, 1, px(0))
       }
-      edgeFadeView("&[data-shape='line'] > .diff-content")
+      edgeFadeView("&[data-shape='line']:not([data-diff-mode='text']) > .diff-content")
+      // A text's old → new is running text in this column (user, 2026-11-10): its two values and the
+      // arrow are words of one line, wrapped where it is long, never three columns or three lines.
+      selector("&[data-shape='line'][data-diff-mode='text'] > .diff-content") {
+        display(.block)
+        flex(1, 1, px(0))
+        minWidth(0)
+      }
       selector("&[data-shape='box']") {
         display(.flex)
         flexDirection(.column)
@@ -535,11 +530,6 @@ public struct DiffView: HTMLContent {
       }
       selector("& .diff-new .diff-changed") {
         color(colorGreen)
-      }
-      // Taken out and put in side by side in a continuous text: a space's
-      // width between them, so the red and the green read as two runs.
-      selector("& .diff-old + .diff-new") {
-        paddingInlineStart(spacing4)
       }
       // A changed blank has no color to show: it is filled, as Xcode fills
       // one, in the subtle red or green a box's changed line is tinted.
@@ -684,21 +674,6 @@ extension DiffView {
   /// A changed stretch, exactly its characters. White space alone is
   /// marked as such (`data-blank`): on a line of a box the fill shows it,
   /// and a line's diff, which colors only, fills it too.
-  /// A continuous text's runs (`DiffEngine.runs`): kept as text, taken
-  /// out red, put in green.
-  static func runNodes(_ runs: [DiffEngine.Run]) -> [DOM.Node] {
-    runs.map { run -> DOM.Node in
-      switch run {
-      case .unchanged(let text):
-        return DOM.Text(text)
-      case .removed(let text):
-        return span { changed(text) }.class("diff-old").dir("auto").build()
-      case .inserted(let text):
-        return span { changed(text) }.class("diff-new").dir("auto").build()
-      }
-    }
-  }
-
   static func changed(_ text: String) -> DOM.Node {
     span { text }
       .class("diff-changed")

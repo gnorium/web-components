@@ -171,7 +171,10 @@ public struct FieldDiffView: HTMLContent {
         diff = DiffView(.text(old: old, new: value))
         state = emptied
       case .passage:
-        diff = DiffView(.passage(old: old, new: value))
+        // A text with no line break is one line, however many lines it wraps to (user, 2026-11-10: a
+        // Note): it reads "old → new" as a one-line text does. Only one with line breaks is a passage.
+        let oneLine = !old.utf8.contains(0x0A) && !value.utf8.contains(0x0A)
+        diff = DiffView(oneLine ? .text(old: old, new: value) : .passage(old: old, new: value))
         state = emptied
       case .choice:
         diff = DiffView(
