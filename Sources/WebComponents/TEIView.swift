@@ -2516,9 +2516,15 @@ public enum TEISentenceSelection {
         // quoted, on a subtle magenta one that stands out from it (user,
         // 2026-10-31): grounds alone, no line; never blue, a pointed
         // word's, nor yellow, Find's (a <mark>'s own yellow is replaced).
+        // Each word and each space between is a span of its own: where two
+        // meet on a fraction of a pixel a hairline of the page shows
+        // between their grounds (user, 2026-11-11), so each ground runs a
+        // pixel under the next and takes no room for it.
         descendant(".tei-highlight") {
           backgroundColor(backgroundColorVioletSubtle)
           color(.inherit)
+          paddingInlineEnd(borderWidthBase)
+          marginInlineEnd(calc("-\(borderWidthBase.value)"))
         }
         descendant(".tei-highlight[data-highlight='title']") {
           backgroundColor(backgroundColorMagentaSubtle)
