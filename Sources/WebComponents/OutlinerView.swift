@@ -381,6 +381,7 @@ public enum OutlineNumberAdvance {
     let strictRanks: Bool
     let maxDepth: Int?
     let depthRefusal: String
+    let childlessRefusal: String
     let touched: [String]
     let heading: Heading
     let stepper: String?
@@ -414,6 +415,8 @@ public enum OutlineNumberAdvance {
     ///   - maxDepth: The most levels items may stand under the root, the
     ///     top level the first; nil for no limit.
     ///   - depthRefusal: What a move past `maxDepth` is told.
+    ///   - childlessRefusal: What a move under an item its page marks
+    ///     `data-outliner-takes-none="true"` is told.
     ///   - touched: The items the reader has already moved, when the outline
     ///     is brought back mid-edit: where two readings of what moved are
     ///     equally short, theirs is the one reported.
@@ -436,6 +439,7 @@ public enum OutlineNumberAdvance {
       strictRanks: Bool = false,
       maxDepth: Int? = nil,
       depthRefusal: String = "An item can't go that deep.",
+      childlessRefusal: String = "Nothing can go under that item.",
       touched: [String] = [],
       heading: Heading = .control,
       stepper: String? = nil,
@@ -455,6 +459,7 @@ public enum OutlineNumberAdvance {
       self.strictRanks = strictRanks
       self.maxDepth = maxDepth
       self.depthRefusal = depthRefusal
+      self.childlessRefusal = childlessRefusal
       self.touched = touched
       self.heading = heading
       self.stepper = stepper
@@ -512,14 +517,20 @@ public enum OutlineNumberAdvance {
     /// adds to a tree already drawn (a form's new step) asks the server for.
     public struct Item: HTMLContent {
       let node: Node
+      let tree: String?
 
-      public init(_ node: Node) {
+      /// - Parameter tree: The id of the arranged outline it will be put in
+      ///   (`outliner-insertion`), whose handle it then carries; nil for a
+      ///   tree to read.
+      public init(_ node: Node, arrangedIn tree: String? = nil) {
         self.node = node
+        self.tree = tree
       }
 
       public func build() -> DOM.Node {
         OutlinerView.item(
-          node, parent: "", position: 0, prefix: "", treeID: "outliner", arranges: false, moved: [], touched: [])
+          node, parent: "", position: 0, prefix: "", treeID: tree ?? "outliner", arranges: tree != nil, moved: [],
+          touched: [])
       }
     }
 
@@ -840,6 +851,7 @@ public enum OutlineNumberAdvance {
       .data("outliner-strict-ranks", strictRanks)
       .data("outliner-max-depth", maxDepth.map(String.init) ?? "")
       .data("outliner-depth-refusal", depthRefusal)
+      .data("outliner-childless-refusal", childlessRefusal)
       .data("outliner-heading", heading.rawValue)
       .style { Self.treeCSS() }
       .build()
@@ -1834,6 +1846,7 @@ public enum OutlineNumberAdvance {
     private let numberSelector: String
     private let rankRefusal: String
     private let leafRefusal: String
+    private let childlessRefusal: String
     /// Whether an item stands only under a higher rank.
     private let strictRanks: Bool
     /// The most levels under the root; -1 for no limit.
@@ -1873,13 +1886,20 @@ public enum OutlineNumberAdvance {
       strictRanks = stringEquals(root.dataset["outliner-strict-ranks"] ?? "false", "true")
       maxDepth = parseInt(root.dataset["outliner-max-depth"] ?? "") ?? -1
       depthRefusal = root.dataset["outliner-depth-refusal"] ?? ""
+      childlessRefusal = root.dataset["outliner-childless-refusal"] ?? ""
       for item in root.querySelectorAll(".outliner-item") {
-        bind(item)
+        adopt(item)
         if stringEquals(item.dataset["outliner-touched"] ?? "false", "true") { touched.append(id(of: item)) }
       }
       bindToolbar()
       // A removal, or its undoing, marked by the page.
       _ = root.addEventListener("outliner-removal") { [self] _ in self.changed() }
+      // An item its page put in (`Item(_:arrangedIn:)`): its handle joins
+      // the outline's.
+      _ = root.addEventListener("outliner-insertion") { [self] _ in
+        for item in self.root.querySelectorAll(".outliner-item") { self.adopt(item) }
+        self.changed()
+      }
       refresh()
     }
 
@@ -1985,6 +2005,13 @@ public enum OutlineNumberAdvance {
     }
 
     // MARK: - Binding
+
+    /// Binds an item once, however often it is asked.
+    private func adopt(_ item: DOM.Element) {
+      guard !stringEquals(item.dataset["outliner-bound"] ?? "false", "true") else { return }
+      item.setAttribute(data("outliner-bound"), "true")
+      bind(item)
+    }
 
     private func bind(_ item: DOM.Element) {
       // A handle drawn disabled, or a marker drawn immovable, belongs to an
@@ -2251,6 +2278,8 @@ public enum OutlineNumberAdvance {
       if let parent, isRemoved(parent) {
         return stringJoin([label(of: parent), " is removed."], separator: "")
       }
+      // Under an item its page says takes none.
+      if let parent, stringEquals(parent.dataset["outliner-takes-none"] ?? "false", "true") { return childlessRefusal }
       // Under a lower rank, or under the leaf rank, which takes nothing.
       let parentRank = rank(of: parent)
       if let _ = parent, parentRank == leafRank { return leafRefusal }
