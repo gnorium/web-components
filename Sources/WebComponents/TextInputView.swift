@@ -432,6 +432,16 @@ public struct TextInputView: HTMLContent {
         borderColor(borderColorDisabled)
         cursor(cursorNotAllowed)
       }
+      // A disabled input hears no wheel and no touch, so its long value
+      // could not be scrolled (user, 2026-11-12): the pointer goes through
+      // it to its control, whose wheel and swipe scroll it
+      // (`EdgeFadeViewHydration.wheel`).
+      selector("&.text-input-disabled .text-input-control") {
+        cursor(cursorNotAllowed)
+      }
+      selector("&.text-input-disabled .text-input-input:disabled") {
+        pointerEvents(.none)
+      }
       selector("&.text-input-read-only .text-input-input") {
         backgroundColor(backgroundColorNeutralSubtle)
       }

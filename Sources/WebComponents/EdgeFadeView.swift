@@ -242,6 +242,11 @@ private func edgeFadeViewGradient(_ toward: CSS.GradientDirection) -> String {
       // An input's value is no node: typing is heard as typing. Left, an
       // input scrolls back to its start, a frame later.
       _ = document.addEventListener("input", { event in EdgeFadeViewHydration.scrolled(event) }, capture: true, passive: true)
+      // A disabled input scrolls under no wheel and no swipe of its own:
+      // its control's are passed to it (user, 2026-11-12).
+      _ = document.addEventListener("wheel", { event in EdgeFadeViewHydration.wheel(event) }, capture: true, passive: false)
+      _ = document.addEventListener("touchstart", { event in EdgeFadeViewHydration.touched(event) }, capture: true, passive: true)
+      _ = document.addEventListener("touchmove", { event in EdgeFadeViewHydration.swiped(event) }, capture: true, passive: true)
       _ = document.addEventListener("focusout", { _ in EdgeFadeViewHydration.scheduleRefresh() }, capture: true, passive: true)
       // A size that moves (a sidebar opening, a drawer sliding in) is
       // measured on the frame its class or style turned, at its first
@@ -299,6 +304,46 @@ private func edgeFadeViewGradient(_ toward: CSS.GradientDirection) -> String {
       }
       if !isExpanded(box) { mark(box, overflowing: box.scrollWidth > box.clientWidth) }
       markEdges(box, hiddenEdges(box))
+    }
+
+    /// The disabled input the pointer is over: the pointer goes through it
+    /// (`TextInputView`), so the event is its control's, the input a child.
+    static func disabledInput(_ event: Event) -> DOM.Element? {
+      guard let target = event.target, !stringIsEmpty(target.tagName) else { return nil }
+      return target.querySelector(":scope > input[data-edge-fade-view]:disabled")
+    }
+
+    /// Moves a disabled input's line by `distance` and its marks with it;
+    /// whether it moved.
+    @discardableResult
+    static func scroll(_ input: DOM.Element, by distance: Double) -> Bool {
+      let before = input.scrollLeft
+      input.scrollLeft = before + distance
+      markEdges(input, hiddenEdges(input))
+      return input.scrollLeft != before
+    }
+
+    /// A sideways wheel over a disabled input scrolls its line; the page
+    /// keeps a wheel that is mostly up or down, or that the line has no
+    /// more to give.
+    static func wheel(_ event: Event) {
+      let across = event.deltaX, along = event.deltaY
+      guard (across < 0 ? -across : across) > (along < 0 ? -along : along), let input = disabledInput(event) else { return }
+      if scroll(input, by: across) { event.preventDefault() }
+    }
+
+    nonisolated(unsafe) static var swipe: (input: DOM.Element, x: Double)?
+
+    static func touched(_ event: Event) {
+      swipe = disabledInput(event).map { ($0, event.touchClientX(0)) }
+    }
+
+    /// A finger dragged over a disabled input drags its line.
+    static func swiped(_ event: Event) {
+      guard let held = swipe else { return }
+      let x = event.touchClientX(0)
+      scroll(held.input, by: held.x - x)
+      swipe = (held.input, x)
     }
 
     /// Which of the box's edges hide some of its line: the start once it is
