@@ -58,7 +58,8 @@ public struct FieldValidationMessageView: HTMLContent {
         .class("field-validation-message-icon")
         .ariaHidden(true)
 
-      span { self.message }
+      // A path it names is its object's id, linked (`LinkedSentenceView`).
+      span { LinkedSentenceView(self.message) }
         .class("field-validation-message-text")
     }
     .class("field-validation-message-view")
@@ -380,7 +381,7 @@ public struct ConstraintMessages: Sendable {
       let id = messageID(control)
       if let existing = document.querySelector("#\(id)") {
         if let words = existing.querySelector(".field-validation-message-text") {
-          words.textContent = text
+          words.innerHTML = LinkedSentenceView(text).render()
         }
       } else {
         let html = FieldValidationMessageView(id: id, status: .error, message: text).render()
