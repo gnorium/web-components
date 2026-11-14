@@ -48,6 +48,8 @@ public struct InfoChipView: HTMLContent {
   public enum Icon: Sendable {
     case automatic
     case hidden
+    /// The pending mark (`DottedRingView`); an Envoy's rung.
+    case dottedRing
     case ring
     case disc
     case ringedDisc
@@ -157,6 +159,8 @@ public struct InfoChipView: HTMLContent {
             iconContent
           } else {
             switch resolvedIcon {
+            case .dottedRing:
+              DottedRingView(size: iconLength)
             case .ring:
               RingIconView(size: iconLength)
             case .disc:
