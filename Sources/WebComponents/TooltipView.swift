@@ -703,7 +703,13 @@ public struct TooltipView: HTMLContent {
     /// line's: right to left, a start-aligned bubble above or below grows
     /// leftward from the trigger's right edge.
     private func place() {
-      guard let host, let content, let t = trigger.getBoundingClientRect() else { return }
+      guard let host, let content, let rect = trigger.getBoundingClientRect() else { return }
+      // The box the bubble is placed from: the trigger's, wider on both
+      // sides by its `--tooltip-anchor-inset` where it sets one (a trigger
+      // whose text runs to its edges, the bubble's own text then in line
+      // with it: the session context bar).
+      let widen = Self.pixels(window.getComputedStyle(trigger).getPropertyValue("--tooltip-anchor-inset"))
+      let t = Anchor(left: rect.left - widen, right: rect.right + widen, top: rect.top, bottom: rect.bottom)
       // The viewport less its scrollbar: `innerWidth` counts the bar, and a
       // bubble run under it was cut off.
       let root = document.documentElement
@@ -792,8 +798,18 @@ public struct TooltipView: HTMLContent {
 
     /// The point on the trigger's box that the placement CSS grows the
     /// bubble away from.
+    /// The box a bubble is placed from (`place`).
+    private struct Anchor {
+      let left: Double
+      let right: Double
+      let top: Double
+      let bottom: Double
+      var width: Double { right - left }
+      var height: Double { bottom - top }
+    }
+
     private static func anchor(
-      for placement: TooltipView.Placement, trigger t: DOM.Rect
+      for placement: TooltipView.Placement, trigger t: Anchor
     ) -> (Double, Double) {
       switch placement.side {
       case .left, .right:
