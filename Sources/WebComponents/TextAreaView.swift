@@ -132,7 +132,8 @@ public struct TextAreaView: HTMLContent {
       .class("text-area-input")
 
     if autosize {
-      textAreaInput = textAreaInput.data("autosize", "true")
+      // Its rows its least height: sized to its content, it ignores them.
+      textAreaInput = textAreaInput.data("autosize", "true").addingAttribute("style", "--text-area-rows: \(rows)")
     }
     if let form {
       textAreaInput = textAreaInput.form(form)
@@ -252,6 +253,11 @@ public struct TextAreaView: HTMLContent {
       selector("&.text-area-autosize .text-area-input") {
         resize(.none)
         fieldSizing(.content)
+        // Sized to its content, it keeps its rows as its least height
+        // (user, 2026-11-14: a locution's four lines became one), then grows.
+        CSS.Property(
+          "min-height",
+          "calc(var(--text-area-rows, 1) * \(lineHeightSmall22.value) + 2 * \(spacing12.value) + 2 * \(borderWidthBase.value))")
         maxHeight(rem(18))
       }
       selector("&.text-area-autosize.text-area-disabled .text-area-input", ":where([data-disabled-region='true']) &.text-area-autosize .text-area-input") {
