@@ -223,7 +223,7 @@ public struct DropdownView: HTMLContent {
 
           if let tooltipText = tooltip {
             TooltipView(tooltip: tooltipText, placement: .bottom) {
-              IconView(icon: { size in InfoIconView(size: size) }, size: sizeIconSmall)
+              IconView(icon: { size in InfoIconView(size: size) }, size: lineHeightSmall22)
             }
           }
         }

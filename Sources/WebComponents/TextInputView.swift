@@ -261,7 +261,7 @@ public struct TextInputView: HTMLContent {
           labelMarks
           if let tooltip = tooltip {
             TooltipView(tooltip: tooltip, placement: .bottom) {
-              IconView(icon: { size in InfoIconView(size: size) }, size: sizeIconSmall)
+              IconView(icon: { size in InfoIconView(size: size) }, size: lineHeightSmall22)
             }
           }
         }
