@@ -8,6 +8,8 @@ import WebTypes
 
 /// A multi-line text input that allows manual resizing if needed.
 public struct TextAreaView: HTMLContent {
+  /// A fixed field's rows where none are asked for.
+  static let defaultRows = 4
   let id: String
   let name: String
   let placeholder: String
@@ -16,7 +18,9 @@ public struct TextAreaView: HTMLContent {
   let disabled: Bool
   let readonly: Bool
   let required: Bool
-  let rows: Int
+  /// Its rows as asked: nil, the default for a fixed field and no least
+  /// height for an autosized one, which then starts one line tall.
+  let rows: Int?
   let autosize: Bool
   let startIcon: String?
   /// Text that stands at the start of the field, inside it and never part
@@ -73,7 +77,7 @@ public struct TextAreaView: HTMLContent {
     disabled: Bool = false,
     readonly: Bool = false,
     required: Bool = false,
-    rows: Int = 4,
+    rows: Int? = nil,
     autosize: Bool = false,
     startIcon: String? = nil,
     endIcon: String? = nil,
@@ -128,12 +132,14 @@ public struct TextAreaView: HTMLContent {
       .disabled(disabled)
       .readonly(readonly)
       .required(required)
-      .rows(rows)
+      .rows(rows ?? (autosize ? 1 : Self.defaultRows))
       .class("text-area-input")
 
     if autosize {
-      // Its rows its least height: sized to its content, it ignores them.
-      textAreaInput = textAreaInput.data("autosize", "true").addingAttribute("style", "--text-area-rows: \(rows)")
+      textAreaInput = textAreaInput.data("autosize", "true")
+      // Rows asked for are its least height: sized to its content, it
+      // ignores them (a composer's four lines). None asked, one line.
+      if let rows { textAreaInput = textAreaInput.addingAttribute("style", "--text-area-rows: \(rows)") }
     }
     if let form {
       textAreaInput = textAreaInput.form(form)
