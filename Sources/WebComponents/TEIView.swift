@@ -1226,7 +1226,7 @@ public enum TEISentenceSelection {
         return glossable(span { line.text }.class("tei-line tei-line-mark"), line.element).build()
       case .gap(let reason):
         // A statement about the page, never a mark on it (user, repeated
-        // 2026-10-30): the trace shows only what the page bears, so a gap of
+        // 2026-10-30): the parse shows only what the page bears, so a gap of
         // any reason draws nothing. Its reason stays in the TEI and here.
         return span {}.class("tei-line tei-line-gap").ariaHidden(true).data("reason", reason).build()
       case .documentBoundary:
