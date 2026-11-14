@@ -204,6 +204,21 @@ public struct DropdownView: HTMLContent {
     return stringEquals(value, selectedValue ?? "")
   }
 
+  /// The class of one chosen option's item in the trigger of a dropdown
+  /// that takes several (`multiple`), its value in `data-selected-value`.
+  public static let selectedItemClass = "dropdown-selected-item"
+
+  /// The event a dropdown's root dispatches, bubbling, as its open menu
+  /// closes: one that takes several choices is settled then.
+  public static let closedEvent = "dropdown-closed"
+
+  /// An option's name as text with its context before it, the trail's
+  /// chevron written as text ("Agent › Nicholas Ling (publisher)"): a
+  /// trigger's tooltip. Embedded-safe.
+  public static func fullName(context: String, display: String) -> String {
+    stringIsEmpty(context) ? display : stringJoin([context, " › ", display], separator: "")
+  }
+
   public func build() -> DOM.Node {
     let requiredMessage = "\(labelText.isEmpty ? "A value" : labelText) is required."
     div {
@@ -250,13 +265,15 @@ public struct DropdownView: HTMLContent {
           : selectedValue.flatMap { value in
             options.first(where: { stringEquals($0.value, value) })
           }
-        // Several chosen: their names in the order chosen.
-        var chosenNames: [String] = []
+        // Several chosen: their names in the order chosen, each with its
+        // context where it has one ("Agent › Nicholas Ling (publisher)").
+        var chosenOptions: [DropdownOption] = []
         if multiple {
           for value in selectedValues {
-            if let option = options.first(where: { stringEquals($0.value, value) }) { chosenNames.append(option.display) }
+            if let option = options.first(where: { stringEquals($0.value, value) }) { chosenOptions.append(option) }
           }
         }
+        let chosenNames = chosenOptions.map { Self.fullName(context: $0.context ?? "", display: $0.display) }
         let displayText =
           multiple
           ? (chosenNames.isEmpty ? placeholder : EnglishList.joined(chosenNames))
@@ -279,6 +296,21 @@ public struct DropdownView: HTMLContent {
                 BreadcrumbLabelView(context: context, text: option.display)
               } else if let option = selectedOption, let number = option.number {
                 Self.numberedLabel(number: number, display: option.display)
+              } else if !chosenOptions.isEmpty {
+                // Several chosen: each its own item, as English joins a list
+                // (`EnglishList`), an option with a context its trail.
+                for (index, option) in chosenOptions.enumerated() {
+                  EnglishList.separator(before: index, of: chosenOptions.count)
+                  span {
+                    if let context = option.context {
+                      BreadcrumbLabelView(context: context, text: option.display)
+                    } else {
+                      option.display
+                    }
+                  }
+                  .class(Self.selectedItemClass)
+                  .data("selected-value", option.value)
+                }
               } else {
                 displayText
               }
@@ -1035,10 +1067,27 @@ public struct DropdownView: HTMLContent {
         let alt = option.getAttribute(data("alt-display")) ?? ""
         selectedText?.setAttribute(.title, stringIsEmpty(alt) ? display : alt)
       } else {
+        // Several: each chosen its own item, as the server draws them, an
+        // option with a context its trail.
         var names: [String] = []
-        for option in chosen { names.append(option.getAttribute(data("display")) ?? "") }
+        selectedText?.innerHTML = chosen.isEmpty ? placeholder : ""
+        for (index, option) in chosen.enumerated() {
+          let display = option.getAttribute(data("display")) ?? ""
+          names.append(DropdownView.fullName(context: option.getAttribute(data("context")) ?? "", display: display))
+          guard let selectedText else { continue }
+          let separator = EnglishList.separator(before: index, of: chosen.count)
+          if !stringIsEmpty(separator) { selectedText.appendChild(document.createTextNode(separator)) }
+          let item = document.createElement(.span)
+          item.setAttribute("class", DropdownView.selectedItemClass)
+          item.setAttribute(data("selected-value"), option.getAttribute(data("value")) ?? "")
+          if let label = option.querySelector(".breadcrumb-label-view") {
+            item.appendChild(label.cloneNode(deep: true))
+          } else {
+            item.appendChild(document.createTextNode(display))
+          }
+          selectedText.appendChild(item)
+        }
         let shown = EnglishList.joined(names)
-        selectedText?.innerHTML = chosen.isEmpty ? placeholder : shown
         if chosen.isEmpty { selectedText?.removeAttribute(.title) } else { selectedText?.setAttribute(.title, shown) }
       }
       selectedText?.setAttribute(data("selected"), !chosen.isEmpty)
@@ -1243,7 +1292,17 @@ public struct DropdownView: HTMLContent {
       searchInput?.focus(DOM.FocusOptions(preventScroll: true))
     }
 
+    /// What a dropdown's root hears as its open menu closes
+    /// (`DropdownView.closedEvent`).
     private func closeDropdown() {
+      let wasOpen = isOpen
+      defer {
+        // Said once a menu that was open closes: a dropdown of several
+        // choices is settled then, its choices made one at a time before.
+        if wasOpen, let root = container?.closest(".dropdown-view") {
+          root.dispatchEvent(CustomEvent(type: DropdownView.closedEvent, detail: "", bubbles: true))
+        }
+      }
       isOpen = false
       menu?.setAttribute(data("open"), false)
       _ = container?.classList.remove("is-open")
@@ -1582,18 +1641,14 @@ public struct DropdownView: HTMLContent {
       if let container {
         (container.closest(".dropdown-view") ?? container).removeAttribute("data-invalid")
       }
-      var names: [String] = []
-      for chosen in values {
-        for opt in ownOptions + resultOptions where stringEquals(opt.getAttribute(data("value")) ?? "", chosen) {
-          names.append(opt.getAttribute(data("display")) ?? chosen)
+      var chosen: [DOM.Element] = []
+      for value in values {
+        for opt in ownOptions + resultOptions where stringEquals(opt.getAttribute(data("value")) ?? "", value) {
+          chosen.append(opt)
           break
         }
       }
-      let shown = EnglishList.joined(names)
-      selectedText?.innerHTML = values.isEmpty ? placeholder : shown
-      if values.isEmpty { selectedText?.removeAttribute(.title) } else { selectedText?.setAttribute(.title, shown) }
-      selectedText?.setAttribute(data("selected"), !values.isEmpty)
-      selectedText?.scrollLeft = 0
+      show(chosen)
       markChosen()
       if let hiddenInput {
         hiddenInput.dispatchEvent(.change)
@@ -1860,6 +1915,8 @@ public struct DropdownView: HTMLContent {
       buttonSize: ButtonView.ButtonSize = .large,
       fullWidth: Bool = true,
       fontSize: CSS.Length = fontSizeMedium16,
+      multiple: Bool = false,
+      selectedValues: [String] = [],
       hydrator: DropdownHydration? = nil
     ) -> DOM.Element {
       let wrapper = document.createElement(.div)
@@ -1876,7 +1933,9 @@ public struct DropdownView: HTMLContent {
         class: `class`,
         buttonSize: buttonSize,
         fullWidth: fullWidth,
-        fontSize: fontSize
+        fontSize: fontSize,
+        multiple: multiple,
+        selectedValues: selectedValues
       )
       wrapper.innerHTML = view.render()
       let element = wrapper.firstElementChild ?? wrapper
