@@ -450,6 +450,15 @@ public struct AccordionView: HTMLContent {
     }
     var root = div {
       detailsElement
+      // Its edge, all four sides, as a thread's spine is (user, 2026-11-16):
+      // a band along its border that folds it, or opens it, wherever in its
+      // body the reader is. Pointer-only, as a rail: the keyboard folds it
+      // by its header.
+      if separation == .outline && !disabled {
+        for side in ["top", "end", "bottom", "start"] {
+          div {}.class("accordion-edge").data("edge", side).ariaHidden(true)
+        }
+      }
       if separation == .divider {
         hr()
           .class("accordion-divider")
@@ -481,6 +490,31 @@ public struct AccordionView: HTMLContent {
         border(borderWidthBase, .solid, borderColorSubtle)
         borderRadius(borderRadiusBase)
         padding(0)
+      }
+      // Its edge band: 16 wide, centered on the border line, on every side.
+      // Under the pointer the whole border, round its corners, takes the
+      // emphasized color, the pointer a hand.
+      selector("& > .accordion-edge") {
+        position(.absolute)
+        zIndex(1)
+        cursor(.pointer)
+      }
+      selector("& > .accordion-edge[data-edge='top']", "& > .accordion-edge[data-edge='bottom']") {
+        insetInlineStart(-(spacing8 + borderWidthBase))
+        insetInlineEnd(-(spacing8 + borderWidthBase))
+        height(spacing16)
+      }
+      selector("& > .accordion-edge[data-edge='start']", "& > .accordion-edge[data-edge='end']") {
+        insetBlockStart(-(spacing8 + borderWidthBase))
+        insetBlockEnd(-(spacing8 + borderWidthBase))
+        width(spacing16)
+      }
+      selector("& > .accordion-edge[data-edge='top']") { insetBlockStart(-(spacing8 + borderWidthBase)) }
+      selector("& > .accordion-edge[data-edge='bottom']") { insetBlockEnd(-(spacing8 + borderWidthBase)) }
+      selector("& > .accordion-edge[data-edge='start']") { insetInlineStart(-(spacing8 + borderWidthBase)) }
+      selector("& > .accordion-edge[data-edge='end']") { insetInlineEnd(-(spacing8 + borderWidthBase)) }
+      selector("&[data-separation='outline']:has(> .accordion-edge:hover)") {
+        borderColor(borderColorEmphasized)
       }
       // Grouped: one frame round the siblings, square where they meet, the
       // line between two drawn once, by the one below.
@@ -681,6 +715,18 @@ public struct AccordionView: HTMLContent {
           self.beginClose(details)
         } else {
           self.beginOpen(details)
+        }
+      }
+
+      // Its edge folds it as its header does, the header brought back into
+      // sight where folding left it above the window.
+      for edge in accordion.querySelectorAll(":scope > .accordion-edge") {
+        _ = edge.addEventListener(.click) { [self] _ in
+          guard let summary = self.summary else { return }
+          summary.click()
+          if let top = summary.getBoundingClientRect()?.y, top < 0 {
+            summary.scrollIntoView(CSSOM.ScrollIntoViewOptions(behavior: .auto, block: .start))
+          }
         }
       }
 
