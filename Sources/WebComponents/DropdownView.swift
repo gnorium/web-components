@@ -355,7 +355,10 @@ public struct DropdownView: HTMLContent {
             .role(.alert)
         }
 
-        // Dropdown menu
+        // Dropdown menu: none for a frozen one, which never opens (its
+        // trigger is a disabled button) and is most of a revision page's
+        // dropdowns; its value is drawn on the trigger above.
+        if !disabled {
         div {
           // Search input
           // The site's search box; the menu's own hydration drives it
@@ -433,6 +436,7 @@ public struct DropdownView: HTMLContent {
         .class("dropdown-menu")
         .data("dropdown-menu", true)
         .data("open", false)
+        }
       }
       .class("dropdown-container")
       .data("dropdown-container", true)
