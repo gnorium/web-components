@@ -33,6 +33,9 @@ public struct RingedDiscIconView: HTMLContent {
     .viewBox(0, 0, 1024, 1024)
     .xmlns("http://www.w3.org/2000/svg")
     .fill(.currentColor)
+    // Inline, never the page's symbol (`DOM.IconSprite`): a roster status
+    // colors its ring (`circle:last-child`), which a `<use>` would hide.
+    .data("sprite", "false")
   }
 }
 
