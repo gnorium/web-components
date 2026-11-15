@@ -1039,6 +1039,11 @@ public struct TooltipView: HTMLContent {
       // `data-tooltip-text`; the bubble says it as it shows.
       if let text = trigger.getAttribute("data-tooltip-text") { content.innerHTML = text }
 
+      // Before it is placed: what sizes its trigger to its bubble (the
+      // context bar's meter) does it now, so it is placed from the trigger
+      // as it will stand (user, 2026-11-15: resized after, the bubble stood
+      // off its trigger).
+      trigger.dispatchEvent(CustomEvent(type: "tooltip-will-show", detail: ""))
       place()
       host?.setAttribute(data("visible"), true)
       trigger.setAttribute(data("visible"), true)
