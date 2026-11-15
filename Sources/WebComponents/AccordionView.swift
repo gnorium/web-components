@@ -449,16 +449,18 @@ public struct AccordionView: HTMLContent {
       }
     }
     var root = div {
-      detailsElement
       // Its edge, all four sides, as a thread's spine is (user, 2026-11-16):
       // a band along its border that folds it, or opens it, wherever in its
       // body the reader is. Pointer-only, as a rail: the keyboard folds it
-      // by its header.
+      // by its header. Drawn before its body, so an accordion inside it,
+      // flush with its border (a tree node's Metadata), keeps its own edge
+      // on top.
       if separation == .outline && !disabled {
         for side in ["top", "end", "bottom", "start"] {
           div {}.class("accordion-edge").data("edge", side).ariaHidden(true)
         }
       }
+      detailsElement
       if separation == .divider {
         hr()
           .class("accordion-divider")

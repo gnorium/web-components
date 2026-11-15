@@ -365,7 +365,7 @@ public struct TextInputView: HTMLContent {
         customProperty("--edge-fade-inset-start", "calc(\(borderWidthBase.value) + \(spacing12.value))")
         customProperty("--edge-fade-inset-end", "calc(\(borderWidthBase.value) + \(spacing12.value))")
       }
-      selector("&.text-input-disabled .text-input-control", ":where([data-disabled-region='true']) & .text-input-control") {
+      selector("&.text-input-disabled .text-input-control", "&:has(.text-input-input:disabled) .text-input-control", ":where([data-disabled-region='true']) & .text-input-control") {
         customProperty("--edge-fade-ground", backgroundColorDisabled)
       }
       selector("&.text-input-read-only .text-input-control") {
@@ -425,7 +425,7 @@ public struct TextInputView: HTMLContent {
       // ground, as every disabled field's does (DropdownView's too); its
       // placeholder stays the placeholder's. So does a field in a part
       // drawn disabled (`DisabledRegion`).
-      selector("&.text-input-disabled .text-input-input", ":where([data-disabled-region='true']) & .text-input-input") {
+      selector("&.text-input-disabled .text-input-input", "&:has(.text-input-input:disabled) .text-input-input", ":where([data-disabled-region='true']) & .text-input-input") {
         color(colorBase)
         customProperty("-webkit-text-fill-color", colorBase)
         backgroundColor(backgroundColorDisabled)
@@ -436,10 +436,10 @@ public struct TextInputView: HTMLContent {
       // could not be scrolled (user, 2026-11-12): the pointer goes through
       // it to its control, whose wheel and swipe scroll it
       // (`EdgeFadeViewHydration.wheel`).
-      selector("&.text-input-disabled .text-input-control") {
+      selector("&.text-input-disabled .text-input-control", "&:has(.text-input-input:disabled) .text-input-control") {
         cursor(cursorNotAllowed)
       }
-      selector("&.text-input-disabled .text-input-input:disabled") {
+      selector("&.text-input-disabled .text-input-input:disabled", "&:has(.text-input-input:disabled) .text-input-input:disabled") {
         pointerEvents(.none)
       }
       selector("&.text-input-read-only .text-input-input") {
@@ -586,7 +586,7 @@ public struct TextInputView: HTMLContent {
       // search bar: a hover border on a field reads as a half-finished focus
       // ring, and tells the reader nothing the cursor has not already told
       // them.
-      selector("&:not(.text-input-disabled):not(.text-input-read-only):not(.text-input-error) .text-input-input:focus") {
+      selector("&:not(.text-input-disabled):not(:has(.text-input-input:disabled)):not(.text-input-read-only):not(.text-input-error) .text-input-input:focus") {
         borderColor(borderColorBlue).important()
         outline(borderWidthBase, .solid, borderColorBlue).important()
         outlineOffset(px(0)).important()
@@ -626,15 +626,15 @@ public struct TextInputView: HTMLContent {
         cursor(cursorBase)
         transition(transitionPropertyBase, transitionDurationBase, transitionTimingFunctionSystem)
       }
-      selector("&.text-input-disabled .text-input-clear-button") {
+      selector("&.text-input-disabled .text-input-clear-button", "&:has(.text-input-input:disabled) .text-input-clear-button") {
         cursor(cursorNotAllowed)
         opacity(opacityMedium).important()
       }
-      selector("&:not(.text-input-disabled) .text-input-clear-button:hover") {
+      selector("&:not(.text-input-disabled):not(:has(.text-input-input:disabled)) .text-input-clear-button:hover") {
         backgroundColor(backgroundColorInteractiveSubtleHover).important()
         color(colorBase).important()
       }
-      selector("&:not(.text-input-disabled) .text-input-clear-button:active") {
+      selector("&:not(.text-input-disabled):not(:has(.text-input-input:disabled)) .text-input-clear-button:active") {
         backgroundColor(backgroundColorInteractiveSubtleActive).important()
       }
       descendant(".text-input-clear-button:focus") {
