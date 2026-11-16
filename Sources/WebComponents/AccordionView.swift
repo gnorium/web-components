@@ -495,10 +495,10 @@ public struct AccordionView: HTMLContent {
       }
       // Its border subtle at rest (user, 2026-11-16: a fold edge, not a
       // button, like the thread spine and the sets' inner borders),
-      // emphasized under the pointer.
+      // base under the pointer, as the thread spine's (user, 2026-11-16).
       // Its edge band: 16 wide, centered on the border line, on every side.
       // Under the pointer the whole border, round its corners, takes the
-      // emphasized color, the pointer a hand.
+      // base color, the pointer a hand.
       selector("& > .accordion-edge") {
         position(.absolute)
         zIndex(1)
@@ -519,7 +519,7 @@ public struct AccordionView: HTMLContent {
       selector("& > .accordion-edge[data-edge='start']") { insetInlineStart(-(spacing8 + borderWidthBase)) }
       selector("& > .accordion-edge[data-edge='end']") { insetInlineEnd(-(spacing8 + borderWidthBase)) }
       selector("&[data-separation='outline']:has(> .accordion-edge:hover)") {
-        borderColor(borderColorEmphasized)
+        borderColor(borderColorBase)
       }
       // Grouped: one frame round the siblings, square where they meet, the
       // line between two drawn once, by the one below.
