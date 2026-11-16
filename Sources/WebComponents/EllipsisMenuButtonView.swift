@@ -5,8 +5,9 @@
   import HTMLBuilder
   import WebTypes
 
-  /// A button that toggles an ellipsis popover menu; `marked`, a small blue
-  /// dot at its corner, says something in the menu is new (unread Notices).
+  /// A button that toggles an ellipsis popover menu; `marked`, its three
+  /// dots blue, says something in the menu is new (unread Notices), as the
+  /// blue count beside Notices inside it does (user, 2026-11-16: no dot).
   public struct EllipsisMenuButtonView: HTMLContent {
     let `class`: String
     let weight: ButtonView.ButtonWeight
@@ -30,25 +31,16 @@
           ariaLabel: "Settings",
           class: "navbar-ellipsis-btn"
         )
-        if marked {
-          span { DiscIconView(size: spacing8) }
-            .class("ellipsis-menu-button-mark")
-            .ariaHidden(true)
-        }
       }
       .class(`class`.isEmpty ? "ellipsis-menu-button-view" : "ellipsis-menu-button-view \(`class`)")
       .data("navbar-ellipsis", true)
       .ariaExpanded(false)
       .ariaControls("navbar-ellipsis-menu")
+      .data("marked", marked)
       .style {
         selector("&") { position(.relative) }
-        selector("& .ellipsis-menu-button-mark") {
-          position(.absolute)
-          insetBlockStart(spacing8)
-          insetInlineEnd(spacing8)
-          display(.flex)
-          color(colorBlue)
-          pointerEvents(.none)
+        selector("&[data-marked='true'] .navbar-ellipsis-btn", "&[data-marked='true'] .navbar-ellipsis-btn:hover") {
+          color(colorBlue).important()
         }
       }
     }
