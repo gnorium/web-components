@@ -872,9 +872,11 @@ public enum OutlineNumberAdvance {
     public static let markerSize: CSS.Length = `var`("--outliner-marker")
 
     /// Between a flat item's marker and what it shows (user, 2026-11-03:
-    /// "too cramped"): room for its ring midway, a step from the marker and
-    /// a step from what it rings.
-    public static let markerSpace: CSS.Length = spacing16
+    /// "too cramped"): room for its ring midway, 16 from the marker and 16
+    /// from what it rings, so every line a diff draws—the spine's marker,
+    /// a node's ring, the borders inside it—stands 16 from the next (user,
+    /// 2026-11-16). A thread keeps its avatars as far from what they head.
+    public static let markerSpace: CSS.Length = spacing32
 
     /// Where every flat item's heading and body start, the same x for the
     /// whole tree (user, 2026-11-03): right after its marker. A node is one
@@ -887,13 +889,13 @@ public enum OutlineNumberAdvance {
     /// Between two flat items, and between an item's own row and the items
     /// under it: room for two rings face to face (`ringOffset`), never
     /// meeting.
-    static let nodeGap: CSS.Length = spacing24
+    static let nodeGap: CSS.Length = spacing48
 
     /// How far a flat item's ring stands outside what it rings, on every
     /// side (user, 2026-11-03: the number, the value box and the body a
     /// step inside it), its start midway between the marker and what it
     /// rings (`markerSpace`), never touching the marker.
-    static let ringOffset: CSS.Length = spacing8
+    static let ringOffset: CSS.Length = spacing16
 
     /// A flat item's ring (user, 2026-11-03), the selector it is drawn by,
     /// for `item`, a selector of the item: what an action affects, the
