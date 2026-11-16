@@ -493,6 +493,9 @@ public struct AccordionView: HTMLContent {
         borderRadius(borderRadiusBase)
         padding(0)
       }
+      // Its border subtle at rest (user, 2026-11-16: a fold edge, not a
+      // button, like the thread spine and the sets' inner borders),
+      // emphasized under the pointer.
       // Its edge band: 16 wide, centered on the border line, on every side.
       // Under the pointer the whole border, round its corners, takes the
       // emphasized color, the pointer a hand.
