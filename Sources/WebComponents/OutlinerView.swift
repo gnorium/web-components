@@ -872,11 +872,9 @@ public enum OutlineNumberAdvance {
     public static let markerSize: CSS.Length = `var`("--outliner-marker")
 
     /// Between a flat item's marker and what it shows (user, 2026-11-03:
-    /// "too cramped"): room for its ring midway, 16 from the marker and 16
-    /// from what it rings, so every line a diff draws—the spine's marker,
-    /// a node's ring, the borders inside it—stands 16 from the next (user,
-    /// 2026-11-16). A thread keeps its avatars as far from what they head.
-    public static let markerSpace: CSS.Length = spacing32
+    /// "too cramped"): room for its ring midway, a step from the marker and
+    /// a step from what it rings.
+    public static let markerSpace: CSS.Length = spacing16
 
     /// Where every flat item's heading and body start, the same x for the
     /// whole tree (user, 2026-11-03): right after its marker. A node is one
@@ -889,13 +887,13 @@ public enum OutlineNumberAdvance {
     /// Between two flat items, and between an item's own row and the items
     /// under it: room for two rings face to face (`ringOffset`), never
     /// meeting.
-    static let nodeGap: CSS.Length = spacing48
+    static let nodeGap: CSS.Length = spacing24
 
     /// How far a flat item's ring stands outside what it rings, on every
     /// side (user, 2026-11-03: the number, the value box and the body a
     /// step inside it), its start midway between the marker and what it
     /// rings (`markerSpace`), never touching the marker.
-    static let ringOffset: CSS.Length = spacing16
+    static let ringOffset: CSS.Length = spacing8
 
     /// A flat item's ring (user, 2026-11-03), the selector it is drawn by,
     /// for `item`, a selector of the item: what an action affects, the
@@ -904,14 +902,6 @@ public enum OutlineNumberAdvance {
     /// its border and its outline, a field's ring.
     public static func ring(_ item: String) -> String {
       "\(item)::after"
-    }
-
-    /// A flat item's own ring (user, 2026-11-16: "per node rings rather
-    /// than per node family"): its row alone—its heading, its number and
-    /// its body—never the nodes under it, a step outside it. A diff rings
-    /// each node it touches so; a caller colors its border and outline.
-    public static func rowRing(_ item: String) -> String {
-      "\(item) > .outliner-row::after"
     }
 
     /// Where the spine runs, in from the tree's start: through the middle
@@ -1277,18 +1267,6 @@ public enum OutlineNumberAdvance {
       // it, a step outside them, right of its marker (`bodyStart`),
       // transparent until the page colors its border and outline.
       descendant(".outliner-item[data-outliner-accordion='true']::after") {
-        content("\"\"")
-        position(.absolute)
-        inset(-Self.ringOffset)
-        insetInlineStart(Self.bodyStart - Self.ringOffset)
-        border(borderWidthBase, .solid, borderColorTransparent)
-        borderRadius(borderRadiusBase)
-        pointerEvents(.none)
-      }
-      // A node's own ring (`rowRing`), round its row alone, transparent
-      // until a page colors it; a drop's mark takes the row's while one is
-      // dragged over it.
-      descendant(".outliner-item[data-outliner-accordion='true'] > .outliner-row:not([data-outliner-drop])::after") {
         content("\"\"")
         position(.absolute)
         inset(-Self.ringOffset)
