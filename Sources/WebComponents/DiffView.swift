@@ -498,6 +498,16 @@ public struct DiffView: HTMLContent {
         // meets its code's.
         CSS.Property("column-gap", "max(0px, calc(\(spacing8.value) + var(--passage-shift, 0px)))")
       }
+      // A reader's page diff: its text at its code's edge (`--code-start`,
+      // PassageDiffSyncView), each sign centered in the room before it.
+      selector("& .diff-box[style*='--code-start'] > .diff-lines > .diff-row") {
+        paddingInlineStart(0).important()
+        CSS.Property("column-gap", "0").important()
+      }
+      selector("& .diff-box[style*='--code-start'] > .diff-lines > .diff-row > .diff-sign") {
+        CSS.Property("width", "var(--code-start)")
+        textAlign(.center)
+      }
       selector("& .diff-box[data-passage-wrap='false'] .diff-lines") {
         width(.maxContent)
         minWidth(perc(100))

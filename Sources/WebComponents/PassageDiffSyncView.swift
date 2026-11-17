@@ -157,6 +157,22 @@ public enum PassageDiffSyncViewHydration {
         let text = box.querySelector(".diff-content")?.getBoundingClientRect()
       {
         let codeLeft = line.left + padStart * scale
+        // A reader's page diff (user, 2026-11-17): one edge for all of it,
+        // the code's—its "Diff" word starts there, and its lines' text, each
+        // sign centered in the room before it as the code's numbers are.
+        if box.closest(".frame-diff-view, .testament-translation-diff") != nil,
+          let boxRect = box.getBoundingClientRect()
+        {
+          box.style.setProperty("--code-start", doubleToString(max(0, codeLeft - boxRect.left)) + "px")
+          if let label = box.parentElement?.querySelector(".diff-label"),
+            let word = label.querySelector(".icon-label-text")?.getBoundingClientRect()
+          {
+            let pad = pixels(window.getComputedStyle(label).getPropertyValue("padding-inline-start"))
+            if abs(codeLeft - word.left) >= 0.5 {
+              label.style.setProperty("padding-inline-start", doubleToString(max(0, pad + codeLeft - word.left)) + "px")
+            }
+          }
+        }
         let shift = pixels(box.style.getPropertyValue("--passage-shift")) + codeLeft - text.left
         // Either way (user, 2026-11-17: a diff's text stood 3px right of
         // its code's and could never move left): the row's inset takes it.
