@@ -2524,7 +2524,7 @@ public enum TEISentenceSelection {
           backgroundColor(backgroundColorVioletSubtle)
           color(.inherit)
           paddingInlineEnd(borderWidthBase)
-          marginInlineEnd(calc("-\(borderWidthBase.value)"))
+          marginInlineEnd(calc("-1 * \(borderWidthBase.value)"))
         }
         descendant(".tei-highlight[data-highlight='title']") {
           backgroundColor(backgroundColorMagentaSubtle)

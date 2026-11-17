@@ -107,7 +107,7 @@ public struct TimeInputPartView: HTMLContent {
       // The ring every control wears for keyboard focus.
       descendant(".time-input-option:focus-visible") {
         outline(borderWidthThick, .solid, borderColorBlueFocus)
-        outlineOffset(calc("-\(borderWidthThick.value)"))
+        outlineOffset(calc("-1 * \(borderWidthThick.value)"))
       }
       ButtonView.phoneStepRowCSS(".time-input-option", fixed: true)
       media(maxWidth(maxWidthBreakpointPhoneNarrow)) {
