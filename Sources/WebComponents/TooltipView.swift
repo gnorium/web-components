@@ -903,31 +903,42 @@ public struct TooltipView: HTMLContent {
         self.togglePinned()
       }
 
-      // A pinned one closes on a click or tap anywhere else. iOS sends no
+      // A pinned one closes on a click or tap anywhere else (iOS sends no
       // click to the document for a tap on something that isn't clickable,
-      // hence the touchstart too.
-      _ = document.addEventListener(.click) { [self] event in
-        self.dismissUnlessInside(event)
-      }
-      _ = document.addEventListener(.touchstart) { [self] event in
-        self.dismissUnlessInside(event)
-      }
+      // hence the touchstart too); Escape dismisses it; a scroll or resize
+      // too (its host is fixed to the viewport). Heard by one listener each
+      // for every tooltip, reaching the shown ones alone (user, 2026-11-17:
+      // a page's hundreds of tooltips each heard every key and click).
+      Self.listen()
+    }
 
-      // Keyboard: Escape to dismiss
-      _ = document.addEventListener(.keydown) { [self] (event: Event) in
-        let key = event.key
-        if stringEquals(key, "Escape") && self.isVisible {
-          self.dismiss()
-        }
-      }
+    /// Tooltips shown now, each known by its own number.
+    nonisolated(unsafe) private static var shown: [TooltipInstance] = []
+    nonisolated(unsafe) private static var made = 0
+    private lazy var number: Int = {
+      Self.made += 1
+      return Self.made
+    }()
+    nonisolated(unsafe) private static var listening = false
 
-      // The host is fixed to the viewport, not to the page: once the trigger
-      // moves under it, the bubble would point at nothing.
-      _ = window.addEventListener(.scroll) { [self] _ in
-        if self.isVisible { self.dismiss() }
+    private static func listen() {
+      guard !listening else { return }
+      listening = true
+      _ = document.addEventListener(.click) { event in
+        for tooltip in shown { tooltip.dismissUnlessInside(event) }
       }
-      _ = window.addEventListener(.resize) { [self] _ in
-        if self.isVisible { self.dismiss() }
+      _ = document.addEventListener(.touchstart) { event in
+        for tooltip in shown { tooltip.dismissUnlessInside(event) }
+      }
+      _ = document.addEventListener(.keydown) { (event: Event) in
+        guard stringEquals(event.key, "Escape") else { return }
+        for tooltip in shown where tooltip.isVisible { tooltip.dismiss() }
+      }
+      _ = window.addEventListener(.scroll) { _ in
+        for tooltip in shown where tooltip.isVisible { tooltip.dismiss() }
+      }
+      _ = window.addEventListener(.resize) { _ in
+        for tooltip in shown where tooltip.isVisible { tooltip.dismiss() }
       }
     }
 
@@ -975,12 +986,40 @@ public struct TooltipView: HTMLContent {
     /// next tap.
     private func watchTrigger() {
       guard isVisible else { return }
+      Self.followPointer()
       let box = trigger.getBoundingClientRect()
       if !trigger.isConnected || box.map({ $0.width == 0 && $0.height == 0 }) ?? true {
         dismiss()
         return
       }
+      // Its trigger moved out from under a still pointer (user, 2026-11-17:
+      // a stream pushed it down, and no leave is heard till the pointer
+      // moves): hidden, unless pinned, headed for, or the pointer is on
+      // the bubble.
+      if !pinned, aimFrom == nil, let box, let pointer = Self.pointer,
+        !Self.holds(box, pointer), !(content?.getBoundingClientRect().map { Self.holds($0, pointer) } ?? false)
+      {
+        hideTooltip()
+        return
+      }
       _ = window.requestAnimationFrame { [self] in self.watchTrigger() }
+    }
+
+    /// Where the pointer last was on the page, kept by one listener for
+    /// every tooltip.
+    nonisolated(unsafe) private static var pointer: (x: Double, y: Double)?
+    nonisolated(unsafe) private static var followingPointer = false
+
+    private static func followPointer() {
+      guard !followingPointer else { return }
+      followingPointer = true
+      _ = document.addEventListener(.pointermove) { (event: Event) in
+        pointer = (event.clientX, event.clientY)
+      }
+    }
+
+    private static func holds(_ box: DOM.Rect, _ point: (x: Double, y: Double)) -> Bool {
+      point.x >= box.left && point.x <= box.left + box.width && point.y >= box.top && point.y <= box.top + box.height
     }
 
     /// Follows the pointer from where it left the trigger, keeping the
@@ -1048,6 +1087,7 @@ public struct TooltipView: HTMLContent {
       host?.setAttribute(data("visible"), true)
       trigger.setAttribute(data("visible"), true)
       isVisible = true
+      if !Self.shown.contains(where: { $0.number == number }) { Self.shown.append(self) }
       watchTrigger()
 
       // Dispatch show event
@@ -1061,6 +1101,7 @@ public struct TooltipView: HTMLContent {
       host?.setAttribute(data("visible"), false)
       trigger.setAttribute(data("visible"), false)
       isVisible = false
+      Self.shown.removeAll { $0.number == number }
 
       // Dispatch hide event
       let event = CustomEvent(type: "tooltip-hide", detail: "")
