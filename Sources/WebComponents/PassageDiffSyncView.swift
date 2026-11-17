@@ -158,16 +158,20 @@ public enum PassageDiffSyncViewHydration {
       {
         let codeLeft = line.left + padStart * scale
         // A reader's page diff (user, 2026-11-17): one edge for all of it,
-        // where its "Diff" word stands (8 before its icon, 8 after it): the
-        // code's gutter that wide above, its lines' text there below, each
-        // sign centered in the room before it as the code's numbers are.
+        // its code's: its lines' text there, each sign centered in the
+        // gutter before it as the code's numbers are, and its "± Diff" the
+        // same—the icon centered in it, its word at the edge.
         if box.closest(".frame-diff-view, .testament-translation-diff") != nil,
-          let boxRect = box.getBoundingClientRect(),
-          let word = box.parentElement?.querySelector(".diff-label .icon-label-text")?.getBoundingClientRect()
+          let boxRect = box.getBoundingClientRect()
         {
-          box.style.setProperty("--code-start", doubleToString(max(0, word.left - boxRect.left)) + "px")
-          if let view = source.closest(".code-view") {
-            view.style.setProperty("--reader-gutter", doubleToString(max(0, (word.left - line.left) / scale)) + "px")
+          let gutter = max(0, codeLeft - boxRect.left)
+          box.style.setProperty("--code-start", doubleToString(gutter) + "px")
+          if let label = box.parentElement?.querySelector(".diff-label"),
+            let icon = label.querySelector("svg")?.getBoundingClientRect()
+          {
+            let side = doubleToString(max(0, (gutter - icon.width) / 2)) + "px"
+            label.style.setProperty("padding-inline-start", side)
+            (label.querySelector(".icon-label-view") ?? label).style.setProperty("gap", side)
           }
         }
         let shift = pixels(box.style.getPropertyValue("--passage-shift")) + codeLeft - text.left
