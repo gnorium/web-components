@@ -1207,21 +1207,43 @@ public struct DropdownView: HTMLContent {
         bindLeave(list)
       }
 
-      // Click outside handler
-      _ = document.addEventListener(.click) { [self] event in
-        guard self.isOpen,
-          let target = event.target,
-          let container = self.container
-        else { return }
+      // The page's clicks and keys reach an open menu alone, through one
+      // listener each for every dropdown (user, 2026-11-17: a form's
+      // hundreds of dropdowns each heard every key, an arrow key held
+      // ran on long after it was let go).
+      Self.listen()
+    }
 
-        // Close if click is outside the dropdown container
-        if !container.contains(target) {
-          self.closeDropdown()
-        }
+    /// Dropdowns whose menu is open now; at most one in practice.
+    nonisolated(unsafe) private static var opened: [DropdownInstance] = []
+    nonisolated(unsafe) private static var listening = false
+    nonisolated(unsafe) private static var made = 0
+    /// This one's own number, which `opened` knows it by.
+    private lazy var number: Int = {
+      Self.made += 1
+      return Self.made
+    }()
+
+    private static func listen() {
+      guard !listening else { return }
+      listening = true
+      _ = document.addEventListener(.click) { event in
+        for dropdown in opened { dropdown.clicked(event) }
       }
+      _ = document.addEventListener(.keydown) { event in
+        for dropdown in opened { dropdown.pressed(event) }
+      }
+    }
 
-      // Keydown handler for auto-focusing search and arrow navigation
-      _ = document.addEventListener(.keydown) { [self] event in
+    /// A click anywhere while its menu is open: outside it, it closes.
+    private func clicked(_ event: Event) {
+      guard isOpen, let target = event.target, let container else { return }
+      if !container.contains(target) { closeDropdown() }
+    }
+
+    /// A key while its menu is open: typing goes to its search, the arrows
+    /// move its highlight, Enter chooses, Escape closes.
+    private func pressed(_ event: Event) {
         guard self.isOpen, let searchInput = self.searchInput else { return }
         if stringIsAlphanumeric(event.key) {
           searchInput.focus()
@@ -1242,7 +1264,6 @@ public struct DropdownView: HTMLContent {
           self.closeDropdown()
           (self.trigger?.querySelector("button") ?? self.trigger)?.focus()
         }
-      }
     }
 
     /// Click and hover on each option. Its place is read in the list that
@@ -1286,6 +1307,7 @@ public struct DropdownView: HTMLContent {
       takeList()
       applyExclusions()
       isOpen = true
+      if !Self.opened.contains(where: { $0.number == number }) { Self.opened.append(self) }
       menu?.setAttribute(data("open"), true)
       _ = container?.classList.add("is-open")
       place()
@@ -1308,6 +1330,7 @@ public struct DropdownView: HTMLContent {
         }
       }
       isOpen = false
+      Self.opened.removeAll { $0.number == number }
       menu?.setAttribute(data("open"), false)
       _ = container?.classList.remove("is-open")
       unplace()
