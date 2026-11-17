@@ -161,7 +161,7 @@ public enum PassageDiffSyncViewHydration {
         // its code's: its lines' text there, each sign centered in the
         // gutter before it as the code's numbers are, and its "± Diff" the
         // same—the icon centered in it, its word at the edge.
-        if box.closest(".frame-diff-view, .testament-translation-diff") != nil,
+        if box.closest(".frame-diff-view, .testament-translation-diff, .artifact-under-header") != nil,
           let boxRect = box.getBoundingClientRect()
         {
           let gutter = max(0, codeLeft - boxRect.left)
