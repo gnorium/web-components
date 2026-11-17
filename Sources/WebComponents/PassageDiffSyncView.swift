@@ -158,8 +158,10 @@ public enum PassageDiffSyncViewHydration {
       {
         let codeLeft = line.left + padStart * scale
         let shift = pixels(box.style.getPropertyValue("--passage-shift")) + codeLeft - text.left
+        // Either way (user, 2026-11-17: a diff's text stood 3px right of
+        // its code's and could never move left): the row's inset takes it.
         if abs(codeLeft - text.left) >= 0.5 {
-          box.style.setProperty("--passage-shift", doubleToString(max(0, shift)) + "px")
+          box.style.setProperty("--passage-shift", doubleToString(shift) + "px")
         }
       }
       if stringEquals(signature, presentationKey) { return }
