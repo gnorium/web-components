@@ -588,7 +588,11 @@ public struct AccordionView: HTMLContent {
         backgroundColor(backgroundColorDisabledSubtle).important()
       }
       pseudoClass(.hover) { zIndex(zIndexToolbar).important() }
-      pseudoClass(.focusWithin) { zIndex(zIndexToolbar).important() }
+      // One holding the focus or an open menu over one only hovered (user,
+      // 2026-11-18: a sibling under the pointer covered an open dropdown).
+      selector("&:focus-within", "&:has(.dropdown-menu[data-open='true'])") {
+        zIndex("calc(var(--z-index-toolbar) + 1)").important()
+      }
     }
   }
 }

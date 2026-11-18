@@ -1694,10 +1694,13 @@ public struct DropdownView: HTMLContent {
       let currentVal = (hiddenInput as? HTML.HTMLInputElement)?.value ?? ""
       
       if stringEquals(currentVal, value) {
-        // Chosen again: a required choice stays (it is never blank after a
-        // visible choice, and a repeated click must not blank it); any
-        // other toggles off.
-        if (hiddenInput as? HTML.HTMLInputElement)?.hasAttribute("required") ?? false {
+        // Chosen again: toggled off, required or not (user, 2026-11-18:
+        // cleared to choose another; a required one left empty is the
+        // submit guard's to flag). One that submits its form on change
+        // (a sort) keeps it: it would post empty.
+        let submits = stringEquals(
+          container?.closest(".dropdown-view")?.getAttribute(data("submit-form-on-change")) ?? "", "true")
+        if submits, (hiddenInput as? HTML.HTMLInputElement)?.hasAttribute("required") ?? false {
           closeDropdown()
           return
         }
