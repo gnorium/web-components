@@ -182,6 +182,9 @@ import EmbeddedSwiftUtilities
     private let removable: (DOM.Element) -> Bool
     /// Removes a node, or restores a removed one.
     private let remove: (DOM.Element) -> Void
+    /// Whether a new node goes only first under its parent, never right
+    /// after a node (a level put in over a chain's node: user, 2026-11-18).
+    private let firstOnly: Bool
 
     private var places: [Place] = []
     private var place = -1
@@ -190,7 +193,7 @@ import EmbeddedSwiftUtilities
 
     public init?(
       view: DOM.Element, allows: @escaping (DOM.Element?) -> Bool, insert: @escaping (Place) -> Void,
-      removable: @escaping (DOM.Element) -> Bool, remove: @escaping (DOM.Element) -> Void
+      removable: @escaping (DOM.Element) -> Bool, remove: @escaping (DOM.Element) -> Void, firstOnly: Bool = false
     ) {
       guard let tree = document.getElementById(view.dataset["outliner-stepper-for"] ?? "") else { return nil }
       self.view = view
@@ -201,6 +204,7 @@ import EmbeddedSwiftUtilities
       self.insert = insert
       self.removable = removable
       self.remove = remove
+      self.firstOnly = firstOnly
       // Where it rests: the tree's end, as drawn.
       homeParent = view.parentElement
       if let parent = homeParent { homeNext = Self.following(view, in: parent) }
@@ -264,7 +268,7 @@ import EmbeddedSwiftUtilities
             out.append(Place(parent: item, after: nil, number: stringJoin([number, "1"], separator: ".")))
           }
           walk(item.querySelector(":scope > .outliner-list"), parent: item)
-          if allows(parent) {
+          if !firstOnly, allows(parent) {
             out.append(Place(parent: parent, after: item, number: OutlinerHydration.nextSibling(of: number)))
           }
         }
